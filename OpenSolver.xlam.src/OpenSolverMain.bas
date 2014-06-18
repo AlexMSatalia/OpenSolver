@@ -279,6 +279,11 @@ End Sub
 
 Function RunOpenSolver(Optional SolveRelaxation As Boolean = False, Optional MinimiseUserInteraction As Boolean = False) As OpenSolverResult
 28820     On Error GoTo errorHandler
+
+          'Save iterative calcalation state
+          Dim oldIterationMode As Boolean
+          oldIterationMode = Application.Iteration
+
 28830     RunOpenSolver = OpenSolverResult.Unsolved
 28840     Set OpenSolver = New COpenSolver
 28850     OpenSolver.BuildModelFromSolverData
@@ -288,6 +293,7 @@ Function RunOpenSolver(Optional SolveRelaxation As Boolean = False, Optional Min
 28860     RunOpenSolver = OpenSolver.SolveModel(SolveRelaxation)
 28870     If Not MinimiseUserInteraction Then OpenSolver.ReportAnySolutionSubOptimality
 28880     Set OpenSolver = Nothing    ' Free any OpenSolver memory used
+          Application.Iteration = oldIterationMode
 28890     Exit Function
 Tokeniser:
     On Error GoTo errHandle
@@ -296,15 +302,17 @@ Tokeniser:
     TokenSolver.Setup ActiveWorkbook, ActiveSheet
     TokenSolver.ProcessSolverModel
     modPuLP.GenerateFile TokenSolver, OpenSolver.Solver, True
-    
+    Application.Iteration = oldIterationMode
     Exit Function
     
 errHandle:
     MsgBox "An error occurred while trying build the model:" + vbNewLine _
             + "Description: " + Err.Description, vbOKOnly
+    Application.Iteration = oldIterationMode
     Exit Function
 errorHandler:
 28900     Set OpenSolver = Nothing    ' Free any OpenSolver memory used
+          Application.Iteration = oldIterationMode
 28910     RunOpenSolver = OpenSolverResult.ErrorOccurred
 28920     If Err.Number <> OpenSolver_UserCancelledError Then
 28930         MsgBox "OpenSolver" & sOpenSolverVersion & " encountered an error:" & vbCrLf & Err.Description & IIf(Erl = 0, "", " (at line " & Erl & ")") & vbCrLf & vbCrLf & "Source = " & Err.Source & ", ErrNumber=" & Err.Number, , "OpenSolver" & sOpenSolverVersion & " Error"

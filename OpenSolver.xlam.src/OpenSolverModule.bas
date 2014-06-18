@@ -1342,6 +1342,19 @@ Function ForceCalculate(prompt As String) As Boolean
 4980          Application.CalculateFullRebuild
 4990          DoEvents
 5000      End If
+          
+          ' Check for circular references causing problems, which can happen if iterative calculation mode is enabled.
+          If Application.CalculationState <> xlDone Then
+              If Application.Iteration Then
+                  If MsgBox("Iterative calculation mode is enabled and may be interfering with the inital calculation. Would you like to try disabling iterative calculation mode to see if this fixes the problem?", _
+                            vbYesNo, _
+                            "OpenSolver: Iterative Calculation Mode Detected...") = vbYes Then
+                      Application.Iteration = False
+                      Application.Calculate
+                  End If
+              End If
+          End If
+          
 5010      While Application.CalculationState <> xlDone
 5020          If MsgBox(prompt, _
                           vbCritical + vbRetryCancel + vbDefaultButton1, _
