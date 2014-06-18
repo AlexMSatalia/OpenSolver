@@ -71,13 +71,13 @@ Function SolveModel_Nomad(SolveRelaxation As Boolean) As Integer
 48400     ElseIf NomadRetVal = 2 Then
 48410         Err.Raise Number:=OpenSolver_NomadError, Source:=errorPrefix, Description:="Nomad reached " _
                 & "the maximum number of iterations and returned the best feasible solution it found. This " _
-                & "solution is not gauranteed to be an optimal solution." & vbCrLf & vbCrLf & "You can increase " _
+                & "solution is not guaranteed to be an optimal solution." & vbCrLf & vbCrLf & "You can increase " _
                 & "the maximum time and iterations under the options in the model dialogue or check whether your model is feasible."
 48420         OpenSolver.SolveStatus = -1 'Unsolved
 48430     ElseIf NomadRetVal = 3 Then
 48440         Err.Raise Number:=OpenSolver_NomadError, Source:=errorPrefix, Description:="Nomad reached the " _
                 & "maximum time and returned the best feasible solution it found. This solution is not " _
-                & "gauranteed to be an optimal solution." & vbCrLf & vbCrLf & "You can increase the maximum " _
+                & "guaranteed to be an optimal solution." & vbCrLf & vbCrLf & "You can increase the maximum " _
                 & "time and iterations under the options in the model dialogue or check whether your model is feasible."
 48450         OpenSolver.SolveStatus = TimeLimitedSubOptimal
 48460     ElseIf NomadRetVal = 4 Then
