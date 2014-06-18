@@ -353,6 +353,12 @@ Private Const ERROR_BAD_FORMAT = 11&
 
 '=====================================================================
 
+#If VBA7 Then
+    Public Declare PtrSafe Sub Sleep Lib "kernel32" (ByVal dwMilliseconds As Long)
+#Else
+    Public Declare Sub Sleep Lib "kernel32" (ByVal dwMilliseconds As Long)
+#End If
+
 
 '***************** Code Start ******************
 'This code was originally written by Terry Kreft.
@@ -1333,9 +1339,15 @@ End Function
 Function ForceCalculate(prompt As String) As Boolean
            'There appears to be a bug in Excel 2010 where the .Calculate does not always complete. We handle up to 3 such failures.
            ' We have seen this problem arise on large models.
-4930       Application.Calculate
-
-4940      If Application.CalculationState <> xlDone Then Application.Calculate
+4930      Application.Calculate
+4940      If Application.CalculationState <> xlDone Then
+              Application.Calculate
+              Dim i As Integer
+              For i = 1 To 10
+                  DoEvents
+                  Sleep (100)
+              Next i
+          End If
 4950      If Application.CalculationState <> xlDone Then Application.Calculate
 4960      If Application.CalculationState <> xlDone Then
 4970          DoEvents
