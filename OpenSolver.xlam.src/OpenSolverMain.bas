@@ -36,22 +36,22 @@ Private Const strMenuName  As String = "&OpenSolver"
 Dim OpenSolver As COpenSolver
 
 Sub OpenSolver_SolveClickHandler(Optional Control)
-27810     If Not CheckWorkSheetAvailable Then Exit Sub
+27810     If Not CheckWorksheetAvailable Then Exit Sub
 27820     RunOpenSolver False
 End Sub
 
 Sub OpenSolver_ModelOptions(Optional Control)
-27830     If Not CheckWorkSheetAvailable Then Exit Sub
+27830     If Not CheckWorksheetAvailable Then Exit Sub
 27840     frmOptions.Show vbModal
 End Sub
 
 Sub OpenSolver_SolverOptions(Optional Control)
-27850     If Not CheckWorkSheetAvailable Then Exit Sub
+27850     If Not CheckWorksheetAvailable Then Exit Sub
 27860     frmSolverChange.Show
 End Sub
 
 Sub OpenSolver_SolveRelaxationClickHandler(Optional Control)
-27870     If Not CheckWorkSheetAvailable Then Exit Sub
+27870     If Not CheckWorksheetAvailable Then Exit Sub
 27880     RunOpenSolver True
 End Sub
 
@@ -61,9 +61,9 @@ Sub OpenSolver_LaunchCBCCommandLine(Optional Control)
 27890     On Error GoTo errorHandler
           Dim errorPrefix  As String
 27900     errorPrefix = ""
-
+            
           Dim WorksheetAvailable As Boolean
-27910     WorksheetAvailable = CheckWorkSheetAvailable(SuppressDialogs:=True)
+27910     WorksheetAvailable = CheckWorksheetAvailable(SuppressDialogs:=True)
           
           Dim ExternalSolverPathName As String, Solver As String
 27920     Solver = "cbc.exe"
@@ -81,7 +81,7 @@ Sub OpenSolver_LaunchCBCCommandLine(Optional Control)
 27960     If WorksheetAvailable Then
 27970         GetSolveOptions "'" & Replace(ActiveSheet.Name, "'", "''") & "'!", SolveOptions, ErrorString ' NB: We have to double any ' when we quote the sheet name
 27980         If ErrorString = "" Then
-27990            SolveOptionsString = " -ratioGap " & Str(SolveOptions.Tolerance) & " -seconds " & Str(SolveOptions.maxTime)
+27990            SolveOptionsString = " -ratioGap " & str(SolveOptions.Tolerance) & " -seconds " & str(SolveOptions.maxTime)
 28000         End If
 28010     End If
           
@@ -108,7 +108,7 @@ errorHandler:
 End Sub
 
 Sub OpenSolver_ShowHideModelClickHandler(Optional Control)
-28110     If Not CheckWorkSheetAvailable Then Exit Sub
+28110     If Not CheckWorksheetAvailable Then Exit Sub
           Dim sheet As Worksheet
 28120     On Error GoTo ExitSub
 28130     Set sheet = ActiveSheet
@@ -125,19 +125,19 @@ ExitSub:
 End Sub
 
 Sub OpenSolver_SetQuickSolveParametersClickHandler(Optional Control)
-28190     If Not CheckWorkSheetAvailable Then Exit Sub
+28190     If Not CheckWorksheetAvailable Then Exit Sub
 28200     If UserSetQuickSolveParameterRange Then
 28210         Set OpenSolver = Nothing ' Was: OpenSolver.ClearQuickSolve  ' Reset any pre-initialized quicksolve data
 28220     End If
 End Sub
 
 Sub OpenSolver_InitQuickSolveClickHandler(Optional Control)
-28230     If Not CheckWorkSheetAvailable Then Exit Sub
+28230     If Not CheckWorksheetAvailable Then Exit Sub
 28240     InitializeQuickSolve
 End Sub
 
 Sub OpenSolver_QuickSolveClickHandler(Optional Control)
-28250     If Not CheckWorkSheetAvailable Then Exit Sub
+28250     If Not CheckWorksheetAvailable Then Exit Sub
 28260     RunQuickSolve
 End Sub
 
@@ -282,10 +282,27 @@ Function RunOpenSolver(Optional SolveRelaxation As Boolean = False, Optional Min
 28830     RunOpenSolver = OpenSolverResult.Unsolved
 28840     Set OpenSolver = New COpenSolver
 28850     OpenSolver.BuildModelFromSolverData
+          If OpenSolver.Solver Like "PuLP" Or OpenSolver.Solver Like "*Cou*" Or OpenSolver.Solver Like "*Bon*" Then
+              GoTo Tokeniser
+          End If
 28860     RunOpenSolver = OpenSolver.SolveModel(SolveRelaxation)
 28870     If Not MinimiseUserInteraction Then OpenSolver.ReportAnySolutionSubOptimality
 28880     Set OpenSolver = Nothing    ' Free any OpenSolver memory used
 28890     Exit Function
+Tokeniser:
+    On Error GoTo errHandle
+    
+    Dim TokenSolver As New CModel2
+    TokenSolver.Setup ActiveWorkbook, ActiveSheet
+    TokenSolver.ProcessSolverModel
+    modPuLP.GenerateFile TokenSolver, OpenSolver.Solver, True
+    
+    Exit Function
+    
+errHandle:
+    MsgBox "An error occurred while trying build the model:" + vbNewLine _
+            + "Description: " + Err.Description, vbOKOnly
+    Exit Function
 errorHandler:
 28900     Set OpenSolver = Nothing    ' Free any OpenSolver memory used
 28910     RunOpenSolver = OpenSolverResult.ErrorOccurred
@@ -326,15 +343,15 @@ End Sub
 Sub OpenSolver_ModelClick(Optional Control)
           'frmAutoModel.Show
           'frmAutoModel2.Show
-29110     If Not CheckWorkSheetAvailable Then Exit Sub
+29110     If Not CheckWorksheetAvailable Then Exit Sub
 29120     frmModel.Show
 29130     DoEvents
 End Sub
 
 Sub OpenSolver_QuickAutoModelClick(Optional Control)
-29140     If Not CheckWorkSheetAvailable Then Exit Sub
+29140     If Not CheckWorksheetAvailable Then Exit Sub
           Dim model As New CModel
-29150     If Not CheckWorkSheetAvailable Then Exit Sub
+29150     If Not CheckWorksheetAvailable Then Exit Sub
 29160     If Not model.FindObjective(ActiveSheet) = "OK" Then
 29170         MsgBox "Couldn't find objective, and couldn't finish as a result."
 29180         Exit Sub
@@ -353,7 +370,7 @@ Sub OpenSolver_QuickAutoModelClick(Optional Control)
 End Sub
 
 Sub OpenSolver_AutoModelAndSolveClick(Optional Control)
-29310     If Not CheckWorkSheetAvailable Then Exit Sub
+29310     If Not CheckWorksheetAvailable Then Exit Sub
           Dim model As New CModel
           Dim status As String
           

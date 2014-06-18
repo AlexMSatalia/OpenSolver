@@ -293,7 +293,7 @@ Private Function GetCOMAddInIfExists(AddIn As Variant, progID As String) As Bool
           ' See http://msdn.microsoft.com/en-us/library/aa432088(v=office.12).aspx for COMAddIn
 35410     Set AddIn = Nothing
 35420     On Error Resume Next
-35430     Set AddIn = Application.COMAddIns.item(progID)
+35430     Set AddIn = Application.COMAddIns.Item(progID)
 35440     GetCOMAddInIfExists = Err = 0
 End Function
 
@@ -302,13 +302,13 @@ Private Function GetAddInIfExists(AddIn As Variant, title As String) As Boolean
           ' http://msdn.microsoft.com/en-us/library/microsoft.office.interop.excel.addin.aspx
 35450     Set AddIn = Nothing
 35460     On Error Resume Next
-35470     Set AddIn = Application.AddIns.item(title)
+35470     Set AddIn = Application.AddIns.Item(title)
 35480     GetAddInIfExists = Err = 0
 End Function
 
 Private Sub btnInstallOpenSolverStudio_Click()
-          Dim AddInName As String, Key As String, FullPath As String
-35490     Key = "Software\Microsoft\Office\Excel\Addins\" & OpenSolverStudioAddInName
+          Dim AddInName As String, key As String, FullPath As String
+35490     key = "Software\Microsoft\Office\Excel\Addins\" & OpenSolverStudioAddInName
 35500     FullPath = ThisWorkbook.Path
 35510     If right(" " & FullPath, 1) <> PathDelimeter Then FullPath = FullPath & PathDelimeter
 35520     FullPath = FullPath & OpenSolverStudioAddInName & ".vsto"
@@ -320,11 +320,11 @@ Private Sub btnInstallOpenSolverStudio_Click()
           
           ' For a description of these registry entries, see
           ' http://msdn.microsoft.com/en-us/library/bb386106.aspx
-35570     CreateNewKey Key, HKEY_CURRENT_USER
-35580     SetKeyValue Key, "Description", "Open Source Optimisation for Excel", REG_SZ
-35590     SetKeyValue Key, "FriendlyName", "OpenSolver Studio", REG_SZ
-35600     SetKeyValue Key, "LoadBehavior", 3, REG_DWORD
-35610     SetKeyValue Key, "Manifest", FullPath & "|vstolocal", REG_SZ
+35570     CreateNewKey key, HKEY_CURRENT_USER
+35580     SetKeyValue key, "Description", "Open Source Optimisation for Excel", REG_SZ
+35590     SetKeyValue key, "FriendlyName", "OpenSolver Studio", REG_SZ
+35600     SetKeyValue key, "LoadBehavior", 3, REG_DWORD
+35610     SetKeyValue key, "Manifest", FullPath & "|vstolocal", REG_SZ
           
           'Dim AddIn As Variant, progID As String
           'For Each AddIn In Application.COMAddIns
@@ -349,7 +349,7 @@ Private Sub btnInstallOpenSolverStudio_Click()
 35730     End If
 
 35740     ShowOpenSolverStudioStatus
-35750     MsgBox AddInStatus & vbCrLf & vbCrLf & "Actions Taken:" & vbCrLf & "Installed registry keys under:" & vbCrLf & Key & vbCrLf & "for the VSTO manifest:" & vbCrLf & FullPath, vbOKOnly, "OpenSolver: OpenSolver Studio Installation"
+35750     MsgBox AddInStatus & vbCrLf & vbCrLf & "Actions Taken:" & vbCrLf & "Installed registry keys under:" & vbCrLf & key & vbCrLf & "for the VSTO manifest:" & vbCrLf & FullPath, vbOKOnly, "OpenSolver: OpenSolver Studio Installation"
           
           ' Application.COMAddIns property - COM addins including VSTO's
           ' Application.AddIns property - lists all XLA addins
@@ -372,7 +372,7 @@ Sub ReflectOpenSolverStatus()
 35830     End If
 errorHandler:
 35840     EventsEnabled = False
-35850     chkAutoLoad.Value = InstalledAndActive
+35850     chkAutoLoad.value = InstalledAndActive
 35860     chkAutoLoad.Enabled = Not InstalledAndActive
 35870     buttonUninstall.Enabled = InstalledAndActive
 35880     EventsEnabled = True
@@ -384,7 +384,7 @@ End Sub
 
 Private Sub chkAutoLoad_Change()
 35900     If Not EventsEnabled Then Exit Sub
-35910     ChangeAutoloadStatus chkAutoLoad.Value
+35910     ChangeAutoloadStatus chkAutoLoad.value
 End Sub
 
 Private Sub ChangeAutoloadStatus(loadAtStartup As Boolean)
@@ -404,7 +404,7 @@ Private Sub ChangeAutoloadStatus(loadAtStartup As Boolean)
           
           ' Add-ins can only be added if we have at least one workbook open; see http://vbadud.blogspot.com/2007/06/excel-vba-install-excel-add-in-xla-or.html
           Dim TempBook As Workbook
-35980     If Workbooks.count = 0 Then Set TempBook = Workbooks.Add
+35980     If Workbooks.Count = 0 Then Set TempBook = Workbooks.Add
 
 35990     If Not GetAddInIfExists(AddIn, "OpenSolver") Then
 36000         Set AddIn = Application.AddIns.Add(ThisWorkbook.FullName, False)

@@ -21,13 +21,13 @@ End Sub
 
 Private Sub cmdOK_Click()
 
-41700     If chkNonNeg.Value = True Then
+41700     If chkNonNeg.value = True Then
 41710         SetSolverNameOnSheet "neg", "=1"
 41720     Else
 41730         SetSolverNameOnSheet "neg", "=2"     ' 2 means false
 41740     End If
           
-41750     If chkShowSolverProgress.Value = True Then
+41750     If chkShowSolverProgress.value = True Then
 41760         SetSolverNameOnSheet "sho", "=1"
 41770     Else
 41780         SetSolverNameOnSheet "sho", "=2"     ' 2 means false
@@ -35,7 +35,7 @@ Private Sub cmdOK_Click()
           
           ' Because the "solver_eng" is a new option, and not always available, we only update its value if it already exists
           Dim s As String
-41800     If chkLinear.Value = True Then
+41800     If chkLinear.value = True Then
 41810         SetSolverNameOnSheet "lin", "=1"
 41820         If GetNameValueIfExists(ActiveWorkbook, "'" & Replace(ActiveSheet.Name, "'", "''") & "'!solver_eng", s) Then SetSolverNameOnSheet "eng", "=2" ' 2=simplex
 41830     Else
@@ -43,14 +43,14 @@ Private Sub cmdOK_Click()
 41850         If GetNameValueIfExists(ActiveWorkbook, "'" & Replace(ActiveSheet.Name, "'", "''") & "'!solver_eng", s) Then SetSolverNameOnSheet "eng", "=1" ' 1=non-linear
 41860     End If
           
-41870     SetSolverNameOnSheet "tim", "=" & Trim(Str(CDbl(txtMaxTime.Text)))  ' Trim the leading space which str puts in for +'ve values
-41880     SetSolverNameOnSheet "itr", "=" & Trim(Str(CDbl(txtMaxIter.Text)))  ' Trim the leading space which str puts in for +'ve values
-41890     SetSolverNameOnSheet "pre", "=" & Trim(Str(CDbl(txtPre.Text)))  ' Trim the leading space which str puts in for +'ve values
+41870     SetSolverNameOnSheet "tim", "=" & Trim(str(CDbl(txtMaxTime.Text)))  ' Trim the leading space which str puts in for +'ve values
+41880     SetSolverNameOnSheet "itr", "=" & Trim(str(CDbl(txtMaxIter.Text)))  ' Trim the leading space which str puts in for +'ve values
+41890     SetSolverNameOnSheet "pre", "=" & Trim(str(CDbl(txtPre.Text)))  ' Trim the leading space which str puts in for +'ve values
 41900     txtTol.Text = Replace(txtTol.Text, "%", "")
-41910     SetSolverNameOnSheet "tol", "=" & Trim(Str(CDbl(txtTol.Text) / 100))    ' Str() uses . for decimal
+41910     SetSolverNameOnSheet "tol", "=" & Trim(str(CDbl(txtTol.Text) / 100))    ' Str() uses . for decimal
                                                                       ' CDbl respects the locale. We trim the leading space which str puts in for +'ve values
                                                                       
-41920     If chkPerformLinearityCheck.Value = True Then
+41920     If chkPerformLinearityCheck.value = True Then
               ' Default is "do check", so we just delete the option
 41930         DeleteNameOnSheet "OpenSolver_LinearityCheck"
 41940     Else
@@ -122,19 +122,19 @@ Private Sub UserForm_Activate()
 42190         performLinearityCheck = s = "1"
 42200     End If
 
-42210     chkNonNeg.Value = nonNeg
-42220     chkLinear.Value = AssumeLinearModel
-42230     chkShowSolverProgress.Value = ShowSolverProgress
+42210     chkNonNeg.value = nonNeg
+42220     chkLinear.value = AssumeLinearModel
+42230     chkShowSolverProgress.value = ShowSolverProgress
 42240     txtMaxTime.Text = CStr(maxTime)
 42250     txtTol.Text = tol * 100
 42260     txtMaxIter.Text = CStr(maxIter)
 42270     txtPre = CStr(conPre)
-42280     chkPerformLinearityCheck.Value = performLinearityCheck
+42280     chkPerformLinearityCheck.value = performLinearityCheck
 
-        Dim Value As String
-42290   If Not GetNameValueIfExists(ActiveWorkbook, "'" & Replace(ActiveSheet.Name, "'", "''") & "'!OpenSolver_ChosenSolver", Value) Then
+        Dim value As String
+42290   If Not GetNameValueIfExists(ActiveWorkbook, "'" & Replace(ActiveSheet.Name, "'", "''") & "'!OpenSolver_ChosenSolver", value) Then
 42300       Call SetNameOnSheet("OpenSolver_ChosenSolver", "=CBC")
-42310   ElseIf Value = "NOMAD" Then
+42310   ElseIf value = "NOMAD" Then
             'disable linearity options
 42320       chkLinear.Enabled = False
 42330       chkPerformLinearityCheck.Enabled = False

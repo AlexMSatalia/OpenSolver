@@ -84,8 +84,8 @@ End Sub
 '--------------------------------------------------------------------
 Public Sub ResetEverything()
 
-41390     optMax.Value = False
-41400     optMin.Value = False
+41390     optMax.value = False
+41400     optMin.value = False
 41410     refObj.Text = ""
 
 End Sub
@@ -107,8 +107,8 @@ Private Sub GuessObj()
                   "Please enter the objective sense and the objective function cell."
                   'lblStatus.ForeColor = vbRed
 41440         Case "SenseNoCell"
-41450             If model.ObjectiveSense = MaximiseObjective Then optMax.Value = True
-41460             If model.ObjectiveSense = MinimiseObjective Then optMin.Value = True
+41450             If model.ObjectiveSense = MaximiseObjective Then optMax.value = True
+41460             If model.ObjectiveSense = MinimiseObjective Then optMin.value = True
                   'lblStatus.ForeColor = vbBlue
 41470             lblStatus.Caption = _
                   "AutoModel found the objective sense, but couldn't find the objective cell." + vbNewLine + _
@@ -132,8 +132,8 @@ Private Sub cmdFinish_Click()
 41520     Set model.ObjectiveFunctionCell = ActiveSheet.Range(refObj.Text)
           
           ' Get the objective sense
-41530     If optMax.Value = True Then model.ObjectiveSense = MaximiseObjective
-41540     If optMin.Value = True Then model.ObjectiveSense = MinimiseObjective
+41530     If optMax.value = True Then model.ObjectiveSense = MaximiseObjective
+41540     If optMin.value = True Then model.ObjectiveSense = MinimiseObjective
 41550     If model.ObjectiveSense = UnknownObjectiveSense Then
 41560         MsgBox "Error: Please select an objective sense (minimise or maximise)!", vbExclamation + vbOKOnly, "AutoModel"
               'frmModel.Show

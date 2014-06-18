@@ -44,13 +44,15 @@ Function SolveModel_Nomad(SolveRelaxation As Boolean) As Integer
 48290         res = MsgBox("OpenSolver Warning:" & vbCrLf & "The NOMAD optimizer is unstable on 64 bit office and it is very likely to crash excel. However it may " _
                 & "solve before it crashes and then the solution can be viewed through the nomad log file 'log1.tmp' that is saved in the temp folder. This can be " _
                 & "viewed from under the OpenSolver menu." & vbCrLf & vbCrLf & "Would you like to continue solving anyway?" & vbCrLf & vbCrLf & "Note: Any input on the " _
-                & "errors you recieve or how to make this work in future would be much appreciated.", vbYesNo, "OpenSolver NOMAD Error")
+                & "errors you recieve or how to make this work in future would be much appreciated." & vbNewLine & vbNewLine _
+                & "You may wish to change to one of the NEOS Non-Linear Solvers.", vbYesNo, "OpenSolver NOMAD Error")
 48300         If res = vbNo Then GoTo ExitSub
           #Else
 48310         NomadDllFileName = "OpenSolverNomadDll.dll"
           #End If
           
 48320     If GetExistingFilePathName(ThisWorkbook.Path, NomadDllFileName, pathName) Then
+              NomadDllFileName = "WhatEva.dll"
 48330         NomadRetVal = Application.Run("NomadMain", SolveRelaxation)
 48340     Else
 48350         Err.Raise Number:=OpenSolver_NomadError, Source:=errorPrefix, Description:="Unable to find the Nomad Xll file`'" & NomadDllFileName & "' at" _
@@ -143,8 +145,8 @@ ErrorExit:
 
 End Function
 
-Function updateVar(x As Variant)
-48870     OpenSolver.updateVarOS (x)
+Function updateVar(X As Variant)
+48870     OpenSolver.updateVarOS (X)
 End Function
 
 Function getValues() As Variant

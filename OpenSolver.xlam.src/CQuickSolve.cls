@@ -93,7 +93,7 @@ Function AnalyseParameters(OpenSolver As COpenSolver, sheetName As String, _
 26590         GoTo ExitSub
 26600     End If
           
-26610     NumParams = ParamRange.count
+26610     NumParams = ParamRange.Count
           
           ' Remember the original parameter values
           ' Warning: Do not use ParamRange(i) as this fails with more than 1 area; using "for each" seems to work
@@ -233,7 +233,7 @@ Public Function UpdateModelRHS(sheetName As String, ByRef RHS() As Double) As Bo
 27550         UpdateModelRHS = False
 27560         Exit Function
 27570     End If
-27580     If NumParams <> ParamRange.count Then
+27580     If NumParams <> ParamRange.Count Then
 27590         MsgBox "QuickSolve Failed: The number of values in the Parameter range has changed, and so the model update can not be completed.", , "OpenSolver" & sOpenSolverVersion & " Error"
 27600         UpdateModelRHS = False
 27610         Exit Function
@@ -248,22 +248,22 @@ Public Function UpdateModelRHS(sheetName As String, ByRef RHS() As Double) As Bo
 27670         param = param + 1
 27680     Next c
           
-          Dim row As Long, Value As Double, i As Long, coeff As Double
+          Dim row As Long, value As Double, i As Long, coeff As Double
 27690     For row = 1 To NumRows
-27700         Value = OriginalRHS(row)
+27700         value = OriginalRHS(row)
               'For param = 1 To NumParams
               '    If a(Row, param) <> 0 Then
               '        Value = Value + a(Row, param) * ParamChanges(param)
               '    End If
               'Next param
 27710         With SparseA(row)
-27720             For i = 1 To .count
-27730                 param = .index(i)
+27720             For i = 1 To .Count
+27730                 param = .Index(i)
 27740                 coeff = .Coefficient(i)
-27750                 Value = Value + coeff * ParamChanges(param)
+27750                 value = value + coeff * ParamChanges(param)
 27760             Next i
 27770         End With
-27780         RHS(row) = Value
+27780         RHS(row) = value
 27790     Next row
           
 27800     UpdateModelRHS = True    ' success

@@ -242,13 +242,13 @@ Public Function FindVarsAndCons(IsFirstTime As Boolean) As Boolean
               ' and right. For more columns than rows, up and down. For
               ' single cells, look in all directions
               Dim AreaIndex As Long
-37570         For AreaIndex = 1 To AllCompOps.Areas.count
+37570         For AreaIndex = 1 To AllCompOps.Areas.Count
                   ''Debug.Print "FindVarsAndCons: Con area" + Str(AreaIndex)
                   
                   ' Determine the shape of the area
                   Dim RowCount As Long, ColCount As Long
-37580             RowCount = AllCompOps.Areas(AreaIndex).Rows.count
-37590             ColCount = AllCompOps.Areas(AreaIndex).Columns.count
+37580             RowCount = AllCompOps.Areas(AreaIndex).Rows.Count
+37590             ColCount = AllCompOps.Areas(AreaIndex).Columns.Count
                   
                   ' Depending on the shape, set the LHS and RHS
                   ' NB: in the case of row of constraints, LHS refers to
@@ -429,7 +429,7 @@ Public Function FindVarsAndCons(IsFirstTime As Boolean) As Boolean
           
 38460         For Each CurDecVar In DecisionVariables
                   ' Look below it to see if there is type information
-38470             PossibleType = LCase(Trim(CurDecVar.Offset(1, 0).Value))
+38470             PossibleType = LCase(Trim(CurDecVar.Offset(1, 0).value))
 38480             If PossibleType = "integer" Or PossibleType = "int" Or PossibleType = "i" Then
                       ' This variable is integer
 38490                 Set curConstraint = New CConstraint
@@ -466,7 +466,7 @@ Public Function FindVarsAndCons(IsFirstTime As Boolean) As Boolean
 DecisionErr:
           ' Error occurred while trying to find decision variables
 38720     MsgBox "Error: an issue arose while finding decision variables." + vbNewLine + _
-                 "Error number:" + Str(Err.Number) + vbNewLine + _
+                 "Error number:" + str(Err.Number) + vbNewLine + _
                  "Error description: " + Err.Description & IIf(Erl = 0, "", " (at line " & Erl & ")"), _
                  vbExclamation Or vbOKOnly, "AutoModel"
 38730     FindVarsAndCons = False
@@ -476,7 +476,7 @@ DecisionErr:
 ConstraintErr:
           ' Error occurred while trying to find constraints
 38760     MsgBox "Error: an issue arose while finding constraints." + vbNewLine + _
-                 "Error number:" + Str(Err.Number) + vbNewLine + _
+                 "Error number:" + str(Err.Number) + vbNewLine + _
                  "Error description: " + Err.Description & IIf(Erl = 0, "", " (at line " & Erl & ")"), _
                  vbExclamation Or vbOKOnly, "AutoModel"
 38770     FindVarsAndCons = False
@@ -593,7 +593,7 @@ Sub AddRangeToConstraints(ByRef LHSs As Range, ByRef RelRange As Range, _
                             ByRef RHSs As Range, IsVertical As Boolean, _
                             ByRef Constraints As Collection)
           Dim CellCount As Long
-39030     CellCount = LHSs.count
+39030     CellCount = LHSs.Count
           
           Dim i As Long
           Dim LHSi As Range, RELi As Range, RHSi As Range
@@ -618,7 +618,7 @@ Sub AddRangeToConstraints(ByRef LHSs As Range, ByRef RelRange As Range, _
 39170                 Set .LHS = LHSi
 39180                 Set .RHS = RHSi
 39190                 Set .Relation = RELi
-39200                 .ConstraintType = RELi.Value
+39200                 .ConstraintType = RELi.value
                       ''Debug.Print "Con added:", .LHS.Address, .ConstraintType, .RHS.Address
 39210             End With
 39220             Constraints.Add NewConstraint ', NewConstraint.GetKey
@@ -660,7 +660,7 @@ Public Sub RationaliseConstraints()
           Dim NumConstraints As Integer
           Dim conNum() As Variant
           
-39320     NumConstraints = Constraints.count
+39320     NumConstraints = Constraints.Count
                     
 39330     ReDim conNum(NumConstraints + 1) As Variant
           
@@ -696,7 +696,7 @@ Public Sub RationaliseConstraints()
 39540             c = c + 1
 39550         Next
 
-39560         If conKeys.count > 0 Then
+39560         If conKeys.Count > 0 Then
 39570             Set UnionRange = Nothing
                   'Find the number of constraints for relations(i)
 39580             k = 1
@@ -717,7 +717,7 @@ Public Sub RationaliseConstraints()
                   
 39660             SavedNum = 1
                   
-39670             For AreaIndex = 1 To UnionRange.Areas.count
+39670             For AreaIndex = 1 To UnionRange.Areas.Count
                       'Debug.Print "Relation " + Relations(i) + ", area" + str(AreaIndex)
 39680                 num = SavedNum
 39690                 Set LHSunion = Nothing
@@ -781,19 +781,19 @@ Sub BuildModel()
 40050         SetSolverNameOnSheet "typ", "=1"
 40060     ElseIf ObjectiveSense = TargetObjective Then
 40070         SetSolverNameOnSheet "typ", "=3"
-40080         SetSolverNameOnSheet "val", "=" + Trim(Str(ObjectiveTarget)) ' AJM Changed from CStr to Str as we must store this using US numbers, and we must strip any leading space
+40080         SetSolverNameOnSheet "val", "=" + Trim(str(ObjectiveTarget)) ' AJM Changed from CStr to Str as we must store this using US numbers, and we must strip any leading space
 40090     End If
           
           ' Check int/bin constraints not set on non-decision variables
           Dim c As Long, intersection As Range
-40100     For c = 1 To Constraints.count
+40100     For c = 1 To Constraints.Count
 40110         If Constraints(c).ConstraintType = "bin" _
               Or Constraints(c).ConstraintType = "int" Then
 40120             Set intersection = Intersect(Constraints(c).LHS, DecisionVariables)
 40130             If intersection Is Nothing Then
 40140                 MsgBox "Warning: an int/bin constraint has been set on cells that are not decision variables. OpenSolver does not support this yet. An error message will appear if you have selected to show the Model."
 40150             Else
-40160                 If intersection.count <> Constraints(c).LHS.count Then
+40160                 If intersection.Count <> Constraints(c).LHS.Count Then
 40170                     MsgBox "Warning: an int/bin constraint has been set on cells that are not decision variables. OpenSolver does not support this yet. An error message will appear if you have selected to show the Model."
 40180                 End If
 40190             End If
@@ -801,8 +801,8 @@ Sub BuildModel()
 40210     Next c
           
           ' Constraints
-40220     SetSolverNameOnSheet "num", "=" + CStr(Constraints.count)
-40230     For c = 1 To Constraints.count
+40220     SetSolverNameOnSheet "num", "=" + CStr(Constraints.Count)
+40230     For c = 1 To Constraints.Count
 40240         If Constraints(c).ConstraintType = "bin" Then
 40250             SetSolverNamedRangeOnSheet "lhs" & CStr(c), Constraints(c).LHS
 40260             SetSolverNameOnSheet "rel" & CStr(c), "=5"
@@ -890,13 +890,13 @@ Public Sub PopulateConstraintListBox(ByRef lst As Object)
           Dim oldLI As Long
           
           Dim showNameRange As Boolean
-40690     showNameRange = frmModel.chkNameRange.Value
+40690     showNameRange = frmModel.chkNameRange.value
 40700     If showNameRange Then SearchRangeName_DestroyCache
           
 40710     oldLI = lst.ListIndex
 40720     lst.Clear
 40730     lst.AddItem "<Add new constraint>"
-40740     For c = 1 To Constraints.count
+40740     For c = 1 To Constraints.Count
 40750         With Constraints(c)
 40760             CS = GetDisplayAddress(.LHS, showNameRange) + " " + .ConstraintType
 40770             If Not (.RHS Is Nothing) Then
@@ -968,24 +968,24 @@ Public Sub LoadFromSheet()
               '   A single constant value (eg =2)
               '   A formula returning a single value (eg =sin(A4))
               
-              Dim isRangeLHS As Boolean, valLHS As Double, rLHS As Range, LHSRefersToError As Boolean, LHSRefersToFormula As Boolean, sRefersToLHS As String, LHSIsMissing As Boolean
-              Dim isRangeRHS As Boolean, valRHS As Double, rRHS As Range, RHSRefersToError As Boolean, RHSRefersToFormula As Boolean, sRefersToRHS As String, RHSIsMissing As Boolean
+              Dim isRangeLHS As Boolean, valLHS As Double, rLHS As Range, LHSRefersToError As Boolean, LHSRefersToFormula As Boolean, sRefersToLHS As String, LHSisMissing As Boolean
+              Dim isRangeRHS As Boolean, valRHS As Double, rRHS As Range, RHSRefersToError As Boolean, RHSRefersToFormula As Boolean, sRefersToRHS As String, RHSisMissing As Boolean
               
-41080         GetNameAsValueOrRange ActiveWorkbook, sheetName & "solver_lhs" & constraint, LHSIsMissing, isRangeLHS, rLHS, LHSRefersToFormula, LHSRefersToError, sRefersToLHS, valLHS
-41090         If (LHSIsMissing) Or (Not isRangeLHS) Then GoTo SkipCon
+41080         GetNameAsValueOrRange ActiveWorkbook, sheetName & "solver_lhs" & constraint, LHSisMissing, isRangeLHS, rLHS, LHSRefersToFormula, LHSRefersToError, sRefersToLHS, valLHS
+41090         If (LHSisMissing) Or (Not isRangeLHS) Then GoTo SkipCon
               
               Dim rel As Integer
 41100         rel = Val(Mid(Names(sheetName & "solver_rel" & constraint), 2))  ' Either <=, = or >=, or int or bin (or 'alldif' in Excel 2010)
               
-41110         If rel = RelationInt Or rel = RelationBin Or rel = RelationAllDiff Then
+41110         If rel = RelationINT Or rel = RelationBIN Or rel = RelationAllDiff Then
                   ' Make the LHS variables integer or binary
-41120             If rel = RelationInt Then AddConstraint rLHS, Nothing, "", "int"
-41130             If rel = RelationBin Then AddConstraint rLHS, Nothing, "", "bin"
+41120             If rel = RelationINT Then AddConstraint rLHS, Nothing, "", "int"
+41130             If rel = RelationBIN Then AddConstraint rLHS, Nothing, "", "bin"
 41140             If rel = RelationAllDiff Then AddConstraint rLHS, Nothing, "", "alldiff"
 41150         Else
                   ' Constraint is a full equation with a RHS
-41160             GetNameAsValueOrRange ActiveWorkbook, sheetName & "solver_rhs" & constraint, RHSIsMissing, isRangeRHS, rRHS, RHSRefersToFormula, RHSRefersToError, sRefersToRHS, valRHS
-41170             If RHSIsMissing Then GoTo SkipCon
+41160             GetNameAsValueOrRange ActiveWorkbook, sheetName & "solver_rhs" & constraint, RHSisMissing, isRangeRHS, rRHS, RHSRefersToFormula, RHSRefersToError, sRefersToRHS, valRHS
+41170             If RHSisMissing Then GoTo SkipCon
                   
 41180             If rel <> RelationLE And rel <> RelationEQ And rel <> RelationGE Then GoTo SkipCon
 

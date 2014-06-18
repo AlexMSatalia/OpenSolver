@@ -93,7 +93,7 @@ End Function
 
 Function SheetHasOpenSolverHighlighting(w As Worksheet)
           ' If we have a shape called OpenSolverStudio1 then we are displaying highlighted data
-30500     If w.Shapes.count = 0 Then GoTo NoHighlighting
+30500     If w.Shapes.Count = 0 Then GoTo NoHighlighting
           Dim s As Shape
 30510     SheetHasOpenSolverHighlighting = True
 30520     On Error Resume Next
@@ -152,22 +152,22 @@ Function HighlightRange(r As Range, label As String, HighlightColor As Long, Opt
           
           Const HighlightingOffsetStep = 1
           ' We offset our highlighting so that successive highlights are still visible
-          Dim Offset As Double, Key As String
-30860     Key = r.Address(RowAbsolute:=False, ColumnAbsolute:=False)
+          Dim Offset As Double, key As String
+30860     key = r.Address(RowAbsolute:=False, ColumnAbsolute:=False)
 30870     Offset = 0
 30880     On Error Resume Next
-30890     Offset = colHighlightOffsets(Key) ' eg A1
+30890     Offset = colHighlightOffsets(key) ' eg A1
 30900     If Err.Number <> 0 Then
               ' Item does not exist in collection create it, with an offset of 2 ready to use next time
-30910         colHighlightOffsets.Add HighlightingOffsetStep, Key
+30910         colHighlightOffsets.Add HighlightingOffsetStep, key
 30920     Else
-30930         colHighlightOffsets.Remove Key
-30940         colHighlightOffsets.Add Offset + HighlightingOffsetStep, Key
+30930         colHighlightOffsets.Remove key
+30940         colHighlightOffsets.Add Offset + HighlightingOffsetStep, key
 30950     End If
 30960     On Error GoTo 0
           
           ' Handle merged cells
-          Dim l As Single, t As Single, right As Single, bottom As Single, r2 As Range, c As Range
+          Dim l As Single, t As Single, right As Single, bottom As Single, R2 As Range, c As Range
 30970     If Not r.MergeCells Then
 30980         l = r.left
 30990         t = r.top
@@ -176,12 +176,12 @@ Function HighlightRange(r As Range, label As String, HighlightColor As Long, Opt
 31020     Else
               ' This range contains merged cells. We use MergeArea to to find the area to highlight
               ' But, this only works for one cell, so we expand our size based on all cells
-31030         If r.count = 1 Then
-31040             Set r2 = r.MergeArea
-31050             l = r2.left
-31060             t = r2.top
-31070             right = l + r2.width
-31080             bottom = t + r2.height
+31030         If r.Count = 1 Then
+31040             Set R2 = r.MergeArea
+31050             l = R2.left
+31060             t = R2.top
+31070             right = l + R2.width
+31080             bottom = t + R2.height
 31090         Else
 31100             l = r.left
 31110             t = r.top
@@ -189,11 +189,11 @@ Function HighlightRange(r As Range, label As String, HighlightColor As Long, Opt
 31130             bottom = t + r.height
 31140             For Each c In r
 31150                 If c.MergeCells Then
-31160                     Set r2 = c.MergeArea
-31170                     If r2.left < l Then l = r2.left
-31180                     If r2.top < t Then t = r2.top
-31190                     If r2.left + r2.width > right Then right = r2.left + r2.width
-31200                     If r2.top + r2.height > bottom Then bottom = r2.top + r2.height
+31160                     Set R2 = c.MergeArea
+31170                     If R2.left < l Then l = R2.left
+31180                     If R2.top < t Then t = R2.top
+31190                     If R2.left + R2.width > right Then right = R2.left + R2.width
+31200                     If R2.top + R2.height > bottom Then bottom = R2.top + R2.height
 31210                 End If
 31220             Next c
 31230         End If
@@ -230,7 +230,7 @@ Function HighlightRange(r As Range, label As String, HighlightColor As Long, Opt
 31410       r.Worksheet.Shapes.AddShape(msoShapeRectangle, l + Offset, top2, right - l, height).Name = shapeName
 31420   Else
             'If the box is a bound we name it after the cell that it is in
-31430       shapeName = ShapeNamePrefix & Key
+31430       shapeName = ShapeNamePrefix & key
 31440       On Error Resume Next
             Dim tmpName As String
 31450       tmpName = r.Worksheet.Shapes(shapeName).Name
@@ -291,7 +291,7 @@ endLoop:
 31880   Next i
 31890     Else
 31900   For i = firstShapeIndex To ShapeIndex
-31910       shapeNames(i - firstShapeIndex + 1) = ShapeNamePrefix & Key
+31910       shapeNames(i - firstShapeIndex + 1) = ShapeNamePrefix & key
 31920   Next i
 31930     End If
 31940     Set HighlightRange = r.Worksheet.Shapes.Range(shapeNames)
@@ -383,7 +383,7 @@ Function AddLabelledConnector(w As Worksheet, s1 As Shape, s2 As Shape, label As
 End Function
 
 Sub HighlightConstraint(myDocument As Worksheet, LHSRange As Range, _
-                        ByVal RHSIsRange As Boolean, RHSRange As Range, ByVal RHSValue As String, ByVal Sense As Integer, _
+                        ByVal RHSisRange As Boolean, RHSRange As Range, ByVal RHSValue As String, ByVal Sense As Integer, _
                         ByVal Color As Long)
           ' Show a constraint of the form LHS <|=|> RHS.
           ' We always put the sign in the rightmost (or bottom-most) range so we read left-to-right or top-to-bottom.
@@ -394,10 +394,10 @@ Sub HighlightConstraint(myDocument As Worksheet, LHSRange As Range, _
 32280     If Color = 0 Then Color = NextHighlightColor
           
 32290     Reversed = False
-32300     If Not RHSIsRange And RHSValue <> "" Then
+32300     If Not RHSisRange And RHSValue <> "" Then
               ' We have a constant or formula in the constraint. Put into form RHS <|=|> Range1 (reversing the sense)
 32310         Set s1 = HighlightRange(LHSRange, RHSValue & SolverRelationAsUnicodeChar(4 - Sense), Color, , , True)
-32320     ElseIf RHSIsRange Then
+32320     ElseIf RHSisRange Then
               ' If ranges overlaps on rows, then the top one becomes Range1
 32330         If ((RHSRange.top >= LHSRange.top And RHSRange.top < LHSRange.top + LHSRange.height) _
               Or (LHSRange.top >= RHSRange.top And LHSRange.top < RHSRange.top + RHSRange.height)) Then
@@ -453,7 +453,7 @@ Function HideSolverModel() As Boolean
 
 32660     HideSolverModel = False ' assume we fail
           
-32670     If Application.Workbooks.count = 0 Then
+32670     If Application.Workbooks.Count = 0 Then
 32680         MsgBox "Error: No active workbook available", , "OpenSolver" & sOpenSolverVersion & " Error"
 32690         Exit Function
 32700     End If
@@ -529,7 +529,7 @@ Function ShowSolverModel() As Boolean
           
 33080     ShowSolverModel = False ' Assume we fail
           
-33090     If Application.Workbooks.count = 0 Then
+33090     If Application.Workbooks.Count = 0 Then
 33100         MsgBox "Error: No active workbook available", , "OpenSolver" & sOpenSolverVersion & " Error"
 33110         Exit Function
 33120     End If
@@ -603,12 +603,12 @@ Function ShowSolverModel() As Boolean
 33440     NumConstraints = Mid(Names(sheetName & "solver_num"), 2)  ' Number of constraints entered in excel; can include ranges covering many constraints
           ' Note: Solver leaves around old constraints; the name <sheet>!solver_num gives the correct number of constraints (eg "=4")
           
-33450     Application.StatusBar = "OpenSolver: Displaying Problem... " & AdjustableCells.count & " vars, " & NumConstraints & " Solver constraints"
+33450     Application.StatusBar = "OpenSolver: Displaying Problem... " & AdjustableCells.Count & " vars, " & NumConstraints & " Solver constraints"
                   
           ' Process the decision variables as we need to compute their types (bin or int; a variable can be declared as both!)
           'Dim NumVars As Integer
           Dim numVars As Double
-33460     numVars = AdjustableCells.count
+33460     numVars = AdjustableCells.Count
           'Dim VarNames() As String, VarTypes() As Range
           'Dim VarNamesCollection As New Collection
           'Dim VarTypesCollection As New Collection
@@ -646,9 +646,9 @@ Function ShowSolverModel() As Boolean
 
 33580         rel = Mid(Names(sheetName & "solver_rel" & constraint), 2)
                       
-              Dim LHScount As Double, count As Double
-33590         LHScount = rLHS.count
-33600         count = LHScount
+              Dim LHSCount As Double, Count As Double
+33590         LHSCount = rLHS.Count
+33600         Count = LHSCount
               Dim AllDecisionVariables As Boolean
 33610         AllDecisionVariables = False
       '        If rel = RelationInt Or rel = RelationBin Then
@@ -671,7 +671,7 @@ Function ShowSolverModel() As Boolean
       '                        End If
       '
       '                    Next i
-33620         If rel = RelationInt Or rel = RelationBin Then
+33620         If rel = RelationINT Or rel = RelationBIN Then
               ' Make the LHS variables integer or binary
                   Dim intersection As Range
 33630             Set intersection = Intersect(AdjustableCells, rLHS)
@@ -679,8 +679,8 @@ Function ShowSolverModel() As Boolean
 33650                 Errors = Errors & "Error: A cell specified as bin or int could not be found in the decision variable cells." & vbCrLf
 33660                 GoTo NextConstraint
 33670             End If
-33680             If intersection.count = rLHS.count Then
-33690                 If rel = RelationInt Then
+33680             If intersection.Count = rLHS.Count Then
+33690                 If rel = RelationINT Then
 33700                     If IntegerCellsRange Is Nothing Then
 33710                         Set IntegerCellsRange = rLHS
 33720                     Else
@@ -746,7 +746,7 @@ NextConstraint:
 34180         End If
 34190         If Not IntegerCellsRange Is Nothing Then
 34200             If Not BinaryCellsRange Is Nothing Then
-34210                 If Not BinaryCellsRange.count = IntegerCellsRange.count Then
+34210                 If Not BinaryCellsRange.Count = IntegerCellsRange.Count Then
 34220                     For Each selectedArea In IntegerCellsRange.Areas
 34230                         Set CellHighlight = HighlightRange(selectedArea, "", RGB(255, 0, 255)) ' Magenta highlight
 34240                         AddLabelToShape ActiveSheet, CellHighlight(1), -6, 10, "integer", RGB(0, 0, 0) ' Black text
@@ -808,13 +808,13 @@ errorHandler:
 34690     Resume
 End Function
 'Iain dunning
-Public Function TestKeyExists(ByRef col As Collection, Key As String) As Boolean
+Public Function TestKeyExists(ByRef col As Collection, key As String) As Boolean
           
           'MsgBox Key
     On Error GoTo doesntExist:
-          Dim item As Variant
+          Dim Item As Variant
           
-34700     Set item = col(Key)
+34700     Set Item = col(key)
           
 34710     TestKeyExists = True
 34720     Exit Function

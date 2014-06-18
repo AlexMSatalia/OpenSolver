@@ -63,7 +63,7 @@ Sub Disabler(TrueIfEnable As Boolean)
 42450     optMax.Enabled = TrueIfEnable
 42460     optMin.Enabled = TrueIfEnable
 42470     optTarget.Enabled = TrueIfEnable
-42480     txtObjTarget.Enabled = TrueIfEnable And optTarget.Value
+42480     txtObjTarget.Enabled = TrueIfEnable And optTarget.value
           
 42490     frameDiv2.Enabled = False
           
@@ -82,10 +82,10 @@ Sub Disabler(TrueIfEnable As Boolean)
 
 42580     chkGetDuals.Enabled = TrueIfEnable
 42590     chkGetDuals2.Enabled = TrueIfEnable
-42600     optUpdate.Enabled = chkGetDuals2.Value
-42610     optNew.Enabled = chkGetDuals2.Value
+42600     optUpdate.Enabled = chkGetDuals2.value
+42610     optNew.Enabled = chkGetDuals2.value
           
-42620     refDuals.Enabled = TrueIfEnable And chkGetDuals.Value And chkGetDuals.Enabled
+42620     refDuals.Enabled = TrueIfEnable And chkGetDuals.value And chkGetDuals.Enabled
           
 42630     frameDiv5.Enabled = False
 42640     frameDiv6.Enabled = False
@@ -103,10 +103,10 @@ Sub Disabler(TrueIfEnable As Boolean)
 42740     frmOptions.txtPre.Enabled = True
           
               'If nomad is selected as the solver then need to deactivate some of the model dialogue
-        Dim Value As String
-42750   If Not GetNameValueIfExists(ActiveWorkbook, "'" & Replace(ActiveSheet.Name, "'", "''") & "'!OpenSolver_ChosenSolver", Value) Then
+        Dim value As String
+42750   If Not GetNameValueIfExists(ActiveWorkbook, "'" & Replace(ActiveSheet.Name, "'", "''") & "'!OpenSolver_ChosenSolver", value) Then
 42760       Call SetNameOnSheet("OpenSolver_ChosenSolver", "=CBC")
-42770   ElseIf Value = "NOMAD" Then
+42770   ElseIf value = "NOMAD" Then
 42780       chkGetDuals2.Enabled = False
 42790       chkGetDuals.Enabled = False
 42800       optUpdate.Enabled = False
@@ -132,18 +132,18 @@ End Sub
 ' Written by:       IRD
 '--------------------------------------------------------------------
 Sub UpdateFormFromMemory()
-42890     If model.ObjectiveSense = MaximiseObjective Then optMax.Value = True
-42900     If model.ObjectiveSense = MinimiseObjective Then optMin.Value = True
-42910     If model.ObjectiveSense = TargetObjective Then optTarget.Value = True   ' AJM 20110907
+42890     If model.ObjectiveSense = MaximiseObjective Then optMax.value = True
+42900     If model.ObjectiveSense = MinimiseObjective Then optMin.value = True
+42910     If model.ObjectiveSense = TargetObjective Then optTarget.value = True   ' AJM 20110907
 42920     txtObjTarget.Text = CStr(model.ObjectiveTarget)   ' AJM 20110907 Always show the target (which may just be 0)
           
-42930     chkNonNeg.Value = model.NonNegativityAssumption
+42930     chkNonNeg.value = model.NonNegativityAssumption
          
 42940     If Not model.ObjectiveFunctionCell Is Nothing Then refObj.Text = GetDisplayAddress(model.ObjectiveFunctionCell, False)
           
 42950     If Not model.DecisionVariables Is Nothing Then refDecision.Text = GetDisplayAddressInCurrentLocale(model.DecisionVariables)
           
-42960     chkGetDuals.Value = Not model.Duals Is Nothing
+42960     chkGetDuals.value = Not model.Duals Is Nothing
 42970     If model.Duals Is Nothing Then
 42980         refDuals.Text = ""
 42990     Else
@@ -155,25 +155,25 @@ Sub UpdateFormFromMemory()
 
       '          On Error GoTo nameUndefined
       '          chkGetDuals2.Value = Mid(Names("'" & Replace(ActiveWorkbook.ActiveSheet.Name, "'", "''") & "'!OpenSolver_DualsNewSheet").Value, 2)
-          Dim sheetName As String, Value As String
+          Dim sheetName As String, value As String
 43040     sheetName = "'" & Replace(ActiveWorkbook.ActiveSheet.Name, "'", "''") & "'!"
-43050     If GetNameValueIfExists(ActiveWorkbook, sheetName & "OpenSolver_DualsNewSheet", Value) Then
-43060         chkGetDuals2.Value = Value
+43050     If GetNameValueIfExists(ActiveWorkbook, sheetName & "OpenSolver_DualsNewSheet", value) Then
+43060         chkGetDuals2.value = value
 43070     Else
 43080         Call SetNameOnSheet("OpenSolver_DualsNewSheet", "=FALSE")
-43090         chkGetDuals2.Value = False
+43090         chkGetDuals2.value = False
 43100     End If
-43110     optUpdate.Enabled = chkGetDuals2.Value
-43120     optNew.Enabled = chkGetDuals2.Value
-43130     If GetNameValueIfExists(ActiveWorkbook, sheetName & "OpenSolver_UpdateSensitivity", Value) Then
-43140         If Value = "TRUE" Then
-43150           optUpdate.Value = Value
+43110     optUpdate.Enabled = chkGetDuals2.value
+43120     optNew.Enabled = chkGetDuals2.value
+43130     If GetNameValueIfExists(ActiveWorkbook, sheetName & "OpenSolver_UpdateSensitivity", value) Then
+43140         If value = "TRUE" Then
+43150           optUpdate.value = value
 43160         Else
-43170           optNew.Value = True
+43170           optNew.value = True
 43180         End If
 43190     Else
 43200         Call SetNameOnSheet("OpenSolver_UpdateSensitivity", "=TRUE")
-43210         optUpdate.Value = True
+43210         optUpdate.value = True
 43220     End If
       '          Exit Sub
           
@@ -184,16 +184,16 @@ Sub UpdateFormFromMemory()
 End Sub
 
 Private Sub chkGetDuals_Click()
-43230     refDuals.Enabled = chkGetDuals.Value
+43230     refDuals.Enabled = chkGetDuals.value
           'If chkGetDuals.Value Then
           '    MsgBox "This Beta feature will, when the model is solved, produce a 2-column list at a user-chosen location on the current worksheet containing all the constraints and their shadow prices. Please select the top-left cell for this table. Please note that the shadow prices have very little meaning when solving problems with integer or binary variables.", vbOKOnly, "OpenSolver Beta Feature: Shadow Price Listing"
           'End If
 End Sub
 
 Private Sub chkGetDuals2_Click()
-43240     Call SetNameOnSheet("OpenSolver_DualsNewSheet", "=" & chkGetDuals2.Value)
-43250     optUpdate.Enabled = chkGetDuals2.Value
-43260     optNew.Enabled = chkGetDuals2.Value
+43240     Call SetNameOnSheet("OpenSolver_DualsNewSheet", "=" & chkGetDuals2.value)
+43250     optUpdate.Enabled = chkGetDuals2.value
+43260     optNew.Enabled = chkGetDuals2.value
 End Sub
 
 Private Sub chkNameRange_Click()
@@ -217,11 +217,11 @@ Private Sub cmdOptions_Click()
           ' Save the current "Assume Non Negative" option so this is shown in the options dialog.
           ' The saved value gets updated on OK, which we then reflect in our Model dialog
           Dim s As String
-43340     SetSolverNameOnSheet "neg", IIf(chkNonNeg.Value, "=1", "=2")
+43340     SetSolverNameOnSheet "neg", IIf(chkNonNeg.value, "=1", "=2")
               
 43350     frmOptions.Show vbModal
 43360     If GetNameValueIfExists(ActiveWorkbook, "'" & Replace(ActiveSheet.Name, "'", "''") & "'!solver_neg", s) Then    ' This should always be true
-43370         chkNonNeg.Value = s = "1"
+43370         chkNonNeg.value = s = "1"
 43380     End If
 End Sub
 
@@ -245,7 +245,7 @@ Private Sub cmdReset_Click()
 43430     refDecision.Text = ""
               
           'Find the number of constraints in model
-43440     NumConstraints = model.Constraints.count
+43440     NumConstraints = model.Constraints.Count
           
           ' Remove the constraints
 43450     For i = 1 To NumConstraints
@@ -258,23 +258,23 @@ Private Sub cmdReset_Click()
 End Sub
 
 Private Sub optMax_Click()
-43490     txtObjTarget.Enabled = optTarget.Value
+43490     txtObjTarget.Enabled = optTarget.value
 End Sub
 
 Private Sub optMin_Click()
-43500     txtObjTarget.Enabled = optTarget.Value
+43500     txtObjTarget.Enabled = optTarget.value
 End Sub
 
 Private Sub optNew_Click()
-43510     Call SetNameOnSheet("OpenSolver_UpdateSensitivity", "=" & optUpdate.Value)
+43510     Call SetNameOnSheet("OpenSolver_UpdateSensitivity", "=" & optUpdate.value)
 End Sub
 
 Private Sub optTarget_Click()
-43520     txtObjTarget.Enabled = optTarget.Value
+43520     txtObjTarget.Enabled = optTarget.value
 End Sub
 
 Private Sub optUpdate_Click()
-43530     Call SetNameOnSheet("OpenSolver_UpdateSensitivity", "=" & optUpdate.Value)
+43530     Call SetNameOnSheet("OpenSolver_UpdateSensitivity", "=" & optUpdate.value)
 End Sub
 
 Private Sub refConLHS_Change()
@@ -344,7 +344,7 @@ End Sub
 '--------------------------------------------------------------------
 Private Sub UserForm_Activate()
           ' Check we can even start
-44020     If Not CheckWorkSheetAvailable Then
+44020     If Not CheckWorksheetAvailable Then
 44030         Unload Me
 44040         Exit Sub
 44050     End If
@@ -362,8 +362,8 @@ Private Sub UserForm_Activate()
           ' screen. This works around an apparent bug (?) in Excel 2007.
 44100     Application.CutCopyMode = False
           ' Clear the form
-44110     optMax.Value = False
-44120     optMin.Value = False
+44110     optMax.value = False
+44120     optMin.value = False
 44130     refObj.Text = ""
 44140     refDecision.Text = ""
 44150     refConLHS.Text = ""
@@ -484,9 +484,9 @@ Private Sub cmdBuild_Click()
 44760     On Error GoTo errorHandler
           
           ' Get the objective sense
-44770     If optMax.Value = True Then model.ObjectiveSense = MaximiseObjective
-44780     If optMin.Value = True Then model.ObjectiveSense = MinimiseObjective
-44790     If optTarget.Value = True Then
+44770     If optMax.value = True Then model.ObjectiveSense = MaximiseObjective
+44780     If optMin.value = True Then model.ObjectiveSense = MinimiseObjective
+44790     If optTarget.value = True Then
 44800         model.ObjectiveSense = TargetObjective
 44810         On Error GoTo BadObjectiveTarget
 44820         model.ObjectiveTarget = CDbl(txtObjTarget.Text)
@@ -513,7 +513,7 @@ Private Sub cmdBuild_Click()
           ' Pull possibly updated dual storage cells
 44960     On Error GoTo BadDualsRef
 
-44970     If chkGetDuals.Value = False Or Trim(refDuals.Text) = "" Then
+44970     If chkGetDuals.value = False Or Trim(refDuals.Text) = "" Then
 44980         Set model.Duals = Nothing
 44990     Else
 45000         Set model.Duals = Range(refDuals.Text)
@@ -522,14 +522,14 @@ Private Sub cmdBuild_Click()
           
           '----------------------------------------------------------------
           ' Do it
-45030     model.NonNegativityAssumption = chkNonNeg.Value
+45030     model.NonNegativityAssumption = chkNonNeg.value
           
 45040     model.BuildModel
           
           
           '----------------------------------------------------------------
           ' Display on screen
-45050     If chkShowModel.Value = True Then OpenSolverVisualizer.ShowSolverModel
+45050     If chkShowModel.value = True Then OpenSolverVisualizer.ShowSolverModel
 45060     Application.Calculate
           '----------------------------------------------------------------
           ' Finish
@@ -636,15 +636,15 @@ Private Sub cmdAddCon_Click()
           '      This code also distinguishes a leading '='; this should not be needed
           '
           ' LEFT HAND SIDE
-          Dim LHSIsRange As Boolean, LHSIsFormula As Boolean, LHSIsValueWithEqual As Boolean, LHSIsValueWithoutEqual As Boolean
-45470     TestStringForConstraint refConLHS.Text, LHSIsRange, LHSIsFormula, LHSIsValueWithEqual, LHSIsValueWithoutEqual
+          Dim LHSisRange As Boolean, LHSisFormula As Boolean, LHSIsValueWithEqual As Boolean, LHSIsValueWithoutEqual As Boolean
+45470     TestStringForConstraint refConLHS.Text, LHSisRange, LHSisFormula, LHSIsValueWithEqual, LHSIsValueWithoutEqual
           
-45480     If LHSIsRange = False Then
+45480     If LHSisRange = False Then
               ' The string in the LHS refedit does not describe a range
 45490         MsgBox "Left-hand-side of constraint must be a range."
 45500         Exit Sub
 45510     End If
-45520     If Range(Trim(refConLHS.Text)).Areas.count > 1 Then
+45520     If Range(Trim(refConLHS.Text)).Areas.Count > 1 Then
               ' The LHS is multiple areas - not allowed
 45530         MsgBox "Left-hand-side of constraint must have only one area."
 45540         Exit Sub
@@ -653,7 +653,7 @@ Private Sub cmdAddCon_Click()
           
           '----------------------------------------------------------------
           ' RIGHT HAND SIDE
-          Dim RHSIsRange As Boolean, RHSIsFormula As Boolean, RHSIsValueWithEqual As Boolean, RHSIsValueWithoutEqual As Boolean
+          Dim RHSisRange As Boolean, RHSisFormula As Boolean, RHSIsValueWithEqual As Boolean, RHSIsValueWithoutEqual As Boolean
           Dim strRel As String
 45570     strRel = cboConRel.Text
 45580     If strRel = "" Then ' Should not happen as of 20/9/2011 (AJM)
@@ -667,9 +667,9 @@ Private Sub cmdAddCon_Click()
 45660             Exit Sub
 45670         End If
               
-45680         TestStringForConstraint refConRHS.Text, RHSIsRange, RHSIsFormula, RHSIsValueWithEqual, RHSIsValueWithoutEqual
+45680         TestStringForConstraint refConRHS.Text, RHSisRange, RHSisFormula, RHSIsValueWithEqual, RHSIsValueWithoutEqual
               
-45690         If Not RHSIsRange And Not RHSIsFormula _
+45690         If Not RHSisRange And Not RHSisFormula _
               And Not RHSIsValueWithEqual And Not RHSIsValueWithoutEqual Then
 45700             MsgBox "The right-hand-side of a constraint can be either:" + vbNewLine + _
                           "A single-cell range (e.g. =A4)" + vbNewLine + _
@@ -679,12 +679,12 @@ Private Sub cmdAddCon_Click()
 45710             Exit Sub
 45720         End If
               
-45730         If RHSIsRange Then
+45730         If RHSisRange Then
                   ' If it is single cell, thats OK
                   ' If it is multi cell, it must match cell count for LHS
 45740             Set rngRHS = Range(Trim(refConRHS.Text))
-45750             If rngRHS.count > 1 Then
-45760                 If rngRHS.count <> rngLHS.count Then
+45750             If rngRHS.Count > 1 Then
+45760                 If rngRHS.Count <> rngLHS.Count Then
                           ' Mismatch!
 45770                     MsgBox "Right-hand-side of constraint has more than one cell, and does not match the number of cells on the left-hand-side."
 45780                     Exit Sub
@@ -708,7 +708,7 @@ Private Sub cmdAddCon_Click()
 45870         OpenSolverSheet.Range("A1").Clear ' This must be blank to ensure no risk of dialogs being shown trying to locate a sheet
 45880         Application.DisplayAlerts = True
               
-45890         If Not RHSIsRange Then
+45890         If Not RHSisRange Then
                   ' Can we evaluate this function or constant?
                   Dim varReturn As Variant
 45900             varReturn = ActiveSheet.Evaluate(internalRHS) ' Must be worksheet.evaluate to get references to names local to the sheet
@@ -756,7 +756,7 @@ Private Sub cmdAddCon_Click()
 46170                 Set .RHS = Nothing
 46180                 .RHSstring = ""
 46190             Else
-46200                 If RHSIsRange Then
+46200                 If RHSisRange Then
 46210                     Set .RHS = rngRHS
 46220                     .RHSstring = ""
 46230                 Else
@@ -784,7 +784,7 @@ Private Sub cmdAddCon_Click()
 46410                 Set .RHS = Nothing
 46420                 .RHSstring = ""
 46430             Else
-46440                 If RHSIsRange Then
+46440                 If RHSisRange Then
 46450                     Set .RHS = rngRHS
 46460                     .RHSstring = ""
 46470                 Else

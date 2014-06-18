@@ -100,7 +100,7 @@ Dim RHS() As Double ' The RHS values for each row in the LP
 Dim Relation() As Integer ' For each row, we remember its relation (=, <=, >=)
 
 'Details for the chosen solver
-Dim Solver As String 'Name of solver we will be using
+Public Solver As String 'Name of solver we will be using
 Dim SolverString As String 'Name of solver for printing
 
 ' Details we need for non-linear solver
@@ -357,7 +357,7 @@ Sub BuildModelFromSolverData(Optional LinearityCheckOffset As Double = 0)
 8240      StartTimeOfBuild = Timer    ' Warning: This goes back to zero at midnight!
 8250      StartDateTimeOfBuild = Now()
           
-8260      CheckWorkSheetAvailable SuppressDialogs:=True, ThrowError:=True ' Will throw if there is no workbook or worksheet
+8260      CheckWorksheetAvailable SuppressDialogs:=True, ThrowError:=True ' Will throw if there is no workbook or worksheet
 
           ' We trap the Escape key which does an onerror
           'xlDisabled = 0 'totally disables Esc / Ctrl-Break / Command-Period
@@ -384,7 +384,10 @@ Sub BuildModelFromSolverData(Optional LinearityCheckOffset As Double = 0)
           '----------------------------------------------------------------------------------------------------------
           'Find the users preferred solver
 8400      If GetNameValueIfExists(ActiveWorkbook, sheetName & "OpenSolver_ChosenSolver", Solver) Then
-8410          If Solver Like "*bc*" Or Solver Like "*BC*" Then
+              If Solver Like "NeosCBC" Then
+                  Solver = "NeosCBC"
+                  SolverString = "NEOSCBC"
+8410          ElseIf Solver Like "*bc*" Or Solver Like "*BC*" Then
 8420              Solver = "cbc.exe"
 8430              SolverString = "CBC"
 8440          ElseIf Solver Like "*urobi" Then
@@ -397,11 +400,26 @@ Sub BuildModelFromSolverData(Optional LinearityCheckOffset As Double = 0)
 8500          ElseIf Solver Like "*plex" Then
 8510              Solver = "cplex.exe"
 8520              SolverString = "CPLEX"
-          '          ElseIf solver = "NEOS" Then
+          '          ElseIf Solver = "NeosCBC" Then
           '              solver = "qsopt_ex"
+              ElseIf Solver Like "*Cou" Then
+                  Solver = "NEOSCou"
+                  SolverString = "Couenne"
+                  GoTo ExitSub
+              ElseIf Solver Like "*Bon" Then
+                  Solver = "NEOSBon"
+                  SolverString = "Bonmin"
+                  GoTo ExitSub
+              ElseIf Solver Like "PuLP" Then
+                  Solver = "PuLP"
+                  SolverString = "PuLP"
+                  GoTo ExitSub
 8530          Else
 8540            Err.Raise Number:=OpenSolver_BuildError, Source:=errorPrefix, Description:="OpenSolver did not recognise the solver you have picked. Please pick another one and try again."
 8550          End If
+          Else
+              Solver = "cbc.exe"
+              SolverString = "CBC"
 8560      End If
 
           ' We check to see if a model exists by getting the adjustable cells
@@ -449,7 +467,7 @@ Sub BuildModelFromSolverData(Optional LinearityCheckOffset As Double = 0)
 8780          GoTo ExitSub
 8790      End If
           ' Check we have any cells after all this
-8800      numVars = AdjustableCells.count
+8800      numVars = AdjustableCells.Count
 8810      If numVars < 1 Then
 8820          On Error GoTo errorHandler
 8830          Err.Raise Number:=OpenSolver_BuildError, Source:=errorPrefix, Description:="There are no decision variable cells in this model, and so the model cannot be solved."
@@ -474,7 +492,7 @@ Sub BuildModelFromSolverData(Optional LinearityCheckOffset As Double = 0)
 8920          i = i + 1
 8930          VarNames(i) = AdjCell.Address(RowAbsolute:=False, ColumnAbsolute:=False) ' eg A1
 8940          If Solver = "Nomad" Then
-8950              StartingPosition(i) = AdjCell.Value
+8950              StartingPosition(i) = AdjCell.value
 8960          End If
 8970      Next AdjCell
           ' Set all the adjustable cells to zero (or a user-specified value) (For linear problems)
@@ -501,11 +519,11 @@ Sub BuildModelFromSolverData(Optional LinearityCheckOffset As Double = 0)
 9040      If ObjectiveSense = TargetObjective Then GetNamedNumericValueIfExists book, sheetName & "solver_val", ObjectiveTargetValue    ' Target will be 0 if this fails
           ' Get and check the objective function
           Dim isRangeObj As Boolean, valObj As Double, ObjRefersToError As Boolean
-          Dim ObjRefersToFormula As Boolean, sRefersToObj As String, ObjIsMissing As Boolean
-9050      GetNameAsValueOrRange book, sheetName & "solver_opt", ObjIsMissing, isRangeObj, ObjRange, ObjRefersToFormula, ObjRefersToError, sRefersToObj, valObj
-          Dim ObjValue As Double
+          Dim ObjRefersToFormula As Boolean, sRefersToObj As String, objIsMissing As Boolean
+9050      GetNameAsValueOrRange book, sheetName & "solver_opt", objIsMissing, isRangeObj, ObjRange, ObjRefersToFormula, ObjRefersToError, sRefersToObj, valObj
+          Dim objValue As Double
           ' Must have an objective
-9060      If ObjIsMissing Then
+9060      If objIsMissing Then
 9070          GoTo ModelOptions
 9080          On Error GoTo errorHandler
 9090          Err.Raise Number:=OpenSolver_BuildError, Source:=errorPrefix, Description:="OpenSolver cannot find any objective ('solver_opt' is missing). Please fix the objective, and try again."
@@ -518,7 +536,7 @@ Sub BuildModelFromSolverData(Optional LinearityCheckOffset As Double = 0)
 9150          GoTo ExitSub
 9160      End If
           ' Objective has a value that is not a number
-          Dim x As Variant
+          Dim X As Variant
 9170      If VarType(ObjRange.Value2) <> vbDouble Then
 9180          On Error GoTo errorHandler
 9190          If VarType(ObjRange.Value2) = vbError Then
@@ -531,7 +549,7 @@ Sub BuildModelFromSolverData(Optional LinearityCheckOffset As Double = 0)
           ' Store the value currently in the
 
 9260      ObjRange.Calculate ' This does not always seem to work in that it doesn't track back predecessors; we now do a full re-calc above anyway
-9270      ObjValue = ObjRange.Value2
+9270      objValue = ObjRange.Value2
 9280      ObjectiveFunctionConstant = ObjRange.Value2
 
 ModelOptions:
@@ -591,11 +609,11 @@ ModelOptions:
               ' LEFT HAND SIDE
               '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
               Dim isRangeLHS As Boolean, valLHS As Double, rangeLHS As Range, LHSRefersToError As Boolean
-              Dim LHSRefersToFormula As Boolean, sRefersToLHS As String, LHSIsMissing As Boolean
+              Dim LHSRefersToFormula As Boolean, sRefersToLHS As String, LHSisMissing As Boolean
               
-9520          GetNameAsValueOrRange book, sheetName & "solver_lhs" & constraint, LHSIsMissing, isRangeLHS, rangeLHS, LHSRefersToFormula, LHSRefersToError, sRefersToLHS, valLHS
+9520          GetNameAsValueOrRange book, sheetName & "solver_lhs" & constraint, LHSisMissing, isRangeLHS, rangeLHS, LHSRefersToFormula, LHSRefersToError, sRefersToLHS, valLHS
               ' Must have a left hand side defined
-9530          If LHSIsMissing Then
+9530          If LHSisMissing Then
 9540              On Error GoTo errorHandler
 9550              Err.Raise Number:=OpenSolver_BuildError, Source:=errorPrefix, Description:="The left hand side for a constraint does not appear to be defined ('solver_lhs" & constraint & " is missing). Please fix this, and try again."
 9560          End If
@@ -617,11 +635,11 @@ ModelOptions:
               ' Either <=, = or >=, or int or bin (or 'alldif' in Excel 2010)
 9650          rel = Val(Mid(Names(sheetName & "solver_rel" & constraint), 2))
                       
-              Dim RHScount As Long, RowCount As Long
-9660          RowCount = rangeLHS.count
+              Dim RHSCount As Long, RowCount As Long
+9660          RowCount = rangeLHS.Count
               
               ' If its integer or binary, there is no right-hand-side
-9670          If rel = RelationInt Or rel = RelationBin Then
+9670          If rel = RelationINT Or rel = RelationBIN Then
                   ' Make the LHS variables integer or binary
                   ' Check that they haven't set as integer or binary something that
                   ' is not a decision variable...
@@ -632,8 +650,8 @@ ModelOptions:
 9700                  On Error GoTo errorHandler
 9710                  Err.Raise Number:=OpenSolver_BuildError, Source:=errorPrefix, Description:="A range of cells are specified as bin or int that are not decision variables. OpenSolver does not support this yet."
 9720              End If
-9730              If intersection.count = rangeLHS.count Then
-9740                  If rel = RelationInt Then
+9730              If intersection.Count = rangeLHS.Count Then
+9740                  If rel = RelationINT Then
 9750                      Set IntegerCellsRange = ProperUnion(IntegerCellsRange, rangeLHS)
 9760                  Else 'if the relation is binary
 9770                      Set BinaryCellsRange = ProperUnion(BinaryCellsRange, rangeLHS)
@@ -655,11 +673,11 @@ ModelOptions:
 9840          Else
                   ' ... then the constraint is a full equation with a RHS
                   Dim isRangeRHS As Boolean, valRHS As Double, rangeRHS As Range, RHSRefersToError As Boolean
-                  Dim RHSRefersToFormula As Boolean, sRefersToRHS As String, RHSIsMissing As Boolean
+                  Dim RHSRefersToFormula As Boolean, sRefersToRHS As String, RHSisMissing As Boolean
                   
-9850              GetNameAsValueOrRange book, sheetName & "solver_rhs" & constraint, RHSIsMissing, isRangeRHS, rangeRHS, RHSRefersToFormula, RHSRefersToError, sRefersToRHS, valRHS
+9850              GetNameAsValueOrRange book, sheetName & "solver_rhs" & constraint, RHSisMissing, isRangeRHS, rangeRHS, RHSRefersToFormula, RHSRefersToError, sRefersToRHS, valRHS
                   ' Must have a right hand side defined
-9860              If RHSIsMissing Then
+9860              If RHSisMissing Then
 9870                  On Error GoTo errorHandler
 9880                  Err.Raise Number:=OpenSolver_BuildError, Source:=errorPrefix, Description:="The right hand side for a constraint does not appear to be defined ('solver_rhs" & constraint & " is missing). Please fix this, and try again."
 9890              End If
@@ -685,9 +703,9 @@ ModelOptions:
 
                   ' Check we have a compatible constraint system.
                   ' Solver should have checked this already, but just to make sure...
-10030             RHScount = 1
-10040             If isRangeRHS Then RHScount = rangeRHS.count
-10050             If (RowCount <> 1 And RHScount <> 1) And (RowCount <> RHScount) Then
+10030             RHSCount = 1
+10040             If isRangeRHS Then RHSCount = rangeRHS.Count
+10050             If (RowCount <> 1 And RHSCount <> 1) And (RowCount <> RHSCount) Then
 10060                 On Error GoTo errorHandler
 10070                 Err.Raise Number:=OpenSolver_BuildError, Source:=errorPrefix, Description:="The constraint '" & summary & "' has a different cell count on the left and the right. The model cannot be built."
 10080             End If
@@ -714,7 +732,7 @@ ModelOptions:
                   ' If it is a range, it is much like LHS
 10170             If isRangeRHS Then
 10180                 Set RHSRange(constraint) = rangeRHS
-10190                 RHSType(constraint) = IIf(rangeRHS.count = 1, SolverInputType.SingleCellRange, SolverInputType.MultiCellRange)
+10190                 RHSType(constraint) = IIf(rangeRHS.Count = 1, SolverInputType.SingleCellRange, SolverInputType.MultiCellRange)
 10200                 RHSOriginalValues(constraint) = rangeRHS.Value2  ' Copy the entire range over into an array of variants
                   ' If its a formula, store the formula internally as a string
 10210             ElseIf RHSRefersToFormula Then
@@ -728,11 +746,11 @@ ModelOptions:
 10280             End If
                   
                   ' Store relations for these rows, keep track of how many rows we've added
-10290             ReDim Preserve Relation(NumRows + rangeLHS.count) As Integer
-10300             For i = 1 To rangeLHS.count
+10290             ReDim Preserve Relation(NumRows + rangeLHS.Count) As Integer
+10300             For i = 1 To rangeLHS.Count
 10310                 Relation(row + i - 1) = rel
 10320             Next i
-10330             row = row + rangeLHS.count
+10330             row = row + rangeLHS.Count
                   ' Store the first LP row associated with this Excel constraint
 10340             MappingRowsToConstraints(constraint) = NumRows + 1
 10350             NumRows = NumRows + RowCount
@@ -761,7 +779,7 @@ ModelOptions:
           'which constraints are bounds on the variables as these are treated differently
           '=======================================================================================================================================
           'Set up the constraint matrix for solving linear problems
-10470     Call BuildConstraintMatrix(ObjIsMissing, ObjValue, SparseA, succeeded)
+10470     Call BuildConstraintMatrix(objIsMissing, objValue, SparseA, succeeded)
 10480     If succeeded = False Then GoTo ExitSub
 
 
@@ -857,7 +875,7 @@ Sub BuildModelOptions(s As String, succeeded As Boolean)
 11000         CustomForm.Show
 11010         If CustomForm.Tag = "Cancelled" Then
 11020             Exit Sub
-11030         ElseIf CustomForm.CheckBox1.Value = True Then
+11030         ElseIf CustomForm.CheckBox1.value = True Then
 11040             AssumeLinearModel = True
 11050             If Application.Version <= 12# Then   ' Excel 2007, or earlier
 11060                 SetSolverNameOnSheet "lin", "=1"
@@ -869,7 +887,7 @@ Sub BuildModelOptions(s As String, succeeded As Boolean)
 11120                 CustomForm.Show
 11130                 If CustomForm.Tag = "Cancelled" Then
 11140                     Exit Sub
-11150                 ElseIf CustomForm.CheckBox1.Value = True Then
+11150                 ElseIf CustomForm.CheckBox1.value = True Then
 11160                     AssumeLinearModel = True
 11170                     If Application.Version = 12# Then   ' Excel 2007
 11180                         SetSolverNameOnSheet "lin", "=1"
@@ -883,8 +901,10 @@ Sub BuildModelOptions(s As String, succeeded As Boolean)
 11260     succeeded = True
 End Sub
 
-Sub BuildConstraintMatrix(ObjIsMissing As Boolean, ObjValue As Double, SparseA() As CIndexedCoeffs, succeeded As Boolean)
-          
+Sub BuildConstraintMatrix(objIsMissing As Boolean, objValue As Double, SparseA() As CIndexedCoeffs, succeeded As Boolean)
+          On Error GoTo constraintErrorHandler
+          Dim errorPrefix As String
+          errorPrefix = "OpenSolver Model Build"
 11270     succeeded = False
           
           '--------------------------------------------------------------------------
@@ -894,6 +914,13 @@ Sub BuildConstraintMatrix(ObjIsMissing As Boolean, ObjValue As Double, SparseA()
           ' dependent on it and by what amount
           Dim var As Long
           Dim AdjCell As Range
+          
+          ' Add constants to Target
+          If ObjectiveSense = TargetObjective Then
+              ' Target value needs to be incremented by any constants in the objective
+              ObjectiveTargetValue = ObjectiveTargetValue - objValue
+          End If
+          
 11280     var = 0
 11290     For Each AdjCell In AdjustableCells
               ' Count how many variables we've processed, let the user know
@@ -909,8 +936,8 @@ Sub BuildConstraintMatrix(ObjIsMissing As Boolean, ObjValue As Double, SparseA()
 11330         If Not ForceCalculate("Warning: The worksheet calculation did not complete, and so the model may not be generated correctly. Would you like to retry?") Then Exit Sub
 
               ' Easy part first - the objective function value change
-11340         If Not ObjIsMissing Then
-11350             CostCoeffs(var) = ObjRange.Value2 - ObjValue
+11340         If Not objIsMissing Then
+11350             CostCoeffs(var) = ObjRange.Value2 - objValue
 11360         End If
               ' Now the hard (slow) bit - the constraint changes
               Dim CurrentLHSValues As Variant
@@ -956,7 +983,7 @@ Sub BuildConstraintMatrix(ObjIsMissing As Boolean, ObjValue As Double, SparseA()
 11490                                 coeff = (CurrentLHSValues(i, j) - OriginalLHSValues(i, j)) - (CurrentRHSValues(j, i) - OriginalRHSValues(j, i))
 11500                             End If
 11510                         ElseIf RHSType(constraint) = SolverInputType.Formula Or RHSType(constraint) = SolverInputType.SingleCellRange Then
-11520                             coeff = (CurrentLHSValues(i, j) - OriginalLHSValues(i, j)) - (CurrentRHSValues - OriginalRHSValues)
+11521                             coeff = (CurrentLHSValues(i, j) - OriginalLHSValues(i, j)) - (CurrentRHSValues - OriginalRHSValues)
 11530                         Else    ' if the rhs is a constant value
 11540                             coeff = (CurrentLHSValues(i, j) - OriginalLHSValues(i, j))
 11550                         End If
@@ -1007,6 +1034,45 @@ Sub BuildConstraintMatrix(ObjIsMissing As Boolean, ObjValue As Double, SparseA()
 11900     Next constraint
 
 11910     succeeded = True
+
+Exit Sub:
+
+constraintErrorHandler:
+          ' We only trap Escape (Err.Number=18) here; all other errors are passed back to the caller.
+          ' Save error message
+          Dim ErrorNumber As Long, ErrorDescription As String, ErrorSource As String
+10591     ErrorNumber = Err.Number
+          If ErrorNumber = 13 Then
+              ErrorDescription = Err.Description & " (at constraint " & constraint & " (" & i & ", " & j & "))" & IIf(Erl = 0, "", " (at line " & Erl & ")")
+          Else
+10601         ErrorDescription = Err.Description & IIf(Erl = 0, "", " (at line " & Erl & ")")
+          End If
+10611     ErrorSource = Err.Source
+10621     If Err.Number = 18 Then
+10631         If MsgBox("You have pressed the Escape key. Do you wish to cancel?", _
+                         vbCritical + vbYesNo + vbDefaultButton1, _
+                         "OpenSolver: User Interrupt Occured...") = vbNo Then
+10641             Resume 'continue on from where error occured
+10651         Else
+                  ' Raise a "user cancelled" error. We cannot use Raise, as that exits immediately without going thru our code below
+10661             ErrorNumber = OpenSolver_UserCancelledError
+10671             ErrorSource = errorPrefix
+10681             ErrorDescription = "Model building cancelled by user."
+10691         End If
+10701     End If
+          
+ErrorExit:
+          ' Exit, raising an error; none of the following change the Err.Number etc, but we saved them above just in case...
+10711     Application.Cursor = xlDefault
+10721     Application.StatusBar = False ' Resume normal status bar behaviour
+10731     Application.ScreenUpdating = True
+          Dim oldCalculationMode As Integer
+10741     Application.Calculation = oldCalculationMode
+10751     Err.Raise ErrorNumber, ErrorSource, ErrorDescription
+
+      ' Debugging resume; never reached via code
+10761     Resume  ' Used for manual trying again after an error
+
 End Sub
 
 Function SolveModel(SolveRelaxation As Boolean) As Integer
@@ -1024,9 +1090,17 @@ Function SolveModel(SolveRelaxation As Boolean) As Integer
 11980     End If
           
           Dim ModelFileName As String
-11990     ModelFileName = GetModelFileName
+          If Solver = "NeosCBC" Then
+11990         ModelFileName = GetModelFileName(True)
+          Else
+              ModelFileName = GetModelFileName(False)
+          End If
           Dim ModelFilePathName As String
-12000     ModelFilePathName = GetModelFullPath
+          If Solver = "NeosCBC" Then
+12000         ModelFilePathName = GetModelFullPath(True)
+          Else
+              ModelFilePathName = GetModelFullPath(False)
+          End If
 12010     If Dir(ModelFilePathName) <> "" Then Kill ModelFilePathName ' delete model file, just in case anything goes wrong (and we get left with an old one)
 12020     If Dir(ModelFilePathName) <> "" Then
 12030         On Error GoTo errorHandler
@@ -1124,8 +1198,10 @@ Function SolveModel_Linear(SolveRelaxation As Boolean) As Integer
 12610     Application.StatusBar = "OpenSolver: Writing Model to disk... " & numVars & " vars, " & NumRows & " rows."
                         
           Dim ExternalSolverPathName As String
-         
-12620     GetExternalSolverPathName ExternalSolverPathName, Solver ' May throw an error
+          
+          If Solver <> "NeosCBC" Then
+12620         GetExternalSolverPathName ExternalSolverPathName, Solver ' May throw an error
+          End If
           
           'Check that gurobi has been installed
 12630     If Solver = "gurobi.bat" Then
@@ -1139,190 +1215,201 @@ Function SolveModel_Linear(SolveRelaxation As Boolean) As Integer
           ' output the model to an LP format text file
           ' See http://lpsolve.sourceforge.net/5.5/CPLEX-format.htm
           Dim ModelFileName As String
-12680     ModelFileName = GetModelFileName
           Dim ModelFilePathName As String
-12690     ModelFilePathName = GetModelFullPath
+          If Solver = "NeosCBC" Then
+12680         ModelFileName = GetModelFileName(True)
+12690         ModelFilePathName = GetModelFullPath(True)
+          Else
+              ModelFileName = GetModelFileName(False)
+              ModelFilePathName = GetModelFullPath(False)
+          End If
 
-          'This is where we write the .lp file that has the model thta will be solved by our solver
+          'This is where we write the .lp or .xml file that has the model that will be solved by our solver
           Dim ErrorString As String
-12700     Call WriteLPFile(ModelFilePathName, SolveRelaxation, ErrorString)
-12710     If ErrorString = "ExitSub" Then
-12720         GoTo ExitSub
-12730     ElseIf ErrorString <> "" Then
-12740         On Error GoTo errorHandler
-12750         Err.Raise Number:=OpenSolver_SolveError, Source:=errorPrefix, Description:=ErrorString
-12760     End If
+          
+          If Solver = "NeosCBC" Then
+12701         Call WriteAMPLFile(ModelFilePathName, SolveRelaxation, ErrorString)
+              Call CallNEOS(ModelFilePathName, ErrorString)
+          Else
+12700         Call WriteLPFile(ModelFilePathName, SolveRelaxation, ErrorString)
+          
+12710         If ErrorString = "ExitSub" Then
+12720             GoTo ExitSub
+12730         ElseIf ErrorString <> "" Then
+12740             On Error GoTo errorHandler
+12750             Err.Raise Number:=OpenSolver_SolveError, Source:=errorPrefix, Description:=ErrorString
+12760         End If
+                  
+              ' This is where we solve the problem
+              ' Command line for cbc is: cbc model.lp -solution solution.txt
+              ' Command line for gurobi is: gurobi_cl ResultFile=solution.sol model.lp
+              ' New command line for gurobi is (which runs using our python file and the gurobi interactive shell):
+              '                     gurobi.bat gurobiOSRun.py
+              '         gurobiOSRun.py is a python file that runs and writes the modelsolution.sol file as well as sensitivityData if they want duals
               
-          ' This is where we solve the problem
-          ' Command line for cbc is: cbc model.lp -solution solution.txt
-          ' Command line for gurobi is: gurobi_cl ResultFile=solution.sol model.lp
-          ' New command line for gurobi is (which runs using our python file and the gurobi interactive shell):
-          '                     gurobi.bat gurobiOSRun.py
-          '         gurobiOSRun.py is a python file that runs and writes the modelsolution.sol file as well as sensitivityData if they want duals
-          
-          
-          ' Get the Solver Options, stored in named ranges with values such as "=0.12"
-          ' Because these are NAMEs, they are always in English, not the local language, so get their value using Val
-          Dim SolveOptions As SolveOptionsType
-12770     GetSolveOptions sheetName, SolveOptions, ErrorString
-12780     If ErrorString <> "" Then
-12790         On Error GoTo errorHandler
-12800         Err.Raise Number:=OpenSolver_SolveError, Source:=errorPrefix, Description:=ErrorString
-12810     End If
-          
-12820     Application.StatusBar = "OpenSolver: Solving " & IIf(SolveRelaxation, "Relaxed ", "") & "Model... " & numVars & " vars, " & NumIntVars & " int vars " _
-                  & "(" & NumBinVars & " 0/1), " & NumRows & " rows, " & SolveOptions.maxTime & "s time limit, " _
-                  & SolveOptions.Tolerance * 100 & "% tolerance."
-          
-          ' We allow some user defined CBC parameters
-          Dim CBCExtraParametersString As String
-12830     CBCExtraParametersString = GetCBCExtraParametersString(sheet, ErrorString)
-12840     If ErrorString <> "" Then
-12850         On Error GoTo errorHandler
-12860         Err.Raise Number:=OpenSolver_SolveError, Source:=errorPrefix, Description:=ErrorString
-12870     End If
-             
-          ' If the user has a defined name OpenSolver_ConstraintList, then we need to get the duals by passing an extra option to CBC
-          Dim rConstraintList As Range, bGetDuals As Boolean, DualsOnNewSheet As Boolean, DualsOnSameSheet As Boolean
-12880     DualsOnSameSheet = GetNamedRangeIfExistsOnSheet(ActiveSheet, "OpenSolver_Duals", rConstraintList)
-12890     On Error Resume Next
-12900     DualsOnNewSheet = Mid(Names("'" & Replace(ActiveWorkbook.ActiveSheet.Name, "'", "''") & "'!OpenSolver_DualsNewSheet").Value, 2) 'frmModel.chkGetDuals2.Value
-12910     If Err.Number <> 0 Then
-12920         Call SetNameOnSheet("OpenSolver_DualsNewSheet", "=FALSE")
-12930         DualsOnNewSheet = False
-12940     End If
-12950     On Error GoTo errorHandler
-12960     bGetDuals = False
-12970     If (IntegerCellsRange Is Nothing And BinaryCellsRange Is Nothing) And (DualsOnNewSheet Or DualsOnSameSheet) Then
-12980         bGetDuals = True
-12990     End If
-          
-          Dim SolutionFilePathName As String, SolutionFileName As String
-13000     SolutionFileName = GetSolutionFileName
-13010     SolutionFilePathName = GetSolutionFullPath
+              
+              ' Get the Solver Options, stored in named ranges with values such as "=0.12"
+              ' Because these are NAMEs, they are always in English, not the local language, so get their value using Val
+              Dim SolveOptions As SolveOptionsType
+12770         GetSolveOptions sheetName, SolveOptions, ErrorString
+12780         If ErrorString <> "" Then
+12790             On Error GoTo errorHandler
+12800             Err.Raise Number:=OpenSolver_SolveError, Source:=errorPrefix, Description:=ErrorString
+12810         End If
+              
+12820         Application.StatusBar = "OpenSolver: Solving " & IIf(SolveRelaxation, "Relaxed ", "") & "Model... " & numVars & " vars, " & NumIntVars & " int vars " _
+                      & "(" & NumBinVars & " 0/1), " & NumRows & " rows, " & SolveOptions.maxTime & "s time limit, " _
+                      & SolveOptions.Tolerance * 100 & "% tolerance."
+              
+              ' We allow some user defined CBC parameters
+              Dim CBCExtraParametersString As String
+12830         CBCExtraParametersString = GetCBCExtraParametersString(sheet, ErrorString)
+12840         If ErrorString <> "" Then
+12850             On Error GoTo errorHandler
+12860             Err.Raise Number:=OpenSolver_SolveError, Source:=errorPrefix, Description:=ErrorString
+12870         End If
                  
-          Dim CommandLineRunString As String, PrintingOptionString As String
-13020     If Solver = "cbc.exe" Then
-              ' have to split up the command line as excel couldn't have a string longer than 255 characters??
-13030         CommandLineRunString = " -directory " & GetTempFolder _
-                           & " -import " & ModelFileName _
-                           & " -ratioGap " & Str(SolveOptions.Tolerance) _
-                           & " -seconds " & Str(SolveOptions.maxTime) _
-                           & CBCExtraParametersString _
-                           & " -solve " _
-                           & IIf(bGetDuals, " -printingOptions all ", "") _
-                           & " -solution " & SolutionFileName
-              '-------------------sensitivity analysis-----------------------------------------------------------
-              'extra command line option of -printingOptions rhs -solution rhsranges.txt gives the allowable increase for constraint rhs.
-              '-this file has the increase as the third input and allowable decrease as the fifth input
-              'extra command line option of -printingOptions objective - solution costranges.txt outputs the ranges on the costs to the costranges file
-              '-this file has the increase as the fifth input and decrease as the third input
-13040         PrintingOptionString = IIf(bGetDuals, " -printingOptions rhs  -solution rhsranges.txt -printingOptions objective -solution costranges.txt", "")
-              Open GetTempFolder & "cbc.bat" For Output As 1
-              Print #1, "@echo off" & vbCrLf & """" & ExternalSolverPathName & """" & CommandLineRunString & PrintingOptionString
-              Close #1
-              ExternalSolverPathName = GetTempFolder & "cbc.bat"
-              CommandLineRunString = ""
-              PrintingOptionString = ""
-13050     ElseIf Solver = "gurobi.bat" Then
-              Dim CombinedPathName As String
-13060         If GetExistingFilePathName(ThisWorkbook.Path, "gurobiOSRun.py", CombinedPathName) Then
-13070             CommandLineRunString = " """ & CombinedPathName & """" ' fix error for Gurobi with spaces in path name by quoting path
-                  '========================================================================================
-                  'Gurobi can also be run at the command line using gurobi_cl with the following commands
-                  '
-                  'Solver="gurobi_cl.exe"
-                  'CommandLineRunString = " Threads=1" & " TimeLimit=" & Replace(Str(SolveOptions.maxTime), " ", "") & " ResultFile="
-                  '             & GetTempFolder & Replace(SolutionFileName, ".txt", ".sol") _
-                  '             & " " & ModelFilePathName
-                  '
-                  '========================================================================================
-13080             PrintingOptionString = ""
-13090         Else
-13100             Err.Raise Number:=OpenSolver_SolveError, Source:=errorPrefix, Description:="Could not find the file 'GurobiOSRun.py' in the folder with 'OpenSolver.xlam'. This file should have come with your OpenSolver download. Please move it into the OpenSolver folder or download it from the Opensolver website."
-13110         End If
-13120     ElseIf Solver = "cplex.exe" Then
-13130         CommandLineRunString = """" & GetTempFolder & ModelFilePathName & """" & " write=" & Replace(SolutionFileName, ".txt", ".sol")
-13140         PrintingOptionString = ""
-13150     End If
-          
-          Dim logCommand As String, logFileName As String
-          logFileName = "log1.tmp"
-          logCommand = " > " & """" & GetTempFolder & logFileName & """"
+              ' If the user has a defined name OpenSolver_ConstraintList, then we need to get the duals by passing an extra option to CBC
+              Dim rConstraintList As Range, bGetDuals As Boolean, DualsOnNewSheet As Boolean, DualsOnSameSheet As Boolean
+12880         DualsOnSameSheet = GetNamedRangeIfExistsOnSheet(ActiveSheet, "OpenSolver_Duals", rConstraintList)
+12890         On Error Resume Next
+12900         DualsOnNewSheet = Mid(Names("'" & Replace(ActiveWorkbook.ActiveSheet.Name, "'", "''") & "'!OpenSolver_DualsNewSheet").value, 2) 'frmModel.chkGetDuals2.Value
+12910         If Err.Number <> 0 Then
+12920             Call SetNameOnSheet("OpenSolver_DualsNewSheet", "=FALSE")
+12930             DualsOnNewSheet = False
+12940         End If
+12950         On Error GoTo errorHandler
+12960         bGetDuals = False
+12970         If (IntegerCellsRange Is Nothing And BinaryCellsRange Is Nothing) And (DualsOnNewSheet Or DualsOnSameSheet) Then
+12980             bGetDuals = True
+12990         End If
               
-          Dim ExecutionCompleted As Boolean
-          'ExecutionCompleted = OSSolveSync(CBCRunString, IIf(ShowIterationResults, SW_SHOWNORMAL, SW_SHOWMINIMIZED), True) ' This stops escape being detected properly unless Excel is first 'activated?' with a click
-13160     ExternalSolverPathName = """" & ExternalSolverPathName & """" ' fix error for Gurobi with spaces in path name by quoting path
-          Dim exeResult As Long, userCancelled As Boolean
-13170     ExecutionCompleted = OSSolveSync(ExternalSolverPathName, CommandLineRunString, PrintingOptionString, logCommand, IIf(SolveOptions.ShowIterationResults, SW_SHOWNORMAL, SW_HIDE), True, userCancelled, exeResult) ' Run CBC, waiting for completion
-13180     If userCancelled Then
-              ' User pressed escape. Dialogs have already been shown. Exit with a 'cancelled' error
-13190         On Error GoTo errorHandler
-13200         Err.Raise Number:=OpenSolver_UserCancelledError, Source:=errorPrefix, Description:="The solving process was cancelled by the user."
-13210     End If
-13220     If exeResult <> 0 Then
-              ' User pressed escape. Dialogs have already been shown. Exit with a 'cancelled' error
-13230         On Error GoTo errorHandler
-13240         Err.Raise Number:=OpenSolver_SolveError, Source:=errorPrefix, Description:="The " & SolverString & " solver did not complete, but aborted with the error code " & exeResult & "." & vbCrLf & vbCrLf & "The last log file can be viewed under the OpenSolver menu and may give you more information on what caused this error."
-13250     End If
-          
-         ' Application.StatusBar = "OpenSolver: Loading Solution... " & NumVars & " vars, " & NumRows & " rows."
-          
-          ' Read in the solution, status first
-          ' Statuses can be some combination of (based on CBC.exe text strings):
-          '    Optimal
-          '    Stopped on time
-          '    Stopped on iterations
-          '    Stopped on difficulties
-          '    Stopped on ctrl-c
-          '     (no integer solution - continuous used)
-        
-          'Read the solution files and get back answers as well as dual information if it is wanted
-13260     ErrorString = ""
-13270     If Solver = "gurobi.bat" Then
-              '=============Read the gurobi model file==========================
-13280         SolutionFilePathName = Replace(SolutionFilePathName, ".txt", ".sol")
-13290         If Dir(SolutionFilePathName) = "" Then
-13300             On Error GoTo errorHandler
-13310             Err.Raise Number:=OpenSolver_SolveError, Source:=errorPrefix, Description:="The Gurobi solver did not create a solution file. No new solution is available."
-13320             GoTo ExitSub
-13330         End If
-              Dim VariableValues() As Double, solutionLoaded As Boolean
-13340         solutionLoaded = ReadGurobiModel(SolutionFilePathName, bGetDuals, ErrorString)
-13350         On Error GoTo errorHandler
-13360         If ErrorString <> "" Then
-13370             Err.Raise Number:=OpenSolver_SolveError, Source:=errorPrefix, Description:=ErrorString
-13380         ElseIf Not solutionLoaded Then 'read error
-13390             GoTo ExitSub
-      '                  Err.Raise Number:=OpenSolver_SolveError, Source:=errorPrefix, Description:="OpenSolver encountered an error while trying to read the gurobi solution file at " & SolutionFilePathName & ". No solution available on the spreadsheet."
-13400         End If
-13410     ElseIf Solver = "cbc.exe" Then
-              '===============Read the CBC model file============================
-13420         If Dir(SolutionFilePathName) = "" Then
-13430             On Error GoTo errorHandler
-13440             Err.Raise Number:=OpenSolver_SolveError, Source:=errorPrefix, Description:="The CBC solver did not create a solution file. No new solution is available."
-13450             GoTo ExitSub
-13460         End If
-              Dim CBCSolutionLoaded As Boolean
-13470         CBCSolutionLoaded = ReadCBCModel(SolutionFilePathName, CommandLineRunString, bGetDuals, _
-                                rConstraintList, ErrorString)
-
-13480         If ErrorString <> "" Then
-13490             Err.Raise Number:=OpenSolver_SolveError, Source:=errorPrefix, Description:=ErrorString
-13500         ElseIf Not CBCSolutionLoaded Then
-13510             GoTo ExitSub
-13520         End If
-13530     ElseIf Solver = "cplex.exe" Then
-13540         SolutionFilePathName = Replace(SolutionFilePathName, ".txt", ".sol")
-13550         If Dir(SolutionFilePathName) = "" Then
-13560             On Error GoTo errorHandler
-13570             Err.Raise Number:=OpenSolver_SolveError, Source:=errorPrefix, Description:="The CPLEX solver did not create a solution file. No new solution is available."
-13580             GoTo ExitSub
-13590         End If
-13600         Err.Raise Number:=OpenSolver_SolveError, Source:=errorPrefix, Description:="The CPLEX solver has not been fully incorporated into OpenSolver yet, you can view the solution in modelsolution.txt in the temporary folder. To view on the sheet please pick abother solver. Sorry for the inconvenience we are working out this problem now."
-13610         GoTo ExitSub
-13620     End If
-          
+              Dim SolutionFilePathName As String, SolutionFileName As String
+13000         SolutionFileName = GetSolutionFileName
+13010         SolutionFilePathName = GetSolutionFullPath
+                     
+              Dim CommandLineRunString As String, PrintingOptionString As String
+13020         If Solver = "cbc.exe" Then
+                  ' have to split up the command line as excel couldn't have a string longer than 255 characters??
+13030             CommandLineRunString = " -directory " & GetTempFolder _
+                               & " -import " & ModelFileName _
+                               & " -ratioGap " & str(SolveOptions.Tolerance) _
+                               & " -seconds " & str(SolveOptions.maxTime) _
+                               & CBCExtraParametersString _
+                               & " -solve " _
+                               & IIf(bGetDuals, " -printingOptions all ", "") _
+                               & " -solution " & SolutionFileName
+                  '-------------------sensitivity analysis-----------------------------------------------------------
+                  'extra command line option of -printingOptions rhs -solution rhsranges.txt gives the allowable increase for constraint rhs.
+                  '-this file has the increase as the third input and allowable decrease as the fifth input
+                  'extra command line option of -printingOptions objective - solution costranges.txt outputs the ranges on the costs to the costranges file
+                  '-this file has the increase as the fifth input and decrease as the third input
+13040             PrintingOptionString = IIf(bGetDuals, " -printingOptions rhs  -solution rhsranges.txt -printingOptions objective -solution costranges.txt", "")
+                  Open GetTempFolder & "cbc.bat" For Output As 1
+                  Print #1, "@echo off" & vbCrLf & """" & ExternalSolverPathName & """" & CommandLineRunString & PrintingOptionString
+                  Close #1
+                  ExternalSolverPathName = GetTempFolder & "cbc.bat"
+                  CommandLineRunString = ""
+                  PrintingOptionString = ""
+13050         ElseIf Solver = "gurobi.bat" Then
+                  Dim CombinedPathName As String
+13060             If GetExistingFilePathName(ThisWorkbook.Path, "gurobiOSRun.py", CombinedPathName) Then
+13070                 CommandLineRunString = " """ & CombinedPathName & """" ' fix error for Gurobi with spaces in path name by quoting path
+                      '========================================================================================
+                      'Gurobi can also be run at the command line using gurobi_cl with the following commands
+                      '
+                      'Solver="gurobi_cl.exe"
+                      'CommandLineRunString = " Threads=1" & " TimeLimit=" & Replace(Str(SolveOptions.maxTime), " ", "") & " ResultFile="
+                      '             & GetTempFolder & Replace(SolutionFileName, ".txt", ".sol") _
+                      '             & " " & ModelFilePathName
+                      '
+                      '========================================================================================
+13080                 PrintingOptionString = ""
+13090             Else
+13100                 Err.Raise Number:=OpenSolver_SolveError, Source:=errorPrefix, Description:="Could not find the file 'GurobiOSRun.py' in the folder with 'OpenSolver.xlam'. This file should have come with your OpenSolver download. Please move it into the OpenSolver folder or download it from the Opensolver website."
+13110             End If
+13120         ElseIf Solver = "cplex.exe" Then
+13130             CommandLineRunString = """" & GetTempFolder & ModelFilePathName & """" & " write=" & Replace(SolutionFileName, ".txt", ".sol")
+13140             PrintingOptionString = ""
+13150         End If
+              
+              Dim logCommand As String, logFileName As String
+              logFileName = "log1.tmp"
+              logCommand = " > " & """" & GetTempFolder & logFileName & """"
+                  
+              Dim ExecutionCompleted As Boolean
+              'ExecutionCompleted = OSSolveSync(CBCRunString, IIf(ShowIterationResults, SW_SHOWNORMAL, SW_SHOWMINIMIZED), True) ' This stops escape being detected properly unless Excel is first 'activated?' with a click
+13160         ExternalSolverPathName = """" & ExternalSolverPathName & """" ' fix error for Gurobi with spaces in path name by quoting path
+              Dim exeResult As Long, userCancelled As Boolean
+13170         ExecutionCompleted = OSSolveSync(ExternalSolverPathName, CommandLineRunString, PrintingOptionString, logCommand, IIf(SolveOptions.ShowIterationResults, SW_SHOWNORMAL, SW_HIDE), True, userCancelled, exeResult) ' Run CBC, waiting for completion
+13180         If userCancelled Then
+                  ' User pressed escape. Dialogs have already been shown. Exit with a 'cancelled' error
+13190             On Error GoTo errorHandler
+13200             Err.Raise Number:=OpenSolver_UserCancelledError, Source:=errorPrefix, Description:="The solving process was cancelled by the user."
+13210         End If
+13220         If exeResult <> 0 Then
+                  ' User pressed escape. Dialogs have already been shown. Exit with a 'cancelled' error
+13230             On Error GoTo errorHandler
+13240             Err.Raise Number:=OpenSolver_SolveError, Source:=errorPrefix, Description:="The " & SolverString & " solver did not complete, but aborted with the error code " & exeResult & "." & vbCrLf & vbCrLf & "The last log file can be viewed under the OpenSolver menu and may give you more information on what caused this error."
+13250         End If
+              
+             ' Application.StatusBar = "OpenSolver: Loading Solution... " & NumVars & " vars, " & NumRows & " rows."
+              
+              ' Read in the solution, status first
+              ' Statuses can be some combination of (based on CBC.exe text strings):
+              '    Optimal
+              '    Stopped on time
+              '    Stopped on iterations
+              '    Stopped on difficulties
+              '    Stopped on ctrl-c
+              '     (no integer solution - continuous used)
+            
+              'Read the solution files and get back answers as well as dual information if it is wanted
+13260         ErrorString = ""
+13270         If Solver = "gurobi.bat" Then
+                  '=============Read the gurobi model file==========================
+13280             SolutionFilePathName = Replace(SolutionFilePathName, ".txt", ".sol")
+13290             If Dir(SolutionFilePathName) = "" Then
+13300                 On Error GoTo errorHandler
+13310                 Err.Raise Number:=OpenSolver_SolveError, Source:=errorPrefix, Description:="The Gurobi solver did not create a solution file. No new solution is available."
+13320                 GoTo ExitSub
+13330             End If
+                  Dim VariableValues() As Double, solutionLoaded As Boolean
+13340             solutionLoaded = ReadGurobiModel(SolutionFilePathName, bGetDuals, ErrorString)
+13350             On Error GoTo errorHandler
+13360             If ErrorString <> "" Then
+13370                 Err.Raise Number:=OpenSolver_SolveError, Source:=errorPrefix, Description:=ErrorString
+13380             ElseIf Not solutionLoaded Then 'read error
+13390                 GoTo ExitSub
+          '                  Err.Raise Number:=OpenSolver_SolveError, Source:=errorPrefix, Description:="OpenSolver encountered an error while trying to read the gurobi solution file at " & SolutionFilePathName & ". No solution available on the spreadsheet."
+13400             End If
+13410         ElseIf Solver = "cbc.exe" Then
+                  '===============Read the CBC model file============================
+13420             If Dir(SolutionFilePathName) = "" Then
+13430                 On Error GoTo errorHandler
+13440                 Err.Raise Number:=OpenSolver_SolveError, Source:=errorPrefix, Description:="The CBC solver did not create a solution file. No new solution is available."
+13450                 GoTo ExitSub
+13460             End If
+                  Dim CBCSolutionLoaded As Boolean
+13470             CBCSolutionLoaded = ReadCBCModel(SolutionFilePathName, CommandLineRunString, bGetDuals, _
+                                    rConstraintList, ErrorString)
+    
+13480             If ErrorString <> "" Then
+13490                 Err.Raise Number:=OpenSolver_SolveError, Source:=errorPrefix, Description:=ErrorString
+13500             ElseIf Not CBCSolutionLoaded Then
+13510                 GoTo ExitSub
+13520             End If
+13530         ElseIf Solver = "cplex.exe" Then
+13540             SolutionFilePathName = Replace(SolutionFilePathName, ".txt", ".sol")
+13550             If Dir(SolutionFilePathName) = "" Then
+13560                 On Error GoTo errorHandler
+13570                 Err.Raise Number:=OpenSolver_SolveError, Source:=errorPrefix, Description:="The CPLEX solver did not create a solution file. No new solution is available."
+13580                 GoTo ExitSub
+13590             End If
+13600             Err.Raise Number:=OpenSolver_SolveError, Source:=errorPrefix, Description:="The CPLEX solver has not been fully incorporated into OpenSolver yet, you can view the solution in modelsolution.txt in the temporary folder. To view on the sheet please pick abother solver. Sorry for the inconvenience we are working out this problem now."
+13610             GoTo ExitSub
+13620         End If
+          End If
 13630     LinearSolutionWasLoaded = True
           
           ' Perform a linearity check unless the user has requested otherwise
@@ -1408,8 +1495,8 @@ End Function
 
 Sub WriteLPFile(ModelFilePathName As String, SolveRelaxation As Boolean, ErrorString As String)
 
-          Dim i As Long, j As Long, var As Long, row As Long, coeff As Double
-
+          Dim i As Long, j As Long, var As Long, row As Long, coeff As Double, Line As String, Line2 As String, Line3 As String
+          
 14140     ErrorString = ""
           Dim commentStart As String  'Character for starting comments for chosen solver
 14150     commentStart = "\"
@@ -1482,14 +1569,14 @@ Sub WriteLPFile(ModelFilePathName As String, SolveRelaxation As Boolean, ErrorSt
               '    End If
               'Next var
 14610         With SparseA(row)
-14620             For i = 1 To .count
-14630                 var = .index(i)
+14620             For i = 1 To .Count
+14630                 var = .Index(i)
 14640                 coeff = .Coefficient(i)
 14650                 Print #1, " " & StrEx(coeff) & " " & ValidLPFileVarName(VarNames(var));
 14660             Next i
 14670         End With
               
-14680         If SparseA(row).count = 0 Then
+14680         If SparseA(row).Count = 0 Then
                   'We have a constraint that does not vary with the decision variables; check it is satisifed
                   Dim LHSValue As Double, RHSValue As Double
 14690             GetArrayPosnFromConstraintInstance constraint, instance, i, j
@@ -1572,9 +1659,9 @@ Sub WriteLPFile(ModelFilePathName As String, SolveRelaxation As Boolean, ErrorSt
               ' Note: A constraint of the form 'range <= decision var' does NOT count as a lower bound; the decision var MUST be in the LHS
               Dim BoundedVariables As Range
 15200         For row = 1 To NumRows
-15210             If Relation(row) = RelationGE And SparseA(row).count = 1 Then
+15210             If Relation(row) = RelationGE And SparseA(row).Count = 1 Then
                       ' This is a constraint apply a lower bound to one variable. Check that the LHS did directly specify the decision variable.
-15220                 var = SparseA(row).index(1)
+15220                 var = SparseA(row).Index(1)
 15230                 GetConstraintFromRow row, constraint, instance
 15240                 If RHSType(constraint) <> Formula Then
 15250                     GetArrayPosnFromConstraintInstance constraint, instance, i, j
@@ -1610,7 +1697,7 @@ Sub WriteLPFile(ModelFilePathName As String, SolveRelaxation As Boolean, ErrorSt
 15490     If Not SolveRelaxation And Not (IntegerCellsRange Is Nothing) Then
 15500         If Not BinaryCellsRange Is Nothing Then
 15510             On Error Resume Next
-15520             If Not Intersect(BinaryCellsRange, IntegerCellsRange).count = IntegerCellsRange.count Then
+15520             If Not Intersect(BinaryCellsRange, IntegerCellsRange).Count = IntegerCellsRange.Count Then
 15530                 If Err.Number = 91 Then
                           'If there is no intersect Excel throw an error
 15540                     Print #1, "GENERAL"
@@ -1660,6 +1747,409 @@ errorHandler:
 15900     ErrorString = "Error writing LP File."
 
 End Sub
+
+Sub WriteAMPLFile(ModelFilePathName As String, SolveRelaxation As Boolean, ErrorString As String)
+
+     Dim i As Long, j As Long, var As Long, row As Long, coeff As Double, c As Range, Line As String, Line1 As String, Line2 As String, Line3 As String
+     Dim VarDic As Collection
+     
+     Set VarDic = New Collection
+
+     ErrorString = ""
+     Dim commentStart As String  'Character for starting comments for chosen solver
+     commentStart = "#"
+
+     Open ModelFilePathName For Output As 1 ' supply path with filename
+     
+     ' XML
+     Print #1, "&lt;document&gt;"
+     Print #1, "&lt;category&gt;milp&lt;/category&gt;"
+     Print #1, "&lt;solver&gt;cbc&lt;/solver&gt;"
+     Print #1, "&lt;inputType&gt;AMPL&lt;/inputType&gt;"
+     Print #1, "&lt;client&gt;&lt;/client&gt;"
+     Print #1, "&lt;priority&gt;short&lt;/priority&gt;"
+     Print #1, "&lt;email&gt;&lt;/email&gt;"
+     
+     ' Model File - Replace with Data File
+     Print #1, "&lt;model&gt;&lt;![CDATA[# Define our sets, parameters and variables (with names matching those"
+     Print #1, "# used in defining the data items)"
+     
+     ' Variables
+     For var = 1 To numVars
+         VarDic.Add "", ValidLPFileVarName(VarNames(var))
+     Next var
+     
+     ' Sets - Vars
+     If Not SolveRelaxation Then
+         If Not IntegerCellsRange Is Nothing Then
+             For Each c In IntegerCellsRange
+                 VarDic.Remove (ValidLPFileVarName(c.Address(RowAbsolute:=False, ColumnAbsolute:=False)))
+                 VarDic.Add ", integer", ValidLPFileVarName(c.Address(RowAbsolute:=False, ColumnAbsolute:=False))
+             Next c
+         End If
+          
+         Line3 = ""
+         If Not BinaryCellsRange Is Nothing Then
+             For Each c In BinaryCellsRange
+                 VarDic.Remove (ValidLPFileVarName(c.Address(RowAbsolute:=False, ColumnAbsolute:=False)))
+                 VarDic.Add ", binary", ValidLPFileVarName(c.Address(RowAbsolute:=False, ColumnAbsolute:=False))
+             Next c
+         End If
+     End If
+     
+     ' Intialise Variables
+     For var = 1 To numVars
+         Print #1, "var " & ValidLPFileVarName(VarNames(var)) & VarDic.Item(ValidLPFileVarName(VarNames(var))) & ";"
+     Next var
+     
+     ' Parameter - Costs
+     Print #1,   ' New line
+     Line1 = "  "
+     For var = 1 To numVars
+         Line = Line & ValidLPFileVarName(VarNames(var)) & "*" & CostCoeffs(var)
+         If var < numVars Then
+             Line = Line & " + "
+         End If
+     Next var
+     
+     ' Objective function replaced with constraint if
+     If ObjectiveSense = TargetObjective Then
+         Print #1, commentStart & " We have no objective function as the objective must achieve a given target value"
+         Print #1,
+         
+         Print #1, commentStart & " The objective must achieve a given target value; this constraint enforces this."
+         Print #1, "subject to TargetConstr {c in Constraints}:"
+         Print #1, Line * " = " & StrEx(ObjectiveTargetValue) & ";"
+     Else
+         ' Determine objective direction
+         If ObjectiveSense = MaximiseObjective Then
+            Print #1, "maximize Total_Cost:"
+         Else
+            Print #1, "minimize Total_Cost:"
+         End If
+         
+         Print #1, Line & ";"
+         Print #1,   ' New line
+     End If
+     
+     ' Subject to Constraints
+     Dim constraint As Long
+     Dim instance As Long
+     constraint = 1
+     
+     ' Loop through constraints
+     For row = 1 To NumRows
+         Line = "   "
+         GetConstraintFromRow row, constraint, instance  ' Which Excel constraint are we in, and which instance?
+         If instance = 1 Then
+             ' We are outputting the first row of a new Excel constraint block; put a comment in the .lp file
+             Print #1, commentStart & " " & Replace(Replace(ConstraintSummary(constraint), "<", "&lt;"), ">", "&gt;")
+         End If
+         
+         ' Gather variables
+         With SparseA(row)
+             For i = 1 To .Count
+                 var = .Index(i)
+                 coeff = .Coefficient(i)
+                 Line = Line & StrEx(coeff) & " * " & ValidLPFileVarName(VarNames(var)) & " "
+             Next i
+         End With
+         
+         ' Ensure there were some non-zero coeffs
+         If Line <> "   " Then
+            
+            ' Print constraint header
+            Print #1, "subject to c" & row & ":"
+            
+            ' Check sense
+            If Relation(row) = RelationGE Then
+                Line = Line & "&gt;= "
+            ElseIf Relation(row) = RelationLE Then
+                Line = Line & "&lt;= "
+            ElseIf Relation(row) = RelationEQ Then
+                Line = Line & "== "
+            End If
+            
+            ' Print with RHS
+            Print #1, Line & StrEx(RHS(row))
+            
+            If SparseA(row).Count = 0 Then
+                'We have a constraint that does not vary with the decision variables; check it is satisifed
+                Dim LHSValue As Double, RHSValue As Double
+                GetArrayPosnFromConstraintInstance constraint, instance, i, j
+                LHSValue = LHSOriginalValues(constraint)(i, j)
+                If RHSType(constraint) <> MultiCellRange Then
+                    RHSValue = RHSOriginalValues(constraint)
+                Else
+                    RHSValue = RHSOriginalValues(constraint)(i, j)
+                End If
+                ' GetExcelConstraintInfoFromRow Constraint, Row, LHSValue, RHSValue, Probleminstance, sLHS, sRHS
+                If (Relation(row) = RelationGE And LHSValue < RHSValue - EPSILON) _
+                   Or (Relation(row) = RelationEQ And Abs(LHSValue - RHSValue) > EPSILON) _
+                   Or (Relation(row) = RelationLE And LHSValue > RHSValue + EPSILON) Then
+    '                  ' AJM 28.11.2010 We cannot use any IIF() that references LHSRange(row).Address because all arguments are always evaluated, and LHSRange(row).Address is not defined and throws an error
+    '                  sLHS = LHSRange(j).Address & " = " & lhsvalue
+                      Dim LHSCellRange As Range, RHSCellRange As Range, RHSstring As String
+                      GetConstraintInstanceData constraint, instance, LHSCellRange, RHSCellRange, RHSstring
+                      ' If the RHS is a range, we show its address; if not, RHSString contains the RHS's constant or formula
+                      If Not RHSCellRange Is Nothing Then RHSstring = RHSCellRange.AddressLocal(RowAbsolute:=False, ColumnAbsolute:=False)
+                      SolveStatus = OpenSolverResult.Infeasible
+                      SolveStatusString = "Infeasible"
+                      SolveStatusComment = "The model contains an Excel constraint '" & ConstraintSummary(constraint) & "' for which instance " _
+                             & instance & " does not depend on the decision variables and is not satisfied." & vbCrLf _
+                            & "Constraint specifies: " _
+                             & "LHS=" & LHSCellRange.AddressLocal(RowAbsolute:=False, ColumnAbsolute:=False) & "=" & LHSValue _
+                            & " " & SolverRelationAsString(Relation(row)) & " " _
+                            & "RHS=" & RHSstring & "=" & RHSValue
+                      Close #1
+                      GoTo ExitSub
+                End If
+                 'We output the row as a comment
+                Print #1, commentStart & " (A row with all zero coeffs)";
+            End If
+        
+            Print #1, ";"
+           
+            Print #1,   ' New line
+         End If
+     Next row
+     
+     ' Run Commands
+     Print #1,   ' New line
+     Print #1, commentStart & " Solve the problem"
+     Print #1, "option solver cbc;"
+     Print #1, "solve;"
+     Print #1,   ' New line
+     ' Display variables
+     For var = 1 To numVars
+         Print #1, "_display " & ValidLPFileVarName(VarNames(var)) & ";"
+     Next var
+     Print #1, "_display solve_result;"
+     Print #1,   ' New line
+     Print #1, "end]]&gt;&lt;/model&gt;"
+     
+     ' Closing XML
+     Print #1, "&lt;data&gt;&lt;![CDATA[]]&gt;&lt;/data&gt;"
+     Print #1,   ' New line
+     Print #1, "&lt;commands&gt;&lt;![CDATA[]]&gt;&lt;/commands&gt;"
+     Print #1,   ' New line
+     Print #1, "&lt;comments&gt;&lt;![CDATA[]]&gt;&lt;/comments&gt;"
+     Print #1,   ' New line
+     Print #1, "&lt;/document&gt;"
+     
+     Close 1
+
+     Exit Sub
+          
+ExitSub:
+     ErrorString = "ExitSub"
+     Exit Sub
+errorHandler:
+     ErrorString = "Error writing data File."
+
+End Sub
+
+Sub CallNEOS(ModelFilePathName As String, ErrorString As String)
+     Dim objSvrHTTP As ServerXMLHTTP, message As String, txtURL As String
+     Dim Done As Boolean, result As String
+     Dim openingParen As String, closingParen As String, jobNumber As String, Password As String, solutionFile As String, solution As String
+     Dim i As Integer, LinearSolveStatusString As String, var As Long
+     
+     ' Server name
+     txtURL = "http://www.neos-server.org:3332"
+     Set objSvrHTTP = New ServerXMLHTTP
+     
+     ' Set up obj for a POST request
+     objSvrHTTP.Open "POST", txtURL, False
+     
+     ' Import file as continuous string
+     Open ModelFilePathName For Input As #1
+         message = Input$(LOF(1), 1)
+     Close #1
+     
+     ' Set up message as XML
+     message = "<methodCall><methodName>submitJob</methodName><params><param><value><string>" _
+        & message & "</string></value></param></params></methodCall>"
+     
+     ' Send Message to NEOS
+     objSvrHTTP.send message
+     
+     ' Extract Job Number
+     openingParen = InStr(objSvrHTTP.responseText, "<int>")
+     closingParen = InStr(objSvrHTTP.responseText, "</int>")
+     jobNumber = Mid(objSvrHTTP.responseText, openingParen + Len("<int>"), closingParen - openingParen - Len("<int>"))
+     
+     If jobNumber = 0 Then
+         MsgBox "An error occured when sending file to NEOS."
+         GoTo ExitSub
+     End If
+     
+     ' Extract Password
+     openingParen = InStr(objSvrHTTP.responseText, "<string>")
+     closingParen = InStr(objSvrHTTP.responseText, "</string>")
+     Password = Mid(objSvrHTTP.responseText, openingParen + Len("<string>"), closingParen - openingParen - Len("<string>"))
+     
+     ' Set up Job Status message for XML
+     message = "<methodCall><methodName>getJobStatus</methodName><params><param><value><int>" _
+        & jobNumber & "</int></value><value><string>" & Password & _
+        "</string></value></param></params></methodCall>"
+     Done = False
+     
+     CallingNeos.Show False
+     
+     ' Loop until job is done
+     While Done = False
+         DoEvents
+         
+         ' Reset obj
+         Set objSvrHTTP = New ServerXMLHTTP
+         objSvrHTTP.Open "POST", txtURL, False
+         
+         ' Send message
+         objSvrHTTP.send message
+         
+         ' Extract answer
+         openingParen = InStr(objSvrHTTP.responseText, "<string>")
+         closingParen = InStr(objSvrHTTP.responseText, "</string>")
+         result = Mid(objSvrHTTP.responseText, openingParen + 8, closingParen - openingParen - 8)
+         
+         ' Evaluate result
+         If result = "Done" Then
+             Done = True
+         ElseIf result <> "Waiting" And result <> "Running" Then
+             MsgBox "An error occured when sending file to NEOS. Neos returned: " & result
+             GoTo ExitSub
+         Else
+             Application.Wait (Now + TimeValue("0:00:01"))
+         End If
+     Wend
+     
+     CallingNeos.Hide
+     
+     ' Set up final message for XML
+     message = "<methodCall><methodName>getFinalResults</methodName><params><param><value><int>" _
+        & jobNumber & "</int></value></param><param><value><string>" & Password & _
+        "</string></value></param></params></methodCall>"
+     
+     ' Reset obj
+     Set objSvrHTTP = New ServerXMLHTTP
+     objSvrHTTP.Open "POST", txtURL, False
+    
+     objSvrHTTP.send message
+     
+     ' Extract Result
+     openingParen = InStr(objSvrHTTP.responseText, "<base64>")
+     closingParen = InStr(objSvrHTTP.responseText, "</base64>")
+     result = Mid(objSvrHTTP.responseText, openingParen + 8, closingParen - openingParen - 8)
+     
+     ' The message is returned from NEOS in base 64
+     solution = DecodeBase64(result)
+    
+     ' Extract the solve status
+     openingParen = InStr(solution, "solve_result")
+     LinearSolveStatusString = right(solution, Len(solution) - openingParen - Len("solve_result"))
+    
+     ' Determine Feasibility
+     If LinearSolveStatusString Like "unbounded*" Then
+         SolveStatus = OpenSolverResult.Unbounded
+         SolveStatusString = "No Solution Found (Unbounded)"
+         LinearSolveStatus = LinearSolveResult.Unbounded
+         '
+     ElseIf LinearSolveStatusString Like "infeasible*" Then ' Stopped on iterations or time
+         SolveStatus = OpenSolverResult.Infeasible
+         SolveStatusString = "No Feasible Solution"
+         LinearSolveStatus = LinearSolveResult.Infeasible
+         GoTo ExitSub
+         '
+     ElseIf Not LinearSolveStatusString Like "solved*" Then
+         openingParen = InStr(solution, ">>>")
+         If openingParen = 0 Then
+             openingParen = InStr(solution, "processing commands.")
+             LinearSolveStatusString = right(solution, Len(solution) - openingParen - Len("processing commands."))
+         Else
+             closingParen = InStr(solution, "<<<")
+             LinearSolveStatusString = "Error: " & Mid(solution, openingParen, closingParen - openingParen)
+         End If
+         GoTo ExitSub
+     Else
+         SolveStatus = OpenSolverResult.Optimal
+         SolveStatusString = "Optimal"
+         LinearSolveStatus = LinearSolveResult.Optimal
+         '
+     End If
+     
+     Application.Calculation = xlCalculationAutomatic
+    
+     ' Display results to sheet
+     For var = 1 To numVars
+         openingParen = InStr(solution, ValidLPFileVarName(VarNames(var)))
+         closingParen = openingParen + InStr(right(solution, Len(solution) - openingParen), "_display")
+         result = Mid(solution, openingParen + Len(ValidLPFileVarName(VarNames(var))) + 1, Application.Max(closingParen - openingParen - Len(ValidLPFileVarName(VarNames(var))) - 1, 0))
+         
+         ' Converting result to number
+         AdjustableCells.Worksheet.Range(VarNames(var)).Value2 = "= " & result & " * 1"
+         
+         ' Removing equal sign
+         AdjustableCells.Worksheet.Range(VarNames(var)).Value2 = AdjustableCells.Worksheet.Range(VarNames(var)).Value2
+     Next
+     
+     Application.Calculation = xlCalculationManual
+     
+15870          Exit Sub
+          
+ExitSub:
+15880     ErrorString = "ExitSub"
+15890     Exit Sub
+errorHandler:
+15900     ErrorString = "Error contacting NEOS."
+
+End Sub
+
+' Code by Tim Hastings
+Private Function DecodeBase64(ByVal strData As String) As String
+    Dim objXML As MSXML2.DOMDocument
+    Dim objNode As MSXML2.IXMLDOMElement
+  
+    ' Help from MSXML
+    Set objXML = New MSXML2.DOMDocument
+    Set objNode = objXML.createElement("b64")
+    objNode.DataType = "bin.base64"
+    objNode.Text = strData
+    DecodeBase64 = Stream_BinaryToString(objNode.nodeTypedValue)
+  
+    ' Clean up
+    Set objNode = Nothing
+    Set objXML = Nothing
+End Function
+
+' Code by Tim Hastings
+Function Stream_BinaryToString(Binary)
+     Const adTypeText = 2
+     Const adTypeBinary = 1
+     
+     'Create Stream object
+     Dim BinaryStream 'As New Stream
+     Set BinaryStream = CreateObject("ADODB.Stream")
+     
+     'Specify stream type - we want To save binary data.
+     BinaryStream.Type = adTypeBinary
+     
+     'Open the stream And write binary data To the object
+     BinaryStream.Open
+     BinaryStream.Write Binary
+     
+     'Change stream type To text/string
+     BinaryStream.Position = 0
+     BinaryStream.Type = adTypeText
+     
+     'Specify charset For the output text (unicode) data.
+     BinaryStream.Charset = "us-ascii"
+     
+     'Open the stream And get text/string data from the object
+     Stream_BinaryToString = BinaryStream.ReadText
+     Set BinaryStream = Nothing
+End Function
+
 Sub ReportAnySolutionSubOptimality()
           ' Call this after SolveModel to report to the user what happened. A dialog is shown if the optimal result was not found
 15910     If SolveStatus <> OpenSolverResult.Optimal Then
@@ -1686,7 +2176,7 @@ End Sub
 Function StrEx(d As Double) As String
       ' Convert a double to a string, always with a + or -. Also ensure we have "0.", not just "." for values between -1 and 1
               Dim s As String, prependedZero As String, sign As String
-15990         s = Mid(Str(d), 2)  ' remove the initial space (reserved by VB for the sign)
+15990         s = Mid(str(d), 2)  ' remove the initial space (reserved by VB for the sign)
 16000         prependedZero = IIf(left(s, 1) = ".", "0", "")  ' ensure we have "0.", not just "."
 16010         sign = IIf(d >= 0, "+", "-")
 16020         StrEx = sign + prependedZero + s
@@ -1707,7 +2197,7 @@ Sub WriteConstraintListToSheet(r As Range)
 16090         GetConstraintFromRow row, constraint, instance  ' Which Excel constraint are we in, and which instance?
               
               Dim UnusedConstraint As Boolean
-16100         UnusedConstraint = SparseA(row).count = 0
+16100         UnusedConstraint = SparseA(row).Count = 0
               
               Dim LHSCellRange As Range, RHSCellRange As Range, RHSstring As String
 16110         GetConstraintInstanceData constraint, instance, LHSCellRange, RHSCellRange, RHSstring
@@ -1722,7 +2212,7 @@ Sub WriteConstraintListToSheet(r As Range)
 16180         s = IIf(UnusedConstraint, "", "") & LHSCellRange.AddressLocal(RowAbsolute:=False, ColumnAbsolute:=False) & _
                   SolverRelationAsString(Relation(row)) & RHSstring & IIf(UnusedConstraint, "", "")
           
-16190         r.Cells(row + 1, 1).Value = s
+16190         r.Cells(row + 1, 1).value = s
 16200         r.Cells(row + 1, 2).Value2 = ShadowPrice(row)
 16210         r.Cells(row + 1, 3).Value2 = IncreaseCon(row)
 16220         r.Cells(row + 1, 4).Value2 = DecreaseCon(row)
@@ -1790,8 +2280,8 @@ Sub WriteModelToSheet()
               '    End If
               'Next var
 16550     With SparseA(row)
-16560         For i = 1 To .count
-16570             var = .index(i)
+16560         For i = 1 To .Count
+16570             var = .Index(i)
 16580             coeff = .Coefficient(i)
 16590             Worksheets("Model").Cells(4 + row, 1 + var) = coeff
 16600         Next i
@@ -1871,13 +2361,13 @@ Function DoQuickSolve() As Boolean
 End Function
 
 'Iain dunning
-Public Function TestKeyExists(ByRef col As Collection, Key As String) As Boolean
+Public Function TestKeyExists(ByRef col As Collection, key As String) As Boolean
           
           'MsgBox Key
     On Error GoTo doesntExist:
-          Dim item As Variant
+          Dim Item As Variant
           
-17090     Set item = col(Key)
+17090     Set Item = col(key)
           
 17100     TestKeyExists = True
 17110     Exit Function
@@ -1911,9 +2401,9 @@ Sub HighlightNonLinearities(RowIsNonLinear() As Boolean, ObjectiveIsNonLinear As
                   '    Set currentsheet = ActiveSheet
                   'End If
 17270             RHSstring = StripWorksheetNameAndDollars(RHSstring, LHSCellRange.Worksheet) ' Strip any worksheet name and $'s from the RHS (useful if it is a formula)
-                  Dim RHSIsRange As Boolean
-17280             RHSIsRange = RHSType(constraint) = MultiCellRange Or RHSType(constraint) = SingleCellRange
-17290             HighlightConstraint LHSCellRange.Worksheet, LHSCellRange, RHSIsRange, RHSCellRange, RHSstring, Relation(row), 0  ' Show either a value or a formula
+                  Dim RHSisRange As Boolean
+17280             RHSisRange = RHSType(constraint) = MultiCellRange Or RHSType(constraint) = SingleCellRange
+17290             HighlightConstraint LHSCellRange.Worksheet, LHSCellRange, RHSisRange, RHSCellRange, RHSstring, Relation(row), 0  ' Show either a value or a formula
 17300         End If
 17310     Next row
 17320     If ObjectiveIsNonLinear Then
@@ -1985,9 +2475,9 @@ Sub CheckLinearityOfModel()
               
               'This is used to display the constriant
 17720         FirstVar = True
-17730         ValueZeroCounter = ValueZero(row).count
-17740         ValueOneCounter = ValueOne(row).count
-17750         ValueTenCounter = ValueTen(row).count
+17730         ValueZeroCounter = ValueZero(row).Count
+17740         ValueOneCounter = ValueOne(row).Count
+17750         ValueTenCounter = ValueTen(row).Count
               'find out how many variables it dependent on
 17760         NumEntries = ChooseMaximum(ValueZeroCounter, ValueOneCounter, ValueTenCounter)
 17770         For i = 1 To NumEntries
@@ -1996,7 +2486,7 @@ Sub CheckLinearityOfModel()
 17790                 If Abs(ValueOne(row).Coefficient(i) - ValueZero(row).Coefficient(i)) / (1 + Abs(ValueOne(row).Coefficient(i))) > EPSILON _
                       And Abs(ValueOne(row).Coefficient(i) - ValueTen(row).Coefficient(i)) / (1 + Abs(ValueOne(row).Coefficient(i))) > EPSILON Then
 17800                     GetConstraintFromRow row, constraint, instance
-17810                     If NonLinearityCount <= 10 Then AddNonLinearInfoToString ValueOne(row).index(i), nonlinearinformation, FirstVar, constraint, instance
+17810                     If NonLinearityCount <= 10 Then AddNonLinearInfoToString ValueOne(row).Index(i), nonlinearinformation, FirstVar, constraint, instance
 17820                     FirstVar = False
 17830                     RowIsNonLinear(row) = True
 17840                 End If
@@ -2062,7 +2552,7 @@ Sub CheckLinearityOfModel()
 18260     NonlinearForm.height = NonlinearForm.ContinueButton.top + NonlinearForm.ContinueButton.height + 30
 18270     NonlinearForm.Show
           
-18280     If NonlinearForm.HighlightBox.Value = True Then
+18280     If NonlinearForm.HighlightBox.value = True Then
 18290         HighlightNonLinearities RowIsNonLinear, ObjectiveIsNonLinear
 18300     End If
 End Sub
@@ -2070,7 +2560,7 @@ End Sub
 Function TestExistanceOfEntry(ValueZero, ValueOne, ValueTen, i) As Boolean
           'Check if ALL the index exists
 18310     On Error GoTo errorHandler
-18320     If ValueZero.index(i) <> 0 And ValueOne.index(i) <> 0 And ValueTen.index(i) <> 0 Then
+18320     If ValueZero.Index(i) <> 0 And ValueOne.Index(i) <> 0 And ValueTen.Index(i) <> 0 Then
 18330         TestExistanceOfEntry = True
 18340     End If
 errorHandler:
@@ -2082,12 +2572,12 @@ End Function
 Function GetEntry(ValueZero, ValueOne, ValueTen, i) As Long
           'Return the i'th entry from any one of these arrays; it may not exist in all of them
 18380     On Error Resume Next
-18390     If i <= ValueZero.count Then
-18400         GetEntry = ValueZero.index(i)
-18410     ElseIf i <= ValueOne.count Then
-18420         GetEntry = ValueOne.index(i)
-18430     ElseIf i <= ValueTen.count Then
-18440         GetEntry = ValueTen.index(i)
+18390     If i <= ValueZero.Count Then
+18400         GetEntry = ValueZero.Index(i)
+18410     ElseIf i <= ValueOne.Count Then
+18420         GetEntry = ValueOne.Index(i)
+18430     ElseIf i <= ValueTen.Count Then
+18440         GetEntry = ValueTen.Index(i)
 18450     End If
 End Function
 
@@ -2275,10 +2765,10 @@ Sub QuickLinearityCheck(fullLinearityCheckWasPerformed As Boolean)
 19480         NonlinearForm.Show
               
               'showing the nonlinear constraints
-19490         If NonlinearForm.HighlightBox.Value = True Then
+19490         If NonlinearForm.HighlightBox.value = True Then
 19500             HighlightNonLinearities RowIsNonLinear, ObjectiveIsNonLinear
 19510         End If
-19520         If NonlinearForm.FullCheck.Value = True Then
+19520         If NonlinearForm.FullCheck.value = True Then
                   'Full linearity check run
 19530             CheckLinearityOfModel
 19540             fullLinearityCheckWasPerformed = True
@@ -2330,7 +2820,7 @@ Function ReadGurobiModel(SolutionFilePathName As String, bGetDuals As Boolean, _
         ErrorString As String) As Boolean
           
 19570     ReadGurobiModel = False
-          Dim Line As String, index As Integer
+          Dim Line As String, Index As Integer
 19580     On Error GoTo readError
           Dim solutionExpected As Boolean
 19590     solutionExpected = True
@@ -2386,19 +2876,19 @@ Function ReadGurobiModel(SolutionFilePathName As String, bGetDuals As Boolean, _
 20050     If solutionExpected Then
 20060         Line Input #1, Line  ' Optimal - objective value              22
 20070         If Line <> "" Then
-20080             index = InStr(Line, "=")
+20080             Index = InStr(Line, "=")
                   Dim ObjectiveValue As Double
-20090             ObjectiveValue = Val(Mid(Line, index + 2))
+20090             ObjectiveValue = Val(Mid(Line, Index + 2))
                   Dim i As Integer
 20100             i = 1
 20110             While Not EOF(1)
 20120                 Line Input #1, Line
-20130                 index = InStr(Line, " ")
+20130                 Index = InStr(Line, " ")
 20140                 ReDim Preserve FinalVarValue(i)
 20150                 ReDim Preserve VarCell(i)
-20160                 FinalVarValue(i) = Val(right(Line, Len(Line) - index))
+20160                 FinalVarValue(i) = Val(right(Line, Len(Line) - Index))
                       'Get the variable name
-20170                 VarCell(i) = left(Line, index - 1)
+20170                 VarCell(i) = left(Line, Index - 1)
 20180                 If left(VarCell(i), 1) = "_" Then VarCell(i) = Mid(VarCell(i), 2) ' Strip any _ character added to make a valid name
 20190                 i = i + 1
 20200             Wend
@@ -2563,7 +3053,7 @@ Function ReadCBCModel(SolutionFilePathName As String, CommandLineRunString As St
               ' This gives the non-zero? variable values
               ' Lines like:       0 AZ70                  15                      0
               ' ...being? : Index Name Value ReducedCost
-              Dim Line As String, SplitLine() As String, index As Double, NameValue As String, Value As Double, CBCConstraintIndex As Long
+              Dim Line As String, SplitLine() As String, Index As Double, NameValue As String, value As Double, CBCConstraintIndex As Long
 21420         If bGetDuals Then
                   Dim j As Integer, row As Integer, i As Integer
                   'Dim FinalValue() As String, ShadowPrice() As String
@@ -2572,12 +3062,12 @@ Function ReadCBCModel(SolutionFilePathName As String, CommandLineRunString As St
 21450             j = 1
 21460             CBCConstraintIndex = 0
 21470             For row = 1 To NumRows
-21480                 If SparseA(row).count = 0 Then
+21480                 If SparseA(row).Count = 0 Then
                           ' This constraint was not written to the model, as it had no coefficients. Just ignore it.
 21490                     rConstraintList.Cells(row, 2).ClearContents
 21500                 Else
 21510                     Line Input #1, Line
-21520                     SplitLine = Split(Line, " ")    ' 0 indexed; item 0 is the variable index
+21520                     SplitLine = split(Line, " ")    ' 0 indexed; item 0 is the variable index
                           ' Skip over the blank items in the split (multiple delimiters give multiple items), getting the real items
 21530                     i = 0
 21540                     While SplitLine(i) = ""
@@ -2611,13 +3101,13 @@ Function ReadCBCModel(SolutionFilePathName As String, CommandLineRunString As St
 21780                     Wend
                           ' Get the dual value
 21790                     If ObjectiveSense = MaximiseObjective Then
-21800                         Value = -1 * Val(SplitLine(i))
+21800                         value = -1 * Val(SplitLine(i))
                               'rConstraintList.Cells(row, 2).Value2 = Value
 21810                     Else
-21820                         Value = Val(SplitLine(i))
+21820                         value = Val(SplitLine(i))
                               'rConstraintList.Cells(row, 2).Value2 = Value
 21830                     End If
-21840                     ShadowPrice(j) = Value
+21840                     ShadowPrice(j) = value
 21850                     If InStr(ShadowPrice(j), "E-16") Then
 21860                         ShadowPrice(j) = "0"
 21870                     End If
@@ -2632,7 +3122,7 @@ Function ReadCBCModel(SolutionFilePathName As String, CommandLineRunString As St
 21940         j = 1
 21950         While Not EOF(1)
 21960             Line Input #1, Line
-21970             SplitLine = Split(Line, " ")    ' 0 indexed; item 0 is the variable index
+21970             SplitLine = split(Line, " ")    ' 0 indexed; item 0 is the variable index
                   ' Skip over the blank items in the split (multiple delimiters give multiple items), getting the real items
 21980             i = 0
 21990             While SplitLine(i) = ""
@@ -2644,7 +3134,7 @@ Function ReadCBCModel(SolutionFilePathName As String, CommandLineRunString As St
 22040                 i = i + 1
 22050             Wend
                   ' Get the index of the variable
-22060             index = Val(SplitLine(i))
+22060             Index = Val(SplitLine(i))
 22070             i = i + 1
 22080             While SplitLine(i) = ""
 22090                 i = i + 1
@@ -2668,13 +3158,13 @@ Function ReadCBCModel(SolutionFilePathName As String, CommandLineRunString As St
 22230                     i = i + 1
 22240                 Wend
 22250                 If ObjectiveSense = MaximiseObjective Then
-22260                     Value = -1 * Val(SplitLine(i))
+22260                     value = -1 * Val(SplitLine(i))
 22270                 Else
-22280                     Value = Val(SplitLine(i))
+22280                     value = Val(SplitLine(i))
 22290                 End If
 22300                 ReDim Preserve ReducedCosts(j) As String
 22310                 ReDim Preserve VarCell(j) As String
-22320                 ReducedCosts(j) = Str(Value)
+22320                 ReducedCosts(j) = str(value)
 22330                 If InStr(ReducedCosts(j), "E-16") Then
 22340                     ReducedCosts(j) = "0"
 22350                 End If
@@ -2816,7 +3306,7 @@ Sub WriteConstraintSensitivityTable(nameSheet As String, SolverString As String)
               'This finds the range for cells of each constraint (similar to WriteConstraintListToSheet)
 23330         GetConstraintFromRow i, constraint, instance  ' Which Excel constraint are we in, and which instance?
               Dim UnusedConstraint As Boolean
-23340         UnusedConstraint = SparseA(i).count = 0
+23340         UnusedConstraint = SparseA(i).Count = 0
               Dim LHSCellRange As Range, RHSCellRange As Range, RHSstring As String
 23350         GetConstraintInstanceData constraint, instance, LHSCellRange, RHSCellRange, RHSstring
 23360         If Not RHSCellRange Is Nothing Then
@@ -2829,7 +3319,7 @@ Sub WriteConstraintSensitivityTable(nameSheet As String, SolverString As String)
 23420         s = IIf(UnusedConstraint, "", "") & LHSCellRange.AddressLocal(RowAbsolute:=False, ColumnAbsolute:=False) & _
               SolverRelationAsString(Relation(i)) & RHSstring & IIf(UnusedConstraint, "", "")
               'Cell Range for each constraint
-23430         Sheets(nameSheet).Cells(row, Column).Value = s
+23430         Sheets(nameSheet).Cells(row, Column).value = s
               'Finds the nearest name for the constraint
 23440         Sheets(nameSheet).Cells(row, Column + 1) = findName(sheet, LHSCellRange.AddressLocal(RowAbsolute:=False, ColumnAbsolute:=False))
 23450         row = row + 1
@@ -3006,16 +3496,16 @@ End Function
 '********************NON-LINEAR**************************************
 '====================================================================
 
-Function updateVarOS(x As Variant)
+Function updateVarOS(X As Variant)
 
           Dim i As Integer, numVars As Integer
 
           'set new variable values on sheet
-24740     numVars = UBound(x)
+24740     numVars = UBound(X)
 24750     i = 1
           Dim AdjCell As Range
 24760     For Each AdjCell In AdjustableCells
-24770         AdjCell.Value2 = x(i, 1)
+24770         AdjCell.Value2 = X(i, 1)
 24780         i = i + 1
 24790     Next AdjCell
 
@@ -3107,40 +3597,40 @@ Function getValuesOS() As Variant
 End Function
 
 Function getNumVariablesOS() As Variant
-25480     getNumVariablesOS = AdjustableCells.count
+25480     getNumVariablesOS = AdjustableCells.Count
 End Function
 
 Function getNumConstraintsOS() As Variant
           'The number of constraints is actually the number of Objectives + Number of Constraints
           'Note: Bounds do not count as constraints and equalities count as 2 constraints
           Dim i As Integer
-          Dim x(0 To 1) As Double
-25490     x(0) = 1
+          Dim X(0 To 1) As Double
+25490     X(0) = 1
 25500     For i = 1 To NumRows
-25510         If VariableBounds(i) = False Then x(0) = x(0) + 1
-25520         If Relation(i) = RelationEQ Then x(0) = x(0) + 1
+25510         If VariableBounds(i) = False Then X(0) = X(0) + 1
+25520         If Relation(i) = RelationEQ Then X(0) = X(0) + 1
 25530     Next i
 
           'Number of objectives - NOMAD can do bi-objective
           'will take the first two values passed to it from getValuesOS as the objectives if doing biobj
           'Note: Currently OpenSolver can only do single objectives- will need to set up multi objectives yourself
-25540     x(1) = 1 'number of objectives
-25550     getNumConstraintsOS = x
+25540     X(1) = 1 'number of objectives
+25550     getNumConstraintsOS = X
 End Function
 
 Function getVariableDataOS() As Variant
           Dim numVars As Double
-25560     numVars = AdjustableCells.count
-          Dim x() As Double
-25570     ReDim x(0 To 4 * numVars - 1)
+25560     numVars = AdjustableCells.Count
+          Dim X() As Double
+25570     ReDim X(0 To 4 * numVars - 1)
           Dim i As Long, j As Long
 25580     For i = 0 To numVars - 1
 25590         If AssumeNonNegativeVars Then
-25600             x(2 * i) = 0
+25600             X(2 * i) = 0
 25610         Else
-25620             x(2 * i) = -10000000000000#
+25620             X(2 * i) = -10000000000000#
 25630         End If
-25640         x(2 * i + 1) = 10000000000000#
+25640         X(2 * i + 1) = 10000000000000#
 25650     Next i
           
           Dim BoundedVariables As Range, row As Long, var As Long, constraint As Long, instance As Long
@@ -3148,9 +3638,9 @@ Function getVariableDataOS() As Variant
 25670     ReDim VariableBounds(NumRows)
 25680     For row = 1 To NumRows
 25690         VariableBounds(row) = False
-25700         If (Relation(row) = RelationGE Or Relation(row) = RelationLE) And SparseA(row).count = 1 Then
+25700         If (Relation(row) = RelationGE Or Relation(row) = RelationLE) And SparseA(row).Count = 1 Then
               ' This is a constraint apply a lower bound to one variable. Check that the LHS did directly specify the decision variable.
-25710             var = SparseA(row).index(1)
+25710             var = SparseA(row).Index(1)
 25720             GetConstraintFromRow row, constraint, instance
 25730             If RHSType(constraint) <> Formula Then
 25740                 GetArrayPosnFromConstraintInstance constraint, instance, i, j
@@ -3159,15 +3649,15 @@ Function getVariableDataOS() As Variant
                           ' This is a direct lower bound on this variable
 25760                     If Relation(row) = 1 Then
 25770                         If RHSType(constraint) = MultiCellRange Then
-25780                             x(2 * var - 1) = RHSOriginalValues(constraint)(i, j)
+25780                             X(2 * var - 1) = RHSOriginalValues(constraint)(i, j)
 25790                         Else
-25800                             x(2 * var - 1) = RHSOriginalValues(constraint)
+25800                             X(2 * var - 1) = RHSOriginalValues(constraint)
 25810                         End If
 25820                     ElseIf Relation(row) = 3 Then
 25830                         If RHSType(constraint) = MultiCellRange Then
-25840                             x(2 * var - 2) = RHSOriginalValues(constraint)(i, j)
+25840                             X(2 * var - 2) = RHSOriginalValues(constraint)(i, j)
 25850                         Else
-25860                             x(2 * var - 2) = RHSOriginalValues(constraint)
+25860                             X(2 * var - 2) = RHSOriginalValues(constraint)
 25870                         End If
 25880                     End If
 25890                     VariableBounds(row) = True
@@ -3179,19 +3669,19 @@ Function getVariableDataOS() As Variant
           'Get the starting point
           'Takes the points on the sheet and forces them between the bounds
 25940     For j = 0 To numVars - 1
-25950         If StartingPosition(j + 1) < x(2 * j) Then
-25960             x(j + 2 * numVars) = x(2 * j)
-25970         ElseIf StartingPosition(j + 1) > x(2 * j + 1) Then
-25980             x(j + 2 * numVars) = x(2 * j + 1)
+25950         If StartingPosition(j + 1) < X(2 * j) Then
+25960             X(j + 2 * numVars) = X(2 * j)
+25970         ElseIf StartingPosition(j + 1) > X(2 * j + 1) Then
+25980             X(j + 2 * numVars) = X(2 * j + 1)
 25990         Else
-26000             x(j + 2 * numVars) = StartingPosition(j + 1)
+26000             X(j + 2 * numVars) = StartingPosition(j + 1)
 26010         End If
 26020     Next j
           
           'Get the variable type(real, int or bin)
 26030     For i = 1 To numVars
           'initialise all variables as continuous
-26040         x(i - 1 + 3 * numVars) = 1
+26040         X(i - 1 + 3 * numVars) = 1
 26050     Next i
           Dim counter As Integer, types As Variant, c As Range
 26060     counter = 2
@@ -3200,26 +3690,26 @@ Function getVariableDataOS() As Variant
 26090             For Each c In types
 26100                 For i = 1 To numVars
 26110                     If VarNames(i) = c.Address(RowAbsolute:=False, ColumnAbsolute:=False) Then
-26120                         x(i - 1 + 3 * numVars) = counter
+26120                         X(i - 1 + 3 * numVars) = counter
 26130                         If Not SolveRelaxedModel Then
                                   'Make bounds on integer and binary constraints integer
-26140                             If x(2 * i - 2) > 0 Then
-26150                                 x(2 * i - 2) = Application.WorksheetFunction.RoundUp(x(2 * i - 2), 0)
+26140                             If X(2 * i - 2) > 0 Then
+26150                                 X(2 * i - 2) = Application.WorksheetFunction.RoundUp(X(2 * i - 2), 0)
 26160                             Else
-26170                                 x(2 * i - 2) = Application.WorksheetFunction.RoundDown(x(2 * i - 2), 0)
+26170                                 X(2 * i - 2) = Application.WorksheetFunction.RoundDown(X(2 * i - 2), 0)
 26180                             End If
-26190                             If x(2 * i - 1) > 0 Then
-26200                                 x(2 * i - 1) = Application.WorksheetFunction.RoundDown(x(2 * i - 1), 0)
+26190                             If X(2 * i - 1) > 0 Then
+26200                                 X(2 * i - 1) = Application.WorksheetFunction.RoundDown(X(2 * i - 1), 0)
 26210                             Else
-26220                                 x(2 * i - 1) = Application.WorksheetFunction.RoundUp(x(2 * i - 1), 0)
+26220                                 X(2 * i - 1) = Application.WorksheetFunction.RoundUp(X(2 * i - 1), 0)
 26230                             End If
                                   'Make starting positions on integer and binary constraints integer
-26240                             If x(i - 1 + 2 * numVars) < x(2 * i - 2) Then
-26250                                 x(i - 1 + 2 * numVars) = x(2 * i - 2)
-26260                             ElseIf x(i - 1 + 2 * numVars) > x(2 * i - 1) Then
-26270                                 x(i - 1 + 2 * numVars) = x(2 * i - 1)
+26240                             If X(i - 1 + 2 * numVars) < X(2 * i - 2) Then
+26250                                 X(i - 1 + 2 * numVars) = X(2 * i - 2)
+26260                             ElseIf X(i - 1 + 2 * numVars) > X(2 * i - 1) Then
+26270                                 X(i - 1 + 2 * numVars) = X(2 * i - 1)
 26280                             Else
-26290                                 x(i - 1 + 2 * numVars) = Round(x(i - 1 + 2 * numVars))
+26290                                 X(i - 1 + 2 * numVars) = Round(X(i - 1 + 2 * numVars))
 26300                             End If
 26310                         End If
 26320                     End If
@@ -3229,17 +3719,17 @@ Function getVariableDataOS() As Variant
 26360         counter = counter + 1
 26370     Next types
           
-26380     getVariableDataOS = x
+26380     getVariableDataOS = X
 End Function
 
 Function getOptionDataOS() As Variant
-          Dim x() As Double
-26390     ReDim x(0 To 2)
+          Dim X() As Double
+26390     ReDim X(0 To 2)
           Dim SolveOptions As SolveOptionsType, ErrorString As String
 26400     GetSolveOptions sheetName, SolveOptions, ErrorString
-26410     x(0) = SolveOptions.MaxIterations
-26420     x(1) = SolveOptions.maxTime
-26430     x(2) = SolveOptions.Precision
-26440     getOptionDataOS = x
+26410     X(0) = SolveOptions.MaxIterations
+26420     X(1) = SolveOptions.maxTime
+26430     X(2) = SolveOptions.Precision
+26440     getOptionDataOS = X
 End Function
 
