@@ -1,0 +1,7 @@
+OpenSolverNomadDll License
+--------------------------
+The OpenSolverNomadDLL and OpenSolverNomadDLL64 files support the use of NOMAD in OpenSolver, and are licensed for use by all OpenSolver users. 
+
+Please see "NOMAD GNU LGPL License.txt" and http://www.gerad.ca/nomad/Project/Home.html for details of the NOMAD license.
+
+© Copyright by Andrew Mason and Matthew Milner, 2013
