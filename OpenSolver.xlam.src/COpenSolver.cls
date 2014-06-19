@@ -1830,10 +1830,12 @@ Sub WriteAMPLFile(ModelFilePathName As String, SolveRelaxation As Boolean, Error
      ' Intialise Variables
      For var = 1 To numVars
          Line = "var " & ValidLPFileVarName(VarNames(var)) & VarDic.Item(ValidLPFileVarName(VarNames(var)))
-         If BoundedVariables Is Nothing Then
-             Line = Line & " &gt;= 0"
-         ElseIf Application.Intersect(Range(VarNames(var)), BoundedVariables) Is Nothing Then
-             Line = Line & " &gt;= 0"
+         If AssumeNonNegativeVars Then
+             If BoundedVariables Is Nothing Then
+                 Line = Line & " &gt;= 0"
+             ElseIf Application.Intersect(Range(VarNames(var)), BoundedVariables) Is Nothing Then
+                 Line = Line & " &gt;= 0"
+             End If
          End If
          Print #1, Line & ";"
      Next var

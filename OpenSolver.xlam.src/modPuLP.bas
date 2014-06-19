@@ -163,6 +163,7 @@ Public Sub GenerateFile(m As CModel2, SolverType As String, boolOtherSheetsIndep
             Next
         End If
         
+        Dim Line As String
         ' Vars
         ' Initialise each variable independently
         For Each c In m.AdjustableCells
