@@ -2049,18 +2049,18 @@ Sub CallNEOS(ModelFilePathName As String, ErrorString As String)
      LinearSolveStatusString = right(solution, Len(solution) - openingParen - Len("solve_result"))
     
      ' Determine Feasibility
-     If LinearSolveStatusString Like "unbounded*" Then
+     If LinearSolveStatusString Like "*unbounded*" Then
          SolveStatus = OpenSolverResult.Unbounded
          SolveStatusString = "No Solution Found (Unbounded)"
          LinearSolveStatus = LinearSolveResult.Unbounded
          '
-     ElseIf LinearSolveStatusString Like "infeasible*" Then ' Stopped on iterations or time
+     ElseIf LinearSolveStatusString Like "*infeasible*" Then ' Stopped on iterations or time
          SolveStatus = OpenSolverResult.Infeasible
          SolveStatusString = "No Feasible Solution"
          LinearSolveStatus = LinearSolveResult.Infeasible
          GoTo ExitSub
          '
-     ElseIf Not LinearSolveStatusString Like "solved*" Then
+     ElseIf Not LinearSolveStatusString Like "*solved*" Then
          openingParen = InStr(solution, ">>>")
          If openingParen = 0 Then
              openingParen = InStr(solution, "processing commands.")
