@@ -521,11 +521,14 @@ Sub BuildModelFromSolverData(Optional LinearityCheckOffset As Double = 0)
           Dim ObjRefersToFormula As Boolean, sRefersToObj As String, objIsMissing As Boolean
 9050      GetNameAsValueOrRange book, sheetName & "solver_opt", objIsMissing, isRangeObj, ObjRange, ObjRefersToFormula, ObjRefersToError, sRefersToObj, valObj
           Dim objValue As Double
-          ' Must have an objective
+          ' Allow no objective in order to seek a feasible solution
 9060      If objIsMissing Then
 9070          GoTo ModelOptions
+          End If
+          ' If objMissing is false, but the ObjRange is empty, the objective might be an out of date reference
+          If objIsMissing = False And ObjRange Is Nothing Then
 9080          On Error GoTo errorHandler
-9090          Err.Raise Number:=OpenSolver_BuildError, Source:=errorPrefix, Description:="OpenSolver cannot find any objective ('solver_opt' is missing). Please fix the objective, and try again."
+9090          Err.Raise Number:=OpenSolver_BuildError, Source:=errorPrefix, Description:="OpenSolver cannot find the objective ('solver_opt' is out of date). Please re-enter the objective, and try again."
 9100          GoTo ExitSub
 9110      End If
           ' Objective is corrupted somehow
