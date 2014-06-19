@@ -1949,14 +1949,14 @@ errorHandler:
 End Sub
 
 Sub CallNEOS(ModelFilePathName As String, ErrorString As String)
-     Dim objSvrHTTP As ServerXMLHTTP, message As String, txtURL As String
+     Dim objSvrHTTP As MSXML2.ServerXMLHTTP60, message As String, txtURL As String
      Dim Done As Boolean, result As String
      Dim openingParen As String, closingParen As String, jobNumber As String, Password As String, solutionFile As String, solution As String
      Dim i As Integer, LinearSolveStatusString As String, var As Long
      
      ' Server name
      txtURL = "http://www.neos-server.org:3332"
-     Set objSvrHTTP = New ServerXMLHTTP
+     Set objSvrHTTP = New MSXML2.ServerXMLHTTP60
      
      ' Set up obj for a POST request
      objSvrHTTP.Open "POST", txtURL, False
@@ -2001,7 +2001,7 @@ Sub CallNEOS(ModelFilePathName As String, ErrorString As String)
          DoEvents
          
          ' Reset obj
-         Set objSvrHTTP = New ServerXMLHTTP
+         Set objSvrHTTP = New MSXML2.ServerXMLHTTP60
          objSvrHTTP.Open "POST", txtURL, False
          
          ' Send message
@@ -2031,7 +2031,7 @@ Sub CallNEOS(ModelFilePathName As String, ErrorString As String)
         "</string></value></param></params></methodCall>"
      
      ' Reset obj
-     Set objSvrHTTP = New ServerXMLHTTP
+     Set objSvrHTTP = New MSXML2.ServerXMLHTTP60
      objSvrHTTP.Open "POST", txtURL, False
     
      objSvrHTTP.send message
@@ -2106,11 +2106,11 @@ End Sub
 
 ' Code by Tim Hastings
 Private Function DecodeBase64(ByVal strData As String) As String
-    Dim objXML As MSXML2.DOMDocument
+    Dim objXML As MSXML2.DOMDocument60
     Dim objNode As MSXML2.IXMLDOMElement
   
     ' Help from MSXML
-    Set objXML = New MSXML2.DOMDocument
+    Set objXML = New MSXML2.DOMDocument60
     Set objNode = objXML.createElement("b64")
     objNode.DataType = "bin.base64"
     objNode.Text = strData
