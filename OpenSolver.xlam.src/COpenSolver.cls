@@ -1796,14 +1796,51 @@ Sub WriteAMPLFile(ModelFilePathName As String, SolveRelaxation As Boolean, Error
          End If
      End If
      
+     Dim constraint As Long
+     Dim instance As Long
+     constraint = 1
+     
+     Dim BoundedVariables As Range
+     If AssumeNonNegativeVars Then
+         'If AssumeNonNegative, then we need to apply lower bounds to any variables without explicit lower bounds.
+         ' Excel 2007 requires the following conditions to be met for a user-supplied lower bound to exist
+         '  The LHS range includes a decision variable directly (not via a formula referring to the decision var).
+         '  The RHS is either: a constant, or: a (single or multicell) range that containing a constant or a formula. The RHS may not
+         '  be specified as a formula (even one evaluating to a constant)
+         '  The resulting equation does indeed just depend on a single decision variable (ie the RHS range turned out to be constant)
+         ' Note: Excel 2010 seems a bit different in that the WHOLE LHS range must be decision variables; this needs to be confirmed
+         ' Note: A constraint of the form 'range <= decision var' does NOT count as a lower bound; the decision var MUST be in the LHS
+         For row = 1 To NumRows
+             If Relation(row) = RelationGE And SparseA(row).Count = 1 Then
+                 ' This is a constraint apply a lower bound to one variable. Check that the LHS did directly specify the decision variable.
+                 var = SparseA(row).Index(1)
+                 GetConstraintFromRow row, constraint, instance
+                 If RHSType(constraint) <> Formula Then
+                     GetArrayPosnFromConstraintInstance constraint, instance, i, j
+                     If LHSRange(constraint)(i, j).Address(RowAbsolute:=False, ColumnAbsolute:=False) = VarNames(var) _
+                        And LHSRange(constraint).Worksheet.Name = AdjustableCells.Worksheet.Name Then ' AJM Must be on the same sheet
+                         ' This is a direct lower bound on this variable
+                         Set BoundedVariables = ProperUnion(BoundedVariables, LHSRange(constraint)(i, j))
+                     End If
+                 End If
+             End If
+         Next row
+     End If
+     
      ' Intialise Variables
      For var = 1 To numVars
-         Print #1, "var " & ValidLPFileVarName(VarNames(var)) & VarDic.Item(ValidLPFileVarName(VarNames(var))) & ";"
+         Line = "var " & ValidLPFileVarName(VarNames(var)) & VarDic.Item(ValidLPFileVarName(VarNames(var)))
+         If BoundedVariables Is Nothing Then
+             Line = Line & " &gt;= 0"
+         ElseIf Application.Intersect(Range(VarNames(var)), BoundedVariables) Is Nothing Then
+             Line = Line & " &gt;= 0"
+         End If
+         Print #1, Line & ";"
      Next var
      
      ' Parameter - Costs
      Print #1,   ' New line
-     Line1 = "  "
+     Line = "  "
      For var = 1 To numVars
          Line = Line & ValidLPFileVarName(VarNames(var)) & "*" & StrEx(CostCoeffs(var))
          If var < numVars Then
@@ -1832,11 +1869,6 @@ Sub WriteAMPLFile(ModelFilePathName As String, SolveRelaxation As Boolean, Error
      End If
      
      ' Subject to Constraints
-     Dim constraint As Long
-     Dim instance As Long
-     constraint = 1
-     
-     ' Loop through constraints
      For row = 1 To NumRows
          Line = "   "
          GetConstraintFromRow row, constraint, instance  ' Which Excel constraint are we in, and which instance?

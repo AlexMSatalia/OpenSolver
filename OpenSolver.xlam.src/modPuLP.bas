@@ -166,7 +166,11 @@ Public Sub GenerateFile(m As CModel2, SolverType As String, boolOtherSheetsIndep
         ' Vars
         ' Initialise each variable independently
         For Each c In m.AdjustableCells
-            WriteToFile 1, "var " & ConvertCellToStandardName(c) & IntegerType(ConvertCellToStandardName(c)) & ";"
+            Line = "var " & ConvertCellToStandardName(c) & IntegerType(ConvertCellToStandardName(c))
+            If m.AssumeNonNegative Then
+                Line = Line & " &gt;= 0"
+            End If
+            WriteToFile 1, Line & ";"
         Next
         
         WriteToFile 1, "var " & ConvertCellToStandardName(m.ObjectiveCell) & ";" & vbNewLine
