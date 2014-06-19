@@ -437,9 +437,6 @@ ExitSub:
           'Next key
 End Sub
 
-Private Sub Label3_Click()
-
-End Sub
 
 Private Sub labelOpenSolverOrg_Click()
 36090     Call fHandleFile("http://www.opensolver.org", WIN_NORMAL)
