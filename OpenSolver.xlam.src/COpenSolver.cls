@@ -1805,7 +1805,7 @@ Sub WriteAMPLFile(ModelFilePathName As String, SolveRelaxation As Boolean, Error
      Print #1,   ' New line
      Line1 = "  "
      For var = 1 To numVars
-         Line = Line & ValidLPFileVarName(VarNames(var)) & "*" & CostCoeffs(var)
+         Line = Line & ValidLPFileVarName(VarNames(var)) & "*" & StrEx(CostCoeffs(var))
          If var < numVars Then
              Line = Line & " + "
          End If
@@ -1818,7 +1818,7 @@ Sub WriteAMPLFile(ModelFilePathName As String, SolveRelaxation As Boolean, Error
          
          Print #1, commentStart & " The objective must achieve a given target value; this constraint enforces this."
          Print #1, "subject to TargetConstr {c in Constraints}:"
-         Print #1, Line * " = " & StrEx(ObjectiveTargetValue) & ";"
+         Print #1, Line & " = " & StrEx(ObjectiveTargetValue) & ";"
      Else
          ' Determine objective direction
          If ObjectiveSense = MaximiseObjective Then
