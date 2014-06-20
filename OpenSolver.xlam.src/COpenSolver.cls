@@ -3670,37 +3670,39 @@ Function getVariableDataOS() As Variant
 25650     Next i
           
           Dim BoundedVariables As Range, row As Long, var As Long, constraint As Long, instance As Long
-25660     constraint = 1
-25670     ReDim VariableBounds(NumRows)
-25680     For row = 1 To NumRows
-25690         VariableBounds(row) = False
-25700         If (Relation(row) = RelationGE Or Relation(row) = RelationLE) And SparseA(row).Count = 1 Then
-              ' This is a constraint apply a lower bound to one variable. Check that the LHS did directly specify the decision variable.
-25710             var = SparseA(row).Index(1)
-25720             GetConstraintFromRow row, constraint, instance
-25730             If RHSType(constraint) <> Formula Then
-25740                 GetArrayPosnFromConstraintInstance constraint, instance, i, j
-25750                 If LHSRange(constraint)(i, j).Address(RowAbsolute:=False, ColumnAbsolute:=False) = VarNames(var) _
-                          And LHSRange(constraint).Worksheet.Name = AdjustableCells.Worksheet.Name Then ' AJM Must be on the same sheet
-                          ' This is a direct lower bound on this variable
-25760                     If Relation(row) = 1 Then
-25770                         If RHSType(constraint) = MultiCellRange Then
-25780                             X(2 * var - 1) = RHSOriginalValues(constraint)(i, j)
-25790                         Else
-25800                             X(2 * var - 1) = RHSOriginalValues(constraint)
-25810                         End If
-25820                     ElseIf Relation(row) = 3 Then
-25830                         If RHSType(constraint) = MultiCellRange Then
-25840                             X(2 * var - 2) = RHSOriginalValues(constraint)(i, j)
-25850                         Else
-25860                             X(2 * var - 2) = RHSOriginalValues(constraint)
-25870                         End If
-25880                     End If
-25890                     VariableBounds(row) = True
-25900                 End If
-25910             End If
-25920         End If
-25930     Next row
+          If NumRows > 0 Then
+25660         constraint = 1
+25670         ReDim VariableBounds(NumRows)
+25680         For row = 1 To NumRows
+25690             VariableBounds(row) = False
+25700             If (Relation(row) = RelationGE Or Relation(row) = RelationLE) And SparseA(row).Count = 1 Then
+                  ' This is a constraint apply a lower bound to one variable. Check that the LHS did directly specify the decision variable.
+25710                 var = SparseA(row).Index(1)
+25720                 GetConstraintFromRow row, constraint, instance
+25730                 If RHSType(constraint) <> Formula Then
+25740                     GetArrayPosnFromConstraintInstance constraint, instance, i, j
+25750                     If LHSRange(constraint)(i, j).Address(RowAbsolute:=False, ColumnAbsolute:=False) = VarNames(var) _
+                              And LHSRange(constraint).Worksheet.Name = AdjustableCells.Worksheet.Name Then ' AJM Must be on the same sheet
+                              ' This is a direct lower bound on this variable
+25760                         If Relation(row) = 1 Then
+25770                             If RHSType(constraint) = MultiCellRange Then
+25780                                 X(2 * var - 1) = RHSOriginalValues(constraint)(i, j)
+25790                             Else
+25800                                 X(2 * var - 1) = RHSOriginalValues(constraint)
+25810                             End If
+25820                         ElseIf Relation(row) = 3 Then
+25830                             If RHSType(constraint) = MultiCellRange Then
+25840                                 X(2 * var - 2) = RHSOriginalValues(constraint)(i, j)
+25850                             Else
+25860                                 X(2 * var - 2) = RHSOriginalValues(constraint)
+25870                             End If
+25880                         End If
+25890                         VariableBounds(row) = True
+25900                     End If
+25910                 End If
+25920             End If
+25930         Next row
+          End If
 
           'Get the starting point
           'Takes the points on the sheet and forces them between the bounds
