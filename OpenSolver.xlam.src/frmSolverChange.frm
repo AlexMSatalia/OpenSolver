@@ -66,8 +66,8 @@ Private Sub UserForm_Activate()
           'cboSolver.AddItem "Cplex"
 47910     cboSolver.AddItem "Gurobi (Linear Solver)"
 47920     cboSolver.AddItem "NOMAD (Non-linear Solver)"
-          cboSolver.AddItem "NEOS using Couenne (Non-linear Solver)"
-          cboSolver.AddItem "NEOS using Bonmin (Non-linear Solver)"
+          'cboSolver.AddItem "NEOS using Couenne (Non-linear Solver)"
+          'cboSolver.AddItem "NEOS using Bonmin (Non-linear Solver)"
           'cboSolver.AddItem "PuLP (Non-linear Solver)"
 47930     cboSolver.MatchRequired = True
 47940     cboSolver.Style = fmStyleDropDownList
