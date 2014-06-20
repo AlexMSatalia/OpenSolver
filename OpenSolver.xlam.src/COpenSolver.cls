@@ -3495,7 +3495,7 @@ Function findName(sheet As String, cell As String) As String
 24470     NotFoundStringLeft = True
 24480     NotFoundStringTop = True
           'Loop through to the left and above the cell to find the first non-numeric cell
-24490     While (NotFoundStringLeft Or NotFoundStringTop) And (i > 0) And (j > 0)
+24490     While (NotFoundStringLeft And i > 0) Or (NotFoundStringTop And j > 0)
               'Find the nearest name to the left of the variable or constraint if one exists
 24500         If i > 0 And NotFoundStringLeft Then
 24510             CellValue = Sheets(sheet).Cells(row, i)
