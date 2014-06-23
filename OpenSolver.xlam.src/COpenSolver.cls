@@ -3562,25 +3562,20 @@ Function getValuesOS() As Variant
           Dim y As Variant, i As Integer, j As Integer, k As Integer, conCountB As Integer, numCons As Variant
 24800     numCons = getNumConstraintsOS()
 24810     ReDim y(1 To numCons(0), 1 To 1)
-          ' Catch #DIV/0! error in objective and report NaN to DLL
-          If VarType(ObjRange.Value2) = vbError Then
-              y(1, 1) = "NaN"
-          Else
-              '====NOMAD only does minimise so need to change objective if it is max====
-              'If objective sense is maximise then multiply by minus 1
-24820         If ObjectiveSense = MaximiseObjective Then
-24830             If ObjRange.Value2 <> 0 Then
-24840                 y(1, 1) = -1 * ObjRange.Value2 'objective value
-24850             Else
-24860                 y(1, 1) = ObjRange.Value2
-24870             End If
-              'Else if objective sense is minimise leave it
-24880         ElseIf ObjectiveSense = MinimiseObjective Then
-24890             y(1, 1) = ObjRange.Value2
-24900         ElseIf ObjectiveSense = TargetObjective Then
-24910             y(1, 1) = Abs(ObjRange.Value2 - ObjectiveTargetValue)
-24920         End If
-          End If
+          '====NOMAD only does minimise so need to change objective if it is max====
+          'If objective sense is maximise then multiply by minus 1
+24820     If ObjectiveSense = MaximiseObjective Then
+24830         If ObjRange.Value2 <> 0 Then
+24840             y(1, 1) = -1 * ObjRange.Value2 'objective value
+24850         Else
+24860             y(1, 1) = ObjRange.Value2
+24870         End If
+          'Else if objective sense is minimise leave it
+24880     ElseIf ObjectiveSense = MinimiseObjective Then
+24890         y(1, 1) = ObjRange.Value2
+24900     ElseIf ObjectiveSense = TargetObjective Then
+24910         y(1, 1) = Abs(ObjRange.Value2 - ObjectiveTargetValue)
+24920     End If
 24930     conCountB = 1 'keep a count of what constraint its up to including bounds
 24940     k = 1 'keep a count of what constraint its up to not including bounds
           Dim row As Long, constraint As Long
@@ -3625,12 +3620,12 @@ Sub SetConstraintValue(ByRef ConstraintValues As Variant, ByRef k As Integer, RH
           ' This is for when the LHS and RHS ranges are the same dimension (both m x n)
           Select Case RelationType
               Case RelationLE
-                  ConstraintValues(k + 1, 1) = DifferenceOrNaN(LHSValue, RHSValue)
+                  ConstraintValues(k + 1, 1) = LHSValue - RHSValue
               Case RelationGE
-                  ConstraintValues(k + 1, 1) = DifferenceOrNaN(RHSValue, LHSValue)
+                  ConstraintValues(k + 1, 1) = RHSValue - LHSValue
               Case RelationEQ
-                  ConstraintValues(k + 1, 1) = DifferenceOrNaN(LHSValue, RHSValue)
-                  ConstraintValues(k + 2, 1) = DifferenceOrNaN(RHSValue, LHSValue)
+                  ConstraintValues(k + 1, 1) = LHSValue - RHSValue
+                  ConstraintValues(k + 2, 1) = RHSValue - LHSValue
                   k = k + 1
           End Select
           k = k + 1
@@ -3643,26 +3638,17 @@ Sub SetConstraintValueMismatchedDims(ByRef ConstraintValues As Variant, ByRef k 
           ' This is for when the LHS and RHS ranges have mismatched dimensions (m x n and n x m)
           Select Case RelationType
               Case RelationLE
-                  ConstraintValues(k + 1, 1) = DifferenceOrNaN(CurrentLHSValues(j, i), CurrentRHSValues(i, j))
+                  ConstraintValues(k + 1, 1) = CurrentLHSValues(j, i) - CurrentRHSValues(i, j)
               Case RelationGE
-                  ConstraintValues(k + 1, 1) = DifferenceOrNaN(CurrentRHSValues(j, i), CurrentLHSValues(i, j))
+                  ConstraintValues(k + 1, 1) = CurrentRHSValues(j, i) - CurrentLHSValues(i, j)
               Case RelationEQ
-                  ConstraintValues(k + 1, 1) = DifferenceOrNaN(CurrentLHSValues(j, i), CurrentRHSValues(i, j))
-                  ConstraintValues(k + 2, 1) = DifferenceOrNaN(CurrentRHSValues(j, i), CurrentLHSValues(i, j))
+                  ConstraintValues(k + 1, 1) = CurrentLHSValues(j, i) - CurrentRHSValues(i, j)
+                  ConstraintValues(k + 2, 1) = CurrentRHSValues(j, i) - CurrentLHSValues(i, j)
                   k = k + 1
           End Select
           k = k + 1
 
 End Sub
-
-Function DifferenceOrNaN(Value1 As Variant, Value2 As Variant)
-          ' Returns Value1 - Value2, unless either variable is a vbError, in which case "NaN" is returned.
-          If VarType(Value1) = vbError Or VarType(Value2) = vbError Then
-              DifferenceOrNaN = "NaN"
-          Else
-              DifferenceOrNaN = Value1 - Value2
-          End If
-End Function
 
 
 Function getNumVariablesOS() As Variant
