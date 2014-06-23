@@ -50,6 +50,19 @@ End Function
 '==============================================================================
 
 '==============================================================================
+' ConvertRelationToAMPL
+' Given the value of a solver_relX Name, pick the equivalent AMPL comparison
+' operator
+Private Function ConvertRelationToAMPL(ByVal strNameContents As String) As String
+    Select Case Mid(strNameContents, 2)
+        Case "1": ConvertRelationToAMPL = " &lt;= "
+        Case "2": ConvertRelationToAMPL = " == "
+        Case "3": ConvertRelationToAMPL = " &gt;= "
+    End Select
+End Function
+'==============================================================================
+
+'==============================================================================
 Public Sub GenerateFile(m As CModel2, SolverType As String, boolOtherSheetsIndependent As Boolean)
 
     '==========================================================================
@@ -260,15 +273,13 @@ Public Sub GenerateFile(m As CModel2, SolverType As String, boolOtherSheetsIndep
         Set nameRELi = Names(m.strNameRoot + "solver_rel" + CStr(i))
         Set nameRHSi = Names(m.strNameRoot + "solver_rhs" + CStr(i))
         
-        Dim pystrLHS As String, pystrREL As String, pystrRHS As String
+        Dim pystrLHS As String, pystrREL As String, pystrRHS As String, amplstrREL As String
         Dim lngFormulaeCountBefore As Long
         Dim cRow As Long, cCol As Long, cRowCount As Long, cColCount As Long
         Dim varLHSFormulae As Variant, rngLHS As Range
         
         If nameRELi.value = "=5" Or nameRELi.value = "=4" Then
             GoTo NextCons
-        Else
-            Count = Count + 1
         End If
         
         lngFormulaeCountBefore = Formulae.Count
@@ -287,6 +298,7 @@ Public Sub GenerateFile(m As CModel2, SolverType As String, boolOtherSheetsIndep
                 
         For cRow = 1 To cRowCount
             For cCol = 1 To cColCount
+                Count = Count + 1
                 'Application.StatusBar = "Solver Constraint #" + CStr(i) + " - R" + CStr(cRow) + " - C" + CStr(cCol)
                 'Debug.Print "Solver Constraint #" + CStr(i) + " - R" + CStr(cRow) + " - C" + CStr(cCol)
                 'DoEvents
@@ -302,6 +314,7 @@ Public Sub GenerateFile(m As CModel2, SolverType As String, boolOtherSheetsIndep
                 
                 ' Determine appropriate relation
                 pystrREL = ConvertRelationToPython(nameRELi.value)
+                amplstrREL = ConvertRelationToAMPL(nameRELi.value)
                     
                 ' Parse RHS
                 Dim strRHSFormula As String, rngRHSCell As Range
@@ -329,7 +342,7 @@ Public Sub GenerateFile(m As CModel2, SolverType As String, boolOtherSheetsIndep
                     strProbPlus = strProbPlus + ("prob += " + pystrLHS + pystrREL + pystrRHS + vbNewLine)
                 ElseIf SolverType Like "NEOS*" Then
                     strProbPlus = strProbPlus + "subject to " & pystrLHS & ":" & vbNewLine
-                    strProbPlus = strProbPlus + "    " & Formulae(Count).strFormulaParsed & pystrREL & pystrRHS & ";" & vbNewLine & vbNewLine
+                    strProbPlus = strProbPlus + "    " & Formulae(Count).strFormulaParsed & amplstrREL & pystrRHS & ";" & vbNewLine & vbNewLine
                 End If
             Next cCol
         Next cRow
@@ -717,6 +730,8 @@ Private Function ConvertFormulaToPython(ByVal strFormula As String, _
                                     Else
                                         strParsed = Replace(strParsed, ",", "*" & AddNodeIfNew(objCurNode, c, rngAdjCells, Formulae, lngMaxDepth, rngAdjDepedents) & "+", 1, 1)
                                     End If
+                                ElseIf FunctionName = "sum" Then
+                                    strParsed = strParsed + AddNodeIfNew(objCurNode, c, rngAdjCells, Formulae, lngMaxDepth, rngAdjDepedents) + "+"
                                 Else
                                     ' Check if we need a new node, add token to parsed string
                                     strParsed = strParsed + AddNodeIfNew(objCurNode, c, rngAdjCells, Formulae, lngMaxDepth, rngAdjDepedents) + ","
@@ -735,6 +750,8 @@ Private Function ConvertFormulaToPython(ByVal strFormula As String, _
                                     Else
                                         strParsed = Replace(strParsed, ",", "*" & ConvertCellToStandardName(c, strCleanParentName) & "+", 1, 1)
                                     End If
+                                ElseIf FunctionName = "sum" Then
+                                    strParsed = strParsed + AddNodeIfNew(objCurNode, c, rngAdjCells, Formulae, lngMaxDepth, rngAdjDepedents) + "+"
                                 Else
                                     strParsed = strParsed + ConvertCellToStandardName(c, strCleanParentName) + ","
                                 End If
@@ -808,10 +825,14 @@ Private Function ConvertFormulaToPython(ByVal strFormula As String, _
                         ' AMPL works with lower case expressions
                         tkn.Text = LCase(tkn.Text)
                     
-                        ' SUMPRODUCT - Map to custom function called ExSumProduct
+                        ' SUMPRODUCT
                         If tkn.Text = "sumproduct" Then
                             strParsed = strParsed + "("
                             FunctionName = "sumproduct"
+                        ' SUMPRODUCT
+                        ElseIf tkn.Text = "sum" Then
+                            strParsed = strParsed + "("
+                            FunctionName = "sum"
                         ' TODO: Unhandled yet
                         ElseIf Not tkn.Text = "min" And Not tkn.Text = "max" Then
                             strParsed = strParsed + tkn.Text + "("
