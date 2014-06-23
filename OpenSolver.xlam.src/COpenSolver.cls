@@ -3540,11 +3540,20 @@ Function updateVarOS(X As Variant)
 24740     numVars = UBound(X)
 24750     i = 1
           Dim AdjCell As Range
-24760     For Each AdjCell In AdjustableCells
-24770         AdjCell.Value2 = X(i, 1)
-24780         i = i + 1
-24790     Next AdjCell
-
+          ' If only one variable is returned, X is treated as a 1D array rather than 2D, so we need to access it
+          ' differently.
+          If numVars = 1 Then
+              For Each AdjCell In AdjustableCells
+                  AdjCell.Value2 = X(i)
+                  i = i + 1
+              Next AdjCell
+          Else
+24760         For Each AdjCell In AdjustableCells
+24770             AdjCell.Value2 = X(i, 1)
+24780             i = i + 1
+24790         Next AdjCell
+          End If
+          
 End Function
 
 Function getValuesOS() As Variant
