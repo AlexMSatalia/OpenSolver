@@ -496,7 +496,9 @@ Sub BuildModelFromSolverData(Optional LinearityCheckOffset As Double = 0)
 8960          End If
 8970      Next AdjCell
           ' Set all the adjustable cells to zero (or a user-specified value) (For linear problems)
-8980      AdjustableCells.Value2 = LinearityCheckOffset
+8980      If Solver <> "Nomad" Then ' TODO: Change to all non-linear
+              AdjustableCells.Value2 = LinearityCheckOffset
+          End If
           
           '--------------------------------------------------------------------------
           ' INITIAL SHEET CALCULATION (using new decision var values set just above)
@@ -3560,20 +3562,25 @@ Function getValuesOS() As Variant
           Dim y As Variant, i As Integer, j As Integer, k As Integer, conCountB As Integer, numCons As Variant
 24800     numCons = getNumConstraintsOS()
 24810     ReDim y(1 To numCons(0), 1 To 1)
-          '====NOMAD only does minimise so need to change objective if it is max====
-          'If objective sense is maximise then multiply by minus 1
-24820     If ObjectiveSense = MaximiseObjective Then
-24830         If ObjRange.Value2 <> 0 Then
-24840             y(1, 1) = -1 * ObjRange.Value2 'objective value
-24850         Else
-24860             y(1, 1) = ObjRange.Value2
-24870         End If
-          'Else if objective sense is minimise leave it
-24880     ElseIf ObjectiveSense = MinimiseObjective Then
-24890         y(1, 1) = ObjRange.Value2
-24900     ElseIf ObjectiveSense = TargetObjective Then
-24910         y(1, 1) = Abs(ObjRange.Value2 - ObjectiveTargetValue)
-24920     End If
+          ' Catch #DIV/0! error in objective and report NaN to DLL
+          If VarType(ObjRange.Value2) = vbError Then
+              y(1, 1) = "NaN"
+          Else
+              '====NOMAD only does minimise so need to change objective if it is max====
+              'If objective sense is maximise then multiply by minus 1
+24820         If ObjectiveSense = MaximiseObjective Then
+24830             If ObjRange.Value2 <> 0 Then
+24840                 y(1, 1) = -1 * ObjRange.Value2 'objective value
+24850             Else
+24860                 y(1, 1) = ObjRange.Value2
+24870             End If
+              'Else if objective sense is minimise leave it
+24880         ElseIf ObjectiveSense = MinimiseObjective Then
+24890             y(1, 1) = ObjRange.Value2
+24900         ElseIf ObjectiveSense = TargetObjective Then
+24910             y(1, 1) = Abs(ObjRange.Value2 - ObjectiveTargetValue)
+24920         End If
+          End If
 24930     conCountB = 1 'keep a count of what constraint its up to including bounds
 24940     k = 1 'keep a count of what constraint its up to not including bounds
           Dim row As Long, constraint As Long
@@ -3590,47 +3597,18 @@ Function getValuesOS() As Variant
 25000                 For i = 1 To UBound(LHSOriginalValues(constraint), 1)
 25010                     For j = 1 To UBound(LHSOriginalValues(constraint), 2)
 25020                         If VariableBounds(conCountB) = False Then
-25030                             If Relation(conCountB) = 1 Then 'less then or equal to
-25040                                 If UBound(LHSOriginalValues(constraint), 1) = UBound(RHSOriginalValues(constraint), 1) Then
-25050                                     y(k + 1, 1) = CurrentLHSValues(i, j) - CurrentRHSValues(i, j)  'constraint value
-25060                                 Else
-25070                                     y(k + 1, 1) = CurrentLHSValues(j, i) - CurrentRHSValues(i, j)  'constraint value
-25080                                 End If
-25090                             ElseIf Relation(conCountB) = 3 Then 'greater then or equal to
-25100                                 If UBound(LHSOriginalValues(constraint), 1) = UBound(RHSOriginalValues(constraint), 1) Then
-25110                                     y(k + 1, 1) = CurrentRHSValues(i, j) - CurrentLHSValues(i, j)
-25120                                 Else
-25130                                     y(k + 1, 1) = CurrentRHSValues(j, i) - CurrentLHSValues(i, j)
-25140                                 End If
-                                  '--------what to do in this case--------------
-25150                             ElseIf Relation(conCountB) = 2 Then 'equal to
-25160                                 If UBound(LHSOriginalValues(constraint), 1) = UBound(RHSOriginalValues(constraint), 1) Then
-25170                                     y(k + 1, 1) = CurrentLHSValues(i, j) - CurrentRHSValues(i, j)
-25180                                     y(k + 2, 1) = CurrentRHSValues(i, j) - CurrentLHSValues(i, j)
-25190                                 Else
-25200                                     y(k + 1, 1) = CurrentLHSValues(j, i) - CurrentRHSValues(i, j)
-25210                                     y(k + 2, 1) = CurrentRHSValues(j, i) - CurrentLHSValues(i, j)
-25220                                 End If
-25230                                 k = k + 1
-25240                             End If
-25250                             k = k + 1
+                                  If UBound(LHSOriginalValues(constraint), 1) = UBound(RHSOriginalValues(constraint), 1) Then
+                                      SetConstraintValue y, k, CurrentRHSValues(i, j), CurrentLHSValues(i, j), Relation(conCountB)
+                                  Else
+                                      SetConstraintValueMismatchedDims y, k, CurrentRHSValues, CurrentLHSValues, Relation(conCountB), i, j
+                                  End If
 25260                         End If
 25270                         conCountB = conCountB + 1
 25280                     Next j
 25290                 Next i
 25300             Else
 25310                 If VariableBounds(conCountB) = False Then
-25320                     If Relation(conCountB) = RelationLE Then 'less then or equal to
-25330                         y(k + 1, 1) = CurrentLHSValues(1, 1) - CurrentRHSValues 'constraint value
-25340                     ElseIf Relation(conCountB) = RelationGE Then 'greater then or equal to
-25350                         y(k + 1, 1) = CurrentRHSValues - CurrentLHSValues(1, 1)
-                          '--------what to do in this case--------------
-25360                     ElseIf Relation(conCountB) = RelationEQ Then 'equal to
-25370                         y(k + 1, 1) = CurrentLHSValues(1, 1) - CurrentRHSValues
-25380                         y(k + 2, 1) = CurrentRHSValues - CurrentLHSValues(1, 1)
-25390                         k = k + 1
-25400                     End If
-25410                     k = k + 1
+                          SetConstraintValue y, k, CurrentRHSValues, CurrentLHSValues(1, 1), Relation(conCountB)
 25420                 End If
 25430                 conCountB = conCountB + 1
 25440             End If
@@ -3640,6 +3618,52 @@ Function getValuesOS() As Variant
           'Get back new objective and difference between LHS and RHS values
 25470     getValuesOS = y
 End Function
+
+Sub SetConstraintValue(ByRef ConstraintValues As Variant, ByRef k As Integer, RHSValue As Variant, LHSValue As Variant, RelationType As Integer)
+          ' Sets the constraint value as appropriate for the given constraint (eg. LHS - RHS for <=) or returns
+          ' "NaN" if either side contains an error (eg. #DIV/0!)
+          ' This is for when the LHS and RHS ranges are the same dimension (both m x n)
+          Select Case RelationType
+              Case RelationLE
+                  ConstraintValues(k + 1, 1) = DifferenceOrNaN(LHSValue, RHSValue)
+              Case RelationGE
+                  ConstraintValues(k + 1, 1) = DifferenceOrNaN(RHSValue, LHSValue)
+              Case RelationEQ
+                  ConstraintValues(k + 1, 1) = DifferenceOrNaN(LHSValue, RHSValue)
+                  ConstraintValues(k + 2, 1) = DifferenceOrNaN(RHSValue, LHSValue)
+                  k = k + 1
+          End Select
+          k = k + 1
+
+End Sub
+
+Sub SetConstraintValueMismatchedDims(ByRef ConstraintValues As Variant, ByRef k As Integer, RHSValues As Variant, LHSValues As Variant, RelationType As Integer, i As Integer, j As Integer)
+          ' Sets the constraint value as appropriate for the given constraint (eg. LHS - RHS for <=) or returns
+          ' "NaN" if either side contains an error (eg. #DIV/0!)
+          ' This is for when the LHS and RHS ranges have mismatched dimensions (m x n and n x m)
+          Select Case RelationType
+              Case RelationLE
+                  ConstraintValues(k + 1, 1) = DifferenceOrNaN(CurrentLHSValues(j, i), CurrentRHSValues(i, j))
+              Case RelationGE
+                  ConstraintValues(k + 1, 1) = DifferenceOrNaN(CurrentRHSValues(j, i), CurrentLHSValues(i, j))
+              Case RelationEQ
+                  ConstraintValues(k + 1, 1) = DifferenceOrNaN(CurrentLHSValues(j, i), CurrentRHSValues(i, j))
+                  ConstraintValues(k + 2, 1) = DifferenceOrNaN(CurrentRHSValues(j, i), CurrentLHSValues(i, j))
+                  k = k + 1
+          End Select
+          k = k + 1
+
+End Sub
+
+Function DifferenceOrNaN(Value1 As Variant, Value2 As Variant)
+          ' Returns Value1 - Value2, unless either variable is a vbError, in which case "NaN" is returned.
+          If VarType(Value1) = vbError Or VarType(Value2) = vbError Then
+              DifferenceOrNaN = "NaN"
+          Else
+              DifferenceOrNaN = Value1 - Value2
+          End If
+End Function
+
 
 Function getNumVariablesOS() As Variant
 25480     getNumVariablesOS = AdjustableCells.Count
