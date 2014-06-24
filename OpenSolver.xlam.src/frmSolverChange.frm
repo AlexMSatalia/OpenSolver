@@ -23,7 +23,7 @@ Private Sub cboSolver_Change()
               lblHyperlink = "http://www.neos-server.org/neos/solvers/milp:Cbc/AMPL.html"
               ChosenSolver = "NeosCBC"
           ElseIf cboSolver.Text Like "NEOS using Couenne*" Then
-              lblSolver.Caption = "The NEOS (Network-Enabled Optimization System) Server is a free Internet-based service for solving optimization problems."
+              lblSolver.Caption = "The NEOS (Network-Enabled Optimization System) Server is a free Internet-based service for solving optimization problems. Couenne (Convex Over and Under ENvelopes for Nonlinear Estimation) is a branch & bound algorithm to solve Mixed-Integer Nonlinear Programming (MINLP) problems of sepcific forms."
               lblHyperlink = "https://projects.coin-or.org/Couenne"
               ChosenSolver = "NeosCou"
           ElseIf cboSolver.Text Like "NEOS using Bonmin*" Then
