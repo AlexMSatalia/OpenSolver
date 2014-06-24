@@ -187,7 +187,11 @@ Public Sub GenerateFile(m As CModel2, SolverType As String, boolOtherSheetsIndep
             If m.AssumeNonNegative Then
                 Line = Line & " &gt;= 0,"
             End If
-            Line = Line & " := " & c
+            If VarType(c) = vbEmpty Then
+                Line = Line & " := 0"
+            Else
+                Line = Line & " := " & c
+            End If
             WriteToFile 1, Line & ";"
         Next
         
@@ -196,6 +200,8 @@ Public Sub GenerateFile(m As CModel2, SolverType As String, boolOtherSheetsIndep
         ' Objective function replaced with constraint if
         If m.ObjectiveSense = TargetObjective Then
             WriteToFile 1, commentStart & " We have no objective function as the objective must achieve a given target value"
+            WriteToFile 1, "subject to targetObj:"
+            WriteToFile 1, "    " & ConvertCellToStandardName(m.ObjectiveCell) & " == " & m.ObjectiveTargetValue & ";"
             WriteToFile 1, vbNewLine
         Else
             ' Determine objective direction

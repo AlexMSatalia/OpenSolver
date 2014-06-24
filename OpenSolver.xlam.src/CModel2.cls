@@ -104,6 +104,9 @@ End Sub
 '==============================================================================
 Private Sub ProcessObjective()
 
+    Dim errorPrefix As String
+    errorPrefix = "OpenSolver Non-Linear Model Build"
+
     ' Get the objective sense
     Dim temp As Long
     ObjectiveSense = UnknownObjectiveSense
