@@ -150,6 +150,9 @@ Public Sub GenerateFile(m As CModel2, SolverType As String, boolOtherSheetsIndep
         WriteToFile 1, "&lt;model&gt;&lt;![CDATA[# Define our sets, parameters and variables (with names matching those"
         WriteToFile 1, "# used in defining the data items)"
         
+        ' Define useful constants
+        WriteToFile 1, "param pi = 4 * atan(1);"
+        
         WriteToFile 1, "# 'Sheet=" + m.SolverModelSheet.Name + "'"
         
         ' Determine which adjustable cells are integer and binary
@@ -182,8 +185,9 @@ Public Sub GenerateFile(m As CModel2, SolverType As String, boolOtherSheetsIndep
         For Each c In m.AdjustableCells
             Line = "var " & ConvertCellToStandardName(c) & IntegerType(ConvertCellToStandardName(c))
             If m.AssumeNonNegative Then
-                Line = Line & " &gt;= 0"
+                Line = Line & " &gt;= 0,"
             End If
+            Line = Line & " := " & c
             WriteToFile 1, Line & ";"
         Next
         
@@ -362,6 +366,26 @@ NextCons:
     WriteToFile 1, strAdjCellDefines
     ' Write the formulae
     Dim lngCurDepth As Long, lngCurNode As Long
+    
+    Dim lngIndex As Long, objCurNode As CFormula, strParentAdr As Variant
+    If SolverType Like "NEOS*" Then
+        For lngCurDepth = lngMaxDepth To 0 Step -1
+            For lngIndex = 1 To Formulae.Count
+                If Formulae(lngIndex).lngDepth = lngCurDepth Then
+                    Set objCurNode = Formulae(lngIndex)
+                    
+                    For Each strParentAdr In objCurNode.Parents
+                        With Formulae(strParentAdr)
+                            .strFormulaParsed = Replace(.strFormulaParsed, objCurNode.strAddress, "(" & objCurNode.strFormulaParsed & ")")
+                        End With
+                        'Formulae(strParentAdr).strFormulaParsed = Replace(Formulae(strParentAdr).strFormulaParsed, objCurNode.strAddress, objCurNode.strFormulaParsed)
+                    Next
+                End If
+            Next lngIndex
+        Next lngCurDepth
+    End If
+    
+    
     For lngCurDepth = lngMaxDepth To 0 Step -1
         If SolverType = "PuLP" Then
             For lngCurNode = 1 To Formulae.Count
@@ -718,6 +742,12 @@ Private Function ConvertFormulaToPython(ByVal strFormula As String, _
                                 End If
                             Next lngCurAdjCellArea
                         End If
+                        
+                        'Replace preceding comma with + if summing a second argument
+                        If FunctionName = "sum" And FunctionCount > 0 Then
+                            strParsed = left(strParsed, Len(strParsed) - 1) + "+"
+                        End If
+                        
                         ' If it wasn't all adjustable, have to do it manually
                         If Not boolRangeIsAllDecision Then
                             Count = 0
@@ -833,6 +863,9 @@ Private Function ConvertFormulaToPython(ByVal strFormula As String, _
                         ElseIf tkn.Text = "sum" Then
                             strParsed = strParsed + "("
                             FunctionName = "sum"
+                        ' RADIANS
+                        ElseIf tkn.Text = "radians" Then
+                            strParsed = strParsed + "pi/180*("
                         ' TODO: Unhandled yet
                         ElseIf Not tkn.Text = "min" And Not tkn.Text = "max" Then
                             strParsed = strParsed + tkn.Text + "("

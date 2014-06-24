@@ -97,7 +97,7 @@ Private Sub ProcessAdjustableCells()
     Next AdjCell
     
     ' Set all the adjustable cells to zero
-    AdjustableCells.value = 0
+    'AdjustableCells.value = 0
 End Sub
 
 
@@ -121,11 +121,17 @@ Private Sub ProcessObjective()
     
     ' Valdiate objective function:
     ' 1. Name must exist
-    If objIsMissing Then RaiseOSErr OSErrObjectiveMissing
+    If objIsMissing Then Err.Raise Number:=OpenSolver_BuildError, Source:=errorPrefix, Description:="OpenSolver cannot find the objective ('solver_opt' is out of date). Please re-enter the objective, and try again."
     ' Objective is corrupted somehow
-    If objIsError Then RaiseOSErr OSErrObjectiveError
+    If objIsError Then Err.Raise Number:=OpenSolver_BuildError, Source:=errorPrefix, Description:="The objective is marked #REF!, indicating this cell has been deleted. Please fix the objective, and try again."
     ' Objective has a value that is not a number
-    If VarType(ObjectiveCell.value) <> vbDouble Then RaiseOSErr OSErrObjectiveNAN
+    If VarType(ObjectiveCell.value) <> vbDouble Then
+        If VarType(ObjectiveCell.value) = vbError Then
+            Err.Raise Number:=OpenSolver_BuildError, Source:=errorPrefix, Description:="The objective cell appears to contain an error. This could have occurred if there is a divide by zero error or if you have used the wrong function (eg #DIV/0! or #VALUE!). Please fix this, and try again."
+        Else
+            Err.Raise Number:=OpenSolver_BuildError, Source:=errorPrefix, Description:="The objective cell does not appear to contain a numeric value. Please fix this, and try again."
+        End If
+    End If
     
     ' Objective is calid.
     ' Store the value currently in the objective cell.
@@ -143,6 +149,8 @@ Private Sub ProcessConstraints()
     If Not GetIntegerFromName(book, strNameRoot + NameConsCount, ConstraintCount) Then
         RaiseOSErr OSErrConsMissing
     End If
+    
+    If ConstraintCount < 1 Then Exit Sub
     
     ' Create an array to store the details of the LHS and RHS, which
     ' is useful for parsing and classic
@@ -280,7 +288,7 @@ Private Sub ProcessModelOptions()
         strLinearityMsg = strLinearityMsg + "Click No to proceed assuming the model is linear."
         
         Dim msgResponse As VbMsgBoxResult
-        msgResponse = MsgBox(strLinearityMsg, vbYesNoCancel, "OpenSolver")
+        'msgResponse = MsgBox(strLinearityMsg, vbYesNoCancel, "OpenSolver")
         
         If msgResponse = vbCancel Then
             RaiseOSErr OSErrUserCancel
