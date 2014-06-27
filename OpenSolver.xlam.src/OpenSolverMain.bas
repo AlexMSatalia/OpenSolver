@@ -26,8 +26,8 @@ Attribute VB_Name = "OpenSolverMain"
 Option Explicit
 
 ' Version information (as displayed in the About box...)
-Public Const sOpenSolverVersion As String = "2.5.1 alpha"
-Public Const sOpenSolverDate As String = "2014.06.25"
+Public Const sOpenSolverVersion As String = "2.5.2 alpha"
+Public Const sOpenSolverDate As String = "2014.06.27"
 
 ' Used for the 2003 menu code
 Private Const strAddInName As String = "OpenSolver"
