@@ -461,11 +461,18 @@ Private Sub UserForm_Activate()
 36190     VBAversion = "VBA"
 #If VBA7 Then
 36200     VBAversion = "VBA7"
-#End If
-#If VBA6 Then
+#ElseIf VBA6 Then
 36210     VBAversion = "VBA6"
 #End If
-36220     labelVersion.Caption = "Version " & sOpenSolverVersion & " (" & sOpenSolverDate & ") running on " & IIf(SystemIs64Bit, "64", "32") & " bit Windows in " & VBAversion & " in Excel " & Application.Version
+
+          Dim ExcelBitness As String
+#If Win64 Then
+          ExcelBitness = "64"
+#Else
+          ExcelBitness = "32"
+#End If
+
+36220     labelVersion.Caption = "Version " & sOpenSolverVersion & " (" & sOpenSolverDate & ") running on " & IIf(SystemIs64Bit, "64", "32") & " bit Windows in " & VBAversion & " in " & ExcelBitness & " bit Excel " & Application.Version
 36230     labelFilePath = "OpenSolverFile: " & ThisWorkbook.FullName
           ' ShowOpenSolverStudioStatus
 36240     ReflectOpenSolverStatus

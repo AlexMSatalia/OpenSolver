@@ -352,7 +352,11 @@ Public Sub GenerateFile(m As CModel2, SolverType As String, boolOtherSheetsIndep
                     strProbPlus = strProbPlus + ("prob += " + pystrLHS + pystrREL + pystrRHS + vbNewLine)
                 ElseIf SolverType Like "NEOS*" Then
                     strProbPlus = strProbPlus + "subject to " & pystrLHS & ":" & vbNewLine
-                    strProbPlus = strProbPlus + "    " & Formulae(Count).strFormulaParsed & amplstrREL & pystrRHS & ";" & vbNewLine & vbNewLine
+                    If Count > Formulae.Count Then
+                        strProbPlus = strProbPlus + "    " & pystrLHS & amplstrREL & pystrRHS & ";" & vbNewLine & vbNewLine
+                    Else
+                        strProbPlus = strProbPlus + "    " & Formulae(Count).strFormulaParsed & amplstrREL & pystrRHS & ";" & vbNewLine & vbNewLine
+                    End If
                 End If
             Next cCol
         Next cRow
