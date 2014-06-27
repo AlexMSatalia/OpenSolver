@@ -1506,8 +1506,9 @@ NeosReturn:
     Exit Function
 
 errorHandler:
-    MsgBox "Sorry we have failed to contact NEOS."
+    MsgBox "OpenSolver failed to contact NEOS. Please try again."
     CallNEOS = False
+    Exit Function
 
 HELPG:
     MsgBox "Uh Oh"
