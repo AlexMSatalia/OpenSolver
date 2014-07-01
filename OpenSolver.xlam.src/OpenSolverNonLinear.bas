@@ -53,7 +53,9 @@ Function SolveModel_Nomad(SolveRelaxation As Boolean) As Integer
           
 48320     If GetExistingFilePathName(ThisWorkbook.Path, NomadDllFileName, pathName) Then
               NomadDllFileName = "WhatEva.dll"
-48330         NomadRetVal = Application.Run("NomadMain", SolveRelaxation)
+              ' We need to call NomadMain directly rather than use Application.Run .
+              ' Using Application.Run causes the API calls inside the DLL to fail on 64 bit Office
+48330         NomadRetVal = NomadMain(SolveRelaxation)
 48340     Else
 48350         Err.Raise Number:=OpenSolver_NomadError, Source:=errorPrefix, Description:="Unable to find the Nomad Xll file`'" & NomadDllFileName & "' at" _
                 & "any of the following location(s):" & vbCrLf & vbCrLf & pathName & vbCrLf & vbCrLf _

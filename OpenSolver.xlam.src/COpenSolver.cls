@@ -3563,8 +3563,12 @@ Function getValuesOS() As Variant
 24800     numCons = getNumConstraintsOS()
 24810     ReDim y(1 To numCons(0), 1 To 1)
           '====NOMAD only does minimise so need to change objective if it is max====
+          ' If no objective, just set a constant.
+          ' TODO: fix this to set it based on amount of violation to hunt for feasibility
+          If ObjRange Is Nothing Then
+              y(1, 1) = 0
           'If objective sense is maximise then multiply by minus 1
-24820     If ObjectiveSense = MaximiseObjective Then
+24820     ElseIf ObjectiveSense = MaximiseObjective Then
 24830         If ObjRange.Value2 <> 0 Then
 24840             y(1, 1) = -1 * ObjRange.Value2 'objective value
 24850         Else
