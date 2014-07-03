@@ -149,6 +149,19 @@ Private Declare Function RegDeleteValue Lib "advapi32.dll" Alias "RegDeleteValue
 
 #End If
 
+#If VBA7 Then
+    #If Win64 Then
+        Private Declare PtrSafe Function NomadVersion Lib "OpenSolverNomadDll64.dll" () As String
+        Private Declare PtrSafe Function NomadDllVersion Lib "OpenSolverNomadDll64.dll" Alias "NomadDLLVersion" () As String
+    #Else
+        Private Declare PtrSafe Function NomadVersion Lib "OpenSolverNomadDll.dll" () As String
+        Private Declare PtrSafe Function NomadDllVersion Lib "OpenSolverNomadDll.dll" Alias "NomadDLLVersion" () As String
+    #End If
+#Else
+    Private Declare Function NomadVersion Lib "OpenSolverNomadDll.dll" () As String
+    Private Declare Function NomadDllVersion Lib "OpenSolverNomadDll.dll" Alias "NomadDLLVersion" () As String
+#End If
+
 Private EventsEnabled As Boolean
 
          
@@ -473,6 +486,17 @@ Private Sub UserForm_Activate()
 #End If
 
 36220     labelVersion.Caption = "Version " & sOpenSolverVersion & " (" & sOpenSolverDate & ") running on " & IIf(SystemIs64Bit, "64", "32") & " bit Windows in " & VBAversion & " in " & ExcelBitness & " bit Excel " & Application.Version
+          
+          Dim currentDir As String, sNomadVersion As String, sNomadDllVersion As String
+          currentDir = CurDir
+          SetCurrentDirectory ThisWorkbook.Path
+          sNomadVersion = NomadVersion()
+          sNomadVersion = left(sNomadVersion, InStr(sNomadVersion, vbNullChar) - 1)
+          sNomadDllVersion = NomadDllVersion()
+          sNomadDllVersion = left(sNomadDllVersion, InStr(sNomadDllVersion, vbNullChar) - 1)
+          LabelNomad.Caption = "NOMAD Version " & sNomadVersion & " using OpenSolverNomadDLL v" & sNomadDllVersion & " at " & ThisWorkbook.Path & "OpenSolverNomadDll"
+          SetCurrentDirectory currentDir
+          
 36230     labelFilePath = "OpenSolverFile: " & ThisWorkbook.FullName
           ' ShowOpenSolverStudioStatus
 36240     ReflectOpenSolverStatus
