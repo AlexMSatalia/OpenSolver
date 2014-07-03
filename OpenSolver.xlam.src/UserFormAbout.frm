@@ -534,13 +534,13 @@ Private Function GetCBCVersion() As String
         Close #1
         GetCBCVersion = right(Line, Len(Line) - 9)
         GetCBCVersion = left(GetCBCVersion, Len(GetCBCVersion) - 1)
-        GetCBCVersion = " Version " & GetCBCVersion
+        GetCBCVersion = " v" & GetCBCVersion
     Else
         GetCBCVersion = ""
     End If
     
     ' Assemble version info
-    GetCBCVersion = "CBC" & GetCBCVersion & " " & Bitness & " bit at " & SolverPath
+    GetCBCVersion = "CBC " & Bitness & " bit" & GetCBCVersion & " at " & SolverPath
     
 End Function
 
@@ -565,5 +565,5 @@ Private Function GetNomadVersion() As String
 #Else
     sDllName = "OpenSolverNomadDll.dll"
 #End If
-    GetNomadVersion = "NOMAD Version " & sNomadVersion & " using OpenSolverNomadDLL v" & sNomadDllVersion & " at " & ThisWorkbook.Path & "\" & sDllName
+    GetNomadVersion = "NOMAD v" & sNomadVersion & " using OpenSolverNomadDLL v" & sNomadDllVersion & " at " & ThisWorkbook.Path & "\" & sDllName
 End Function
