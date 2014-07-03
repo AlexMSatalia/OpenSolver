@@ -2002,7 +2002,7 @@ Sub CallNEOS(ModelFilePathName As String, ErrorString As String)
      
      ' Import file as continuous string
      Open ModelFilePathName For Input As #1
-         message = Input$(LOF(1), 1)
+         message = input$(LOF(1), 1)
      Close #1
      
      ' Set up message as XML

@@ -487,15 +487,10 @@ Private Sub UserForm_Activate()
 
 36220     labelVersion.Caption = "Version " & sOpenSolverVersion & " (" & sOpenSolverDate & ") running on " & IIf(SystemIs64Bit, "64", "32") & " bit Windows in " & VBAversion & " in " & ExcelBitness & " bit Excel " & Application.Version
           
-          Dim currentDir As String, sNomadVersion As String, sNomadDllVersion As String
-          currentDir = CurDir
-          SetCurrentDirectory ThisWorkbook.Path
-          sNomadVersion = NomadVersion()
-          sNomadVersion = left(sNomadVersion, InStr(sNomadVersion, vbNullChar) - 1)
-          sNomadDllVersion = NomadDllVersion()
-          sNomadDllVersion = left(sNomadDllVersion, InStr(sNomadDllVersion, vbNullChar) - 1)
-          LabelNomad.Caption = "NOMAD Version " & sNomadVersion & " using OpenSolverNomadDLL v" & sNomadDllVersion & " at " & ThisWorkbook.Path & "OpenSolverNomadDll"
-          SetCurrentDirectory currentDir
+          
+          LabelNomad.Caption = GetNomadVersion()
+          LabelCBC.Caption = GetCBCVersion()
+          
           
 36230     labelFilePath = "OpenSolverFile: " & ThisWorkbook.FullName
           ' ShowOpenSolverStudioStatus
@@ -505,4 +500,70 @@ Private Sub UserForm_Activate()
           txtAbout.SelStart = 0
 End Sub
 
+Private Function GetCBCVersion() As String
+    Dim SolverPath As String, Bitness As String, RunPath As String
+    GetExternalSolverPathName SolverPath, "cbc.exe"
+    
+    If right(SolverPath, 9) = "cbc64.exe" Then
+        Bitness = "64"
+    Else
+        Bitness = "32"
+    End If
+    
+    ' Set up cbc to write version info to text file
+    Dim logCommand As String, logFile As String, completed As Boolean
+    logFile = GetTempFolder & "cbcversion.txt"
+    If Dir(logFile) <> "" Then Kill logFile
+    logCommand = " > " & """" & logFile & """"
+    
+    RunPath = GetTempFolder & "cbc.bat"
+    If Dir(RunPath) <> "" Then Kill RunPath
+    Open GetTempFolder & "cbc.bat" For Output As 1
+    Print #1, "@echo off" & vbCrLf & """" & SolverPath & """" & " -exit" & logCommand
+    Close #1
+    
+    ' Run cbc
+    completed = OSSolveSync(RunPath, "", "", "", SW_HIDE, True)
+    
+    ' Read version info back from output file
+    Dim Line As String
+    If Dir(logFile) <> "" Then
+        Open logFile For Input As 1
+        Line Input #1, Line
+        Line Input #1, Line
+        Close #1
+        GetCBCVersion = right(Line, Len(Line) - 9)
+        GetCBCVersion = left(GetCBCVersion, Len(GetCBCVersion) - 1)
+        GetCBCVersion = " Version " & GetCBCVersion
+    Else
+        GetCBCVersion = ""
+    End If
+    
+    ' Assemble version info
+    GetCBCVersion = "CBC" & GetCBCVersion & " " & Bitness & " bit at " & SolverPath
+    
+End Function
 
+Private Function GetNomadVersion() As String
+    Dim currentDir As String, sNomadVersion As String, sNomadDllVersion As String, sDllName As String
+    
+    ' Set current dir for finding the DLL
+    currentDir = CurDir
+    SetCurrentDirectory ThisWorkbook.Path
+    
+    ' Get version info from DLL
+    sNomadVersion = NomadVersion()
+    sNomadVersion = left(sNomadVersion, InStr(sNomadVersion, vbNullChar) - 1)
+    sNomadDllVersion = NomadDllVersion()
+    sNomadDllVersion = left(sNomadDllVersion, InStr(sNomadDllVersion, vbNullChar) - 1)
+    
+    SetCurrentDirectory currentDir
+    
+    ' Assemble version info
+#If Win64 Then
+    sDllName = "OpenSolverNomadDll64.dll"
+#Else
+    sDllName = "OpenSolverNomadDll.dll"
+#End If
+    GetNomadVersion = "NOMAD Version " & sNomadVersion & " using OpenSolverNomadDLL v" & sNomadDllVersion & " at " & ThisWorkbook.Path & "\" & sDllName
+End Function

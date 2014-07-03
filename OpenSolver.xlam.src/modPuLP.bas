@@ -1367,7 +1367,7 @@ Function CallNEOS(ModelFilePathName As String, m As CModel2) As Boolean
     
     ' Import file as continuous string
     Open ModelFilePathName For Input As #1
-        message = Input$(LOF(1), 1)
+        message = input$(LOF(1), 1)
     Close #1
     
     ' Clean message up
