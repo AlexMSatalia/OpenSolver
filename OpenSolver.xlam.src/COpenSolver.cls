@@ -3624,12 +3624,12 @@ Sub SetConstraintValue(ByRef ConstraintValues As Variant, ByRef k As Integer, RH
           ' This is for when the LHS and RHS ranges are the same dimension (both m x n)
           Select Case RelationType
               Case RelationLE
-                  ConstraintValues(k + 1, 1) = LHSValue - RHSValue
+                  ConstraintValues(k + 1, 1) = DifferenceOrError(LHSValue, RHSValue)
               Case RelationGE
-                  ConstraintValues(k + 1, 1) = RHSValue - LHSValue
+                  ConstraintValues(k + 1, 1) = DifferenceOrError(RHSValue, LHSValue)
               Case RelationEQ
-                  ConstraintValues(k + 1, 1) = LHSValue - RHSValue
-                  ConstraintValues(k + 2, 1) = RHSValue - LHSValue
+                  ConstraintValues(k + 1, 1) = DifferenceOrError(LHSValue, RHSValue)
+                  ConstraintValues(k + 2, 1) = DifferenceOrError(RHSValue, LHSValue)
                   k = k + 1
           End Select
           k = k + 1
@@ -3642,17 +3642,27 @@ Sub SetConstraintValueMismatchedDims(ByRef ConstraintValues As Variant, ByRef k 
           ' This is for when the LHS and RHS ranges have mismatched dimensions (m x n and n x m)
           Select Case RelationType
               Case RelationLE
-                  ConstraintValues(k + 1, 1) = CurrentLHSValues(j, i) - CurrentRHSValues(i, j)
+                  ConstraintValues(k + 1, 1) = DifferenceOrError(CurrentLHSValues(j, i), CurrentRHSValues(i, j))
               Case RelationGE
-                  ConstraintValues(k + 1, 1) = CurrentRHSValues(j, i) - CurrentLHSValues(i, j)
+                  ConstraintValues(k + 1, 1) = DifferenceOrError(CurrentRHSValues(j, i), CurrentLHSValues(i, j))
               Case RelationEQ
-                  ConstraintValues(k + 1, 1) = CurrentLHSValues(j, i) - CurrentRHSValues(i, j)
-                  ConstraintValues(k + 2, 1) = CurrentRHSValues(j, i) - CurrentLHSValues(i, j)
+                  ConstraintValues(k + 1, 1) = DifferenceOrError(CurrentLHSValues(j, i), CurrentRHSValues(i, j))
+                  ConstraintValues(k + 2, 1) = DifferenceOrError(CurrentRHSValues(j, i), CurrentLHSValues(i, j))
                   k = k + 1
           End Select
           k = k + 1
 
 End Sub
+
+Function DifferenceOrError(Value1 As Variant, Value2 As Variant) As Variant
+          If VarType(Value1) = vbError Then
+              DifferenceOrError = Value1
+          ElseIf VarType(Value2) = vbError Then
+              DifferenceOrError = Value2
+          Else
+              DifferenceOrError = Value1 - Value2
+          End If
+End Function
 
 
 Function getNumVariablesOS() As Variant
