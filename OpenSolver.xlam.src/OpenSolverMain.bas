@@ -314,7 +314,7 @@ errorHandler:
 28900     Set OpenSolver = Nothing    ' Free any OpenSolver memory used
           Application.Iteration = oldIterationMode
 28910     RunOpenSolver = OpenSolverResult.ErrorOccurred
-28920     If Err.Number <> OpenSolver_UserCancelledError Then
+28920     If Err.Number <> OpenSolver_UserCancelledError And Not MinimiseUserInteraction Then
 28930         MsgBox "OpenSolver" & sOpenSolverVersion & " encountered an error:" & vbCrLf & Err.Description & IIf(Erl = 0, "", " (at line " & Erl & ")") & vbCrLf & vbCrLf & "Source = " & Err.Source & ", ErrNumber=" & Err.Number, , "OpenSolver" & sOpenSolverVersion & " Error"
 28940     End If
 End Function
