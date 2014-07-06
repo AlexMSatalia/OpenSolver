@@ -1767,4 +1767,18 @@ Public Function SearchRangeInVisibleNames(r As Range) As Name
           
 End Function
 
+Public Sub OpenURL(URL As String)
+
+#If Mac Then
+    ' Use applescript to open the webpage
+    Dim s As String
+    s = "open location """ + URL + """"
+    MacScript s
+#Else
+    ' Use windows file handler to open webpage
+    Call fHandleFile(URL, WIN_NORMAL)
+#End If
+
+End Sub
+
 

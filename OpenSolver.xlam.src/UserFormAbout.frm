@@ -452,7 +452,7 @@ End Sub
 
 
 Private Sub labelOpenSolverOrg_Click()
-36090     Call fHandleFile("http://www.opensolver.org", WIN_NORMAL)
+36090     Call OpenURL("http://www.opensolver.org")
           ' or ThisWorkbook.FollowHyperlink Address :="http://www.opensolver.org", NewWindow := true
 End Sub
 

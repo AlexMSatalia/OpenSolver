@@ -247,7 +247,7 @@ errorHandler:
 End Sub
 
 Sub OpenSolver_OnlineHelp(Optional Control)
-28770     Call fHandleFile("http://help.opensolver.org", WIN_NORMAL)
+28770     Call OpenURL("http://help.opensolver.org")
 End Sub
 
 Sub OpenSolver_AboutClickHandler(Optional Control)
@@ -264,11 +264,11 @@ Sub OpenSolver_AboutCoinOR(Optional Control)
 End Sub
 
 Sub OpenSolver_VisitOpenSolverOrg(Optional Control)
-28800     Call fHandleFile("http://www.opensolver.org", WIN_NORMAL)
+28800     Call OpenURL("http://www.opensolver.org")
 End Sub
 
 Sub OpenSolver_VisitCoinOROrg(Optional Control)
-28810     Call fHandleFile("http://www.coin-or.org", WIN_NORMAL)
+28810     Call OpenURL("http://www.coin-or.org")
 End Sub
 
 Sub AutoOpenSolver()

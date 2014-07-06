@@ -14,24 +14,39 @@ Option Explicit
 ' Provided by Paul Becker of Eclipse Engineering (www.eclipseeng.com)
 '====================================================================
 Private Sub Workbook_AddinInstall()
-10        If Application.Version = "11.0" Then Call OpenSolverMain.AddMenuItems
+10        AlterMenuItems (True)
 End Sub
 
 Private Sub Workbook_AddinUninstall()
-20        If Application.Version = "11.0" Then Call DelMenuItems
+20        AlterMenuItems (False)
 End Sub
 
 Private Sub Workbook_BeforeClose(Cancel As Boolean)
-30        If Application.Version = "11.0" Then Call DelMenuItems
+30        AlterMenuItems (False)
 End Sub
 
 Private Sub Workbook_Open()
-40        If Application.Version = "11.0" Then Call OpenSolverMain.AddMenuItems
+40        AlterMenuItems (True)
 End Sub
 '====================================================================
 ' Excel 2003 Menu Code
 ' Provided by Paul Becker of Eclipse Engineering (www.eclipseeng.com)
 '====================================================================
+
+Sub AlterMenuItems(AddItems As Boolean)
+    Dim NeedToAdd As Boolean
+    NeedToAdd = Application.Version = "11.0"
+#If Mac Then
+    NeedToAdd = True
+#End If
+    If NeedToAdd Then
+        If AddItems Then
+            Call OpenSolverMain.AddMenuItems
+        Else
+            Call OpenSolverMain.DelMenuItems
+        End If
+    End If
+End Sub
 
 '====================================================================
 ' Excel Code Exporter by Mike Woodhouse
