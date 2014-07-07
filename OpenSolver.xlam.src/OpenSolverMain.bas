@@ -418,6 +418,7 @@ Public Sub AddMenuItems()
          Dim intHelpMenu      As Integer
          Dim objMainMenuBar   As CommandBar
          Dim objCustomMenu    As CommandBarControl
+         Dim objCustomMenu2   As CommandBarControl
          
 29430    Call DelMenuItems
          
@@ -431,13 +432,42 @@ Public Sub AddMenuItems()
 29460    objCustomMenu.Caption = strMenuName
          
          
-         'Main menu items
-29470    With objCustomMenu.Controls.Add(Type:=msoControlButton)
-29480       .Caption = "&Model"
+         'Model menu items
+         Set objCustomMenu2 = objCustomMenu.Controls.Add(Type:=msoControlPopup)
+         objCustomMenu2.Caption = "&Model"
+         objCustomMenu2.BeginGroup = True
+         
+29470    With objCustomMenu2.Controls.Add(Type:=msoControlButton)
+29480       .Caption = "&Model..."
 29490       .OnAction = "OpenSolver_ModelClick"
 29500       .FaceId = 0
 29510    End With
+
+         With objCustomMenu2.Controls.Add(Type:=msoControlButton)
+            .Caption = "Quick AutoModel"
+            .OnAction = "OpenSolver_QuickAutoModelClick"
+            .FaceId = 0
+         End With
+
+         With objCustomMenu2.Controls.Add(Type:=msoControlButton)
+            .Caption = "&AutoModel and Solve"
+            .OnAction = "OpenSolver_AutoModelAndSolveClick"
+            .FaceId = 0
+         End With
+
+         With objCustomMenu2.Controls.Add(Type:=msoControlButton)
+            .Caption = "&Solver Engine..."
+            .OnAction = "OpenSolver_SolverOptions"
+            .FaceId = 0
+         End With
+
+         With objCustomMenu2.Controls.Add(Type:=msoControlButton)
+            .Caption = "&Options..."
+            .OnAction = "OpenSolver_ModelOptions"
+            .FaceId = 0
+         End With
          
+         ' Main menu items
 29520    With objCustomMenu.Controls.Add(Type:=msoControlButton)
 29530       .Caption = "&Solve"
 29540       .OnAction = "OpenSolver_SolveClickHandler"
@@ -457,7 +487,7 @@ Public Sub AddMenuItems()
 29660    End With
          
          
-         'Sub menu items
+         'OpenSolver menu items
 29670    Set objCustomMenu = objCustomMenu.Controls.Add(Type:=msoControlPopup)
 29680    objCustomMenu.Caption = strAddInName
 29690    objCustomMenu.BeginGroup = True
@@ -489,10 +519,17 @@ Public Sub AddMenuItems()
 29900       .FaceId = 0
 29910    End With
          
+         With objCustomMenu.Controls.Add(Type:=msoControlButton)
+            .Caption = "View Last Log File"
+            .OnAction = "OpenSolver_ViewLogFile"
+            .FaceId = 0
+         End With
+         
 29920    With objCustomMenu.Controls.Add(Type:=msoControlButton)
 29930       .Caption = "View Last CBC Solution File"
 29940       .OnAction = "OpenSolver_ViewLastSolutionClickHandler"
 29950       .FaceId = 0
+            .BeginGroup = True
 29960    End With
          
 29970    With objCustomMenu.Controls.Add(Type:=msoControlButton)
@@ -502,6 +539,12 @@ Public Sub AddMenuItems()
 30010    End With
          
          
+         With objCustomMenu.Controls.Add(Type:=msoControlButton)
+            .Caption = "View Last Gurobi Solution File"
+            .OnAction = "OpenSolver_ViewLastGurobiSolutionClickHandler"
+            .FaceId = 0
+            .BeginGroup = True
+         End With
          
 30020    With objCustomMenu.Controls.Add(Type:=msoControlButton)
 30030       .Caption = "Online Help..."
