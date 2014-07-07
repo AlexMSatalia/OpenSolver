@@ -155,21 +155,29 @@ Public Const ModelFileName As String = "model.lp"  ' Open Solver writes this fil
 Public Const XMLFileName As String = "job.xml"  ' Open Solver writes this file
 Public Const PuLPFileName As String = "opensolver.py"  ' Open Solver writes this file
 Public Const SolutionFileName = "modelsolution.txt"    ' CBC writes this file for us to read back in
-Public Const PathDelimeter = "\"
+
+#If Mac Then
+    Public Const PathDelimeter = ":"
+#Else
+    Public Const PathDelimeter = "\"
+#End If
+
 Public Const ExternalSolverExeName As String = "cbc.exe"   ' The Executable to run (with no path)
 Public Const ExternalSolverExeName64 As String = "cbc64.exe"   ' The Executable to run (with no path) in 64 bit systems (if it exists)
 
 ' TODO: These & other declarations, and type definitons, need to be updated for 64 bit systems; see:
 '   http://msdn.microsoft.com/en-us/library/ee691831.aspx
 '   http://technet.microsoft.com/en-us/library/ee833946.aspx
-#If VBA7 Then
-    Private Declare PtrSafe Function GetTempPath Lib "kernel32" _
-    Alias "GetTempPathA" (ByVal nBufferLength As Long, _
-    ByVal lpBuffer As String) As Long
-#Else
-    Private Declare Function GetTempPath Lib "kernel32" _
-    Alias "GetTempPathA" (ByVal nBufferLength As Long, _
-    ByVal lpBuffer As String) As Long
+#If Not Mac Then
+    #If VBA7 Then
+        Private Declare PtrSafe Function GetTempPath Lib "kernel32" _
+        Alias "GetTempPathA" (ByVal nBufferLength As Long, _
+        ByVal lpBuffer As String) As Long
+    #Else
+        Private Declare Function GetTempPath Lib "kernel32" _
+        Alias "GetTempPathA" (ByVal nBufferLength As Long, _
+        ByVal lpBuffer As String) As Long
+    #End If
 #End If
 
 #If VBA7 Then
@@ -490,6 +498,10 @@ End Function
 
 
 Function GetTempFolder() As String
+#If Mac Then
+    GetTempFolder = MacScript("return (path to temporary items) as string")
+    Exit Function
+#Else
           'Get Temp Folder
           ' See http://www.pcreview.co.uk/forums/thread-934893.php
           Dim fctRet As Long
@@ -511,6 +523,33 @@ Function GetTempFolder() As String
 730             GetTempFolder = Environ("OpenSolverTempPath")
 740       End If
         '  ASL END NEW CODE
+#End If
+End Function
+
+Function FileOrFolderExistsOnMac(FileOrFolder As Long, FileOrFolderstr As String) As Boolean
+'By Ron de Bruin (http://www.rondebruin.nl/mac/mac008.htm)
+'30-July-2012
+'Function to test whether a file or folder exist on a Mac.
+'Uses AppleScript to avoid the problem with long file names
+    Dim ScriptToCheckFileFolder As String
+    ScriptToCheckFileFolder = "tell application ""Finder""" & vbNewLine
+    If FileOrFolder = 1 Then
+        ScriptToCheckFileFolder = ScriptToCheckFileFolder & "exists file " & _
+                                  """" & FileOrFolderstr & """" & vbNewLine
+    Else
+        ScriptToCheckFileFolder = ScriptToCheckFileFolder & "exists folder " & _
+                                  """" & FileOrFolderstr & """" & vbNewLine
+    End If
+    ScriptToCheckFileFolder = ScriptToCheckFileFolder & "end tell" & vbNewLine
+    FileOrFolderExistsOnMac = MacScript(ScriptToCheckFileFolder)
+End Function
+
+Function FileExists(FilePath As String)
+#If Mac Then
+    FileExists = FileOrFolderExistsOnMac(1, FilePath)
+#Else
+    FileExists = Dir(FilePath) <> ""
+#End If
 End Function
 
 Function GetModelFileName(Optional SolveNEOS As Boolean = False, Optional SolvePulp As Boolean = False) As String

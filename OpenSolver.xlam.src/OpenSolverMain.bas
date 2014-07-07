@@ -143,7 +143,7 @@ End Sub
 
 Sub OpenSolver_ViewLastModelClickHandler(Optional Control)
 28270     On Error GoTo errorHandler
-28280     If Dir(GetModelFullPath) = "" Then
+28280     If FileExists(GetModelFullPath) = "" Then
 28290         MsgBox "Error: There is no model .lp file (" & GetModelFullPath & ") to open. Please solve the model using one of the linear solvers within OpenSolver, and then try again.", , "OpenSolver" & sOpenSolverVersion & " Error"
 28300     Else
               ' Check that there is no workbook open with the same name
@@ -170,7 +170,7 @@ Sub OpenSolver_ViewLogFile(Optional Control)
 28390     On Error GoTo errorHandler
           Dim logPath As String
 28400     logPath = GetTempFolder & "log1.tmp"
-28410     If Dir(logPath) = "" Then
+28410     If FileExists(logPath) = "" Then
 28420         MsgBox "Error: There is no log file (" & logPath & ") to open. Please re-solve the OpenSolver model, and then try again.", , "OpenSolver" & sOpenSolverVersion & " Error"
 28430     Else
               ' Check that there is no workbook open with the same name
@@ -194,7 +194,7 @@ End Sub
 
 Sub OpenSolver_ViewLastSolutionClickHandler(Optional Control)
 28510     On Error GoTo errorHandler
-28520     If Dir(GetSolutionFullPath) = "" Then
+28520     If FileExists(GetSolutionFullPath) = "" Then
 28530         MsgBox "Error: There is no solution file (" & GetSolutionFullPath & ") to open. Please solve the model using the CBC solver for OpenSolver, and then try again. Or if you solved your model using a different solver try opening that file instead.", , "OpenSolver" & sOpenSolverVersion & " Error"
 28540     Else
               ' Check that there is no workbook open with the same name
@@ -221,7 +221,7 @@ Sub OpenSolver_ViewLastGurobiSolutionClickHandler(Optional Control)
 28630     On Error GoTo errorHandler
           Dim GurobiSolutionPath As String
 28640     GurobiSolutionPath = Replace(GetSolutionFullPath, ".txt", ".sol")
-28650     If Dir(GurobiSolutionPath) = "" Then
+28650     If FileExists(GurobiSolutionPath) = "" Then
 28660         MsgBox "Error: There is no solution file (" & GurobiSolutionPath & ") to open. Please solve the model using the Gurobi solver for OpenSolver, and then try again. Or if you solved your model using a different solver try opening that file instead.", , "OpenSolver" & sOpenSolverVersion & " Error"
 28670     Else
                ' Check that there is no workbook open with the same name
