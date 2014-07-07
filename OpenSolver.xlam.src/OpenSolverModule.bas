@@ -1660,6 +1660,17 @@ Sub test()
 End Sub
 
 Function SystemIs64Bit() As Boolean
+#If Mac Then
+    ' Check bitness of Mac by attempting to load 64-bit kernel
+    ' http://macscripter.net/viewtopic.php?pid=137569#p137569
+    Dim script As String
+    script = "try" & vbNewLine & _
+                 "return ((do shell script ""sysctl -n hw.optional.x86_64"") as integer) as boolean" & vbNewLine & _
+             "on error" & vbNewLine & _
+                 "return false" & vbNewLine & _
+             "end try"
+    SystemIs64Bit = MacScript(script)
+#Else
           ' Is true if the Windows system is a 64 bit one
           ' If Not Environ("ProgramFiles(x86)") = "" Then Is64Bit=True, or
           ' Is64bit = Len(Environ("ProgramW6432")) > 0; see:
@@ -1668,6 +1679,7 @@ Function SystemIs64Bit() As Boolean
           ' http://stackoverflow.com/questions/6256140/how-to-detect-if-the-computer-is-x32-or-x64 and
           ' http://msdn.microsoft.com/en-us/library/ms684139%28v=vs.85%29.aspx
 6400     SystemIs64Bit = Environ("ProgramFiles(x86)") <> ""
+#End If
 End Function
 
 'Public Function GetDefinedNameFromRange(theSheet As Worksheet, DefinedRange As String) As String

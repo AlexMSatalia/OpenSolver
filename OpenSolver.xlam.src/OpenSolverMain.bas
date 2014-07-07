@@ -81,7 +81,7 @@ Sub OpenSolver_LaunchCBCCommandLine(Optional Control)
 27960     If WorksheetAvailable Then
 27970         GetSolveOptions "'" & Replace(ActiveSheet.Name, "'", "''") & "'!", SolveOptions, ErrorString ' NB: We have to double any ' when we quote the sheet name
 27980         If ErrorString = "" Then
-27990            SolveOptionsString = " -ratioGap " & str(SolveOptions.Tolerance) & " -seconds " & str(SolveOptions.maxTime)
+27990            SolveOptionsString = " -ratioGap " & CStr(SolveOptions.Tolerance) & " -seconds " & CStr(SolveOptions.maxTime)
 28000         End If
 28010     End If
           

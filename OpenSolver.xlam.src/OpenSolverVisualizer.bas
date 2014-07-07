@@ -114,9 +114,11 @@ Function CreateLabelShape(w As Worksheet, left As Long, top As Long, width As Lo
           Dim s1 As Shape
 30610     Set s1 = w.Shapes.AddShape(msoShapeRectangle, left, top, width, height)
 30620     s1.Fill.Visible = True
+          s1.Fill.Solid
 30630     s1.Fill.ForeColor.RGB = RGB(255, 255, 255)
 30640     s1.Fill.Transparency = 0.2
 30650     s1.Line.Visible = False
+          s1.Shadow.Visible = msoFalse
 30660     With s1.TextFrame
 30670         .Characters.Text = label
 30680         .Characters.Font.Size = 9
@@ -259,9 +261,11 @@ Function HighlightRange(r As Range, label As String, HighlightColor As Long, Opt
 31610       End With
 31620   Else
 31630       s1.Line.Visible = False
+            s1.Fill.Solid
 31640       s1.Fill.Transparency = 0.6
 31650       s1.Fill.ForeColor.RGB = HighlightColor
 31660   End If
+        s1.Shadow.Visible = msoFalse
         
 31670   With s1.TextFrame
 31680       .Characters.Text = label
@@ -354,6 +358,7 @@ Function AddLabelledConnector(w As Worksheet, s1 As Shape, s2 As Shape, label As
 32050     c.Line.DashStyle = msoLineSolid
 32060     c.Line.Weight = 0.75
 32070     c.Line.Style = msoLineSingle
+          c.Shadow.Visible = msoFalse
               
 32080     ShapeIndex = ShapeIndex + 1
 32090     c.Name = "OpenSolver " & ShapeIndex
@@ -363,6 +368,7 @@ Function AddLabelledConnector(w As Worksheet, s1 As Shape, s2 As Shape, label As
                   
 32110     s3.Line.Visible = False
 32120     s3.Fill.Visible = False
+          s3.Shadow.Visible = msoFalse
 32130     If label <> "" Then
 32140         With s3.TextFrame
 32150             .Characters.Text = label
