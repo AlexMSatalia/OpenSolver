@@ -168,7 +168,7 @@ Public Const ExternalSolverExeName64 As String = "cbc64.exe"   ' The Executable 
 ' TODO: These & other declarations, and type definitons, need to be updated for 64 bit systems; see:
 '   http://msdn.microsoft.com/en-us/library/ee691831.aspx
 '   http://technet.microsoft.com/en-us/library/ee833946.aspx
-#If Not Mac Then
+#If Win32 Then
     #If VBA7 Then
         Private Declare PtrSafe Function GetTempPath Lib "kernel32" _
         Alias "GetTempPathA" (ByVal nBufferLength As Long, _
@@ -180,12 +180,14 @@ Public Const ExternalSolverExeName64 As String = "cbc64.exe"   ' The Executable 
     #End If
 #End If
 
-#If VBA7 Then
-    Declare PtrSafe Function SetCurrentDirectory Lib "kernel32" _
-    Alias "SetCurrentDirectoryA" (ByVal lpPathName As String) As Long
-#Else
-    Declare Function SetCurrentDirectory Lib "kernel32" Alias _
-    "SetCurrentDirectoryA" (ByVal lpPathName As String) As Long
+#If Win32 Then
+    #If VBA7 Then
+        Declare PtrSafe Function SetCurrentDirectoryA Lib "kernel32" _
+        (ByVal lpPathName As String) As Long
+    #Else
+        Declare Function SetCurrentDirectoryA Lib "kernel32" _
+        (ByVal lpPathName As String) As Long
+    #End If
 #End If
 
 '***************** Code Start ******************
@@ -367,6 +369,10 @@ Private Const ERROR_BAD_FORMAT = 11&
     Public Declare Sub Sleep Lib "kernel32" (ByVal dwMilliseconds As Long)
 #End If
 
+#If Mac Then
+    Public Declare Function system Lib "libc.dylib" (ByVal cammand As String) As Long
+#End If
+
 
 '***************** Code Start ******************
 'This code was originally written by Terry Kreft.
@@ -379,6 +385,11 @@ Private Const ERROR_BAD_FORMAT = 11&
 'Terry Kreft
 ' Modified by A Mason
 Function OSSolveSync(SolverPath As String, pathName As String, PrintingOptionString As String, logPath As String, Optional WindowStyle As Long, Optional WaitForCompletion As Boolean, Optional userCancelled As Boolean, Optional exeResult As Long) As Boolean
+#If Mac Then
+    Dim ret As Long
+    ret = System(SolverPath & pathName & PrintingOptionString & logPath)
+    If ret = 0 Then OSSolveSync = True
+#Else
       'TODO: Optional for Boolean doesn't seem to work IsMissing is always false and value is false?
       ' Returns true if successful completion, false if escape was pressed
 50        OSSolveSync = False
@@ -477,6 +488,7 @@ DLLErrorHandler:
 471       On Error Resume Next
 472       ret& = CloseHandle(proc.hProcess)
           Err.Raise Err.LastDllError, "OpenSolver OSSolverSync", DLLErrorText(Err.LastDllError) & IIf(Erl = 0, "", " (at line " & Erl & ")")
+#End If
 End Function
 '***************** Code End Terry Kreft ****************
 
@@ -526,31 +538,35 @@ Function GetTempFolder() As String
 #End If
 End Function
 
-Function FileOrFolderExistsOnMac(FileOrFolder As Long, FileOrFolderstr As String) As Boolean
-'By Ron de Bruin (http://www.rondebruin.nl/mac/mac008.htm)
-'30-July-2012
-'Function to test whether a file or folder exist on a Mac.
-'Uses AppleScript to avoid the problem with long file names
-    Dim ScriptToCheckFileFolder As String
-    ScriptToCheckFileFolder = "tell application ""Finder""" & vbNewLine
-    If FileOrFolder = 1 Then
-        ScriptToCheckFileFolder = ScriptToCheckFileFolder & "exists file " & _
-                                  """" & FileOrFolderstr & """" & vbNewLine
-    Else
-        ScriptToCheckFileFolder = ScriptToCheckFileFolder & "exists folder " & _
-                                  """" & FileOrFolderstr & """" & vbNewLine
-    End If
-    ScriptToCheckFileFolder = ScriptToCheckFileFolder & "end tell" & vbNewLine
-    FileOrFolderExistsOnMac = MacScript(ScriptToCheckFileFolder)
+Function FileOrDirExists(pathName As String) As Boolean
+     ' from http://www.vbaexpress.com/kb/getarticle.php?kb_id=559
+     'Macro Purpose: Function returns TRUE if the specified file
+     '               or folder exists, false if not.
+     'PathName     : Supports Windows mapped drives or UNC
+     '             : Supports Macintosh paths
+     'File usage   : Provide full file path and extension
+     'Folder usage : Provide full folder path
+     '               Accepts with/without trailing "\" (Windows)
+     '               Accepts with/without trailing ":" (Macintosh)
+     
+    Dim iTemp As Integer
+     
+     'Ignore errors to allow for error evaluation
+    On Error Resume Next
+    iTemp = GetAttr(pathName)
+     
+     'Check if error exists and set response appropriately
+    Select Case Err.Number
+    Case Is = 0
+        FileOrDirExists = True
+    Case Else
+        FileOrDirExists = False
+    End Select
+     
+     'Resume error checking
+    On Error GoTo 0
 End Function
 
-Function FileExists(FilePath As String)
-#If Mac Then
-    FileExists = FileOrFolderExistsOnMac(1, FilePath)
-#Else
-    FileExists = Dir(FilePath) <> ""
-#End If
-End Function
 
 Function GetModelFileName(Optional SolveNEOS As Boolean = False, Optional SolvePulp As Boolean = False) As String
           If SolveNEOS Then
@@ -1204,7 +1220,7 @@ End Function
 Function GetExistingFilePathName(Directory As String, FileName As String, ByRef pathName As String) As Boolean
 4260     If right(" " & Directory, 1) <> PathDelimeter Then Directory = Directory & PathDelimeter
 4270     pathName = Directory & FileName
-4280     GetExistingFilePathName = Dir(pathName) <> ""
+4280     GetExistingFilePathName = FileOrDirExists(pathName)
 End Function
 
 'Function GetExternalSolverPath(ExternalSolverPath As String)
@@ -1244,6 +1260,12 @@ Sub GetExternalSolverPathName(ByRef CombinedPathName As String, solverName As St
           ' We look for a 64 bit version if we are running a 64-bit system
           ' This will throw an exception if the solver cannot be found
           Dim Try1 As String, Try2 As String
+#If Mac Then
+    If GetExistingFilePathName(ThisWorkbook.Path, left(solverName, Len(solverName) - 4), CombinedPathName) Then Exit Sub ' Found a mac solver
+    Err.Raise Number:=OpenSolver_CBCMissingError, Source:="OpenSolver GetExternalSolverPathName", _
+                      Description:="Unable to find Mac version of the external solver '" & solverName & "'."
+    Exit Sub
+#End If
           
 4290      If SystemIs64Bit Then
 4300          If GetExistingFilePathName(ThisWorkbook.Path, Replace(solverName, ".exe", "64.exe"), CombinedPathName) Then Exit Sub ' Found a 64 bit solver
@@ -1378,6 +1400,14 @@ End Function
 Function ForceCalculate(prompt As String) As Boolean
            'There appears to be a bug in Excel 2010 where the .Calculate does not always complete. We handle up to 3 such failures.
            ' We have seen this problem arise on large models.
+#If Mac Then
+          'In Excel 2011 the Application.CalculationState is not included:
+          'http://sysmod.wordpress.com/2011/10/24/more-differences-mainly-vba/
+          'Try calling 'Calculate' two times just to be safe? This will probably cause problems down the line, maybe Office 2014 will fix it?
+          Application.Calculate
+          Application.Calculate
+          ForceCalculate = True
+#Else
 4930      Application.Calculate
 4940      If Application.CalculationState <> xlDone Then
               Application.Calculate
@@ -1416,7 +1446,8 @@ Function ForceCalculate(prompt As String) As Boolean
 5060              Application.Calculate
 5070          End If
 5080      Wend
-5090      ForceCalculate = True
+          ForceCalculate = True
+#End If
 End Function
 
 Function ProperUnion(R1 As Range, R2 As Range) As Range
@@ -1832,4 +1863,23 @@ Public Sub OpenURL(URL As String)
 
 End Sub
 
+Public Sub SetCurrentDirectory(NewPath As String)
+#If Mac Then
+    ChDir NewPath
+#Else
+    SetCurrentDirectoryA NewPath
+#End If
+End Sub
 
+Public Function ReplaceDelimitersMac(Path As String) As String
+    ReplaceDelimitersMac = Replace(Path, ":", "/")
+End Function
+
+Public Function ConvertHfsPath(Path As String) As String
+#If Mac Then
+    ConvertHfsPath = right(Path, Len(Path) - InStr(Path, ":") + 1)
+    ConvertHfsPath = ReplaceDelimitersMac(ConvertHfsPath)
+#Else
+    ConvertHfsPath = Path
+#End If
+End Function

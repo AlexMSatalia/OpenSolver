@@ -1087,8 +1087,8 @@ Function SolveModel(SolveRelaxation As Boolean) As Integer
           'Delete any existing nomad log file
           Dim logPath As String
 11930     logPath = GetTempFolder & "log1.tmp"
-11940     If Dir(logPath) <> "" Then Kill logPath
-11950     If Dir(logPath) <> "" Then
+11940     If FileOrDirExists(logPath) Then Kill logPath
+11950     If FileOrDirExists(logPath) Then
 11960         On Error GoTo errorHandler
 11970         Err.Raise Number:=OpenSolver_SolveError, Source:=errorPrefix, Description:="Unable to delete the log file 'log1.tmp'"
 11980     End If
@@ -1105,8 +1105,8 @@ Function SolveModel(SolveRelaxation As Boolean) As Integer
           Else
               ModelFilePathName = GetModelFullPath(False)
           End If
-12010     If Dir(ModelFilePathName) <> "" Then Kill ModelFilePathName ' delete model file, just in case anything goes wrong (and we get left with an old one)
-12020     If Dir(ModelFilePathName) <> "" Then
+12010     If FileOrDirExists(ModelFilePathName) Then Kill ModelFilePathName ' delete model file, just in case anything goes wrong (and we get left with an old one)
+12020     If FileOrDirExists(ModelFilePathName) Then
 12030         On Error GoTo errorHandler
 12040         Err.Raise Number:=OpenSolver_SolveError, Source:=errorPrefix, Description:="Unable to delete file " & ModelFilePathName
 12050     End If
@@ -1115,8 +1115,8 @@ Function SolveModel(SolveRelaxation As Boolean) As Integer
           Dim SolutionFilePathName As String, SolutionFileName As String
 12060     SolutionFileName = GetSolutionFileName
 12070     SolutionFilePathName = GetSolutionFullPath
-12080     If Dir(SolutionFilePathName) <> "" Then Kill SolutionFilePathName ' delete solution file
-12090     If Dir(SolutionFilePathName) <> "" Then
+12080     If FileOrDirExists(SolutionFilePathName) Then Kill SolutionFilePathName ' delete solution file
+12090     If FileOrDirExists(SolutionFilePathName) Then
 12100         On Error GoTo errorHandler
 12110         Err.Raise Number:=OpenSolver_SolveError, Source:=errorPrefix, Description:="Unable to delete the " & SolverString & " solver solution file: " & SolutionFilePathName & ". The problem cannot be solved."
 12120     End If
@@ -1125,18 +1125,18 @@ Function SolveModel(SolveRelaxation As Boolean) As Integer
           Dim GurobiSolutionFilePathName As String, GurobiSolutionFileName As String
 12130     GurobiSolutionFileName = Replace(SolutionFileName, ".txt", ".sol")
 12140     GurobiSolutionFilePathName = Replace(SolutionFilePathName, ".txt", ".sol")
-12150     If Dir(GurobiSolutionFilePathName) <> "" Then Kill GurobiSolutionFilePathName ' delete solution file
-12160     If Dir(GurobiSolutionFilePathName) <> "" Then
+12150     If FileOrDirExists(GurobiSolutionFilePathName) Then Kill GurobiSolutionFilePathName ' delete solution file
+12160     If FileOrDirExists(GurobiSolutionFilePathName) Then
 12170         On Error GoTo errorHandler
 12180         Err.Raise Number:=OpenSolver_SolveError, Source:=errorPrefix, Description:="Unable to delete the " & SolverString & " solver solution file: " & GurobiSolutionFilePathName & ". The problem cannot be solved."
 12190     End If
           
           'Delete the CBC or Gurobi files with sensitivity data on it if they exist
-12200     If Dir(Replace(SolutionFilePathName, "modelsolution", "costranges")) <> "" Then Kill Replace(SolutionFilePathName, "modelsolution", "costranges")
-12210     If Dir(Replace(SolutionFilePathName, "modelsolution", "rhsranges")) <> "" Then Kill Replace(SolutionFilePathName, "modelsolution", "rhsranges")
-12220     If Dir(Replace(GurobiSolutionFilePathName, "modelsolution", "sensitivityData")) <> "" Then Kill Replace(GurobiSolutionFilePathName, "modelsolution", "sensitivityData")
+12200     If FileOrDirExists(Replace(SolutionFilePathName, "modelsolution", "costranges")) Then Kill Replace(SolutionFilePathName, "modelsolution", "costranges")
+12210     If FileOrDirExists(Replace(SolutionFilePathName, "modelsolution", "rhsranges")) Then Kill Replace(SolutionFilePathName, "modelsolution", "rhsranges")
+12220     If FileOrDirExists(Replace(GurobiSolutionFilePathName, "modelsolution", "sensitivityData")) Then Kill Replace(GurobiSolutionFilePathName, "modelsolution", "sensitivityData")
           'Delete the cbc batch file if it exists
-          If Dir(Replace(SolutionFilePathName, "modelsolution.txt", "cbc.bat")) <> "" Then Kill Replace(SolutionFilePathName, "modelsolution.txt", "cbc.bat")
+          If FileOrDirExists(Replace(SolutionFilePathName, "modelsolution.txt", "cbc.bat")) Then Kill Replace(SolutionFilePathName, "modelsolution.txt", "cbc.bat")
 
 12230     If Solver = "Nomad" Then
 12240         SolveRelaxedModel = SolveRelaxation
@@ -1295,7 +1295,7 @@ Function SolveModel_Linear(SolveRelaxation As Boolean) As Integer
               Dim CommandLineRunString As String, PrintingOptionString As String
 13020         If Solver = "cbc.exe" Then
                   ' have to split up the command line as excel couldn't have a string longer than 255 characters??
-13030             CommandLineRunString = " -directory " & GetTempFolder _
+13030             CommandLineRunString = " -directory " & ConvertHfsPath(GetTempFolder) _
                                & " -import " & ModelFileName _
                                & " -ratioGap " & str(SolveOptions.Tolerance) _
                                & " -seconds " & str(SolveOptions.maxTime) _
@@ -1309,12 +1309,24 @@ Function SolveModel_Linear(SolveRelaxation As Boolean) As Integer
                   'extra command line option of -printingOptions objective - solution costranges.txt outputs the ranges on the costs to the costranges file
                   '-this file has the increase as the fifth input and decrease as the third input
 13040             PrintingOptionString = IIf(bGetDuals, " -printingOptions rhs  -solution rhsranges.txt -printingOptions objective -solution costranges.txt", "")
-                  Open GetTempFolder & "cbc.bat" For Output As 1
-                  Print #1, "@echo off" & vbCrLf & """" & ExternalSolverPathName & """" & CommandLineRunString & PrintingOptionString
+                  Dim scriptFile As String
+#If Mac Then
+                  scriptFile = GetTempFolder & "cbc.sh"
+#Else
+                  scriptFile = GetTempFolder & "cbc.bat"
+#End If
+                  Open scriptFile For Output As 1
+#If Win32 Then
+                  Print #1, "@echo off" & vbCrLf
+#End If
+                  Print #1, """" & ConvertHfsPath(ExternalSolverPathName) & """" & CommandLineRunString & PrintingOptionString
                   Close #1
-                  ExternalSolverPathName = GetTempFolder & "cbc.bat"
+                  ExternalSolverPathName = scriptFile
                   CommandLineRunString = ""
                   PrintingOptionString = ""
+#If Mac Then
+                  System ("chmod +x " & ConvertHfsPath(ExternalSolverPathName))
+#End If
 13050         ElseIf Solver = "gurobi.bat" Then
                   Dim CombinedPathName As String
 13060             If GetExistingFilePathName(ThisWorkbook.Path, "gurobiOSRun.py", CombinedPathName) Then
@@ -1339,11 +1351,11 @@ Function SolveModel_Linear(SolveRelaxation As Boolean) As Integer
               
               Dim logCommand As String, logFileName As String
               logFileName = "log1.tmp"
-              logCommand = " > " & """" & GetTempFolder & logFileName & """"
+              logCommand = " > " & """" & ConvertHfsPath(GetTempFolder) & logFileName & """"
                   
               Dim ExecutionCompleted As Boolean
               'ExecutionCompleted = OSSolveSync(CBCRunString, IIf(ShowIterationResults, SW_SHOWNORMAL, SW_SHOWMINIMIZED), True) ' This stops escape being detected properly unless Excel is first 'activated?' with a click
-13160         ExternalSolverPathName = """" & ExternalSolverPathName & """" ' fix error for Gurobi with spaces in path name by quoting path
+13160         ExternalSolverPathName = """" & ConvertHfsPath(ExternalSolverPathName) & """" ' fix error for Gurobi with spaces in path name by quoting path
               Dim exeResult As Long, userCancelled As Boolean
 13170         ExecutionCompleted = OSSolveSync(ExternalSolverPathName, CommandLineRunString, PrintingOptionString, logCommand, IIf(SolveOptions.ShowIterationResults, SW_SHOWNORMAL, SW_HIDE), True, userCancelled, exeResult) ' Run CBC, waiting for completion
 13180         If userCancelled Then
@@ -1373,7 +1385,7 @@ Function SolveModel_Linear(SolveRelaxation As Boolean) As Integer
 13270         If Solver = "gurobi.bat" Then
                   '=============Read the gurobi model file==========================
 13280             SolutionFilePathName = Replace(SolutionFilePathName, ".txt", ".sol")
-13290             If Dir(SolutionFilePathName) = "" Then
+13290             If Not FileOrDirExists(SolutionFilePathName) Then
 13300                 On Error GoTo errorHandler
 13310                 Err.Raise Number:=OpenSolver_SolveError, Source:=errorPrefix, Description:="The Gurobi solver did not create a solution file. No new solution is available."
 13320                 GoTo ExitSub
@@ -1389,7 +1401,7 @@ Function SolveModel_Linear(SolveRelaxation As Boolean) As Integer
 13400             End If
 13410         ElseIf Solver = "cbc.exe" Then
                   '===============Read the CBC model file============================
-13420             If Dir(SolutionFilePathName) = "" Then
+13420             If Not FileOrDirExists(SolutionFilePathName) Then
 13430                 On Error GoTo errorHandler
 13440                 Err.Raise Number:=OpenSolver_SolveError, Source:=errorPrefix, Description:="The CBC solver did not create a solution file. No new solution is available."
 13450                 GoTo ExitSub
@@ -1405,7 +1417,7 @@ Function SolveModel_Linear(SolveRelaxation As Boolean) As Integer
 13520             End If
 13530         ElseIf Solver = "cplex.exe" Then
 13540             SolutionFilePathName = Replace(SolutionFilePathName, ".txt", ".sol")
-13550             If Dir(SolutionFilePathName) = "" Then
+13550             If Not FileOrDirExists(SolutionFilePathName) = "" Then
 13560                 On Error GoTo errorHandler
 13570                 Err.Raise Number:=OpenSolver_SolveError, Source:=errorPrefix, Description:="The CPLEX solver did not create a solution file. No new solution is available."
 13580                 GoTo ExitSub

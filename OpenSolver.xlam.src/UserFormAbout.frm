@@ -325,7 +325,7 @@ Private Sub btnInstallOpenSolverStudio_Click()
 35500     FullPath = ThisWorkbook.Path
 35510     If right(" " & FullPath, 1) <> PathDelimeter Then FullPath = FullPath & PathDelimeter
 35520     FullPath = FullPath & OpenSolverStudioAddInName & ".vsto"
-35530     If Dir(FullPath) = "" Then
+35530     If Not FileOrDirExists(FullPath) Then
 35540         MsgBox "Unable to find the OpenSolverStudio file: " & FullPath, , "OpenSolver"
 35550         Exit Sub
 35560     End If
@@ -513,11 +513,11 @@ Private Function GetCBCVersion() As String
     ' Set up cbc to write version info to text file
     Dim logCommand As String, logFile As String, completed As Boolean
     logFile = GetTempFolder & "cbcversion.txt"
-    If Dir(logFile) <> "" Then Kill logFile
+    If FileOrDirExists(logFile) Then Kill logFile
     logCommand = " > " & """" & logFile & """"
     
     RunPath = GetTempFolder & "cbc.bat"
-    If Dir(RunPath) <> "" Then Kill RunPath
+    If FileOrDirExists(RunPath) Then Kill RunPath
     Open GetTempFolder & "cbc.bat" For Output As 1
     Print #1, "@echo off" & vbCrLf & """" & SolverPath & """" & " -exit" & logCommand
     Close #1
@@ -527,7 +527,7 @@ Private Function GetCBCVersion() As String
     
     ' Read version info back from output file
     Dim Line As String
-    If Dir(logFile) <> "" Then
+    If FileOrDirExists(logFile) Then
         Open logFile For Input As 1
         Line Input #1, Line
         Line Input #1, Line
