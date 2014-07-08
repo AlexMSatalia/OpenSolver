@@ -74,7 +74,7 @@ Private Function exportPath() As String
     exportPath = ThisWorkbook.FullName & ".src"
     If Not FileOrDirExists(exportPath) Then
         ' Modification JWD: We need late binding on FSO here to avoid a dependence on Microsoft Scripting Runtime
-        Dim fso As Object
+        Dim fso As Object ' FileSystemObject
         Set fso = CreateObject("Scripting.FileSystemObject")
         fso.GetFolder(ThisWorkbook.Path).SubFolders.Add (ThisWorkbook.Name & ".src")
     End If

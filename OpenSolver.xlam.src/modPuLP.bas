@@ -1351,7 +1351,9 @@ End Function
 
 Function CallNEOS(ModelFilePathName As String, m As CModel2) As Boolean
     On Error GoTo HELPG
-    Dim objSvrHTTP As MSXML2.ServerXMLHTTP60, message As String, txtURL As String
+    ' Late-binding required to prevent dependence on MSXML reference
+    Dim objSvrHTTP As Object ' MSXML2.ServerXMLHTTP
+    Dim message As String, txtURL As String
     Dim Done As Boolean, result As String
     Dim openingParen As String, closingParen As String, jobNumber As String, Password As String, solutionFile As String, solution As String
     Dim i As Integer, LinearSolveStatusString As String
@@ -1360,7 +1362,7 @@ Function CallNEOS(ModelFilePathName As String, m As CModel2) As Boolean
     
     ' Server name
     txtURL = "http://www.neos-server.org:3332"
-    Set objSvrHTTP = New MSXML2.ServerXMLHTTP60
+    Set objSvrHTTP = CreateObject("MSXML2.ServerXMLHTTP")
     
     ' Set up obj for a POST request
     objSvrHTTP.Open "POST", txtURL, False
@@ -1379,7 +1381,7 @@ Function CallNEOS(ModelFilePathName As String, m As CModel2) As Boolean
        & message & "</string></value></param></params></methodCall>"
     
     ' Send Message to NEOS
-    objSvrHTTP.send message
+    objSvrHTTP.send (message)
     
     ' Extract Job Number
     openingParen = InStr(objSvrHTTP.responseText, "<int>")
@@ -1409,11 +1411,10 @@ Function CallNEOS(ModelFilePathName As String, m As CModel2) As Boolean
         DoEvents
         
         ' Reset obj
-        Set objSvrHTTP = New MSXML2.ServerXMLHTTP60
         objSvrHTTP.Open "POST", txtURL, False
         
         ' Send message
-        objSvrHTTP.send message
+        objSvrHTTP.send (message)
         
         ' Extract answer
         openingParen = InStr(objSvrHTTP.responseText, "<string>")
@@ -1439,10 +1440,9 @@ Function CallNEOS(ModelFilePathName As String, m As CModel2) As Boolean
        "</string></value></param></params></methodCall>"
     
     ' Reset obj
-    Set objSvrHTTP = New MSXML2.ServerXMLHTTP60
     objSvrHTTP.Open "POST", txtURL, False
     
-    objSvrHTTP.send message
+    objSvrHTTP.send (message)
     
     ' Extract Result
     openingParen = InStr(objSvrHTTP.responseText, "<base64>")
@@ -1517,11 +1517,12 @@ End Function
 
 ' Code by Tim Hastings
 Private Function DecodeBase64(ByVal strData As String) As String
-    Dim objXML As MSXML2.DOMDocument60
-    Dim objNode As MSXML2.IXMLDOMElement
+    ' Late-binding required to prevent dependence on MSXML reference
+    Dim objXML As Object 'MSXML2.DOMDocument60
+    Dim objNode As Object 'MSXML2.IXMLDOMElement
   
     ' Help from MSXML
-    Set objXML = New MSXML2.DOMDocument60
+    Set objXML = CreateObject("MSXML2.DOMDocument")
     Set objNode = objXML.createElement("b64")
     objNode.DataType = "bin.base64"
     objNode.Text = strData

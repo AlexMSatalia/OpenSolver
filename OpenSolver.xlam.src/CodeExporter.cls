@@ -15,7 +15,7 @@ Option Explicit
 '====================================================================
 Private wkbk As Excel.Workbook
 Private exportFolder As String
-Private fso As Object
+Private fso As Object 'FileSystemObject
 
 Public Property Set SourceWorkbook(book As Excel.Workbook)
    Set wkbk = book

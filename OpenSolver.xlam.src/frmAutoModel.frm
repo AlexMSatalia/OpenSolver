@@ -1,7 +1,7 @@
 VERSION 5.00
 Begin {C62A69F0-16DC-11CE-9E98-00AA00574A4F} frmAutoModel 
    Caption         =   "OpenSolver - AutoModel"
-   ClientHeight    =   4485
+   ClientHeight    =   4480
    ClientLeft      =   42
    ClientTop       =   378
    ClientWidth     =   8806

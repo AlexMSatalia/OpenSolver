@@ -105,50 +105,25 @@ StopSearchingForModelType:
           
           ' SUMPRODUCT SEARCH FIRST
           ' SAME ROW AS MODEL TYPE
-37160     Set ObjectiveFunctionCell = _
-              s.Rows(ObjSenseCell.row).Find(What:="sumproduct", _
-                  LookIn:=xlFormulas, lookat:=xlPart, _
-                  SearchOrder:=xlByRows, SearchDirection:=xlNext, _
-                  MatchCase:=False, SearchFormat:=False)
+          FindObjCell s, ObjSenseCell.row, "sumproduct", ObjectiveFunctionCell
 37170     If Not (ObjectiveFunctionCell Is Nothing) Then GoTo FoundObjCell
           ' ROW ABOVE
-37180     Set ObjectiveFunctionCell = _
-              s.Rows(RowLBound).Find(What:="sumproduct", _
-                  LookIn:=xlFormulas, lookat:=xlPart, _
-                  SearchOrder:=xlByRows, SearchDirection:=xlNext, _
-                  MatchCase:=False, SearchFormat:=False)
+          FindObjCell s, RowLBound, "sumproduct", ObjectiveFunctionCell
 37190     If Not (ObjectiveFunctionCell Is Nothing) Then GoTo FoundObjCell
           ' ROW BELOW
-37200     Set ObjectiveFunctionCell = _
-              s.Rows(RowUBound).Find(What:="sumproduct", _
-                  LookIn:=xlFormulas, lookat:=xlPart, _
-                  SearchOrder:=xlByRows, SearchDirection:=xlNext, _
-                  MatchCase:=False, SearchFormat:=False)
+          FindObjCell s, RowUBound, "sumproduct", ObjectiveFunctionCell
 37210     If Not (ObjectiveFunctionCell Is Nothing) Then GoTo FoundObjCell
           
           ' NEXT SEARCH FOR ANY FORMULA
           ' SAME ROW AS MODEL TYPE
-37220     Set ObjectiveFunctionCell = _
-              s.Rows(ObjSenseCell.row).Find(What:="=", _
-                  LookIn:=xlFormulas, lookat:=xlPart, _
-                  SearchOrder:=xlByRows, SearchDirection:=xlNext, _
-                  MatchCase:=False, SearchFormat:=False)
+          FindObjCell s, ObjSenseCell.row, "=", ObjectiveFunctionCell
 37230     If Not (ObjectiveFunctionCell Is Nothing) Then GoTo FoundObjCell
           ' ROW ABOVE
-37240     Set ObjectiveFunctionCell = _
-              s.Rows(RowLBound).Find(What:="=", _
-                  LookIn:=xlFormulas, lookat:=xlPart, _
-                  SearchOrder:=xlByRows, SearchDirection:=xlNext, _
-                  MatchCase:=False, SearchFormat:=False)
+          FindObjCell s, RowLBound, "=", ObjectiveFunctionCell
 37250     If Not (ObjectiveFunctionCell Is Nothing) Then GoTo FoundObjCell
           ' ROW BELOW
-37260     Set ObjectiveFunctionCell = _
-              s.Rows(RowUBound).Find(What:="=", _
-                  LookIn:=xlFormulas, lookat:=xlPart, _
-                  SearchOrder:=xlByRows, SearchDirection:=xlNext, _
-                  MatchCase:=False, SearchFormat:=False)
+          FindObjCell s, RowUBound, "=", ObjectiveFunctionCell
 37270     If Not (ObjectiveFunctionCell Is Nothing) Then GoTo FoundObjCell
-
          
 FoundObjCell:
 
@@ -174,7 +149,7 @@ End Function
 '--------------------------------------------------------------------
 ' FindObjSense
 ' Helper function for FindObjective. Contains the settings for the
-' right kind of search (values, don't match case)
+' right kind of search to find the objective sense (values, don't match case)
 '
 ' Written by:       IRD
 '--------------------------------------------------------------------
@@ -184,6 +159,33 @@ Private Sub FindObjSense(ByRef s As Worksheet, ByVal searchStr As String, ByRef 
                       LookIn:=xlValues, SearchOrder:=xlByRows, _
                       SearchDirection:=xlPrevious, MatchCase:=False)
 End Sub
+
+
+'--------------------------------------------------------------------
+' FindObjCell
+' Helper function for FindObjective. Contains the settings for the
+' right kind of search to find objective cell (specified row, formulas, don't match case)
+'
+' Written by:       JWD
+'--------------------------------------------------------------------
+Private Sub FindObjCell(ByRef s As Worksheet, ByVal rowNum As Long, ByVal searchStr As String, ByRef result As Range)
+' Mac cannot handle SearchFormat parameter
+#If Mac Then
+          Set result = _
+              s.Rows(rowNum).Find(What:=searchStr, _
+                  LookIn:=xlFormulas, lookat:=xlPart, _
+                  SearchOrder:=xlByRows, SearchDirection:=xlNext, _
+                  MatchCase:=False)
+#Else
+          Set result = _
+              s.Rows(rowNum).Find(What:=searchStr, _
+                  LookIn:=xlFormulas, lookat:=xlPart, _
+                  SearchOrder:=xlByRows, SearchDirection:=xlNext, _
+                  MatchCase:=False, SearchFormat:=False)
+#End If
+End Sub
+
+
 
 
 '--------------------------------------------------------------------
