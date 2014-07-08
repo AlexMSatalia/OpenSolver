@@ -377,10 +377,17 @@ Sub ReflectOpenSolverStatus()
 35770     On Error GoTo errorHandler
           Dim InstalledAndActive As Boolean
 35780     InstalledAndActive = False
+
+          Dim title As String
+          title = "OpenSolver"
+#If Mac Then
+          ' On Mac, the Application.AddIns collection is indexed by filename.ext rather than just filename as on Windows
+          title = title & ".xlam"
+#End If
           Dim AddIn As Variant
 35790     Set AddIn = Nothing
-35800     If GetAddInIfExists(AddIn, "OpenSolver") Then
-35810         Set AddIn = Application.AddIns("OpenSolver")
+35800     If GetAddInIfExists(AddIn, title) Then
+35810         Set AddIn = Application.AddIns(title)
 35820         InstalledAndActive = AddIn.Installed
 35830     End If
 errorHandler:
@@ -484,8 +491,14 @@ Private Sub UserForm_Activate()
 #Else
           ExcelBitness = "32"
 #End If
+          Dim OS As String
+#If Mac Then
+          OS = "Mac"
+#Else
+          OS = "Windows"
+#End If
 
-36220     labelVersion.Caption = "Version " & sOpenSolverVersion & " (" & sOpenSolverDate & ") running on " & IIf(SystemIs64Bit, "64", "32") & " bit Windows in " & VBAversion & " in " & ExcelBitness & " bit Excel " & Application.Version
+36220     labelVersion.Caption = "Version " & sOpenSolverVersion & " (" & sOpenSolverDate & ") running on " & IIf(SystemIs64Bit, "64", "32") & " bit " & OS & " in " & VBAversion & " in " & ExcelBitness & " bit Excel " & Application.Version
           
           
           LabelNomad.Caption = GetNomadVersion()
@@ -545,6 +558,10 @@ Private Function GetCBCVersion() As String
 End Function
 
 Private Function GetNomadVersion() As String
+#If Mac Then
+    GetNomadVersion = "NOMAD for OpenSolver is not currently supported on Mac"
+    Exit Function
+#End If
     Dim currentDir As String, sNomadVersion As String, sNomadDllVersion As String, sDllName As String
     
     ' Set current dir for finding the DLL
