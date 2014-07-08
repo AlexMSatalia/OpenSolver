@@ -2,9 +2,9 @@ VERSION 5.00
 Begin {C62A69F0-16DC-11CE-9E98-00AA00574A4F} CallingNeos 
    Caption         =   "OpenSolver Optimisation Running"
    ClientHeight    =   1830
-   ClientLeft      =   45
-   ClientTop       =   435
-   ClientWidth     =   4470
+   ClientLeft      =   42
+   ClientTop       =   434
+   ClientWidth     =   4473
    OleObjectBlob   =   "CallingNeos.frx":0000
    StartUpPosition =   1  'CenterOwner
 End

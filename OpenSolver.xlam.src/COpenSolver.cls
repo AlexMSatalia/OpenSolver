@@ -1325,7 +1325,7 @@ Function SolveModel_Linear(SolveRelaxation As Boolean) As Integer
                   CommandLineRunString = ""
                   PrintingOptionString = ""
 #If Mac Then
-                  System ("chmod +x " & ConvertHfsPath(ExternalSolverPathName))
+                  system ("chmod +x " & ConvertHfsPath(ExternalSolverPathName))
 #End If
 13050         ElseIf Solver = "gurobi.bat" Then
                   Dim CombinedPathName As String

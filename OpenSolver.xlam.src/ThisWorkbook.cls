@@ -71,21 +71,14 @@ End Sub
 
 Private Function exportPath() As String
 
-Dim pathName As String
-
-    pathName = ThisWorkbook.Name & ".src"
-
-    With New FileSystemObject
-        With .GetFolder(ThisWorkbook.Path)
-            On Error Resume Next
-            exportPath = .SubFolders(pathName).Path
-            If Err.Number <> 0 Then
-                .SubFolders.Add pathName
-                exportPath = .SubFolders(pathName).Path
-            End If
-            On Error GoTo 0
-        End With
-    End With
+    exportPath = ThisWorkbook.FullName & ".src"
+    If Not FileOrDirExists(exportPath) Then
+        ' Modification JWD: We need late binding on FSO here to avoid a dependence on Microsoft Scripting Runtime
+        Dim fso As Object
+        Set fso = CreateObject("Scripting.FileSystemObject")
+        fso.GetFolder(ThisWorkbook.Path).SubFolders.Add (ThisWorkbook.Name & ".src")
+    End If
+        
 
 End Function
 '====================================================================

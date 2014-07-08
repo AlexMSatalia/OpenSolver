@@ -15,15 +15,15 @@ Option Explicit
 '====================================================================
 Private wkbk As Excel.Workbook
 Private exportFolder As String
-Private fso As FileSystemObject
+Private fso As Object
 
 Public Property Set SourceWorkbook(book As Excel.Workbook)
    Set wkbk = book
 End Property
 
 Public Sub ExportTo(where As String)
-
-   Set fso = New FileSystemObject
+   ' Modification JWD: We need late binding on FSO here to avoid a dependence on Microsoft Scripting Runtime
+   Set fso = CreateObject("Scripting.FileSystemObject")
    
    If Not fso.FolderExists(where) Then
        fso.CreateFolder where

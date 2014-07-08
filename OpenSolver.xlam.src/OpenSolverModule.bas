@@ -387,7 +387,7 @@ Private Const ERROR_BAD_FORMAT = 11&
 Function OSSolveSync(SolverPath As String, pathName As String, PrintingOptionString As String, logPath As String, Optional WindowStyle As Long, Optional WaitForCompletion As Boolean, Optional userCancelled As Boolean, Optional exeResult As Long) As Boolean
 #If Mac Then
     Dim ret As Long
-    ret = System(SolverPath & pathName & PrintingOptionString & logPath)
+    ret = system(SolverPath & pathName & PrintingOptionString & logPath)
     If ret = 0 Then OSSolveSync = True
 #Else
       'TODO: Optional for Boolean doesn't seem to work IsMissing is always false and value is false?
