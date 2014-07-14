@@ -2,9 +2,9 @@ VERSION 5.00
 Begin {C62A69F0-16DC-11CE-9E98-00AA00574A4F} UserFormAbout 
    Caption         =   "About OpenSolver"
    ClientHeight    =   7140
-   ClientLeft      =   42
-   ClientTop       =   343
-   ClientWidth     =   8883
+   ClientLeft      =   45
+   ClientTop       =   345
+   ClientWidth     =   8880.001
    OleObjectBlob   =   "UserFormAbout.frx":0000
    StartUpPosition =   1  'CenterOwner
 End
@@ -502,7 +502,7 @@ Private Sub UserForm_Activate()
           
           
           LabelNomad.Caption = GetNomadVersion()
-          LabelCBC.Caption = GetCBCVersion()
+          LabelCBC.Caption = About_CBC()
           
           
 36230     labelFilePath = "OpenSolverFile: " & ThisWorkbook.FullName
@@ -513,49 +513,6 @@ Private Sub UserForm_Activate()
           txtAbout.SelStart = 0
 End Sub
 
-Private Function GetCBCVersion() As String
-    Dim SolverPath As String, Bitness As String, RunPath As String
-    GetExternalSolverPathName SolverPath, "cbc.exe"
-    
-    If right(SolverPath, 9) = "cbc64.exe" Then
-        Bitness = "64"
-    Else
-        Bitness = "32"
-    End If
-    
-    ' Set up cbc to write version info to text file
-    Dim logCommand As String, logFile As String, completed As Boolean
-    logFile = GetTempFolder & "cbcversion.txt"
-    If FileOrDirExists(logFile) Then Kill logFile
-    logCommand = " > " & """" & logFile & """"
-    
-    RunPath = GetTempFolder & "cbc.bat"
-    If FileOrDirExists(RunPath) Then Kill RunPath
-    Open GetTempFolder & "cbc.bat" For Output As 1
-    Print #1, "@echo off" & vbCrLf & """" & SolverPath & """" & " -exit" & logCommand
-    Close #1
-    
-    ' Run cbc
-    completed = OSSolveSync(RunPath, "", "", "", SW_HIDE, True)
-    
-    ' Read version info back from output file
-    Dim Line As String
-    If FileOrDirExists(logFile) Then
-        Open logFile For Input As 1
-        Line Input #1, Line
-        Line Input #1, Line
-        Close #1
-        GetCBCVersion = right(Line, Len(Line) - 9)
-        GetCBCVersion = left(GetCBCVersion, Len(GetCBCVersion) - 1)
-        GetCBCVersion = " v" & GetCBCVersion
-    Else
-        GetCBCVersion = ""
-    End If
-    
-    ' Assemble version info
-    GetCBCVersion = "CBC " & Bitness & " bit" & GetCBCVersion & " at " & SolverPath
-    
-End Function
 
 Private Function GetNomadVersion() As String
 #If Mac Then
