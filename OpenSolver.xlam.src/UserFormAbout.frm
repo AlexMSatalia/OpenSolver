@@ -500,10 +500,10 @@ Private Sub UserForm_Activate()
 
 36220     labelVersion.Caption = "Version " & sOpenSolverVersion & " (" & sOpenSolverDate & ") running on " & IIf(SystemIs64Bit, "64", "32") & " bit " & OS & " in " & VBAversion & " in " & ExcelBitness & " bit Excel " & Application.Version
           
-          
-          LabelNomad.Caption = GetNomadVersion()
-          LabelCBC.Caption = About_CBC()
-          
+          txtAbout.Text = About_OpenSolver
+          txtAbout.Text = About_CBC & vbNewLine & vbNewLine & txtAbout.Text
+          txtAbout.Text = About_Gurobi & vbNewLine & vbNewLine & txtAbout.Text
+          txtAbout.Text = GetNomadVersion & vbNewLine & vbNewLine & txtAbout.Text
           
 36230     labelFilePath = "OpenSolverFile: " & ThisWorkbook.FullName
           ' ShowOpenSolverStudioStatus
@@ -540,4 +540,24 @@ Private Function GetNomadVersion() As String
     sDllName = "OpenSolverNomadDll.dll"
 #End If
     GetNomadVersion = "NOMAD v" & sNomadVersion & " using OpenSolverNomadDLL v" & sNomadDllVersion & " at " & ThisWorkbook.Path & "\" & sDllName
+End Function
+
+Private Function About_OpenSolver() As String
+About_OpenSolver = _
+"(c) Andrew J Mason 2011 , 2012" & vbNewLine & _
+"Developed by Andrew Mason and Iain Dunning, with coding assistance by Kat Gilbert, Matthew Milner, Kris Atkins and Jack Dunn." & vbNewLine & _
+"Department of Engineering Science" & vbNewLine & _
+"University of Auckland, New Zealand" & vbNewLine & _
+vbNewLine & _
+"Excel 2003 Menu Code" & vbNewLine & _
+"Provided by Paul Becker of Eclipse Engineering (http://www.eclipseeng.com)" & vbNewLine & _
+vbNewLine & _
+"OpenSolver allows the Coin-OR CBC optimization engine to be used to solve linear integer programming problems in Excel as well as the NOMAD optimization engine to solve non-linear programming problems. OpenSolver also offers the choice of solving linear problems with the Gurobi optimizer if this is installed." & vbNewLine & _
+vbNewLine & _
+"OpenSolver is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.  The CBC solver is licensed under the Common Public License while the NOMAD software is subject to the terms of the GNU Lesser General Public License." & vbNewLine & _
+vbNewLine & _
+"OpenSolver is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.  You should have received a copy of the GNU General Public License along with OpenSolver.  If not, see http://www.gnu.org/licenses/" & vbNewLine & _
+vbNewLine & _
+"Excel Solver is a product developed by Frontline Systems (www.solver.com) for Microsoft. OpenSolver has no affiliation with, nor is recommend by, Microsoft or Frontline Systems. All trademark terms are the property of their respective owners." & vbNewLine
+
 End Function

@@ -48,7 +48,7 @@ Function SolverVersion_CBC() As String
     
     ' Run cbc
     Dim completed As Boolean
-    completed = OSSolveSync(RunPath, "", "", "", SW_HIDE, True)
+    completed = OSSolveSync(ConvertHfsPath(RunPath), "", "", "", SW_HIDE, True)
     
     ' Read version info back from output file
     Dim Line As String
