@@ -99,7 +99,7 @@ Public Sub GenerateFile(m As CModel2, SolverType As String, boolOtherSheetsIndep
     Close #1
     Dim ModelFileName As String, ModelFilePathName As String
     ModelFileName = GetModelFileName(True)
-    ModelFilePathName = GetModelFullPath(True)
+    ModelFilePathName = GetTempFilePath(ModelFileName)
     
     ' Delete model file, just in case anything goes wrong (and we get left with an old one)
     Close 1

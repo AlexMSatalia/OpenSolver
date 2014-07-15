@@ -1084,59 +1084,24 @@ Function SolveModel(SolveRelaxation As Boolean) As Integer
           Dim errorPrefix As String
 11920     errorPrefix = "OpenSolver Model Solving"
 
-          'Delete any existing nomad log file
+          'Delete any existing log file
           Dim logPath As String
-11930     logPath = GetTempFolder & "log1.tmp"
-11940     If FileOrDirExists(logPath) Then Kill logPath
-11950     If FileOrDirExists(logPath) Then
-11960         On Error GoTo errorHandler
-11970         Err.Raise Number:=OpenSolver_SolveError, Source:=errorPrefix, Description:="Unable to delete the log file 'log1.tmp'"
-11980     End If
+11930     logPath = GetTempFilePath("log1.tmp")
+11940     DeleteFileAndVerify logPath, errorPrefix, "Unable to delete the log file: " & logPath
           
           Dim ModelFileName As String
           If Solver = "NeosCBC" Then
-11990         ModelFileName = GetModelFileName(True)
+              ModelFileName = GetModelFileName(True)
           Else
               ModelFileName = GetModelFileName(False)
           End If
           Dim ModelFilePathName As String
-          If Solver = "NeosCBC" Then
-12000         ModelFilePathName = GetModelFullPath(True)
-          Else
-              ModelFilePathName = GetModelFullPath(False)
-          End If
-12010     If FileOrDirExists(ModelFilePathName) Then Kill ModelFilePathName ' delete model file, just in case anything goes wrong (and we get left with an old one)
-12020     If FileOrDirExists(ModelFilePathName) Then
-12030         On Error GoTo errorHandler
-12040         Err.Raise Number:=OpenSolver_SolveError, Source:=errorPrefix, Description:="Unable to delete file " & ModelFilePathName
-12050     End If
-
-          'Delete the CBC solution file if it exists
-          Dim SolutionFilePathName As String, SolutionFileName As String
-12060     SolutionFileName = GetSolutionFileName
-12070     SolutionFilePathName = GetSolutionFullPath
-12080     If FileOrDirExists(SolutionFilePathName) Then Kill SolutionFilePathName ' delete solution file
-12090     If FileOrDirExists(SolutionFilePathName) Then
-12100         On Error GoTo errorHandler
-12110         Err.Raise Number:=OpenSolver_SolveError, Source:=errorPrefix, Description:="Unable to delete the " & SolverString & " solver solution file: " & SolutionFilePathName & ". The problem cannot be solved."
-12120     End If
-
-          'Delete the Gurobi solution file if it exists
-          Dim GurobiSolutionFilePathName As String, GurobiSolutionFileName As String
-12130     GurobiSolutionFileName = Replace(SolutionFileName, ".txt", ".sol")
-12140     GurobiSolutionFilePathName = Replace(SolutionFilePathName, ".txt", ".sol")
-12150     If FileOrDirExists(GurobiSolutionFilePathName) Then Kill GurobiSolutionFilePathName ' delete solution file
-12160     If FileOrDirExists(GurobiSolutionFilePathName) Then
-12170         On Error GoTo errorHandler
-12180         Err.Raise Number:=OpenSolver_SolveError, Source:=errorPrefix, Description:="Unable to delete the " & SolverString & " solver solution file: " & GurobiSolutionFilePathName & ". The problem cannot be solved."
-12190     End If
+          ModelFilePathName = GetTempFilePath(ModelFileName)
           
-          'Delete the CBC or Gurobi files with sensitivity data on it if they exist
-12200     If FileOrDirExists(Replace(SolutionFilePathName, "modelsolution", "costranges")) Then Kill Replace(SolutionFilePathName, "modelsolution", "costranges")
-12210     If FileOrDirExists(Replace(SolutionFilePathName, "modelsolution", "rhsranges")) Then Kill Replace(SolutionFilePathName, "modelsolution", "rhsranges")
-12220     If FileOrDirExists(Replace(GurobiSolutionFilePathName, "modelsolution", "sensitivityData")) Then Kill Replace(GurobiSolutionFilePathName, "modelsolution", "sensitivityData")
-          'Delete the cbc batch file if it exists
-          If FileOrDirExists(Replace(SolutionFilePathName, "modelsolution.txt", "cbc.bat")) Then Kill Replace(SolutionFilePathName, "modelsolution.txt", "cbc.bat")
+          DeleteFileAndVerify ModelFilePathName, errorPrefix, "Unable to delete file " & ModelFilePathName
+          
+          'Clean up solver specific files
+          CleanFiles (errorPrefix)
 
 12230     If Solver = "Nomad" Then
 12240         SolveRelaxedModel = SolveRelaxation
@@ -1222,12 +1187,10 @@ Function SolveModel_Linear(SolveRelaxation As Boolean) As Integer
           Dim ModelFilePathName As String
           If Solver = "NeosCBC" Then
 12680         ModelFileName = GetModelFileName(True)
-12690         ModelFilePathName = GetModelFullPath(True)
           Else
               ModelFileName = GetModelFileName(False)
-              ModelFilePathName = GetModelFullPath(False)
           End If
-
+          ModelFilePathName = GetTempFilePath(ModelFileName)
           'This is where we write the .lp or .xml file that has the model that will be solved by our solver
           Dim ErrorString As String
           

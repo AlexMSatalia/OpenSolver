@@ -80,6 +80,13 @@ Enum OpenSolverResult
    ' IntegerOptimal = 14 We just return Optimal
 End Enum
 
+' OpenSolver Solver Types
+Enum OpenSolver_SolverType
+    Unknown = -1
+    Linear = 1
+    NonLinear = 2
+End Enum
+
 '--------------------------------------------------------------------------------
 ' OpenSolver solve results as read directly from CBC, and given by OpenSolver.CBCSolveStatus
 ' See also OpenSolver.CBCSolveStatusString for a direct text equivalent
@@ -540,6 +547,10 @@ Function GetTempFolder() As String
 #End If
 End Function
 
+Function GetTempFilePath(FileName As String) As String
+    GetTempFilePath = GetTempFolder & FileName
+End Function
+
 Function FileOrDirExists(pathName As String) As Boolean
      ' from http://www.vbaexpress.com/kb/getarticle.php?kb_id=559
      'Macro Purpose: Function returns TRUE if the specified file
@@ -584,9 +595,6 @@ Function GetSolutionFileName() As String
 760       GetSolutionFileName = SolutionFileName
 End Function
 
-Function GetModelFullPath(Optional SolveNEOS As Boolean = False, Optional SolvePulp As Boolean = False) As String
-770       GetModelFullPath = GetTempFolder & GetModelFileName(SolveNEOS, SolvePulp)
-End Function
 
 Function GetSolutionFullPath() As String
 780       GetSolutionFullPath = GetTempFolder & GetSolutionFileName
@@ -1911,4 +1919,12 @@ Public Sub CreateScriptFile(ByRef ScriptFilePath As String, FileContents As Stri
 #If Mac Then
     system ("chmod +x " & ConvertHfsPath(ScriptFilePath))
 #End If
+End Sub
+
+Public Sub DeleteFileAndVerify(FilePath As String, errorPrefix As String, errorDesc As String)
+' Deletes file and raises error if not successful
+    If FileOrDirExists(FilePath) Then Kill FilePath
+    If FileOrDirExists(FilePath) Then
+        Err.Raise Number:=OpenSolver_SolveError, Source:=errorPrefix, Description:=errorDesc
+    End If
 End Sub

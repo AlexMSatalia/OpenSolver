@@ -1,8 +1,27 @@
 Attribute VB_Name = "SolverGurobi"
 
 Option Explicit
-Public Const SOLVERNAME_GUROBI = "gurobi_cl.exe"
-Public Const SOLVER_GUROBI = "gurobi" & ScriptExtension
+Public Const SolverName_Gurobi = "gurobi_cl.exe"
+Public Const Solver_Gurobi = "gurobi" & ScriptExtension
+Public Const SolverType_Gurobi = OpenSolver_SolverType.Linear
+
+Public Const SolutionFile_Gurobi = "modelsolution.sol"
+Public Const SensitivityFile_Gurobi = "sensitivityData.sol"
+
+Function SolutionFilePath_Gurobi() As String
+    SolutionFilePath_Gurobi = GetTempFilePath(SolutionFile_Gurobi)
+End Function
+
+Function SensitivityFilePath_Gurobi() As String
+    SensitivityFilePath_Gurobi = GetTempFilePath(SensitivityFile_Gurobi)
+End Function
+
+Sub CleanFiles_Gurobi(errorPrefix As String)
+    ' Solution file
+    DeleteFileAndVerify SolutionFilePath_Gurobi(), errorPrefix, "Unable to delete the Gurobi solver solution file: " & SolutionFilePath_Gurobi()
+    ' Cost Range file
+    DeleteFileAndVerify SensitivityFilePath_Gurobi(), errorPrefix, "Unable to delete the Gurobi solver sensitivity data file: " & SensitivityFilePath_Gurobi()
+End Sub
 
 Function About_Gurobi() As String
 ' Return string for "About" form
@@ -12,7 +31,7 @@ Function About_Gurobi() As String
         Exit Function
     End If
     
-    SolverPath = left(SolverPath, InStrRev(SolverPath, PathDelimeter)) & SOLVER_GUROBI
+    SolverPath = left(SolverPath, InStrRev(SolverPath, PathDelimeter)) & Solver_Gurobi
     
     ' Assemble version info
     About_Gurobi = "Gurobi " & SolverBitness_Gurobi & "-bit" & _
@@ -23,7 +42,7 @@ End Function
 Function SolverAvailable_Gurobi(ByRef SolverPath As String) As Boolean
 ' Returns true if Gurobi is available and sets SolverPath as path to gurobi_cl
 #If Mac Then
-    SolverPath = "Macintosh HD:usr:local:bin:" & left(SOLVERNAME_GUROBI, Len(SOLVERNAME_GUROBI) - 4)
+    SolverPath = "Macintosh HD:usr:local:bin:" & left(SolverName_Gurobi, Len(SolverName_Gurobi) - 4)
     If FileOrDirExists(SolverPath) Then
         SolverAvailable_Gurobi = True
     Else
@@ -32,7 +51,7 @@ Function SolverAvailable_Gurobi(ByRef SolverPath As String) As Boolean
     End If
 #Else
     If Environ("GUROBI_HOME") <> "" Then
-        If GetExistingFilePathName(Environ("GUROBI_HOME"), "bin\" & SOLVERNAME_GUROBI, SolverPath) Then
+        If GetExistingFilePathName(Environ("GUROBI_HOME"), "bin\" & SolverName_Gurobi, SolverPath) Then
             SolverAvailable_Gurobi = True
             Exit Function
         End If

@@ -52,11 +52,7 @@ End Sub
 Private Sub lblHyperlink_Click()
           Dim link As String
 47840     link = lblHyperlink.Caption
-47850     On Error GoTo NoCanDo
-47860     ActiveWorkbook.FollowHyperlink Address:=link, NewWindow:=True
-47870     Exit Sub
-NoCanDo:
-47880     MsgBox "Cannot open " & link
+47850     OpenURL link
 End Sub
 
 Private Sub UserForm_Activate()

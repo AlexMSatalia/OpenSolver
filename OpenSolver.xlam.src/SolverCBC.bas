@@ -1,7 +1,40 @@
 Attribute VB_Name = "SolverCBC"
 
 Option Explicit
-Public Const SOLVERNAME_CBC = "cbc.exe"
+Public Const SolverName_CBC = "cbc.exe"
+Public Const SolverScript_CBC = "cbc" & ScriptExtension
+Public Const SolverType_CBC = OpenSolver_SolverType.Linear
+
+Public Const SolutionFile_CBC = "modelsolution.txt"
+Public Const CostRangesFile_CBC = "costranges.txt"
+Public Const RHSRangesFile_CBC = "rhsranges.txt"
+
+Function ScriptFilePath_CBC() As String
+    ScriptFilePath_CBC = GetTempFilePath(SolverScript_CBC)
+End Function
+
+Function SolutionFilePath_CBC() As String
+    SolutionFilePath_CBC = GetTempFilePath(SolutionFile_CBC)
+End Function
+
+Function CostRangesFilePath_CBC() As String
+    CostRangesFilePath_CBC = GetTempFilePath(CostRangesFile_CBC)
+End Function
+
+Function RHSRangesFilePath_CBC() As String
+    RHSRangesFilePath_CBC = GetTempFilePath(RHSRangesFile_CBC)
+End Function
+
+Sub CleanFiles_CBC(errorPrefix As String)
+    ' Solution file
+    DeleteFileAndVerify SolutionFilePath_CBC(), errorPrefix, "Unable to delete the CBC solver solution file: " & SolutionFilePath_CBC()
+    ' Cost Range file
+    DeleteFileAndVerify CostRangesFilePath_CBC(), errorPrefix, "Unable to delete the CBC solver sensitivity data file: " & CostRangesFilePath_CBC()
+    ' RHS Range file
+    DeleteFileAndVerify RHSRangesFilePath_CBC(), errorPrefix, "Unable to delete the CBC solver sensitivity data file: " & RHSRangesFilePath_CBC()
+    ' Script file
+    DeleteFileAndVerify ScriptFilePath_CBC(), errorPrefix, "Unable to delete the CBC solver script file: " & ScriptFilePath_CBC()
+End Sub
 
 Function About_CBC() As String
 ' Return string for "About" form
@@ -19,7 +52,7 @@ End Function
 Function SolverAvailable_CBC(ByRef SolverPath As String) As Boolean
 ' Returns true if CBC is available and sets SolverPath
     On Error GoTo NotFound
-    GetExternalSolverPathName SolverPath, SOLVERNAME_CBC
+    GetExternalSolverPathName SolverPath, SolverName_CBC
     SolverAvailable_CBC = True
     Exit Function
 NotFound:
