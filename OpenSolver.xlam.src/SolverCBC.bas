@@ -4,6 +4,7 @@ Option Explicit
 Public Const SOLVERNAME_CBC = "cbc.exe"
 
 Function About_CBC() As String
+' Return string for "About" form
     Dim SolverPath As String
     If Not SolverAvailable_CBC(SolverPath) Then
         About_CBC = "CBC not found"
@@ -16,6 +17,7 @@ Function About_CBC() As String
 End Function
 
 Function SolverAvailable_CBC(ByRef SolverPath As String) As Boolean
+' Returns true if CBC is available and sets SolverPath
     On Error GoTo NotFound
     GetExternalSolverPathName SolverPath, SOLVERNAME_CBC
     SolverAvailable_CBC = True
@@ -26,6 +28,7 @@ NotFound:
 End Function
 
 Function SolverVersion_CBC() As String
+' Get CBC version by running 'cbc -exit' at command line
     Dim SolverPath As String
     If Not SolverAvailable_CBC(SolverPath) Then
         SolverVersion_CBC = ""
@@ -33,18 +36,18 @@ Function SolverVersion_CBC() As String
     End If
     
     ' Set up cbc to write version info to text file
-    Dim logCommand As String, logFile As String, RunPath As String, completed As Boolean
+    Dim logFile As String
     logFile = GetTempFolder & "cbcversion.txt"
     If FileOrDirExists(logFile) Then Kill logFile
-    logCommand = " > " & """" & logFile & """"
     
-    RunPath = GetTempFolder & "cbc.bat"
+    Dim RunPath As String, FileContents As String
+    RunPath = GetTempFolder & "cbc"
     If FileOrDirExists(RunPath) Then Kill RunPath
-    Open GetTempFolder & "cbc.bat" For Output As 1
-    Print #1, "@echo off" & vbCrLf & """" & SolverPath & """" & " -exit" & logCommand
-    Close #1
+    FileContents = """" & ConvertHfsPath(SolverPath) & """" & " -exit" & " > """ & ConvertHfsPath(logFile) & """"
+    CreateScriptFile RunPath, FileContents
     
     ' Run cbc
+    Dim completed As Boolean
     completed = OSSolveSync(RunPath, "", "", "", SW_HIDE, True)
     
     ' Read version info back from output file
@@ -62,6 +65,7 @@ Function SolverVersion_CBC() As String
 End Function
 
 Function SolverBitness_CBC() As String
+' Get Bitness of CBC solver
     Dim SolverPath As String
     If Not SolverAvailable_CBC(SolverPath) Then
         SolverBitness_CBC = ""

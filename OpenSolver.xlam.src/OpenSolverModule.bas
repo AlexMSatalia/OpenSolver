@@ -158,8 +158,10 @@ Public Const SolutionFileName = "modelsolution.txt"    ' CBC writes this file fo
 
 #If Mac Then
     Public Const PathDelimeter = ":"
+    Public Const ScriptExtension = ".sh"
 #Else
     Public Const PathDelimeter = "\"
+    Public Const ScriptExtension = ".bat"
 #End If
 
 Public Const ExternalSolverExeName As String = "cbc.exe"   ' The Executable to run (with no path)
@@ -1876,10 +1878,37 @@ Public Function ReplaceDelimitersMac(Path As String) As String
 End Function
 
 Public Function ConvertHfsPath(Path As String) As String
+' Any direct file system access (using 'system' or applescript) on Mac requires
+' that HFS-style paths are converted to normal *NIX paths. On windows this
+' function does nothing, so it can safely wrap all file system calls on any platform
+' Input (HFS path):   "Macintosh HD:Users:jack:filename.txt"
+' Output (*NIX path): "/Users/jack/filename.txt"
 #If Mac Then
+    ' Remove disk name (everything up to first ':')
     ConvertHfsPath = right(Path, Len(Path) - InStr(Path, ":") + 1)
+    ' Convert path delimiters
     ConvertHfsPath = ReplaceDelimitersMac(ConvertHfsPath)
 #Else
     ConvertHfsPath = Path
 #End If
 End Function
+
+Public Sub CreateScriptFile(ByRef ScriptFilePath As String, FileContents As String, Optional EnableEcho As Boolean)
+' Create a script file with the specified contents.
+    ScriptFilePath = ScriptFilePath & ScriptExtension
+    Open ScriptFilePath For Output As 1
+    
+    ' Add echo off for windows
+#If Win32 Then
+    If Not EnableEcho Then
+        Print #1, "@echo off" & vbCrLf
+    End If
+#End If
+    Print #1, FileContents
+    Close #1
+    
+    ' Make shell script executable on Mac
+#If Mac Then
+    system ("chmod +x " & ConvertHfsPath(ScriptFilePath))
+#End If
+End Sub
