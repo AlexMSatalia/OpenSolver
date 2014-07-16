@@ -503,7 +503,7 @@ NextCons:
         Dim CurLine As String, SplitLine() As String
         While Not EOF(2)
             Line Input #2, CurLine
-            SplitLine = split(CurLine, " ")
+            SplitLine = Split(CurLine, " ")
             AdjCellNameMap(SplitLine(0)).value = Val(SplitLine(1))
         Wend
         Close #2

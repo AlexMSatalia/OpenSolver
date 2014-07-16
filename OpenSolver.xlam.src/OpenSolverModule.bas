@@ -1345,7 +1345,7 @@ Function GetCBCExtraParametersString(sheet As Worksheet, ErrorString As String) 
 4550              If ParamName <> "" Then
 4560                  If left(ParamName, 1) <> "-" Then ParamName = "-" & ParamName
 4570                  ParamValue = Trim(CBCParametersRange.Cells(i, 2))
-4580                  CBCExtraParametersString = CBCExtraParametersString & " " & ParamName & " " & ParamValue
+4580                  CBCExtraParametersString = CBCExtraParametersString & " " & ParamName & " " & ConvertFromCurrentLocale(ParamValue)
 4590              End If
 4600          Next i
 4610      End If

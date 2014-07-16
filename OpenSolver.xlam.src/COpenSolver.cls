@@ -2909,7 +2909,8 @@ Function ReadGurobiModel(SolutionFilePathName As String, bGetDuals As Boolean, _
               Dim NumVar As Integer, j As Integer
 20230         NumVar = UBound(FinalVarValue, 1)
 20240         For i = 1 To NumVar
-20250             AdjustableCells.Worksheet.Range(VarCell(i)).Value2 = FinalVarValue(i)
+                  ' Need to make sure number is in US locale when Value2 is set
+20250             AdjustableCells.Worksheet.Range(VarCell(i)).Value2 = ConvertFromCurrentLocale(FinalVarValue(i))
 20260         Next i
               
 20270         If bGetDuals Then
@@ -3079,7 +3080,7 @@ Function ReadCBCModel(SolutionFilePathName As String, CommandLineRunString As St
 21490                     rConstraintList.Cells(row, 2).ClearContents
 21500                 Else
 21510                     Line Input #1, Line
-21520                     SplitLine = split(Line, " ")    ' 0 indexed; item 0 is the variable index
+21520                     SplitLine = Split(Line, " ")    ' 0 indexed; item 0 is the variable index
                           ' Skip over the blank items in the split (multiple delimiters give multiple items), getting the real items
 21530                     i = 0
 21540                     While SplitLine(i) = ""
@@ -3134,7 +3135,7 @@ Function ReadCBCModel(SolutionFilePathName As String, CommandLineRunString As St
 21940         j = 1
 21950         While Not EOF(1)
 21960             Line Input #1, Line
-21970             SplitLine = split(Line, " ")    ' 0 indexed; item 0 is the variable index
+21970             SplitLine = Split(Line, " ")    ' 0 indexed; item 0 is the variable index
                   ' Skip over the blank items in the split (multiple delimiters give multiple items), getting the real items
 21980             i = 0
 21990             While SplitLine(i) = ""
@@ -3161,7 +3162,8 @@ Function ReadCBCModel(SolutionFilePathName As String, CommandLineRunString As St
 22170             ReDim Preserve FinalVarValue(j) As String
 22180             FinalVarValue(j) = Val(SplitLine(i))
                   'Write to the sheet containing the decision variables (which may not be the active sheet)
-22190             AdjustableCells.Worksheet.Range(NameValue).Value2 = FinalVarValue(j)
+                  'Value assigned to Value2 must be in US locale
+22190             AdjustableCells.Worksheet.Range(NameValue).Value2 = ConvertFromCurrentLocale(FinalVarValue(j))
                  
                   'ConvertFullLPFileVarNameToRange(name, AdjCellsSheetIndex).Value2 = Value
 22200             If bGetDuals Then
