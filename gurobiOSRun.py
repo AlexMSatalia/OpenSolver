@@ -1,5 +1,6 @@
 from gurobipy import *
 import os
+import sys
 import tempfile
 
 if os.name == 'nt':
@@ -15,8 +16,16 @@ if not isWindows:
 
 m = Model ('myModel')
 m = read(os.path.join(tFile, 'model.lp'))
-m.optimize()
 path = os.path.join(tFile, 'modelsolution.sol')
+
+# Catch any GurobiError that occurs when solving
+try:
+    m.optimize()
+except GurobiError as e:
+    with open(path,'w') as File:
+        File.write('Gurobi Error: %s' % e.message)
+    sys.exit()
+
 with open(path,'w') as File:
     File.write(str(m.status)+ '\n')
     if m.status != 3 and m.status != 4 and m.status != 5:

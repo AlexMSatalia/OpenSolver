@@ -4,6 +4,10 @@ Option Explicit
 Public OpenSolver_Gurobi As COpenSolver 'Access to model
 Public SparseA_Gurobi() As CIndexedCoeffs 'Access to sparse A matrix
 
+Public Const SolverTitle_Gurobi = "Gurobi (Linear Solver)"
+Public Const SolverDesc_Gurobi = "Gurobi is a solver for linear programming (LP), quadratic and quadratically constrained programming (QP and QCP), and mixed-integer programming (MILP, MIQP, and MIQCP). It requires the user to download and install a version of the Gurobi and to have GurobiOSRun.py in the OpenSolver directory."
+Public Const SolverLink_Gurobi = "http://www.gurobi.com/resources/documentation"
+
 #If Mac Then
 Public Const SolverName_Gurobi = "gurobi_cl"
 #Else
@@ -196,6 +200,13 @@ Function ReadModel_Gurobi(SolutionFilePathName As String, errorString As String)
           
 19600     Open SolutionFilePathName For Input As 1 ' supply path with filename
 19610     Line Input #1, Line
+          ' Check for python exception while running Gurobi
+          Dim GurobiError As String ' The string that identifies a gurobi error in the model file
+          GurobiError = "Gurobi Error: "
+          If left(Line, Len(GurobiError)) = GurobiError Then
+              errorString = Line
+              GoTo exitFunction
+          End If
           'Get the returned status code from gurobi.
           'List of return codes can be seen at - http://www.gurobi.com/documentation/5.1/reference-manual/node865#sec:StatusCodes
 19620     If Line = GurobiResult.Optimal Then
