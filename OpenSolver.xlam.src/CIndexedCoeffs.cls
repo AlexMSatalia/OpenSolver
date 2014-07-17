@@ -14,7 +14,7 @@ Private Values() As Double
 
 Private NumEntries As Long
 
-Public Sub Add(Index As Long, value As Double)
+Public Sub Add(index As Long, value As Double)
 36360     If NumEntries = 0 Then
 36370         ReDim Indices(10) As Long
 36380         ReDim Values(10) As Double
@@ -24,12 +24,12 @@ Public Sub Add(Index As Long, value As Double)
 36410         ReDim Preserve Values(UBound(Indices)) As Double
 36420     End If
 36430     NumEntries = NumEntries + 1
-36440     Indices(NumEntries) = Index
+36440     Indices(NumEntries) = index
 36450     Values(NumEntries) = value
 End Sub
 
-Public Function Index(i As Long) As Long
-36460     Index = Indices(i)
+Public Function index(i As Long) As Long
+36460     index = Indices(i)
 End Function
 
 Public Function Coefficient(i As Long) As Double
@@ -44,7 +44,7 @@ Public Function Evaluate(DecisionVariableValues() As Double) As Double
           ' Evaluate the equation's value for the given variable values
           Dim i As Long, v As Double, vMax As Double
 36490     For i = 1 To NumEntries
-36500         v = v + Coefficient(i) * DecisionVariableValues(Index(i))
+36500         v = v + Coefficient(i) * DecisionVariableValues(index(i))
 36510         If Abs(v) > vMax Then vMax = Abs(v)
 36520     Next i
 36530     Evaluate = v
@@ -56,7 +56,7 @@ Public Function Evaluate_RecordPrecision(DecisionVariableValues() As Double, vMa
 36540     vMax = 0
 36550     For i = 1 To NumEntries
 36560         coeff = Coefficient(i)
-36570         value = DecisionVariableValues(Index(i))
+36570         value = DecisionVariableValues(index(i))
 36580         v = v + coeff * value
 36590         If Abs(v) > vMax Then vMax = Abs(v)
 36600         If Abs(coeff) > vMax Then vMax = Abs(coeff)
@@ -72,7 +72,7 @@ Public Function Clone() As CIndexedCoeffs
           'ReDim v.Indices(count)
           'ReDim v.Values(count)
 36650     For i = 1 To Count
-36660         v.Add Index(i), Coefficient(i)
+36660         v.Add index(i), Coefficient(i)
 36670     Next i
 36680     Set Clone = v
 End Function

@@ -155,14 +155,23 @@ Sub UpdateFormFromMemory()
 
       '          On Error GoTo nameUndefined
       '          chkGetDuals2.Value = Mid(Names("'" & Replace(ActiveWorkbook.ActiveSheet.Name, "'", "''") & "'!OpenSolver_DualsNewSheet").Value, 2)
-          Dim sheetName As String, value As String
+          Dim sheetName As String, value As String, ResetDualsNewSheet As Boolean
 43040     sheetName = "'" & Replace(ActiveWorkbook.ActiveSheet.Name, "'", "''") & "'!"
 43050     If GetNameValueIfExists(ActiveWorkbook, sheetName & "OpenSolver_DualsNewSheet", value) Then
 43060         chkGetDuals2.value = value
+              ' If checkbox is null, then the stored value was not 'True' or 'False'. We should reset to false
+              If IsNull(chkGetDuals2.value) Then
+                  ResetDualsNewSheet = True
+              End If
 43070     Else
-43080         Call SetNameOnSheet("OpenSolver_DualsNewSheet", "=FALSE")
-43090         chkGetDuals2.value = False
+43080         ResetDualsNewSheet = True
 43100     End If
+          
+          If ResetDualsNewSheet Then
+              Call SetNameOnSheet("OpenSolver_DualsNewSheet", "=FALSE")
+              chkGetDuals2.value = False
+          End If
+          
 43110     optUpdate.Enabled = chkGetDuals2.value
 43120     optNew.Enabled = chkGetDuals2.value
 43130     If GetNameValueIfExists(ActiveWorkbook, sheetName & "OpenSolver_UpdateSensitivity", value) Then

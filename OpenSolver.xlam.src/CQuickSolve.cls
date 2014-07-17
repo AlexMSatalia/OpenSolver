@@ -258,7 +258,7 @@ Public Function UpdateModelRHS(sheetName As String, ByRef RHS() As Double) As Bo
               'Next param
 27710         With SparseA(row)
 27720             For i = 1 To .Count
-27730                 param = .Index(i)
+27730                 param = .index(i)
 27740                 coeff = .Coefficient(i)
 27750                 value = value + coeff * ParamChanges(param)
 27760             Next i

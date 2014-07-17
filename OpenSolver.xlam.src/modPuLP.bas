@@ -487,7 +487,7 @@ NextCons:
     ElseIf SolverType Like "NEOS*" Then
         On Error GoTo ErrHandler
         Application.AutomationSecurity = Office.MsoAutomationSecurity.msoAutomationSecurityForceDisable
-        ExecutionCompleted = CallNEOS(ModelFilePathName, m)
+        ExecutionCompleted = SolveModel_TokenNeos(ModelFilePathName, m)
     End If
     
     If Not ExecutionCompleted Then
@@ -1349,115 +1349,22 @@ Function AddNodeIfNew(ByRef objCurNode As CFormula, ByRef c As Range, ByRef rngA
 finishedNode:
 End Function
 
-Function CallNEOS(ModelFilePathName As String, m As CModel2) As Boolean
-    On Error GoTo HELPG
-    ' Late-binding required to prevent dependence on MSXML reference
-    Dim objSvrHTTP As Object ' MSXML2.ServerXMLHTTP
-    Dim message As String, txtURL As String
-    Dim Done As Boolean, result As String
-    Dim openingParen As String, closingParen As String, jobNumber As String, Password As String, solutionFile As String, solution As String
-    Dim i As Integer, LinearSolveStatusString As String
-    
-    On Error GoTo errorHandler
-    
-    ' Server name
-    txtURL = "http://www.neos-server.org:3332"
-    Set objSvrHTTP = CreateObject("MSXML2.ServerXMLHTTP")
-    
-    ' Set up obj for a POST request
-    objSvrHTTP.Open "POST", txtURL, False
-    
-    ' Import file as continuous string
-    Open ModelFilePathName For Input As #1
-        message = Input$(LOF(1), 1)
-    Close #1
-    
-    ' Clean message up
-    message = Replace(message, "<", "&lt;")
-    message = Replace(message, ">", "&gt;")
-    
-    ' Set up message as XML
-    message = "<methodCall><methodName>submitJob</methodName><params><param><value><string>" _
-       & message & "</string></value></param></params></methodCall>"
-    
-    ' Send Message to NEOS
-    objSvrHTTP.send (message)
-    
-    ' Extract Job Number
-    openingParen = InStr(objSvrHTTP.responseText, "<int>")
-    closingParen = InStr(objSvrHTTP.responseText, "</int>")
-    jobNumber = Mid(objSvrHTTP.responseText, openingParen + 5, closingParen - openingParen - 5)
-    
-    If jobNumber = 0 Then
-        MsgBox "An error occured when sending file to NEOS."
-        GoTo ExitSub
+Function SolveModel_TokenNeos(ModelFilePathName As String, m As CModel2) As Boolean
+    Dim solution As String, errorString As String
+    solution = CallNEOS(ModelFilePathName, errorString)
+    If errorString <> "" Then
+        MsgBox (errorString)
+        SolveModel_TokenNeos = False
+        Exit Function
     End If
     
-    ' Extract Password
-    openingParen = InStr(objSvrHTTP.responseText, "<string>")
-    closingParen = InStr(objSvrHTTP.responseText, "</string>")
-    Password = Mid(objSvrHTTP.responseText, openingParen + 8, closingParen - openingParen - 8)
-    
-    ' Set up Job Status message for XML
-    message = "<methodCall><methodName>getJobStatus</methodName><params><param><value><int>" _
-       & jobNumber & "</int></value><value><string>" & Password & _
-       "</string></value></param></params></methodCall>"
-    Done = False
-    
-    CallingNeos.Show False
-    
-    ' Loop until job is done
-    While Done = False
-        DoEvents
-        
-        ' Reset obj
-        objSvrHTTP.Open "POST", txtURL, False
-        
-        ' Send message
-        objSvrHTTP.send (message)
-        
-        ' Extract answer
-        openingParen = InStr(objSvrHTTP.responseText, "<string>")
-        closingParen = InStr(objSvrHTTP.responseText, "</string>")
-        result = Mid(objSvrHTTP.responseText, openingParen + 8, closingParen - openingParen - 8)
-        
-        ' Evaluate result
-        If result = "Done" Then
-            Done = True
-        ElseIf result <> "Waiting" And result <> "Running" Then
-            MsgBox "An error occured when sending file to NEOS. Neos returned: " & result
-            GoTo ExitSub
-        Else
-            Application.Wait (Now + TimeValue("0:00:01"))
-        End If
-    Wend
-    
-    CallingNeos.Hide
-    
-    ' Set up final message for XML
-    message = "<methodCall><methodName>getFinalResults</methodName><params><param><value><int>" _
-       & jobNumber & "</int></value></param><param><value><string>" & Password & _
-       "</string></value></param></params></methodCall>"
-    
-    ' Reset obj
-    objSvrHTTP.Open "POST", txtURL, False
-    
-    objSvrHTTP.send (message)
-    
-    ' Extract Result
-    openingParen = InStr(objSvrHTTP.responseText, "<base64>")
-    closingParen = InStr(objSvrHTTP.responseText, "</base64>")
-    result = Mid(objSvrHTTP.responseText, openingParen + 8, closingParen - openingParen - 8)
-    
-    ' The message returned from NEOS is encoded in base 64
-    solution = DecodeBase64(result)
-    
     Application.Calculation = xlCalculationAutomatic
-    
+
+    Dim openingParen As Integer, closingParen As Integer, LinearSolveStatusString As String, result As String
     ' Extract the solve status
     openingParen = InStr(solution, "solve_result =")
     LinearSolveStatusString = right(solution, Len(solution) - openingParen - Len("solve_result ="))
-    
+
     ' Determine Feasibility
     If LinearSolveStatusString Like "unbounded*" Then
         GoTo NeosReturn
@@ -1475,89 +1382,28 @@ Function CallNEOS(ModelFilePathName As String, m As CModel2) As Boolean
         End If
         GoTo NeosReturn
     End If
-    
+
     ' Display results to sheet
     Dim c As Range
     For Each c In m.AdjustableCells
         openingParen = InStr(solution, ConvertCellToStandardName(c))
         closingParen = openingParen + InStr(right(solution, Len(solution) - openingParen), "_display")
         result = Mid(solution, openingParen + Len(ConvertCellToStandardName(c)) + 1, Application.Max(closingParen - openingParen - Len(ConvertCellToStandardName(c)) - 1, 0))
-        
+
         ' Converting result to number
         Range(c.Address) = "=" & result & "*1"
-        
+
         ' Removing equal sign
         Range(c.Address) = Range(c.Address).Value2
     Next
-    
-    Application.Calculation = xlCalculationManual
-    
-    CallNEOS = True
-    
-    Exit Function
-          
-ExitSub:
-    CallNEOS = False
-    Exit Function
 
+    Application.Calculation = xlCalculationManual
+    Exit Function
+    
 NeosReturn:
-    CallNEOS = False
+    SolveModel_TokenNeos = False
     MsgBox "OpenSolver could not solve this problem." & vbNewLine & vbNewLine & "Neos Returned:" & vbNewLine & vbNewLine & LinearSolveStatusString
     Exit Function
 
-errorHandler:
-    MsgBox "OpenSolver failed to contact NEOS. Please try again."
-    CallNEOS = False
-    Exit Function
-
-HELPG:
-    MsgBox "Uh Oh"
-
-End Function
-
-' Code by Tim Hastings
-Private Function DecodeBase64(ByVal strData As String) As String
-    ' Late-binding required to prevent dependence on MSXML reference
-    Dim objXML As Object 'MSXML2.DOMDocument60
-    Dim objNode As Object 'MSXML2.IXMLDOMElement
-  
-    ' Help from MSXML
-    Set objXML = CreateObject("MSXML2.DOMDocument")
-    Set objNode = objXML.createElement("b64")
-    objNode.DataType = "bin.base64"
-    objNode.Text = strData
-    DecodeBase64 = Stream_BinaryToString(objNode.nodeTypedValue)
-  
-    ' Clean up
-    Set objNode = Nothing
-    Set objXML = Nothing
-End Function
-
-' Code by Tim Hastings
-Function Stream_BinaryToString(Binary)
-     Const adTypeText = 2
-     Const adTypeBinary = 1
-     
-     'Create Stream object
-     Dim BinaryStream 'As New Stream
-     Set BinaryStream = CreateObject("ADODB.Stream")
-     
-     'Specify stream type - we want To save binary data.
-     BinaryStream.Type = adTypeBinary
-     
-     'Open the stream And write binary data To the object
-     BinaryStream.Open
-     BinaryStream.Write Binary
-     
-     'Change stream type To text/string
-     BinaryStream.Position = 0
-     BinaryStream.Type = adTypeText
-     
-     'Specify charset For the output text (unicode) data.
-     BinaryStream.Charset = "us-ascii"
-     
-     'Open the stream And get text/string data from the object
-     Stream_BinaryToString = BinaryStream.ReadText
-     Set BinaryStream = Nothing
 End Function
 

@@ -31,12 +31,12 @@ Public Sub Add(Token As Token, Optional key As Variant)
     Set Token.Parent = Me
 End Sub
 
-Public Sub Remove(Index As Variant)
-    colTokens.Remove Index
+Public Sub Remove(index As Variant)
+    colTokens.Remove index
 End Sub
 
-Function Item(Index As Variant) As Token
-    Set Item = colTokens.Item(Index)
+Function Item(index As Variant) As Token
+    Set Item = colTokens.Item(index)
 End Function
 
 Property Get Count() As Long

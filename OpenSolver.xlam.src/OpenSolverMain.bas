@@ -77,25 +77,25 @@ Sub OpenSolver_LaunchCBCCommandLine(Optional Control)
           ' Get all the options that we pass to CBC when we solve the problem and pass them here as well
           ' Get the Solver Options, stored in named ranges with values such as "=0.12"
           ' Because these are NAMEs, they are always in English, not the local language, so get their value using Val
-          Dim SolveOptions As SolveOptionsType, ErrorString As String, SolveOptionsString As String
+          Dim SolveOptions As SolveOptionsType, errorString As String, SolveOptionsString As String
 27960     If WorksheetAvailable Then
-27970         GetSolveOptions "'" & Replace(ActiveSheet.Name, "'", "''") & "'!", SolveOptions, ErrorString ' NB: We have to double any ' when we quote the sheet name
-27980         If ErrorString = "" Then
+27970         GetSolveOptions "'" & Replace(ActiveSheet.Name, "'", "''") & "'!", SolveOptions, errorString ' NB: We have to double any ' when we quote the sheet name
+27980         If errorString = "" Then
 27990            SolveOptionsString = " -ratioGap " & CStr(SolveOptions.Tolerance) & " -seconds " & CStr(SolveOptions.maxTime)
 28000         End If
 28010     End If
           
-          Dim CBCExtraParametersString As String
+          Dim ExtraParametersString As String
 28020     If WorksheetAvailable Then
-28030         CBCExtraParametersString = GetCBCExtraParametersString(ActiveSheet, ErrorString)
-28040         If ErrorString <> "" Then CBCExtraParametersString = ""
+28030         CBCExtraParametersString = GetExtraParameters_CBC(ActiveSheet, errorString)
+28040         If errorString <> "" Then ExtraParametersString = ""
 28050     End If
              
           Dim CBCRunString As String
 28060     CBCRunString = " -directory " & GetTempFolder _
                            & " -import " & ModelFileName _
                            & SolveOptionsString _
-                           & CBCExtraParametersString _
+                           & ExtraParametersString _
                            & " -" ' Force CBC to accept commands from the command line
 28070     OSSolveSync ExternalSolverPathName, CBCRunString, "", SW_SHOWNORMAL, False
 

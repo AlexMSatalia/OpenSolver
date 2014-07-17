@@ -158,9 +158,6 @@ Const ParamRangeName As String = "OpenSolverModelParameters"
 'CACHE for SearchRange - Saves defined names from user
 Private SearchRangeNameCACHE As Collection  'by ASL 20130126
 
-Public Const ModelFileName As String = "model.lp"  ' Open Solver writes this file
-Public Const XMLFileName As String = "job.xml"  ' Open Solver writes this file
-Public Const PuLPFileName As String = "opensolver.py"  ' Open Solver writes this file
 Public Const SolutionFileName = "modelsolution.txt"    ' CBC writes this file for us to read back in
 
 #If Mac Then
@@ -587,7 +584,7 @@ Function GetModelFileName(Optional SolveNEOS As Boolean = False, Optional SolveP
           ElseIf SolvePulp Then
               GetModelFileName = PuLPFileName
           Else
-750           GetModelFileName = ModelFileName
+750           GetModelFileName = LPFileName
           End If
 End Function
 
@@ -1148,11 +1145,11 @@ Function CheckModelHasParameterRange()
 3760      End If
 End Function
 
-Sub GetSolveOptions(sheetName As String, SolveOptions As SolveOptionsType, ErrorString As String)
+Sub GetSolveOptions(sheetName As String, SolveOptions As SolveOptionsType, errorString As String)
           ' Get the Solver Options, stored in named ranges with values such as "=0.12"
           ' Because these are NAMEs, they are always in English, not the local language, so get their value using Val
 3770      On Error GoTo errorHandler
-3780      ErrorString = ""
+3780      errorString = ""
 3790      SetAnyMissingDefaultExcel2007SolverOptions ' This can happen if they have created the model using an old version of OpenSolver
 3800      With SolveOptions
 3810          .maxTime = Val(Mid(Names(sheetName & "solver_tim").value, 2)) ' Trim the "="; use Val to get a conversion in English, not the local language
@@ -1166,7 +1163,7 @@ Sub GetSolveOptions(sheetName As String, SolveOptions As SolveOptionsType, Error
 ExitSub:
 3870      Exit Sub
 errorHandler:
-3880      ErrorString = "No Solve options (such as Tolerance) could be found - perhaps a model has not been defined on this sheet?"
+3880      errorString = "No Solve options (such as Tolerance) could be found - perhaps a model has not been defined on this sheet?"
 End Sub
 
 Sub SetAnyMissingDefaultExcel2007SolverOptions()
@@ -1270,6 +1267,12 @@ Sub GetExternalSolverPathName(ByRef CombinedPathName As String, solverName As St
           ' We look for a 64 bit version if we are running a 64-bit system
           ' This will throw an exception if the solver cannot be found
           Dim Try1 As String, Try2 As String
+          If solverName = "gurobi.bat" Then
+              CombinedPathName = GetExternalSolver_Gurobi()
+              If FileOrDirExists(CombinedPathName) Then
+                  Exit Sub
+              End If
+          End If
 #If Mac Then
     If GetExistingFilePathName(ThisWorkbook.Path, left(solverName, Len(solverName) - 4), CombinedPathName) Then Exit Sub ' Found a mac solver
     Err.Raise Number:=OpenSolver_CBCMissingError, Source:="OpenSolver GetExternalSolverPathName", _
@@ -1328,29 +1331,6 @@ Sub GetExternalSolverPathName(ByRef CombinedPathName As String, solverName As St
 4450            End If
 4460      End If
 End Sub
-
-Function GetCBCExtraParametersString(sheet As Worksheet, ErrorString As String) As String
-          ' The user can define a set of parameters they want to pass to CBC; this gets them as a string
-          ' Note: The named range MUST be on the current sheet
-          Dim CBCParametersRange As Range, CBCExtraParametersString As String, i As Long
-4470      ErrorString = ""
-4480      If GetNamedRangeIfExistsOnSheet(sheet, "OpenSolver_CBCParameters", CBCParametersRange) Then
-4490          If CBCParametersRange.Columns.Count <> 2 Then
-4500              ErrorString = "The range OpenSolver_CBCParameters must be a two-column table."
-4510              Exit Function
-4520          End If
-4530          For i = 1 To CBCParametersRange.Rows.Count
-                  Dim ParamName As String, ParamValue As String
-4540              ParamName = Trim(CBCParametersRange.Cells(i, 1))
-4550              If ParamName <> "" Then
-4560                  If left(ParamName, 1) <> "-" Then ParamName = "-" & ParamName
-4570                  ParamValue = Trim(CBCParametersRange.Cells(i, 2))
-4580                  CBCExtraParametersString = CBCExtraParametersString & " " & ParamName & " " & ConvertFromCurrentLocale(ParamValue)
-4590              End If
-4600          Next i
-4610      End If
-4620      GetCBCExtraParametersString = CBCExtraParametersString
-End Function
 
 Function CheckWorksheetAvailable(Optional SuppressDialogs As Boolean = False, Optional ThrowError As Boolean = False) As Boolean
 4630      CheckWorksheetAvailable = False
@@ -1886,28 +1866,38 @@ Public Function ReplaceDelimitersMac(Path As String) As String
 End Function
 
 Public Function ConvertHfsPath(Path As String) As String
-' Any direct file system access (using 'system' or applescript) on Mac requires
-' that HFS-style paths are converted to normal *NIX paths. On windows this
+' Any direct file system access (using 'system' or in script files) on Mac requires
+' that HFS-style paths are converted to normal posix paths. On windows this
 ' function does nothing, so it can safely wrap all file system calls on any platform
 ' Input (HFS path):   "Macintosh HD:Users:jack:filename.txt"
-' Output (*NIX path): "/Users/jack/filename.txt"
+' Output (posix path): "/Users/jack/filename.txt"
 #If Mac Then
-    ' Remove disk name (everything up to first ':')
-    ConvertHfsPath = right(Path, Len(Path) - InStr(Path, ":") + 1)
-    ' Convert path delimiters
-    ConvertHfsPath = ReplaceDelimitersMac(ConvertHfsPath)
+    ' Check we have an HFS path and not posix
+    If InStr(Path, ":") > 0 Then
+        ' Remove disk name (everything up to first ':')
+        ConvertHfsPath = right(Path, Len(Path) - InStr(Path, ":") + 1)
+        ' Convert path delimiters
+        ConvertHfsPath = ReplaceDelimitersMac(ConvertHfsPath)
+    Else
+        ' Path is already posix
+        ConvertHfsPath = Path
+    End If
 #Else
     ConvertHfsPath = Path
 #End If
 End Function
 
+Public Function QuotePath(Path As String) As String
+    ' Quote path
+    QuotePath = """" & Path & """"
+End Function
+
 Public Sub CreateScriptFile(ByRef ScriptFilePath As String, FileContents As String, Optional EnableEcho As Boolean)
 ' Create a script file with the specified contents.
-    ScriptFilePath = ScriptFilePath & ScriptExtension
     Open ScriptFilePath For Output As 1
     
-    ' Add echo off for windows
 #If Win32 Then
+    ' Add echo off for windows
     If Not EnableEcho Then
         Print #1, "@echo off" & vbCrLf
     End If
