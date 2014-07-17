@@ -149,19 +149,6 @@ Private Declare Function RegDeleteValue Lib "advapi32.dll" Alias "RegDeleteValue
 
 #End If
 
-#If VBA7 Then
-    #If Win64 Then
-        Private Declare PtrSafe Function NomadVersion Lib "OpenSolverNomadDll64.dll" () As String
-        Private Declare PtrSafe Function NomadDllVersion Lib "OpenSolverNomadDll64.dll" Alias "NomadDLLVersion" () As String
-    #Else
-        Private Declare PtrSafe Function NomadVersion Lib "OpenSolverNomadDll.dll" () As String
-        Private Declare PtrSafe Function NomadDllVersion Lib "OpenSolverNomadDll.dll" Alias "NomadDLLVersion" () As String
-    #End If
-#Else
-    Private Declare Function NomadVersion Lib "OpenSolverNomadDll.dll" () As String
-    Private Declare Function NomadDllVersion Lib "OpenSolverNomadDll.dll" Alias "NomadDLLVersion" () As String
-#End If
-
 Private EventsEnabled As Boolean
 
          
@@ -503,7 +490,7 @@ Private Sub UserForm_Activate()
           txtAbout.Text = About_OpenSolver
           txtAbout.Text = About_CBC & vbNewLine & vbNewLine & txtAbout.Text
           txtAbout.Text = About_Gurobi & vbNewLine & vbNewLine & txtAbout.Text
-          txtAbout.Text = GetNomadVersion & vbNewLine & vbNewLine & txtAbout.Text
+          txtAbout.Text = About_NOMAD & vbNewLine & vbNewLine & txtAbout.Text
           
 36230     labelFilePath = "OpenSolverFile: " & ThisWorkbook.FullName
           ' ShowOpenSolverStudioStatus
@@ -513,34 +500,6 @@ Private Sub UserForm_Activate()
           txtAbout.SelStart = 0
 End Sub
 
-
-Private Function GetNomadVersion() As String
-#If Mac Then
-    GetNomadVersion = "NOMAD for OpenSolver is not currently supported on Mac"
-    Exit Function
-#End If
-    Dim currentDir As String, sNomadVersion As String, sNomadDllVersion As String, sDllName As String
-    
-    ' Set current dir for finding the DLL
-    currentDir = CurDir
-    SetCurrentDirectory ThisWorkbook.Path
-    
-    ' Get version info from DLL
-    sNomadVersion = NomadVersion()
-    sNomadVersion = left(sNomadVersion, InStr(sNomadVersion, vbNullChar) - 1)
-    sNomadDllVersion = NomadDllVersion()
-    sNomadDllVersion = left(sNomadDllVersion, InStr(sNomadDllVersion, vbNullChar) - 1)
-    
-    SetCurrentDirectory currentDir
-    
-    ' Assemble version info
-#If Win64 Then
-    sDllName = "OpenSolverNomadDll64.dll"
-#Else
-    sDllName = "OpenSolverNomadDll.dll"
-#End If
-    GetNomadVersion = "NOMAD v" & sNomadVersion & " using OpenSolverNomadDLL v" & sNomadDllVersion & " at " & ThisWorkbook.Path & "\" & sDllName
-End Function
 
 Private Function About_OpenSolver() As String
 About_OpenSolver = _

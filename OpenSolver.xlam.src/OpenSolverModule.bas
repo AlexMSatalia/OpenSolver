@@ -356,18 +356,6 @@ Private Const ERROR_BAD_FORMAT = 11&
 #End If
 
 '=====================================================================
-'NON-LINEAR XLL FUNCTION - Matthew Milner
-#If VBA7 Then
-    #If Win64 Then
-        Public Declare PtrSafe Function NomadMain Lib "OpenSolverNomadDll64.dll" (ByVal SolveRelaxation As Boolean) As Long
-    #Else
-        Public Declare PtrSafe Function NomadMain Lib "OpenSolverNomadDll.dll" (ByVal SolveRelaxation As Boolean) As Long
-    #End If
-#Else
-    Public Declare Function NomadMain Lib "OpenSolverNomadDll.dll" (ByVal SolveRelaxation As Boolean) As Long
-#End If
-
-'=====================================================================
 
 #If VBA7 Then
     Public Declare PtrSafe Sub Sleep Lib "kernel32" (ByVal dwMilliseconds As Long)

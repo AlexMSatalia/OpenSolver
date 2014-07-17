@@ -20,6 +20,8 @@ Function SolverAvailable(Solver As String, ByRef SolverPath As String) As Boolea
         SolverAvailable = SolverAvailable_CBC(SolverPath)
     Case "Gurobi"
         SolverAvailable = SolverAvailable_Gurobi(SolverPath)
+    Case "NOMAD"
+        SolverAvailable = SolverAvailable_NOMAD()
     Case Else
         SolverAvailable = False
         SolverPath = ""
@@ -69,7 +71,11 @@ Function ModelFile(Solver As String) As String
 End Function
 
 Function ModelFilePath(Solver As String) As String
-    ModelFilePath = GetTempFilePath(ModelFile(Solver))
+    ModelFilePath = ModelFile(Solver)
+    ' If model file is empty, then don't return anything
+    If ModelFilePath <> "" Then
+        ModelFilePath = GetTempFilePath(ModelFilePath)
+    End If
 End Function
 
 Function RunsOnNeos(Solver As String) As Boolean
@@ -97,6 +103,8 @@ Sub SetOpenSolver(Solver As String, OpenSolver As COpenSolver, SparseA() As CInd
     Case "Gurobi"
         Set SolverGurobi.OpenSolver_Gurobi = OpenSolver
         SolverGurobi.SparseA_Gurobi = SparseA
+    Case "NOMAD"
+        Set SolverNOMAD.OpenSolver_NOMAD = OpenSolver
     End Select
 End Sub
 

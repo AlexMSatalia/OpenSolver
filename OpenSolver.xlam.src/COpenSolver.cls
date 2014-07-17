@@ -1209,7 +1209,6 @@ Function SolveModel(SolveRelaxation As Boolean) As Integer
 
 12230     If Solver = "Nomad" Then
 12240         SolveRelaxedModel = SolveRelaxation
-12250         Set OpenSolverNonLinear.OpenSolver = Me
 12260         SolveModel = SolveModel_Nomad(SolveRelaxation)
 12270     Else
 12280         SolveModel = SolveModel_Linear(SolveRelaxation)

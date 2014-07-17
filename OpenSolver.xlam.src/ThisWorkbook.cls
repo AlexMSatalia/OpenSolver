@@ -54,7 +54,7 @@ End Sub
 '====================================================================
 Private Sub Workbook_BeforeSave(ByVal SaveAsUI As Boolean, Cancel As Boolean)
 
-    If MsgBox("Save VBA Code?", vbYesNo, "Before you go") = vbYes Then
+    If MsgBox("Export VBA Code?", vbYesNo, "Before you go") = vbYes Then
         ExportVBACode
     End If
 
