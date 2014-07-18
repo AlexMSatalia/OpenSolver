@@ -7,6 +7,7 @@ Public SparseA_Gurobi() As CIndexedCoeffs 'Access to sparse A matrix
 Public Const SolverTitle_Gurobi = "Gurobi (Linear Solver)"
 Public Const SolverDesc_Gurobi = "Gurobi is a solver for linear programming (LP), quadratic and quadratically constrained programming (QP and QCP), and mixed-integer programming (MILP, MIQP, and MIQCP). It requires the user to download and install a version of the Gurobi and to have GurobiOSRun.py in the OpenSolver directory."
 Public Const SolverLink_Gurobi = "http://www.gurobi.com/resources/documentation"
+Public Const SolverType_Gurobi = OpenSolver_SolverType.Linear
 
 #If Mac Then
 Public Const SolverName_Gurobi = "gurobi_cl"
@@ -17,7 +18,6 @@ Public Const SolverName_Gurobi = "gurobi_cl.exe"
 Public Const SolverScript_Gurobi = "gurobi_tmp" & ScriptExtension
 Public Const SolverPythonScript_Gurobi = "gurobiOSRun.py"
 Public Const Solver_Gurobi = "gurobi" & ScriptExtension
-Public Const SolverType_Gurobi = OpenSolver_SolverType.Linear
 
 Public Const SolutionFile_Gurobi = "modelsolution.sol"
 Public Const SensitivityFile_Gurobi = "sensitivityData.sol"
@@ -47,9 +47,9 @@ End Sub
 
 Function About_Gurobi() As String
 ' Return string for "About" form
-    Dim SolverPath As String
-    If Not SolverAvailable_Gurobi(SolverPath) Then
-        About_Gurobi = "Gurobi not found"
+    Dim SolverPath As String, errorString As String
+    If Not SolverAvailable_Gurobi(SolverPath, errorString) Then
+        About_Gurobi = errorString
         Exit Function
     End If
     
@@ -80,13 +80,14 @@ Function GetExternalSolver_Gurobi() As String
 #End If
 End Function
 
-Function SolverAvailable_Gurobi(ByRef SolverPath As String) As Boolean
+Function SolverAvailable_Gurobi(Optional SolverPath As String, Optional errorString As String) As Boolean
 ' Returns true if Gurobi is available and sets SolverPath as path to gurobi_cl
     If GetExistingFilePathName(GetGurobiBinFolder, SolverName_Gurobi, SolverPath) And _
        FileOrDirExists(SolverPythonScriptPath_Gurobi()) Then
         SolverAvailable_Gurobi = True
     Else
         SolverPath = ""
+        errorString = "No Gurobi installation was detected."
         SolverAvailable_Gurobi = False
     End If
 End Function

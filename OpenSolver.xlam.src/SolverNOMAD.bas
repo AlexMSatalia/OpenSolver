@@ -1,6 +1,13 @@
 Attribute VB_Name = "SolverNOMAD"
 Public OpenSolver_NOMAD As COpenSolver
 
+Public Const SolverTitle_NOMAD = "NOMAD (Non-linear Solver)"
+Public Const SolverDesc_NOMAD = "Nomad (Nonsmooth Optimization by Mesh Adaptive Direct search) is a C++ implementation of the Mesh Adaptive Direct Search (Mads) algorithm that solves non-linear problems. It works by updating the values on the sheet and passing them to the C++ solver. Like many non-linear solvers NOMAD cannot guarantee optimality of its solutions."
+Public Const SolverLink_NOMAD = "http://www.gerad.ca/nomad/Project/Home.html"
+Public Const SolverType_NOMAD = OpenSolver_SolverType.NonLinear
+
+
+
 #If Win64 Then
 Public Const NomadDllName = "OpenSolverNomadDll64.dll"
 #Else
@@ -26,12 +33,9 @@ Public Const NomadDllName = "OpenSolverNomadDll.dll"
 
 
 Function About_NOMAD() As String
-#If Mac Then
-    About_NOMAD = "NOMAD for OpenSolver is not currently supported on Mac"
-    Exit Function
-#End If
-    If Not SolverAvailable_NOMAD() Then
-        About_NOMAD = "NOMAD not found"
+    Dim errorString As String
+    If Not SolverAvailable_NOMAD(errorString) Then
+        About_NOMAD = errorString
         Exit Function
     End If
     ' Assemble version info
@@ -40,6 +44,7 @@ End Function
 
 Function SolverAvailable_NOMAD(Optional errorString As String) As Boolean
 #If Mac Then
+    errorString = "NOMAD for OpenSolver is not currently supported on Mac"
     SolverAvailable_NOMAD = False
     Exit Function
 #Else
@@ -59,10 +64,7 @@ Function SolverAvailable_NOMAD(Optional errorString As String) As Boolean
 NotFound:
     SetCurrentDirectory currentDir
     SolverAvailable_NOMAD = False
-    errorString = "Unable to find the Nomad DLL file `" & NomadDllName & "'" & vbCrLf & vbCrLf _
-                & "Please ensure the file `" & NomadDllName & "' is in the folder:" + vbCrLf + ThisWorkbook.Path _
-                & vbCrLf & "that contains the `OpenSolver.xlam' file." & vbCrLf & vbCrLf _
-                & "Note: Running OpenSolver from within the zipped file will not work."
+    errorString = "Unable to find the Nomad DLL file `" & NomadDllName & "' in the folder that contains `OpenSolver.xlam'"
     Exit Function
 #End If
 End Function

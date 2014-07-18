@@ -102,27 +102,26 @@ Sub Disabler(TrueIfEnable As Boolean)
 42730     frmOptions.txtMaxIter.Enabled = True
 42740     frmOptions.txtPre.Enabled = True
           
-              'If nomad is selected as the solver then need to deactivate some of the model dialogue
-        Dim value As String
-42750   If Not GetNameValueIfExists(ActiveWorkbook, "'" & Replace(ActiveSheet.Name, "'", "''") & "'!OpenSolver_ChosenSolver", value) Then
-42760       Call SetNameOnSheet("OpenSolver_ChosenSolver", "=CBC")
-42770   ElseIf value = "NOMAD" Then
-42780       chkGetDuals2.Enabled = False
-42790       chkGetDuals.Enabled = False
-42800       optUpdate.Enabled = False
-42810       optNew.Enabled = False
-            'disable linearity options
-42820       frmOptions.chkLinear.Enabled = False
-42830       frmOptions.chkPerformLinearityCheck.Enabled = False
-42840       frmOptions.txtTol.Enabled = False
-42850   Else
-42860       frmOptions.txtMaxIter.Enabled = False
-42870       frmOptions.txtPre.Enabled = False
-42880   End If
-      '============================================================================================
-      'NOTE: Beware that RefEdits cannot be enabled last in this sub as they seem to grab the focus
-      '       and create weird errors
-      '============================================================================================
+        
+          Dim Solver As String
+42750     If Not GetNameValueIfExists(ActiveWorkbook, "'" & Replace(ActiveSheet.Name, "'", "''") & "'!OpenSolver_ChosenSolver", Solver) Then
+              Solver = "CBC"
+              Call SetNameOnSheet("OpenSolver_ChosenSolver", "=" & Solver)
+42770     End If
+            
+          
+          If Not SolverHasSensitivityAnalysis(Solver) Then
+42780         ' Disable dual options
+              chkGetDuals2.Enabled = False
+42790         chkGetDuals.Enabled = False
+42800         optUpdate.Enabled = False
+42810         optNew.Enabled = False
+          End If
+          
+          '============================================================================================
+          'NOTE: Beware that RefEdits cannot be enabled last in this sub as they seem to grab the focus
+          '       and create weird errors
+          '============================================================================================
 End Sub
 
 '--------------------------------------------------------------------

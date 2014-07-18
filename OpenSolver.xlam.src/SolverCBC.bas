@@ -7,10 +7,10 @@ Public SparseA_CBC() As CIndexedCoeffs 'Access to sparse A matrix
 Public Const SolverTitle_CBC = "COIN-OR CBC (Linear Solver)"
 Public Const SolverDesc_CBC = "The COIN Branch and Cut solver (CBC) is the default solver for OpenSolver and is an open-source mixed-integer program (MIP) solver written in C++. CBC is an active open-source project led by John Forrest at www.coin-or.org."
 Public Const SolverLink_CBC = "http://www.coin-or.org/Cbc/cbcuserguide.html"
+Public Const SolverType_CBC = OpenSolver_SolverType.Linear
 
 Public Const SolverName_CBC = "cbc.exe"
 Public Const SolverScript_CBC = "cbc" & ScriptExtension
-Public Const SolverType_CBC = OpenSolver_SolverType.Linear
 
 Public Const SolutionFile_CBC = "modelsolution.txt"
 Public Const CostRangesFile_CBC = "costranges.txt"
@@ -45,9 +45,9 @@ End Sub
 
 Function About_CBC() As String
 ' Return string for "About" form
-    Dim SolverPath As String
-    If Not SolverAvailable_CBC(SolverPath) Then
-        About_CBC = "CBC not found"
+    Dim SolverPath As String, errorString As String
+    If Not SolverAvailable_CBC(SolverPath, errorString) Then
+        About_CBC = errorString
         Exit Function
     End If
     ' Assemble version info
@@ -56,7 +56,7 @@ Function About_CBC() As String
                      " at " & SolverPath
 End Function
 
-Function SolverAvailable_CBC(ByRef SolverPath As String) As Boolean
+Function SolverAvailable_CBC(Optional SolverPath As String, Optional errorString As String) As Boolean
 ' Returns true if CBC is available and sets SolverPath
     On Error GoTo NotFound
     GetExternalSolverPathName SolverPath, SolverName_CBC
@@ -64,6 +64,7 @@ Function SolverAvailable_CBC(ByRef SolverPath As String) As Boolean
     Exit Function
 NotFound:
     SolverPath = ""
+    errorString = "Unable to find the CBC solver in the folder that contains `OpenSolver.xlam'"
     SolverAvailable_CBC = False
 End Function
 

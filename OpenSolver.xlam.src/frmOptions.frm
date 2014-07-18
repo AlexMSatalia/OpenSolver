@@ -131,17 +131,23 @@ Private Sub UserForm_Activate()
 42270     txtPre = CStr(conPre)
 42280     chkPerformLinearityCheck.value = performLinearityCheck
 
-        Dim value As String
-42290   If Not GetNameValueIfExists(ActiveWorkbook, "'" & Replace(ActiveSheet.Name, "'", "''") & "'!OpenSolver_ChosenSolver", value) Then
-42300       Call SetNameOnSheet("OpenSolver_ChosenSolver", "=CBC")
-42310   ElseIf value = "NOMAD" Then
-            'disable linearity options
-42320       chkLinear.Enabled = False
-42330       chkPerformLinearityCheck.Enabled = False
-42340       txtTol.Enabled = False
-42350   Else
-42360       txtMaxIter.Enabled = False
-42370       txtPre.Enabled = False
-42380   End If
+          Dim Solver As String
+42290     If Not GetNameValueIfExists(ActiveWorkbook, "'" & Replace(ActiveSheet.Name, "'", "''") & "'!OpenSolver_ChosenSolver", Solver) Then
+              Solver = "CBC"
+42300         Call SetNameOnSheet("OpenSolver_ChosenSolver", "=" & Solver)
+42310     End If
+
+          If SolverType(Solver) = OpenSolver_SolverType.NonLinear Then
+              ' Disable linearity options
+42820         frmOptions.chkLinear.Enabled = False
+42830         frmOptions.chkPerformLinearityCheck.Enabled = False
+42840         frmOptions.txtTol.Enabled = False
+          End If
+          
+42850     If Solver <> "NOMAD" Then
+              ' Disable NOMAD only options
+42860         frmOptions.txtMaxIter.Enabled = False
+42870         frmOptions.txtPre.Enabled = False
+42880     End If
 End Sub
 

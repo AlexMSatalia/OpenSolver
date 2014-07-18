@@ -5,7 +5,7 @@ Public Const LPFileName As String = "model.lp"
 Public Const XMLFileName As String = "job.xml"
 Public Const PuLPFileName As String = "opensolver.py"
 
-Function SolverAvailable(Solver As String, ByRef SolverPath As String) As Boolean
+Function SolverAvailable(Solver As String, Optional SolverPath As String, Optional errorString As String) As Boolean
 ' Delegated function returns True if solver is available and sets SolverPath to location of solver
     
     'All Neos solver always available
@@ -17,11 +17,11 @@ Function SolverAvailable(Solver As String, ByRef SolverPath As String) As Boolea
 
     Select Case Solver
     Case "CBC"
-        SolverAvailable = SolverAvailable_CBC(SolverPath)
+        SolverAvailable = SolverAvailable_CBC(SolverPath, errorString)
     Case "Gurobi"
-        SolverAvailable = SolverAvailable_Gurobi(SolverPath)
+        SolverAvailable = SolverAvailable_Gurobi(SolverPath, errorString)
     Case "NOMAD"
-        SolverAvailable = SolverAvailable_NOMAD()
+        SolverAvailable = SolverAvailable_NOMAD(errorString)
     Case Else
         SolverAvailable = False
         SolverPath = ""
@@ -34,6 +34,14 @@ Function SolverType(Solver As String) As String
         SolverType = SolverType_CBC
     Case "Gurobi"
         SolverType = SolverType_Gurobi
+    Case "NeosCBC"
+        SolverType = SolverType_NeosCBC
+    Case "NOMAD"
+        SolverType = SolverType_NOMAD
+    Case "NeosBon"
+        SolverType = SolverType_NeosBon
+    Case "NeosCou"
+        SolverType = SolverType_NeosCou
     Case Else
         SolverType = OpenSolver_SolverType.Unknown
     End Select
@@ -114,5 +122,87 @@ Function CreateSolveScript(Solver As String, SolutionFilePathName As String, Ext
         CreateSolveScript = CreateSolveScript_CBC(SolutionFilePathName, ExtraParametersString, SolveOptions)
     Case "Gurobi"
         CreateSolveScript = CreateSolveScript_Gurobi(SolutionFilePathName, ExtraParametersString, SolveOptions)
+    End Select
+End Function
+
+Function SolverTitle(Solver As String) As String
+    Select Case Solver
+    Case "CBC"
+        SolverTitle = SolverTitle_CBC
+    Case "Gurobi"
+        SolverTitle = SolverTitle_Gurobi
+    Case "NOMAD"
+        SolverTitle = SolverTitle_NOMAD
+    Case "NeosCBC"
+        SolverTitle = SolverTitle_NeosCBC
+    Case "NeosCou"
+        SolverTitle = SolverTitle_NeosCou
+    Case "NeosBon"
+        SolverTitle = SolverTitle_NeosBon
+    End Select
+End Function
+
+Function ReverseSolverTitle(SolverTitle As String) As String
+    Select Case SolverTitle
+    Case SolverTitle_CBC
+        ReverseSolverTitle = "CBC"
+    Case SolverTitle_Gurobi
+        ReverseSolverTitle = "Gurobi"
+    Case SolverTitle_NOMAD
+        ReverseSolverTitle = "NOMAD"
+    Case SolverTitle_NeosCBC
+        ReverseSolverTitle = "NeosCBC"
+    Case SolverTitle_NeosCou
+        ReverseSolverTitle = "NeosCou"
+    Case SolverTitle_NeosBon
+        ReverseSolverTitle = "NeosBon"
+    End Select
+End Function
+
+Function SolverDesc(Solver As String) As String
+    Select Case Solver
+    Case "CBC"
+        SolverDesc = SolverDesc_CBC
+    Case "Gurobi"
+        SolverDesc = SolverDesc_Gurobi
+    Case "NOMAD"
+        SolverDesc = SolverDesc_NOMAD
+    Case "NeosCBC"
+        SolverDesc = SolverDesc_NeosCBC
+    Case "NeosCou"
+        SolverDesc = SolverDesc_NeosCou
+    Case "NeosBon"
+        SolverDesc = SolverDesc_NeosBon
+    End Select
+End Function
+
+Function SolverLink(Solver As String) As String
+    Select Case Solver
+    Case "CBC"
+        SolverLink = SolverLink_CBC
+    Case "Gurobi"
+        SolverLink = SolverLink_Gurobi
+    Case "NOMAD"
+        SolverLink = SolverLink_NOMAD
+    Case "NeosCBC"
+        SolverLink = SolverLink_NeosCBC
+    Case "NeosCou"
+        SolverLink = SolverLink_NeosCou
+    Case "NeosBon"
+        SolverLink = SolverLink_NeosBon
+    End Select
+End Function
+
+Function SolverHasSensitivityAnalysis(Solver As String) As Boolean
+    ' Non-linear solvers don't have sensitivity analysis
+    If SolverType(Solver) = OpenSolver_SolverType.NonLinear Then
+        SolverHasSensitivityAnalysis = False
+    End If
+    
+    Select Case Solver
+    Case "CBC", "Gurobi"
+        SolverHasSensitivityAnalysis = True
+    Case Else
+        SolverHasSensitivityAnalysis = False
     End Select
 End Function
