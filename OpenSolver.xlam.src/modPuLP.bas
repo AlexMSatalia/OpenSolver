@@ -130,7 +130,7 @@ Public Sub GenerateFile(m As CModel2, SolverType As String, boolOtherSheetsIndep
         Else
             WriteToFile 1, "prob = LpProblem(""opensolver"", LpMinimize)"
         End If
-    ElseIf SolverType Like "NEOS*" Then
+    ElseIf SolverType Like "Neos*" Then
         ' XML
         WriteToFile 1, "&lt;document&gt;"
         WriteToFile 1, "&lt;category&gt;minco&lt;/category&gt;"
@@ -264,7 +264,7 @@ Public Sub GenerateFile(m As CModel2, SolverType As String, boolOtherSheetsIndep
     CleanFormulae Formulae, 1, Formulae.Count, lngMaxDepth
     If SolverType = "PuLP" Then
         strProbPlus = "prob += " + pystrObjective + vbNewLine
-    ElseIf SolverType Like "NEOS*" Then
+    ElseIf SolverType Like "Neos*" Then
         strProbPlus = ""
     End If
     timerObjCell.StopTimer
@@ -350,7 +350,7 @@ Public Sub GenerateFile(m As CModel2, SolverType As String, boolOtherSheetsIndep
                 If SolverType = "PuLP" Then
                     strProbPlus = strProbPlus + ("#" + nameLHSi.RefersToRange.Address + vbNewLine)
                     strProbPlus = strProbPlus + ("prob += " + pystrLHS + pystrREL + pystrRHS + vbNewLine)
-                ElseIf SolverType Like "NEOS*" Then
+                ElseIf SolverType Like "Neos*" Then
                     strProbPlus = strProbPlus + "subject to " & pystrLHS & ":" & vbNewLine
                     If Count > Formulae.Count Then
                         strProbPlus = strProbPlus + "    " & pystrLHS & amplstrREL & pystrRHS & ";" & vbNewLine & vbNewLine
@@ -378,7 +378,7 @@ NextCons:
     Dim lngCurDepth As Long, lngCurNode As Long
     
     Dim lngIndex As Long, objCurNode As CFormula, strParentAdr As Variant
-    If SolverType Like "NEOS*" Then
+    If SolverType Like "Neos*" Then
         For lngCurDepth = lngMaxDepth To 0 Step -1
             For lngIndex = 1 To Formulae.Count
                 If Formulae(lngIndex).lngDepth = lngCurDepth Then
@@ -408,7 +408,7 @@ NextCons:
                     MsgBox Formulae(lngCurNode).strAddress
                 End If
             Next lngCurNode
-        ElseIf SolverType Like "NEOS*" Then
+        ElseIf SolverType Like "Neos*" Then
             For lngCurNode = 1 To 1
                 If Formulae(lngCurNode).lngDepth = lngCurDepth Then
                     WriteToFile 1, "subject to objConstraint:"
@@ -440,7 +440,7 @@ NextCons:
             WriteToFile 1, "f.write(""" + cellName + " ""+str(value(" + cellName + "))+""\n"")"
         Next
         WriteToFile 1, "f.close()"
-    ElseIf SolverType Like "NEOS*" Then
+    ElseIf SolverType Like "Neos*" Then
         ' Run Commands
         WriteToFile 1, commentStart & " Solve the problem"
         If SolverType Like "*Bon" Then
@@ -484,7 +484,7 @@ NextCons:
         ' Need to work on implementing this
         ' ExecutionCompleted = OSSolveSync("C:\Python27\python.exe " & SolutionFilePathName, SW_HIDE, True)
         Exit Sub
-    ElseIf SolverType Like "NEOS*" Then
+    ElseIf SolverType Like "Neos*" Then
         On Error GoTo ErrHandler
         Application.AutomationSecurity = Office.MsoAutomationSecurity.msoAutomationSecurityForceDisable
         ExecutionCompleted = SolveModel_TokenNeos(ModelFilePathName, m)
@@ -858,7 +858,7 @@ Private Function ConvertFormulaToPython(ByVal strFormula As String, _
                     strParsed = strParsed + "/100.0"
                     
                 Case TokenType.FunctionOpen
-                    If SolverType Like "*NEOS*" Then
+                    If SolverType Like "*Neos*" Then
                         FunctionName = ""
                         FunctionCount = 0
                         

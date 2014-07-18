@@ -61,14 +61,6 @@ Private Sub cmdOK_Click()
 41970     Unload Me
 End Sub
 
-Private Sub Label2_Click()
-
-End Sub
-
-Private Sub lblTol_Click()
-
-End Sub
-
 Private Sub UserForm_Activate()
 
 41980     SetAnyMissingDefaultExcel2007SolverOptions

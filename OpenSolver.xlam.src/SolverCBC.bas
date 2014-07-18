@@ -56,16 +56,37 @@ Function About_CBC() As String
                      " at " & SolverPath
 End Function
 
+Function SolverFilePath_CBC(errorString As String) As String
+#If Mac Then
+    If GetExistingFilePathName(ThisWorkbook.Path, left(SolverName_CBC, Len(SolverName_CBC) - 4), SolverFilePath_CBC) Then Exit Function ' Found a mac solver
+    errorString = "Unable to find Mac version of CBC ('cbc') in the folder that contains 'OpenSolver.xlam'"
+    Exit Function
+#Else
+    ' Look for the 64 bit version
+    If SystemIs64Bit Then
+        If GetExistingFilePathName(ThisWorkbook.Path, Replace(SolverName_CBC, ".exe", "64.exe"), SolverFilePath_CBC) Then Exit Function ' Found a 64 bit solver
+    End If
+    ' Look for the 32 bit version
+    If GetExistingFilePathName(ThisWorkbook.Path, SolverName_CBC, SolverFilePath_CBC) Then
+        If SystemIs64Bit Then
+            errorString = "Unable to find 64-bit CBC (cbc64.exe) in the 'OpenSolver.xlam' folder. 32-bit CBC will be used instead."
+        End If
+        Exit Function
+    End If
+    ' Fail
+    SolverFilePath_CBC = ""
+    errorString = "Unable to find 32-bit CBC (cbc.exe) or 64-bit CBC (cbc64.exe) in the 'OpenSolver.xlam' folder."
+#End If
+End Function
+
 Function SolverAvailable_CBC(Optional SolverPath As String, Optional errorString As String) As Boolean
 ' Returns true if CBC is available and sets SolverPath
-    On Error GoTo NotFound
-    GetExternalSolverPathName SolverPath, SolverName_CBC
-    SolverAvailable_CBC = True
-    Exit Function
-NotFound:
-    SolverPath = ""
-    errorString = "Unable to find the CBC solver in the folder that contains `OpenSolver.xlam'"
-    SolverAvailable_CBC = False
+    SolverPath = SolverFilePath_CBC(errorString)
+    If SolverPath <> "" Then
+        SolverAvailable_CBC = True
+    Else
+        SolverAvailable_CBC = False
+    End If
 End Function
 
 Function SolverVersion_CBC() As String
@@ -324,7 +345,7 @@ Function ReadModel_CBC(SolutionFilePathName As String, errorString As String) As
 21890                     j = j + 1
 21900                 End If
 21910             Next row
-21920             ReadCBCSensitivityData SolutionFilePathName
+21920             ReadSensitivityData_CBC SolutionFilePathName
 21930         End If
             
               ' Now we read in the decision variable values
@@ -387,7 +408,7 @@ ExitSub:
           OpenSolver_CBC.LinearSolveStatusString = LinearSolveStatusString
 End Function
 
-Sub ReadCBCSensitivityData(SolutionFilePathName As String)
+Sub ReadSensitivityData_CBC(SolutionFilePathName As String)
           'Reads the two files with the limits on the bounds of shadow prices and reduced costs
 
           Dim RangeFilePathName As String, Stuff(5) As String, index2 As Integer
@@ -445,4 +466,54 @@ Sub ReadCBCSensitivityData(SolutionFilePathName As String)
 22930     Wend
 22940     Close 2
                     
+End Sub
+
+Sub LaunchCommandLine_CBC()
+' Open the CBC solver with our last model loaded.
+          ' If we have a worksheet open with a model, then we pass the solver options (max runtime etc) from this model to CBC. Otherwise, we don't pass any options.
+27890     On Error GoTo errorHandler
+          Dim errorPrefix  As String
+27900     errorPrefix = ""
+            
+          Dim WorksheetAvailable As Boolean
+27910     WorksheetAvailable = CheckWorksheetAvailable(SuppressDialogs:=True)
+          
+          Dim SolverPath As String, errorString As String
+27930     If Not SolverAvailable_CBC(SolverPath, errorString) Then
+              Err.Raise OpenSolver_CBCMissingError, Description:=errorString
+          End If
+          
+          Dim ModelFilePathName As String
+27950     ModelFilePathName = ModelFilePath("CBC")
+          
+          ' Get all the options that we pass to CBC when we solve the problem and pass them here as well
+          ' Get the Solver Options, stored in named ranges with values such as "=0.12"
+          ' Because these are NAMEs, they are always in English, not the local language, so get their value using Val
+          Dim SolveOptions As SolveOptionsType, SolveOptionsString As String
+27960     If WorksheetAvailable Then
+27970         GetSolveOptions "'" & Replace(ActiveSheet.Name, "'", "''") & "'!", SolveOptions, errorString ' NB: We have to double any ' when we quote the sheet name
+27980         If errorString = "" Then
+27990            SolveOptionsString = " -ratioGap " & CStr(SolveOptions.Tolerance) & " -seconds " & CStr(SolveOptions.maxTime)
+28000         End If
+28010     End If
+          
+          Dim ExtraParametersString As String
+28020     If WorksheetAvailable Then
+28030         ExtraParametersString = GetExtraParameters_CBC(ActiveSheet, errorString)
+28040         If errorString <> "" Then ExtraParametersString = ""
+28050     End If
+             
+          Dim CBCRunString As String
+28060     CBCRunString = " -directory " & ConvertHfsPath(GetTempFolder) _
+                           & " -import " & QuotePath(ConvertHfsPath(ModelFilePathName)) _
+                           & SolveOptionsString _
+                           & ExtraParametersString _
+                           & " -" ' Force CBC to accept commands from the command line
+28070     OSSolveSync QuotePath(ConvertHfsPath(SolverPath)), CBCRunString, "", "", SW_SHOWNORMAL, False
+
+ExitSub:
+28080     Exit Sub
+errorHandler:
+28090     MsgBox "OpenSolver encountered error " & Err.Number & ":" & vbCrLf & Err.Description & IIf(Erl = 0, "", " (at line " & Erl & ")") & vbCrLf & "Source = " & Err.Source, , "OpenSolver Code Error"
+28100     Resume ExitSub
 End Sub

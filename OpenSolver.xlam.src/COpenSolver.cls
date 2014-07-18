@@ -101,7 +101,6 @@ Dim Relation() As Integer ' For each row, we remember its relation (=, <=, >=)
 
 'Details for the chosen solver
 Public Solver As String 'Name of solver we will be using
-Dim SolverString As String 'Name of solver for printing
 Public ExternalSolverPathName As String 'Path to solver
 Public ModelFilePathName As String ' Path to model file
 Dim SolutionFilePathName As String ' Path to model file
@@ -488,43 +487,8 @@ Sub BuildModelFromSolverData(Optional LinearityCheckOffset As Double = 0)
         
           '----------------------------------------------------------------------------------------------------------
           'Find the users preferred solver
-8400      If GetNameValueIfExists(ActiveWorkbook, sheetName & "OpenSolver_ChosenSolver", Solver) Then
-              If Solver Like "NeosCBC" Then
-                  Solver = "NeosCBC"
-                  SolverString = "NeosCBC"
-8410          ElseIf Solver Like "*bc*" Or Solver Like "*BC*" Then
-8420              Solver = "cbc.exe"
-8430              SolverString = "CBC"
-8440          ElseIf Solver Like "*urobi" Then
-8450              Solver = "gurobi.bat"
-8460              SolverString = "Gurobi"
-8470          ElseIf Solver Like "NOMAD*" Then
-8480              Solver = "Nomad"
-8490              SolverString = "NOMAD"
-              '---------Need to add in cplex solver---------------------------------------
-8500          ElseIf Solver Like "*plex" Then
-8510              Solver = "cplex.exe"
-8520              SolverString = "CPLEX"
-          '          ElseIf Solver = "NeosCBC" Then
-          '              solver = "qsopt_ex"
-              ElseIf Solver Like "*Cou" Then
-                  Solver = "NEOSCou"
-                  SolverString = "Couenne"
-                  GoTo ExitSub
-              ElseIf Solver Like "*Bon" Then
-                  Solver = "NEOSBon"
-                  SolverString = "Bonmin"
-                  GoTo ExitSub
-              ElseIf Solver Like "PuLP" Then
-                  Solver = "PuLP"
-                  SolverString = "PuLP"
-                  GoTo ExitSub
-8530          Else
-8540            Err.Raise Number:=OpenSolver_BuildError, Source:=errorPrefix, Description:="OpenSolver did not recognise the solver you have picked. Please pick another one and try again."
-8550          End If
-          Else
-              Solver = "cbc.exe"
-              SolverString = "CBC"
+8400      If Not GetNameValueIfExists(ActiveWorkbook, sheetName & "OpenSolver_ChosenSolver", Solver) Then
+              Solver = "CBC"
 8560      End If
 
           ' We check to see if a model exists by getting the adjustable cells
@@ -588,7 +552,7 @@ Sub BuildModelFromSolverData(Optional LinearityCheckOffset As Double = 0)
           ' Get names for all the variables, creating names that distinguish cells on different sheets
 8850      ReDim VarNames(numVars)
 8860      ReDim CostCoeffs(numVars) As Double
-8870      If Solver = "Nomad" Then
+8870      If Solver = "NOMAD" Then
 8880          ReDim StartingPosition(numVars)
 8890      End If
           Dim AdjCell As Range
@@ -596,12 +560,12 @@ Sub BuildModelFromSolverData(Optional LinearityCheckOffset As Double = 0)
 8910      For Each AdjCell In AdjustableCells
 8920          i = i + 1
 8930          VarNames(i) = AdjCell.Address(RowAbsolute:=False, ColumnAbsolute:=False) ' eg A1
-8940          If Solver = "Nomad" Then
+8940          If Solver = "NOMAD" Then
 8950              StartingPosition(i) = AdjCell.value
 8960          End If
 8970      Next AdjCell
           ' Set all the adjustable cells to zero (or a user-specified value) (For linear problems)
-8980      If Solver <> "Nomad" Then ' TODO: Change to all non-linear
+8980      If Solver <> "NOMAD" Then ' TODO: Change to all non-linear
               AdjustableCells.Value2 = LinearityCheckOffset
           End If
           
@@ -669,7 +633,7 @@ ModelOptions:
 9300      If GetNameValueIfExists(ActiveWorkbook, sheetName & "solver_neg", s) Then AssumeNonNegativeVars = s = "1"
 
           Dim succeeded As Boolean
-9310      If Solver <> "Nomad" Then
+9310      If Solver <> "NOMAD" Then
 9320          On Error GoTo errorHandler
 9330          Call BuildModelOptions(s, succeeded)
 9340          If succeeded = False Then GoTo ExitSub
@@ -1190,24 +1154,24 @@ Function SolveModel(SolveRelaxation As Boolean) As Integer
 11920     errorPrefix = "OpenSolver Model Solving"
 
           'Check that solver is available
-          If Not SolverAvailable(SolverString, ExternalSolverPathName) Then
-              Err.Raise Number:=OpenSolver_SolveError, Source:=errorPrefix, Description:="The specified solver, " & SolverString & " could not be found. Make sure it is correctly installed or try another solver."
+          If Not SolverAvailable(Solver, ExternalSolverPathName) Then
+              Err.Raise Number:=OpenSolver_SolveError, Source:=errorPrefix, Description:="The specified solver, " & Solver & " could not be found. Make sure it is correctly installed or try another solver."
           End If
-          SetOpenSolver SolverString, Me, SparseA
+          SetOpenSolver Solver, Me, SparseA
 
           'Delete any existing log file
           Dim logPath As String
 11930     logPath = GetTempFilePath("log1.tmp")
 11940     DeleteFileAndVerify logPath, errorPrefix, "Unable to delete the log file: " & logPath
           
-          ModelFilePathName = ModelFilePath(SolverString)
+          ModelFilePathName = ModelFilePath(Solver)
           
           DeleteFileAndVerify ModelFilePathName, errorPrefix, "Unable to delete file " & ModelFilePathName
           
           'Clean up solver specific files
           CleanFiles (errorPrefix)
 
-12230     If Solver = "Nomad" Then
+12230     If Solver = "NOMAD" Then
 12240         SolveRelaxedModel = SolveRelaxation
 12260         SolveModel = SolveModel_Nomad(SolveRelaxation)
 12270     Else
@@ -1300,7 +1264,7 @@ Function SolveModel_Linear(SolveRelaxation As Boolean) As Integer
           
           'Delegate to Neos or Local solver
           Dim errorString As String
-          If RunsOnNeos(SolverString) Then
+          If RunsOnNeos(Solver) Then
               SolveModel_LinearNeos ModelFilePathName, SolveRelaxation, errorString
           Else
               SolveModel_LinearLocal ModelFilePathName, SolveRelaxation, errorString
@@ -1332,12 +1296,12 @@ Function SolveModel_Linear(SolveRelaxation As Boolean) As Integer
                   Dim nameSheet As String
 13790             nameSheet = MakeNewSheet(RawSheetName & " Sensitivity", sheetName)
 13800             sheet.Select
-13810             Call WriteConstraintSensitivityTable(nameSheet, SolverString)
+13810             Call WriteConstraintSensitivityTable(nameSheet, Solver)
                   'If you want to end up on the sensitivity page use this next line
                   'Sheets(nameSheet).Select
 13820         End If
 13830     ElseIf Not bGetDuals And (DualsOnNewSheet Or DualsOnSameSheet) Then
-13840         Err.Raise Number:=OpenSolver_SolveError, Source:=errorPrefix, Description:="Could not get sensitivity analysis due to binary and/or integer constraints." & vbCrLf & vbCrLf & "Turn off sensitivity in the model dialogue or reformulate your model without these constraints." & vbCrLf & vbCrLf & "The " & SolverString & " solution has been returned to the sheet." & vbCrLf
+13840         Err.Raise Number:=OpenSolver_SolveError, Source:=errorPrefix, Description:="Could not get sensitivity analysis due to binary and/or integer constraints." & vbCrLf & vbCrLf & "Turn off sensitivity in the model dialogue or reformulate your model without these constraints." & vbCrLf & vbCrLf & "The " & Solver & " solution has been returned to the sheet." & vbCrLf
 13850     End If
           '=========================================================================================================
         
@@ -1490,7 +1454,7 @@ Sub SolveModel_LinearLocal(ModelFilePathName As String, SolveRelaxation As Boole
               
               ' We allow user to define extra parameters
               Dim ExtraParametersString As String
-12830         ExtraParametersString = GetExtraParameters(SolverString, sheet, errorString)
+12830         ExtraParametersString = GetExtraParameters(Solver, sheet, errorString)
 12840         If errorString <> "" Then
 12850             On Error GoTo errorHandler
 12860             Err.Raise Number:=OpenSolver_SolveError, Source:=errorPrefix, Description:=errorString
@@ -1499,11 +1463,8 @@ Sub SolveModel_LinearLocal(ModelFilePathName As String, SolveRelaxation As Boole
               Dim SolutionFilePathName As String, SolutionFileName As String
 13000         SolutionFileName = GetSolutionFileName
 13010         SolutionFilePathName = GetSolutionFullPath
-                     
-              
-              GetExternalSolverPathName ExternalSolverPathName, Solver ' May throw an error
          
-13020         ExternalSolverPathName = CreateSolveScript(SolverString, SolutionFilePathName, ExtraParametersString, SolveOptions)
+13020         ExternalSolverPathName = CreateSolveScript(Solver, SolutionFilePathName, ExtraParametersString, SolveOptions)
 '13120         ElseIf Solver = "cplex.exe" Then
 '13130             CommandLineRunString = """" & GetTempFolder & ModelFilePathName & """" & " write=" & Replace(SolutionFileName, ".txt", ".sol")
 '13140             PrintingOptionString = ""
@@ -1526,7 +1487,7 @@ Sub SolveModel_LinearLocal(ModelFilePathName As String, SolveRelaxation As Boole
 13220         If exeResult <> 0 Then
                   ' User pressed escape. Dialogs have already been shown. Exit with a 'cancelled' error
 13230             On Error GoTo errorHandler
-13240             Err.Raise Number:=OpenSolver_SolveError, Source:=errorPrefix, Description:="The " & SolverString & " solver did not complete, but aborted with the error code " & exeResult & "." & vbCrLf & vbCrLf & "The last log file can be viewed under the OpenSolver menu and may give you more information on what caused this error."
+13240             Err.Raise Number:=OpenSolver_SolveError, Source:=errorPrefix, Description:="The " & Solver & " solver did not complete, but aborted with the error code " & exeResult & "." & vbCrLf & vbCrLf & "The last log file can be viewed under the OpenSolver menu and may give you more information on what caused this error."
 13250         End If
               
              ' Application.StatusBar = "OpenSolver: Loading Solution... " & NumVars & " vars, " & NumRows & " rows."
@@ -1545,14 +1506,14 @@ Sub SolveModel_LinearLocal(ModelFilePathName As String, SolveRelaxation As Boole
 
               errorString = ""
               '=============Read solution file==========================
-13280         SolutionFilePathName = SolutionFilePath(SolverString)
+13280         SolutionFilePathName = SolutionFilePath(Solver)
               If Not FileOrDirExists(SolutionFilePathName) Then
                   On Error GoTo errorHandler
 13310             Err.Raise Number:=OpenSolver_SolveError, Source:=errorPrefix, Description:="The solver did not create a solution file. No new solution is available."
 13320             GoTo ExitSub
               End If
               Dim solutionLoaded As Boolean
-13340         solutionLoaded = ReadModel(SolverString, SolutionFilePathName, errorString)
+13340         solutionLoaded = ReadModel(Solver, SolutionFilePathName, errorString)
 13350         On Error GoTo errorHandler
 13360         If errorString <> "" Then
 13370             Err.Raise Number:=OpenSolver_SolveError, Source:=errorPrefix, Description:=errorString
@@ -2755,12 +2716,12 @@ Function ReadModel(Solver As String, SolutionFilePathName As String, errorString
 End Function
 
 
-Sub WriteConstraintSensitivityTable(nameSheet As String, SolverString As String)
+Sub WriteConstraintSensitivityTable(nameSheet As String, Solver As String)
 
       'Writes out the sensitivity table on a new page (like the solver sensitivity report)
           
           Dim Column As Integer, row As Integer, i As Long
-22950     Sheets(nameSheet).Cells(1, 1) = "OpenSolver Sensitivity Report - " & SolverString
+22950     Sheets(nameSheet).Cells(1, 1) = "OpenSolver Sensitivity Report - " & Solver
 22960     Sheets(nameSheet).Cells(2, 1) = "Worksheet: [" & ActiveWorkbook.Name & "] " & ActiveSheet.Name
 22970     Sheets(nameSheet).Cells(3, 1) = "Report Created: " & Now()
           

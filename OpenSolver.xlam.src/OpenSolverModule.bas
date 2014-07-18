@@ -346,7 +346,7 @@ Private Const ERROR_BAD_FORMAT = 11&
 #If VBA7 Then
    Private Declare PtrSafe Function GetExitCodeProcess Lib "kernel32" (ByVal hProcess As LongPtr, lpExitCode As Long) As Long
 #Else
-   Private Declare Function GetExitCodeProcess Lib "kernel32" (ByVal hProcess As Long, lpExitCode As Long) As Long
+ '  Private Declare Function GetExitCodeProcess Lib "kernel32" (ByVal hProcess As Long, lpExitCode As Long) As Long
 #End If
 
 #If VBA7 Then
@@ -1217,108 +1217,6 @@ Function GetExistingFilePathName(Directory As String, FileName As String, ByRef 
 4270     pathName = Directory & FileName
 4280     GetExistingFilePathName = FileOrDirExists(pathName)
 End Function
-
-'Function GetExternalSolverPath(ExternalSolverPath As String)
-'          ' Location of the external solver; we look in various locations to find it every time we solve the model
-'          ' This will throw an exception if the solver cannot be found
-'          GetExternalSolverPath = False
-'          Dim Try1 As String, Try2 As String, Try3 As String
-'          ' Check that the external solver CBC can be found
-'3750      ExternalSolverPath = ThisWorkbook.Path ' In same directory as OpenSolver.xlam
-'3760      If right(" " & ExternalSolverPath, 1) <> PathDelimeter Then ExternalSolverPath = ExternalSolverPath & PathDelimeter
-'3770      Try1 = ExternalSolverPath & ExternalSolverExeName
-'3780      If Dir(Try1) = "" Then
-'              ' Try in c:\temp\OpenSolver\
-'3790          ExternalSolverPath = ExternalSolverPath1
-'3800          Try2 = ExternalSolverPath & ExternalSolverExeName
-'3810          If Dir(Try2) = "" Then
-'                  ' Try in the active workbook's location
-'3820              ExternalSolverPath = ActiveWorkbook.Path   ' May be blank if no active workbook
-'3830              If right(" " & ExternalSolverPath, 1) <> PathDelimeter Then ExternalSolverPath = ExternalSolverPath & PathDelimeter
-'3840              Try3 = ExternalSolverPath & ExternalSolverExeName
-'3850              If Dir(Try3) = "" Then
-'                      ' Give up
-'3860                  Err.Raise Number:=OpenSolver_CBCMissingError, Source:="OpenSolver GetExternalSolverPath", _
-'                            Description:="Unable to find the external solver `" + ExternalSolverExeName + "' at any of the following locations:" & vbCrLf & vbCrLf _
-'                            & Try1 & vbCrLf & Try2 & vbCrLf & Try3 & vbCrLf & vbCrLf _
-'                            & "Please ensure the file `" + ExternalSolverExeName + "' is in the folder:" + vbCrLf + ThisWorkbook.Path _
-'                            + vbCrLf + "that contains the `OpenSolver.xlam' file." & vbCrLf _
-'                            & "Note: After downloading the OpenSolver compressed (zipped) file, you must extract all the files before running OpenSolver; " _
-'                            & "running OpenSolver from within the zipped file will not work."
-'3870              End If
-'3880          End If
-'3890      End If
-'End Function
-
-Sub GetExternalSolverPathName(ByRef CombinedPathName As String, solverName As String)
-          ' Location of the external solver (path and file name); we look in various locations to find it every time we solve the model
-          ' We look for a 64 bit version if we are running a 64-bit system
-          ' This will throw an exception if the solver cannot be found
-          Dim Try1 As String, Try2 As String
-          If solverName = "gurobi.bat" Then
-              CombinedPathName = GetExternalSolver_Gurobi()
-              If FileOrDirExists(CombinedPathName) Then
-                  Exit Sub
-              End If
-          End If
-#If Mac Then
-    If GetExistingFilePathName(ThisWorkbook.Path, left(solverName, Len(solverName) - 4), CombinedPathName) Then Exit Sub ' Found a mac solver
-    Err.Raise Number:=OpenSolver_CBCMissingError, Source:="OpenSolver GetExternalSolverPathName", _
-                      Description:="Unable to find Mac version of the external solver '" & solverName & "'."
-    Exit Sub
-#End If
-          
-4290      If SystemIs64Bit Then
-4300          If GetExistingFilePathName(ThisWorkbook.Path, Replace(solverName, ".exe", "64.exe"), CombinedPathName) Then Exit Sub ' Found a 64 bit solver
-4310          Try1 = CombinedPathName
-4320      End If
-          ' Look for the 32 bit version
-4330      If GetExistingFilePathName(ThisWorkbook.Path, solverName, CombinedPathName) Then Exit Sub
-4340      Try2 = CombinedPathName
-          ' Fail
-4350      If solverName = "cbc.exe" Then
-4360            Err.Raise Number:=OpenSolver_CBCMissingError, Source:="OpenSolver GetExternalSolverPathName", _
-                      Description:="Unable to find the external solver `" + ExternalSolverExeName + "' at any of the following location(s):" & vbCrLf & vbCrLf _
-                      & Try1 & IIf(Try1 <> "", vbCrLf, "") & Try2 & vbCrLf & vbCrLf _
-                      & "Please ensure the file `" + ExternalSolverExeName + "' is in the folder:" + vbCrLf + ThisWorkbook.Path _
-                      + vbCrLf + "that contains the `OpenSolver.xlam' file." & vbCrLf & vbCrLf _
-                      & "Notes: After downloading the OpenSolver compressed (zipped) file, you must extract all the files before running OpenSolver; " _
-                      & "running OpenSolver from within the zipped file will not work." & vbCrLf _
-                      & "On a 64 bit system, the '" & ExternalSolverExeName64 & "' file will be used if it exists."
-4370      Else
-                'Give an error if the user has selected a solver other then cbc and give the option of changing to cbc
-4380            If MsgBox("Unable to find the external solver `" + solverName + "' at any of the following location(s):" & vbCrLf & vbCrLf _
-                      & Try1 & IIf(Try1 <> "", vbCrLf, "") & vbCrLf & vbCrLf _
-                      & "Please ensure the file `" + solverName + "' is in the folder" _
-                      + "that contains the `OpenSolver.xlam' file." & vbCrLf & vbCrLf _
-                      & "Notes: If you do not have " & solverName & " installed then change the chosen solver to the default (cbc) or one of the other solver engines in the model dialogue under 'Solver Engine...'" & vbCrLf _
-                      & "The default CBC solver should be found when downloading the OpenSolver compressed (zipped) file; " & vbCrLf _
-                      & "Running OpenSolver from within the zipped file will not work." & vbCrLf & vbCrLf _
-                      & "Would you like to change your preferred solver to the default 'cbc' solver and continue solving?", vbYesNo, "OpenSolver" & sOpenSolverVersion & " Error") _
-                      = vbYes Then
-                    
-                    'If they want to change it to cbc then set the solver for that sheet as cbc and continue solving
-4390                solverName = "cbc.exe"
-4400                MsgBox prompt:="Your preferred solver has been changed to 'cbc' for this model", title:="OpenSolver"
-4410                Call SetNameOnSheet("OpenSolver_ChosenSolver", "=CBC")
-4420                GetExternalSolverPathName CombinedPathName, solverName
-        
-4430            Else
-                    'Raise an error if they choose to not use cbc
-4440                Err.Raise Number:=OpenSolver_CBCMissingError, Source:="OpenSolver GetExternalSolverPathName", _
-                      Description:="Unable to find the external solver '" & solverName & "'."
-              
-                'Err.Raise Number:=OpenSolver_CBCMissingError, Source:="OpenSolver GetExternalSolverPathName", _
-                      Description:="Unable to find the external solver `" + SolverName + "' at any of the following location(s):" & vbCrLf & vbCrLf _
-                      & Try1 & IIf(Try1 <> "", vbCrLf, "") & Try2 & vbCrLf & vbCrLf _
-                      & "Please ensure the file `" + SolverName + "' is in the folder:" + vbCrLf + ThisWorkbook.Path _
-                      + vbCrLf + "that contains the `OpenSolver.xlam' file." & vbCrLf & vbCrLf _
-                      & "Notes: If you do not have " & SolverName & " installed then change the chosen solver to the default (cbc) in the model dialogue under 'Solver Engine...'" & vbCrLf _
-                      & "The default CBC solver should be found when downloading the OpenSolver compressed (zipped) file; " & vbCrLf _
-                      & "Running OpenSolver from within the zipped file will not work."
-4450            End If
-4460      End If
-End Sub
 
 Function CheckWorksheetAvailable(Optional SuppressDialogs As Boolean = False, Optional ThrowError As Boolean = False) As Boolean
 4630      CheckWorksheetAvailable = False

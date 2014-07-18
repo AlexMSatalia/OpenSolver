@@ -25,12 +25,11 @@ Private Sub cboSolver_Change()
           
           Dim errorString As String
           If SolverAvailable(ChosenSolver, errorString:=errorString) Then
-              lblError.Caption = ""
               cmdOK.Enabled = True
           Else
-              lblError.Caption = errorString
               cmdOK.Enabled = False
           End If
+          lblError.Caption = errorString ' empty if no errors found
 End Sub
 
 Private Sub lblHyperlink_Click()

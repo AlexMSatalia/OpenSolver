@@ -53,7 +53,7 @@ Function About_Gurobi() As String
         Exit Function
     End If
     
-    SolverPath = GetExternalSolver_Gurobi()
+    SolverPath = SolverFilePath_Gurobi()
     
     ' Assemble version info
     About_Gurobi = "Gurobi " & SolverBitness_Gurobi & "-bit" & _
@@ -69,14 +69,14 @@ Function GetGurobiBinFolder() As String
 #End If
 End Function
 
-Function GetExternalSolver_Gurobi() As String
+Function SolverFilePath_Gurobi() As String
 #If Mac Then
     ' On Mac, using the gurobi interactive shell causes errors when there are spaces in the filepath.
     ' The mac gurobi.sh script, unlike windows, doesn't have a check for a gurobi install, thus it doesn't do anything for us here and is safe to skip.
     ' We can just run python by itself. We need to use the default system python (pre-installed on mac) and not any other version (e.g. a version from homebrew)
-    GetExternalSolver_Gurobi = "Macintosh HD:usr:bin:python"
+    SolverFilePath_Gurobi = "Macintosh HD:usr:bin:python"
 #Else
-    GetExistingFilePathName GetGurobiBinFolder(), Solver_Gurobi, GetExternalSolver_Gurobi
+    GetExistingFilePathName GetGurobiBinFolder(), Solver_Gurobi, SolverFilePath_Gurobi
 #End If
 End Function
 
@@ -168,7 +168,7 @@ Function SolverBitness_Gurobi() As String
 End Function
 Function CreateSolveScript_Gurobi(SolutionFilePathName As String, ExtraParametersString As String, SolveOptions As SolveOptionsType) As String
     Dim SolverString As String, CommandLineRunString As String, PrintingOptionString As String
-    SolverString = QuotePath(ConvertHfsPath(GetExternalSolver_Gurobi()))
+    SolverString = QuotePath(ConvertHfsPath(SolverFilePath_Gurobi()))
 
     CommandLineRunString = QuotePath(ConvertHfsPath(SolverPythonScriptPath_Gurobi()))
     '========================================================================================

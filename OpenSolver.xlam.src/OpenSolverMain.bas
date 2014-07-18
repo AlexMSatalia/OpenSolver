@@ -56,55 +56,7 @@ Sub OpenSolver_SolveRelaxationClickHandler(Optional Control)
 End Sub
 
 Sub OpenSolver_LaunchCBCCommandLine(Optional Control)
-          ' Open the CBC solver with our last model loaded.
-          ' If we have a worksheet open with a model, then we pass the solver options (max runtime etc) from this model to CBC. Otherwise, we don't pass any options.
-27890     On Error GoTo errorHandler
-          Dim errorPrefix  As String
-27900     errorPrefix = ""
-            
-          Dim WorksheetAvailable As Boolean
-27910     WorksheetAvailable = CheckWorksheetAvailable(SuppressDialogs:=True)
-          
-          Dim ExternalSolverPathName As String, Solver As String
-27920     Solver = "cbc.exe"
-27930     GetExternalSolverPathName ExternalSolverPathName, Solver ' May throw an error if no solver can be found
-          
-          Dim ModelFileName As String
-27940     ModelFileName = GetModelFileName
-          Dim ModelFilePathName As String
-27950     ModelFilePathName = GetModelFullPath
-          
-          ' Get all the options that we pass to CBC when we solve the problem and pass them here as well
-          ' Get the Solver Options, stored in named ranges with values such as "=0.12"
-          ' Because these are NAMEs, they are always in English, not the local language, so get their value using Val
-          Dim SolveOptions As SolveOptionsType, errorString As String, SolveOptionsString As String
-27960     If WorksheetAvailable Then
-27970         GetSolveOptions "'" & Replace(ActiveSheet.Name, "'", "''") & "'!", SolveOptions, errorString ' NB: We have to double any ' when we quote the sheet name
-27980         If errorString = "" Then
-27990            SolveOptionsString = " -ratioGap " & CStr(SolveOptions.Tolerance) & " -seconds " & CStr(SolveOptions.maxTime)
-28000         End If
-28010     End If
-          
-          Dim ExtraParametersString As String
-28020     If WorksheetAvailable Then
-28030         CBCExtraParametersString = GetExtraParameters_CBC(ActiveSheet, errorString)
-28040         If errorString <> "" Then ExtraParametersString = ""
-28050     End If
-             
-          Dim CBCRunString As String
-28060     CBCRunString = " -directory " & GetTempFolder _
-                           & " -import " & ModelFileName _
-                           & SolveOptionsString _
-                           & ExtraParametersString _
-                           & " -" ' Force CBC to accept commands from the command line
-28070     OSSolveSync ExternalSolverPathName, CBCRunString, "", SW_SHOWNORMAL, False
-
-ExitSub:
-28080     Exit Sub
-errorHandler:
-28090     MsgBox "OpenSolver encountered error " & Err.Number & ":" & vbCrLf & Err.Description & IIf(Erl = 0, "", " (at line " & Erl & ")") & vbCrLf & "Source = " & Err.Source, , "OpenSolver Code Error"
-28100     Resume ExitSub
-
+          LaunchCommandLine_CBC
 End Sub
 
 Sub OpenSolver_ShowHideModelClickHandler(Optional Control)
@@ -287,7 +239,7 @@ Function RunOpenSolver(Optional SolveRelaxation As Boolean = False, Optional Min
 28830     RunOpenSolver = OpenSolverResult.Unsolved
 28840     Set OpenSolver = New COpenSolver
 28850     OpenSolver.BuildModelFromSolverData
-          If OpenSolver.Solver Like "PuLP" Or OpenSolver.Solver Like "*Cou*" Or OpenSolver.Solver Like "*Bon*" Then
+          If UsesTokeniser(OpenSolver.Solver) Then
               GoTo Tokeniser
           End If
 28860     RunOpenSolver = OpenSolver.SolveModel(SolveRelaxation)

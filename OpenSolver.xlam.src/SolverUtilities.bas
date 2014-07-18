@@ -94,6 +94,15 @@ Function RunsOnNeos(Solver As String) As Boolean
     End If
 End Function
 
+Function UsesTokeniser(Solver As String) As Boolean
+    Select Case Solver
+    Case "PuLP", "NeosBon", "NeosCou"
+        UsesTokeniser = True
+    Case Else
+        UsesTokeniser = False
+    End Select
+End Function
+
 Function GetExtraParameters(Solver As String, sheet As Worksheet, errorString As String) As String
     Select Case Solver
     Case "CBC"
