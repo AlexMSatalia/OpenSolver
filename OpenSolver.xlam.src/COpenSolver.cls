@@ -2703,18 +2703,6 @@ End Sub
 '        End If
 'End Function
 
-Function ReadModel(Solver As String, SolutionFilePathName As String, errorString As String) As Boolean
-    Select Case Solver
-    Case "CBC"
-        ReadModel = ReadModel_CBC(SolutionFilePathName, errorString)
-    Case "Gurobi"
-        ReadModel = ReadModel_Gurobi(SolutionFilePathName, errorString)
-    Case Else
-        ReadModel = False
-        errorString = "The solver " & Solver & " has not yet been incorporated fully into OpenSolver."
-    End Select
-End Function
-
 
 Sub WriteConstraintSensitivityTable(nameSheet As String, Solver As String)
 
