@@ -1356,7 +1356,7 @@ Sub SolveModel_LinearNeos(ModelFilePathName As String, SolveRelaxation As Boolea
     Call WriteAMPLFile(ModelFilePathName, SolveRelaxation, errorString)
      
     Dim solution As String
-    solution = CallNEOS(ModelFilePathName, errorString)
+    solution = CallNEOS(ModelFilePathName, Solver, errorString)
     If errorString <> "" Then
         Exit Sub
     End If
@@ -1817,18 +1817,9 @@ Sub WriteAMPLFile(ModelFilePathName As String, SolveRelaxation As Boolean, error
      commentStart = "#"
 
      Open ModelFilePathName For Output As 1 ' supply path with filename
-     
-     ' XML
-     Print #1, "&lt;document&gt;"
-     Print #1, "&lt;category&gt;milp&lt;/category&gt;"
-     Print #1, "&lt;solver&gt;cbc&lt;/solver&gt;"
-     Print #1, "&lt;inputType&gt;AMPL&lt;/inputType&gt;"
-     Print #1, "&lt;client&gt;&lt;/client&gt;"
-     Print #1, "&lt;priority&gt;short&lt;/priority&gt;"
-     Print #1, "&lt;email&gt;&lt;/email&gt;"
-     
+          
      ' Model File - Replace with Data File
-     Print #1, "&lt;model&gt;&lt;![CDATA[# Define our sets, parameters and variables (with names matching those"
+     Print #1, "# Define our sets, parameters and variables (with names matching those"
      Print #1, "# used in defining the data items)"
      
      ' Variables
@@ -1890,9 +1881,9 @@ Sub WriteAMPLFile(ModelFilePathName As String, SolveRelaxation As Boolean, error
          Line = "var " & ValidLPFileVarName(VarNames(var)) & VarDic.Item(ValidLPFileVarName(VarNames(var)))
          If AssumeNonNegativeVars Then
              If BoundedVariables Is Nothing Then
-                 Line = Line & " &gt;= 0"
+                 Line = Line & " >= 0"
              ElseIf Application.Intersect(Range(VarNames(var)), BoundedVariables) Is Nothing Then
-                 Line = Line & " &gt;= 0"
+                 Line = Line & " >= 0"
              End If
          End If
          Print #1, Line & ";"
@@ -1934,7 +1925,7 @@ Sub WriteAMPLFile(ModelFilePathName As String, SolveRelaxation As Boolean, error
          GetConstraintFromRow row, constraint, instance  ' Which Excel constraint are we in, and which instance?
          If instance = 1 Then
              ' We are outputting the first row of a new Excel constraint block; put a comment in the .lp file
-             Print #1, commentStart & " " & Replace(Replace(ConstraintSummary(constraint), "<", "&lt;"), ">", "&gt;")
+             Print #1, commentStart & " " & ConstraintSummary(constraint)
          End If
          
          ' Gather variables
@@ -1954,9 +1945,9 @@ Sub WriteAMPLFile(ModelFilePathName As String, SolveRelaxation As Boolean, error
             
             ' Check sense
             If Relation(row) = RelationGE Then
-                Line = Line & "&gt;= "
+                Line = Line & ">= "
             ElseIf Relation(row) = RelationLE Then
-                Line = Line & "&lt;= "
+                Line = Line & "<= "
             ElseIf Relation(row) = RelationEQ Then
                 Line = Line & "== "
             End If
@@ -2017,18 +2008,8 @@ Sub WriteAMPLFile(ModelFilePathName As String, SolveRelaxation As Boolean, error
      Next var
      Print #1, "_display solve_result;"
      Print #1,   ' New line
-     Print #1, "end]]&gt;&lt;/model&gt;"
      
-     ' Closing XML
-     Print #1, "&lt;data&gt;&lt;![CDATA[]]&gt;&lt;/data&gt;"
-     Print #1,   ' New line
-     Print #1, "&lt;commands&gt;&lt;![CDATA[]]&gt;&lt;/commands&gt;"
-     Print #1,   ' New line
-     Print #1, "&lt;comments&gt;&lt;![CDATA[]]&gt;&lt;/comments&gt;"
-     Print #1,   ' New line
-     Print #1, "&lt;/document&gt;"
-     
-     Close 1
+     Close #1
 
      Exit Sub
           

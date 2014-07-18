@@ -55,9 +55,9 @@ End Function
 ' operator
 Private Function ConvertRelationToAMPL(ByVal strNameContents As String) As String
     Select Case Mid(strNameContents, 2)
-        Case "1": ConvertRelationToAMPL = " &lt;= "
+        Case "1": ConvertRelationToAMPL = " <= "
         Case "2": ConvertRelationToAMPL = " == "
-        Case "3": ConvertRelationToAMPL = " &gt;= "
+        Case "3": ConvertRelationToAMPL = " >= "
     End Select
 End Function
 '==============================================================================
@@ -131,23 +131,8 @@ Public Sub GenerateFile(m As CModel2, SolverType As String, boolOtherSheetsIndep
             WriteToFile 1, "prob = LpProblem(""opensolver"", LpMinimize)"
         End If
     ElseIf SolverType Like "Neos*" Then
-        ' XML
-        WriteToFile 1, "&lt;document&gt;"
-        WriteToFile 1, "&lt;category&gt;minco&lt;/category&gt;"
-        ' Selected Solver
-        If SolverType Like "*Bon" Then
-            WriteToFile 1, "&lt;solver&gt;Bonmin&lt;/solver&gt;"
-        ElseIf SolverType Like "*Cou" Then
-            WriteToFile 1, "&lt;solver&gt;Couenne&lt;/solver&gt;"
-        End If
-        WriteToFile 1, "&lt;inputType&gt;AMPL&lt;/inputType&gt;"
-        WriteToFile 1, "&lt;client&gt;&lt;/client&gt;"
-        WriteToFile 1, "&lt;priority&gt;short&lt;/priority&gt;"
-        WriteToFile 1, "&lt;email&gt;&lt;/email&gt;"
-         
-        ' Model File
         ' Note - We can use the following code on its own to produce a mod file
-        WriteToFile 1, "&lt;model&gt;&lt;![CDATA[# Define our sets, parameters and variables (with names matching those"
+        WriteToFile 1, "# Define our sets, parameters and variables (with names matching those"
         WriteToFile 1, "# used in defining the data items)"
         
         ' Define useful constants
@@ -185,7 +170,7 @@ Public Sub GenerateFile(m As CModel2, SolverType As String, boolOtherSheetsIndep
         For Each c In m.AdjustableCells
             Line = "var " & ConvertCellToStandardName(c) & IntegerType(ConvertCellToStandardName(c))
             If m.AssumeNonNegative Then
-                Line = Line & " &gt;= 0,"
+                Line = Line & " >= 0,"
             End If
             If VarType(c) = vbEmpty Then
                 Line = Line & " := 0"
@@ -460,14 +445,6 @@ NextCons:
         
         ' Display solving condition
         WriteToFile 1, "display solve_result_num, solve_result;"
-        
-        WriteToFile 1, "end]]&gt;&lt;/model&gt;"
-        
-        ' Closing XML
-        WriteToFile 1, "&lt;data&gt;&lt;![CDATA[]]&gt;&lt;/data&gt;"
-        WriteToFile 1, "&lt;commands&gt;&lt;![CDATA[]]&gt;&lt;/commands&gt;"
-        WriteToFile 1, "&lt;comments&gt;&lt;![CDATA[]]&gt;&lt;/comments&gt;"
-        WriteToFile 1, "&lt;/document&gt;"
     End If
     
     ' Flush and close file handler
@@ -487,7 +464,7 @@ NextCons:
     ElseIf SolverType Like "Neos*" Then
         On Error GoTo ErrHandler
         Application.AutomationSecurity = Office.MsoAutomationSecurity.msoAutomationSecurityForceDisable
-        ExecutionCompleted = SolveModel_TokenNeos(ModelFilePathName, m)
+        ExecutionCompleted = SolveModel_TokenNeos(ModelFilePathName, SolverType, m)
     End If
     
     If Not ExecutionCompleted Then
@@ -1349,9 +1326,9 @@ Function AddNodeIfNew(ByRef objCurNode As CFormula, ByRef c As Range, ByRef rngA
 finishedNode:
 End Function
 
-Function SolveModel_TokenNeos(ModelFilePathName As String, m As CModel2) As Boolean
+Function SolveModel_TokenNeos(ModelFilePathName As String, Solver As String, m As CModel2) As Boolean
     Dim solution As String, errorString As String
-    solution = CallNEOS(ModelFilePathName, errorString)
+    solution = CallNEOS(ModelFilePathName, Solver, errorString)
     If errorString <> "" Then
         MsgBox (errorString)
         SolveModel_TokenNeos = False

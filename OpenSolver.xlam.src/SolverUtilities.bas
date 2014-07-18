@@ -2,7 +2,7 @@ Attribute VB_Name = "SolverUtilities"
 ' Functions that relate to multiple solvers, or delegate to internal solver functions.
 Option Explicit
 Public Const LPFileName As String = "model.lp"
-Public Const XMLFileName As String = "job.xml"
+Public Const XMLFileName As String = "model.ampl"
 Public Const PuLPFileName As String = "opensolver.py"
 
 Function SolverAvailable(Solver As String, Optional SolverPath As String, Optional errorString As String) As Boolean
@@ -105,6 +105,20 @@ Function RunsOnNeos(Solver As String) As Boolean
         RunsOnNeos = False
     End If
 End Function
+
+Sub GetNeosValues(Solver As String, Category As String, SolverType As String)
+    Select Case Solver
+    Case "NeosCBC"
+        Category = "milp"
+        SolverType = "cbc"
+    Case "NeosBon"
+        Category = "minco"
+        SolverType = "Bonmin"
+    Case "NeosCou"
+        Category = "minco"
+        SolverType = "Couenne"
+    End Select
+End Sub
 
 Function UsesTokeniser(Solver As String) As Boolean
     Select Case Solver

@@ -1,6 +1,6 @@
 Attribute VB_Name = "OpenSolverNeos"
 Option Explicit
-Function CallNEOS(ModelFilePathName As String, errorString As String) As String
+Function CallNEOS(ModelFilePathName As String, Solver As String, errorString As String) As String
      Dim objSvrHTTP As Object 'MSXML2.ServerXMLHTTP
      Dim message As String, txtURL As String
      Dim Done As Boolean, result As String
@@ -18,6 +18,13 @@ Function CallNEOS(ModelFilePathName As String, errorString As String) As String
      Open ModelFilePathName For Input As #1
          message = Input$(LOF(1), 1)
      Close #1
+     
+     ' Wrap in XML for AMPL on NEOS
+     WrapAMPLForNEOS message, Solver
+     
+     ' Clean message up
+     message = Replace(message, "<", "&lt;")
+     message = Replace(message, ">", "&gt;")
      
      ' Set up message as XML
      message = "<methodCall><methodName>submitJob</methodName><params><param><value><string>" _
@@ -150,4 +157,22 @@ Function Stream_BinaryToString(Binary)
      Set BinaryStream = Nothing
 End Function
 
-
+Sub WrapAMPLForNEOS(AmplString As String, Solver As String)
+' Wraps AMPL in the required XML to send to NEOS
+     Dim Category As String, SolverType As String
+     GetNeosValues Solver, Category, SolverType
+     
+     AmplString = _
+        "<document>" & _
+            "<category>" & Category & "</category>" & _
+            "<solver>" & SolverType & "</solver>" & _
+            "<inputType>AMPL</inputType>" & _
+            "<client></client>" & _
+            "<priority>short</priority>" & _
+            "<email></email>" & _
+            "<model><![CDATA[" & AmplString & "end]]></model>" & _
+            "<data><![CDATA[]]></data>" & _
+            "<commands><![CDATA[]]></commands>" & _
+            "<comments><![CDATA[]]></comments>" & _
+        "</document>"
+End Sub
