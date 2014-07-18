@@ -94,108 +94,31 @@ Sub OpenSolver_QuickSolveClickHandler(Optional Control)
 End Sub
 
 Sub OpenSolver_ViewLastModelClickHandler(Optional Control)
-28270     On Error GoTo errorHandler
-28280     If Not FileOrDirExists(GetModelFullPath) Then
-28290         MsgBox "Error: There is no model .lp file (" & GetModelFullPath & ") to open. Please solve the model using one of the linear solvers within OpenSolver, and then try again.", , "OpenSolver" & sOpenSolverVersion & " Error"
-28300     Else
-              ' Check that there is no workbook open with the same name
-              Dim w As Workbook
-28310         On Error Resume Next
-28320         Set w = Workbooks(GetModelFileName)
-28330         On Error GoTo errorHandler
-              ' If w Is Nothing Then
-28340             Workbooks.Open FileName:=GetModelFullPath, ReadOnly:=True ' , Format:=Tabs
-                  'Workbooks.OpenText Filename:=GetModelFullPath, Origin:=xlMSDOS _
-                      , StartRow:=1, DataType:=xlFixedWidth, FieldInfo:=Array(0, 2), TrailingMinusNumbers:=True, Read
-              'Else
-              '    msgbox "Error: A model file is already open. Please close the '" & GetModelFileName & "' workbook and try again."
-              'End If
-28350     End If
-ExitSub:
-28360     Exit Sub
-errorHandler:
-28370     MsgBox "OpenSolver encountered error " & Err.Number & ":" & vbCrLf & Err.Description & IIf(Erl = 0, "", " (at line " & Erl & ")") & vbCrLf & "Source = " & Err.Source, , "OpenSolver Code Error"
-28380     Resume ExitSub
+          Dim notFoundMessage As String, FilePath As String
+          FilePath = GetTempFilePath(LPFileName)
+          notFoundMessage = "Error: There is no LP file (" & FilePath & ") to open. Please solve the model using one of the linear solvers within OpenSolver, and then try again."
+          OpenFile FilePath, notFoundMessage
 End Sub
 
 Sub OpenSolver_ViewLogFile(Optional Control)
-28390     On Error GoTo errorHandler
-          Dim logPath As String
-28400     logPath = GetTempFolder & "log1.tmp"
-28410     If Not FileOrDirExists(logPath) Then
-28420         MsgBox "Error: There is no log file (" & logPath & ") to open. Please re-solve the OpenSolver model, and then try again.", , "OpenSolver" & sOpenSolverVersion & " Error"
-28430     Else
-              ' Check that there is no workbook open with the same name
-              Dim w As Workbook
-28440         On Error Resume Next
-28450         Set w = Workbooks("log1.tmp")
-28460         On Error GoTo errorHandler
-              ' If w Is Nothing Then
-28470         Workbooks.Open FileName:=logPath, ReadOnly:=True ' , Format:=Tabs
-                  'Workbooks.OpenText Filename:=GetModelFullPath, Origin:=xlMSDOS _
-                      , StartRow:=1, DataType:=xlFixedWidth, FieldInfo:=Array(0, 2), TrailingMinusNumbers:=True, Read
-              'Else
-              '    msgbox "Error: A model file is already open. Please close the '" & GetModelFileName & "' workbook and try again."
-              'End If
-28480     End If
-ExitSub:
-28490     Exit Sub
-errorHandler:
-28500     MsgBox "OpenSolver encountered error " & Err.Number & ":" & vbCrLf & Err.Description & IIf(Erl = 0, "", " (at line " & Erl & ")") & vbCrLf & "Source = " & Err.Source, , "OpenSolver Code Error"
+          Dim notFoundMessage As String, FilePath As String
+          FilePath = GetTempFilePath("log1.tmp")
+          notFoundMessage = "Error: There is no log file (" & FilePath & ") to open. Please re-solve the OpenSolver model, and then try again."
+          OpenFile FilePath, notFoundMessage
 End Sub
 
 Sub OpenSolver_ViewLastSolutionClickHandler(Optional Control)
-28510     On Error GoTo errorHandler
-28520     If Not FileOrDirExists(GetSolutionFullPath) Then
-28530         MsgBox "Error: There is no solution file (" & GetSolutionFullPath & ") to open. Please solve the model using the CBC solver for OpenSolver, and then try again. Or if you solved your model using a different solver try opening that file instead.", , "OpenSolver" & sOpenSolverVersion & " Error"
-28540     Else
-              ' Check that there is no workbook open with the same name
-              Dim w As Workbook
-28550         On Error Resume Next
-28560         Set w = Workbooks(GetSolutionFileName)
-28570         On Error GoTo errorHandler
-              'If w Is Nothing Then
-28580             Workbooks.Open FileName:=GetSolutionFullPath, ReadOnly:=True
-                  ' Workbooks.OpenText Filename:=GetSolutionFullPath, Origin:=xlMSDOS _
-                      , StartRow:=1, DataType:=xlFixedWidth, FieldInfo:=Array(0, 2), TrailingMinusNumbers:=True
-              'Else
-              '    msgbox "Error: A solution file is already open. Please close the '" & GetSolutionFileName & "' workbook and try again."
-              'End If
-28590     End If
-ExitSub:
-28600     Exit Sub
-errorHandler:
-28610     MsgBox "OpenSolver encountered error " & Err.Number & ":" & vbCrLf & Err.Description & IIf(Erl = 0, "", " (at line " & Erl & ")") & vbCrLf & "Source = " & Err.Source, , "OpenSolver Code Error"
-28620     Resume ExitSub
+          Dim notFoundMessage As String, FilePath As String
+          FilePath = SolutionFilePath_CBC()
+          notFoundMessage = "Error: There is no solution file (" & FilePath & ") to open. Please solve the model using the CBC solver for OpenSolver, and then try again. Or if you solved your model using a different solver try opening that file instead."
+          OpenFile FilePath, notFoundMessage
 End Sub
 
 Sub OpenSolver_ViewLastGurobiSolutionClickHandler(Optional Control)
-28630     On Error GoTo errorHandler
-          Dim GurobiSolutionPath As String
-28640     GurobiSolutionPath = Replace(GetSolutionFullPath, ".txt", ".sol")
-28650     If Not FileOrDirExists(GurobiSolutionPath) Then
-28660         MsgBox "Error: There is no solution file (" & GurobiSolutionPath & ") to open. Please solve the model using the Gurobi solver for OpenSolver, and then try again. Or if you solved your model using a different solver try opening that file instead.", , "OpenSolver" & sOpenSolverVersion & " Error"
-28670     Else
-               ' Check that there is no workbook open with the same name
-               Dim w As Workbook
-28680         On Error Resume Next
-              Dim GurobiSolutionName As String
-28690         GurobiSolutionName = Replace(GetSolutionFileName, ".txt", ".sol")
-28700         Set w = Workbooks(GurobiSolutionPath)
-28710         On Error GoTo errorHandler
-               'If w Is Nothing Then
-28720             Workbooks.Open FileName:=GurobiSolutionPath, ReadOnly:=True
-                   ' Workbooks.OpenText Filename:=GetSolutionFullPath, Origin:=xlMSDOS _
-                       , StartRow:=1, DataType:=xlFixedWidth, FieldInfo:=Array(0, 2), TrailingMinusNumbers:=True
-               'Else
-               '    msgbox "Error: A solution file is already open. Please close the '" & GetSolutionFileName & "' workbook and try again."
-               'End If
-28730     End If
-ExitSub:
-28740     Exit Sub
-errorHandler:
-28750     MsgBox "OpenSolver encountered error " & Err.Number & ":" & vbCrLf & Err.Description & IIf(Erl = 0, "", " (at line " & Erl & ")") & vbCrLf & "Source = " & Err.Source, , "OpenSolver Code Error"
-28760     Resume ExitSub
+          Dim notFoundMessage As String, FilePath As String
+          FilePath = SolutionFilePath_Gurobi()
+          notFoundMessage = "Error: There is no solution file (" & FilePath & ") to open. Please solve the model using the Gurobi solver for OpenSolver, and then try again. Or if you solved your model using a different solver try opening that file instead."
+          OpenFile FilePath, notFoundMessage
 End Sub
 
 Sub OpenSolver_OnlineHelp(Optional Control)

@@ -1804,3 +1804,22 @@ Public Sub DeleteFileAndVerify(FilePath As String, errorPrefix As String, errorD
         Err.Raise Number:=OpenSolver_SolveError, Source:=errorPrefix, Description:=errorDesc
     End If
 End Sub
+
+Public Sub OpenFile(FilePath As String, notFoundMessage As String)
+28270     On Error GoTo errorHandler
+28280     If Not FileOrDirExists(FilePath) Then
+28290         MsgBox notFoundMessage, , "OpenSolver" & sOpenSolverVersion & " Error"
+28300     Else
+              ' Check that there is no workbook open with the same name
+              Dim w As Workbook
+28310         On Error Resume Next
+28320         Set w = Workbooks(right(FilePath, InStr(FilePath, PathDelimeter)))
+28330         On Error GoTo errorHandler
+28340         Workbooks.Open FileName:=FilePath, ReadOnly:=True ' , Format:=Tabs
+28350     End If
+ExitSub:
+28360     Exit Sub
+errorHandler:
+28370     MsgBox "OpenSolver encountered error " & Err.Number & ":" & vbCrLf & Err.Description & IIf(Erl = 0, "", " (at line " & Erl & ")") & vbCrLf & "Source = " & Err.Source, , "OpenSolver Code Error"
+28380     Resume ExitSub
+End Sub
