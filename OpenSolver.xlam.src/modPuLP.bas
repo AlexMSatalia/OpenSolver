@@ -98,8 +98,7 @@ Public Sub GenerateFile(m As CModel2, SolverType As String, boolOtherSheetsIndep
     ' Open a file handle
     Close #1
     Dim ModelFileName As String, ModelFilePathName As String
-    ModelFileName = GetModelFileName(True)
-    ModelFilePathName = GetTempFilePath(ModelFileName)
+    ModelFilePathName = ModelFilePath(SolverType)
     
     ' Delete model file, just in case anything goes wrong (and we get left with an old one)
     Close 1
@@ -410,15 +409,10 @@ NextCons:
         WriteToFile 1, "prob.solve()"
         WriteToFile 1, "# Output results"
         
-        Dim SolutionFilePathName As String, SolutionFileName As String
-        SolutionFileName = GetSolutionFileName
-        SolutionFilePathName = GetSolutionFullPath
-        If Dir(SolutionFilePathName) <> "" Then Kill SolutionFilePathName ' delete solution file
-        If Dir(SolutionFilePathName) <> "" Then
-            ' TODO MsgBox ErrorPrefix & "Unable to delete the CBC solver solution file: " & SolutionFilePathName & ". The problem cannot be solved.", , "OpenSolver Error"
-            'GoTo ExitSub
-            Exit Sub
-        End If
+        Dim SolutionFilePathName As String
+        SolutionFilePathName = SolutionFilePath(SolverType)
+        DeleteFileAndVerify SolutionFilePathName, "Writing PuLP file", "Unable to delete the solution file: " & SolutionFilePathName
+        
         WriteToFile 1, "f=open(""" & SolutionFilePathName & """,""w"")"
         For Each c In m.AdjustableCells
             cellName = ConvertCellToStandardName(c)

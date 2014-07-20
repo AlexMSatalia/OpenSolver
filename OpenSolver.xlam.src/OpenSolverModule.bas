@@ -565,26 +565,6 @@ Function FileOrDirExists(pathName As String) As Boolean
     On Error GoTo 0
 End Function
 
-
-Function GetModelFileName(Optional SolveNEOS As Boolean = False, Optional SolvePulp As Boolean = False) As String
-          If SolveNEOS Then
-              GetModelFileName = XMLFileName
-          ElseIf SolvePulp Then
-              GetModelFileName = PuLPFileName
-          Else
-750           GetModelFileName = LPFileName
-          End If
-End Function
-
-Function GetSolutionFileName() As String
-760       GetSolutionFileName = SolutionFileName
-End Function
-
-
-Function GetSolutionFullPath() As String
-780       GetSolutionFullPath = GetTempFolder & GetSolutionFileName
-End Function
-
 Function GetParamRangeName() As String
 790       GetParamRangeName = ParamRangeName
 End Function

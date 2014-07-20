@@ -1460,9 +1460,8 @@ Sub SolveModel_LinearLocal(ModelFilePathName As String, SolveRelaxation As Boole
 12860             Err.Raise Number:=OpenSolver_SolveError, Source:=errorPrefix, Description:=errorString
 12870         End If
               
-              Dim SolutionFilePathName As String, SolutionFileName As String
-13000         SolutionFileName = GetSolutionFileName
-13010         SolutionFilePathName = GetSolutionFullPath
+              Dim SolutionFilePathName As String
+13010         SolutionFilePathName = SolutionFilePath(Solver)
          
 13020         ExternalSolverPathName = CreateSolveScript(Solver, SolutionFilePathName, ExtraParametersString, SolveOptions)
 '13120         ElseIf Solver = "cplex.exe" Then
