@@ -538,11 +538,20 @@ Private Sub cmdBuild_Click()
           '----------------------------------------------------------------
           ' Display on screen
 45050     If chkShowModel.value = True Then OpenSolverVisualizer.ShowSolverModel
+          On Error GoTo CalculateFailed
 45060     Application.Calculate
+          On Error GoTo errorHandler
           '----------------------------------------------------------------
           ' Finish
 45070     Me.Hide
 45080     Exit Sub
+
+          '----------------------------------------------------------------
+CalculateFailed:
+          ' Application.Calculate failed. Ignore error and try again
+          On Error GoTo errorHandler
+          Application.Calculate
+          Resume Next
           
           '----------------------------------------------------------------
 BadObjRef:
