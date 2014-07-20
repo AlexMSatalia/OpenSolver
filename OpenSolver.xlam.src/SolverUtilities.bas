@@ -2,7 +2,7 @@ Attribute VB_Name = "SolverUtilities"
 ' Functions that relate to multiple solvers, or delegate to internal solver functions.
 Option Explicit
 Public Const LPFileName As String = "model.lp"
-Public Const XMLFileName As String = "model.ampl"
+Public Const AMPLFileName As String = "model.ampl"
 Public Const PuLPFileName As String = "opensolver.py"
 
 Function SolverAvailable(Solver As String, Optional SolverPath As String, Optional errorString As String) As Boolean
@@ -82,7 +82,7 @@ Function ModelFile(Solver As String) As String
         ' See http://lpsolve.sourceforge.net/5.5/CPLEX-format.htm
         ModelFile = LPFileName
     Case "NeosCBC", "NeosCou", "NeosBon"
-        ModelFile = XMLFileName
+        ModelFile = AMPLFileName
     Case "PuLP"
         ModelFile = PuLPFileName
     Case Else

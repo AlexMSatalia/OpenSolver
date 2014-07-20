@@ -100,6 +100,13 @@ Sub OpenSolver_ViewLastModelClickHandler(Optional Control)
           OpenFile FilePath, notFoundMessage
 End Sub
 
+Sub OpenSolver_ViewLastAmplClickHandler(Optional Control)
+          Dim notFoundMessage As String, FilePath As String
+          FilePath = GetTempFilePath(AMPLFileName)
+          notFoundMessage = "Error: There is no AMPL file (" & FilePath & ") to open. Please solve the model using one of the NEOS solvers within OpenSolver, and then try again."
+          OpenFile FilePath, notFoundMessage
+End Sub
+
 Sub OpenSolver_ViewLogFile(Optional Control)
           Dim notFoundMessage As String, FilePath As String
           FilePath = GetTempFilePath("log1.tmp")
