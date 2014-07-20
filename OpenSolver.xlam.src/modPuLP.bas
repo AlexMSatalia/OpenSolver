@@ -457,7 +457,6 @@ NextCons:
         Exit Sub
     ElseIf SolverType Like "Neos*" Then
         On Error GoTo ErrHandler
-        Application.AutomationSecurity = Office.MsoAutomationSecurity.msoAutomationSecurityForceDisable
         ExecutionCompleted = SolveModel_TokenNeos(ModelFilePathName, SolverType, m)
     End If
     
