@@ -2969,6 +2969,9 @@ Function getValuesOS() As Variant
           ' TODO: fix this to set it based on amount of violation to hunt for feasibility
           If ObjRange Is Nothing Then
               y(1, 1) = 0
+          ' If objective cell is error, report this directly to NOMAD. Attempting to manipulate it can cause errors
+          ElseIf VarType(ObjRange.Value2) = vbError Then
+              y(1, 1) = ObjRange.Value2
           'If objective sense is maximise then multiply by minus 1
 24820     ElseIf ObjectiveSense = MaximiseObjective Then
 24830         If ObjRange.Value2 <> 0 Then
