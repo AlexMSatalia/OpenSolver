@@ -80,10 +80,16 @@ End Function
 Function SolverAvailable_CBC(Optional SolverPath As String, Optional errorString As String) As Boolean
 ' Returns true if CBC is available and sets SolverPath
     SolverPath = SolverFilePath_CBC(errorString)
-    If SolverPath <> "" Then
-        SolverAvailable_CBC = True
-    Else
+    If SolverPath = "" Then
         SolverAvailable_CBC = False
+    Else
+        SolverAvailable_CBC = True
+
+#If Mac Then
+        ' Make sure cbc is executable on Mac
+        system ("chmod +x " & ConvertHfsPath(SolverPath))
+#End If
+    
     End If
 End Function
 
