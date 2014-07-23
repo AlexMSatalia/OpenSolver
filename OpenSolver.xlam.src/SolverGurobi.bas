@@ -1,8 +1,5 @@
 Attribute VB_Name = "SolverGurobi"
-
 Option Explicit
-Public OpenSolver_Gurobi As COpenSolver 'Access to model
-Public SparseA_Gurobi() As CIndexedCoeffs 'Access to sparse A matrix
 
 Public Const SolverTitle_Gurobi = "Gurobi (Linear Solver)"
 Public Const SolverDesc_Gurobi = "Gurobi is a solver for linear programming (LP), quadratic and quadratically constrained programming (QP and QCP), and mixed-integer programming (MILP, MIQP, and MIQCP). It requires the user to download and install a version of the Gurobi and to have GurobiOSRun.py in the OpenSolver directory."
@@ -191,7 +188,7 @@ Function CreateSolveScript_Gurobi(SolutionFilePathName As String, ExtraParameter
 End Function
 
 
-Function ReadModel_Gurobi(SolutionFilePathName As String, errorString As String) As Boolean
+Function ReadModel_Gurobi(SolutionFilePathName As String, errorString As String, s As COpenSolver) As Boolean
           
 19570     ReadModel_Gurobi = False
           Dim Line As String, index As Integer
@@ -211,44 +208,44 @@ Function ReadModel_Gurobi(SolutionFilePathName As String, errorString As String)
           'Get the returned status code from gurobi.
           'List of return codes can be seen at - http://www.gurobi.com/documentation/5.1/reference-manual/node865#sec:StatusCodes
 19620     If Line = GurobiResult.Optimal Then
-19630         OpenSolver_Gurobi.SolveStatus = OpenSolverResult.Optimal
-19640         OpenSolver_Gurobi.SolveStatusString = "Optimal"
-19650         OpenSolver_Gurobi.LinearSolveStatus = LinearSolveResult.Optimal
+19630         s.SolveStatus = OpenSolverResult.Optimal
+19640         s.SolveStatusString = "Optimal"
+19650         s.LinearSolveStatus = LinearSolveResult.Optimal
 19660     ElseIf Line = GurobiResult.Infeasible Then
-19670         OpenSolver_Gurobi.SolveStatus = OpenSolverResult.Infeasible
-19680         OpenSolver_Gurobi.SolveStatusString = "No Feasible Solution"
+19670         s.SolveStatus = OpenSolverResult.Infeasible
+19680         s.SolveStatusString = "No Feasible Solution"
 19690         solutionExpected = False
-19700         OpenSolver_Gurobi.LinearSolveStatus = LinearSolveResult.Infeasible
+19700         s.LinearSolveStatus = LinearSolveResult.Infeasible
 19710     ElseIf Line = GurobiResult.InfOrUnbound Then
-19720         OpenSolver_Gurobi.SolveStatus = OpenSolverResult.Unbounded
-19730         OpenSolver_Gurobi.SolveStatusString = "No Solution Found (Infeasible or Unbounded)"
+19720         s.SolveStatus = OpenSolverResult.Unbounded
+19730         s.SolveStatusString = "No Solution Found (Infeasible or Unbounded)"
 19740         solutionExpected = False
-19750         OpenSolver_Gurobi.LinearSolveStatus = LinearSolveResult.Unbounded
+19750         s.LinearSolveStatus = LinearSolveResult.Unbounded
 19760     ElseIf Line = GurobiResult.Unbounded Then
-19770         OpenSolver_Gurobi.SolveStatus = OpenSolverResult.Unbounded
-19780         OpenSolver_Gurobi.SolveStatusString = "No Solution Found (Unbounded)"
+19770         s.SolveStatus = OpenSolverResult.Unbounded
+19780         s.SolveStatusString = "No Solution Found (Unbounded)"
 19790         solutionExpected = False
-19800         OpenSolver_Gurobi.LinearSolveStatus = LinearSolveResult.Unbounded
+19800         s.LinearSolveStatus = LinearSolveResult.Unbounded
 19810     ElseIf Line = GurobiResult.SolveStoppedTime Then
-19820         OpenSolver_Gurobi.SolveStatus = OpenSolverResult.TimeLimitedSubOptimal
-19830         OpenSolver_Gurobi.SolveStatusString = "Stopped on Time Limit"
-19840         OpenSolver_Gurobi.LinearSolveStatus = LinearSolveResult.SolveStopped
+19820         s.SolveStatus = OpenSolverResult.TimeLimitedSubOptimal
+19830         s.SolveStatusString = "Stopped on Time Limit"
+19840         s.LinearSolveStatus = LinearSolveResult.SolveStopped
 19850     ElseIf Line = GurobiResult.SolveStoppedIter Then
-19860         OpenSolver_Gurobi.SolveStatus = OpenSolverResult.TimeLimitedSubOptimal
-19870         OpenSolver_Gurobi.SolveStatusString = "Stopped on Iteration Limit"
-19880         OpenSolver_Gurobi.LinearSolveStatus = LinearSolveResult.SolveStopped
+19860         s.SolveStatus = OpenSolverResult.TimeLimitedSubOptimal
+19870         s.SolveStatusString = "Stopped on Iteration Limit"
+19880         s.LinearSolveStatus = LinearSolveResult.SolveStopped
 19890     ElseIf Line = GurobiResult.SolveStoppedUser Then
-19900         OpenSolver_Gurobi.SolveStatus = OpenSolverResult.TimeLimitedSubOptimal
-19910         OpenSolver_Gurobi.SolveStatusString = "Stopped on Ctrl-C"
-19920         OpenSolver_Gurobi.LinearSolveStatus = LinearSolveResult.SolveStopped
+19900         s.SolveStatus = OpenSolverResult.TimeLimitedSubOptimal
+19910         s.SolveStatusString = "Stopped on Ctrl-C"
+19920         s.LinearSolveStatus = LinearSolveResult.SolveStopped
 19930     ElseIf Line = GurobiResult.Unsolved Then
-19940         OpenSolver_Gurobi.SolveStatus = OpenSolverResult.TimeLimitedSubOptimal
-19950         OpenSolver_Gurobi.SolveStatusString = "Stopped on Gurobi Numerical difficulties"
-19960         OpenSolver_Gurobi.LinearSolveStatus = LinearSolveResult.SolveStopped
+19940         s.SolveStatus = OpenSolverResult.TimeLimitedSubOptimal
+19950         s.SolveStatusString = "Stopped on Gurobi Numerical difficulties"
+19960         s.LinearSolveStatus = LinearSolveResult.SolveStopped
 19970     ElseIf Line = GurobiResult.SubOptimal Then
-19980         OpenSolver_Gurobi.SolveStatus = OpenSolverResult.TimeLimitedSubOptimal
-19990         OpenSolver_Gurobi.SolveStatusString = "Unable to satisfy optimality tolerances; a sub-optimal solution is available."
-20000         OpenSolver_Gurobi.LinearSolveStatus = LinearSolveResult.SolveStopped
+19980         s.SolveStatus = OpenSolverResult.TimeLimitedSubOptimal
+19990         s.SolveStatusString = "Unable to satisfy optimality tolerances; a sub-optimal solution is available."
+20000         s.LinearSolveStatus = LinearSolveResult.SolveStopped
 20010     Else
 20020         errorString = "The response from the Gurobi solver is not recognised. The response was: " & Line
 20030         GoTo readError
@@ -266,26 +263,26 @@ Function ReadModel_Gurobi(SolutionFilePathName As String, errorString As String)
 20110             While Not EOF(1)
 20120                 Line Input #1, Line
 20130                 index = InStr(Line, " ")
-20160                 OpenSolver_Gurobi.FinalVarValueP(i) = Val(right(Line, Len(Line) - index))
+20160                 s.FinalVarValueP(i) = Val(right(Line, Len(Line) - index))
                       'Get the variable name
-20170                 OpenSolver_Gurobi.VarCellP(i) = left(Line, index - 1)
-20180                 If left(OpenSolver_Gurobi.VarCellP(i), 1) = "_" Then
+20170                 s.VarCellP(i) = left(Line, index - 1)
+20180                 If left(s.VarCellP(i), 1) = "_" Then
                           ' Strip any _ character added to make a valid name
-                          OpenSolver_Gurobi.VarCellP(i) = Mid(OpenSolver_Gurobi.VarCellP(i), 2)
+                          s.VarCellP(i) = Mid(s.VarCellP(i), 2)
 20190                 End If
                       ' Save number of vars read
                       NumVar = i
                       i = i + 1
 20200             Wend
 20210         End If
-20220         OpenSolver_Gurobi.AdjustableCells.Value2 = 0
+20220         s.AdjustableCells.Value2 = 0
               Dim j As Integer
 20240         For i = 1 To NumVar
                   ' Need to make sure number is in US locale when Value2 is set
-20250             OpenSolver_Gurobi.AdjustableCells.Worksheet.Range(OpenSolver_Gurobi.VarCellP(i)).Value2 = ConvertFromCurrentLocale(OpenSolver_Gurobi.FinalVarValueP(i))
+20250             s.AdjustableCells.Worksheet.Range(s.VarCellP(i)).Value2 = ConvertFromCurrentLocale(s.FinalVarValueP(i))
 20260         Next i
               
-20270         If OpenSolver_Gurobi.bGetDuals Then
+20270         If s.bGetDuals Then
 20350             Open Replace(SolutionFilePathName, "modelsolution", "sensitivityData") For Input As 2
                   Dim index2 As Integer
                   Dim Stuff() As String
@@ -301,12 +298,12 @@ Function ReadModel_Gurobi(SolutionFilePathName As String, errorString As String)
 20450                     End If
 20460                     Line = Mid(Line, index2 + 1)
 20470                 Next j
-20480                 OpenSolver_Gurobi.ReducedCostsP(i) = Stuff(1)
-20490                 OpenSolver_Gurobi.IncreaseVarP(i) = Stuff(3) - OpenSolver_Gurobi.CostCoeffsP(i)
-20500                 OpenSolver_Gurobi.DecreaseVarP(i) = OpenSolver_Gurobi.CostCoeffsP(i) - Stuff(2)
+20480                 s.ReducedCostsP(i) = Stuff(1)
+20490                 s.IncreaseVarP(i) = Stuff(3) - s.CostCoeffsP(i)
+20500                 s.DecreaseVarP(i) = s.CostCoeffsP(i) - Stuff(2)
 20510             Next i
 20520             ReDim Stuff(5)
-20530             For i = 1 To OpenSolver_Gurobi.NumRows
+20530             For i = 1 To s.NumRows
 20540                 Line Input #2, Line
 20550                 For j = 1 To 5
 20560                     index2 = InStr(Line, ",")
@@ -317,10 +314,10 @@ Function ReadModel_Gurobi(SolutionFilePathName As String, errorString As String)
 20610                     End If
 20620                     Line = Mid(Line, index2 + 1)
 20630                 Next j
-20640                 OpenSolver_Gurobi.ShadowPriceP(i) = Stuff(1)
-20650                 OpenSolver_Gurobi.IncreaseConP(i) = Stuff(5) - Stuff(2)
-20660                 OpenSolver_Gurobi.DecreaseConP(i) = Stuff(2) - Stuff(4)
-20670                 OpenSolver_Gurobi.FinalValueP(i) = Stuff(2) - Stuff(3)
+20640                 s.ShadowPriceP(i) = Stuff(1)
+20650                 s.IncreaseConP(i) = Stuff(5) - Stuff(2)
+20660                 s.DecreaseConP(i) = Stuff(2) - Stuff(4)
+20670                 s.FinalValueP(i) = Stuff(2) - Stuff(3)
 20680             Next i
 20690         End If
 20700         ReadModel_Gurobi = True

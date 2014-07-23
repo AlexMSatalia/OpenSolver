@@ -1,12 +1,10 @@
 Attribute VB_Name = "SolverNOMAD"
-Public OpenSolver_NOMAD As COpenSolver
+Public OS As COpenSolver
 
 Public Const SolverTitle_NOMAD = "NOMAD (Non-linear Solver)"
 Public Const SolverDesc_NOMAD = "Nomad (Nonsmooth Optimization by Mesh Adaptive Direct search) is a C++ implementation of the Mesh Adaptive Direct Search (Mads) algorithm that solves non-linear problems. It works by updating the values on the sheet and passing them to the C++ solver. Like many non-linear solvers NOMAD cannot guarantee optimality of its solutions."
 Public Const SolverLink_NOMAD = "http://www.gerad.ca/nomad/Project/Home.html"
 Public Const SolverType_NOMAD = OpenSolver_SolverType.NonLinear
-
-
 
 #If Win64 Then
 Public Const NomadDllName = "OpenSolverNomadDll64.dll"
@@ -115,12 +113,12 @@ Function DllPath_NOMAD() As String
     GetExistingFilePathName ThisWorkbook.Path, NomadDllName, DllPath_NOMAD
 End Function
 
-Function SolveModel_Nomad(SolveRelaxation As Boolean) As Integer
+Function SolveModel_Nomad(SolveRelaxation As Boolean, s As COpenSolver) As Integer
           Dim ScreenStatus As Boolean
 48140     ScreenStatus = Application.ScreenUpdating
-          Dim s As String
-48150     If GetNameValueIfExists(ActiveWorkbook, "'" & Replace(ActiveSheet.Name, "'", "''") & "'!solver_sho", s) Then
-48160         If s <> 1 Then Application.ScreenUpdating = False
+          Dim Show As String
+48150     If GetNameValueIfExists(ActiveWorkbook, "'" & Replace(ActiveSheet.Name, "'", "''") & "'!solver_sho", Show) Then
+48160         If Show <> 1 Then Application.ScreenUpdating = False
 48170     End If
           
           Dim oldCalculationMode As Integer
@@ -145,6 +143,9 @@ Function SolveModel_Nomad(SolveRelaxation As Boolean) As Integer
 
 48270     SetCurrentDirectory ThisWorkbook.Path
           
+          ' Set OS for the calls back into Excel from NOMAD
+          Set OS = s
+          
           ' We need to call NomadMain directly rather than use Application.Run .
           ' Using Application.Run causes the API calls inside the DLL to fail on 64 bit Office
 48330     NomadRetVal = NomadMain(SolveRelaxation)
@@ -153,32 +154,32 @@ Function SolveModel_Nomad(SolveRelaxation As Boolean) As Integer
 48370     If NomadRetVal = 1 Then
 48380         Err.Raise Number:=OpenSolver_NomadError, Source:=errorPrefix, Description:="There " _
                 & "was an error while Nomad was solving. No solution has been loaded into the sheet."
-48390         OpenSolver_NOMAD.SolveStatus = ErrorOccurred
+48390         s.SolveStatus = ErrorOccurred
 48400     ElseIf NomadRetVal = 2 Then
 48410         Err.Raise Number:=OpenSolver_NomadError, Source:=errorPrefix, Description:="Nomad reached " _
                 & "the maximum number of iterations and returned the best feasible solution it found. This " _
                 & "solution is not guaranteed to be an optimal solution." & vbCrLf & vbCrLf & "You can increase " _
                 & "the maximum time and iterations under the options in the model dialogue or check whether your model is feasible."
-48420         OpenSolver_NOMAD.SolveStatus = -1 'Unsolved
+48420         s.SolveStatus = -1 'Unsolved
 48430     ElseIf NomadRetVal = 3 Then
 48440         Err.Raise Number:=OpenSolver_NomadError, Source:=errorPrefix, Description:="Nomad reached the " _
                 & "maximum time and returned the best feasible solution it found. This solution is not " _
                 & "guaranteed to be an optimal solution." & vbCrLf & vbCrLf & "You can increase the maximum " _
                 & "time and iterations under the options in the model dialogue or check whether your model is feasible."
-48450         OpenSolver_NOMAD.SolveStatus = TimeLimitedSubOptimal
+48450         s.SolveStatus = TimeLimitedSubOptimal
 48460     ElseIf NomadRetVal = 4 Then
 48470         Err.Raise Number:=OpenSolver_NomadError, Source:=errorPrefix, Description:="Nomad reached the maximum time " _
                 & "or number of iterations without finding a feasible solution. The best infeasible solution has been returned " _
                 & "to the sheet." & vbCrLf & vbCrLf & "You can increase the maximum time and iterations under the options in the " _
                 & "model dialogue or check whether your model is feasible."
-48480         OpenSolver_NOMAD.SolveStatus = 5 'infeasible
+48480         s.SolveStatus = 5 'infeasible
 48490     ElseIf NomadRetVal = 10 Then
 48500         Err.Raise Number:=OpenSolver_NomadError, Source:=errorPrefix, Description:="Nomad could not find a feasible solution. " _
                 & "The best infeasible solution has been returned to the sheet." & vbCrLf & vbCrLf & "Try resolving at a different start point or check whether your model " _
                 & "is feasible or relax some of your constraints."
-48510         OpenSolver_NOMAD.SolveStatus = 5 'infeasible
+48510         s.SolveStatus = 5 'infeasible
 48520     Else
-48530         OpenSolver_NOMAD.SolveStatus = NomadRetVal 'optimal
+48530         s.SolveStatus = NomadRetVal 'optimal
 48540     End If
           
 ExitSub:
@@ -192,7 +193,7 @@ ExitSub:
 48600     Application.Calculate
 48610     Application.ScreenUpdating = ScreenStatus
 48620     Close #1 ' Close any open file; this does not seem to ever give errors
-48630     SolveModel_Nomad = OpenSolver_NOMAD.SolveStatus    ' Return the main result
+48630     SolveModel_Nomad = s.SolveStatus    ' Return the main result
 48650     Exit Function
           
 errorHandler:
@@ -230,11 +231,11 @@ ErrorExit:
 End Function
 
 Function updateVar(X As Variant)
-48870     OpenSolver_NOMAD.updateVarOS (X)
+48870     OS.updateVarOS (X)
 End Function
 
 Function getValues() As Variant
-48880     getValues = OpenSolver_NOMAD.getValuesOS()
+48880     getValues = OS.getValuesOS()
 End Function
 
 Sub RecalculateValues()
@@ -242,18 +243,18 @@ Sub RecalculateValues()
 End Sub
 
 Function getNumVariables() As Variant
-48900     getNumVariables = OpenSolver_NOMAD.getNumVariablesOS
+48900     getNumVariables = OS.getNumVariablesOS
 End Function
 
 Function getNumConstraints() As Variant
-48910     getNumConstraints = OpenSolver_NOMAD.getNumConstraintsOS
+48910     getNumConstraints = OS.getNumConstraintsOS
 End Function
 
 Function getVariableData() As Variant
-48920     getVariableData = OpenSolver_NOMAD.getVariableDataOS()
+48920     getVariableData = OS.getVariableDataOS()
 End Function
 
 Function getOptionData() As Variant
-48930     getOptionData = OpenSolver_NOMAD.getOptionDataOS()
+48930     getOptionData = OS.getOptionDataOS()
 End Function
 

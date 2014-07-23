@@ -1,8 +1,6 @@
 Attribute VB_Name = "SolverCBC"
 
 Option Explicit
-Public OpenSolver_CBC As COpenSolver 'Access to model
-Public SparseA_CBC() As CIndexedCoeffs 'Access to sparse A matrix
 
 Public Const SolverTitle_CBC = "COIN-OR CBC (Linear Solver)"
 Public Const SolverDesc_CBC = "The COIN Branch and Cut solver (CBC) is the default solver for OpenSolver and is an open-source mixed-integer program (MIP) solver written in C++. CBC is an active open-source project led by John Forrest at www.coin-or.org."
@@ -164,33 +162,33 @@ Function GetExtraParameters_CBC(sheet As Worksheet, errorString As String) As St
     GetExtraParameters_CBC = CBCExtraParametersString
 End Function
 
-Function CreateSolveScript_CBC(SolutionFilePathName As String, ExtraParametersString As String, SolveOptions As SolveOptionsType) As String
+Function CreateSolveScript_CBC(SolutionFilePathName As String, ExtraParametersString As String, SolveOptions As SolveOptionsType, s As COpenSolver) As String
     Dim CommandLineRunString As String, PrintingOptionString As String
     ' have to split up the command line as excel couldn't have a string longer than 255 characters??
     CommandLineRunString = " -directory " & ConvertHfsPath(GetTempFolder) _
-                         & " -import """ & ConvertHfsPath(OpenSolver_CBC.ModelFilePathName) & """" _
+                         & " -import """ & ConvertHfsPath(s.ModelFilePathName) & """" _
                          & " -ratioGap " & str(SolveOptions.Tolerance) _
                          & " -seconds " & str(SolveOptions.maxTime) _
                          & ExtraParametersString _
                          & " -solve " _
-                         & IIf(OpenSolver_CBC.bGetDuals, " -printingOptions all ", "") _
+                         & IIf(s.bGetDuals, " -printingOptions all ", "") _
                          & " -solution " & ConvertHfsPath(SolutionFilePathName)
     '-------------------sensitivity analysis-----------------------------------------------------------
     'extra command line option of -printingOptions rhs -solution rhsranges.txt gives the allowable increase for constraint rhs.
     '-this file has the increase as the third input and allowable decrease as the fifth input
     'extra command line option of -printingOptions objective - solution costranges.txt outputs the ranges on the costs to the costranges file
     '-this file has the increase as the fifth input and decrease as the third input
-    PrintingOptionString = IIf(OpenSolver_CBC.bGetDuals, " -printingOptions rhs  -solution " & RHSRangesFile_CBC & " -printingOptions objective -solution " & CostRangesFile_CBC, "")
+    PrintingOptionString = IIf(s.bGetDuals, " -printingOptions rhs  -solution " & RHSRangesFile_CBC & " -printingOptions objective -solution " & CostRangesFile_CBC, "")
                   
     Dim scriptFile As String, scriptFileContents As String
     scriptFile = ScriptFilePath_CBC()
-    scriptFileContents = """" & ConvertHfsPath(OpenSolver_CBC.ExternalSolverPathName) & """" & CommandLineRunString & PrintingOptionString
+    scriptFileContents = """" & ConvertHfsPath(s.ExternalSolverPathName) & """" & CommandLineRunString & PrintingOptionString
     CreateScriptFile scriptFile, scriptFileContents
     
     CreateSolveScript_CBC = scriptFile
 End Function
 
-Function ReadModel_CBC(SolutionFilePathName As String, errorString As String) As Boolean
+Function ReadModel_CBC(SolutionFilePathName As String, errorString As String, s As COpenSolver) As Boolean
           Dim LinearSolveStatusString As String
 20770     ReadModel_CBC = False
 20780     Open SolutionFilePathName For Input As 1 ' supply path with filename
@@ -199,57 +197,57 @@ Function ReadModel_CBC(SolutionFilePathName As String, errorString As String) As
           Dim solutionExpected As Boolean
 20800     solutionExpected = True
 20810     If LinearSolveStatusString Like "Optimal*" Then
-20820         OpenSolver_CBC.SolveStatus = OpenSolverResult.Optimal
-20830         OpenSolver_CBC.SolveStatusString = "Optimal"
-20840         OpenSolver_CBC.LinearSolveStatus = LinearSolveResult.Optimal
+20820         s.SolveStatus = OpenSolverResult.Optimal
+20830         s.SolveStatusString = "Optimal"
+20840         s.LinearSolveStatus = LinearSolveResult.Optimal
               '
 20850     ElseIf LinearSolveStatusString Like "Infeasible*" Then
-20860         OpenSolver_CBC.SolveStatus = OpenSolverResult.Infeasible
-20870         OpenSolver_CBC.SolveStatusString = "No Feasible Solution"
-20880         OpenSolver_CBC.LinearSolveStatus = LinearSolveResult.Infeasible
+20860         s.SolveStatus = OpenSolverResult.Infeasible
+20870         s.SolveStatusString = "No Feasible Solution"
+20880         s.LinearSolveStatus = LinearSolveResult.Infeasible
               '
 20890     ElseIf LinearSolveStatusString Like "Integer infeasible*" Then
-20900         OpenSolver_CBC.SolveStatus = OpenSolverResult.Infeasible
-20910         OpenSolver_CBC.SolveStatusString = "No Feasible Integer Solution"
-20920         OpenSolver_CBC.LinearSolveStatus = LinearSolveResult.IntegerInfeasible
+20900         s.SolveStatus = OpenSolverResult.Infeasible
+20910         s.SolveStatusString = "No Feasible Integer Solution"
+20920         s.LinearSolveStatus = LinearSolveResult.IntegerInfeasible
               '
 20930     ElseIf LinearSolveStatusString Like "Unbounded*" Then
-20940         OpenSolver_CBC.SolveStatus = OpenSolverResult.Unbounded
-20950         OpenSolver_CBC.SolveStatusString = "No Solution Found (Unbounded)"
-20960         OpenSolver_CBC.LinearSolveStatus = LinearSolveResult.Unbounded
+20940         s.SolveStatus = OpenSolverResult.Unbounded
+20950         s.SolveStatusString = "No Solution Found (Unbounded)"
+20960         s.LinearSolveStatus = LinearSolveResult.Unbounded
 20970         solutionExpected = False
               '
 20980     ElseIf LinearSolveStatusString Like "Stopped on time *" Then ' Stopped on iterations or time
-20990         OpenSolver_CBC.SolveStatus = OpenSolverResult.TimeLimitedSubOptimal
-21000         OpenSolver_CBC.SolveStatusString = "Stopped on Time Limit"
+20990         s.SolveStatus = OpenSolverResult.TimeLimitedSubOptimal
+21000         s.SolveStatusString = "Stopped on Time Limit"
 21010         If LinearSolveStatusString Like "*(no integer solution - continuous used)*" Then
-21020             OpenSolver_CBC.SolveStatusString = OpenSolver_CBC.SolveStatusString & ": No integer solution found. Fractional solution returned."
+21020             s.SolveStatusString = s.SolveStatusString & ": No integer solution found. Fractional solution returned."
 21030         End If
-21040         OpenSolver_CBC.LinearSolveStatus = LinearSolveResult.SolveStopped
+21040         s.LinearSolveStatus = LinearSolveResult.SolveStopped
               '
 21050     ElseIf LinearSolveStatusString Like "Stopped on iterations*" Then ' Stopped on iterations or time
-21060         OpenSolver_CBC.SolveStatus = OpenSolverResult.TimeLimitedSubOptimal
-21070         OpenSolver_CBC.SolveStatusString = "Stopped on Iteration Limit"
+21060         s.SolveStatus = OpenSolverResult.TimeLimitedSubOptimal
+21070         s.SolveStatusString = "Stopped on Iteration Limit"
 21080         If LinearSolveStatusString Like "*(no integer solution - continuous used)*" Then
-21090             OpenSolver_CBC.SolveStatusString = OpenSolver_CBC.SolveStatusString & ": No integer solution found. Fractional solution returned."
+21090             s.SolveStatusString = s.SolveStatusString & ": No integer solution found. Fractional solution returned."
 21100         End If
-21110         OpenSolver_CBC.LinearSolveStatus = LinearSolveResult.SolveStopped
+21110         s.LinearSolveStatus = LinearSolveResult.SolveStopped
               '
 21120     ElseIf LinearSolveStatusString Like "Stopped on difficulties*" Then ' Stopped on iterations or time
-21130         OpenSolver_CBC.SolveStatus = OpenSolverResult.TimeLimitedSubOptimal
-21140         OpenSolver_CBC.SolveStatusString = "Stopped on CBC difficulties"
+21130         s.SolveStatus = OpenSolverResult.TimeLimitedSubOptimal
+21140         s.SolveStatusString = "Stopped on CBC difficulties"
 21150         If LinearSolveStatusString Like "*(no integer solution - continuous used)*" Then
-21160             OpenSolver_CBC.SolveStatusString = OpenSolver_CBC.SolveStatusString & ": No integer solution found. Fractional solution returned."
+21160             s.SolveStatusString = s.SolveStatusString & ": No integer solution found. Fractional solution returned."
 21170         End If
-21180         OpenSolver_CBC.LinearSolveStatus = LinearSolveResult.SolveStopped
+21180         s.LinearSolveStatus = LinearSolveResult.SolveStopped
               '
 21190     ElseIf LinearSolveStatusString Like "Stopped on ctrl-c*" Then ' Stopped on iterations or time
-21200         OpenSolver_CBC.SolveStatus = OpenSolverResult.TimeLimitedSubOptimal
-21210         OpenSolver_CBC.SolveStatusString = "Stopped on Ctrl-C"
+21200         s.SolveStatus = OpenSolverResult.TimeLimitedSubOptimal
+21210         s.SolveStatusString = "Stopped on Ctrl-C"
 21220         If LinearSolveStatusString Like "*(no integer solution - continuous used)*" Then
-21230             OpenSolver_CBC.SolveStatusString = OpenSolver_CBC.SolveStatusString & ": No integer solution found. Fractional solution returned."
+21230             s.SolveStatusString = s.SolveStatusString & ": No integer solution found. Fractional solution returned."
 21240         End If
-21250         OpenSolver_CBC.LinearSolveStatus = LinearSolveResult.SolveStopped
+21250         s.LinearSolveStatus = LinearSolveResult.SolveStopped
               '
 21260     ElseIf LinearSolveStatusString Like "Status unknown*" Then
 21270         errorString = "CBC solver did not solve the problem, suggesting there was an error in the CBC input parameters. The response was: " & vbCrLf _
@@ -274,7 +272,7 @@ Function ReadModel_CBC(SolutionFilePathName As String, errorString As String) As
               ' We read in whatever solution CBC returned
 21400         Application.StatusBar = "OpenSolver: Loading Solution... " & LinearSolveStatusString
               ' Zero the current decision variables
-21410         OpenSolver_CBC.AdjustableCells.Value2 = 0
+21410         s.AdjustableCells.Value2 = 0
               ' Faster code; put a zero into first adjustable cell, and copy it to all the adjustable cells
               ' AdjustableCells.Cells(0, 0).Value = 0
               ' AdjustableCells.Cells(0, 0).Copy
@@ -285,16 +283,16 @@ Function ReadModel_CBC(SolutionFilePathName As String, errorString As String) As
               ' Lines like:       0 AZ70                  15                      0
               ' ...being? : Index Name Value ReducedCost
               Dim Line As String, SplitLine() As String, index As Double, NameValue As String, value As Double, CBCConstraintIndex As Long
-21420         If OpenSolver_CBC.bGetDuals Then
+21420         If s.bGetDuals Then
                   Dim j As Integer, row As Integer, i As Integer
                   'Dim FinalValue() As String, ShadowPrice() As String
 21430
 21450             j = 1
 21460             CBCConstraintIndex = 0
-21470             For row = 1 To OpenSolver_CBC.NumRows
-21480                 If SparseA_CBC(row).Count = 0 Then
+21470             For row = 1 To s.NumRows
+21480                 If s.GetSparseACount(row) = 0 Then
                           ' This constraint was not written to the model, as it had no coefficients. Just ignore it.
-21490                     OpenSolver_CBC.rConstraintList.Cells(row, 2).ClearContents
+21490                     s.rConstraintList.Cells(row, 2).ClearContents
 21500                 Else
 21510                     Line Input #1, Line
 21520                     SplitLine = Split(Line, " ")    ' 0 indexed; item 0 is the variable index
@@ -323,29 +321,29 @@ Function ReadModel_CBC(SolutionFilePathName As String, errorString As String) As
 21710                     While SplitLine(i) = ""
 21720                         i = i + 1
 21730                     Wend
-21740                     OpenSolver_CBC.FinalValueP(j) = SplitLine(i)
+21740                     s.FinalValueP(j) = SplitLine(i)
                           ' Skip the constraint LHS value - we don't need this
 21750                     i = i + 1
 21760                     While SplitLine(i) = ""
 21770                         i = i + 1
 21780                     Wend
                           ' Get the dual value
-21790                     If OpenSolver_CBC.ObjectiveSense = MaximiseObjective Then
+21790                     If s.ObjectiveSense = MaximiseObjective Then
 21800                         value = -1 * Val(SplitLine(i))
                               'rConstraintList.Cells(row, 2).Value2 = Value
 21810                     Else
 21820                         value = Val(SplitLine(i))
                               'rConstraintList.Cells(row, 2).Value2 = Value
 21830                     End If
-21840                     OpenSolver_CBC.ShadowPriceP(j) = value
-21850                     If InStr(OpenSolver_CBC.ShadowPriceP(j), "E-16") Then
-21860                         OpenSolver_CBC.ShadowPriceP(j) = "0"
+21840                     s.ShadowPriceP(j) = value
+21850                     If InStr(s.ShadowPriceP(j), "E-16") Then
+21860                         s.ShadowPriceP(j) = "0"
 21870                     End If
 21880                     CBCConstraintIndex = CBCConstraintIndex + 1
 21890                     j = j + 1
 21900                 End If
 21910             Next row
-21920             ReadSensitivityData_CBC SolutionFilePathName
+21920             ReadSensitivityData_CBC SolutionFilePathName, s
 21930         End If
             
               ' Now we read in the decision variable values
@@ -376,27 +374,27 @@ Function ReadModel_CBC(SolutionFilePathName As String, errorString As String) As
 22140             While SplitLine(i) = ""
 22150                 i = i + 1
 22160             Wend
-22180             OpenSolver_CBC.FinalVarValueP(j) = Val(SplitLine(i))
+22180             s.FinalVarValueP(j) = Val(SplitLine(i))
                   'Write to the sheet containing the decision variables (which may not be the active sheet)
                   'Value assigned to Value2 must be in US locale
-22190             OpenSolver_CBC.AdjustableCells.Worksheet.Range(NameValue).Value2 = ConvertFromCurrentLocale(OpenSolver_CBC.FinalVarValueP(j))
+22190             s.AdjustableCells.Worksheet.Range(NameValue).Value2 = ConvertFromCurrentLocale(s.FinalVarValueP(j))
                  
                   'ConvertFullLPFileVarNameToRange(name, AdjCellsSheetIndex).Value2 = Value
-22200             If OpenSolver_CBC.bGetDuals Then
+22200             If s.bGetDuals Then
 22210                 i = i + 1
 22220                 While SplitLine(i) = ""
 22230                     i = i + 1
 22240                 Wend
-22250                 If OpenSolver_CBC.ObjectiveSense = MaximiseObjective Then
+22250                 If s.ObjectiveSense = MaximiseObjective Then
 22260                     value = -1 * Val(SplitLine(i))
 22270                 Else
 22280                     value = Val(SplitLine(i))
 22290                 End If
-22320                 OpenSolver_CBC.ReducedCostsP(j) = str(value)
-22330                 If InStr(OpenSolver_CBC.ReducedCostsP(j), "E-16") Then
-22340                     OpenSolver_CBC.ReducedCostsP(j) = "0"
+22320                 s.ReducedCostsP(j) = str(value)
+22330                 If InStr(s.ReducedCostsP(j), "E-16") Then
+22340                     s.ReducedCostsP(j) = "0"
 22350                 End If
-22360                 OpenSolver_CBC.VarCellP(j) = NameValue
+22360                 s.VarCellP(j) = NameValue
 22370             End If
 22380             j = j + 1
 22390         Wend
@@ -405,10 +403,10 @@ Function ReadModel_CBC(SolutionFilePathName As String, errorString As String) As
 22410     Close #1
 22420     ReadModel_CBC = True
 ExitSub:
-          OpenSolver_CBC.LinearSolveStatusString = LinearSolveStatusString
+          s.LinearSolveStatusString = LinearSolveStatusString
 End Function
 
-Sub ReadSensitivityData_CBC(SolutionFilePathName As String)
+Sub ReadSensitivityData_CBC(SolutionFilePathName As String, s As COpenSolver)
           'Reads the two files with the limits on the bounds of shadow prices and reduced costs
 
           Dim RangeFilePathName As String, Stuff(5) As String, index2 As Integer
@@ -431,8 +429,8 @@ Sub ReadSensitivityData_CBC(SolutionFilePathName As String)
 22580             End If
 22590             Line = Mid(Line, index2 + 1)
 22600         Next i
-22610         OpenSolver_CBC.IncreaseConP(j) = Stuff(3)
-22620         OpenSolver_CBC.DecreaseConP(j) = Stuff(5)
+22610         s.IncreaseConP(j) = Stuff(3)
+22620         s.DecreaseConP(j) = Stuff(5)
 22630         j = j + 1
 22640     Wend
 22650     Close 2
@@ -442,7 +440,7 @@ Sub ReadSensitivityData_CBC(SolutionFilePathName As String)
 22670     RangeFilePathName = left(SolutionFilePathName, InStrRev(SolutionFilePathName, PathDelimeter)) & CostRangesFile_CBC
 22680     Open RangeFilePathName For Input As 2 ' supply path with filename
 22690     Line Input #2, Line 'Dont want first line
-22700     row = OpenSolver_CBC.NumRows + 2
+22700     row = s.NumRows + 2
 22710     While Not EOF(2)
 22740         Line Input #2, Line
 22750         For i = 1 To 5
@@ -455,12 +453,12 @@ Sub ReadSensitivityData_CBC(SolutionFilePathName As String)
 22820             End If
 22830             Line = Mid(Line, index2 + 1)
 22840         Next i
-22850         If OpenSolver_CBC.ObjectiveSense = MaximiseObjective Then
-22860             OpenSolver_CBC.IncreaseVarP(j) = Stuff(5)
-22870             OpenSolver_CBC.DecreaseVarP(j) = Stuff(3)
+22850         If s.ObjectiveSense = MaximiseObjective Then
+22860             s.IncreaseVarP(j) = Stuff(5)
+22870             s.DecreaseVarP(j) = Stuff(3)
 22880         Else
-22890             OpenSolver_CBC.IncreaseVarP(j) = Stuff(3)
-22900             OpenSolver_CBC.DecreaseVarP(j) = Stuff(5)
+22890             s.IncreaseVarP(j) = Stuff(3)
+22900             s.DecreaseVarP(j) = Stuff(5)
 22910         End If
 22920         j = j + 1
 22930     Wend

@@ -65,12 +65,12 @@ Sub CleanFiles(errorPrefix)
     CleanFiles_Gurobi (errorPrefix)
 End Sub
 
-Function ReadModel(Solver As String, SolutionFilePathName As String, errorString As String) As Boolean
+Function ReadModel(Solver As String, SolutionFilePathName As String, errorString As String, s As COpenSolver) As Boolean
     Select Case Solver
     Case "CBC"
-        ReadModel = ReadModel_CBC(SolutionFilePathName, errorString)
+        ReadModel = ReadModel_CBC(SolutionFilePathName, errorString, s)
     Case "Gurobi"
-        ReadModel = ReadModel_Gurobi(SolutionFilePathName, errorString)
+        ReadModel = ReadModel_Gurobi(SolutionFilePathName, errorString, s)
     Case Else
         ReadModel = False
         errorString = "The solver " & Solver & " has not yet been incorporated fully into OpenSolver."
@@ -151,23 +151,10 @@ Function GetExtraParameters(Solver As String, sheet As Worksheet, errorString As
     End Select
 End Function
 
-Sub SetOpenSolver(Solver As String, OpenSolver As COpenSolver, SparseA() As CIndexedCoeffs)
+Function CreateSolveScript(Solver As String, SolutionFilePathName As String, ExtraParametersString As String, SolveOptions As SolveOptionsType, s As COpenSolver) As String
     Select Case Solver
     Case "CBC"
-        Set SolverCBC.OpenSolver_CBC = OpenSolver
-        SolverCBC.SparseA_CBC = SparseA
-    Case "Gurobi"
-        Set SolverGurobi.OpenSolver_Gurobi = OpenSolver
-        SolverGurobi.SparseA_Gurobi = SparseA
-    Case "NOMAD"
-        Set SolverNOMAD.OpenSolver_NOMAD = OpenSolver
-    End Select
-End Sub
-
-Function CreateSolveScript(Solver As String, SolutionFilePathName As String, ExtraParametersString As String, SolveOptions As SolveOptionsType) As String
-    Select Case Solver
-    Case "CBC"
-        CreateSolveScript = CreateSolveScript_CBC(SolutionFilePathName, ExtraParametersString, SolveOptions)
+        CreateSolveScript = CreateSolveScript_CBC(SolutionFilePathName, ExtraParametersString, SolveOptions, s)
     Case "Gurobi"
         CreateSolveScript = CreateSolveScript_Gurobi(SolutionFilePathName, ExtraParametersString, SolveOptions)
     End Select

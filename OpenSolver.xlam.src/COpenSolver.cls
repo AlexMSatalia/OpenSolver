@@ -270,6 +270,10 @@ Public Function GetNumRows() As Long
 7050      GetNumRows = NumRows
 End Function
 
+Public Function GetSparseACount(index As Integer) As Integer
+    GetSparseACount = SparseA(index).Count
+End Function
+
 Sub GetConstraintFromRow(row As Long, ByRef constraint As Long, ByRef instance As Long)
           ' Get the Excel constraint that goes with this LP row
           ' The incoming Constraint value will be either 1 or the constraint found on the last call to this
@@ -1157,7 +1161,6 @@ Function SolveModel(SolveRelaxation As Boolean) As Integer
           If Not SolverAvailable(Solver, ExternalSolverPathName) Then
               Err.Raise Number:=OpenSolver_SolveError, Source:=errorPrefix, Description:="The specified solver, " & Solver & " could not be found. Make sure it is correctly installed or try another solver."
           End If
-          SetOpenSolver Solver, Me, SparseA
 
           'Delete any existing log file
           Dim logPath As String
@@ -1173,7 +1176,7 @@ Function SolveModel(SolveRelaxation As Boolean) As Integer
 
 12230     If Solver = "NOMAD" Then
 12240         SolveRelaxedModel = SolveRelaxation
-12260         SolveModel = SolveModel_Nomad(SolveRelaxation)
+12260         SolveModel = SolveModel_Nomad(SolveRelaxation, Me)
 12270     Else
 12280         SolveModel = SolveModel_Linear(SolveRelaxation)
 12290     End If
@@ -1463,7 +1466,7 @@ Sub SolveModel_LinearLocal(ModelFilePathName As String, SolveRelaxation As Boole
               Dim SolutionFilePathName As String
 13010         SolutionFilePathName = SolutionFilePath(Solver)
          
-13020         ExternalSolverPathName = CreateSolveScript(Solver, SolutionFilePathName, ExtraParametersString, SolveOptions)
+13020         ExternalSolverPathName = CreateSolveScript(Solver, SolutionFilePathName, ExtraParametersString, SolveOptions, Me)
 '13120         ElseIf Solver = "cplex.exe" Then
 '13130             CommandLineRunString = """" & GetTempFolder & ModelFilePathName & """" & " write=" & Replace(SolutionFileName, ".txt", ".sol")
 '13140             PrintingOptionString = ""
@@ -1512,7 +1515,7 @@ Sub SolveModel_LinearLocal(ModelFilePathName As String, SolveRelaxation As Boole
 13320             GoTo ExitSub
               End If
               Dim solutionLoaded As Boolean
-13340         solutionLoaded = ReadModel(Solver, SolutionFilePathName, errorString)
+13340         solutionLoaded = ReadModel(Solver, SolutionFilePathName, errorString, Me)
 13350         On Error GoTo errorHandler
 13360         If errorString <> "" Then
 13370             Err.Raise Number:=OpenSolver_SolveError, Source:=errorPrefix, Description:=errorString
