@@ -125,8 +125,6 @@ Dim IncreaseVar() As String
 Dim DecreaseVar() As String
 Dim VarCell() As String
 
-
-
 ' This is the A matrix for our Solver model
 Dim SparseA() As CIndexedCoeffs
 
@@ -511,7 +509,7 @@ Sub BuildModelFromSolverData(Optional LinearityCheckOffset As Double = 0)
 8630      oldCalculationMode = Application.Calculation
 8640      Application.Calculation = xlCalculationManual
           
-          Dim i As Long, j As Long
+          Dim i As Long
 
 8650      Application.ScreenUpdating = False
 8660      Application.Cursor = xlWait
@@ -613,7 +611,6 @@ Sub BuildModelFromSolverData(Optional LinearityCheckOffset As Double = 0)
 9150          GoTo ExitSub
 9160      End If
           ' Objective has a value that is not a number
-          Dim X As Variant
 9170      If VarType(ObjRange.Value2) <> vbDouble Then
 9180          On Error GoTo errorHandler
 9190          If VarType(ObjRange.Value2) = vbError Then
@@ -623,8 +620,8 @@ Sub BuildModelFromSolverData(Optional LinearityCheckOffset As Double = 0)
 9230          End If
 9240          GoTo ExitSub
 9250      End If
-          ' Store the value currently in the
 
+          ' Store the value currently in the objective cell
 9260      ObjRange.Calculate ' This does not always seem to work in that it doesn't track back predecessors; we now do a full re-calc above anyway
 9270      objValue = ObjRange.Value2
 9280      ObjectiveFunctionConstant = ObjRange.Value2
@@ -1236,8 +1233,6 @@ Function SolveModel_Linear(SolveRelaxation As Boolean) As Integer
           
 12610     Application.StatusBar = "OpenSolver: Writing Model to disk... " & numVars & " vars, " & NumRows & " rows."
           
-          Dim i As Long, j As Long, var As Long, row As Long, coeff As Double
-          
           ' If the user has a defined name OpenSolver_ConstraintList, then we need to request duals from the solver
           DualsOnSameSheet = GetNamedRangeIfExistsOnSheet(ActiveSheet, "OpenSolver_Duals", rConstraintList)
           On Error Resume Next
@@ -1554,7 +1549,7 @@ errorHandler:
 
 Sub WriteLPFile(ModelFilePathName As String, SolveRelaxation As Boolean, errorString As String)
 
-          Dim i As Long, j As Long, var As Long, row As Long, coeff As Double, Line As String, Line2 As String, Line3 As String
+          Dim i As Long, j As Long, var As Long, row As Long, coeff As Double
           
 14140     errorString = ""
           Dim commentStart As String  'Character for starting comments for chosen solver
@@ -1809,7 +1804,7 @@ End Sub
 
 Sub WriteAMPLFile(ModelFilePathName As String, SolveRelaxation As Boolean, errorString As String)
 
-     Dim i As Long, j As Long, var As Long, row As Long, coeff As Double, c As Range, Line As String, Line1 As String, Line2 As String, Line3 As String
+     Dim i As Long, j As Long, var As Long, row As Long, coeff As Double, c As Range, Line As String
      Dim VarDic As Collection
      
      Set VarDic = New Collection
@@ -1838,7 +1833,6 @@ Sub WriteAMPLFile(ModelFilePathName As String, SolveRelaxation As Boolean, error
              Next c
          End If
           
-         Line3 = ""
          If Not BinaryCellsRange Is Nothing Then
              For Each c In BinaryCellsRange
                  VarDic.Remove (ValidLPFileVarName(c.Address(RowAbsolute:=False, ColumnAbsolute:=False)))
@@ -2999,7 +2993,6 @@ Function getValuesOS() As Variant
 24970         If Not LHSRange(constraint) Is Nothing Then ' skip Binary and Integer constraints
                   ' Get current value(s) for LHS and RHS of this constraint off the sheet. LHS is always an array (even if 1x1)
 24980             GetCurrentConstraintValues constraint, CurrentLHSValues, CurrentRHSValues
-                  Dim coeff As Double
 24990             If RHSType(constraint) = SolverInputType.MultiCellRange Then
 25000                 For i = 1 To UBound(LHSOriginalValues(constraint), 1)
 25010                     For j = 1 To UBound(LHSOriginalValues(constraint), 2)

@@ -4,8 +4,7 @@ Function CallNEOS(ModelFilePathName As String, Solver As String, errorString As 
      Dim objSvrHTTP As Object 'MSXML2.ServerXMLHTTP
      Dim message As String, txtURL As String
      Dim Done As Boolean, result As String
-     Dim openingParen As String, closingParen As String, jobNumber As String, Password As String, solutionFile As String, solution As String
-     Dim i As Integer, LinearSolveStatusString As String, var As Long
+     Dim openingParen As String, closingParen As String, jobNumber As String, Password As String
      
      ' Server name
      txtURL = "http://www.neos-server.org:3332"

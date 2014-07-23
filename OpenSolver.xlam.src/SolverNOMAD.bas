@@ -120,14 +120,7 @@ Function SolveModel_Nomad(SolveRelaxation As Boolean, s As COpenSolver) As Integ
 48150     If GetNameValueIfExists(ActiveWorkbook, "'" & Replace(ActiveSheet.Name, "'", "''") & "'!solver_sho", Show) Then
 48160         If Show <> 1 Then Application.ScreenUpdating = False
 48170     End If
-          
-          Dim oldCalculationMode As Integer
-48180     oldCalculationMode = Application.Calculation
-48190     Application.Calculation = xlCalculationManual
-          
-          Dim currentDir As String, currentExcelDir As String
-48200     currentDir = CurDir
-          
+
           ' Trap Escape key
 48210     Application.EnableCancelKey = xlErrorHandler
           
@@ -138,16 +131,21 @@ Function SolveModel_Nomad(SolveRelaxation As Boolean, s As COpenSolver) As Integ
 48250         Err.Raise Number:=OpenSolver_NomadError, Source:=errorPrefix, Description:="The model cannot be solved as it has not yet been built."
 48260     End If
           
-          Dim pathName As String
-          Dim NomadRetVal As Long
-
-48270     SetCurrentDirectory ThisWorkbook.Path
-          
           ' Set OS for the calls back into Excel from NOMAD
           Set OS = s
           
+          Dim oldCalculationMode As Integer
+48180     oldCalculationMode = Application.Calculation
+48190     Application.Calculation = xlCalculationManual
+          
+          Dim currentDir As String
+48200     currentDir = CurDir
+          
+48270     SetCurrentDirectory ThisWorkbook.Path
+          
           ' We need to call NomadMain directly rather than use Application.Run .
           ' Using Application.Run causes the API calls inside the DLL to fail on 64 bit Office
+          Dim NomadRetVal As Long
 48330     NomadRetVal = NomadMain(SolveRelaxation)
           
           'Catch any errors that occured while Nomad was solving
@@ -183,9 +181,8 @@ Function SolveModel_Nomad(SolveRelaxation As Boolean, s As COpenSolver) As Integ
 48540     End If
           
 ExitSub:
+          ' We can fall thru to here
 48550     SetCurrentDirectory currentDir
-          'Application.DefaultFilePath = currentExcelDir
-          ' We can fall thru to here, or jump here if the problem is shown to be infeasible before we run the CBC Solver
 48560     Application.Cursor = xlDefault
 48570     Application.StatusBar = False ' Resume normal status bar behaviour
 48580     Application.ScreenUpdating = True

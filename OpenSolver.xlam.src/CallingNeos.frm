@@ -22,11 +22,4 @@ End
 
 End Sub
 
-Private Sub CheckBox1_Click()
-36710     Me.Tag = "Change"
-End Sub
-Private Sub Continue_Click()
-36720     Me.Hide
-End Sub
-
 

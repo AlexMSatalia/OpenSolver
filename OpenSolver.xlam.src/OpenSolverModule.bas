@@ -164,8 +164,6 @@ Const ParamRangeName As String = "OpenSolverModelParameters"
 'CACHE for SearchRange - Saves defined names from user
 Private SearchRangeNameCACHE As Collection  'by ASL 20130126
 
-Public Const SolutionFileName = "modelsolution.txt"    ' CBC writes this file for us to read back in
-
 #If Mac Then
     Public Const PathDelimeter = ":"
     Public Const ScriptExtension = ".sh"
@@ -352,7 +350,7 @@ Private Const ERROR_BAD_FORMAT = 11&
 #If VBA7 Then
    Private Declare PtrSafe Function GetExitCodeProcess Lib "kernel32" (ByVal hProcess As LongPtr, lpExitCode As Long) As Long
 #Else
- '  Private Declare Function GetExitCodeProcess Lib "kernel32" (ByVal hProcess As Long, lpExitCode As Long) As Long
+   Private Declare Function GetExitCodeProcess Lib "kernel32" (ByVal hProcess As Long, lpExitCode As Long) As Long
 #End If
 
 #If VBA7 Then
@@ -1699,11 +1697,6 @@ End Sub
 
 ' ASL NEW FUNCTION 2012-01-23 - Andres Sommerhoff
 Public Function SearchRangeInVisibleNames(r As Range) As Name
-          Dim ret As Name
-          Dim TestName As Name
-          Dim i As Long
-          Dim rComp As Range
-                    
 7020      SearchRangeName_LoadCache r.Parent  'Use a collection as cache. Without cache is a little bit slow.
                                               'To refresh the cache use SearchRangeName_DestroyCache()
 7030      On Error Resume Next
