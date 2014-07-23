@@ -214,7 +214,11 @@ QueryValueExError:
 
 ' See http://support.microsoft.com/kb/145679
 Private Sub CreateNewKey(sNewKeyName As String, lPredefinedKey As Long)
+#If VBA7 Then
+             Dim hNewKey As LongPtr      'handle to the new key
+#Else
              Dim hNewKey As Long         'handle to the new key
+#End If
              Dim lRetVal As Long         'result of the RegCreateKeyEx function
 
 35140        lRetVal = RegCreateKeyEx(lPredefinedKey, sNewKeyName, 0&, _
@@ -226,7 +230,11 @@ End Sub
 ' See http://support.microsoft.com/kb/145679
 Private Sub SetKeyValue(sKeyName As String, sValueName As String, vValueSetting As Variant, lValueType As Long)
           Dim lRetVal As Long         'result of the SetValueEx function
-          Dim hKey As Long         'handle of open key
+#If VBA7 Then
+          Dim hKey As LongPtr      'handle to the open key
+#Else
+          Dim hKey As Long         'handle to the open key
+#End If
 
           'open the specified key
 35160     lRetVal = RegOpenKeyEx(HKEY_CURRENT_USER, sKeyName, 0, _

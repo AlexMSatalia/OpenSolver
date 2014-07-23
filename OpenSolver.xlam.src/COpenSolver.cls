@@ -565,7 +565,7 @@ Sub BuildModelFromSolverData(Optional LinearityCheckOffset As Double = 0)
 8960          End If
 8970      Next AdjCell
           ' Set all the adjustable cells to zero (or a user-specified value) (For linear problems)
-8980      If Solver <> "NOMAD" Then ' TODO: Change to all non-linear
+8980      If SolverType(Solver) = OpenSolver_SolverType.Linear Then
               AdjustableCells.Value2 = LinearityCheckOffset
           End If
           
@@ -3047,12 +3047,12 @@ Sub SetConstraintValueMismatchedDims(ByRef ConstraintValues As Variant, ByRef k 
           ' This is for when the LHS and RHS ranges have mismatched dimensions (m x n and n x m)
           Select Case RelationType
               Case RelationLE
-                  ConstraintValues(k + 1, 1) = DifferenceOrError(CurrentLHSValues(j, i), CurrentRHSValues(i, j))
+                  ConstraintValues(k + 1, 1) = DifferenceOrError(LHSValues(j, i), RHSValues(i, j))
               Case RelationGE
-                  ConstraintValues(k + 1, 1) = DifferenceOrError(CurrentRHSValues(j, i), CurrentLHSValues(i, j))
+                  ConstraintValues(k + 1, 1) = DifferenceOrError(RHSValues(j, i), LHSValues(i, j))
               Case RelationEQ
-                  ConstraintValues(k + 1, 1) = DifferenceOrError(CurrentLHSValues(j, i), CurrentRHSValues(i, j))
-                  ConstraintValues(k + 2, 1) = DifferenceOrError(CurrentRHSValues(j, i), CurrentLHSValues(i, j))
+                  ConstraintValues(k + 1, 1) = DifferenceOrError(LHSValues(j, i), RHSValues(i, j))
+                  ConstraintValues(k + 2, 1) = DifferenceOrError(RHSValues(j, i), LHSValues(i, j))
                   k = k + 1
           End Select
           k = k + 1

@@ -53,6 +53,8 @@ Function SolutionFilePath(Solver As String) As String
         SolutionFilePath = SolutionFilePath_CBC
     Case "Gurobi"
         SolutionFilePath = SolutionFilePath_Gurobi
+    Case "PuLP"
+        SolutionFilePath = SolutionFilePath_PuLP
     Case Else
         SolutionFilePath = ""
     End Select
@@ -120,12 +122,23 @@ Sub GetNeosValues(Solver As String, Category As String, SolverType As String)
     End Select
 End Sub
 
-Function UsesTokeniser(Solver As String) As Boolean
+Function GetAmplSolverValues(Solver As String) As String
+    Select Case Solver
+    Case "NeosCBC"
+        GetAmplSolverValues = "cbc"
+    Case "NeosBon"
+        GetAmplSolverValues = "bonmin"
+    Case "NeosCou"
+        GetAmplSolverValues = "couenne"
+    End Select
+End Function
+
+Function UsesParsedModel(Solver As String) As Boolean
     Select Case Solver
     Case "PuLP", "NeosBon", "NeosCou"
-        UsesTokeniser = True
+        UsesParsedModel = True
     Case Else
-        UsesTokeniser = False
+        UsesParsedModel = False
     End Select
 End Function
 

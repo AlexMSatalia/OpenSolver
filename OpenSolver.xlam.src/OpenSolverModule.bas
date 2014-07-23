@@ -142,6 +142,12 @@ Public Enum ObjectiveSenseType
    TargetObjective = 3   ' Seek a specific value
 End Enum
 
+Public Enum VariableType
+   VarContinuous = 0
+   VarInteger = 1
+   VarBinary = 2
+End Enum
+
 Public Type SolveOptionsType
     maxTime As Double ' "MaxTime"=Max run time in seconds
     MaxIterations As Long ' "Iterations" = max number of branch and bound nodes?
@@ -1802,4 +1808,28 @@ ExitSub:
 errorHandler:
 28370     MsgBox "OpenSolver encountered error " & Err.Number & ":" & vbCrLf & Err.Description & IIf(Erl = 0, "", " (at line " & Erl & ")") & vbCrLf & "Source = " & Err.Source, , "OpenSolver Code Error"
 28380     Resume ExitSub
+End Sub
+
+'==============================================================================
+' ConvertRelationToEnum
+' Given the value of a solver_relX Name, pick the equivalent OpenSolver operator
+Function ConvertRelationToEnum(ByVal strNameContents As String) As Variant
+    Select Case Mid(strNameContents, 2)
+        Case "1": ConvertRelationToEnum = RelationConsts.RelationLE
+        Case "2": ConvertRelationToEnum = RelationConsts.RelationEQ
+        Case "3": ConvertRelationToEnum = RelationConsts.RelationGE
+    End Select
+End Function
+
+' WriteToFile
+' Writes a string to the given file number, adds a newline, and can easily
+' uncomment debug line to print to Immediate if needed. Adds number of spaces to front if specified
+Sub WriteToFile(intFileNum As Integer, strData As String, Optional numSpaces As Integer = 0)
+    Dim spaces As String, i As Integer
+    spaces = ""
+    For i = 1 To numSpaces
+        spaces = spaces + " "
+    Next i
+    Print #intFileNum, spaces & strData
+    'Debug.Print strData
 End Sub

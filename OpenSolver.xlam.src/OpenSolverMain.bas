@@ -169,29 +169,29 @@ Function RunOpenSolver(Optional SolveRelaxation As Boolean = False, Optional Min
 28830     RunOpenSolver = OpenSolverResult.Unsolved
 28840     Set OpenSolver = New COpenSolver
 28850     OpenSolver.BuildModelFromSolverData
-          If UsesTokeniser(OpenSolver.Solver) Then
-              GoTo Tokeniser
+          If UsesParsedModel(OpenSolver.Solver) Then
+              GoTo ParsedModel
           End If
 28860     RunOpenSolver = OpenSolver.SolveModel(SolveRelaxation)
 28870     If Not MinimiseUserInteraction Then OpenSolver.ReportAnySolutionSubOptimality
 28880     Set OpenSolver = Nothing    ' Free any OpenSolver memory used
           Application.Iteration = oldIterationMode
 28890     Exit Function
-Tokeniser:
-    On Error GoTo errHandle
-    
-    Dim TokenSolver As New CModel2
-    TokenSolver.Setup ActiveWorkbook, ActiveSheet
-    TokenSolver.ProcessSolverModel
-    modPuLP.GenerateFile TokenSolver, OpenSolver.Solver, True
-    Application.Iteration = oldIterationMode
-    Exit Function
+
+ParsedModel:
+          On Error GoTo errHandle
+          Dim OpenSolverParsed As New COpenSolverParsed
+          OpenSolverParsed.SolveModel OpenSolver.Solver
+          Application.Iteration = oldIterationMode
+          Exit Function
     
 errHandle:
-    MsgBox "An error occurred while trying build the model:" + vbNewLine _
-            + "Description: " + Err.Description, vbOKOnly
-    Application.Iteration = oldIterationMode
-    Exit Function
+          Set OpenSolverParsed = Nothing
+          MsgBox "An error occurred while trying build the model:" + vbNewLine _
+                  + "Description: " + Err.Description, vbOKOnly
+          Application.Iteration = oldIterationMode
+          Exit Function
+
 errorHandler:
 28900     Set OpenSolver = Nothing    ' Free any OpenSolver memory used
           Application.Iteration = oldIterationMode
@@ -200,11 +200,6 @@ errorHandler:
 28930         MsgBox "OpenSolver" & sOpenSolverVersion & " encountered an error:" & vbCrLf & Err.Description & IIf(Erl = 0, "", " (at line " & Erl & ")") & vbCrLf & vbCrLf & "Source = " & Err.Source & ", ErrNumber=" & Err.Number, , "OpenSolver" & sOpenSolverVersion & " Error"
 28940     End If
 End Function
-
-'Sub BuildOpenSolverModel()
-'    Set OpenSolver = New COpenSolver
-'    OpenSolver.BuildModelFromSolverData
-'End Sub
 
 Sub InitializeQuickSolve()
 28950     On Error GoTo errorHandler
