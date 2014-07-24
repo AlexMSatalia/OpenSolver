@@ -1,114 +1,190 @@
 Attribute VB_Name = "OpenSolverNeos"
 Option Explicit
 Function CallNEOS(ModelFilePathName As String, Solver As String, errorString As String) As String
-     Dim objSvrHTTP As Object 'MSXML2.ServerXMLHTTP
-     Dim message As String, txtURL As String
-     Dim Done As Boolean, result As String
-     Dim openingParen As String, closingParen As String, jobNumber As String, Password As String
+    ' Import file as continuous string
+    Dim message As String
+    Open ModelFilePathName For Input As #1
+        message = Input$(LOF(1), 1)
+    Close #1
      
-     ' Server name
-     txtURL = "http://www.neos-server.org:3332"
-     Set objSvrHTTP = CreateObject("MSXML2.ServerXMLHTTP")
+    ' Wrap in XML for AMPL on NEOS
+    WrapAMPLForNEOS message, Solver
      
-     ' Set up obj for a POST request
-     objSvrHTTP.Open "POST", txtURL, False
+#If Mac Then
+    CallNEOS = CallNEOS_Mac(message, errorString)
+#Else
+    CallNEOS = CallNEOS_Windows(message, errorString)
+#End If
      
-     ' Import file as continuous string
-     Open ModelFilePathName For Input As #1
-         message = Input$(LOF(1), 1)
-     Close #1
-     
-     ' Wrap in XML for AMPL on NEOS
-     WrapAMPLForNEOS message, Solver
-     
-     ' Clean message up
-     message = Replace(message, "<", "&lt;")
-     message = Replace(message, ">", "&gt;")
-     
-     ' Set up message as XML
-     message = "<methodCall><methodName>submitJob</methodName><params><param><value><string>" _
-        & message & "</string></value></param></params></methodCall>"
-     
-     ' Send Message to NEOS
-     objSvrHTTP.send (message)
-     
-     ' Extract Job Number
-     openingParen = InStr(objSvrHTTP.responseText, "<int>")
-     closingParen = InStr(objSvrHTTP.responseText, "</int>")
-     jobNumber = Mid(objSvrHTTP.responseText, openingParen + Len("<int>"), closingParen - openingParen - Len("<int>"))
-     
-     If jobNumber = 0 Then
-         MsgBox "An error occured when sending file to NEOS."
-         GoTo ExitSub
-     End If
-     
-     ' Extract Password
-     openingParen = InStr(objSvrHTTP.responseText, "<string>")
-     closingParen = InStr(objSvrHTTP.responseText, "</string>")
-     Password = Mid(objSvrHTTP.responseText, openingParen + Len("<string>"), closingParen - openingParen - Len("<string>"))
-     
-     ' Set up Job Status message for XML
-     message = "<methodCall><methodName>getJobStatus</methodName><params><param><value><int>" _
-        & jobNumber & "</int></value><value><string>" & Password & _
-        "</string></value></param></params></methodCall>"
-     Done = False
-     
-     CallingNeos.Show False
-     
-     ' Loop until job is done
-     While Done = False
-         DoEvents
-         
-         ' Reset obj
-         objSvrHTTP.Open "POST", txtURL, False
-         
-         ' Send message
-         objSvrHTTP.send (message)
-         
-         ' Extract answer
-         openingParen = InStr(objSvrHTTP.responseText, "<string>")
-         closingParen = InStr(objSvrHTTP.responseText, "</string>")
-         result = Mid(objSvrHTTP.responseText, openingParen + 8, closingParen - openingParen - 8)
-         
-         ' Evaluate result
-         If result = "Done" Then
-             Done = True
-         ElseIf result <> "Waiting" And result <> "Running" Then
-             MsgBox "An error occured when sending file to NEOS. Neos returned: " & result
-             GoTo ExitSub
-         Else
-             Application.Wait (Now + TimeValue("0:00:01"))
-         End If
-     Wend
-     
-     CallingNeos.Hide
-     
-     ' Set up final message for XML
-     message = "<methodCall><methodName>getFinalResults</methodName><params><param><value><int>" _
-        & jobNumber & "</int></value></param><param><value><string>" & Password & _
-        "</string></value></param></params></methodCall>"
-     
-     ' Reset obj
-     objSvrHTTP.Open "POST", txtURL, False
+End Function
+
+Private Function CallNEOS_Windows(message As String, errorString As String)
+    ' Server name
+    Dim txtURL As String
+    txtURL = "http://www.neos-server.org:3332"
     
-     objSvrHTTP.send (message)
-     
-     ' Extract Result
-     openingParen = InStr(objSvrHTTP.responseText, "<base64>")
-     closingParen = InStr(objSvrHTTP.responseText, "</base64>")
-     result = Mid(objSvrHTTP.responseText, openingParen + 8, closingParen - openingParen - 8)
-     
-     ' The message is returned from NEOS in base 64
-     CallNEOS = DecodeBase64(result)
-     
-15870          Exit Function
+    ' Late binding so we don't need to add the reference to MSXML, causing a crash on Mac
+    Dim objSvrHTTP As Object 'MSXML2.ServerXMLHTTP
+    Set objSvrHTTP = CreateObject("MSXML2.ServerXMLHTTP")
+    
+    ' Set up obj for a POST request
+    objSvrHTTP.Open "POST", txtURL, False
+    
+    ' Clean message up
+    message = Replace(message, "<", "&lt;")
+    message = Replace(message, ">", "&gt;")
+    
+    ' Set up message as XML
+    message = "<methodCall><methodName>submitJob</methodName><params><param><value><string>" _
+       & message & "</string></value></param></params></methodCall>"
+    
+    ' Send Message to NEOS
+    objSvrHTTP.send (message)
+    
+    ' Extract Job Number
+    Dim openingParen As String, closingParen As String, jobNumber As String
+    openingParen = InStr(objSvrHTTP.responseText, "<int>")
+    closingParen = InStr(objSvrHTTP.responseText, "</int>")
+    jobNumber = Mid(objSvrHTTP.responseText, openingParen + Len("<int>"), closingParen - openingParen - Len("<int>"))
+    
+    If jobNumber = 0 Then
+        MsgBox "An error occured when sending file to NEOS."
+        GoTo ExitSub
+    End If
+    
+    ' Extract Password
+    Dim Password As String
+    openingParen = InStr(objSvrHTTP.responseText, "<string>")
+    closingParen = InStr(objSvrHTTP.responseText, "</string>")
+    Password = Mid(objSvrHTTP.responseText, openingParen + Len("<string>"), closingParen - openingParen - Len("<string>"))
+    
+    ' Set up Job Status message for XML
+    Dim Done As Boolean, result As String
+    message = "<methodCall><methodName>getJobStatus</methodName><params><param><value><int>" _
+       & jobNumber & "</int></value><value><string>" & Password & _
+       "</string></value></param></params></methodCall>"
+    Done = False
+    
+    CallingNeos.Show False
+    
+    ' Loop until job is done
+    While Done = False
+        DoEvents
+        
+        ' Reset obj
+        objSvrHTTP.Open "POST", txtURL, False
+        
+        ' Send message
+        objSvrHTTP.send (message)
+        
+        ' Extract answer
+        openingParen = InStr(objSvrHTTP.responseText, "<string>")
+        closingParen = InStr(objSvrHTTP.responseText, "</string>")
+        result = Mid(objSvrHTTP.responseText, openingParen + 8, closingParen - openingParen - 8)
+        
+        ' Evaluate result
+        If result = "Done" Then
+            Done = True
+        ElseIf result <> "Waiting" And result <> "Running" Then
+            MsgBox "An error occured when sending file to NEOS. Neos returned: " & result
+            GoTo ExitSub
+        Else
+            Application.Wait (Now + TimeValue("0:00:01"))
+        End If
+    Wend
+    
+    CallingNeos.Hide
+    
+    ' Set up final message for XML
+    message = "<methodCall><methodName>getFinalResults</methodName><params><param><value><int>" & _
+              jobNumber & "</int></value></param><param><value><string>" & Password & _
+              "</string></value></param></params></methodCall>"
+    
+    ' Reset obj
+    objSvrHTTP.Open "POST", txtURL, False
+    
+    objSvrHTTP.send (message)
+    
+    ' Extract Result
+    openingParen = InStr(objSvrHTTP.responseText, "<base64>")
+    closingParen = InStr(objSvrHTTP.responseText, "</base64>")
+    result = Mid(objSvrHTTP.responseText, openingParen + 8, closingParen - openingParen - 8)
+    
+    ' The message is returned from NEOS in base 64
+    CallNEOS_Windows = DecodeBase64(result)
+    
+    Exit Function
           
 ExitSub:
-15880     errorString = "ExitSub"
-15890     Exit Function
+    errorString = "ExitSub"
+    Exit Function
 errorHandler:
-15900     errorString = "Error contacting NEOS."
+    errorString = "Error while contacting NEOS."
 
+End Function
+
+Private Function CallNEOS_Mac(message As String, errorString As String)
+    ' Mac doesn't have ActiveX so can't use MSXML.
+    ' It does have python by default, so we can use python's xmlrpclib to contact NEOS instead.
+    ' We delegate all interaction to the NeosClient.py script file.
+    Dim errorPrefix As String
+    errorPrefix = "Sending model to NEOS"
+    
+    Dim ModelFilePathName As String
+    ModelFilePathName = GetTempFilePath("job.xml")
+    DeleteFileAndVerify ModelFilePathName, errorPrefix, "Unable to delete the job file: " & ModelFilePathName
+    
+    ' Create the job file
+    Open ModelFilePathName For Output As #1
+    Print #1, message
+    Close #1
+    
+    ' Set up commands for NeosClient
+    ' NeosClient call is of the form: NeosClient.py <job.xml> <neosresult.txt> > <logfile>
+    ModelFilePathName = QuotePath(ConvertHfsPath(ModelFilePathName))
+    
+    Dim SolverPath As String
+    GetExistingFilePathName ThisWorkbook.Path, "NeosClient.py", SolverPath
+    SolverPath = QuotePath(ConvertHfsPath(SolverPath))
+    system ("chmod +x " & SolverPath)
+    
+    Dim SolutionFilePathName As String
+    SolutionFilePathName = GetTempFilePath("neosresult.txt")
+    DeleteFileAndVerify SolutionFilePathName, errorPrefix, "Unable to delete the solution file: " & SolutionFilePathName
+
+    Dim LogFilePathName As String
+    LogFilePathName = GetTempFilePath("log1.tmp")
+    DeleteFileAndVerify LogFilePathName, errorPrefix, "Unable to delete the log file: " & LogFilePathName
+    LogFilePathName = " > " & QuotePath(ConvertHfsPath(LogFilePathName))
+
+    ' Forms seem to block the thread on Mac
+    'CallingNeos.Show False
+
+    ' Run NeosClient.py
+    Dim result As Boolean
+    result = OSSolveSync(SolverPath & " " & ModelFilePathName & " " & QuotePath(ConvertHfsPath(SolutionFilePathName)), "", "", LogFilePathName)
+    If Not result Then
+        GoTo errorHandler
+    End If
+    
+    'CallingNeos.Hide
+    
+    ' Read in results from file
+    Open SolutionFilePathName For Input As #1
+        message = Input$(LOF(1), 1)
+    Close #1
+    
+    If left(message, 6) = "Error:" Then
+        GoTo errorHandler
+    End If
+    CallNEOS_Mac = message
+    Exit Function
+    
+errorHandler:
+    Close #1
+    errorString = "Error contacting NEOS."
+    CallNEOS_Mac = ""
+    MsgBox "An error occured when sending file to NEOS. Neos returned: " & message
 End Function
 
 ' Code by Tim Hastings
