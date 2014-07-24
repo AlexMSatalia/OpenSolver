@@ -1061,7 +1061,10 @@ Sub BuildConstraintMatrix(objIsMissing As Boolean, objValue As Double, SparseA()
 11530                         Else    ' if the rhs is a constant value
 11540                             coeff = (CurrentLHSValues(i, j) - OriginalLHSValues(i, j))
 11550                         End If
-11560                         If coeff <> 0 Then SparseA(row).Add var, coeff
+                              ' Ignore zero (or near-zero) coefficients
+11560                         If Abs(coeff) > EPSILON Then
+                                  SparseA(row).Add var, coeff
+                              End If
 11570                         row = row + 1
 11580                     Next j
 11590                 Next i
@@ -1147,6 +1150,17 @@ ErrorExit:
       ' Debugging resume; never reached via code
 10761     Resume  ' Used for manual trying again after an error
 
+End Sub
+
+Sub ViewSparseA()
+          Dim i As Integer, j As Long, strA As String
+          For i = 1 To UBound(SparseA)
+              For j = 1 To numVars
+                  strA = strA & CStr(SparseA(i).Coefficient(j)) & "    "
+              Next j
+              strA = strA & vbNewLine
+          Next i
+          MsgBox (strA)
 End Sub
 
 Function SolveModel(SolveRelaxation As Boolean) As Integer
