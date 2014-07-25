@@ -46,7 +46,7 @@ Public LHSKeys As Collection
 Public RHSKeys As Collection
 Public Rels As Collection
 
-Private lngMaxDepth As Long
+Public lngMaxDepth As Long
 
 '------------------------------------------------------------------------------
 ' USEFUL GLOBALS
@@ -374,23 +374,26 @@ NextCons:
     Next i
     
     '==========================================================================
-    ' STEP 3. Make all possible substitutions in formula tree
-    Dim lngCurDepth As Long
-    Dim lngIndex As Long, objCurNode As CFormula, strParentAdr As Variant
+    ' STEP 3. Make all possible substitutions in formula tree if required by solver
+    If DoBackSubstitution(Solver) Then
     
-    For lngCurDepth = lngMaxDepth To 0 Step -1
-        For lngIndex = 1 To Formulae.Count
-            If Formulae(lngIndex).lngDepth = lngCurDepth Then
-                Set objCurNode = Formulae(lngIndex)
-                
-                For Each strParentAdr In objCurNode.Parents
-                    With Formulae(strParentAdr)
-                        .strFormulaParsed = Replace(.strFormulaParsed, objCurNode.strAddress, "(" & objCurNode.strFormulaParsed & ")")
-                    End With
-                Next
-            End If
-        Next lngIndex
-    Next lngCurDepth
+        Dim lngCurDepth As Long
+        Dim lngIndex As Long, objCurNode As CFormula, strParentAdr As Variant
+        
+        For lngCurDepth = lngMaxDepth To 0 Step -1
+            For lngIndex = 1 To Formulae.Count
+                If Formulae(lngIndex).lngDepth = lngCurDepth Then
+                    Set objCurNode = Formulae(lngIndex)
+                    
+                    For Each strParentAdr In objCurNode.Parents
+                        With Formulae(strParentAdr)
+                            .strFormulaParsed = Replace(.strFormulaParsed, objCurNode.strAddress, "(" & objCurNode.strFormulaParsed & ")")
+                        End With
+                    Next
+                End If
+            Next lngIndex
+        Next lngCurDepth
+    End If
 
 End Sub
 
@@ -556,7 +559,7 @@ Function ExpandFormula(ByVal strFormula As String, _
         ExpandFormula = strRootAddress
     Else
         ' Its a constant or formula - return the parsed formula directly
-        objCurNode.strAddress = "!" + CStr(Formulae.Count)
+        objCurNode.strAddress = "_" + CStr(Formulae.Count)
         Set objCurNode.rngAddress = Nothing
     End If
     objCurNode.strFormula = strFormula  ' Could also get from rngSourceCell
@@ -796,7 +799,7 @@ Function ExpandFormula(ByVal strFormula As String, _
         ' STEP 2.C. Store parsed formula in the DAG
 skipTokenising:
         If objCurNode.boolIsConstant = False Then objCurNode.strFormulaParsed = strParsed
-        If left(objCurNode.strAddress, 1) = "!" Then
+        If left(objCurNode.strAddress, 1) = "_" Then
             ' Root node is actually a formula or constant, so return the parsed formula
             ExpandFormula = strParsed
         End If

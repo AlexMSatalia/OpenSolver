@@ -98,22 +98,28 @@ Sub WritePuLPFile_Parsed(m As CModelParsed, ModelFilePathName As String, Solutio
     Next
     WriteToFile 1, "", 4
     
-    ' Add objective definition
-    WriteToFile 1, "# Define objective cell", 4
-    WriteToFile 1, ConvertCellToStandardName(m.ObjectiveCell) & " = " & ConvertFormulaToPuLP(m.Formulae(ConvertCellToStandardName(m.ObjectiveCell)).strFormulaParsed), 4
-    WriteToFile 1, "", 4
-    
     Dim i As Integer
     Dim strLHS As String, strRel As String, strRHS As String
     
     ' Add constraint cell definitions
     WriteToFile 1, "# Define constraint cells", 4
     For i = 1 To m.LHSKeys.Count
-        strLHS = ConvertFormulaToPuLP(GetFormulaWithDefault(m.Formulae, m.LHSKeys(i), m.LHSKeys(i)))
+        strLHS = GetFormulaWithDefault(m.Formulae, m.LHSKeys(i), m.LHSKeys(i))
         WriteToFile 1, m.LHSKeys(i) & " = " & strLHS, 4
     Next i
     WriteToFile 1, "", 4
     
+    ' Add formula definitions - needs to be highest depth first so no undefined variables are used
+    WriteToFile 1, "# Define formulae", 4
+    Dim lngIndex As Long, lngCurDepth As Long
+    For lngCurDepth = m.lngMaxDepth To 0 Step -1
+            For lngIndex = 1 To m.Formulae.Count
+                If m.Formulae(lngIndex).lngDepth = lngCurDepth Then
+                    WriteToFile 1, m.Formulae(lngIndex).strAddress & " = " & m.Formulae(lngIndex).strFormulaParsed, 4
+                End If
+            Next lngIndex
+    Next lngCurDepth
+
     ' Add objective function
     WriteToFile 1, "# Add objective", 4
     WriteToFile 1, "prob += " + ConvertCellToStandardName(m.ObjectiveCell), 4
@@ -122,7 +128,7 @@ Sub WritePuLPFile_Parsed(m As CModelParsed, ModelFilePathName As String, Solutio
     WriteToFile 1, "# Add constraints", 4
     For i = 1 To m.LHSKeys.Count
         strRel = ConvertRelationToPuLP(m.Rels(i))
-        strRHS = ConvertFormulaToPuLP(GetFormulaWithDefault(m.Formulae, m.RHSKeys(i), m.RHSKeys(i)))
+        strRHS = GetFormulaWithDefault(m.Formulae, m.RHSKeys(i), m.RHSKeys(i))
         
         WriteToFile 1, "#" & m.LHSKeys(i), 4
         WriteToFile 1, "prob += " + m.LHSKeys(i) + strRel + strRHS, 4
@@ -180,7 +186,7 @@ End Function
 
 Function ConvertFormula_PuLP(tokenText As String) As String
     tokenText = LCase(tokenText)
-    Select Case tkn.tokenText
+    Select Case tokenText
     Case "sqrt"
         ConvertFormula_PuLP = "math." + tokenText + "("
     Case Else

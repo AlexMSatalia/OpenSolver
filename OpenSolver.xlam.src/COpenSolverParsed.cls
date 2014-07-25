@@ -92,10 +92,18 @@ Sub WriteAMPLFile_Parsed(ModelFilePathName As String, SolverType As String)
             End If
             WriteToFile 1, Line & ";"
         Next
+        WriteToFile 1, ""
         
         Dim objCellName As String
         objCellName = ConvertCellToStandardName(m.ObjectiveCell)
-        WriteToFile 1, "var " & objCellName & ";" & vbNewLine
+'        WriteToFile 1, "var " & objCellName & ";"
+'        WriteToFile 1, ""
+        
+        Dim Formula As Variant
+        For Each Formula In m.Formulae
+            WriteToFile 1, "var " & Formula.strAddress & ";"
+        Next Formula
+        WriteToFile 1, ""
         
         If m.ObjectiveSense = TargetObjective Then
             ' Replace objective function with constraint
@@ -114,23 +122,23 @@ Sub WriteAMPLFile_Parsed(ModelFilePathName As String, SolverType As String)
             WriteToFile 1, "    " & objCellName & ";" & vbNewLine
         End If
         
-        
         Dim i As Integer
         For i = 1 To m.LHSKeys.Count
             Dim strLHS As String, strRel As String, strRHS As String
-            
-            strLHS = GetFormulaWithDefault(m.Formulae, m.LHSKeys(i), m.LHSKeys(i))
+
+            strLHS = m.LHSKeys(i)
             strRel = ConvertRelationToAMPL(m.Rels(i))
-            strRHS = GetFormulaWithDefault(m.Formulae, m.RHSKeys(i), m.RHSKeys(i))
-            
+            strRHS = m.RHSKeys(i)
+
             ' Try to make a unique constraint name
             WriteToFile 1, "subject to c" & i & "_" & m.LHSKeys(i) & ":"
             WriteToFile 1, "    " & strLHS & strRel & strRHS & ";" & vbNewLine
         Next i
         
-        
-        WriteToFile 1, "subject to objConstraint:"
-        WriteToFile 1, "    " & m.Formulae(objCellName).strFormulaParsed & " == " & objCellName & ";" & vbNewLine
+        For i = 1 To m.Formulae.Count
+            WriteToFile 1, "subject to f" & i & ":"
+            WriteToFile 1, "    " & m.Formulae(i).strAddress & " == " & m.Formulae(i).strFormulaParsed & ";" & vbNewLine
+        Next i
         
         ' Run Commands
         WriteToFile 1, "# Solve the problem"

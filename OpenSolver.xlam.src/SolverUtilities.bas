@@ -142,6 +142,12 @@ Function UsesParsedModel(Solver As String) As Boolean
     End Select
 End Function
 
+Function DoBackSubstitution(Solver As String) As Boolean
+    ' Enable when .nl files are added
+    DoBackSubstitution = False
+End Function
+
+
 Function GetExtraParameters(Solver As String, sheet As Worksheet, errorString As String) As String
     Select Case Solver
     Case "CBC"

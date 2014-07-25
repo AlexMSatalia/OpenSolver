@@ -33,8 +33,9 @@ Sub showFormulae(Formulae As Collection)
     Dim f As Variant, showstr As String
     For Each f In Formulae
         showstr = showstr & f.strFormulaParsed & vbNewLine & vbNewLine
+        Debug.Print f.strFormulaParsed
     Next f
-    MsgBox showstr
+    'MsgBox showstr
 End Sub
 
 ' Shows all members of a collection
