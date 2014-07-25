@@ -178,40 +178,17 @@ Function ConvertRelationToPuLP(Relation As RelationConsts) As String
     End Select
 End Function
 
-Function ConvertFormulaToPuLP(strFormula As String) As String
-    ' Tokenize the formula
-    Dim tksFormula As Tokens
-    ' Need to add "=" to convert the expression to a formula for the tokeniser
-    Set tksFormula = modTokeniser.ParseFormula("=" & strFormula)
-            
-    Dim strParsed As String
-    strParsed = ""
-    
-    ' Take a walk through the tokens
-    Dim i As Integer, tkn As Token
-    For i = 1 To tksFormula.Count
-        Set tkn = tksFormula.Item(i)
-
-        ' Decide what to insert based on token type
-        Select Case tkn.TokenType
-        Case TokenType.FunctionOpen
-            tkn.Text = LCase(tkn.Text)
-            Select Case tkn.Text
-            Case "sqrt"
-                strParsed = strParsed + "math.sqrt" + "("
-            Case Else
-                strParsed = strParsed + tkn.Text + "("
-            End Select
-        Case TokenType.FunctionClose
-            strParsed = strParsed + ")"
-        Case Else
-            strParsed = strParsed + tkn.Text
-        End Select
-    Next i
-    
-    ConvertFormulaToPuLP = strParsed
+Function ConvertFormula_PuLP(tokenText As String) As String
+    tokenText = LCase(tokenText)
+    Select Case tkn.tokenText
+    Case "sqrt"
+        ConvertFormula_PuLP = "math." + tokenText + "("
+    Case Else
+        ConvertFormula_PuLP = tokenText + "("
+    End Select
     Exit Function
 
 errorHandler:
-    MsgBox "Not implemented for PuLP yet"
+    MsgBox tokenText + "not implemented for PuLP yet"
+    ConvertFormula_PuLP = tokenText + "("
 End Function

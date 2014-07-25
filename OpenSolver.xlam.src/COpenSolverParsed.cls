@@ -19,7 +19,7 @@ Public Sub SolveModel(Solver As String)
     ' Parse spreadsheet and build model
     Set m = New CModelParsed
     m.Setup ActiveWorkbook, ActiveSheet
-    m.ProcessSolverModel
+    m.ProcessSolverModel (Solver)
     
     ' Setup output file
     Dim ModelFilePathName As String
@@ -119,9 +119,9 @@ Sub WriteAMPLFile_Parsed(ModelFilePathName As String, SolverType As String)
         For i = 1 To m.LHSKeys.Count
             Dim strLHS As String, strRel As String, strRHS As String
             
-            strLHS = ConvertFormulaToAMPL(GetFormulaWithDefault(m.Formulae, m.LHSKeys(i), m.LHSKeys(i)))
+            strLHS = GetFormulaWithDefault(m.Formulae, m.LHSKeys(i), m.LHSKeys(i))
             strRel = ConvertRelationToAMPL(m.Rels(i))
-            strRHS = ConvertFormulaToAMPL(GetFormulaWithDefault(m.Formulae, m.RHSKeys(i), m.RHSKeys(i)))
+            strRHS = GetFormulaWithDefault(m.Formulae, m.RHSKeys(i), m.RHSKeys(i))
             
             WriteToFile 1, "subject to " & m.LHSKeys(i) & ":"
             WriteToFile 1, "    " & strLHS & strRel & strRHS & ";" & vbNewLine
@@ -129,7 +129,7 @@ Sub WriteAMPLFile_Parsed(ModelFilePathName As String, SolverType As String)
         
         
         WriteToFile 1, "subject to objConstraint:"
-        WriteToFile 1, "    " & ConvertFormulaToAMPL(m.Formulae(objCellName).strFormulaParsed) & " == " & objCellName & ";" & vbNewLine
+        WriteToFile 1, "    " & m.Formulae(objCellName).strFormulaParsed & " == " & objCellName & ";" & vbNewLine
         
         ' Run Commands
         WriteToFile 1, "# Solve the problem"
@@ -163,49 +163,6 @@ Function ConvertRelationToAMPL(Relation As RelationConsts) As String
     End Select
 End Function
 
-Function ConvertFormulaToAMPL(strFormula As String) As String
-    ' Tokenize the formula
-    Dim tksFormula As Tokens
-    ' Need to add "=" to convert the expression to a formula for the tokeniser
-    Set tksFormula = modTokeniser.ParseFormula("=" & strFormula)
-            
-    Dim strParsed As String
-    strParsed = ""
-    
-    ' Take a walk through the tokens
-    Dim i As Integer, tkn As Token
-    For i = 1 To tksFormula.Count
-        Set tkn = tksFormula.Item(i)
-
-        ' Decide what to insert based on token type
-        Select Case tkn.TokenType
-                
-        Case TokenType.FunctionOpen
-            ' AMPL works with lower case expressions
-            tkn.Text = LCase(tkn.Text)
-            Select Case tkn.Text
-            ' RADIANS
-            Case "radians"
-                strParsed = strParsed + "pi/180*("
-            ' TODO: Unhandled yet
-            Case "min", "max"
-                GoTo errorHandler
-            Case Else
-                strParsed = strParsed + tkn.Text + "("
-            End Select
-        Case TokenType.FunctionClose
-            strParsed = strParsed + ")"
-        Case Else
-            strParsed = strParsed + tkn.Text
-        End Select
-    Next i
-    
-    ConvertFormulaToAMPL = strParsed
-    Exit Function
-
-errorHandler:
-    MsgBox "Not implemented for AMPL yet"
-End Function
 
 Function ConvertVarTypeAMPL(intVarType As Integer) As String
     Select Case intVarType

@@ -37,6 +37,8 @@ Private RHSType() As SolverConstraintType
 
 Public AssumeNonNegative As Boolean
 
+Public Solver As String
+
 Public Formulae As Collection
 Public VarTypeMap As Collection
 Public AdjCellNameMap As Collection
@@ -61,7 +63,8 @@ Public Sub Setup(ByRef BookToUse As Workbook, ByRef SheetToUse As Worksheet)
 End Sub
 
 '==============================================================================
-Public Sub ProcessSolverModel()
+Public Sub ProcessSolverModel(SolverType As String)
+    Solver = SolverType
     ProcessAdjustableCells
     ProcessObjective
     ProcessConstraints
@@ -741,13 +744,16 @@ Function ExpandFormula(ByVal strFormula As String, _
                 Case TokenType.FunctionOpen
                     FunctionName = tkn.Text
                     output = tkn.Text
-                    If output = "SUMPRODUCT" Then
-                        output = ""
-                    ElseIf output = "SUM" Then
-                        output = ""
-                    End If
-                    strParsed = strParsed + output + "("
-                    
+                    Select Case output
+                    Case "SUMPRODUCT"
+                        output = "("
+                    Case "SUM"
+                        output = "("
+                    Case Else
+                        ' Delegate to solver specific conversion code
+                        output = ConvertFormula(Solver, output)
+                    End Select
+                    strParsed = strParsed + output
                     
                 Case TokenType.ParameterSeparator
                     strParsed = strParsed + tkn.Text
@@ -1048,4 +1054,34 @@ Function AddNodeIfNew(ByRef objCurNode As CFormula, ByRef c As Range) As String
     AddNodeIfNew = strStdName
 
 finishedNode:
+End Function
+
+Function ConvertFormula(Solver As String, tokenText As String) As String
+    Select Case Solver
+    Case "PuLP"
+        ConvertFormula = ConvertFormula_PuLP(tokenText)
+    Case "NeosBon", "NeosCou"
+        ConvertFormula = ConvertFormula_AMPL(tokenText)
+    Case Else
+        ConvertFormula = tokenText + "("
+    End Select
+End Function
+
+Function ConvertFormula_AMPL(tokenText As String) As String
+   tokenText = LCase(tokenText)
+    Select Case tokenText
+    ' RADIANS
+    Case "radians"
+        ConvertFormula_AMPL = "pi/180*("
+    ' TODO: Unhandled yet
+    Case "min", "max"
+        GoTo errorHandler
+    Case Else
+        ConvertFormula_AMPL = tokenText + "("
+    End Select
+    Exit Function
+    
+errorHandler:
+    MsgBox tokenText & " not implemented for AMPL yet"
+    ConvertFormula_AMPL = tokenText + "("
 End Function
