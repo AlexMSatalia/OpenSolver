@@ -23,6 +23,8 @@ Function SolverAvailable(Solver As String, Optional SolverPath As String, Option
         SolverAvailable = SolverAvailable_Gurobi(SolverPath, errorString)
     Case "NOMAD"
         SolverAvailable = SolverAvailable_NOMAD(errorString)
+    Case "Couenne"
+        SolverAvailable = SolverAvailable_Couenne
     Case Else
         SolverAvailable = False
         SolverPath = ""
@@ -43,6 +45,8 @@ Function SolverType(Solver As String) As String
         SolverType = SolverType_NeosBon
     Case "NeosCou"
         SolverType = SolverType_NeosCou
+    Case "Couenne"
+        SolverType = SolverType_Couenne
     Case Else
         SolverType = OpenSolver_SolverType.Unknown
     End Select
@@ -54,6 +58,8 @@ Function SolutionFilePath(Solver As String) As String
         SolutionFilePath = SolutionFilePath_CBC
     Case "Gurobi"
         SolutionFilePath = SolutionFilePath_Gurobi
+    Case "Couenne"
+        SolutionFilePath = SolutionFilePath_Couenne
     Case "PuLP"
         SolutionFilePath = SolutionFilePath_PuLP
     Case Else
@@ -88,7 +94,7 @@ Function ModelFile(Solver As String) As String
         ModelFile = AMPLFileName
     Case "PuLP"
         ModelFile = PuLPFileName
-    Case "NL"
+    Case "Couenne"
         ModelFile = NLFileName
     Case Else
         ModelFile = ""
@@ -138,7 +144,7 @@ End Function
 
 Function UsesParsedModel(Solver As String) As Boolean
     Select Case Solver
-    Case "PuLP", "NeosBon", "NeosCou"
+    Case "PuLP", "NeosBon", "NeosCou", "Couenne"
         UsesParsedModel = True
     Case Else
         UsesParsedModel = False
@@ -175,6 +181,8 @@ Function SolverTitle(Solver As String) As String
         SolverTitle = SolverTitle_CBC
     Case "Gurobi"
         SolverTitle = SolverTitle_Gurobi
+    Case "Couenne"
+        SolverTitle = SolverTitle_Couenne
     Case "NOMAD"
         SolverTitle = SolverTitle_NOMAD
     Case "NeosCBC"
@@ -194,6 +202,8 @@ Function ReverseSolverTitle(SolverTitle As String) As String
         ReverseSolverTitle = "Gurobi"
     Case SolverTitle_NOMAD
         ReverseSolverTitle = "NOMAD"
+    Case SolverTitle_Couenne
+        ReverseSolverTitle = "Couenne"
     Case SolverTitle_NeosCBC
         ReverseSolverTitle = "NeosCBC"
     Case SolverTitle_NeosCou
@@ -211,6 +221,8 @@ Function SolverDesc(Solver As String) As String
         SolverDesc = SolverDesc_Gurobi
     Case "NOMAD"
         SolverDesc = SolverDesc_NOMAD
+    Case "Couenne"
+        SolverDesc = SolverDesc_Couenne
     Case "NeosCBC"
         SolverDesc = SolverDesc_NeosCBC
     Case "NeosCou"
@@ -228,6 +240,8 @@ Function SolverLink(Solver As String) As String
         SolverLink = SolverLink_Gurobi
     Case "NOMAD"
         SolverLink = SolverLink_NOMAD
+    Case "Couenne"
+        SolverLink = SolverLink_Couenne
     Case "NeosCBC"
         SolverLink = SolverLink_NeosCBC
     Case "NeosCou"

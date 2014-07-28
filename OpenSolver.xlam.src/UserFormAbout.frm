@@ -499,6 +499,7 @@ Private Sub UserForm_Activate()
           txtAbout.Text = About_CBC & vbNewLine & vbNewLine & txtAbout.Text
           txtAbout.Text = About_Gurobi & vbNewLine & vbNewLine & txtAbout.Text
           txtAbout.Text = About_NOMAD & vbNewLine & vbNewLine & txtAbout.Text
+          txtAbout.Text = About_Couenne & vbNewLine & vbNewLine & txtAbout.Text
           
 36230     labelFilePath = "OpenSolverFile: " & ThisWorkbook.FullName
           ' ShowOpenSolverStudioStatus
