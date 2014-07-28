@@ -37,7 +37,7 @@ Function About_NOMAD() As String
         Exit Function
     End If
     ' Assemble version info
-    About_NOMAD = "NOMAD v" & SolverVersion_NOMAD() & " using OpenSolverNomadDLL v" & DllVersion_NOMAD() & " at " & DllPath_NOMAD()
+    About_NOMAD = "NOMAD " & SolverBitness_NOMAD & "-bit v" & SolverVersion_NOMAD() & " using OpenSolverNomadDLL v" & DllVersion_NOMAD() & " at " & DllPath_NOMAD()
 End Function
 
 Function SolverAvailable_NOMAD(Optional errorString As String) As Boolean
@@ -111,6 +111,20 @@ End Function
 
 Function DllPath_NOMAD() As String
     GetExistingFilePathName ThisWorkbook.Path, NomadDllName, DllPath_NOMAD
+End Function
+
+Function SolverBitness_NOMAD() As String
+' Get Bitness of NOMAD solver
+    If Not SolverAvailable_NOMAD() Then
+        SolverBitness_NOMAD = ""
+        Exit Function
+    End If
+    
+    If right(NomadDllName, 6) = "64.dll" Then
+        SolverBitness_NOMAD = "64"
+    Else
+        SolverBitness_NOMAD = "32"
+    End If
 End Function
 
 Function SolveModel_Nomad(SolveRelaxation As Boolean, s As COpenSolver) As Integer
