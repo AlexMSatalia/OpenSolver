@@ -3,6 +3,7 @@ Attribute VB_Name = "SolverUtilities"
 Option Explicit
 Public Const LPFileName As String = "model.lp"
 Public Const AMPLFileName As String = "model.ampl"
+Public Const NLFileName As String = "model.nl"
 Public Const PuLPFileName As String = "opensolver.py"
 
 Function SolverAvailable(Solver As String, Optional SolverPath As String, Optional errorString As String) As Boolean
@@ -87,6 +88,8 @@ Function ModelFile(Solver As String) As String
         ModelFile = AMPLFileName
     Case "PuLP"
         ModelFile = PuLPFileName
+    Case "NL"
+        ModelFile = NLFileName
     Case Else
         ModelFile = ""
     End Select

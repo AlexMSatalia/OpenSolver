@@ -31,6 +31,8 @@ Public Sub SolveModel(Solver As String)
     Select Case Solver
     Case "PuLP"
         ExecutionCompleted = SolveModelParsed_PuLP(ModelFilePathName, m)
+    Case "NL"
+        ExecutionCompleted = SolveModelParsed_NL(ModelFilePathName, m)
     Case "NeosBon", "NeosCou"
         ExecutionCompleted = SolveModelParsed_AMPL(ModelFilePathName, Solver)
     Case Else
