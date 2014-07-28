@@ -140,10 +140,35 @@ Function SolveModelParsed_NL(ModelFilePathName As String, model As CModelParsed)
     OutputColFile
     OutputRowFile
     
+    ProcessConstraints
+    
     Open ModelFilePathName For Output As #1
     
     ' Write header
-    WriteToFile 1, MakeHeader()
+    Print #1, MakeHeader()
+    
+    ' Write C blocks
+    
+    ' Write O block
+    
+    ' Write d block
+    Print #1, MakeDBlock()
+    
+    ' Write x block
+    Print #1, MakeXBlock()
+    
+    ' Write r block
+    
+    ' Write b block
+    Print #1, MakeBBlock()
+    
+    ' Write k block
+    
+    ' Write J block
+    
+    ' Write G block
+    
+    
     Close #1
 End Function
 
@@ -172,7 +197,8 @@ Function MakeHeader() As String
     'Line #10
     AddNewLine Header, " " & comb & " " & comc & " " & como & " " & comc1 & " " & como1 & " # common exprs: b,c,o,c1,o1"
     
-    MakeHeader = Header
+    ' Strip trailing newline
+    MakeHeader = left(Header, Len(Header) - 2)
 End Function
 
 Sub MakeVariableMap()
@@ -189,8 +215,8 @@ Sub MakeVariableMap()
         cellName = ConvertCellToStandardName(c)
         
         ' Update variable maps
-        VariableMap.Add "v" & index, cellName
-        VariableMapRev.Add cellName, "v" & index
+        VariableMap.Add CStr(index), cellName
+        VariableMapRev.Add cellName, CStr(index)
         
         ' Update max length
         If Len(cellName) > maxcolnamelen_ Then
@@ -205,8 +231,8 @@ Sub MakeVariableMap()
         cellName = m.Formulae(i).strAddress
         
         ' Update variable maps
-        VariableMap.Add "v" & index, cellName
-        VariableMapRev.Add cellName, "v" & index
+        VariableMap.Add CStr(index), cellName
+        VariableMapRev.Add cellName, CStr(index)
         
         ' Update max length
         If Len(cellName) > maxcolnamelen_ Then
@@ -287,6 +313,82 @@ Sub OutputRowFile()
     
     Close #3
 End Sub
+
+Sub ProcessConstraints()
+    ' Split into linear, non-linear and constant
+    For i = 1 To m.Formulae.Count
+        SplitFormula (m.Formulae(i).strFormulaParsed)
+    Next i
+End Sub
+
+
+Function MakeDBlock() As String
+    Dim Block As String
+    Block = ""
+    
+    AddNewLine Block, "d" & n_con
+    
+    ' Set duals to zero for all constraints
+    Dim i As Integer
+    For i = 1 To n_con
+        AddNewLine Block, i - 1 & " 0"
+    Next i
+    
+    ' Strip trailing newline
+    MakeDBlock = left(Block, Len(Block) - 2)
+End Function
+
+Function MakeXBlock() As String
+    Dim Block As String
+    Block = ""
+    
+    AddNewLine Block, "x" & n_var
+    
+    ' Actual variables, apply bounds
+    Dim i As Integer, initial As String
+    For i = 1 To m.AdjustableCells.Count
+        If VarType(m.AdjustableCells(i)) = vbEmpty Then
+            initial = 0
+        Else
+            initial = m.AdjustableCells(i)
+        End If
+        AddNewLine Block, i - 1 & " " & initial
+    Next i
+    
+    ' TODO: real initial values for formulae vars
+    For i = 1 To m.Formulae.Count
+        AddNewLine Block, i + m.AdjustableCells.Count - 1 & " 0"
+    Next i
+    
+    ' Strip trailing newline
+    MakeXBlock = left(Block, Len(Block) - 2)
+End Function
+
+Function MakeBBlock() As String
+    Dim Block As String
+    Block = ""
+    
+    AddNewLine Block, "b"
+    
+    ' Actual variables, apply bounds
+    Dim i As Integer, bound As String
+    For i = 1 To m.AdjustableCells.Count
+        If m.AssumeNonNegative Then
+            initial = "2 0"
+        Else
+            initial = "3"
+        End If
+        AddNewLine Block, bound
+    Next i
+    
+    ' Fake formulae variables - no bounds
+    For i = 1 To m.Formulae.Count
+        AddNewLine Block, "3"
+    Next i
+    
+    ' Strip trailing newline
+    MakeXBlock = left(Block, Len(Block) - 2)
+End Function
 
 Sub AddNewLine(CurText As String, LineText As String)
     CurText = CurText & LineText & vbNewLine
