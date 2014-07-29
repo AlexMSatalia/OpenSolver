@@ -5,6 +5,9 @@ Dim m As CModelParsed
 
 Dim problem_name As String
 
+Public CommentIndent As Integer     ' Tracks the level of indenting in comments on nl output
+Public Const CommentSpacing = 20    ' The column number at which nl comments begin
+
 ' ==========================================================================
 ' ASL variables
 ' These are variables used in the .NL file that are also used by the AMPL Solver Library
@@ -59,6 +62,9 @@ Dim VariableMap As Collection
 Dim VariableMapRev As Collection
 Dim ConstraintMap As Collection
 Dim ConstraintMapRev As Collection
+
+Dim NonLinearConstraintTrees As Collection
+Dim NonLinearObjectiveTrees As Collection
 
     
 Function SolveModelParsed_NL(ModelFilePathName As String, model As CModelParsed)
@@ -140,7 +146,7 @@ Function SolveModelParsed_NL(ModelFilePathName As String, model As CModelParsed)
     OutputColFile
     OutputRowFile
     
-    ProcessConstraints
+    ProcessFormulae
     
     Open ModelFilePathName For Output As #1
     
@@ -148,7 +154,7 @@ Function SolveModelParsed_NL(ModelFilePathName As String, model As CModelParsed)
     Print #1, MakeHeader()
     
     ' Write C blocks
-    
+    Print #1, MakeCBlocks()
     ' Write O block
     
     ' Write d block
@@ -314,14 +320,60 @@ Sub OutputRowFile()
     Close #3
 End Sub
 
-Sub ProcessConstraints()
-    ' Split into linear, non-linear and constant
-    Dim i As Integer
+Sub ProcessFormulae()
+
+
+    Set NonLinearConstraintTrees = New Collection
+    Set NonLinearObjectiveTrees = New Collection
+
+    Dim i As Integer, Tree As ExpressionTree
+    For i = 1 To m.LHSKeys.Count
+        Set Tree = ConvertFormulaToExpressionTree(m.RHSKeys(i))
+        AddLHSToExpressionTree Tree, m.LHSKeys(i)
+        Debug.Print Tree.Display
+        ' Remove linear terms
+        ' Set header information
+        
+        NonLinearConstraintTrees.Add Tree
+    Next i
+    
     For i = 1 To m.Formulae.Count
-        ConvertFormulaToExpressionTree m.Formulae(i).strFormulaParsed
+        Set Tree = ConvertFormulaToExpressionTree(m.Formulae(i).strFormulaParsed)
+        AddLHSToExpressionTree Tree, m.Formulae(i).strAddress
+        Debug.Print Tree.Display
+        ' Remove linear terms
+        ' Set header information
+        
+        NonLinearConstraintTrees.Add Tree
     Next i
 End Sub
 
+Function MakeCBlocks() As String
+    Dim Blocks As String
+    Blocks = ""
+    
+    Dim i As Integer, Block As String
+    For i = 1 To n_con
+        Block = "C" & i - 1
+        
+        ' Add set spacing for comments
+        Dim j As Integer
+        For j = 1 To CommentSpacing - Len(Block)
+           Block = Block + " "
+        Next j
+        Block = Block + "### CONSTRAINT " + ConstraintMapRev(CStr(i - 1)) + vbNewLine
+        
+        ' Add expression tree
+        CommentIndent = 6
+        Block = Block + NonLinearConstraintTrees(i).ConvertToNL
+        
+        ' Add to all CBlocks
+        Blocks = Blocks + Block
+    Next i
+    
+    ' Strip trailing newline
+    MakeCBlocks = left(Blocks, Len(Blocks) - 2)
+End Function
 
 Function MakeDBlock() As String
     Dim Block As String
@@ -395,7 +447,7 @@ Sub AddNewLine(CurText As String, LineText As String)
     CurText = CurText & LineText & vbNewLine
 End Sub
 
-Sub ConvertFormulaToExpressionTree(strFormula As String)
+Function ConvertFormulaToExpressionTree(strFormula As String) As ExpressionTree
 ' Converts a string formula to a complete expression tree
 ' Uses the Shunting Yard algorithm (adapted to produce an expression tree) which takes O(n) time
 ' https://en.wikipedia.org/wiki/Shunting-yard_algorithm
@@ -495,14 +547,13 @@ Sub ConvertFormulaToExpressionTree(strFormula As String)
     Loop
     
     ' We are left with a single tree in the operand stack - this is the complete expression tree
-    Debug.Print Operands.Peek.Display
-    
-    Exit Sub
+    Set ConvertFormulaToExpressionTree = Operands.Pop
+    Exit Function
     
 Mismatch:
     MsgBox "Mismatched parentheses"
     
-End Sub
+End Function
 
 Public Function CreateTree(NodeText As String, NodeType As Long) As ExpressionTree
     Dim obj As ExpressionTree
@@ -520,7 +571,7 @@ Function NumberOfOperands(FunctionName As String) As Integer
         NumberOfOperands = 1
     Case "plus", "minus", "mult", "div", "rem", "pow", "less", "or", "and", "lt", "le", "eq", "ge", "gt", "ne", "atan2", "intdiv", "precision", "round", "trunc", "iff"
         NumberOfOperands = 2
-    Case "min", "max", "sum", "count", "numberof", "numberofs", "and", "or", "alldiff"
+    Case "min", "max", "sum", "count", "numberof", "numberofs", "and_n", "or_n", "alldiff"
         'n-ary
     Case "if", "ifs", "implies"
         NumberOfOperands = 3
@@ -560,6 +611,10 @@ Function ConvertExcelFunctionToNL(FunctionName As String) As String
         FunctionName = "ne"
     Case "quotient"
         FunctionName = "intdiv"
+    Case "and"
+        FunctionName = "and_n"
+    Case "or"
+        FunctionName = "or_n"
         
     Case "log", "ceiling", "floor", "power"
         MsgBox "Not implemented yet: " & FunctionName
@@ -648,3 +703,139 @@ Sub AddNegToTree(Tree As ExpressionTree)
     
     Set Tree = NewTree
 End Sub
+
+Sub AddLHSToExpressionTree(Tree As ExpressionTree, LHS As String)
+' Bring the LHS variable over to the RHS as a minus operation
+    Dim NewTree As ExpressionTree
+    Set NewTree = CreateTree("minus", ExpressionTreeOperator)
+    
+    NewTree.SetChild 1, Tree
+    Set Tree = NewTree
+    
+    Set NewTree = CreateTree(LHS, ExpressionTreeVariable)
+    Tree.SetChild 2, NewTree
+End Sub
+
+Function FormatNL(NodeText As String, NodeType As ExpressionTreeNodeType) As String
+    Select Case NodeType
+    Case ExpressionTreeVariable
+        FormatNL = "v" & VariableMap(NodeText)
+    Case ExpressionTreeNumber
+        FormatNL = "n" & NodeText
+    Case ExpressionTreeOperator
+        FormatNL = "o" & CStr(ConvertOperatorToNLCode(NodeText))
+    End Select
+End Function
+
+Function ConvertOperatorToNLCode(FunctionName As String) As Integer
+    Select Case FunctionName
+    Case "plus"
+        ConvertOperatorToNLCode = 0
+    Case "minus"
+        ConvertOperatorToNLCode = 1
+    Case "mult"
+        ConvertOperatorToNLCode = 2
+    Case "div"
+        ConvertOperatorToNLCode = 3
+    Case "rem"
+        ConvertOperatorToNLCode = 4
+    Case "pow"
+        ConvertOperatorToNLCode = 5
+    Case "less"
+        ConvertOperatorToNLCode = 6
+    Case "min"
+        ConvertOperatorToNLCode = 11
+    Case "max"
+        ConvertOperatorToNLCode = 12
+    Case "floor"
+        ConvertOperatorToNLCode = 13
+    Case "ceil"
+        ConvertOperatorToNLCode = 14
+    Case "abs"
+        ConvertOperatorToNLCode = 15
+    Case "neg"
+        ConvertOperatorToNLCode = 16
+    Case "or"
+        ConvertOperatorToNLCode = 20
+    Case "and"
+        ConvertOperatorToNLCode = 21
+    Case "lt"
+        ConvertOperatorToNLCode = 22
+    Case "le"
+        ConvertOperatorToNLCode = 23
+    Case "eq"
+        ConvertOperatorToNLCode = 24
+    Case "ge"
+        ConvertOperatorToNLCode = 28
+    Case "gt"
+        ConvertOperatorToNLCode = 29
+    Case "ne"
+        ConvertOperatorToNLCode = 30
+    Case "if"
+        ConvertOperatorToNLCode = 35
+    Case "not"
+        ConvertOperatorToNLCode = 34
+    Case "tanh"
+        ConvertOperatorToNLCode = 37
+    Case "tan"
+        ConvertOperatorToNLCode = 38
+    Case "sqrt"
+        ConvertOperatorToNLCode = 39
+    Case "sinh"
+        ConvertOperatorToNLCode = 40
+    Case "sin"
+        ConvertOperatorToNLCode = 41
+    Case "log10"
+        ConvertOperatorToNLCode = 42
+    Case "log"
+        ConvertOperatorToNLCode = 43
+    Case "exp"
+        ConvertOperatorToNLCode = 44
+    Case "cosh"
+        ConvertOperatorToNLCode = 45
+    Case "cos"
+        ConvertOperatorToNLCode = 46
+    Case "atanh"
+        ConvertOperatorToNLCode = 47
+    Case "atan2"
+        ConvertOperatorToNLCode = 48
+    Case "atan"
+        ConvertOperatorToNLCode = 49
+    Case "asinh"
+        ConvertOperatorToNLCode = 50
+    Case "asin"
+        ConvertOperatorToNLCode = 51
+    Case "acosh"
+        ConvertOperatorToNLCode = 52
+    Case "acos"
+        ConvertOperatorToNLCode = 53
+    Case "sum"
+        ConvertOperatorToNLCode = 54
+    Case "intdiv"
+        ConvertOperatorToNLCode = 55
+    Case "precision"
+        ConvertOperatorToNLCode = 56
+    Case "round"
+        ConvertOperatorToNLCode = 57
+    Case "trunc"
+        ConvertOperatorToNLCode = 58
+    Case "count"
+        ConvertOperatorToNLCode = 59
+    Case "numberof"
+        ConvertOperatorToNLCode = 60
+    Case "numberofs"
+        ConvertOperatorToNLCode = 61
+    Case "ifs"
+        ConvertOperatorToNLCode = 65
+    Case "and_n"
+        ConvertOperatorToNLCode = 70
+    Case "or_n"
+        ConvertOperatorToNLCode = 71
+    Case "implies"
+        ConvertOperatorToNLCode = 72
+    Case "iff"
+        ConvertOperatorToNLCode = 73
+    Case "alldiff"
+        ConvertOperatorToNLCode = 74
+    End Select
+End Function
