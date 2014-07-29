@@ -316,8 +316,9 @@ End Sub
 
 Sub ProcessConstraints()
     ' Split into linear, non-linear and constant
+    Dim i As Integer
     For i = 1 To m.Formulae.Count
-        SplitFormula (m.Formulae(i).strFormulaParsed)
+        ConvertFormulaToExpressionTree m.Formulae(i).strFormulaParsed
     Next i
 End Sub
 
@@ -374,9 +375,9 @@ Function MakeBBlock() As String
     Dim i As Integer, bound As String
     For i = 1 To m.AdjustableCells.Count
         If m.AssumeNonNegative Then
-            initial = "2 0"
+            bound = "2 0"
         Else
-            initial = "3"
+            bound = "3"
         End If
         AddNewLine Block, bound
     Next i
@@ -387,9 +388,263 @@ Function MakeBBlock() As String
     Next i
     
     ' Strip trailing newline
-    MakeXBlock = left(Block, Len(Block) - 2)
+    MakeBBlock = left(Block, Len(Block) - 2)
 End Function
 
 Sub AddNewLine(CurText As String, LineText As String)
     CurText = CurText & LineText & vbNewLine
+End Sub
+
+Sub ConvertFormulaToExpressionTree(strFormula As String)
+' Converts a string formula to a complete expression tree
+' Uses the Shunting Yard algorithm (adapted to produce an expression tree) which takes O(n) time
+' https://en.wikipedia.org/wiki/Shunting-yard_algorithm
+' For details on modifications to algorithm
+' http://wcipeg.com/wiki/Shunting_yard_algorithm#Conversion_into_syntax_tree
+    Dim tksFormula As Tokens
+    Set tksFormula = modTokeniser.ParseFormula("=" + strFormula)
+    
+    Dim Operands As New ExpressionTreeStack, Operators As New StringStack
+    
+    Dim i As Integer, c As Range, tkn As Token, tknOld As String, Tree As ExpressionTree
+    For i = 1 To tksFormula.Count
+        Set tkn = tksFormula.Item(i)
+        
+        Select Case tkn.TokenType
+        ' If the token is a number or variable, then add it to the operands stack as a new tree.
+        Case TokenType.Number
+            ' Might be a negative number, if so we need to parse out the neg operator
+            Set Tree = CreateTree(tkn.Text, ExpressionTreeNumber)
+            If left(Tree.NodeText, 1) = "-" Then
+                AddNegToTree Tree
+            End If
+            Operands.Push Tree
+            
+        Case TokenType.Reference
+            Operands.Push CreateTree(tkn.Text, ExpressionTreeVariable)
+            
+        ' If the token is a function token, then push it onto the operators stack along with a left parenthesis (tokeniser strips the parenthesis).
+        Case TokenType.FunctionOpen
+            Operators.Push ConvertExcelFunctionToNL(tkn.Text)
+            Operators.Push "("
+            
+        ' If the token is a function argument separator (e.g., a comma)
+        Case TokenType.ParameterSeparator
+            ' Until the token at the top of the operator stack is a left parenthesis, pop operators off the stack onto the operands stack as a new tree.
+            ' If no left parentheses are encountered, either the separator was misplaced or parentheses were mismatched.
+            Do While Operators.Peek() <> "("
+                PopOperator Operators, Operands
+                
+                ' If the operator stack runs out without finding a left parenthesis, then there are mismatched parentheses
+                If Operators.Count = 0 Then
+                    GoTo Mismatch
+                End If
+            Loop
+        
+        ' If the token is an operator
+        Case TokenType.ArithmeticOperator
+            tkn.Text = ConvertExcelFunctionToNL(tkn.Text)
+            ' While there is an operator token at the top of the operator stack
+            Do While Operators.Count > 0
+                tknOld = Operators.Peek()
+                ' If either tkn is left-associative and its precedence is less than or equal to that of tknOld
+                ' or tkn has precedence less than that of tknOld
+                If CheckPrecedence(tkn.Text, tknOld) Then
+                    ' Pop tknOld off the operator stack onto the operand stack as a new tree
+                    PopOperator Operators, Operands
+                Else
+                    Exit Do
+                End If
+            Loop
+            ' Push operator onto the operator stack
+            Operators.Push tkn.Text
+            
+        ' If the token is a left parenthesis, then push it onto the operator stack
+        Case TokenType.SubExpressionOpen
+            Operators.Push tkn.Text
+            
+        ' If the token is a right parenthesis
+        Case TokenType.SubExpressionClose
+            ' Until the token at the top of the operator stack is not a left parenthesis, pop operators off the stack onto the operand stack as a new tree.
+            Do While Operators.Peek <> "("
+                PopOperator Operators, Operands
+                ' If the operator stack runs out without finding a left parenthesis, then there are mismatched parentheses
+                If Operators.Count = 0 Then
+                    GoTo Mismatch
+                End If
+            Loop
+            ' Pop the left parenthesis from the operator stack, but not onto the operand stack
+            Operators.Pop
+            ' If the token at the top of the stack is a function token, pop it onto the operand stack as a new tree
+            If Operators.Count > 0 Then
+                If IsFunctionOperator(Operators.Peek()) Then
+                    PopOperator Operators, Operands
+                End If
+            End If
+        End Select
+    Next i
+    
+    ' While there are still tokens in the operator stack
+    Do While Operators.Count > 0
+        ' If the token on the top of the operator stack is a parenthesis, then there are mismatched parentheses
+        If Operators.Peek = "(" Then
+            GoTo Mismatch
+        End If
+        ' Pop the operator onto the operand stack as a new tree
+        PopOperator Operators, Operands
+    Loop
+    
+    ' We are left with a single tree in the operand stack - this is the complete expression tree
+    Debug.Print Operands.Peek.Display
+    
+    Exit Sub
+    
+Mismatch:
+    MsgBox "Mismatched parentheses"
+    
+End Sub
+
+Public Function CreateTree(NodeText As String, NodeType As Long) As ExpressionTree
+    Dim obj As ExpressionTree
+
+    Set obj = New ExpressionTree
+    obj.NodeText = NodeText
+    obj.NodeType = NodeType
+
+    Set CreateTree = obj
+End Function
+
+Function NumberOfOperands(FunctionName As String) As Integer
+    Select Case FunctionName
+    Case "floor", "ceil", "abs", "neg", "not", "tanh", "tan", "sqrt", "sinh", "sin", "log10", "log", "exp", "cosh", "cos", "atanh", "atan", "asinh", "asin", "acosh", "acos"
+        NumberOfOperands = 1
+    Case "plus", "minus", "mult", "div", "rem", "pow", "less", "or", "and", "lt", "le", "eq", "ge", "gt", "ne", "atan2", "intdiv", "precision", "round", "trunc", "iff"
+        NumberOfOperands = 2
+    Case "min", "max", "sum", "count", "numberof", "numberofs", "and", "or", "alldiff"
+        'n-ary
+    Case "if", "ifs", "implies"
+        NumberOfOperands = 3
+    Case Else
+        MsgBox "Unknown function " & FunctionName
+    End Select
+End Function
+
+Function ConvertExcelFunctionToNL(FunctionName As String) As String
+    FunctionName = LCase(FunctionName)
+    Select Case FunctionName
+    Case "ln"
+        FunctionName = "log"
+    Case "+"
+        FunctionName = "plus"
+    Case "-"
+        FunctionName = "minus"
+    Case "*"
+        FunctionName = "mult"
+    Case "/"
+        FunctionName = "div"
+    Case "mod"
+        FunctionName = "rem"
+    Case "^"
+        FunctionName = "pow"
+    Case "<"
+        FunctionName = "lt"
+    Case "<="
+        FunctionName = "le"
+    Case "="
+        FunctionName = "eq"
+    Case ">="
+        FunctionName = "ge"
+    Case ">"
+        FunctionName = "gt"
+    Case "<>"
+        FunctionName = "ne"
+    Case "quotient"
+        FunctionName = "intdiv"
+        
+    Case "log", "ceiling", "floor", "power"
+        MsgBox "Not implemented yet: " & FunctionName
+    End Select
+    ConvertExcelFunctionToNL = FunctionName
+End Function
+
+Function Precedence(tkn As String) As Integer
+    Select Case tkn
+    Case "plus", "minus"
+        Precedence = 2
+    Case "mult", "div"
+        Precedence = 3
+    Case "pow"
+        Precedence = 4
+    Case "neg"
+        Precedence = 5
+    Case Else
+        Precedence = -1
+    End Select
+End Function
+
+Function CheckPrecedence(tkn1 As String, tkn2 As String) As Boolean
+    ' Either tkn1 is left-associative and its precedence is less than or equal to that of tkn2
+    If OperatorIsLeftAssociative(tkn1) Then
+        If Precedence(tkn1) <= Precedence(tkn2) Then
+            CheckPrecedence = True
+        Else
+            CheckPrecedence = False
+        End If
+    ' Or tkn1 has precedence less than that of tkn2
+    Else
+        If Precedence(tkn1) < Precedence(tkn2) Then
+            CheckPrecedence = True
+        Else
+            CheckPrecedence = False
+        End If
+    End If
+End Function
+
+Function OperatorIsLeftAssociative(tkn As String) As Boolean
+    Select Case tkn
+    Case "plus", "minus", "mult", "div"
+        OperatorIsLeftAssociative = True
+    Case "pow"
+        OperatorIsLeftAssociative = False
+    Case Else
+        MsgBox "unknown associativity: " & tkn
+    End Select
+End Function
+
+Sub PopOperator(Operators As StringStack, Operands As ExpressionTreeStack)
+    Dim Operator As String
+    Operator = Operators.Pop()
+    
+    Dim NewTree As ExpressionTree
+    Set NewTree = CreateTree(Operator, ExpressionTreeOperator)
+    
+    Dim NumToPop As Integer
+    NumToPop = NumberOfOperands(Operator)
+    
+    Dim i As Integer, Tree As ExpressionTree
+    For i = NumToPop To 1 Step -1
+        Set Tree = Operands.Pop
+        NewTree.SetChild i, Tree
+    Next i
+    
+    Operands.Push NewTree
+End Sub
+
+Function IsFunctionOperator(tkn As String) As Boolean
+    Select Case tkn
+    Case "plus", "minus", "mult", "div", "pow", "neg"
+        IsFunctionOperator = False
+    Case Else
+        IsFunctionOperator = True
+    End Select
+End Function
+
+Sub AddNegToTree(Tree As ExpressionTree)
+    Dim NewTree As ExpressionTree
+    Set NewTree = CreateTree("neg", ExpressionTreeOperator)
+    
+    Tree.NodeText = right(Tree.NodeText, Len(Tree.NodeText) - 1)
+    NewTree.SetChild 1, Tree
+    
+    Set Tree = NewTree
 End Sub

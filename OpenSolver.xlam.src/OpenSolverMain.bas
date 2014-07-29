@@ -396,11 +396,11 @@ Public Sub AddMenuItems()
 29900       .FaceId = 0
 29910    End With
          
-29870    With objCustomMenu.Controls.Add(Type:=msoControlButton)
-29880       .Caption = "View Last AMPL File"
-29890       .OnAction = "OpenSolver_ViewLastAmplClickHandler"
-29900       .FaceId = 0
-29910    End With
+         With objCustomMenu.Controls.Add(Type:=msoControlButton)
+            .Caption = "View Last AMPL File"
+            .OnAction = "OpenSolver_ViewLastAmplClickHandler"
+            .FaceId = 0
+         End With
          
          With objCustomMenu.Controls.Add(Type:=msoControlButton)
             .Caption = "View Last Log File"
