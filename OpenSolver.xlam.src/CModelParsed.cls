@@ -555,6 +555,7 @@ Function ExpandFormula(ByVal strFormula As String, _
     Set objCurNode = New CFormula
     If Not (rngSourceCell Is Nothing) Then
         objCurNode.strAddress = strRootAddress
+        objCurNode.initialValue = rngSourceCell.Value2
         Set objCurNode.rngAddress = rngSourceCell
         ExpandFormula = strRootAddress
     Else

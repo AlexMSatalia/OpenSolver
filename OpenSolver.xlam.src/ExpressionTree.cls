@@ -67,23 +67,16 @@ Public Function Display() As String
 End Function
 
 Public Function ConvertToNL() As String
-
-    Dim output As String
-    output = output + FormatNL(NodeText, NodeType)
-    
-    ' Add set spacing for comments
-    Dim i As Integer
-    For i = 1 To CommentSpacing - Len(output)
-       output = output + " "
-    Next i
     
     ' Add comment
-    output = output + "# "
+    Dim comment As String, i As Integer
     For i = 1 To CommentIndent
-       output = output + " "
+       comment = comment + " "
     Next i
+    comment = comment + NodeText
     
-    output = output + NodeText + vbNewLine
+    Dim output As String
+    AddNewLine output, FormatNL(NodeText, NodeType), comment
     
     CommentIndent = CommentIndent + 4
     For i = 1 To NumChildren

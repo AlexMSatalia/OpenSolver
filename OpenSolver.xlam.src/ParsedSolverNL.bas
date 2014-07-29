@@ -66,12 +66,22 @@ Dim ConstraintMapRev As Collection
 Dim NonLinearConstraintTrees As Collection
 Dim NonLinearObjectiveTrees As Collection
 
+Dim objCellName As String
+Dim numActualVars As Integer
+Dim numFakeVars As Integer
+Dim numFakeCons As Integer
+Dim numActualCons As Integer
+Dim numActualEqs As Integer
+Dim numActualRanges As Integer
+
     
 Function SolveModelParsed_NL(ModelFilePathName As String, model As CModelParsed)
     Set m = model
     
-    Dim numActualVars As Integer, numFakeCons As Integer, numActualCons As Integer, numActualEqs As Integer, numActualRanges As Integer
+    objCellName = ConvertCellToStandardName(m.ObjectiveCell)
+    
     numActualVars = m.AdjustableCells.Count
+    numFakeVars = m.Formulae.Count
     numFakeCons = m.Formulae.Count
     numActualCons = m.LHSKeys.Count
     
@@ -156,6 +166,7 @@ Function SolveModelParsed_NL(ModelFilePathName As String, model As CModelParsed)
     ' Write C blocks
     Print #1, MakeCBlocks()
     ' Write O block
+    Print #1, MakeOBlocks()
     
     ' Write d block
     Print #1, MakeDBlock()
@@ -164,6 +175,7 @@ Function SolveModelParsed_NL(ModelFilePathName As String, model As CModelParsed)
     Print #1, MakeXBlock()
     
     ' Write r block
+    Print #1, MakeRBlock()
     
     ' Write b block
     Print #1, MakeBBlock()
@@ -183,28 +195,28 @@ Function MakeHeader() As String
     Header = ""
     
     'Line #1
-    AddNewLine Header, "g3 1 1 0 # problem " & problem_name
+    AddNewLine Header, "g3 1 1 0", "problem " & problem_name
     'Line #2
-    AddNewLine Header, " " & n_var & " " & n_con & " " & n_obj & " " & nranges & " " & n_eqn_ & " " & n_lcon & " # vars, constraints, objectives, ranges, eqns"
+    AddNewLine Header, " " & n_var & " " & n_con & " " & n_obj & " " & nranges & " " & n_eqn_ & " " & n_lcon, "vars, constraints, objectives, ranges, eqns"
     'Line #3
-    AddNewLine Header, " " & nlc & " " & nlo & " # nonlinear constraints, objectives"
+    AddNewLine Header, " " & nlc & " " & nlo, "nonlinear constraints, objectives"
     'Line #4
-    AddNewLine Header, " " & nlnc & " " & lnc & " # network constraints: nonlinear, linear"
+    AddNewLine Header, " " & nlnc & " " & lnc, "network constraints: nonlinear, linear"
     'Line #5
-    AddNewLine Header, " " & nlvc & " " & nlvo & " " & nlvb & " # nonlinear vars in constraints, objectives, both"
+    AddNewLine Header, " " & nlvc & " " & nlvo & " " & nlvb, "nonlinear vars in constraints, objectives, both"
     'Line #6
-    AddNewLine Header, " " & nwv_ & " " & nfunc_ & " " & arith & " " & flags & " # linear network variables; functions; arith, flags"
+    AddNewLine Header, " " & nwv_ & " " & nfunc_ & " " & arith & " " & flags, "linear network variables; functions; arith, flags"
     'Line #7
-    AddNewLine Header, " " & nbv & " " & niv & " " & nlvbi & " " & nlvci & " " & nlvoi & " # discrete variables: binary, integer, nonlinear (b,c,o)"
+    AddNewLine Header, " " & nbv & " " & niv & " " & nlvbi & " " & nlvci & " " & nlvoi, "discrete variables: binary, integer, nonlinear (b,c,o)"
     'Line #8
-    AddNewLine Header, " " & nzc & " " & nzo & " # nonzeros in Jacobian, gradients"
+    AddNewLine Header, " " & nzc & " " & nzo, "nonzeros in Jacobian, gradients"
     'Line #9
-    AddNewLine Header, " " & maxrownamelen_ & " " & maxcolnamelen_ & " # max name lengths: constraints, variables"
+    AddNewLine Header, " " & maxrownamelen_ & " " & maxcolnamelen_, "max name lengths: constraints, variables"
     'Line #10
-    AddNewLine Header, " " & comb & " " & comc & " " & como & " " & comc1 & " " & como1 & " # common exprs: b,c,o,c1,o1"
+    AddNewLine Header, " " & comb & " " & comc & " " & como & " " & comc1 & " " & como1, "common exprs: b,c,o,c1,o1"
     
     ' Strip trailing newline
-    MakeHeader = left(Header, Len(Header) - 2)
+    MakeHeader = StripTrailingNewLine(Header)
 End Function
 
 Sub MakeVariableMap()
@@ -274,7 +286,7 @@ Sub MakeConstraintMap()
     
     ' Actual constraints
     Dim i As Integer, cellName As String
-    For i = 1 To m.LHSKeys.Count
+    For i = 1 To numActualCons
         cellName = "c" & i & "_" & m.LHSKeys(i)
     
         ' Update constraint maps
@@ -289,7 +301,7 @@ Sub MakeConstraintMap()
     Next i
     
     ' Formulae variables
-    For i = 1 To m.Formulae.Count
+    For i = 1 To numFakeCons
         cellName = "f" & i & "_" & m.Formulae(i).strAddress
         
         ' Update variable maps
@@ -327,7 +339,7 @@ Sub ProcessFormulae()
     Set NonLinearObjectiveTrees = New Collection
 
     Dim i As Integer, Tree As ExpressionTree
-    For i = 1 To m.LHSKeys.Count
+    For i = 1 To numActualCons
         Set Tree = ConvertFormulaToExpressionTree(m.RHSKeys(i))
         AddLHSToExpressionTree Tree, m.LHSKeys(i)
         Debug.Print Tree.Display
@@ -337,7 +349,7 @@ Sub ProcessFormulae()
         NonLinearConstraintTrees.Add Tree
     Next i
     
-    For i = 1 To m.Formulae.Count
+    For i = 1 To numFakeCons
         Set Tree = ConvertFormulaToExpressionTree(m.Formulae(i).strFormulaParsed)
         AddLHSToExpressionTree Tree, m.Formulae(i).strAddress
         Debug.Print Tree.Display
@@ -349,103 +361,149 @@ Sub ProcessFormulae()
 End Sub
 
 Function MakeCBlocks() As String
-    Dim Blocks As String
-    Blocks = ""
+    Dim Block As String
+    Block = ""
     
-    Dim i As Integer, Block As String
+    Dim i As Integer
     For i = 1 To n_con
-        Block = "C" & i - 1
-        
-        ' Add set spacing for comments
-        Dim j As Integer
-        For j = 1 To CommentSpacing - Len(Block)
-           Block = Block + " "
-        Next j
-        Block = Block + "### CONSTRAINT " + ConstraintMapRev(CStr(i - 1)) + vbNewLine
+        ' Add block header
+        AddNewLine Block, "C" & i - 1, "CONSTRAINT " + ConstraintMapRev(CStr(i - 1))
         
         ' Add expression tree
-        CommentIndent = 6
+        CommentIndent = 4
         Block = Block + NonLinearConstraintTrees(i).ConvertToNL
-        
-        ' Add to all CBlocks
-        Blocks = Blocks + Block
     Next i
     
     ' Strip trailing newline
-    MakeCBlocks = left(Blocks, Len(Blocks) - 2)
+    MakeCBlocks = StripTrailingNewLine(Block)
+End Function
+
+Function MakeOBlocks() As String
+' Currently just one objective
+' Objective has a single linear term - the objective variable
+    
+    Dim Block As String
+    Block = ""
+    
+    AddNewLine Block, "O" & "0 " & ConvertObjectiveSenseToNL(m.ObjectiveSense), "OBJECTIVE " & objCellName
+    AddNewLine Block, "n0", "    No non-linear terms"
+    
+    MakeOBlocks = StripTrailingNewLine(Block)
 End Function
 
 Function MakeDBlock() As String
     Dim Block As String
     Block = ""
     
-    AddNewLine Block, "d" & n_con
+    AddNewLine Block, "d" & n_con, "INITIAL DUAL GUESS"
     
     ' Set duals to zero for all constraints
     Dim i As Integer
     For i = 1 To n_con
-        AddNewLine Block, i - 1 & " 0"
+        AddNewLine Block, i - 1 & " 0", "    " & ConstraintMapRev(CStr(i - 1)) & " = " & 0
     Next i
     
     ' Strip trailing newline
-    MakeDBlock = left(Block, Len(Block) - 2)
+    MakeDBlock = StripTrailingNewLine(Block)
 End Function
 
 Function MakeXBlock() As String
     Dim Block As String
     Block = ""
     
-    AddNewLine Block, "x" & n_var
+    AddNewLine Block, "x" & n_var, "INITIAL PRIMAL GUESS"
     
     ' Actual variables, apply bounds
     Dim i As Integer, initial As String
-    For i = 1 To m.AdjustableCells.Count
+    For i = 1 To numActualVars
         If VarType(m.AdjustableCells(i)) = vbEmpty Then
             initial = 0
         Else
             initial = m.AdjustableCells(i)
         End If
-        AddNewLine Block, i - 1 & " " & initial
+        AddNewLine Block, i - 1 & " " & initial, "    " & VariableMapRev(CStr(i - 1)) & " = " & initial
     Next i
     
-    ' TODO: real initial values for formulae vars
-    For i = 1 To m.Formulae.Count
-        AddNewLine Block, i + m.AdjustableCells.Count - 1 & " 0"
+    ' Initial values for formulae vars
+    For i = 1 To numFakeVars
+        initial = CStr(m.Formulae(i).initialValue)
+        AddNewLine Block, i + numActualVars - 1 & " " & initial, "    " & VariableMapRev(CStr(i - 1 + numActualVars)) & " = " & initial
     Next i
     
     ' Strip trailing newline
-    MakeXBlock = left(Block, Len(Block) - 2)
+    MakeXBlock = StripTrailingNewLine(Block)
+End Function
+
+Function MakeRBlock() As String
+    Dim Block As String
+    Block = ""
+    
+    AddNewLine Block, "r", "CONSTRAINT BOUNDS"
+    
+    ' Actual constraints - apply bounds
+    Dim i As Integer, BoundType As Integer, comment As String
+    For i = 1 To numActualCons
+        ConvertConstraintToNL m.Rels(i), BoundType, comment
+        AddNewLine Block, BoundType & " " & 0, "    " & ConstraintMapRev(CStr(i - 1)) & comment & 0
+    Next i
+    
+    ' Fake formulae constraints - must equal 0
+    For i = 1 To numFakeCons
+        ConvertConstraintToNL RelationConsts.RelationEQ, BoundType, comment
+        AddNewLine Block, BoundType & " " & 0, "    " & ConstraintMapRev(CStr(i - 1 + numActualCons)) & comment & 0
+    Next i
+    
+    ' Strip trailing newline
+    MakeRBlock = StripTrailingNewLine(Block)
 End Function
 
 Function MakeBBlock() As String
     Dim Block As String
     Block = ""
     
-    AddNewLine Block, "b"
+    AddNewLine Block, "b", "VARIABLE BOUNDS"
     
     ' Actual variables, apply bounds
-    Dim i As Integer, bound As String
-    For i = 1 To m.AdjustableCells.Count
+    Dim i As Integer, bound As String, comment As String
+    For i = 1 To numActualVars
+        comment = "    " & VariableMapRev(CStr(i - 1))
         If m.AssumeNonNegative Then
             bound = "2 0"
+            comment = comment & " >= 0"
         Else
             bound = "3"
+            comment = comment & " FREE"
         End If
-        AddNewLine Block, bound
+        AddNewLine Block, bound, comment
     Next i
     
     ' Fake formulae variables - no bounds
-    For i = 1 To m.Formulae.Count
-        AddNewLine Block, "3"
+    For i = 1 To numFakeVars
+        AddNewLine Block, "3", "    " & VariableMapRev(CStr(i - 1 + numActualVars)) & " FREE"
     Next i
     
     ' Strip trailing newline
-    MakeBBlock = left(Block, Len(Block) - 2)
+    MakeBBlock = StripTrailingNewLine(Block)
 End Function
 
-Sub AddNewLine(CurText As String, LineText As String)
-    CurText = CurText & LineText & vbNewLine
+Sub AddNewLine(CurText As String, LineText As String, Optional CommentText As String = "")
+    Dim Space As String
+    Space = ""
+    
+    If CommentText <> "" Then
+        Dim j As Integer
+        For j = 1 To CommentSpacing - Len(LineText)
+           Space = Space + " "
+        Next j
+        Space = Space + "# "
+    End If
+    
+    CurText = CurText & LineText & Space & CommentText & vbNewLine
 End Sub
+
+Function StripTrailingNewLine(Block As String) As String
+    StripTrailingNewLine = left(Block, Len(Block) - 2)
+End Function
 
 Function ConvertFormulaToExpressionTree(strFormula As String) As ExpressionTree
 ' Converts a string formula to a complete expression tree
@@ -516,7 +574,7 @@ Function ConvertFormulaToExpressionTree(strFormula As String) As ExpressionTree
             Operators.Push tkn.Text
             
         ' If the token is a right parenthesis
-        Case TokenType.SubExpressionClose
+        Case TokenType.SubExpressionClose, TokenType.FunctionClose
             ' Until the token at the top of the operator stack is not a left parenthesis, pop operators off the stack onto the operand stack as a new tree.
             Do While Operators.Peek <> "("
                 PopOperator Operators, Operands
@@ -839,3 +897,31 @@ Function ConvertOperatorToNLCode(FunctionName As String) As Integer
         ConvertOperatorToNLCode = 74
     End Select
 End Function
+
+Function ConvertObjectiveSenseToNL(ObjectiveSense As ObjectiveSenseType) As Integer
+    Select Case ObjectiveSense
+    Case ObjectiveSenseType.MaximiseObjective
+        ConvertObjectiveSenseToNL = 1
+    Case ObjectiveSenseType.MinimiseObjective
+        ConvertObjectiveSenseToNL = 0
+    Case Else
+        MsgBox "Objective sense not supported: " & ObjectiveSense
+    End Select
+End Function
+
+Sub ConvertConstraintToNL(Relation As RelationConsts, BoundType As Integer, comment As String)
+' Converts RelationConsts enum to NL format.
+' LE and GE are swapped here because the relation const is defined w.r.t to LHS but the NL deals with the RHS
+' so LE becomes >= in the NL file, and GE becomes <=
+    Select Case Relation
+        Case RelationConsts.RelationLE
+            BoundType = 1
+            comment = " >= "
+        Case RelationConsts.RelationEQ
+            BoundType = 4
+            comment = " == "
+        Case RelationConsts.RelationGE
+            BoundType = 2
+            comment = " <= "
+    End Select
+End Sub

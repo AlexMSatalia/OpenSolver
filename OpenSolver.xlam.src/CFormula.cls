@@ -13,6 +13,8 @@ Public strAddress As String
 ' Formula
 Public strFormula As String
 Public strFormulaParsed As String
+' Initial value
+Public initialValue As Variant
 ' Properties
 Public lngDepth As Long
 Public boolIsRoot As Boolean
