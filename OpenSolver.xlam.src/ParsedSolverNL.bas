@@ -66,7 +66,14 @@ Dim ConstraintMapRev As Collection
 Dim NonLinearConstraintTrees As Collection
 Dim NonLinearObjectiveTrees As Collection
 
-Dim objCellName As String
+Dim LinearConstraintVariables As Collection
+Dim LinearConstraintCoefficients As Collection
+Dim LinearObjectiveVariables As Collection
+Dim LinearObjectiveCoefficients As Collection
+
+Dim ObjectiveCells As Collection
+Dim ObjectiveSenses As Collection
+
 Dim numActualVars As Integer
 Dim numFakeVars As Integer
 Dim numFakeCons As Integer
@@ -74,11 +81,11 @@ Dim numActualCons As Integer
 Dim numActualEqs As Integer
 Dim numActualRanges As Integer
 
+Dim NonZeroConstraintCount As Collection
+
     
 Function SolveModelParsed_NL(ModelFilePathName As String, model As CModelParsed)
     Set m = model
-    
-    objCellName = ConvertCellToStandardName(m.ObjectiveCell)
     
     numActualVars = m.AdjustableCells.Count
     numFakeVars = m.Formulae.Count
@@ -104,7 +111,7 @@ Function SolveModelParsed_NL(ModelFilePathName As String, model As CModelParsed)
     ' Model statistics for line #2
     n_var = numActualVars + numFakeCons
     n_con = numActualCons + numFakeCons
-    n_obj = 1
+    n_obj = 0
     nranges = numActualRanges
     n_eqn_ = numActualEqs + numFakeCons
     n_lcon = 0
@@ -157,6 +164,7 @@ Function SolveModelParsed_NL(ModelFilePathName As String, model As CModelParsed)
     OutputRowFile
     
     ProcessFormulae
+    ProcessObjective
     
     Open ModelFilePathName For Output As #1
     
@@ -185,7 +193,7 @@ Function SolveModelParsed_NL(ModelFilePathName As String, model As CModelParsed)
     ' Write J block
     
     ' Write G block
-    
+    Print #1, MakeGBlocks()
     
     Close #1
 End Function
@@ -216,7 +224,7 @@ Function MakeHeader() As String
     AddNewLine Header, " " & comb & " " & comc & " " & como & " " & comc1 & " " & como1, "common exprs: b,c,o,c1,o1"
     
     ' Strip trailing newline
-    MakeHeader = StripTrailingNewLine(Header)
+    MakeHeader = StripTrailingNewline(Header)
 End Function
 
 Sub MakeVariableMap()
@@ -334,10 +342,11 @@ End Sub
 
 Sub ProcessFormulae()
 
-
+    Set NonZeroConstraintCount = New Collection
     Set NonLinearConstraintTrees = New Collection
-    Set NonLinearObjectiveTrees = New Collection
-
+    Set LinearConstraintVariables = New Collection
+    Set LinearConstraintCoefficients = New Collection
+    
     Dim i As Integer, Tree As ExpressionTree
     For i = 1 To numActualCons
         Set Tree = ConvertFormulaToExpressionTree(m.RHSKeys(i))
@@ -360,6 +369,38 @@ Sub ProcessFormulae()
     Next i
 End Sub
 
+Sub ProcessObjective()
+' Currently just one objective
+' Objective has a single linear term - the objective variable
+
+    Set NonLinearObjectiveTrees = New Collection
+    Set ObjectiveSenses = New Collection
+    Set ObjectiveCells = New Collection
+    Set LinearObjectiveVariables = New Collection
+    Set LinearObjectiveCoefficients = New Collection
+
+    ObjectiveCells.Add ConvertCellToStandardName(m.ObjectiveCell)
+    ObjectiveSenses.Add m.ObjectiveSense
+    
+    ' Objective non-linear constraint tree is empty
+    NonLinearObjectiveTrees.Add CreateTree("0", ExpressionTreeNodeType.ExpressionTreeNumber)
+    
+    ' Objective linear constraint
+    Dim ObjectiveVariables As New Collection
+    Dim ObjectiveCoefficients As New Collection
+    
+    ObjectiveVariables.Add VariableMap(ObjectiveCells(1))
+    ObjectiveCoefficients.Add 1
+    
+    LinearObjectiveVariables.Add ObjectiveVariables
+    LinearObjectiveCoefficients.Add ObjectiveCoefficients
+    ' Track non-zero count in linear objective
+    nzo = nzo + 1
+    
+    ' Adjust objective count
+    n_obj = n_obj + 1
+End Sub
+
 Function MakeCBlocks() As String
     Dim Block As String
     Block = ""
@@ -367,28 +408,31 @@ Function MakeCBlocks() As String
     Dim i As Integer
     For i = 1 To n_con
         ' Add block header
-        AddNewLine Block, "C" & i - 1, "CONSTRAINT " + ConstraintMapRev(CStr(i - 1))
+        AddNewLine Block, "C" & i - 1, "CONSTRAINT NON-LINEAR SECTION " + ConstraintMapRev(CStr(i - 1))
         
         ' Add expression tree
         CommentIndent = 4
         Block = Block + NonLinearConstraintTrees(i).ConvertToNL
     Next i
     
-    ' Strip trailing newline
-    MakeCBlocks = StripTrailingNewLine(Block)
+    MakeCBlocks = StripTrailingNewline(Block)
 End Function
 
 Function MakeOBlocks() As String
-' Currently just one objective
-' Objective has a single linear term - the objective variable
     
     Dim Block As String
     Block = ""
     
-    AddNewLine Block, "O" & "0 " & ConvertObjectiveSenseToNL(m.ObjectiveSense), "OBJECTIVE " & objCellName
-    AddNewLine Block, "n0", "    No non-linear terms"
+    Dim i As Integer
+    For i = 1 To n_obj
+        AddNewLine Block, "O" & i - 1 & " " & ConvertObjectiveSenseToNL(ObjectiveSenses(i)), "OBJECTIVE NON-LINEAR SECTION " & ObjectiveCells(i)
+        
+        ' Add expression tree
+        CommentIndent = 4
+        Block = Block + NonLinearObjectiveTrees(i).ConvertToNL
+    Next i
     
-    MakeOBlocks = StripTrailingNewLine(Block)
+    MakeOBlocks = StripTrailingNewline(Block)
 End Function
 
 Function MakeDBlock() As String
@@ -404,7 +448,7 @@ Function MakeDBlock() As String
     Next i
     
     ' Strip trailing newline
-    MakeDBlock = StripTrailingNewLine(Block)
+    MakeDBlock = StripTrailingNewline(Block)
 End Function
 
 Function MakeXBlock() As String
@@ -431,7 +475,7 @@ Function MakeXBlock() As String
     Next i
     
     ' Strip trailing newline
-    MakeXBlock = StripTrailingNewLine(Block)
+    MakeXBlock = StripTrailingNewline(Block)
 End Function
 
 Function MakeRBlock() As String
@@ -454,7 +498,7 @@ Function MakeRBlock() As String
     Next i
     
     ' Strip trailing newline
-    MakeRBlock = StripTrailingNewLine(Block)
+    MakeRBlock = StripTrailingNewline(Block)
 End Function
 
 Function MakeBBlock() As String
@@ -483,7 +527,25 @@ Function MakeBBlock() As String
     Next i
     
     ' Strip trailing newline
-    MakeBBlock = StripTrailingNewLine(Block)
+    MakeBBlock = StripTrailingNewline(Block)
+End Function
+
+Function MakeGBlocks() As String
+    Dim Block As String
+    Block = ""
+    
+    Dim i As Integer, ObjectiveVariables As Collection, ObjectiveCoefficients As Collection
+    For i = 1 To n_obj
+        ' Make header
+        AddNewLine Block, "G" & i - 1 & " " & LinearObjectiveVariables(i).Count, "OBJECTIVE LINEAR SECTION " & ObjectiveCells(i)
+        
+        Dim j As Integer
+        For j = 1 To LinearObjectiveVariables(i).Count
+            AddNewLine Block, LinearObjectiveVariables(i)(j) & " " & LinearObjectiveCoefficients(i)(j), "    + " & LinearObjectiveCoefficients(i)(j) & " * " & VariableMapRev(LinearObjectiveVariables(i)(j))
+        Next j
+    Next i
+    
+    MakeGBlocks = StripTrailingNewline(Block)
 End Function
 
 Sub AddNewLine(CurText As String, LineText As String, Optional CommentText As String = "")
@@ -501,8 +563,8 @@ Sub AddNewLine(CurText As String, LineText As String, Optional CommentText As St
     CurText = CurText & LineText & Space & CommentText & vbNewLine
 End Sub
 
-Function StripTrailingNewLine(Block As String) As String
-    StripTrailingNewLine = left(Block, Len(Block) - 2)
+Function StripTrailingNewline(Block As String) As String
+    StripTrailingNewline = left(Block, Len(Block) - 2)
 End Function
 
 Function ConvertFormulaToExpressionTree(strFormula As String) As ExpressionTree
