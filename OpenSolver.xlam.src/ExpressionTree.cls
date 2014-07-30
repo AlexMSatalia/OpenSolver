@@ -86,3 +86,18 @@ Public Function ConvertToNL() As String
     
     ConvertToNL = output
 End Function
+
+Sub ExtractVariables(Variables As Collection, Coefficients As Collection)
+    If NodeType = ExpressionTreeVariable Then
+        If Not TestKeyExists(Variables, NodeText) Then
+            Variables.Add VariableMap(NodeText), NodeText
+            Coefficients.Add 0, NodeText
+        End If
+    End If
+    
+    Dim i As Integer
+    For i = 1 To NumChildren
+        Children(i).ExtractVariables Variables, Coefficients
+    Next i
+
+End Sub

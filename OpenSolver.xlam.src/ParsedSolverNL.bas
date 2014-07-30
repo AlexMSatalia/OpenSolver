@@ -58,13 +58,15 @@ Dim como1 As Integer
 ' End ASL variables
 ' ===========================================================================
 
-Dim VariableMap As Collection
+Public VariableMap As Collection
 Dim VariableMapRev As Collection
 Dim ConstraintMap As Collection
 Dim ConstraintMapRev As Collection
 
 Dim NonLinearConstraintTrees As Collection
 Dim NonLinearObjectiveTrees As Collection
+
+Dim NonLinearVars As Collection
 
 Dim LinearConstraintVariables As Collection
 Dim LinearConstraintCoefficients As Collection
@@ -81,7 +83,7 @@ Dim numActualCons As Integer
 Dim numActualEqs As Integer
 Dim numActualRanges As Integer
 
-Dim NonZeroConstraintCount As Collection
+Dim NonZeroConstraintCount() As Integer
 
     
 Function SolveModelParsed_NL(ModelFilePathName As String, model As CModelParsed)
@@ -189,8 +191,10 @@ Function SolveModelParsed_NL(ModelFilePathName As String, model As CModelParsed)
     Print #1, MakeBBlock()
     
     ' Write k block
+    Print #1, MakeKBlock()
     
     ' Write J block
+    Print #1, MakeJBlocks()
     
     ' Write G block
     Print #1, MakeGBlocks()
@@ -341,32 +345,82 @@ Sub OutputRowFile()
 End Sub
 
 Sub ProcessFormulae()
-
-    Set NonZeroConstraintCount = New Collection
+    
     Set NonLinearConstraintTrees = New Collection
     Set LinearConstraintVariables = New Collection
     Set LinearConstraintCoefficients = New Collection
     
-    Dim i As Integer, Tree As ExpressionTree
+    Set NonLinearVars = New Collection
+    
+    Dim ConstraintVariables As Collection
+    Dim ConstraintCoefficients As Collection
+    
+    Dim i As Integer, j As Integer, Tree As ExpressionTree
     For i = 1 To numActualCons
         Set Tree = ConvertFormulaToExpressionTree(m.RHSKeys(i))
         AddLHSToExpressionTree Tree, m.LHSKeys(i)
         Debug.Print Tree.Display
+        
+        Set ConstraintVariables = New Collection
+        Set ConstraintCoefficients = New Collection
+        Tree.ExtractVariables ConstraintVariables, ConstraintCoefficients
+        
+        For j = 1 To ConstraintVariables.Count
+            If Not TestKeyExists(NonLinearVars, VariableMapRev(ConstraintVariables(j))) Then
+                NonLinearVars.Add ConstraintVariables(j), VariableMapRev(ConstraintVariables(j))
+                nlvc = nlvc + 1
+            End If
+        Next j
         ' Remove linear terms
         ' Set header information
         
         NonLinearConstraintTrees.Add Tree
+        
+        
+        LinearConstraintVariables.Add ConstraintVariables
+        LinearConstraintCoefficients.Add ConstraintCoefficients
+        
+        nlc = nlc + 1
     Next i
     
     For i = 1 To numFakeCons
         Set Tree = ConvertFormulaToExpressionTree(m.Formulae(i).strFormulaParsed)
         AddLHSToExpressionTree Tree, m.Formulae(i).strAddress
         Debug.Print Tree.Display
+        
+        Set ConstraintVariables = New Collection
+        Set ConstraintCoefficients = New Collection
+        Tree.ExtractVariables ConstraintVariables, ConstraintCoefficients
+        
+        For j = 1 To ConstraintVariables.Count
+            If Not TestKeyExists(NonLinearVars, VariableMapRev(ConstraintVariables(j))) Then
+                NonLinearVars.Add ConstraintVariables(j), VariableMapRev(ConstraintVariables(j))
+                nlvc = nlvc + 1
+            End If
+        Next j
         ' Remove linear terms
         ' Set header information
         
         NonLinearConstraintTrees.Add Tree
+        
+        
+        LinearConstraintVariables.Add ConstraintVariables
+        LinearConstraintCoefficients.Add ConstraintCoefficients
+        
+        nlc = nlc + 1
     Next i
+    
+    ' Process linear vars for jacobian counts
+    ReDim NonZeroConstraintCount(n_var)
+    For i = 1 To LinearConstraintVariables.Count
+        For j = 1 To LinearConstraintVariables(i).Count
+            If LinearConstraintCoefficients(i)(j) > 0 Then
+                NonZeroConstraintCount(LinearConstraintVariables(i) + 1) = NonZeroConstraintCount(LinearConstraintVariables(i) + 1) + 1
+                nzc = nzc + 1
+            End If
+        Next j
+    Next i
+    
 End Sub
 
 Sub ProcessObjective()
@@ -528,6 +582,41 @@ Function MakeBBlock() As String
     
     ' Strip trailing newline
     MakeBBlock = StripTrailingNewline(Block)
+End Function
+
+Function MakeKBlock() As String
+    Dim Block As String
+    Block = ""
+
+    ' Add header
+    AddNewLine Block, "k" & n_var - 1, "NUMBER OF JACOBIAN ENTRIES (CUMULATIVE) FOR FIRST " & n_var - 1 & " VARIABLES"
+    
+    Dim i As Integer, total As Integer
+    total = 0
+    For i = 1 To n_var - 1
+        total = total + NonZeroConstraintCount(i)
+        AddNewLine Block, CStr(total), "    Up to " & VariableMapRev(CStr(i - 1)) & ": " & CStr(total) & " entries in Jacobian"
+    Next i
+    
+    MakeKBlock = StripTrailingNewline(Block)
+End Function
+
+Function MakeJBlocks() As String
+    Dim Block As String
+    Block = ""
+    
+    Dim i As Integer, ObjectiveVariables As Collection, ObjectiveCoefficients As Collection
+    For i = 1 To n_con
+        ' Make header
+        AddNewLine Block, "J" & i - 1 & " " & LinearConstraintVariables(i).Count, "CONSTRAINT LINEAR SECTION " & ConstraintMapRev(i)
+        
+        Dim j As Integer
+        For j = 1 To LinearConstraintVariables(i).Count
+            AddNewLine Block, LinearConstraintVariables(i)(j) & " " & LinearConstraintCoefficients(i)(j), "    + " & LinearConstraintCoefficients(i)(j) & " * " & VariableMapRev(LinearConstraintVariables(i)(j))
+        Next j
+    Next i
+    
+    MakeJBlocks = StripTrailingNewline(Block)
 End Function
 
 Function MakeGBlocks() As String
