@@ -87,17 +87,18 @@ Public Function ConvertToNL() As String
     ConvertToNL = output
 End Function
 
-Sub ExtractVariables(Variables As Collection, Coefficients As Collection)
+Sub ExtractVariables(constraint As LinearConstraintNL)
     If NodeType = ExpressionTreeVariable Then
-        If Not TestKeyExists(Variables, NodeText) Then
-            Variables.Add VariableMap(NodeText), NodeText
-            Coefficients.Add 0, NodeText
+        Dim index As Integer
+        index = VariableMap(NodeText) + 1
+        If Not constraint.VariablePresent(index) Then
+            constraint.VariablePresent(index) = True
         End If
     End If
     
     Dim i As Integer
     For i = 1 To NumChildren
-        Children(i).ExtractVariables Variables, Coefficients
+        Children(i).ExtractVariables constraint
     Next i
 
 End Sub

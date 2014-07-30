@@ -66,12 +66,10 @@ Dim ConstraintMapRev As Collection
 Dim NonLinearConstraintTrees As Collection
 Dim NonLinearObjectiveTrees As Collection
 
-Dim NonLinearVars As Collection
+Dim NonLinearVars() As Boolean
 
-Dim LinearConstraintVariables As Collection
-Dim LinearConstraintCoefficients As Collection
-Dim LinearObjectiveVariables As Collection
-Dim LinearObjectiveCoefficients As Collection
+Dim LinearConstraints As Collection
+Dim LinearObjectives As Collection
 
 Dim ObjectiveCells As Collection
 Dim ObjectiveSenses As Collection
@@ -168,6 +166,8 @@ Function SolveModelParsed_NL(ModelFilePathName As String, model As CModelParsed)
     ProcessFormulae
     ProcessObjective
     
+    On Error GoTo ErrHandler
+    
     Open ModelFilePathName For Output As #1
     
     ' Write header
@@ -175,6 +175,7 @@ Function SolveModelParsed_NL(ModelFilePathName As String, model As CModelParsed)
     
     ' Write C blocks
     Print #1, MakeCBlocks()
+    
     ' Write O block
     Print #1, MakeOBlocks()
     
@@ -200,6 +201,11 @@ Function SolveModelParsed_NL(ModelFilePathName As String, model As CModelParsed)
     Print #1, MakeGBlocks()
     
     Close #1
+    Exit Function
+    
+ErrHandler:
+    Close #1
+    Err.Raise Err.Number, Err.Source, Err.Description
 End Function
 
 Function MakeHeader() As String
@@ -347,27 +353,26 @@ End Sub
 Sub ProcessFormulae()
     
     Set NonLinearConstraintTrees = New Collection
-    Set LinearConstraintVariables = New Collection
-    Set LinearConstraintCoefficients = New Collection
+    Set LinearConstraints = New Collection
     
-    Set NonLinearVars = New Collection
+    ReDim NonLinearVars(n_var)
     
-    Dim ConstraintVariables As Collection
-    Dim ConstraintCoefficients As Collection
+    Dim constraint As LinearConstraintNL
+    
     
     Dim i As Integer, j As Integer, Tree As ExpressionTree
     For i = 1 To numActualCons
         Set Tree = ConvertFormulaToExpressionTree(m.RHSKeys(i))
-        AddLHSToExpressionTree Tree, m.LHSKeys(i)
         Debug.Print Tree.Display
         
-        Set ConstraintVariables = New Collection
-        Set ConstraintCoefficients = New Collection
-        Tree.ExtractVariables ConstraintVariables, ConstraintCoefficients
+        Set constraint = New LinearConstraintNL
+        constraint.Count = n_var
         
-        For j = 1 To ConstraintVariables.Count
-            If Not TestKeyExists(NonLinearVars, VariableMapRev(ConstraintVariables(j))) Then
-                NonLinearVars.Add ConstraintVariables(j), VariableMapRev(ConstraintVariables(j))
+        Tree.ExtractVariables constraint
+        
+        For j = 1 To constraint.Count
+            If constraint.VariablePresent(j) And Not NonLinearVars(j) Then
+                NonLinearVars(j) = True
                 nlvc = nlvc + 1
             End If
         Next j
@@ -376,9 +381,10 @@ Sub ProcessFormulae()
         
         NonLinearConstraintTrees.Add Tree
         
+        constraint.VariablePresent(VariableMap(m.LHSKeys(i)) + 1) = True
+        constraint.Coefficient(VariableMap(m.LHSKeys(i)) + 1) = -1
         
-        LinearConstraintVariables.Add ConstraintVariables
-        LinearConstraintCoefficients.Add ConstraintCoefficients
+        LinearConstraints.Add constraint
         
         nlc = nlc + 1
     Next i
@@ -388,13 +394,14 @@ Sub ProcessFormulae()
         AddLHSToExpressionTree Tree, m.Formulae(i).strAddress
         Debug.Print Tree.Display
         
-        Set ConstraintVariables = New Collection
-        Set ConstraintCoefficients = New Collection
-        Tree.ExtractVariables ConstraintVariables, ConstraintCoefficients
+        Set constraint = New LinearConstraintNL
+        constraint.Count = n_var
         
-        For j = 1 To ConstraintVariables.Count
-            If Not TestKeyExists(NonLinearVars, VariableMapRev(ConstraintVariables(j))) Then
-                NonLinearVars.Add ConstraintVariables(j), VariableMapRev(ConstraintVariables(j))
+        Tree.ExtractVariables constraint
+        
+        For j = 1 To constraint.Count
+            If constraint.VariablePresent(j) And Not NonLinearVars(j) Then
+                NonLinearVars(j) = True
                 nlvc = nlvc + 1
             End If
         Next j
@@ -403,19 +410,20 @@ Sub ProcessFormulae()
         
         NonLinearConstraintTrees.Add Tree
         
+        constraint.VariablePresent(VariableMap(m.Formulae(i).strAddress) + 1) = True
+        constraint.Coefficient(VariableMap(m.Formulae(i).strAddress) + 1) = -1
         
-        LinearConstraintVariables.Add ConstraintVariables
-        LinearConstraintCoefficients.Add ConstraintCoefficients
+        LinearConstraints.Add constraint
         
         nlc = nlc + 1
     Next i
     
     ' Process linear vars for jacobian counts
     ReDim NonZeroConstraintCount(n_var)
-    For i = 1 To LinearConstraintVariables.Count
-        For j = 1 To LinearConstraintVariables(i).Count
-            If LinearConstraintCoefficients(i)(j) > 0 Then
-                NonZeroConstraintCount(LinearConstraintVariables(i) + 1) = NonZeroConstraintCount(LinearConstraintVariables(i) + 1) + 1
+    For i = 1 To LinearConstraints.Count
+        For j = 1 To LinearConstraints(i).Count
+            If LinearConstraints(i).VariablePresent(j) And LinearConstraints(i).Coefficient(j) <> 0 Then
+                NonZeroConstraintCount(j) = NonZeroConstraintCount(j) + 1
                 nzc = nzc + 1
             End If
         Next j
@@ -430,8 +438,7 @@ Sub ProcessObjective()
     Set NonLinearObjectiveTrees = New Collection
     Set ObjectiveSenses = New Collection
     Set ObjectiveCells = New Collection
-    Set LinearObjectiveVariables = New Collection
-    Set LinearObjectiveCoefficients = New Collection
+    Set LinearObjectives = New Collection
 
     ObjectiveCells.Add ConvertCellToStandardName(m.ObjectiveCell)
     ObjectiveSenses.Add m.ObjectiveSense
@@ -440,14 +447,13 @@ Sub ProcessObjective()
     NonLinearObjectiveTrees.Add CreateTree("0", ExpressionTreeNodeType.ExpressionTreeNumber)
     
     ' Objective linear constraint
-    Dim ObjectiveVariables As New Collection
-    Dim ObjectiveCoefficients As New Collection
+    Dim Objective As New LinearConstraintNL
+    Objective.Count = n_var
     
-    ObjectiveVariables.Add VariableMap(ObjectiveCells(1))
-    ObjectiveCoefficients.Add 1
+    Objective.VariablePresent(VariableMap(ObjectiveCells(1)) + 1) = True
+    Objective.Coefficient(VariableMap(ObjectiveCells(1)) + 1) = 1
     
-    LinearObjectiveVariables.Add ObjectiveVariables
-    LinearObjectiveCoefficients.Add ObjectiveCoefficients
+    LinearObjectives.Add Objective
     ' Track non-zero count in linear objective
     nzo = nzo + 1
     
@@ -608,11 +614,13 @@ Function MakeJBlocks() As String
     Dim i As Integer, ObjectiveVariables As Collection, ObjectiveCoefficients As Collection
     For i = 1 To n_con
         ' Make header
-        AddNewLine Block, "J" & i - 1 & " " & LinearConstraintVariables(i).Count, "CONSTRAINT LINEAR SECTION " & ConstraintMapRev(i)
+        AddNewLine Block, "J" & i - 1 & " " & LinearConstraints(i).NumPresent, "CONSTRAINT LINEAR SECTION " & ConstraintMapRev(i)
         
         Dim j As Integer
-        For j = 1 To LinearConstraintVariables(i).Count
-            AddNewLine Block, LinearConstraintVariables(i)(j) & " " & LinearConstraintCoefficients(i)(j), "    + " & LinearConstraintCoefficients(i)(j) & " * " & VariableMapRev(LinearConstraintVariables(i)(j))
+        For j = 1 To LinearConstraints(i).Count
+            If LinearConstraints(i).VariablePresent(j) Then
+                AddNewLine Block, j - 1 & " " & LinearConstraints(i).Coefficient(j), "    + " & LinearConstraints(i).Coefficient(j) & " * " & VariableMapRev(CStr(j - 1))
+            End If
         Next j
     Next i
     
@@ -626,11 +634,13 @@ Function MakeGBlocks() As String
     Dim i As Integer, ObjectiveVariables As Collection, ObjectiveCoefficients As Collection
     For i = 1 To n_obj
         ' Make header
-        AddNewLine Block, "G" & i - 1 & " " & LinearObjectiveVariables(i).Count, "OBJECTIVE LINEAR SECTION " & ObjectiveCells(i)
+        AddNewLine Block, "G" & i - 1 & " " & LinearObjectives(i).NumPresent, "OBJECTIVE LINEAR SECTION " & ObjectiveCells(i)
         
         Dim j As Integer
-        For j = 1 To LinearObjectiveVariables(i).Count
-            AddNewLine Block, LinearObjectiveVariables(i)(j) & " " & LinearObjectiveCoefficients(i)(j), "    + " & LinearObjectiveCoefficients(i)(j) & " * " & VariableMapRev(LinearObjectiveVariables(i)(j))
+        For j = 1 To LinearObjectives(i).Count
+            If LinearObjectives(i).VariablePresent(j) Then
+                AddNewLine Block, j - 1 & " " & LinearObjectives(i).Coefficient(j), "    + " & LinearObjectives(i).Coefficient(j) & " * " & VariableMapRev(CStr(j - 1))
+            End If
         Next j
     Next i
     
