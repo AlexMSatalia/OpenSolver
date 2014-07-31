@@ -357,69 +357,19 @@ Sub ProcessFormulae()
     
     ReDim NonLinearVars(n_var)
     
-    Dim constraint As LinearConstraintNL
     
-    
-    Dim i As Integer, j As Integer, Tree As ExpressionTree
+    Dim i As Integer
     For i = 1 To numActualCons
-        Set Tree = ConvertFormulaToExpressionTree(m.RHSKeys(i))
-        Debug.Print Tree.Display
-        
-        Set constraint = New LinearConstraintNL
-        constraint.Count = n_var
-        
-        Tree.ExtractVariables constraint
-        
-        For j = 1 To constraint.Count
-            If constraint.VariablePresent(j) And Not NonLinearVars(j) Then
-                NonLinearVars(j) = True
-                nlvc = nlvc + 1
-            End If
-        Next j
-        ' Remove linear terms
-        ' Set header information
-        
-        NonLinearConstraintTrees.Add Tree
-        
-        constraint.VariablePresent(VariableMap(m.LHSKeys(i)) + 1) = True
-        constraint.Coefficient(VariableMap(m.LHSKeys(i)) + 1) = -1
-        
-        LinearConstraints.Add constraint
-        
-        nlc = nlc + 1
+        ProcessSingleFormula m.RHSKeys(i), m.LHSKeys(i)
     Next i
     
     For i = 1 To numFakeCons
-        Set Tree = ConvertFormulaToExpressionTree(m.Formulae(i).strFormulaParsed)
-        AddLHSToExpressionTree Tree, m.Formulae(i).strAddress
-        Debug.Print Tree.Display
-        
-        Set constraint = New LinearConstraintNL
-        constraint.Count = n_var
-        
-        Tree.ExtractVariables constraint
-        
-        For j = 1 To constraint.Count
-            If constraint.VariablePresent(j) And Not NonLinearVars(j) Then
-                NonLinearVars(j) = True
-                nlvc = nlvc + 1
-            End If
-        Next j
-        ' Remove linear terms
-        ' Set header information
-        
-        NonLinearConstraintTrees.Add Tree
-        
-        constraint.VariablePresent(VariableMap(m.Formulae(i).strAddress) + 1) = True
-        constraint.Coefficient(VariableMap(m.Formulae(i).strAddress) + 1) = -1
-        
-        LinearConstraints.Add constraint
-        
-        nlc = nlc + 1
+        ProcessSingleFormula m.Formulae(i).strFormulaParsed, m.Formulae(i).strAddress
     Next i
     
     ' Process linear vars for jacobian counts
     ReDim NonZeroConstraintCount(n_var)
+    Dim j As Integer
     For i = 1 To LinearConstraints.Count
         For j = 1 To LinearConstraints(i).Count
             If LinearConstraints(i).VariablePresent(j) And LinearConstraints(i).Coefficient(j) <> 0 Then
@@ -429,6 +379,40 @@ Sub ProcessFormulae()
         Next j
     Next i
     
+End Sub
+
+Sub ProcessSingleFormula(RHSExpression As String, LHSVariable As String)
+    Dim Tree As ExpressionTree
+    Set Tree = ConvertFormulaToExpressionTree(RHSExpression)
+    Debug.Print Tree.Display
+    
+    
+    Dim constraint As LinearConstraintNL
+    Set constraint = New LinearConstraintNL
+    constraint.Count = n_var
+    
+    Tree.ExtractVariables constraint
+    
+    Dim j As Integer
+    For j = 1 To constraint.Count
+        If constraint.VariablePresent(j) And Not NonLinearVars(j) Then
+            NonLinearVars(j) = True
+            nlvc = nlvc + 1
+        End If
+    Next j
+
+    ' Remove linear terms
+    Tree.MarkLinearity
+    ' Set header information
+    
+    NonLinearConstraintTrees.Add Tree
+    
+    constraint.VariablePresent(VariableMap(LHSVariable) + 1) = True
+    constraint.Coefficient(VariableMap(LHSVariable) + 1) = -1
+    
+    LinearConstraints.Add constraint
+    
+    nlc = nlc + 1
 End Sub
 
 Sub ProcessObjective()
@@ -1086,3 +1070,4 @@ Sub ConvertConstraintToNL(Relation As RelationConsts, BoundType As Integer, comm
             comment = " <= "
     End Select
 End Sub
+

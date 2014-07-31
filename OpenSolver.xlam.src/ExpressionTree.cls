@@ -14,11 +14,18 @@ Dim Children() As ExpressionTree
 Dim NumChildren As Integer
 Public NodeText As String
 Public NodeType As ExpressionTreeNodeType
+Public NodeLinearity As ExpressionTreeNodeLinearity
 
 Public Enum ExpressionTreeNodeType
     ExpressionTreeNumber = 0
     ExpressionTreeVariable = 1
     ExpressionTreeOperator = 2
+End Enum
+
+Public Enum ExpressionTreeNodeLinearity
+    ExpressionTreeConstant = 0
+    ExpressionTreeLinear = 1
+    ExpressionTreeNonLinear = 2
 End Enum
 
 Public Function GetChild(index As Integer) As ExpressionTree
@@ -40,6 +47,7 @@ End Sub
 
 Private Sub Class_Initialize()
     NumChildren = 0
+    NodeLinearity = ExpressionTreeNonLinear
 End Sub
 
 Public Function Display() As String
@@ -66,6 +74,17 @@ Public Function Display() As String
     Display = output
 End Function
 
+Function DisplayLinearity() As String
+    Select Case NodeLinearity
+    Case ExpressionTreeNonLinear
+        DisplayLinearity = "N"
+    Case ExpressionTreeLinear
+        DisplayLinearity = "L"
+    Case ExpressionTreeConstant
+        DisplayLinearity = "C"
+    End Select
+End Function
+
 Public Function ConvertToNL() As String
     
     ' Add comment
@@ -73,7 +92,7 @@ Public Function ConvertToNL() As String
     For i = 1 To CommentIndent
        comment = comment + " "
     Next i
-    comment = comment + NodeText
+    comment = comment + NodeText + " " + DisplayLinearity()
     
     Dim output As String
     AddNewLine output, FormatNL(NodeText, NodeType), comment
@@ -101,4 +120,87 @@ Sub ExtractVariables(constraint As LinearConstraintNL)
         Children(i).ExtractVariables constraint
     Next i
 
+End Sub
+
+Sub MarkLinearity()
+    ' First process all children
+    Dim i As Integer
+    For i = 1 To NumChildren
+        Children(i).MarkLinearity
+    Next i
+
+    Select Case NodeType
+    Case ExpressionTreeNumber
+        NodeLinearity = ExpressionTreeConstant
+        
+    Case ExpressionTreeVariable
+        NodeLinearity = ExpressionTreeLinear
+        
+    Case ExpressionTreeOperator
+        Select Case NodeText
+        Case "plus", "minus"
+            ' Non-linear if either child is non-linear
+            If Children(1).NodeLinearity = ExpressionTreeNonLinear Or Children(2).NodeLinearity = ExpressionTreeNonLinear Then
+                NodeLinearity = ExpressionTreeNonLinear
+            ' Linear if either child is linear
+            ElseIf Children(1).NodeLinearity = ExpressionTreeLinear Or Children(2).NodeLinearity = ExpressionTreeLinear Then
+                NodeLinearity = ExpressionTreeLinear
+            ' Otherwise constant
+            Else
+                NodeLinearity = ExpressionTreeConstant
+            End If
+            
+        Case "mult"
+            ' Non-linear if either child is non-linear or both are linear
+            If Children(1).NodeLinearity = ExpressionTreeNonLinear Or Children(2).NodeLinearity = ExpressionTreeNonLinear Or _
+               (Children(1).NodeLinearity = ExpressionTreeLinear And Children(2).NodeLinearity = ExpressionTreeLinear) Then
+                NodeLinearity = ExpressionTreeNonLinear
+            ' Linear if either child is linear
+            ElseIf Children(1).NodeLinearity = ExpressionTreeLinear Or Children(2).NodeLinearity = ExpressionTreeLinear Then
+                NodeLinearity = ExpressionTreeLinear
+            ' Otherwise constant
+            Else
+                NodeLinearity = ExpressionTreeConstant
+            End If
+            
+        Case "div"
+            ' If denominator is not constant, expression is non-linear
+            If Not Children(2).NodeLinearity = ExpressionTreeConstant Then
+                NodeLinearity = ExpressionTreeNonLinear
+            ' Otherwise denominator is constant and expression is same linearity as numerator
+            Else
+                NodeLinearity = Children(1).NodeLinearity
+            End If
+        
+        Case "pow"
+            ' If exponent is not constant, then non-linear
+            If Not Children(2).NodeLinearity = ExpressionTreeConstant Then
+               NodeLinearity = ExpressionTreeNonLinear
+            ' Non-linear if linear variable raised to power other than one
+            ElseIf Children(1).NodeLinearity = ExpressionTreeLinear And Children(2).NodeText <> 1 Then
+               NodeLinearity = ExpressionTreeNonLinear
+            ' Otherwise expression is same linearity as base
+            Else
+               NodeLinearity = Children(1).NodeLinearity
+            End If
+        
+        Case "neg"
+            ' Same linearity as child
+            NodeLinearity = Children(1).NodeLinearity
+            
+        Case Else
+            ' Other functions
+            ' If all arguments const, then node is const
+            ' Otherwise non-linear
+            ' This is a catch-all, specific functions might need more detail
+            For i = 1 To NumChildren
+                If Not Children(i).NodeLinearity = ExpressionTreeConstant Then
+                    NodeLinearity = ExpressionTreeNonLinear
+                    Exit Sub
+                End If
+            Next i
+            NodeLinearity = ExpressionTreeConstant
+            
+        End Select
+    End Select
 End Sub
