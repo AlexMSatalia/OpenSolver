@@ -39,7 +39,7 @@ Function About_Couenne() As String
                     " at " & SolverPath
 End Function
 
-Function SolverFilePath_Couenne(errorString As String) As String
+Function SolverFilePath_Couenne(Optional errorString As String) As String
 #If Mac Then
     If GetExistingFilePathName(ThisWorkbook.Path, left(SolverName_Couenne, Len(SolverName_Couenne) - 4), SolverFilePath_Couenne) Then Exit Function ' Found a mac solver
     errorString = "Unable to find Mac version of Couenne ('couenne') in the folder that contains 'OpenSolver.xlam'"
@@ -129,4 +129,101 @@ Function SolverBitness_Couenne() As String
     End If
 End Function
 
+Function CreateSolveScript_Couenne(ModelFilePathName As String) As String
+    ' Create a script to run "/path/to/couenne.exe /path/to/<ModelFilePathName>"
 
+    Dim SolverString As String, CommandLineRunString As String, PrintingOptionString As String
+    SolverString = QuotePath(ConvertHfsPath(SolverFilePath_Couenne()))
+
+    CommandLineRunString = QuotePath(ConvertHfsPath(ModelFilePathName))
+    PrintingOptionString = ""
+    
+    Dim scriptFile As String, scriptFileContents As String
+    scriptFile = ScriptFilePath_Couenne()
+    scriptFileContents = SolverString & " " & CommandLineRunString & PrintingOptionString
+    CreateScriptFile scriptFile, scriptFileContents
+    
+    CreateSolveScript_Couenne = scriptFile
+End Function
+
+Function ReadModel_Couenne(SolutionFilePathName As String, errorString As String, m As CModelParsed) As Boolean
+    ReadModel_Couenne = False
+    Dim Line As String, index As Integer
+    On Error GoTo readError
+    Dim solutionExpected As Boolean
+    solutionExpected = True
+    
+    Dim SolveStatusString As String, SolveStatus As OpenSolverResult
+    
+    Open SolutionFilePathName For Input As 1 ' supply path with filename
+    Line Input #1, Line ' Skip empty line at start of file
+    Line Input #1, Line
+    Line = Mid(Line, 10)
+    
+    'Get the returned status code from couenne.
+    ' These are currently just using the outputs from CBC
+    ' TODO update to Couenne if needed
+    If Line Like "Optimal*" Then
+        SolveStatus = OpenSolverResult.Optimal
+        SolveStatusString = "Optimal"
+    ElseIf Line Like "Infeasible*" Then
+        SolveStatus = OpenSolverResult.Infeasible
+        SolveStatusString = "No Feasible Solution"
+    ElseIf Line Like "Integer infeasible*" Then
+        SolveStatus = OpenSolverResult.Infeasible
+        SolveStatusString = "No Feasible Integer Solution"
+    ElseIf Line Like "Unbounded*" Then
+        SolveStatus = OpenSolverResult.Unbounded
+        SolveStatusString = "No Solution Found (Unbounded)"
+        solutionExpected = False
+    ElseIf Line Like "Stopped on time *" Then ' Stopped on iterations or time
+        SolveStatus = OpenSolverResult.TimeLimitedSubOptimal
+        SolveStatusString = "Stopped on Time Limit"
+    ElseIf Line Like "Stopped on iterations*" Then ' Stopped on iterations or time
+        SolveStatus = OpenSolverResult.TimeLimitedSubOptimal
+        SolveStatusString = "Stopped on Iteration Limit"
+    ElseIf Line Like "Stopped on difficulties*" Then ' Stopped on iterations or time
+        SolveStatus = OpenSolverResult.TimeLimitedSubOptimal
+        SolveStatusString = "Stopped on difficulties"
+    ElseIf Line Like "Stopped on ctrl-c*" Then ' Stopped on iterations or time
+        SolveStatus = OpenSolverResult.TimeLimitedSubOptimal
+        SolveStatusString = "Stopped on Ctrl-C"
+    ElseIf Line Like "Status unknown*" Then
+        errorString = "Coueene did not solve the problem, suggesting there was an error in the input parameters. The response was: " & vbCrLf _
+               & Line _
+               & vbCrLf & "The Couenne command line can be found at:" _
+               & vbCrLf & ScriptFilePath_Couenne()
+        GoTo exitFunction
+    Else
+        errorString = "The response from the Couenne solver is not recognised. The response was: " & Line
+        GoTo exitFunction
+    End If
+    
+    If solutionExpected Then
+        Line Input #1, Line ' Throw away blank line
+        Line Input #1, Line ' Throw away "Options"
+        
+        Dim i As Integer
+        For i = 1 To 8
+            Line Input #1, Line ' Skip all options lines
+        Next i
+        
+        Dim cellName As String, c As Range
+        For Each c In m.AdjustableCells
+            Line Input #1, Line
+            ' Need to make sure number is in US locale when Value2 is set
+            Range(c.Address).Value2 = ConvertFromCurrentLocale(CDbl(Line))
+        Next c
+
+        ReadModel_Couenne = True
+    End If
+
+exitFunction:
+    Close #1
+    Close #2
+    Exit Function
+    
+readError:
+    Close #1
+    Close #2
+End Function

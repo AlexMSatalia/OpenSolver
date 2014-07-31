@@ -204,6 +204,52 @@ Function SolveModelParsed_NL(ModelFilePathName As String, model As CModelParsed)
     Print #1, MakeGBlocks()
     
     Close #1
+    
+    ' ===================
+    ' Solve model
+    
+    Dim SolutionFilePathName As String
+    SolutionFilePathName = SolutionFilePath(m.Solver)
+    
+    Dim ExternalSolverPathName As String
+    ExternalSolverPathName = CreateSolveScriptParsed(m.Solver, ModelFilePathName)
+             
+    Dim logCommand As String, logFileName As String
+'    logFileName = "log1.tmp"
+'    logCommand = " > " & """" & ConvertHfsPath(GetTempFolder) & logFileName & """"
+                  
+    Dim ExecutionCompleted As Boolean
+    ExternalSolverPathName = """" & ConvertHfsPath(ExternalSolverPathName) & """"
+              
+    Dim exeResult As Long, userCancelled As Boolean
+    ExecutionCompleted = OSSolveSync(ExternalSolverPathName, "", "", logCommand, SW_SHOWNORMAL, True, userCancelled, exeResult) ' Run solver, waiting for completion
+    If userCancelled Then
+        ' User pressed escape. Dialogs have already been shown. Exit with a 'cancelled' error
+        On Error GoTo ErrHandler
+        Err.Raise Number:=OpenSolver_UserCancelledError, Source:="Solving NL model", Description:="The solving process was cancelled by the user."
+    End If
+    If exeResult <> 0 Then
+        ' User pressed escape. Dialogs have already been shown. Exit with a 'cancelled' error
+        On Error GoTo ErrHandler
+        Err.Raise Number:=OpenSolver_SolveError, Source:="Solving NL model", Description:="The " & m.Solver & " solver did not complete, but aborted with the error code " & exeResult & "." & vbCrLf & vbCrLf & "The last log file can be viewed under the OpenSolver menu and may give you more information on what caused this error."
+    End If
+    
+    ' ====================
+    ' Read results
+    If Not FileOrDirExists(SolutionFilePathName) Then
+        On Error GoTo ErrHandler
+        Err.Raise Number:=OpenSolver_SolveError, Source:="Solving NL model", Description:="The solver did not create a solution file. No new solution is available."
+    End If
+    Dim solutionLoaded As Boolean, errorString As String
+    solutionLoaded = ReadModelParsed(m.Solver, SolutionFilePathName, errorString, m)
+    On Error GoTo ErrHandler
+    If errorString <> "" Then
+        Err.Raise Number:=OpenSolver_SolveError, Source:="Solving NL model", Description:=errorString
+    ElseIf Not solutionLoaded Then 'read error
+        SolveModelParsed_NL = False
+    End If
+
+    SolveModelParsed_NL = True
     Exit Function
     
 ErrHandler:

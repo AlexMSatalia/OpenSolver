@@ -84,6 +84,16 @@ Function ReadModel(Solver As String, SolutionFilePathName As String, errorString
     End Select
 End Function
 
+Function ReadModelParsed(Solver As String, SolutionFilePathName As String, errorString As String, m As CModelParsed) As Boolean
+    Select Case Solver
+    Case "Couenne"
+        ReadModelParsed = ReadModel_Couenne(SolutionFilePathName, errorString, m)
+    Case Else
+        ReadModelParsed = False
+        errorString = "The solver " & Solver & " has not yet been incorporated fully into OpenSolver."
+    End Select
+End Function
+
 Function ModelFile(Solver As String) As String
     Select Case Solver
     Case "CBC", "Gurobi"
@@ -172,6 +182,13 @@ Function CreateSolveScript(Solver As String, SolutionFilePathName As String, Ext
         CreateSolveScript = CreateSolveScript_CBC(SolutionFilePathName, ExtraParametersString, SolveOptions, s)
     Case "Gurobi"
         CreateSolveScript = CreateSolveScript_Gurobi(SolutionFilePathName, ExtraParametersString, SolveOptions)
+    End Select
+End Function
+
+Function CreateSolveScriptParsed(Solver As String, SolutionFilePathName As String) As String
+    Select Case Solver
+    Case "Couenne"
+        CreateSolveScriptParsed = CreateSolveScript_Couenne(SolutionFilePathName)
     End Select
 End Function
 
