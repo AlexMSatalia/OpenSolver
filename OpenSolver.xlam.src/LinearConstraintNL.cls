@@ -49,3 +49,17 @@ Public Property Get NumPresent() As Integer
         End If
     Next i
 End Property
+
+Public Function Display() As String
+    Dim i As Integer
+    For i = 1 To NumVariables
+        Display = Display & Coefficients(i) & " "
+    Next i
+End Function
+
+Public Sub InvertCoefficients()
+    Dim i As Integer
+    For i = 1 To NumVariables
+        Coefficients(i) = -Coefficients(i)
+    Next i
+End Sub

@@ -69,7 +69,10 @@ Dim NonLinearObjectiveTrees As Collection
 Dim NonLinearVars() As Boolean
 
 Dim LinearConstraints As Collection
+Dim LinearConstants As Collection
 Dim LinearObjectives As Collection
+
+Dim ConstraintRelations As Collection
 
 Dim ObjectiveCells As Collection
 Dim ObjectiveSenses As Collection
@@ -354,17 +357,19 @@ Sub ProcessFormulae()
     
     Set NonLinearConstraintTrees = New Collection
     Set LinearConstraints = New Collection
+    Set LinearConstants = New Collection
+    Set ConstraintRelations = New Collection
     
     ReDim NonLinearVars(n_var)
     
     
     Dim i As Integer
     For i = 1 To numActualCons
-        ProcessSingleFormula m.RHSKeys(i), m.LHSKeys(i)
+        ProcessSingleFormula m.RHSKeys(i), m.LHSKeys(i), m.Rels(i)
     Next i
     
     For i = 1 To numFakeCons
-        ProcessSingleFormula m.Formulae(i).strFormulaParsed, m.Formulae(i).strAddress
+        ProcessSingleFormula m.Formulae(i).strFormulaParsed, m.Formulae(i).strAddress, RelationConsts.RelationEQ
     Next i
     
     ' Process linear vars for jacobian counts
@@ -381,7 +386,7 @@ Sub ProcessFormulae()
     
 End Sub
 
-Sub ProcessSingleFormula(RHSExpression As String, LHSVariable As String)
+Sub ProcessSingleFormula(RHSExpression As String, LHSVariable As String, Relation As RelationConsts)
     Dim Tree As ExpressionTree
     Set Tree = ConvertFormulaToExpressionTree(RHSExpression)
     Debug.Print Tree.Display
@@ -391,28 +396,71 @@ Sub ProcessSingleFormula(RHSExpression As String, LHSVariable As String)
     Set constraint = New LinearConstraintNL
     constraint.Count = n_var
     
+    ' The .nl file needs a linear coefficient for every variable in the constraint - non-linear or otherwise
+    ' We need a list of all variables in this constraint so that we can at least give them a 0 in the linear part of the constraint.
     Tree.ExtractVariables constraint
+
+    ' Remove linear terms from non-linear trees
+    Dim LinearTrees As New Collection
+    Tree.MarkLinearity
+    Tree.PruneLinearTrees LinearTrees, True
     
+    ' Process linear trees to separate constants and variables
+    Dim constant As Double
+    constant = 0
     Dim j As Integer
+    For j = 1 To LinearTrees.Count
+        LinearTrees(j).ConvertLinearTreeToConstraint constraint, constant
+    Next j
+    
+    ' Add definition variable from the LHS to the linear constraint with coefficient -1
+    constraint.VariablePresent(VariableMap(LHSVariable) + 1) = True
+    constraint.Coefficient(VariableMap(LHSVariable) + 1) = constraint.Coefficient(VariableMap(LHSVariable) + 1) - 1
+    
+    ' Constant must be positive
+    If constant < 0 Then
+        ' Take constant to the LHS to make it positive
+        constant = -constant
+        
+        ' Our RHS and LHS have now been swapped. We need to swap the LE or GE relation if present
+        Select Case Relation
+        Case RelationConsts.RelationGE
+            Relation = RelationLE
+        Case RelationConsts.RelationLE
+            Relation = RelationGE
+        End Select
+    Else
+        ' Keep constant on RHS and take everything else to LHS.
+        ' Need to flip all sign of elements in this constraint
+        
+        ' Flip all coefficients in linear constraint
+        constraint.InvertCoefficients
+        
+        ' Negate non-linear tree
+        Set Tree = Tree.Negate
+    End If
+    
+    NonLinearConstraintTrees.Add Tree
+    
+    LinearConstraints.Add constraint
+    LinearConstants.Add constant
+    
+    ConstraintRelations.Add Relation
+    
+    ' Mark any non-linear variables that we haven't seen before
     For j = 1 To constraint.Count
-        If constraint.VariablePresent(j) And Not NonLinearVars(j) Then
+        ' Any variable in the constraint with a zero coefficient must be part of the non-linear section
+        If constraint.VariablePresent(j) And constraint.Coefficient(j) = 0 And Not NonLinearVars(j) Then
             NonLinearVars(j) = True
             nlvc = nlvc + 1
         End If
     Next j
-
-    ' Remove linear terms
-    Tree.MarkLinearity
-    ' Set header information
     
-    NonLinearConstraintTrees.Add Tree
-    
-    constraint.VariablePresent(VariableMap(LHSVariable) + 1) = True
-    constraint.Coefficient(VariableMap(LHSVariable) + 1) = -1
-    
-    LinearConstraints.Add constraint
-    
-    nlc = nlc + 1
+    ' Count non-linear constraint if anything is left in the non-linear tree
+    ' An empty tree has a single "0" node
+    If Tree.NodeText <> "0" Then
+        nlc = nlc + 1
+    End If
 End Sub
 
 Sub ProcessObjective()
@@ -529,16 +577,18 @@ Function MakeRBlock() As String
     AddNewLine Block, "r", "CONSTRAINT BOUNDS"
     
     ' Actual constraints - apply bounds
-    Dim i As Integer, BoundType As Integer, comment As String
+    Dim i As Integer, BoundType As Integer, comment As String, bound As Double
     For i = 1 To numActualCons
-        ConvertConstraintToNL m.Rels(i), BoundType, comment
-        AddNewLine Block, BoundType & " " & 0, "    " & ConstraintMapRev(CStr(i - 1)) & comment & 0
+        bound = LinearConstants(i)
+        ConvertConstraintToNL ConstraintRelations(i), BoundType, comment
+        AddNewLine Block, BoundType & " " & bound, "    " & ConstraintMapRev(CStr(i - 1)) & comment & bound
     Next i
     
     ' Fake formulae constraints - must equal 0
     For i = 1 To numFakeCons
-        ConvertConstraintToNL RelationConsts.RelationEQ, BoundType, comment
-        AddNewLine Block, BoundType & " " & 0, "    " & ConstraintMapRev(CStr(i - 1 + numActualCons)) & comment & 0
+        bound = LinearConstants(i + numActualCons)
+        ConvertConstraintToNL ConstraintRelations(i + numActualCons), BoundType, comment
+        AddNewLine Block, BoundType & " " & bound, "    " & ConstraintMapRev(CStr(i - 1 + numActualCons)) & comment & bound
     Next i
     
     ' Strip trailing newline
@@ -1059,15 +1109,15 @@ Sub ConvertConstraintToNL(Relation As RelationConsts, BoundType As Integer, comm
 ' LE and GE are swapped here because the relation const is defined w.r.t to LHS but the NL deals with the RHS
 ' so LE becomes >= in the NL file, and GE becomes <=
     Select Case Relation
-        Case RelationConsts.RelationLE
+        Case RelationConsts.RelationLE ' Upper Bound on LHS
             BoundType = 1
-            comment = " >= "
-        Case RelationConsts.RelationEQ
+            comment = " <= "
+        Case RelationConsts.RelationEQ ' Equality
             BoundType = 4
             comment = " == "
-        Case RelationConsts.RelationGE
+        Case RelationConsts.RelationGE ' Upper Bound on RHS
             BoundType = 2
-            comment = " <= "
+            comment = " >= "
     End Select
 End Sub
 
