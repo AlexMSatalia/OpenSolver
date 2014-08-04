@@ -218,7 +218,7 @@ Private Sub cmdCancelCon_Click()
 End Sub
 
 Private Sub cmdChange_Click()
-43330     frmSolverChange.Show
+43330     frmSolverChange.Show True
 End Sub
 
 Private Sub cmdOptions_Click()
