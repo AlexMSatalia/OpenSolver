@@ -6,7 +6,7 @@ Dim m As CModelParsed
 Dim problem_name As String
 
 Public CommentIndent As Integer     ' Tracks the level of indenting in comments on nl output
-Public Const CommentSpacing = 20    ' The column number at which nl comments begin
+Public Const CommentSpacing = 24    ' The column number at which nl comments begin
 
 ' ==========================================================================
 ' ASL variables
@@ -58,8 +58,9 @@ Dim como1 As Integer
 ' End ASL variables
 ' ===========================================================================
 
-Public VariableMap As Collection
+Dim VariableMap As Collection
 Dim VariableMapRev As Collection
+
 Dim ConstraintMap As Collection
 Dim ConstraintMapRev As Collection
 
@@ -67,6 +68,12 @@ Dim NonLinearConstraintTrees As Collection
 Dim NonLinearObjectiveTrees As Collection
 
 Dim NonLinearVars() As Boolean
+Dim NonLinearConstraints() As Boolean
+
+Dim ConstraintIndexToTreeIndex() As Integer
+Dim VariableNLIndexToCollectionIndex() As Integer
+Dim VariableCollectionIndexToNLIndex() As Integer
+Public VariableIndex As Collection
 
 Dim LinearConstraints As Collection
 Dim LinearConstants As Collection
@@ -85,6 +92,10 @@ Dim numActualEqs As Integer
 Dim numActualRanges As Integer
 
 Dim NonZeroConstraintCount() As Integer
+
+Public Property Get GetVariableNLIndex(index As Integer) As Integer
+    GetVariableNLIndex = VariableCollectionIndexToNLIndex(index)
+End Property
 
     
 Function SolveModelParsed_NL(ModelFilePathName As String, model As CModelParsed)
@@ -160,14 +171,16 @@ Function SolveModelParsed_NL(ModelFilePathName As String, model As CModelParsed)
     comc1 = 0
     como1 = 0
     
+    CreateVariableIndex
+    
+    ProcessFormulae
+    ProcessObjective
+    
     MakeVariableMap
     MakeConstraintMap
     
     OutputColFile
     OutputRowFile
-    
-    ProcessFormulae
-    ProcessObjective
     
     On Error GoTo ErrHandler
     
@@ -286,7 +299,38 @@ Function MakeHeader() As String
     MakeHeader = StripTrailingNewline(Header)
 End Function
 
+Sub CreateVariableIndex()
+    Set VariableIndex = New Collection
+    Dim c As Range, cellName As String, i As Integer
+    i = 1
+    
+    ' Actual vars
+    For Each c In m.AdjustableCells
+        cellName = ConvertCellToStandardName(c)
+        
+        ' Update variable maps
+        VariableIndex.Add i, cellName
+        i = i + 1
+    Next c
+    
+    ' Fake formulae vars
+    For i = 1 To numFakeVars
+        cellName = m.Formulae(i).strAddress
+        
+        ' Update variable maps
+        VariableIndex.Add i + numActualVars, cellName
+    Next i
+End Sub
+
 Sub MakeVariableMap()
+' We loop through the variables and arrange them in the required order:
+'     1st - non-linear continuous
+'     2nd - non-linear integer
+'     3rd - linear arcs (N/A)
+'     4th - other linear
+'     5th - binary
+'     6th - other integer
+
     maxcolnamelen_ = 0
     Set VariableMap = New Collection
     Set VariableMapRev = New Collection
@@ -294,37 +338,65 @@ Sub MakeVariableMap()
     Dim index As Integer
     index = 0
     
+    ' =============================================
+    ' Create index of variable names
+    Dim CellNames As New Collection
+    
     ' Actual variables
-    Dim c As Range, cellName As String
+    Dim c As Range, cellName As String, i As Integer
     For Each c In m.AdjustableCells
         cellName = ConvertCellToStandardName(c)
-        
-        ' Update variable maps
-        VariableMap.Add CStr(index), cellName
-        VariableMapRev.Add cellName, CStr(index)
-        
-        ' Update max length
-        If Len(cellName) > maxcolnamelen_ Then
-           maxcolnamelen_ = Len(cellName)
-        End If
-        index = index + 1
+        CellNames.Add cellName
     Next c
     
     ' Formulae variables
-    Dim i As Integer
     For i = 1 To m.Formulae.Count
         cellName = m.Formulae(i).strAddress
-        
-        ' Update variable maps
-        VariableMap.Add CStr(index), cellName
-        VariableMapRev.Add cellName, CStr(index)
-        
-        ' Update max length
-        If Len(cellName) > maxcolnamelen_ Then
-           maxcolnamelen_ = Len(cellName)
-        End If
-        index = index + 1
+        CellNames.Add cellName
     Next i
+    
+    ' ==============================================
+    ' Add variables to the variable map in the required order
+    ReDim VariableNLIndexToCollectionIndex(n_var)
+    ReDim VariableCollectionIndexToNLIndex(n_var)
+    
+    ' Non-linear
+    '    continuous
+    '    integer
+    For i = 1 To n_var
+        If NonLinearVars(i) Then
+            'TODO split integer
+            AddVariable CellNames(i), index, i
+        End If
+    Next i
+    
+    ' Linear
+    '    continuous
+    '    binary
+    '    integer
+    For i = 1 To n_var
+        If Not NonLinearVars(i) Then
+            'TODO split integer/binary
+            AddVariable CellNames(i), index, i
+        End If
+    Next i
+    
+End Sub
+
+Sub AddVariable(cellName As String, index As Integer, i As Integer)
+    ' Update variable maps
+    VariableMap.Add CStr(index), cellName
+    VariableMapRev.Add cellName, CStr(index)
+    
+    ' Update max length
+    If Len(cellName) > maxcolnamelen_ Then
+       maxcolnamelen_ = Len(cellName)
+    End If
+    
+    VariableNLIndexToCollectionIndex(index) = i
+    VariableCollectionIndexToNLIndex(i) = index
+    
+    index = index + 1
 End Sub
 
 Sub OutputColFile()
@@ -344,43 +416,73 @@ Sub OutputColFile()
 End Sub
 
 Sub MakeConstraintMap()
+' We loop through the constraints and arrange them in the required order:
+'     1st - non-linear
+'     2nd - non-linear network (N/A)
+'     3rd - linear network (N/A)
+'     4th - linear
+
     maxrownamelen_ = 0
     Set ConstraintMap = New Collection
     Set ConstraintMapRev = New Collection
     
+    ReDim ConstraintIndexToTreeIndex(n_con)
+    
     Dim index As Integer
     index = 0
     
-    ' Actual constraints
+    ' Actual non-linear constraints
     Dim i As Integer, cellName As String
     For i = 1 To numActualCons
-        cellName = "c" & i & "_" & m.LHSKeys(i)
-    
-        ' Update constraint maps
-        ConstraintMap.Add index, cellName
-        ConstraintMapRev.Add cellName, CStr(index)
-        
-        ' Update max length
-        If Len(cellName) > maxrownamelen_ Then
-           maxrownamelen_ = Len(cellName)
+        ' Non-linear only
+        If NonLinearConstraints(i) Then
+            cellName = "c" & i & "_" & m.LHSKeys(i)
+            AddConstraint cellName, index, i
         End If
-        index = index + 1
     Next i
     
-    ' Formulae variables
+    ' Formulae non-linear constraints
     For i = 1 To numFakeCons
-        cellName = "f" & i & "_" & m.Formulae(i).strAddress
-        
-        ' Update variable maps
-        ConstraintMap.Add index, cellName
-        ConstraintMapRev.Add cellName, CStr(index)
-        
-        ' Update max length
-        If Len(cellName) > maxrownamelen_ Then
-           maxrownamelen_ = Len(cellName)
+        ' Non-linear only
+        If NonLinearConstraints(i + numActualCons) Then
+            cellName = "f" & i & "_" & m.Formulae(i).strAddress
+            AddConstraint cellName, index, i + numActualCons
         End If
-        index = index + 1
     Next i
+    
+    ' Actual linear constraints
+    For i = 1 To numActualCons
+        ' Linear only
+        If Not NonLinearConstraints(i) Then
+            cellName = "c" & i & "_" & m.LHSKeys(i)
+            AddConstraint cellName, index, i
+        End If
+    Next i
+    
+    ' Formulae linear constraints
+    For i = 1 To numFakeCons
+        ' Linear only
+        If Not NonLinearConstraints(i + numActualCons) Then
+            cellName = "f" & i & "_" & m.Formulae(i).strAddress
+            AddConstraint cellName, index, i + numActualCons
+        End If
+    Next i
+End Sub
+
+Sub AddConstraint(cellName As String, index As Integer, i As Integer)
+    ' Update constraint maps
+    ConstraintMap.Add index, cellName
+    ConstraintMapRev.Add cellName, CStr(index)
+    
+    ' Update max length
+    If Len(cellName) > maxrownamelen_ Then
+       maxrownamelen_ = Len(cellName)
+    End If
+    
+    ' Map index to constraint collection index
+    ConstraintIndexToTreeIndex(index) = i
+    
+    index = index + 1
 End Sub
 
 Sub OutputRowFile()
@@ -407,7 +509,7 @@ Sub ProcessFormulae()
     Set ConstraintRelations = New Collection
     
     ReDim NonLinearVars(n_var)
-    
+    ReDim NonLinearConstraints(n_con)
     
     Dim i As Integer
     For i = 1 To numActualCons
@@ -460,8 +562,8 @@ Sub ProcessSingleFormula(RHSExpression As String, LHSVariable As String, Relatio
     Next j
     
     ' Add definition variable from the LHS to the linear constraint with coefficient -1
-    constraint.VariablePresent(VariableMap(LHSVariable) + 1) = True
-    constraint.Coefficient(VariableMap(LHSVariable) + 1) = constraint.Coefficient(VariableMap(LHSVariable) + 1) - 1
+    constraint.VariablePresent(VariableIndex(LHSVariable)) = True
+    constraint.Coefficient(VariableIndex(LHSVariable)) = constraint.Coefficient(VariableIndex(LHSVariable)) - 1
     
     ' Constant must be positive
     If constant < 0 Then
@@ -504,7 +606,10 @@ Sub ProcessSingleFormula(RHSExpression As String, LHSVariable As String, Relatio
     
     ' Count non-linear constraint if anything is left in the non-linear tree
     ' An empty tree has a single "0" node
+    Dim ConstraintIndex As Integer
+    ConstraintIndex = NonLinearConstraintTrees.Count
     If Tree.NodeText <> "0" Then
+        NonLinearConstraints(ConstraintIndex) = True
         nlc = nlc + 1
     End If
 End Sub
@@ -528,8 +633,8 @@ Sub ProcessObjective()
     Dim Objective As New LinearConstraintNL
     Objective.Count = n_var
     
-    Objective.VariablePresent(VariableMap(ObjectiveCells(1)) + 1) = True
-    Objective.Coefficient(VariableMap(ObjectiveCells(1)) + 1) = 1
+    Objective.VariablePresent(VariableIndex(ObjectiveCells(1))) = True
+    Objective.Coefficient(VariableIndex(ObjectiveCells(1))) = 1
     
     LinearObjectives.Add Objective
     ' Track non-zero count in linear objective
@@ -550,7 +655,7 @@ Function MakeCBlocks() As String
         
         ' Add expression tree
         CommentIndent = 4
-        Block = Block + NonLinearConstraintTrees(i).ConvertToNL
+        Block = Block + NonLinearConstraintTrees(ConstraintIndexToTreeIndex(i - 1)).ConvertToNL
     Next i
     
     MakeCBlocks = StripTrailingNewline(Block)
@@ -594,22 +699,21 @@ Function MakeXBlock() As String
     Block = ""
     
     AddNewLine Block, "x" & n_var, "INITIAL PRIMAL GUESS"
-    
-    ' Actual variables, apply bounds
-    Dim i As Integer, initial As String
-    For i = 1 To numActualVars
-        If VarType(m.AdjustableCells(i)) = vbEmpty Then
-            initial = 0
+
+    Dim i As Integer, initial As String, VariableIndex As Integer
+    For i = 1 To n_var
+        VariableIndex = VariableNLIndexToCollectionIndex(i - 1)
+        
+        ' Get initial values
+        If VariableIndex <= numActualVars Then
+            ' Actual variables
+            initial = CDbl(m.AdjustableCells(VariableIndex))
         Else
-            initial = m.AdjustableCells(i)
+            ' Formulae variables
+            initial = CDbl(m.Formulae(VariableIndex - numActualVars).initialValue)
         End If
+        
         AddNewLine Block, i - 1 & " " & initial, "    " & VariableMapRev(CStr(i - 1)) & " = " & initial
-    Next i
-    
-    ' Initial values for formulae vars
-    For i = 1 To numFakeVars
-        initial = CDbl(m.Formulae(i).initialValue)
-        AddNewLine Block, i + numActualVars - 1 & " " & initial, "    " & VariableMapRev(CStr(i - 1 + numActualVars)) & " = " & initial
     Next i
     
     ' Strip trailing newline
@@ -625,15 +729,15 @@ Function MakeRBlock() As String
     ' Actual constraints - apply bounds
     Dim i As Integer, BoundType As Integer, comment As String, bound As Double
     For i = 1 To numActualCons
-        bound = LinearConstants(i)
-        ConvertConstraintToNL ConstraintRelations(i), BoundType, comment
+        bound = LinearConstants(ConstraintIndexToTreeIndex(i - 1))
+        ConvertConstraintToNL ConstraintRelations(ConstraintIndexToTreeIndex(i - 1)), BoundType, comment
         AddNewLine Block, BoundType & " " & bound, "    " & ConstraintMapRev(CStr(i - 1)) & comment & bound
     Next i
     
     ' Fake formulae constraints - must equal 0
     For i = 1 To numFakeCons
-        bound = LinearConstants(i + numActualCons)
-        ConvertConstraintToNL ConstraintRelations(i + numActualCons), BoundType, comment
+        bound = LinearConstants(ConstraintIndexToTreeIndex(i - 1 + numActualCons))
+        ConvertConstraintToNL ConstraintRelations(ConstraintIndexToTreeIndex(i - 1 + numActualCons)), BoundType, comment
         AddNewLine Block, BoundType & " " & bound, "    " & ConstraintMapRev(CStr(i - 1 + numActualCons)) & comment & bound
     Next i
     
@@ -648,22 +752,27 @@ Function MakeBBlock() As String
     AddNewLine Block, "b", "VARIABLE BOUNDS"
     
     ' Actual variables, apply bounds
-    Dim i As Integer, bound As String, comment As String
-    For i = 1 To numActualVars
+    Dim i As Integer, bound As String, comment As String, VariableIndex As Integer
+    For i = 1 To n_var
+        VariableIndex = VariableNLIndexToCollectionIndex(i - 1)
+     
         comment = "    " & VariableMapRev(CStr(i - 1))
-        If m.AssumeNonNegative Then
-            bound = "2 0"
-            comment = comment & " >= 0"
+     
+        If VariableIndex <= numActualVars Then
+            ' Real variables, use actual bounds
+            If m.AssumeNonNegative Then
+                bound = "2 0"
+                comment = comment & " >= 0"
+            Else
+                bound = "3"
+                comment = comment & " FREE"
+            End If
         Else
+            ' Fake formulae variables - no bounds
             bound = "3"
             comment = comment & " FREE"
         End If
         AddNewLine Block, bound, comment
-    Next i
-    
-    ' Fake formulae variables - no bounds
-    For i = 1 To numFakeVars
-        AddNewLine Block, "3", "    " & VariableMapRev(CStr(i - 1 + numActualVars)) & " FREE"
     Next i
     
     ' Strip trailing newline
@@ -680,7 +789,7 @@ Function MakeKBlock() As String
     Dim i As Integer, total As Integer
     total = 0
     For i = 1 To n_var - 1
-        total = total + NonZeroConstraintCount(i)
+        total = total + NonZeroConstraintCount(VariableNLIndexToCollectionIndex(i - 1))
         AddNewLine Block, CStr(total), "    Up to " & VariableMapRev(CStr(i - 1)) & ": " & CStr(total) & " entries in Jacobian"
     Next i
     
@@ -691,17 +800,36 @@ Function MakeJBlocks() As String
     Dim Block As String
     Block = ""
     
-    Dim i As Integer, ObjectiveVariables As Collection, ObjectiveCoefficients As Collection
+    Dim ConstraintElements() As String
+    Dim CommentElements() As String
+    
+    Dim i As Integer, TreeIndex As Integer, VariableIndex As Integer
     For i = 1 To n_con
+        TreeIndex = ConstraintIndexToTreeIndex(i - 1)
+    
         ' Make header
-        AddNewLine Block, "J" & i - 1 & " " & LinearConstraints(i).NumPresent, "CONSTRAINT LINEAR SECTION " & ConstraintMapRev(i)
+        AddNewLine Block, "J" & i - 1 & " " & LinearConstraints(TreeIndex).NumPresent, "CONSTRAINT LINEAR SECTION " & ConstraintMapRev(i)
         
+        ReDim ConstraintElements(n_var)
+        ReDim CommentElements(n_var)
+        
+        ' First we collect all the constraint elements - they need to be ordered by NL variable index before printing to file
         Dim j As Integer
-        For j = 1 To LinearConstraints(i).Count
-            If LinearConstraints(i).VariablePresent(j) Then
-                AddNewLine Block, j - 1 & " " & LinearConstraints(i).Coefficient(j), "    + " & LinearConstraints(i).Coefficient(j) & " * " & VariableMapRev(CStr(j - 1))
+        For j = 1 To LinearConstraints(TreeIndex).Count
+            If LinearConstraints(TreeIndex).VariablePresent(j) Then
+                VariableIndex = VariableCollectionIndexToNLIndex(j)
+                ConstraintElements(VariableIndex) = VariableIndex & " " & LinearConstraints(TreeIndex).Coefficient(j)
+                CommentElements(VariableIndex) = "    + " & LinearConstraints(TreeIndex).Coefficient(j) & " * " & VariableMapRev(CStr(VariableIndex))
             End If
         Next j
+        
+        ' Output the constraint elements to the J Block in increasing NL index order
+        For j = 0 To n_var - 1
+            If ConstraintElements(j) <> "" Then
+                AddNewLine Block, ConstraintElements(j), CommentElements(j)
+            End If
+        Next j
+        
     Next i
     
     MakeJBlocks = StripTrailingNewline(Block)
@@ -716,10 +844,11 @@ Function MakeGBlocks() As String
         ' Make header
         AddNewLine Block, "G" & i - 1 & " " & LinearObjectives(i).NumPresent, "OBJECTIVE LINEAR SECTION " & ObjectiveCells(i)
         
-        Dim j As Integer
+        Dim j As Integer, VariableIndex As Integer
         For j = 1 To LinearObjectives(i).Count
             If LinearObjectives(i).VariablePresent(j) Then
-                AddNewLine Block, j - 1 & " " & LinearObjectives(i).Coefficient(j), "    + " & LinearObjectives(i).Coefficient(j) & " * " & VariableMapRev(CStr(j - 1))
+                VariableIndex = VariableCollectionIndexToNLIndex(j)
+                AddNewLine Block, VariableIndex & " " & LinearObjectives(i).Coefficient(j), "    + " & LinearObjectives(i).Coefficient(j) & " * " & VariableMapRev(CStr(VariableIndex))
             End If
         Next j
     Next i

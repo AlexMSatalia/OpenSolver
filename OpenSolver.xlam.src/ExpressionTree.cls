@@ -131,7 +131,7 @@ End Function
 Sub ExtractVariables(constraint As LinearConstraintNL)
     If NodeType = ExpressionTreeVariable Then
         Dim index As Integer
-        index = VariableMap(NodeText) + 1
+        index = VariableIndex(NodeText)
         If Not constraint.VariablePresent(index) Then
             constraint.VariablePresent(index) = True
         End If
@@ -382,7 +382,7 @@ Sub AddLinearTreeToConstraint(constraint As LinearConstraintNL, constant As Doub
     ' Add variable coefficient to constraint
     Case ExpressionTreeVariable
         Dim VarIndex As Integer
-        VarIndex = VariableMap(NodeText) + 1
+        VarIndex = VariableIndex(NodeText)
         constraint.Coefficient(VarIndex) = constraint.Coefficient(VarIndex) + LinearCoefficient
     
     ' Add constant

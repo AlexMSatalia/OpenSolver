@@ -208,11 +208,22 @@ Function ReadModel_Couenne(SolutionFilePathName As String, errorString As String
             Line Input #1, Line ' Skip all options lines
         Next i
         
-        Dim cellName As String, c As Range
-        For Each c In m.AdjustableCells
+        Dim VariableValues As New Collection
+        While Not EOF(1)
             Line Input #1, Line
+            VariableValues.Add CDbl(Line)
+        Wend
+        
+        ' Loop through variable cells and find the corresponding value from VariableValues
+        i = 1
+        Dim c As Range, VariableIndex As Integer
+        For Each c In m.AdjustableCells
+            ' Extract the correct variable value
+            VariableIndex = GetVariableNLIndex(i) + 1
+            
             ' Need to make sure number is in US locale when Value2 is set
-            Range(c.Address).Value2 = ConvertFromCurrentLocale(CDbl(Line))
+            Range(c.Address).Value2 = ConvertFromCurrentLocale(VariableValues(VariableIndex))
+            i = i + 1
         Next c
 
         ReadModel_Couenne = True
