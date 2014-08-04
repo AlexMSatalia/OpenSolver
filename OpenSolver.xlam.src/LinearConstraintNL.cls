@@ -10,7 +10,7 @@ Attribute VB_Exposed = False
 Option Explicit
 
 Dim VariablesPresent() As Boolean
-Dim Coefficients() As Integer
+Dim Coefficients() As Double
 Dim NumVariables As Integer
 
 Public Property Let Count(numVars As Integer)
