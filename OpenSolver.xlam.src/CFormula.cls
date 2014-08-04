@@ -14,7 +14,7 @@ Public strAddress As String
 Public strFormula As String
 Public strFormulaParsed As String
 ' Initial value
-Public initialValue As Variant
+Public initialValue As Double
 ' Properties
 Public lngDepth As Long
 Public boolIsRoot As Boolean

@@ -608,7 +608,7 @@ Function MakeXBlock() As String
     
     ' Initial values for formulae vars
     For i = 1 To numFakeVars
-        initial = CStr(m.Formulae(i).initialValue)
+        initial = CDbl(m.Formulae(i).initialValue)
         AddNewLine Block, i + numActualVars - 1 & " " & initial, "    " & VariableMapRev(CStr(i - 1 + numActualVars)) & " = " & initial
     Next i
     

@@ -555,7 +555,7 @@ Function ExpandFormula(ByVal strFormula As String, _
     Set objCurNode = New CFormula
     If Not (rngSourceCell Is Nothing) Then
         objCurNode.strAddress = strRootAddress
-        objCurNode.initialValue = rngSourceCell.Value2
+        objCurNode.initialValue = CDbl(rngSourceCell.Value2)
         Set objCurNode.rngAddress = rngSourceCell
         ExpandFormula = strRootAddress
     Else
@@ -1046,6 +1046,7 @@ Function AddNodeIfNew(ByRef objCurNode As CFormula, ByRef c As Range) As String
     ' 3. Create new node
     With objNewNode
         .strFormula = strCFormula
+        .initialValue = CDbl(c.Value2)
         .lngDepth = objCurNode.lngDepth + 1
         If .lngDepth > lngMaxDepth Then lngMaxDepth = .lngDepth
         .Parents.Add objCurNode.strAddress, objCurNode.strAddress
