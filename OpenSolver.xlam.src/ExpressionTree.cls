@@ -9,15 +9,18 @@ Attribute VB_PredeclaredId = False
 Attribute VB_Exposed = False
 Option Explicit
 
-Dim Parent As ExpressionTree
-Dim Children() As ExpressionTree
-Dim NumChildren As Integer
-Public NodeText As String
-Public NodeType As ExpressionTreeNodeType
-Public NodeLinearity As ExpressionTreeNodeLinearity
+' This class stores an expression tree representing an excel formulae.
+' Each ExpressionTree object actually represents a node in the tree, and the tree is built by setting the Children nodes
 
-Public LinearCoefficient As Double ' Track linear coefficient on node when collating linear tree
-Public LinearValue As Double ' Track linear value of constant node
+Dim Children() As ExpressionTree                    ' The children of the current node
+Dim NumChildren As Integer                          ' The number of child nodes
+Public NodeText As String                           ' The node text - a numeric value, a variable name, or a function name
+Public NodeType As ExpressionTreeNodeType           ' The node type - number, variable, or operator
+
+Public NodeLinearity As ExpressionTreeNodeLinearity ' The node linearity - constant, linear or non-linear
+
+Public LinearCoefficient As Double                  ' Track linear coefficient on node when collating linear tree
+Public LinearValue As Double                        ' Track linear value of constant node when collating linear tree
 
 Public Enum ExpressionTreeNodeType
     ExpressionTreeNumber = 0
@@ -31,12 +34,14 @@ Public Enum ExpressionTreeNodeLinearity
     ExpressionTreeNonLinear = 2
 End Enum
 
+' Getter method for children
 Public Function GetChild(index As Integer) As ExpressionTree
     Dim obj As ExpressionTree
     Set obj = Children(i)
     Set GetChild = obj
 End Function
 
+' Setter method for children
 Public Sub SetChild(index As Integer, obj As ExpressionTree)
     If NumChildren = 0 Then
         ReDim Preserve Children(index)
@@ -48,17 +53,20 @@ Public Sub SetChild(index As Integer, obj As ExpressionTree)
     Set Children(index) = obj
 End Sub
 
+' Clear all children from the node
 Public Sub ClearChildren()
     NumChildren = 0
     ReDim Children(0)
 End Sub
 
+' Set the defaults for the node on creation
 Private Sub Class_Initialize()
     NumChildren = 0
     LinearCoefficient = 0
     NodeLinearity = ExpressionTreeNonLinear
 End Sub
 
+' Negate the tree
 Public Function Negate() As ExpressionTree
     If NodeText <> "0" Then
         Dim NewTree As ExpressionTree
@@ -72,6 +80,7 @@ Public Function Negate() As ExpressionTree
     End If
 End Function
 
+' Display the entire tree as a string for debugging
 Public Function Display() As String
     Dim output As String
     If NodeType = ExpressionTreeOperator Then
@@ -96,6 +105,7 @@ Public Function Display() As String
     Display = output
 End Function
 
+' Display the linearity of a node for debugging
 Function DisplayLinearity() As String
     Select Case NodeLinearity
     Case ExpressionTreeNonLinear
@@ -107,18 +117,20 @@ Function DisplayLinearity() As String
     End Select
 End Function
 
+' Converts the tree to .nl expression tree format
 Public Function ConvertToNL() As String
-    
-    ' Add comment
-    Dim comment As String, i As Integer
+    ' Construct comment
+    Dim Comment As String, i As Integer
     For i = 1 To CommentIndent
-       comment = comment + " "
+       Comment = Comment + " "
     Next i
-    comment = comment + NodeText + " " + DisplayLinearity()
+    Comment = Comment + NodeText + " " + DisplayLinearity()
     
+    ' Add current node to output
     Dim output As String
-    AddNewLine output, FormatNL(NodeText, NodeType), comment
+    AddNewLine output, FormatNL(NodeText, NodeType), Comment
     
+    ' Add children nodes to output
     CommentIndent = CommentIndent + 4
     For i = 1 To NumChildren
         output = output + Children(i).ConvertToNL
@@ -128,6 +140,7 @@ Public Function ConvertToNL() As String
     ConvertToNL = output
 End Function
 
+' Extract all variables from the ExpressionTree into a LinearConstraintNL
 Sub ExtractVariables(constraint As LinearConstraintNL)
     If NodeType = ExpressionTreeVariable Then
         Dim index As Integer
@@ -144,6 +157,7 @@ Sub ExtractVariables(constraint As LinearConstraintNL)
 
 End Sub
 
+' Traverse the tree and mark all nodes as Constant, Linear or Non-linear
 Sub MarkLinearity()
     ' First process all children
     Dim i As Integer
@@ -152,9 +166,11 @@ Sub MarkLinearity()
     Next i
 
     Select Case NodeType
+    ' A constant node is constant
     Case ExpressionTreeNumber
         NodeLinearity = ExpressionTreeConstant
-        
+    
+    ' A variable is linear
     Case ExpressionTreeVariable
         NodeLinearity = ExpressionTreeLinear
         
@@ -164,7 +180,7 @@ Sub MarkLinearity()
             ' Non-linear if either child is non-linear
             If Children(1).NodeLinearity = ExpressionTreeNonLinear Or Children(2).NodeLinearity = ExpressionTreeNonLinear Then
                 NodeLinearity = ExpressionTreeNonLinear
-            ' Linear if either child is linear
+            ' Otherwise linear if either child is linear
             ElseIf Children(1).NodeLinearity = ExpressionTreeLinear Or Children(2).NodeLinearity = ExpressionTreeLinear Then
                 NodeLinearity = ExpressionTreeLinear
             ' Otherwise constant
@@ -177,7 +193,7 @@ Sub MarkLinearity()
             If Children(1).NodeLinearity = ExpressionTreeNonLinear Or Children(2).NodeLinearity = ExpressionTreeNonLinear Or _
                (Children(1).NodeLinearity = ExpressionTreeLinear And Children(2).NodeLinearity = ExpressionTreeLinear) Then
                 NodeLinearity = ExpressionTreeNonLinear
-            ' Linear if either child is linear
+            ' Otherwise linear if either child is linear
             ElseIf Children(1).NodeLinearity = ExpressionTreeLinear Or Children(2).NodeLinearity = ExpressionTreeLinear Then
                 NodeLinearity = ExpressionTreeLinear
             ' Otherwise constant
@@ -198,7 +214,7 @@ Sub MarkLinearity()
             ' If exponent is not constant, then non-linear
             If Not Children(2).NodeLinearity = ExpressionTreeConstant Then
                NodeLinearity = ExpressionTreeNonLinear
-            ' Non-linear if linear variable raised to power other than one
+            ' Otherwise non-linear if linear variable raised to power other than one
             ElseIf Children(1).NodeLinearity = ExpressionTreeLinear And Children(2).NodeText <> 1 Then
                NodeLinearity = ExpressionTreeNonLinear
             ' Otherwise expression is same linearity as base
@@ -227,11 +243,14 @@ Sub MarkLinearity()
     End Select
 End Sub
 
+' Traverses the tree and prunes all linear or constant parts from the tree
 Public Sub PruneLinearTrees(LinearTrees As Collection, Optional RootNode As Boolean = False)
     Dim CanPrune As Boolean
     CanPrune = False
+    ' If the root node is linear or constant we can prune
     If NodeLinearity <> ExpressionTreeNonLinear Then
        CanPrune = True
+    ' Otherwise if the root is a "plus" or "minus", it might have a linear part as one of the children
     ElseIf NodeText = "sum" Or NodeText = "minus" Then
        'TODO prune children individually and set to n0 nodes
     Else
@@ -259,14 +278,16 @@ Public Sub PruneLinearTrees(LinearTrees As Collection, Optional RootNode As Bool
         
 End Sub
 
+' Converts a linear tree into a LinearConstraintNL and Double
 Public Sub ConvertLinearTreeToConstraint(constraint As LinearConstraintNL, constant As Double)
-    ' Remove everything but +, -, variables, and constants
+    ' Remove everything but "plus", variables, and constants
     CollateLinearTerms
     
     ' Add linear terms into constraint/constant
     AddLinearTreeToConstraint constraint, constant
 End Sub
 
+' Traverses a linear tree and removes all operators other than "plus"
 Sub CollateLinearTerms()
 
     ' First collate all children
@@ -318,7 +339,7 @@ Sub CollateLinearTerms()
                 LinearCoefficient = 1
             End If
         
-        ' Linear operator node - we need to collate the constant and variable terms into a single variable node
+        ' Linear operator node - we need to collate the constant and variable terms into a single variable node if possible
         Case ExpressionTreeOperator
             ' Make sure there is a constant and variable to collect
             If (Children(1).NodeType = ExpressionTreeNumber And Children(2).NodeType = ExpressionTreeVariable) Or _
@@ -375,9 +396,12 @@ Sub CollateLinearTerms()
     
 End Sub
 
-
+' Convert a collated linear tree into a LinearConstraintNL and Double constant
 Sub AddLinearTreeToConstraint(constraint As LinearConstraintNL, constant As Double)
-    ' By this point, only "plus", variables and constants remain in the tree
+    ' By this point, only "plus", variables and constants remain in the tree.
+    ' We traverse the tree and add each variable we find to the constraint,
+    ' and each constant value to the constant total
+    
     Select Case NodeType
     ' Add variable coefficient to constraint
     Case ExpressionTreeVariable

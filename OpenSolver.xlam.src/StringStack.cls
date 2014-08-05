@@ -9,6 +9,8 @@ Attribute VB_PredeclaredId = False
 Attribute VB_Exposed = False
 Option Explicit
 
+' Stack for Strings
+
 Private items As Collection
 
 Private Sub Class_Initialize()

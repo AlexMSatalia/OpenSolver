@@ -162,7 +162,7 @@ Function ReadModel_Couenne(SolutionFilePathName As String, errorString As String
     
     'Get the returned status code from couenne.
     ' These are currently just using the outputs from CBC
-    ' TODO update to Couenne if needed
+    ' TODO couenne doesn't seem to write a solution file unless the solve is successful. We need to extract the solve status from the log file
     If Line Like "Optimal*" Then
         SolveStatus = OpenSolverResult.Optimal
         SolveStatusString = "Optimal"
@@ -208,6 +208,10 @@ Function ReadModel_Couenne(SolutionFilePathName As String, errorString As String
             Line Input #1, Line ' Skip all options lines
         Next i
         
+        ' Note that the variable values are written to file in .nl format
+        ' We need to read in the values and the extract the correct values for the adjustable cells
+        
+        ' Read in all variable values
         Dim VariableValues As New Collection
         While Not EOF(1)
             Line Input #1, Line

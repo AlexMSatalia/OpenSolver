@@ -8,11 +8,7 @@ Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = False
 Attribute VB_Exposed = False
 '==============================================================================
-' OpenSolver
-' Formula tokenizer functionality is from http://www.dailydoseofexcel.com
-' Code is written by Rob van Gelder
-' http://www.dailydoseofexcel.com/archives/2009/12/05/formula-tokenizer/
-' GUI-related functionality stripped.
+' Stack for ExpressionTree objects
 '==============================================================================
 Option Explicit
 

@@ -9,9 +9,11 @@ Attribute VB_PredeclaredId = False
 Attribute VB_Exposed = False
 Option Explicit
 
-Dim VariablesPresent() As Boolean
-Dim Coefficients() As Double
-Dim NumVariables As Integer
+' Class for storing information about a linear expression (constraint/objective)
+
+Dim VariablesPresent() As Boolean   ' Whether each variable is present in the expression
+Dim Coefficients() As Double        ' The coefficient of each variable if present
+Dim NumVariables As Integer         ' The number of variables present
 
 Public Property Let Count(numVars As Integer)
     NumVariables = numVars
@@ -39,6 +41,7 @@ Public Property Get Coefficient(index As Integer) As Double
     Coefficient = Coefficients(index)
 End Property
 
+' The number of variables present in the constraint
 Public Property Get NumPresent() As Integer
     NumPresent = 0
     
@@ -50,6 +53,7 @@ Public Property Get NumPresent() As Integer
     Next i
 End Property
 
+' Outputs all variable coefficients to string for debugging
 Public Function Display() As String
     Dim i As Integer
     For i = 1 To NumVariables
@@ -57,9 +61,12 @@ Public Function Display() As String
     Next i
 End Function
 
+' Inverts the sign on all coefficients. Used for negating the expression
 Public Sub InvertCoefficients()
     Dim i As Integer
     For i = 1 To NumVariables
-        Coefficients(i) = -Coefficients(i)
+        If Coefficients(i) <> 0 Then
+            Coefficients(i) = -Coefficients(i)
+        End If
     Next i
 End Sub
