@@ -39,4 +39,12 @@ Property Get Count() As Long
     Count = colTreeStack.Count
 End Property
 
+Public Function Display() As String
+    Dim i As Integer, output As String
+    For i = 1 To colTreeStack.Count
+        output = output & colTreeStack(i).Display & ", "
+    Next i
+    Display = output
+End Function
+
 

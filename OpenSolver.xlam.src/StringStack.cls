@@ -37,3 +37,11 @@ End Function
 Property Get Count() As Long
     Count = items.Count
 End Property
+
+Public Function Display() As String
+    Dim i As Integer, output As String
+    For i = 1 To items.Count
+        output = output & items(i) & ", "
+    Next i
+    Display = output
+End Function

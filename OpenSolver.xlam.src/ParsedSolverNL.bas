@@ -1178,7 +1178,7 @@ End Sub
 ' Check whether a token on the operator stack is a function operator (vs. an arithmetic operator)
 Function IsFunctionOperator(tkn As String) As Boolean
     Select Case tkn
-    Case "plus", "minus", "mult", "div", "pow", "neg"
+    Case "plus", "minus", "mult", "div", "pow", "neg", "("
         IsFunctionOperator = False
     Case Else
         IsFunctionOperator = True
