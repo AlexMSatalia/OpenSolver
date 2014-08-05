@@ -1067,6 +1067,8 @@ Function ConvertFormula(Solver As String, tokenText As String) As String
         ConvertFormula = ConvertFormula_PuLP(tokenText)
     Case "NeosBon", "NeosCou"
         ConvertFormula = ConvertFormula_AMPL(tokenText)
+    Case "Couenne"
+        ConvertFormula = ConvertFormula_NL(tokenText)
     Case Else
         ConvertFormula = tokenText + "("
     End Select
@@ -1089,4 +1091,19 @@ Function ConvertFormula_AMPL(tokenText As String) As String
 errorHandler:
     MsgBox tokenText & " not implemented for AMPL yet"
     ConvertFormula_AMPL = tokenText + "("
+End Function
+
+Function ConvertFormula_NL(tokenText As String) As String
+    Select Case tokenText
+    ' RADIANS
+    Case "RADIANS"
+        ConvertFormula_NL = "4*ATAN(1)/180*("
+    Case Else
+        ConvertFormula_NL = tokenText + "("
+    End Select
+    Exit Function
+    
+errorHandler:
+    MsgBox tokenText & " not implemented for .nl solvers yet"
+    ConvertFormula_NL = tokenText + "("
 End Function

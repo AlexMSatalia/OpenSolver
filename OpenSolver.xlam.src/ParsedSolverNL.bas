@@ -509,9 +509,15 @@ Sub ProcessSingleFormula(RHSExpression As String, LHSVariable As String, Relatio
     constraint.Count = n_var
     Tree.ExtractVariables constraint
 
-    ' Remove linear terms from non-linear trees
     Dim LinearTrees As New Collection
     Tree.MarkLinearity
+    
+    ' Constants in .nl expression trees must be as simple as possible.
+    ' We cannot have constant * constant in the tree, it must be replaced with a single constant
+    ' We need to evalulate and pull up all constants that we can.
+    Tree.PullUpConstants
+    
+    ' Remove linear terms from non-linear trees
     Tree.PruneLinearTrees LinearTrees, True
     
     ' Process linear trees to separate constants and variables

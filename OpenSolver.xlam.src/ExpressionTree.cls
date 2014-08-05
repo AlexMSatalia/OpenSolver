@@ -243,6 +243,52 @@ Sub MarkLinearity()
     End Select
 End Sub
 
+Public Sub PullUpConstants()
+    ' First pull all constants in children
+    Dim i As Integer
+    For i = 1 To NumChildren
+        Children(i).PullUpConstants
+    Next i
+
+    If NodeLinearity = ExpressionTreeConstant And NodeType = ExpressionTreeOperator Then
+        EvaluateConstantOperator
+    End If
+End Sub
+
+' Evaluates a constant operator node and replaces node and all children with a numeric constant
+Public Sub EvaluateConstantOperator()
+    Dim i As Integer, Values As New Collection
+    For i = 1 To NumChildren
+        Values.Add CDbl(Children(i).NodeText)
+    Next i
+    
+    Dim NewValue As Double
+    Select Case NodeText
+    Case "plus"
+        NewValue = Values(1) + Values(2)
+    Case "minus"
+        NewValue = Values(1) - Values(2)
+    Case "mult"
+        NewValue = Values(1) * Values(2)
+    Case "div"
+        NewValue = Values(1) / Values(2)
+    Case "pow"
+        NewValue = Values(1) ^ Values(2)
+    Case "neg"
+        NewValue = -Values(1)
+    Case "atan"
+        NewValue = Atn(Values(1))
+    Case Else
+        NewValue = 0
+        MsgBox "Constant evaluation of " & NodeText & " not implemented yet in collation of linear terms"
+    End Select
+        
+    ' Replace subtree with a constant node
+    NodeType = ExpressionTreeNumber
+    NodeText = NewValue
+    ClearChildren
+End Sub
+
 ' Traverses the tree and prunes all linear or constant parts from the tree
 Public Sub PruneLinearTrees(LinearTrees As Collection, Optional RootNode As Boolean = False)
     Dim CanPrune As Boolean
@@ -306,28 +352,8 @@ Sub CollateLinearTerms()
         
         ' Constant expression under operator - we can evaluate it and discard all children
         Case ExpressionTreeOperator
-            Select Case NodeText
-            Case "plus"
-                LinearValue = Children(1).LinearValue + Children(2).LinearValue
-            Case "minus"
-                LinearValue = Children(1).LinearValue - Children(2).LinearValue
-            Case "mult"
-                LinearValue = Children(1).LinearValue * Children(2).LinearValue
-            Case "div"
-                LinearValue = Children(1).LinearValue / Children(2).LinearValue
-            Case "pow"
-                LinearValue = Children(1).LinearValue ^ Children(2).LinearValue
-            Case "neg"
-                LinearValue = -Children(1).LinearValue
-            Case Else
-                LinearValue = 0
-                MsgBox "Constant evaluation of " & NodeText & " not implemented yet in collation of linear terms"
-            End Select
-            
-            ' Replace subtree with a constant node
-            NodeType = ExpressionTreeNumber
-            NodeText = LinearValue
-            ClearChildren
+            EvaluateConstantOperator
+            LinearValue = CDbl(NodeText)
         End Select
         
     ' A linear node - we need to update the coefficient on the linear term
@@ -341,53 +367,57 @@ Sub CollateLinearTerms()
         
         ' Linear operator node - we need to collate the constant and variable terms into a single variable node if possible
         Case ExpressionTreeOperator
-            ' Make sure there is a constant and variable to collect
-            If (Children(1).NodeType = ExpressionTreeNumber And Children(2).NodeType = ExpressionTreeVariable) Or _
-               (Children(1).NodeType = ExpressionTreeVariable And Children(2).NodeType = ExpressionTreeNumber) Then
-                Select Case NodeText
-
-                ' Need to detect which node is variable
-                Case "mult"
-                    If Children(1).NodeType = ExpressionTreeVariable Then
-                        LinearCoefficient = Children(1).LinearCoefficient * Children(2).LinearValue
-                        NodeText = Children(1).NodeText
-                    Else
-                        LinearCoefficient = Children(2).LinearCoefficient * Children(1).LinearValue
-                        NodeText = Children(2).NodeText
+            If NodeText <> "plus" Then
+                ' If we have a minus node, convert it to a plus and flip the sign on the second operator
+                If NodeText = "minus" Then
+                    If Children(2).NodeType = ExpressionTreeVariable Then
+                        Children(2).LinearCoefficient = -Children(2).LinearCoefficient
+                    Else ' Children(2).NodeType = ExpressionTreeNumber
+                        If Children(2).NodeText <> "0" Then
+                            Children(2).LinearValue = -CDbl(Children(2).NodeText)
+                            Children(2).NodeText = Children(2).LinearValue
+                        End If
                     End If
-                
-                ' First node is variable
-                Case "div"
-                    LinearCoefficient = Children(1).LinearCoefficient / Children(2).LinearValue
-                    NodeText = Children(1).NodeText
                     
-                ' Second node must be 1 (as we know the expression is linear)
-                Case "pow"
-                    LinearCoefficient = Children(1).LinearCoefficient
-                    NodeText = Children(1).NodeText
+                    NodeText = "plus"
                 
-                Case "neg"
-                    LinearCoefficient = -Children(1).LinearCoefficient
-                    NodeText = Children(1).NodeText
-        
-                Case Else
-                    MsgBox "Unknown linear operator " & NodeText
-                End Select
-                
-                ' Remove subtrees
-                NodeType = ExpressionTreeVariable
-                ClearChildren
+                ' Make sure there is a constant and variable to collect with an appropriate operator
+                ElseIf (Children(1).NodeType = ExpressionTreeNumber And Children(2).NodeType = ExpressionTreeVariable) Or _
+                       (Children(1).NodeType = ExpressionTreeVariable And Children(2).NodeType = ExpressionTreeNumber) Then
+                    Select Case NodeText
+    
+                    ' Need to detect which node is variable
+                    Case "mult"
+                        If Children(1).NodeType = ExpressionTreeVariable Then
+                            LinearCoefficient = Children(1).LinearCoefficient * Children(2).LinearValue
+                            NodeText = Children(1).NodeText
+                        Else
+                            LinearCoefficient = Children(2).LinearCoefficient * Children(1).LinearValue
+                            NodeText = Children(2).NodeText
+                        End If
+                    
+                    ' First node is variable
+                    Case "div"
+                        LinearCoefficient = Children(1).LinearCoefficient / Children(2).LinearValue
+                        NodeText = Children(1).NodeText
+                        
+                    ' Second node must be 1 (as we know the expression is linear)
+                    Case "pow"
+                        LinearCoefficient = Children(1).LinearCoefficient
+                        NodeText = Children(1).NodeText
+                    
+                    Case "neg"
+                        LinearCoefficient = -Children(1).LinearCoefficient
+                        NodeText = Children(1).NodeText
             
-            ' If we have a minus node, convert it to a plus and flip the sign on the second operator
-            ElseIf NodeText = "minus" Then
-                If Children(2).NodeType = ExpressionTreeVariable Then
-                    Children(2).LinearCoefficient = -Children(2).LinearCoefficient
-                Else ' Children(2).NodeType = ExpressionTreeNumber
-                    Children(2).LinearValue = -CDbl(NodeText)
-                    Children(2).NodeText = Children(2).LinearValue
+                    Case Else
+                        MsgBox "Unknown linear operator " & NodeText
+                    End Select
+                    
+                    ' Remove subtrees
+                    NodeType = ExpressionTreeVariable
+                    ClearChildren
                 End If
-                
-                NodeText = "plus"
             End If
         End Select
     End Select
