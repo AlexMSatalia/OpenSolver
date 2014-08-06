@@ -518,7 +518,7 @@ Sub ProcessSingleFormula(RHSExpression As String, LHSVariable As String, Relatio
     Tree.PullUpConstants
     
     ' Remove linear terms from non-linear trees
-    Tree.PruneLinearTrees LinearTrees, True
+    Tree.PruneLinearTrees LinearTrees
     
     ' Process linear trees to separate constants and variables
     Dim constant As Double

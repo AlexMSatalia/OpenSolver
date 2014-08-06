@@ -37,7 +37,7 @@ End Enum
 ' Getter method for children
 Public Function GetChild(index As Integer) As ExpressionTree
     Dim obj As ExpressionTree
-    Set obj = Children(i)
+    Set obj = Children(index)
     Set GetChild = obj
 End Function
 
@@ -52,6 +52,10 @@ Public Sub SetChild(index As Integer, obj As ExpressionTree)
     End If
     Set Children(index) = obj
 End Sub
+
+Public Property Get GetNumChildren() As Integer
+    GetNumChildren = NumChildren
+End Property
 
 ' Clear all children from the node
 Public Sub ClearChildren()
@@ -72,6 +76,7 @@ Public Function Negate() As ExpressionTree
         Dim NewTree As ExpressionTree
         Set NewTree = CreateTree("neg", ExpressionTreeOperator)
         
+        NewTree.NodeLinearity = NodeLinearity
         NewTree.SetChild 1, Me
         
         Set Negate = NewTree
@@ -290,27 +295,46 @@ Public Sub EvaluateConstantOperator()
 End Sub
 
 ' Traverses the tree and prunes all linear or constant parts from the tree
-Public Sub PruneLinearTrees(LinearTrees As Collection, Optional RootNode As Boolean = False)
-    Dim CanPrune As Boolean
+Public Function PruneLinearTrees(LinearTrees As Collection, Optional NegativeTree As Boolean = False) As Boolean
+    Dim CanPrune As Boolean, i As Integer, NewTree As ExpressionTree
     CanPrune = False
     ' If the root node is linear or constant we can prune
     If NodeLinearity <> ExpressionTreeNonLinear Then
        CanPrune = True
     ' Otherwise if the root is a "plus" or "minus", it might have a linear part as one of the children
-    ElseIf NodeText = "sum" Or NodeText = "minus" Then
-       'TODO prune children individually and set to n0 nodes
-    Else
+    ElseIf NodeText = "plus" Or NodeText = "minus" Then
+       'Prune children individually and set to n0 nodes
+        Dim PrunedFirst As Boolean, PrunedSecond As Boolean
+        
+        PrunedFirst = Children(1).PruneLinearTrees(LinearTrees)
+        If NodeText = "minus" Then
+            PrunedSecond = Children(2).PruneLinearTrees(LinearTrees, True)
+        Else
+            PrunedSecond = Children(2).PruneLinearTrees(LinearTrees)
+        End If
+        
+        ' If first tree pruned, then set this node to the second child
+        If PrunedFirst Then
+            ' Negate the tree if it was a minus node before setting
+            If NodeText = "minus" Then
+                SetChild 2, Children(2).Negate
+            End If
+            SetTreeToChild 2
+            
+        ' If second node pruned, then set this node to the first child
+        ElseIf PrunedSecond Then
+            SetTreeToChild 1
+        End If
     End If
     
     If CanPrune Then
         ' Copy tree
-        Dim NewTree As ExpressionTree
-        Set NewTree = CreateTree(NodeText, NodeType)
-        NewTree.NodeLinearity = NodeLinearity
-        Dim i As Integer
-        For i = 1 To NumChildren
-            NewTree.SetChild i, Children(i)
-        Next i
+        Set NewTree = Me.Clone
+        
+        ' If tree is being pruned from a "minus", we need to negate it
+        If NegativeTree Then
+            Set NewTree = NewTree.Negate
+        End If
 
         ' Add tree to linear collection
         LinearTrees.Add NewTree
@@ -320,8 +344,53 @@ Public Sub PruneLinearTrees(LinearTrees As Collection, Optional RootNode As Bool
         NodeType = ExpressionTreeNumber
         NodeLinearity = ExpressionTreeConstant
         ClearChildren
+        
+        PruneLinearTrees = True
+    Else
+        PruneLinearTrees = False
     End If
         
+End Function
+
+' Sets an ExpressionTree to be one of its children
+Sub SetTreeToChild(index As Integer)
+    ' We can't clear all children of the current tree while referring to one of it's children
+    ' We therefore need to make a copy of the child tree before we clear the tree and set it to the child
+    Dim NewTree As ExpressionTree
+    Set NewTree = Children(index).Clone
+    SetExpressionTree NewTree
+End Sub
+
+' Creates a copy of an ExpressionTree
+Public Function Clone() As ExpressionTree
+    Dim NewTree As ExpressionTree
+    Set NewTree = CreateTree(NodeText, NodeType)
+    NewTree.NodeLinearity = NodeLinearity
+    NewTree.LinearCoefficient = LinearCoefficient
+    NewTree.LinearValue = LinearValue
+    
+    Dim i As Integer
+    For i = 1 To NumChildren
+        NewTree.SetChild i, Children(i)
+    Next i
+    
+    Set Clone = NewTree
+End Function
+
+' Sets the current ExpressionTree to be the same as another
+Sub SetExpressionTree(NewTree As ExpressionTree)
+    NodeText = NewTree.NodeText
+    NodeType = NewTree.NodeType
+    NodeLinearity = NewTree.NodeLinearity
+    LinearCoefficient = NewTree.LinearCoefficient
+    LinearValue = NewTree.LinearValue
+    
+    ClearChildren
+    
+    Dim i As Integer
+    For i = 1 To NewTree.GetNumChildren
+        SetChild i, NewTree.GetChild(i)
+    Next i
 End Sub
 
 ' Converts a linear tree into a LinearConstraintNL and Double
@@ -370,16 +439,20 @@ Sub CollateLinearTerms()
             If NodeText <> "plus" Then
                 ' If we have a minus node, convert it to a plus and flip the sign on the second operator
                 If NodeText = "minus" Then
-                    If Children(2).NodeType = ExpressionTreeVariable Then
-                        Children(2).LinearCoefficient = -Children(2).LinearCoefficient
-                    Else ' Children(2).NodeType = ExpressionTreeNumber
-                        If Children(2).NodeText <> "0" Then
-                            Children(2).LinearValue = -CDbl(Children(2).NodeText)
-                            Children(2).NodeText = Children(2).LinearValue
-                        End If
-                    End If
+                    Children(2).CollateLinearNegative
                     
                     NodeText = "plus"
+                
+                ' Negate the coefficient on the variable node and remove the "neg" node
+                ElseIf NodeText = "neg" Then
+                    If Children(1).NodeType = ExpressionTreeVariable Then
+                        Children(1).LinearCoefficient = -Children(1).LinearCoefficient
+                    Else ' Children(1).NodeType = ExpressionTreeOperator
+                        ' The child is a "plus" - flip signs on both terms
+                        Children(1).GetChild(1).CollateLinearNegative
+                        Children(1).GetChild(2).CollateLinearNegative
+                    End If
+                    SetTreeToChild 1
                 
                 ' Make sure there is a constant and variable to collect with an appropriate operator
                 ElseIf (Children(1).NodeType = ExpressionTreeNumber And Children(2).NodeType = ExpressionTreeVariable) Or _
@@ -405,10 +478,6 @@ Sub CollateLinearTerms()
                     Case "pow"
                         LinearCoefficient = Children(1).LinearCoefficient
                         NodeText = Children(1).NodeText
-                    
-                    Case "neg"
-                        LinearCoefficient = -Children(1).LinearCoefficient
-                        NodeText = Children(1).NodeText
             
                     Case Else
                         MsgBox "Unknown linear operator " & NodeText
@@ -424,6 +493,18 @@ Sub CollateLinearTerms()
     
     Exit Sub
     
+End Sub
+
+' Flips the sign on variable or constant
+Public Sub CollateLinearNegative()
+    If NodeType = ExpressionTreeVariable Then
+        LinearCoefficient = -LinearCoefficient
+    Else ' NodeType = ExpressionTreeNumber
+        If NodeText <> "0" Then
+            LinearValue = -CDbl(NodeText)
+            NodeText = LinearValue
+        End If
+    End If
 End Sub
 
 ' Convert a collated linear tree into a LinearConstraintNL and Double constant
