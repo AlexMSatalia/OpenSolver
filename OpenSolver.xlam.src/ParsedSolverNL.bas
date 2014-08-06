@@ -345,6 +345,62 @@ Sub MakeVariableMap()
         CellNames.Add cellName
     Next i
     
+    '==============================================
+    ' Get binary and integer variables from model
+    
+    ' Get integer variables
+    Dim IntegerVars() As Boolean
+    ReDim IntegerVars(n_var)
+    If Not m.IntegerCells Is Nothing Then
+        For Each c In m.IntegerCells
+            cellName = ConvertCellToStandardName(c)
+            IntegerVars(VariableIndex(cellName)) = True
+        Next c
+    End If
+    
+    ' Get binary variables
+    Dim BinaryVars() As Boolean
+    ReDim BinaryVars(n_var)
+    If Not m.BinaryCells Is Nothing Then
+        For Each c In m.BinaryCells
+            cellName = ConvertCellToStandardName(c)
+            BinaryVars(VariableIndex(cellName)) = True
+            ' Reset integer state for this variable - binary trumps integer
+            IntegerVars(VariableIndex(cellName)) = False
+        Next c
+    End If
+    
+    ' ==============================================
+    ' Divide variables into the required groups. Note that there is no non-linear binary
+    '     non-linear continuous
+    '     non-linear integer
+    '     linear continuous
+    '     linear binary
+    '     linear integer
+    Dim NonLinearContinuous As New Collection
+    Dim NonLinearInteger As New Collection
+    Dim LinearContinuous As New Collection
+    Dim LinearBinary As New Collection
+    Dim LinearInteger As New Collection
+    
+    For i = 1 To n_var
+        If NonLinearVars(i) Then
+            If IntegerVars(i) Then
+                NonLinearInteger.Add i
+            Else
+                NonLinearContinuous.Add i
+            End If
+        Else
+            If BinaryVars(i) Then
+                LinearBinary.Add i
+            ElseIf IntegerVars(i) Then
+                LinearInteger.Add i
+            Else
+                LinearContinuous.Add i
+            End If
+        End If
+    Next i
+    
     ' ==============================================
     ' Add variables to the variable map in the required order
     ReDim VariableNLIndexToCollectionIndex(n_var)
@@ -352,7 +408,7 @@ Sub MakeVariableMap()
     Set VariableMap = New Collection
     Set VariableMapRev = New Collection
     
-    Dim index As Integer
+    Dim index As Integer, var As Integer
     index = 0
     
     ' We loop through the variables and arrange them in the required order:
@@ -363,27 +419,42 @@ Sub MakeVariableMap()
     '     5th - binary
     '     6th - other integer
     
-    ' Non-linear
-    '    continuous
-    '    integer
-    For i = 1 To n_var
-        If NonLinearVars(i) Then
-            'TODO split integer
-            AddVariable CellNames(i), index, i
-        End If
+    ' Non-linear continuous
+    For i = 1 To NonLinearContinuous.Count
+        var = NonLinearContinuous(i)
+        AddVariable CellNames(var), index, var
     Next i
     
-    ' Linear
-    '    continuous
-    '    binary
-    '    integer
-    For i = 1 To n_var
-        If Not NonLinearVars(i) Then
-            'TODO split integer/binary
-            AddVariable CellNames(i), index, i
-        End If
+    ' Non-linear integer
+    For i = 1 To NonLinearInteger.Count
+        var = NonLinearInteger(i)
+        AddVariable CellNames(var), index, var
     Next i
     
+    ' Linear continuous
+    For i = 1 To LinearContinuous.Count
+        var = LinearContinuous(i)
+        AddVariable CellNames(var), index, var
+    Next i
+    
+    ' Linear binary
+    For i = 1 To LinearBinary.Count
+        var = LinearBinary(i)
+        AddVariable CellNames(var), index, var
+    Next i
+    
+    ' Linear integer
+    For i = 1 To LinearInteger.Count
+        var = LinearInteger(i)
+        AddVariable CellNames(var), index, var
+    Next i
+    
+    ' ==============================================
+    ' Update model stats
+    
+    nbv = LinearBinary.Count
+    niv = LinearInteger.Count
+    nlvci = NonLinearInteger.Count
 End Sub
 
 ' Adds a variable to all the variable maps with:
