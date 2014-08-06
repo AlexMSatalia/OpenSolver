@@ -236,6 +236,8 @@ Sub InitialiseModelStats()
     
     ' Divide the actual constraints into equalities and inequalities (ranges)
     Dim i As Integer
+    numActualEqs = 0
+    numActualRanges = 0
     For i = 1 To numActualCons
         If m.Rels(i) = RelationConsts.RelationEQ Then
             numActualEqs = numActualEqs + 1
@@ -644,6 +646,13 @@ Sub ProcessSingleFormula(RHSExpression As String, LHSVariable As String, Relatio
         If TempConstraint.VariablePresent(j) And Not NonLinearVars(j) Then
             NonLinearVars(j) = True
             nlvc = nlvc + 1
+        End If
+    Next j
+    
+    ' Remove any zero coefficients from the linear constraint if the variable is not in the non-linear tree
+    For j = 1 To constraint.Count
+        If Not NonLinearVars(j) And constraint.Coefficient(j) = 0 Then
+            constraint.VariablePresent(j) = False
         End If
     Next j
     
