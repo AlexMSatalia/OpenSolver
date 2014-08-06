@@ -44,6 +44,7 @@ Private Sub UserForm_Activate()
           Solvers.Add "Gurobi"
           'Solvers.Add "Cplex"
           Solvers.Add "NeosCBC"
+          Solvers.Add "Bonmin"
           Solvers.Add "Couenne"
           Solvers.Add "NOMAD"
           Solvers.Add "NeosBon"

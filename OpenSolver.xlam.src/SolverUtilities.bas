@@ -23,6 +23,8 @@ Function SolverAvailable(Solver As String, Optional SolverPath As String, Option
         SolverAvailable = SolverAvailable_Gurobi(SolverPath, errorString)
     Case "NOMAD"
         SolverAvailable = SolverAvailable_NOMAD(errorString)
+    Case "Bonmin"
+        SolverAvailable = SolverAvailable_Bonmin
     Case "Couenne"
         SolverAvailable = SolverAvailable_Couenne
     Case Else
@@ -45,6 +47,8 @@ Function SolverType(Solver As String) As String
         SolverType = SolverType_NeosBon
     Case "NeosCou"
         SolverType = SolverType_NeosCou
+    Case "Bonmin"
+        SolverType = SolverType_Bonmin
     Case "Couenne"
         SolverType = SolverType_Couenne
     Case Else
@@ -58,6 +62,8 @@ Function SolutionFilePath(Solver As String) As String
         SolutionFilePath = SolutionFilePath_CBC
     Case "Gurobi"
         SolutionFilePath = SolutionFilePath_Gurobi
+    Case "Bonmin"
+        SolutionFilePath = SolutionFilePath_Bonmin
     Case "Couenne"
         SolutionFilePath = SolutionFilePath_Couenne
     Case "PuLP"
@@ -86,6 +92,8 @@ End Function
 
 Function ReadModelParsed(Solver As String, SolutionFilePathName As String, errorString As String, m As CModelParsed) As Boolean
     Select Case Solver
+    Case "Bonmin"
+        ReadModelParsed = ReadModel_Bonmin(SolutionFilePathName, errorString, m)
     Case "Couenne"
         ReadModelParsed = ReadModel_Couenne(SolutionFilePathName, errorString, m)
     Case Else
@@ -104,7 +112,7 @@ Function ModelFile(Solver As String) As String
         ModelFile = AMPLFileName
     Case "PuLP"
         ModelFile = PuLPFileName
-    Case "Couenne"
+    Case "Couenne", "Bonmin"
         ModelFile = NLFileName
     Case Else
         ModelFile = ""
@@ -154,7 +162,7 @@ End Function
 
 Function UsesParsedModel(Solver As String) As Boolean
     Select Case Solver
-    Case "PuLP", "NeosBon", "NeosCou", "Couenne"
+    Case "PuLP", "NeosBon", "NeosCou", "Couenne", "Bonmin"
         UsesParsedModel = True
     Case Else
         UsesParsedModel = False
@@ -187,6 +195,8 @@ End Function
 
 Function CreateSolveScriptParsed(Solver As String, SolutionFilePathName As String) As String
     Select Case Solver
+    Case "Bonmin"
+        CreateSolveScriptParsed = CreateSolveScript_Bonmin(SolutionFilePathName)
     Case "Couenne"
         CreateSolveScriptParsed = CreateSolveScript_Couenne(SolutionFilePathName)
     End Select
@@ -198,6 +208,8 @@ Function SolverTitle(Solver As String) As String
         SolverTitle = SolverTitle_CBC
     Case "Gurobi"
         SolverTitle = SolverTitle_Gurobi
+    Case "Bonmin"
+        SolverTitle = SolverTitle_Bonmin
     Case "Couenne"
         SolverTitle = SolverTitle_Couenne
     Case "NOMAD"
@@ -219,6 +231,8 @@ Function ReverseSolverTitle(SolverTitle As String) As String
         ReverseSolverTitle = "Gurobi"
     Case SolverTitle_NOMAD
         ReverseSolverTitle = "NOMAD"
+    Case SolverTitle_Bonmin
+        ReverseSolverTitle = "Bonmin"
     Case SolverTitle_Couenne
         ReverseSolverTitle = "Couenne"
     Case SolverTitle_NeosCBC
@@ -238,6 +252,8 @@ Function SolverDesc(Solver As String) As String
         SolverDesc = SolverDesc_Gurobi
     Case "NOMAD"
         SolverDesc = SolverDesc_NOMAD
+    Case "Bonmin"
+        SolverDesc = SolverDesc_Bonmin
     Case "Couenne"
         SolverDesc = SolverDesc_Couenne
     Case "NeosCBC"
@@ -257,6 +273,8 @@ Function SolverLink(Solver As String) As String
         SolverLink = SolverLink_Gurobi
     Case "NOMAD"
         SolverLink = SolverLink_NOMAD
+    Case "Bonmin"
+        SolverLink = SolverLink_Bonmin
     Case "Couenne"
         SolverLink = SolverLink_Couenne
     Case "NeosCBC"

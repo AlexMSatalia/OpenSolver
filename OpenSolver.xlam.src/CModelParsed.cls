@@ -1067,7 +1067,7 @@ Function ConvertFormula(Solver As String, tokenText As String) As String
         ConvertFormula = ConvertFormula_PuLP(tokenText)
     Case "NeosBon", "NeosCou"
         ConvertFormula = ConvertFormula_AMPL(tokenText)
-    Case "Couenne"
+    Case "Couenne", "Bonmin"
         ConvertFormula = ConvertFormula_NL(tokenText)
     Case Else
         ConvertFormula = tokenText + "("
