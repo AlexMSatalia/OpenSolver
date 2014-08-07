@@ -866,7 +866,9 @@ ModelOptions:
 10390             End If
 10400         End If
 10410     Next constraint
-          ReDim Preserve VariableBounds(NumRows)
+          If NumRows > 0 Then
+              ReDim Preserve VariableBounds(NumRows)
+          End If
           
           '--------------------------------------------------------------------------
           ' BUILD THE A MATRIX
@@ -961,22 +963,17 @@ Sub ApplyLowerBound(row As Long, rel As Integer, LHS As Range, RHS As Range, RHS
     End If
     
     If isRangeRHS Then
-        Debug.Print LHS.Address, RHS.Address
         If Not RHS.HasFormula Then
             ' The RHS range is a constant - apply a bound
-            Debug.Print "", "", "New bound", LHS.Address & ">=" & RHS
             UpdateLowerBound row, LHS.Address, CDbl(RHS)
         Else
             ' The RHS range is a formula, check if this depends on the decision vars
             If Intersect(RHS.Precedents, AdjustableCells) Is Nothing Then
-                Debug.Print "", "", "New bound", LHS.Address & ">=" & RHS
                 UpdateLowerBound row, LHS.Address, CDbl(RHS)
             End If
         End If
     Else
         ' The RHS is a numeric constant - apply a bound
-        Debug.Print LHS.Address, RHSValue
-        Debug.Print "", "", "New bound", LHS.Address & ">=" & RHSValue
         UpdateLowerBound row, LHS.Address, RHSValue
     End If
 End Sub
