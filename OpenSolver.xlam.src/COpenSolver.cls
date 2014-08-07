@@ -98,6 +98,7 @@ Dim AdjCellsSheetIndex As Integer    ' The sheet index containing variables with
 Dim CostCoeffs() As Double, ObjectiveFunctionConstant As Double
 Dim RHS() As Double ' The RHS values for each row in the LP
 Dim Relation() As Integer ' For each row, we remember its relation (=, <=, >=)
+Public VarLowerBounds As Collection
 
 'Details for the chosen solver
 Public Solver As String 'Name of solver we will be using
@@ -663,6 +664,8 @@ ModelOptions:
 9460          ReDim ConstraintSummary(NumConstraints) As String
 9470          ReDim MappingRowsToConstraints(NumConstraints + 1) As Long
 9480      End If
+          Set VarLowerBounds = New Collection
+          ReDim VariableBounds(1)
           ' Reset number of rows in the LP model
 9490      NumRows = 0
           Dim constraint As Long, row As Long
@@ -748,6 +751,7 @@ ModelOptions:
                   ' ... then the constraint is a full equation with a RHS
                   Dim isRangeRHS As Boolean, valRHS As Double, rangeRHS As Range, RHSRefersToError As Boolean
                   Dim RHSRefersToFormula As Boolean, sRefersToRHS As String, RHSisMissing As Boolean
+                  Set rangeRHS = Nothing
                   
 9850              GetNameAsValueOrRange book, sheetName & "solver_rhs" & constraint, RHSisMissing, isRangeRHS, rangeRHS, RHSRefersToFormula, RHSRefersToError, sRefersToRHS, valRHS
                   ' Must have a right hand side defined
@@ -818,6 +822,31 @@ ModelOptions:
 10260                 RHSType(constraint) = SolverInputType.constant
 10270                 RHSOriginalValues(constraint) = valRHS
 10280             End If
+
+                  ' Check if this constraint applies any lower bounds
+                  If RowCount = 1 Then
+                      ' Single LHS, single RHS
+                      ApplyLowerBound row, rel, rangeLHS, rangeRHS, valRHS, isRangeRHS, RHSRefersToFormula
+                  Else
+                      Dim CurRow As Integer, RHSRowCount As Integer
+                      If rangeRHS Is Nothing Then
+                          RHSRowCount = 1
+                      Else
+                          RHSRowCount = rangeRHS.Count
+                      End If
+                      
+                      If RHSRowCount > 1 Then
+                          ' multiple LHS, multiple RHS
+                          For CurRow = 1 To RowCount
+                              ApplyLowerBound row + CurRow - 1, rel, rangeLHS(CurRow), rangeRHS(CurRow), valRHS, isRangeRHS, RHSRefersToFormula
+                          Next CurRow
+                      Else
+                          ' multiple LHS, single RHS
+                          For CurRow = 1 To RowCount
+                              ApplyLowerBound row + CurRow - 1, rel, rangeLHS(CurRow), rangeRHS, valRHS, isRangeRHS, RHSRefersToFormula
+                          Next CurRow
+                      End If
+                  End If
                   
                   ' Store relations for these rows, keep track of how many rows we've added
 10290             ReDim Preserve Relation(NumRows + rangeLHS.Count) As Integer
@@ -837,6 +866,7 @@ ModelOptions:
 10390             End If
 10400         End If
 10410     Next constraint
+          ReDim Preserve VariableBounds(NumRows)
           
           '--------------------------------------------------------------------------
           ' BUILD THE A MATRIX
@@ -853,8 +883,10 @@ ModelOptions:
           'which constraints are bounds on the variables as these are treated differently
           '=======================================================================================================================================
           'Set up the constraint matrix for solving linear problems
-10470     Call BuildConstraintMatrix(objIsMissing, objValue, SparseA, succeeded)
-10480     If succeeded = False Then GoTo ExitSub
+          If SolverType(Solver) = OpenSolver_SolverType.Linear Then
+10470         Call BuildConstraintMatrix(objIsMissing, objValue, SparseA, succeeded)
+10480         If succeeded = False Then GoTo ExitSub
+          End If
 
 
 10490     ModelStatus = ModelStatus_Built
@@ -901,6 +933,67 @@ ErrorExit:
 
       ' Debugging resume; never reached via code
 10760     Resume  ' Used for manual trying again after an error
+End Sub
+
+Sub ApplyLowerBound(row As Long, rel As Integer, LHS As Range, RHS As Range, RHSValue As Double, isRangeRHS As Boolean, RHSRefersToFormula As Boolean)
+' Determines whether the current LHS and RHS should be applied as a lower bound
+
+' Excel 2007 requires the following conditions to be met for a user-supplied lower bound to exist
+'  The LHS range includes a decision variable directly (not via a formula referring to the decision var).
+'  The RHS is either: a constant, or: a (single or multicell) range that containing a constant or a formula. The RHS may not
+'  be specified as a formula (even one evaluating to a constant)
+' Note: Excel 2010 seems a bit different in that the WHOLE LHS range must be decision variables. We adopt the 2007 behaviour
+' Note: A constraint of the form 'range <= decision var' does NOT count as a lower bound; the decision var MUST be in the LHS
+    
+    ' Only GE constraints can provide lower bounds
+    If rel <> RelationGE Then
+        Exit Sub
+    End If
+    
+    ' Following Solver, we don't apply formulae as lower bounds, even if constant
+    If RHSRefersToFormula Then
+        Exit Sub
+    End If
+    
+    ' Check if LHS cell is a variable cell
+    If Intersect(LHS, AdjustableCells) Is Nothing Then
+        Exit Sub
+    End If
+    
+    If isRangeRHS Then
+        Debug.Print LHS.Address, RHS.Address
+        If Not RHS.HasFormula Then
+            ' The RHS range is a constant - apply a bound
+            Debug.Print "", "", "New bound", LHS.Address & ">=" & RHS
+            UpdateLowerBound row, LHS.Address, CDbl(RHS)
+        Else
+            ' The RHS range is a formula, check if this depends on the decision vars
+            If Intersect(RHS.Precedents, AdjustableCells) Is Nothing Then
+                Debug.Print "", "", "New bound", LHS.Address & ">=" & RHS
+                UpdateLowerBound row, LHS.Address, CDbl(RHS)
+            End If
+        End If
+    Else
+        ' The RHS is a numeric constant - apply a bound
+        Debug.Print LHS.Address, RHSValue
+        Debug.Print "", "", "New bound", LHS.Address & ">=" & RHSValue
+        UpdateLowerBound row, LHS.Address, RHSValue
+    End If
+End Sub
+
+Sub UpdateLowerBound(row As Long, VarName As String, LowerBound As Double)
+    ' Remove existing lower bound on variable if our new one is better
+    If TestKeyExists(VarLowerBounds, VarName) Then
+        If LowerBound > VarLowerBounds(VarName) Then
+            VarLowerBounds.Remove VarName
+        End If
+    End If
+    
+    VarLowerBounds.Add LowerBound, VarName
+    
+    ' Track that this constraint row applies a bound
+    If UBound(VariableBounds) < row Then ReDim Preserve VariableBounds(row)
+    VariableBounds(row) = True
 End Sub
 
 Sub BuildModelOptions(s As String, succeeded As Boolean)
@@ -1718,32 +1811,18 @@ Sub WriteLPFile(ModelFilePathName As String, SolveRelaxation As Boolean, errorSt
 15180         Print #1,   ' New line
 15190     Else
               ' If AssumeNonNegative, then we need to apply lower bounds to any variables without explicit lower bounds.
-              ' Excel 2007 requires the following conditions to be met for a user-supplied lower bound to exist
-              '  The LHS range includes a decision variable directly (not via a formula referring to the decision var).
-              '  The RHS is either: a constant, or: a (single or multicell) range that containing a constant or a formula. The RHS may not
-              '  be specified as a formula (even one evaluating to a constant)
-              '  The resulting equation does indeed just depend on a single decision variable (ie the RHS range turned out to be constant)
-              ' Note: Excel 2010 seems a bit different in that the WHOLE LHS range must be decision variables; this needs to be confirmed
-              ' Note: A constraint of the form 'range <= decision var' does NOT count as a lower bound; the decision var MUST be in the LHS
-              Dim BoundedVariables As Range
-15200         For row = 1 To NumRows
-15210             If Relation(row) = RelationGE And SparseA(row).Count = 1 Then
-                      ' This is a constraint apply a lower bound to one variable. Check that the LHS did directly specify the decision variable.
-15220                 var = SparseA(row).index(1)
-15230                 GetConstraintFromRow row, constraint, instance
-15240                 If RHSType(constraint) <> Formula Then
-15250                     GetArrayPosnFromConstraintInstance constraint, instance, i, j
-15260                     If LHSRange(constraint)(i, j).Address(RowAbsolute:=False, ColumnAbsolute:=False) = VarNames(var) _
-                             And LHSRange(constraint).Worksheet.Name = AdjustableCells.Worksheet.Name Then ' AJM Must be on the same sheet
-                              ' This is a direct lower bound on this variable
-15270                         Set BoundedVariables = ProperUnion(BoundedVariables, LHSRange(constraint)(i, j))
-15280                     End If
-15290                 End If
-15300             End If
-15310         Next row
+              
+              ' Get all bounded variables
+              Dim BoundedVariables As New Collection
+              For Each c In AdjustableCells
+                  If TestKeyExists(VarLowerBounds, c.Address) Then
+                      BoundedVariables.Add c
+                  End If
+              Next c
+
               ' We need to mark variables with explicit lower bounds as FREE variables (allowing the possibly negative lower bound to be effective).
               ' However, we don't make Binary variables free
-15320         If Not BoundedVariables Is Nothing Then
+15320         If BoundedVariables.Count <> 0 Then
 15330             Print #1, "BOUNDS"
 15340             Print #1, commentStart & "'Assume Non Negative' is TRUE, so default lower bounds of zero are removed only from non-binary variables already given explicit lower bounds."
 15350             If BinaryCellsRange Is Nothing Then
@@ -1859,40 +1938,20 @@ Sub WriteAMPLFile(ModelFilePathName As String, SolveRelaxation As Boolean, error
      Dim instance As Long
      constraint = 1
      
-     Dim BoundedVariables As Range
-     If AssumeNonNegativeVars Then
-         'If AssumeNonNegative, then we need to apply lower bounds to any variables without explicit lower bounds.
-         ' Excel 2007 requires the following conditions to be met for a user-supplied lower bound to exist
-         '  The LHS range includes a decision variable directly (not via a formula referring to the decision var).
-         '  The RHS is either: a constant, or: a (single or multicell) range that containing a constant or a formula. The RHS may not
-         '  be specified as a formula (even one evaluating to a constant)
-         '  The resulting equation does indeed just depend on a single decision variable (ie the RHS range turned out to be constant)
-         ' Note: Excel 2010 seems a bit different in that the WHOLE LHS range must be decision variables; this needs to be confirmed
-         ' Note: A constraint of the form 'range <= decision var' does NOT count as a lower bound; the decision var MUST be in the LHS
-         For row = 1 To NumRows
-             If Relation(row) = RelationGE And SparseA(row).Count = 1 Then
-                 ' This is a constraint apply a lower bound to one variable. Check that the LHS did directly specify the decision variable.
-                 var = SparseA(row).index(1)
-                 GetConstraintFromRow row, constraint, instance
-                 If RHSType(constraint) <> Formula Then
-                     GetArrayPosnFromConstraintInstance constraint, instance, i, j
-                     If LHSRange(constraint)(i, j).Address(RowAbsolute:=False, ColumnAbsolute:=False) = VarNames(var) _
-                        And LHSRange(constraint).Worksheet.Name = AdjustableCells.Worksheet.Name Then ' AJM Must be on the same sheet
-                         ' This is a direct lower bound on this variable
-                         Set BoundedVariables = ProperUnion(BoundedVariables, LHSRange(constraint)(i, j))
-                     End If
-                 End If
-             End If
-         Next row
-     End If
+     ' Reindex bounded variables by relative address so that VarNames(var) can search the collection
+     Dim BoundedVariables As New Collection
+     For Each c In AdjustableCells
+         If TestKeyExists(VarLowerBounds, c.Address) Then
+             BoundedVariables.Add c, c.Address(RowAbsolute:=False, ColumnAbsolute:=False)
+         End If
+     Next c
      
      ' Intialise Variables
      For var = 1 To numVars
          Line = "var " & ValidLPFileVarName(VarNames(var)) & VarDic.Item(ValidLPFileVarName(VarNames(var)))
          If AssumeNonNegativeVars Then
-             If BoundedVariables Is Nothing Then
-                 Line = Line & " >= 0"
-             ElseIf Application.Intersect(Range(VarNames(var)), BoundedVariables) Is Nothing Then
+             ' If no lower bound has been applied then we need to add >= 0
+             If Not TestKeyExists(BoundedVariables, VarNames(var)) Then
                  Line = Line & " >= 0"
              End If
          End If
@@ -3021,10 +3080,10 @@ Function getValuesOS() As Variant
 25280                     Next j
 25290                 Next i
 25300             Else
-25310                 If VariableBounds(conCountB) = False Then
+                      If VariableBounds(conCountB) = False Then
                           SetConstraintValue y, k, CurrentRHSValues, CurrentLHSValues(1, 1), Relation(conCountB)
-25420                 End If
-25430                 conCountB = conCountB + 1
+                      End If
+                      conCountB = conCountB + 1
 25440             End If
 25450         End If
 25460     Next constraint
@@ -3117,40 +3176,22 @@ Function getVariableDataOS() As Variant
 25640         X(2 * i + 1) = 10000000000000#
 25650     Next i
           
-          Dim BoundedVariables As Range, row As Long, var As Long, constraint As Long, instance As Long
-          If NumRows > 0 Then
-25660         constraint = 1
-25670         ReDim VariableBounds(NumRows)
-25680         For row = 1 To NumRows
-25690             VariableBounds(row) = False
-25700             If (Relation(row) = RelationGE Or Relation(row) = RelationLE) And SparseA(row).Count = 1 Then
-                  ' This is a constraint apply a lower bound to one variable. Check that the LHS did directly specify the decision variable.
-25710                 var = SparseA(row).index(1)
-25720                 GetConstraintFromRow row, constraint, instance
-25730                 If RHSType(constraint) <> Formula Then
-25740                     GetArrayPosnFromConstraintInstance constraint, instance, i, j
-25750                     If LHSRange(constraint)(i, j).Address(RowAbsolute:=False, ColumnAbsolute:=False) = VarNames(var) _
-                              And LHSRange(constraint).Worksheet.Name = AdjustableCells.Worksheet.Name Then ' AJM Must be on the same sheet
-                              ' This is a direct lower bound on this variable
-25760                         If Relation(row) = 1 Then
-25770                             If RHSType(constraint) = MultiCellRange Then
-25780                                 X(2 * var - 1) = RHSOriginalValues(constraint)(i, j)
-25790                             Else
-25800                                 X(2 * var - 1) = RHSOriginalValues(constraint)
-25810                             End If
-25820                         ElseIf Relation(row) = 3 Then
-25830                             If RHSType(constraint) = MultiCellRange Then
-25840                                 X(2 * var - 2) = RHSOriginalValues(constraint)(i, j)
-25850                             Else
-25860                                 X(2 * var - 2) = RHSOriginalValues(constraint)
-25870                             End If
-25880                         End If
-25890                         VariableBounds(row) = True
-25900                     End If
-25910                 End If
-25920             End If
-25930         Next row
-          End If
+          ' Reindex bounded variables by relative address so that VarNames(var) can search the collection
+          Dim BoundedVariables As New Collection, c As Range
+          For Each c In AdjustableCells
+              If TestKeyExists(VarLowerBounds, c.Address) Then
+                  BoundedVariables.Add VarLowerBounds(c.Address), c.Address(RowAbsolute:=False, ColumnAbsolute:=False)
+              End If
+          Next c
+          
+          
+          ' Apply lower bounds
+          Dim var As Long
+          For var = 1 To numVars
+              If TestKeyExists(BoundedVariables, VarNames(var)) Then
+                  X(2 * var - 2) = BoundedVariables(VarNames(var))
+              End If
+          Next var
 
           'Get the starting point
           'Takes the points on the sheet and forces them between the bounds
@@ -3169,7 +3210,7 @@ Function getVariableDataOS() As Variant
           'initialise all variables as continuous
 26040         X(i - 1 + 3 * numVars) = 1
 26050     Next i
-          Dim counter As Integer, types As Variant, c As Range
+          Dim counter As Integer, types As Variant
 26060     counter = 2
 26070     For Each types In Array(IntegerCellsRange, BinaryCellsRange)
 26080         If Not types Is Nothing Then
