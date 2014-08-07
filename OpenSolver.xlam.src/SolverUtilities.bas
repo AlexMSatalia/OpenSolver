@@ -90,12 +90,12 @@ Function ReadModel(Solver As String, SolutionFilePathName As String, errorString
     End Select
 End Function
 
-Function ReadModelParsed(Solver As String, SolutionFilePathName As String, errorString As String, m As CModelParsed) As Boolean
+Function ReadModelParsed(Solver As String, SolutionFilePathName As String, errorString As String, m As CModelParsed, s As COpenSolverParsed) As Boolean
     Select Case Solver
     Case "Bonmin"
-        ReadModelParsed = ReadModel_Bonmin(SolutionFilePathName, errorString, m)
+        ReadModelParsed = ReadModel_Bonmin(SolutionFilePathName, errorString, m, s)
     Case "Couenne"
-        ReadModelParsed = ReadModel_Couenne(SolutionFilePathName, errorString, m)
+        ReadModelParsed = ReadModel_Couenne(SolutionFilePathName, errorString, m, s)
     Case Else
         ReadModelParsed = False
         errorString = "The solver " & Solver & " has not yet been incorporated fully into OpenSolver."

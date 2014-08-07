@@ -7,7 +7,7 @@ Function SolutionFilePath_PuLP() As String
     SolutionFilePath_PuLP = GetTempFilePath(SolutionFile_PuLP)
 End Function
 
-Function SolveModelParsed_PuLP(ModelFilePathName As String, m As CModelParsed) As Boolean
+Function SolveModelParsed_PuLP(ModelFilePathName As String, m As CModelParsed, s As COpenSolverParsed) As Boolean
     Dim SolutionFilePathName As String
     SolutionFilePathName = SolutionFilePath_PuLP
     DeleteFileAndVerify SolutionFilePathName, "Writing PuLP file", "Unable to delete the solution file: " & SolutionFilePathName

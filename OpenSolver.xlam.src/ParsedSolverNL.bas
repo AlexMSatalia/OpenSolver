@@ -74,9 +74,9 @@ Dim como1 As Integer
 '   - .nl constraint index/order:       the order that constraints are arranged in the .nl output. This follows a strict specification (see Sub MakeConstraintMap)
 '   - parsed objective index/order:     there is currently only a single objective supported, so this is irrelevant
 
-Dim VariableMap As Collection       ' A map from variable name (e.g. Test1_D4) to .nl variable index (0 to n_var - 1)
-Dim VariableMapRev As Collection    ' A map from .nl variable index (0 to n_var - 1) to variable name (e.g. Test1_D4)
-Public VariableIndex As Collection  ' A map from variable name (e.g. Test1_D4) to parsed variable index (1 to n_var)
+Dim VariableMap As Collection           ' A map from variable name (e.g. Test1_D4) to .nl variable index (0 to n_var - 1)
+Dim VariableMapRev As Collection        ' A map from .nl variable index (0 to n_var - 1) to variable name (e.g. Test1_D4)
+Public VariableIndex As Collection      ' A map from variable name (e.g. Test1_D4) to parsed variable index (1 to n_var)
 
 Dim ConstraintMap As Collection     ' A map from constraint name (e.g. c1_Test1_D4) to .nl constraint index (0 to n_con - 1)
 Dim ConstraintMapRev As Collection  ' A map from .nl constraint index (0 to n_con - 1) to constraint name (e.g. c1_Test1_D4)
@@ -94,6 +94,8 @@ Dim VariableCollectionIndexToNLIndex() As Integer   ' Array of size n_var storin
 Dim LinearConstraints As Collection     ' Collection containing the LinearConstraintNLs for each constraint stored in parsed constraint order
 Dim LinearConstants As Collection       ' Collection containing the constant (a Double) for each constraint stored in parsed constraint order
 Dim LinearObjectives As Collection      ' Collection containing the LinearConstraintNLs for each objective stored in parsed objective order
+
+Dim InitialVariableValues As Collection ' Collection containing the intital values for each variable in parsed variable index
 
 Dim ConstraintRelations As Collection   ' Collection containing the RelationConst for each constraint stored in parsed constraint order
 
@@ -115,7 +117,7 @@ Public Property Get GetVariableNLIndex(index As Integer) As Integer
 End Property
 
 ' Creates .nl file and solves model
-Function SolveModelParsed_NL(ModelFilePathName As String, model As CModelParsed, Optional ShouldWriteComments As Boolean = True)
+Function SolveModelParsed_NL(ModelFilePathName As String, model As CModelParsed, s As COpenSolverParsed, Optional ShouldWriteComments As Boolean = True)
     Set m = model
     WriteComments = ShouldWriteComments
     
@@ -215,7 +217,7 @@ Function SolveModelParsed_NL(ModelFilePathName As String, model As CModelParsed,
         Err.Raise Number:=OpenSolver_SolveError, Source:="Solving NL model", Description:="The solver did not create a solution file. No new solution is available."
     End If
     Dim solutionLoaded As Boolean, errorString As String
-    solutionLoaded = ReadModelParsed(m.Solver, SolutionFilePathName, errorString, m)
+    solutionLoaded = ReadModelParsed(m.Solver, SolutionFilePathName, errorString, m, s)
     On Error GoTo ErrHandler
     If errorString <> "" Then
         Err.Raise Number:=OpenSolver_SolveError, Source:="Solving NL model", Description:=errorString
@@ -312,6 +314,7 @@ End Sub
 ' Creates map from variable name (e.g. Test1_D4) to parsed variable index (1 to n_var)
 Sub CreateVariableIndex()
     Set VariableIndex = New Collection
+    Set InitialVariableValues = New Collection
     Dim c As Range, cellName As String, i As Integer
     
     
@@ -322,6 +325,10 @@ Sub CreateVariableIndex()
         
         ' Update variable maps
         VariableIndex.Add i, cellName
+        
+        ' Update initial values
+        InitialVariableValues.Add CDbl(c)
+        
         i = i + 1
     Next c
     
@@ -826,7 +833,7 @@ Function MakeXBlock() As String
         ' Get initial values
         If VariableIndex <= numActualVars Then
             ' Actual variables - use the value in the actual cell
-            initial = CDbl(m.AdjustableCells(VariableIndex))
+            initial = InitialVariableValues(VariableIndex)
         Else
             ' Formulae variables - use the initial value saved in the CFormula instance
             initial = CDbl(m.Formulae(VariableIndex - numActualVars).initialValue)

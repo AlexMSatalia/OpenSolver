@@ -179,13 +179,21 @@ Function RunOpenSolver(Optional SolveRelaxation As Boolean = False, Optional Min
 28890     Exit Function
 
 ParsedModel:
-          On Error GoTo errHandle
+          On Error GoTo CleanParsedModel
           Dim OpenSolverParsed As New COpenSolverParsed
+          
+          ' Solve model and extract result
           OpenSolverParsed.SolveModel OpenSolver.Solver
+          RunOpenSolver = OpenSolverParsed.SolveStatus
+          
+          ' Clean up
+          Set OpenSolver = Nothing
+          Set OpenSolverParsed = Nothing
           Application.Iteration = oldIterationMode
           Exit Function
     
-errHandle:
+CleanParsedModel:
+          ' Clear OpenSolverParsed before moving on to main error handler
           Set OpenSolverParsed = Nothing
           GoTo errorHandler
 

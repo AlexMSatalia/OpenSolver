@@ -146,14 +146,12 @@ Function CreateSolveScript_Bonmin(ModelFilePathName As String) As String
     CreateSolveScript_Bonmin = scriptFile
 End Function
 
-Function ReadModel_Bonmin(SolutionFilePathName As String, errorString As String, m As CModelParsed) As Boolean
+Function ReadModel_Bonmin(SolutionFilePathName As String, errorString As String, m As CModelParsed, s As COpenSolverParsed) As Boolean
     ReadModel_Bonmin = False
     Dim Line As String, index As Integer
     On Error GoTo readError
     Dim solutionExpected As Boolean
     solutionExpected = True
-    
-    Dim SolveStatusString As String, SolveStatus As OpenSolverResult
     
     Open SolutionFilePathName For Input As 1 ' supply path with filename
     Line Input #1, Line ' Skip empty line at start of file
@@ -164,30 +162,30 @@ Function ReadModel_Bonmin(SolutionFilePathName As String, errorString As String,
     ' These are currently just using the outputs from CBC
     ' TODO Bonmin doesn't seem to write a solution file unless the solve is successful. We need to extract the solve status from the log file
     If Line Like "Optimal*" Then
-        SolveStatus = OpenSolverResult.Optimal
-        SolveStatusString = "Optimal"
+        s.SolveStatus = OpenSolverResult.Optimal
+        s.SolveStatusString = "Optimal"
     ElseIf Line Like "Infeasible*" Then
-        SolveStatus = OpenSolverResult.Infeasible
-        SolveStatusString = "No Feasible Solution"
+        s.SolveStatus = OpenSolverResult.Infeasible
+        s.SolveStatusString = "No Feasible Solution"
     ElseIf Line Like "Integer infeasible*" Then
-        SolveStatus = OpenSolverResult.Infeasible
-        SolveStatusString = "No Feasible Integer Solution"
-    ElseIf Line Like "Unbounded*" Then
-        SolveStatus = OpenSolverResult.Unbounded
-        SolveStatusString = "No Solution Found (Unbounded)"
+        s.SolveStatus = OpenSolverResult.Infeasible
+        s.SolveStatusString = "No Feasible Integer Solution"
+    ElseIf Line Like "*unbounded*" Then
+        s.SolveStatus = OpenSolverResult.Unbounded
+        s.SolveStatusString = "No Solution Found (Unbounded)"
         solutionExpected = False
     ElseIf Line Like "Stopped on time *" Then ' Stopped on iterations or time
-        SolveStatus = OpenSolverResult.TimeLimitedSubOptimal
-        SolveStatusString = "Stopped on Time Limit"
+        s.SolveStatus = OpenSolverResult.TimeLimitedSubOptimal
+        s.SolveStatusString = "Stopped on Time Limit"
     ElseIf Line Like "Stopped on iterations*" Then ' Stopped on iterations or time
-        SolveStatus = OpenSolverResult.TimeLimitedSubOptimal
-        SolveStatusString = "Stopped on Iteration Limit"
+        s.SolveStatus = OpenSolverResult.TimeLimitedSubOptimal
+        s.SolveStatusString = "Stopped on Iteration Limit"
     ElseIf Line Like "Stopped on difficulties*" Then ' Stopped on iterations or time
-        SolveStatus = OpenSolverResult.TimeLimitedSubOptimal
-        SolveStatusString = "Stopped on difficulties"
+        s.SolveStatus = OpenSolverResult.TimeLimitedSubOptimal
+        s.SolveStatusString = "Stopped on difficulties"
     ElseIf Line Like "Stopped on ctrl-c*" Then ' Stopped on iterations or time
-        SolveStatus = OpenSolverResult.TimeLimitedSubOptimal
-        SolveStatusString = "Stopped on Ctrl-C"
+        s.SolveStatus = OpenSolverResult.TimeLimitedSubOptimal
+        s.SolveStatusString = "Stopped on Ctrl-C"
     ElseIf Line Like "Status unknown*" Then
         errorString = "Coueene did not solve the problem, suggesting there was an error in the input parameters. The response was: " & vbCrLf _
                & Line _

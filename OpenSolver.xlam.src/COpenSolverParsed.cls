@@ -11,6 +11,9 @@ Option Explicit
 
 Dim m As CModelParsed
 
+Public SolveStatus As OpenSolverResult ' See Enum in OpenSolverModule; Optimal,Infeasible, etc
+Public SolveStatusString As String    ' Eg Infeasible, Opimal etc
+Public SolveStatusComment As String ' Eg constraint 1 cannot be satisified
 
 Public Sub SolveModel(Solver As String)
     Application.Calculation = xlCalculationManual
@@ -30,11 +33,11 @@ Public Sub SolveModel(Solver As String)
     Dim ExecutionCompleted As Boolean
     Select Case Solver
     Case "PuLP"
-        ExecutionCompleted = SolveModelParsed_PuLP(ModelFilePathName, m)
+        ExecutionCompleted = SolveModelParsed_PuLP(ModelFilePathName, m, Me)
     Case "Couenne", "Bonmin"
-        ExecutionCompleted = SolveModelParsed_NL(ModelFilePathName, m)
+        ExecutionCompleted = SolveModelParsed_NL(ModelFilePathName, m, Me)
     Case "NeosBon", "NeosCou"
-        ExecutionCompleted = SolveModelParsed_AMPL(ModelFilePathName, Solver)
+        ExecutionCompleted = SolveModelParsed_AMPL(ModelFilePathName, m, Me)
     Case Else
         ExecutionCompleted = False
     End Select
@@ -55,11 +58,11 @@ ErrHandler:
 
 End Sub
 
-Function SolveModelParsed_AMPL(ModelFilePathName As String, Solver As String) As Boolean
-    WriteAMPLFile_Parsed ModelFilePathName, Solver
+Function SolveModelParsed_AMPL(ModelFilePathName As String, m As CModelParsed, s As COpenSolverParsed) As Boolean
+    WriteAMPLFile_Parsed ModelFilePathName, m.Solver
     
-    If RunsOnNeos(Solver) Then
-        SolveModelParsed_AMPL = SolveModelParsed_NEOS(ModelFilePathName, Solver)
+    If RunsOnNeos(m.Solver) Then
+        SolveModelParsed_AMPL = SolveModelParsed_NEOS(ModelFilePathName, m.Solver)
     Else
         SolveModelParsed_AMPL = False
     End If
