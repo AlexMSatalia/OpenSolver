@@ -187,10 +187,7 @@ ParsedModel:
     
 errHandle:
           Set OpenSolverParsed = Nothing
-          MsgBox "An error occurred while trying build the model:" + vbNewLine _
-                  + "Description: " + Err.Description, vbOKOnly
-          Application.Iteration = oldIterationMode
-          Exit Function
+          GoTo errorHandler
 
 errorHandler:
 28900     Set OpenSolver = Nothing    ' Free any OpenSolver memory used

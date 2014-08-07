@@ -14,6 +14,8 @@ Public WriteComments As Boolean     ' Whether .nl file should include comments
 Public CommentIndent As Integer     ' Tracks the level of indenting in comments on nl output
 Public Const CommentSpacing = 24    ' The column number at which nl comments begin
 
+Dim errorPrefix As String
+
 ' ==========================================================================
 ' ASL variables
 ' These are variables used in the .NL file that are also used by the AMPL Solver Library
@@ -117,6 +119,8 @@ Function SolveModelParsed_NL(ModelFilePathName As String, model As CModelParsed,
     Set m = model
     WriteComments = ShouldWriteComments
     
+    errorPrefix = "Constructing .nl file"
+    
     ' =============================================================
     ' Process model for .nl output
     ' All Module-level variables required for .nl output should be set in this step
@@ -173,6 +177,8 @@ Function SolveModelParsed_NL(ModelFilePathName As String, model As CModelParsed,
     ' Solve model using chosen solver
     ' =============================================================
     
+    errorPrefix = "Solving .nl model file"
+    
     Dim SolutionFilePathName As String
     SolutionFilePathName = SolutionFilePath(m.Solver)
     
@@ -202,6 +208,7 @@ Function SolveModelParsed_NL(ModelFilePathName As String, model As CModelParsed,
     ' =============================================================
     ' Read results from solution file
     ' =============================================================
+    errorPrefix = "Reading .nl solution"
     
     If Not FileOrDirExists(SolutionFilePathName) Then
         On Error GoTo ErrHandler
@@ -600,6 +607,12 @@ Sub ProcessSingleFormula(RHSExpression As String, LHSVariable As String, Relatio
     For j = 1 To LinearTrees.Count
         LinearTrees(j).ConvertLinearTreeToConstraint constraint, constant
     Next j
+    
+    ' Check that our variable LHS exists
+    If Not TestKeyExists(VariableIndex, LHSVariable) Then
+        ' We have an empty formulae cell - maybe the result of a bad merged cell
+        Err.Raise OpenSolver_BuildError, errorPrefix, "A constraint formula was missing when loaded. This might be the result of referencing merged cells in the constraint. Please check for any merged cells and try again."
+    End If
     
     ' Our constraints all have a single term on the LHS and a formulae on the right.
     ' The single LHS term needs to be included in the expression as a linear term with coefficient 1
