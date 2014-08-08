@@ -1257,7 +1257,7 @@ Function Create1x1Array(X As Variant) As Variant
 4920      Create1x1Array = v
 End Function
 
-Function ForceCalculate(prompt As String) As Boolean
+Function ForceCalculate(prompt As String, Optional MinimiseUserInteraction As Boolean = False) As Boolean
            'There appears to be a bug in Excel 2010 where the .Calculate does not always complete. We handle up to 3 such failures.
            ' We have seen this problem arise on large models.
 #If Mac Then
@@ -1287,7 +1287,10 @@ Function ForceCalculate(prompt As String) As Boolean
           ' Check for circular references causing problems, which can happen if iterative calculation mode is enabled.
           If Application.CalculationState <> xlDone Then
               If Application.Iteration Then
-                  If MsgBox("Iterative calculation mode is enabled and may be interfering with the inital calculation. Would you like to try disabling iterative calculation mode to see if this fixes the problem?", _
+                  If MinimiseUserInteraction Then
+                      Application.Iteration = False
+                      Application.Calculate
+                  ElseIf MsgBox("Iterative calculation mode is enabled and may be interfering with the inital calculation. Would you like to try disabling iterative calculation mode to see if this fixes the problem?", _
                             vbYesNo, _
                             "OpenSolver: Iterative Calculation Mode Detected...") = vbYes Then
                       Application.Iteration = False
@@ -1297,7 +1300,10 @@ Function ForceCalculate(prompt As String) As Boolean
           End If
           
 5010      While Application.CalculationState <> xlDone
-5020          If MsgBox(prompt, _
+              If MinimiseUserInteraction Then
+                  ForceCalculate = False
+                  Exit Function
+5020          ElseIf MsgBox(prompt, _
                           vbCritical + vbRetryCancel + vbDefaultButton1, _
                           "OpenSolver: Calculation Error Occured...") = vbCancel Then
 5030              ForceCalculate = False

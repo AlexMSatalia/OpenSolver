@@ -462,7 +462,7 @@ Function CalcObjFnValue(DecisionVariableValues() As Double) As Double
 8140      CalcObjFnValue = sum
 End Function
 
-Sub BuildModelFromSolverData(Optional LinearityCheckOffset As Double = 0)
+Sub BuildModelFromSolverData(Optional LinearityCheckOffset As Double = 0, Optional MinimiseUserInteraction As Boolean = False)
           ' Build the model; throws an error if it fails
           
 8150      SolveStatus = OpenSolverResult.Unsolved
@@ -598,8 +598,10 @@ Sub BuildModelFromSolverData(Optional LinearityCheckOffset As Double = 0)
           ' state may be xlCalculating or xlPending even after a calculation.
           ' if this happens, then we cannot be sure that Application.Calculate will work, so we warn the user.
           ' TODO: Currently we require the calculation to complete before we continue. Should we make this more flexible?
-9000      If Not ForceCalculate("Warning: The initial worksheet calculation did not complete, and so the model may not be generated correctly. Would you like to try again?") Then GoTo ExitSub
-          'End If
+9000      If Not ForceCalculate("Warning: The initial worksheet calculation did not complete, and so the model may not be generated correctly. Would you like to try again?", MinimiseUserInteraction) Then
+              On Error GoTo errorHandler
+              Err.Raise Number:=OpenSolver_BuildError, Source:=errorPrefix, Description:="Calculation failed. The model has not been built so cannot be solved."
+          End If
           '--------------------------------------------------------------------------
           ' OBJECTIVE SETUP
           '--------------------------------------------------------------------------

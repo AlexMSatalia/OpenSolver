@@ -159,7 +159,7 @@ Sub AutoOpenSolver()
     'End If
 End Sub
 
-Function RunOpenSolver(Optional SolveRelaxation As Boolean = False, Optional MinimiseUserInteraction As Boolean = False) As OpenSolverResult
+Function RunOpenSolver(Optional SolveRelaxation As Boolean = False, Optional MinimiseUserInteraction As Boolean = False, Optional LinearityCheckOffset As Double = 0) As OpenSolverResult
 28820     On Error GoTo errorHandler
 
           'Save iterative calcalation state
@@ -168,7 +168,7 @@ Function RunOpenSolver(Optional SolveRelaxation As Boolean = False, Optional Min
 
 28830     RunOpenSolver = OpenSolverResult.Unsolved
 28840     Set OpenSolver = New COpenSolver
-28850     OpenSolver.BuildModelFromSolverData
+28850     OpenSolver.BuildModelFromSolverData LinearityCheckOffset, MinimiseUserInteraction
           If UsesParsedModel(OpenSolver.Solver) Then
               GoTo ParsedModel
           End If
