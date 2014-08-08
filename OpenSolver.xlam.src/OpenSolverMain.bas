@@ -183,7 +183,7 @@ ParsedModel:
           Dim OpenSolverParsed As New COpenSolverParsed
           
           ' Solve model and extract result
-          OpenSolverParsed.SolveModel OpenSolver.Solver
+          OpenSolverParsed.SolveModel OpenSolver
           RunOpenSolver = OpenSolverParsed.SolveStatus
           
           ' Clean up

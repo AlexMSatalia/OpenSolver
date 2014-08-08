@@ -111,6 +111,8 @@ Dim numActualRanges As Integer  ' The number of actual inequality constraints in
 
 Dim NonZeroConstraintCount() As Integer ' An array of size n_var counting the number of times that each variable (in parsed variable order) appears in the linear constraints
 
+Dim BinaryVars() As Boolean
+
 ' Public accessor for VariableCollectionIndexToNLIndex
 Public Property Get GetVariableNLIndex(index As Integer) As Integer
     GetVariableNLIndex = VariableCollectionIndexToNLIndex(index)
@@ -375,7 +377,6 @@ Sub MakeVariableMap()
     End If
     
     ' Get binary variables
-    Dim BinaryVars() As Boolean
     ReDim BinaryVars(n_var)
     If Not m.BinaryCells Is Nothing Then
         For Each c In m.BinaryCells
@@ -870,17 +871,22 @@ Function MakeBBlock() As String
     ' Write block header
     AddNewLine Block, "b", "VARIABLE BOUNDS"
     
-    Dim i As Integer, bound As String, Comment As String, VariableIndex As Integer
+    Dim i As Integer, bound As String, Comment As String, VariableIndex As Integer, VarName As String, value As Double
     For i = 1 To n_var
         VariableIndex = VariableNLIndexToCollectionIndex(i - 1)
         Comment = "    " & VariableMapRev(CStr(i - 1))
      
         If VariableIndex <= numActualVars Then
             ' Real variables, use actual bounds
-            ' TODO apply actual bounding
             If m.AssumeNonNegative Then
-                bound = "2 0"
-                Comment = Comment & " >= 0"
+                VarName = m.GetAdjCellName(CLng(VariableIndex))
+                If TestKeyExists(m.VarLowerBounds, VarName) And Not BinaryVars(VariableIndex) Then
+                    bound = "3"
+                    Comment = Comment & " FREE"
+                Else
+                    bound = "2 0"
+                    Comment = Comment & " >= 0"
+                End If
             Else
                 bound = "3"
                 Comment = Comment & " FREE"

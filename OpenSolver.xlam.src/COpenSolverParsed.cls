@@ -15,23 +15,23 @@ Public SolveStatus As OpenSolverResult ' See Enum in OpenSolverModule; Optimal,I
 Public SolveStatusString As String    ' Eg Infeasible, Opimal etc
 Public SolveStatusComment As String ' Eg constraint 1 cannot be satisified
 
-Public Sub SolveModel(Solver As String)
+Public Sub SolveModel(s As COpenSolver)
     Application.Calculation = xlCalculationManual
     Application.ScreenUpdating = False
     
     ' Parse spreadsheet and build model
     Set m = New CModelParsed
     m.Setup ActiveWorkbook, ActiveSheet
-    m.ProcessSolverModel (Solver)
+    m.ProcessSolverModel s
     
     ' Setup output file
     Dim ModelFilePathName As String
-    ModelFilePathName = ModelFilePath(Solver)
+    ModelFilePathName = ModelFilePath(m.Solver)
     
     DeleteFileAndVerify ModelFilePathName, "Building Token Solver", "Unable to delete " & ModelFilePathName
     
     Dim ExecutionCompleted As Boolean
-    Select Case Solver
+    Select Case m.Solver
     Case "PuLP"
         ExecutionCompleted = SolveModelParsed_PuLP(ModelFilePathName, m, Me)
     Case "Couenne", "Bonmin"

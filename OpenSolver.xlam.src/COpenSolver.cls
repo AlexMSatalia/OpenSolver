@@ -64,9 +64,9 @@ Dim book As Workbook, sheet As Worksheet
 
 ' Data for our model. We work thru the original Excel 'constraints' and form model 'rows' from these
 Public AdjustableCells As Range    ' A range we form containing all the adjustable (ie decision) variables
-Dim BinaryCellsRange As Range   ' A range we form containing all the adjustable (ie decision) variables that are binary
-Dim IntegerCellsRange As Range  ' A range we form containing all the adjustable (ie decision) variables that are integer (which may include binary variables)
-Dim AssumeNonNegativeVars As Boolean   ' Excel stores ...!solver_neg=1 if Assume Linear Model is turned on, 2 if off (NB: Not 0!)
+Public BinaryCellsRange As Range   ' A range we form containing all the adjustable (ie decision) variables that are binary
+Public IntegerCellsRange As Range  ' A range we form containing all the adjustable (ie decision) variables that are integer (which may include binary variables)
+Public AssumeNonNegativeVars As Boolean   ' Excel stores ...!solver_neg=1 if Assume Linear Model is turned on, 2 if off (NB: Not 0!)
 
 ' For the LHS and RHS of each Excel constraint, we store its type, and its LHS and RHS
 Enum SolverInputType
@@ -86,13 +86,13 @@ Dim ConstraintSummary() As String
 Dim LHSOriginalValues() As Variant
 Dim RHSOriginalValues() As Variant
 
-Dim ObjRange As Range
+Public ObjRange As Range
 
 ' Details for the model that we build.
-Dim numVars As Long, NumIntVars As Long, NumBinVars As Long, NumConstraints As Long
+Public numVars As Long, NumIntVars As Long, NumBinVars As Long, NumConstraints As Long
 Public NumRows As Long
 Public ObjectiveSense As Integer
-Dim ObjectiveTargetValue As Double  ' Used when the user wants the objective to achieve some stated target value
+Public ObjectiveTargetValue As Double  ' Used when the user wants the objective to achieve some stated target value
 Dim VarNames() As String
 Dim AdjCellsSheetIndex As Integer    ' The sheet index containing variables with no index specified in the CBC result file
 Dim CostCoeffs() As Double, ObjectiveFunctionConstant As Double
@@ -243,6 +243,22 @@ End Property
 Public Property Let DecreaseVarP(index As Integer, strValue As String)
     If index > UBound(DecreaseVar) Then ReDim Preserve DecreaseVar(index)
     DecreaseVar(index) = strValue
+End Property
+
+Public Property Get VarNamesP(index As Integer) As String
+    VarNamesP = VarNames(index)
+End Property
+
+Public Property Get LHSTypeP(index As Integer) As String
+    LHSTypeP = LHSType(index)
+End Property
+
+Public Property Get RHSTypeP(index As Integer) As String
+    RHSTypeP = RHSType(index)
+End Property
+
+Public Property Get RelationP(index As Integer) As Integer
+    RelationP = Relation(index)
 End Property
 ' End of getters and setters
 '===============================================================================
@@ -870,22 +886,17 @@ ModelOptions:
               ReDim Preserve VariableBounds(NumRows)
           End If
           
-          '--------------------------------------------------------------------------
-          ' BUILD THE A MATRIX
-          '--------------------------------------------------------------------------
-          ' Initialise a sparse matrix
-10420     If NumRows > 0 Then ReDim Preserve SparseA(NumRows) As CIndexedCoeffs
-10430     For row = 1 To NumRows
-10440         Set SparseA(row) = New CIndexedCoeffs
-10450     Next row
-10460     If NumRows > 0 Then ReDim RHS(NumRows) As Double
-          
-          '=======================================================================================================================================
-          'TODO: Want to split up BuildConstraintMatrix so doesnt need to build when using Nomad. However Nomad is using the Sparse matrix to know
-          'which constraints are bounds on the variables as these are treated differently
-          '=======================================================================================================================================
           'Set up the constraint matrix for solving linear problems
           If SolverType(Solver) = OpenSolver_SolverType.Linear Then
+              '--------------------------------------------------------------------------
+              ' BUILD THE A MATRIX
+              '--------------------------------------------------------------------------
+              ' Initialise a sparse matrix
+10420         If NumRows > 0 Then ReDim Preserve SparseA(NumRows) As CIndexedCoeffs
+10430         For row = 1 To NumRows
+10440             Set SparseA(row) = New CIndexedCoeffs
+10450         Next row
+10460         If NumRows > 0 Then ReDim RHS(NumRows) As Double
 10470         Call BuildConstraintMatrix(objIsMissing, objValue, SparseA, succeeded)
 10480         If succeeded = False Then GoTo ExitSub
           End If
