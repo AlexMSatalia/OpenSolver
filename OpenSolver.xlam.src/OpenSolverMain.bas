@@ -172,7 +172,7 @@ Function RunOpenSolver(Optional SolveRelaxation As Boolean = False, Optional Min
           If UsesParsedModel(OpenSolver.Solver) Then
               GoTo ParsedModel
           End If
-28860     RunOpenSolver = OpenSolver.SolveModel(SolveRelaxation)
+28860     RunOpenSolver = OpenSolver.SolveModel(SolveRelaxation, MinimiseUserInteraction)
 28870     If Not MinimiseUserInteraction Then OpenSolver.ReportAnySolutionSubOptimality
 28880     Set OpenSolver = Nothing    ' Free any OpenSolver memory used
           Application.Iteration = oldIterationMode

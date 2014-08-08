@@ -62,6 +62,9 @@ Dim RawSheetName As String ' Just the worksheet name
 Dim RawWorkBookName As String ' Just the workbook name
 Dim book As Workbook, sheet As Worksheet
 
+' Whether to show user alerts
+Dim MinimiseUserInteraction As Boolean
+
 ' Data for our model. We work thru the original Excel 'constraints' and form model 'rows' from these
 Public AdjustableCells As Range    ' A range we form containing all the adjustable (ie decision) variables
 Public BinaryCellsRange As Range   ' A range we form containing all the adjustable (ie decision) variables that are binary
@@ -1264,10 +1267,13 @@ Sub ViewSparseA()
           MsgBox (strA)
 End Sub
 
-Function SolveModel(SolveRelaxation As Boolean) As Integer
+Function SolveModel(SolveRelaxation As Boolean, ShouldMinimiseUserInteraction As Boolean) As Integer
 
           Dim errorPrefix As String
 11920     errorPrefix = "OpenSolver Model Solving"
+
+          ' Track whether to show messages
+          MinimiseUserInteraction = ShouldMinimiseUserInteraction
 
           'Check that solver is available
           If Not SolverAvailable(Solver, ExternalSolverPathName) Then
@@ -2100,7 +2106,8 @@ End Sub
 
 Sub ReportAnySolutionSubOptimality()
           ' Call this after SolveModel to report to the user what happened. A dialog is shown if the optimal result was not found
-15910     If SolveStatus <> OpenSolverResult.Optimal Then
+          ' We have already raised non-linearity to the user, don't show this again
+15910     If SolveStatus <> OpenSolverResult.Optimal And SolveStatus <> OpenSolver.NotLinear Then
 15920         If SolveStatus = OpenSolverResult.AbortedThruUserAction Then
                   ' Do nothing; user has already interacted with some dialogs
 15930         ElseIf LinearSolveStatusString = "" Then
@@ -2676,51 +2683,54 @@ Sub QuickLinearityCheck(fullLinearityCheckWasPerformed As Boolean)
           
           'Set the userform up and display any information on nonlinear constraints
 19290     If NonLinearInfo <> "" Then
-19300         NonlinearForm.TextBox2.Caption = "WARNING : " & vbNewLine & TrimBlankLines(NonLinearInfo)
+              SolveStatus = NotLinear
+              If Not MinimiseUserInteraction Then
+19300             NonlinearForm.TextBox2.Caption = "WARNING : " & vbNewLine & TrimBlankLines(NonLinearInfo)
               
-              'If its only the objective function hide the full check
-              'If NonlinearConstraint = True Then
-19310            NonlinearForm.FullCheck.Visible = True
-              'Else
-              '    NonlinearForm.FullCheck.Visible = False
-              '    NonlinearForm.FullCheck.value = False
-              'End If
+                  'If its only the objective function hide the full check
+                  'If NonlinearConstraint = True Then
+19310             NonlinearForm.FullCheck.Visible = True
+                  'Else
+                  '    NonlinearForm.FullCheck.Visible = False
+                  '    NonlinearForm.FullCheck.value = False
+                  'End If
               
-              'formatting of the user form NonlinearForm.TextBox2.AutoSize = True
-19320         NonlinearForm.TextBox2.AutoSize = False
-19330         NonlinearForm.TextBox2.height = 20
-19340         NonlinearForm.TextBox2.AutoSize = True
-19350         NonlinearForm.TextBox2.AutoSize = False
-19360         If NonlinearForm.TextBox2.height > 250 Then NonlinearForm.TextBox2.height = 250
-19370         NonlinearForm.TextBox2.width = 546
-19380         NonlinearForm.width = NonlinearForm.TextBox2.width + 2 * NonlinearForm.TextBox2.left
-              'NonlinearForm.TextBox2.left = NonlinearForm.TextBox2.width * 0.1
-19390         NonlinearForm.TextBox2.TextAlign = fmTextAlignLeft
-19400         NonlinearForm.HighlightBox.Visible = True
-19410         NonlinearForm.FullCheck.Caption = "Run a full linearity check. (This will destroy the current solution) "
-19420         NonlinearForm.Caption = "OpenSolver: Linearity check "
-19430         NonlinearForm.HighlightBox.Caption = "Highlight the nonlinearities"
-              'NonlinearForm.HighlightBox.left = NonlinearForm.TextBox2.left
-              'NonlinearForm.FullCheck.left = NonlinearForm.TextBox2.left
-19440         NonlinearForm.HighlightBox.top = NonlinearForm.TextBox2.height + NonlinearForm.TextBox2.top + 5
-19450         NonlinearForm.FullCheck.top = NonlinearForm.HighlightBox.top + NonlinearForm.HighlightBox.height + 0 ' Enought space around check box anyway
-              ' NonlinearForm.ContinueButton.top = NonlinearForm.FullCheck.top + NonlinearForm.FullCheck.height + 3 ' Enough space around check box anyway
-19460         NonlinearForm.ContinueButton.top = NonlinearForm.HighlightBox.top + 6 ' Enough space around check box anyway
-              'NonlinearForm.ContinueButton.left = NonlinearForm.TextBox2.width * 0.4
-19470         NonlinearForm.height = NonlinearForm.ContinueButton.top + NonlinearForm.ContinueButton.height + 30
-              'NonlinearForm.height = (NonlinearForm.TextBox2.top + NonlinearForm.TextBox2.height + NonlinearForm.FullCheck.height _
-              '        + NonlinearForm.HighlightBox.height + NonlinearForm.ContinueButton.height + NonlinearForm.ContinueButton.top) * 0.8
-19480         NonlinearForm.Show
+                  'formatting of the user form NonlinearForm.TextBox2.AutoSize = True
+19320             NonlinearForm.TextBox2.AutoSize = False
+19330             NonlinearForm.TextBox2.height = 20
+19340             NonlinearForm.TextBox2.AutoSize = True
+19350             NonlinearForm.TextBox2.AutoSize = False
+19360             If NonlinearForm.TextBox2.height > 250 Then NonlinearForm.TextBox2.height = 250
+19370             NonlinearForm.TextBox2.width = 546
+19380             NonlinearForm.width = NonlinearForm.TextBox2.width + 2 * NonlinearForm.TextBox2.left
+                  'NonlinearForm.TextBox2.left = NonlinearForm.TextBox2.width * 0.1
+19390             NonlinearForm.TextBox2.TextAlign = fmTextAlignLeft
+19400             NonlinearForm.HighlightBox.Visible = True
+19410             NonlinearForm.FullCheck.Caption = "Run a full linearity check. (This will destroy the current solution) "
+19420             NonlinearForm.Caption = "OpenSolver: Linearity check "
+19430             NonlinearForm.HighlightBox.Caption = "Highlight the nonlinearities"
+                  'NonlinearForm.HighlightBox.left = NonlinearForm.TextBox2.left
+                  'NonlinearForm.FullCheck.left = NonlinearForm.TextBox2.left
+19440             NonlinearForm.HighlightBox.top = NonlinearForm.TextBox2.height + NonlinearForm.TextBox2.top + 5
+19450             NonlinearForm.FullCheck.top = NonlinearForm.HighlightBox.top + NonlinearForm.HighlightBox.height + 0 ' Enought space around check box anyway
+                  ' NonlinearForm.ContinueButton.top = NonlinearForm.FullCheck.top + NonlinearForm.FullCheck.height + 3 ' Enough space around check box anyway
+19460             NonlinearForm.ContinueButton.top = NonlinearForm.HighlightBox.top + 6 ' Enough space around check box anyway
+                  'NonlinearForm.ContinueButton.left = NonlinearForm.TextBox2.width * 0.4
+19470             NonlinearForm.height = NonlinearForm.ContinueButton.top + NonlinearForm.ContinueButton.height + 30
+                  'NonlinearForm.height = (NonlinearForm.TextBox2.top + NonlinearForm.TextBox2.height + NonlinearForm.FullCheck.height _
+                  '        + NonlinearForm.HighlightBox.height + NonlinearForm.ContinueButton.height + NonlinearForm.ContinueButton.top) * 0.8
+19480             NonlinearForm.Show
               
-              'showing the nonlinear constraints
-19490         If NonlinearForm.HighlightBox.value = True Then
-19500             HighlightNonLinearities RowIsNonLinear, ObjectiveIsNonLinear
-19510         End If
-19520         If NonlinearForm.FullCheck.value = True Then
-                  'Full linearity check run
-19530             CheckLinearityOfModel
-19540             fullLinearityCheckWasPerformed = True
-19550         End If
+                  'showing the nonlinear constraints
+19490             If NonlinearForm.HighlightBox.value = True Then
+19500                 HighlightNonLinearities RowIsNonLinear, ObjectiveIsNonLinear
+19510             End If
+19520             If NonlinearForm.FullCheck.value = True Then
+                      'Full linearity check run
+19530                 CheckLinearityOfModel
+19540                 fullLinearityCheckWasPerformed = True
+19550             End If
+              End If
 19560     End If
           
 End Sub

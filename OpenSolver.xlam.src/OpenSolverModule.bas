@@ -74,7 +74,7 @@ Enum OpenSolverResult
    Unbounded = 4        ' "The Objective Cell values do not converge" => unbounded
    Infeasible = 5
    TimeLimitedSubOptimal = 10    ' CBC stopped before finding an optimal/feasible/integer solution because of CBC errors or time/iteration limits
-   ' NotLinear = 7 We throw an error instead
+   NotLinear = 7 ' Report non-linearity so that it can be picked up in silent mode
    ' ErrorInTargetOrConstraint = 9  We throw an error instead
    ' ErrorInModel = 13 We throw an error instead
    ' IntegerOptimal = 14 We just return Optimal
