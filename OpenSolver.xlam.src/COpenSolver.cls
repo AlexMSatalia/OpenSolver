@@ -1596,7 +1596,7 @@ Sub SolveModel_LinearLocal(ModelFilePathName As String, SolveRelaxation As Boole
               'ExecutionCompleted = OSSolveSync(CBCRunString, IIf(ShowIterationResults, SW_SHOWNORMAL, SW_SHOWMINIMIZED), True) ' This stops escape being detected properly unless Excel is first 'activated?' with a click
 13160         ExternalSolverPathName = """" & ConvertHfsPath(ExternalSolverPathName) & """" ' fix error for Gurobi with spaces in path name by quoting path
               Dim exeResult As Long, userCancelled As Boolean
-13170         ExecutionCompleted = OSSolveSync(ExternalSolverPathName, "", "", logCommand, IIf(SolveOptions.ShowIterationResults, SW_SHOWNORMAL, SW_HIDE), True, userCancelled, exeResult) ' Run solver, waiting for completion
+13170         ExecutionCompleted = OSSolveSync(ExternalSolverPathName, "", "", logCommand, IIf(SolveOptions.ShowIterationResults And Not MinimiseUserInteraction, SW_SHOWNORMAL, SW_HIDE), True, userCancelled, exeResult) ' Run solver, waiting for completion
 13180         If userCancelled Then
                   ' User pressed escape. Dialogs have already been shown. Exit with a 'cancelled' error
 13190             On Error GoTo errorHandler
@@ -2301,16 +2301,14 @@ Function CanDoQuickSolveForActiveSheet() As Boolean
 16980     End If
 End Function
 
-Function DoQuickSolve() As Boolean
+Function DoQuickSolve(Optional MinimiseUserInteraction As Boolean = False) As Integer
           ' Update a previously built model
-16990     DoQuickSolve = False
+16990     DoQuickSolve = OpenSolverResult.Unsolved
 17000     If QuickSolve Is Nothing Then
 17010         MsgBox "Error: The quick solve data has not been initialized. Please choose Intialize Quick Solve, and then try again.", , "OpenSolver" & sOpenSolverVersion & " Error"
 17020     Else
 17030         If QuickSolve.UpdateModelRHS(sheetName, RHS) Then
-17040             If SolveModel(False) Then
-17050                 DoQuickSolve = True
-17060             End If
+17040             DoQuickSolve = SolveModel(False, MinimiseUserInteraction)
 17070         End If
 17080     End If
 End Function

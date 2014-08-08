@@ -218,17 +218,21 @@ errorHandler:
 29020     MsgBox "OpenSolver encountered error " & Err.Number & ":" & vbCrLf & Err.Description & IIf(Erl = 0, "", " (at line " & Erl & ")") & vbCrLf & "Source = " & Err.Source, , "OpenSolver" & sOpenSolverVersion & " Error"
 End Sub
 
-Sub RunQuickSolve()
+Function RunQuickSolve(Optional MinimiseUserInteraction As Boolean = False) As Integer
 29030     On Error GoTo errorHandler
 29040     If OpenSolver Is Nothing Then
 29050         MsgBox "Error: There is no model to solve, and so the quick solve cannot be completed. Please select the Initialize Quick Solve command.", , "OpenSolver" & sOpenSolverVersion & " Error"
+              RunQuickSolve = OpenSolverResult.ErrorOccurred
 29060     ElseIf OpenSolver.CanDoQuickSolveForActiveSheet Then    ' This will report any errors
-29070         OpenSolver.DoQuickSolve
+29070         RunQuickSolve = OpenSolver.DoQuickSolve(MinimiseUserInteraction)
 29080     End If
-29090     Exit Sub
+29090     Exit Function
 errorHandler:
-29100     MsgBox "OpenSolver encountered error " & Err.Number & ":" & vbCrLf & Err.Description & IIf(Erl = 0, "", " (at line " & Erl & ")") & vbCrLf & "Source = " & Err.Source, , "OpenSolver" & sOpenSolverVersion & " Error"
-End Sub
+          If Not MinimiseUserInteraction Then
+29100         MsgBox "OpenSolver encountered error " & Err.Number & ":" & vbCrLf & Err.Description & IIf(Erl = 0, "", " (at line " & Erl & ")") & vbCrLf & "Source = " & Err.Source, , "OpenSolver" & sOpenSolverVersion & " Error"
+          End If
+          RunQuickSolve = OpenSolverResult.ErrorOccurred
+End Function
 
 Sub OpenSolver_ModelClick(Optional Control)
           'frmAutoModel.Show
