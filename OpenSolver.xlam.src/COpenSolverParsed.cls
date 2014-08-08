@@ -15,9 +15,17 @@ Public SolveStatus As OpenSolverResult ' See Enum in OpenSolverModule; Optimal,I
 Public SolveStatusString As String    ' Eg Infeasible, Opimal etc
 Public SolveStatusComment As String ' Eg constraint 1 cannot be satisified
 
+Dim SolveOptions As SolveOptionsType
+    
+Public Property Get GetShowIterationResults() As Boolean
+    GetShowIterationResults = SolveOptions.ShowIterationResults
+End Property
+
 Public Sub SolveModel(s As COpenSolver)
     Application.Calculation = xlCalculationManual
     Application.ScreenUpdating = False
+    
+    On Error GoTo ErrHandler
     
     ' Parse spreadsheet and build model
     Set m = New CModelParsed
@@ -28,7 +36,13 @@ Public Sub SolveModel(s As COpenSolver)
     Dim ModelFilePathName As String
     ModelFilePathName = ModelFilePath(m.Solver)
     
-    DeleteFileAndVerify ModelFilePathName, "Building Token Solver", "Unable to delete " & ModelFilePathName
+    DeleteFileAndVerify ModelFilePathName, "Solving Parsed Solver Model", "Unable to delete " & ModelFilePathName
+    
+    Dim errorString As String
+    GetSolveOptions m.SolverModelSheet.Name & "!", SolveOptions, errorString
+    If errorString <> "" Then
+        Err.Raise Number:=OpenSolver_SolveError, Source:="Solving Parsed Solver Model", Description:=errorString
+    End If
     
     Dim ExecutionCompleted As Boolean
     Select Case m.Solver
@@ -43,7 +57,7 @@ Public Sub SolveModel(s As COpenSolver)
     End Select
     
     If Not ExecutionCompleted Then
-        GoTo ErrHandler
+        SolveStatus = ErrorOccurred
     End If
     
     Application.Calculation = xlCalculationAutomatic
@@ -54,7 +68,8 @@ Public Sub SolveModel(s As COpenSolver)
 ErrHandler:
     Application.Calculation = xlCalculationAutomatic
     Application.ScreenUpdating = True
-    MsgBox "Uh Oh" 'TODO
+    SolveStatus = ErrorOccurred
+    Err.Raise Err.Number, Err.Source, Err.Description & IIf(Erl = 0, "", " (at line " & Erl & ")")
 
 End Sub
 

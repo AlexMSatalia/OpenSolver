@@ -145,6 +145,13 @@ Function SolveModel_Nomad(SolveRelaxation As Boolean, s As COpenSolver) As Integ
 48250         Err.Raise Number:=OpenSolver_NomadError, Source:=errorPrefix, Description:="The model cannot be solved as it has not yet been built."
 48260     End If
           
+          ' Loop through all decision vars and set their values
+          ' This is to try and catch any protected cells as we can't catch VBA errors that occur while NOMAD calls back into VBA
+          Dim c As Range
+          For Each c In s.AdjustableCells
+              c.Value2 = c.Value2
+          Next c
+          
           ' Set OS for the calls back into Excel from NOMAD
           Set OS = s
           
@@ -205,6 +212,7 @@ ExitSub:
 48610     Application.ScreenUpdating = ScreenStatus
 48620     Close #1 ' Close any open file; this does not seem to ever give errors
 48630     SolveModel_Nomad = s.SolveStatus    ' Return the main result
+          Set OS = Nothing
 48650     Exit Function
           
 errorHandler:
@@ -237,6 +245,7 @@ ErrorExit:
 48830     Application.Calculation = oldCalculationMode
 48840     Application.Calculate
 48850     Close #1 ' Close any open file; this does not seem to ever give errors
+          Set OS = Nothing
 48860     Err.Raise ErrorNumber, ErrorSource, ErrorDescription
 
 End Function

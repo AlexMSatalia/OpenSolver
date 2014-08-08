@@ -190,14 +190,14 @@ Function SolveModelParsed_NL(ModelFilePathName As String, model As CModelParsed,
     ExternalSolverPathName = CreateSolveScriptParsed(m.Solver, ModelFilePathName)
              
     Dim logCommand As String, logFileName As String
-'    logFileName = "log1.tmp"
-'    logCommand = " > " & """" & ConvertHfsPath(GetTempFolder) & logFileName & """"
+    logFileName = "log1.tmp"
+    logCommand = " > " & """" & ConvertHfsPath(GetTempFolder) & logFileName & """"
                   
     Dim ExecutionCompleted As Boolean
     ExternalSolverPathName = """" & ConvertHfsPath(ExternalSolverPathName) & """"
               
     Dim exeResult As Long, userCancelled As Boolean
-    ExecutionCompleted = OSSolveSync(ExternalSolverPathName, "", "", logCommand, SW_SHOWNORMAL, True, userCancelled, exeResult) ' Run solver, waiting for completion
+    ExecutionCompleted = OSSolveSync(ExternalSolverPathName, "", "", logCommand, IIf(s.GetShowIterationResults, SW_SHOWNORMAL, SW_HIDE), True, userCancelled, exeResult) ' Run solver, waiting for completion
     If userCancelled Then
         ' User pressed escape. Dialogs have already been shown. Exit with a 'cancelled' error
         On Error GoTo ErrHandler
@@ -232,7 +232,7 @@ Function SolveModelParsed_NL(ModelFilePathName As String, model As CModelParsed,
     
 ErrHandler:
     Close #1
-    Err.Raise Err.Number, Err.Source, Err.Description
+    Err.Raise Err.Number, Err.Source, Err.Description & IIf(Erl = 0, "", " (at line " & Erl & ")")
 End Function
 
 Sub InitialiseModelStats()

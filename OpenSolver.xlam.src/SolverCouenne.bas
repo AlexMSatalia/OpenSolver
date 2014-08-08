@@ -239,4 +239,5 @@ exitFunction:
 readError:
     Close #1
     Close #2
+    Err.Raise Err.Number, Err.Source, Err.Description & IIf(Erl = 0, "", " (at line " & Erl & ")")
 End Function
