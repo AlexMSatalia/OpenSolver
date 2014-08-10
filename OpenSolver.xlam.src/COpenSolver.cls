@@ -1681,7 +1681,7 @@ Sub WriteLPFile(ModelFilePathName As String, SolveRelaxation As Boolean, errorSt
           ' output the model to an LP format text file
           ' See http://lpsolve.sourceforge.net/5.5/CPLEX-format.htm
 
-          On Error GoTo ErrHandler
+          On Error GoTo errorHandler
 14160     Open ModelFilePathName For Output As 1 ' supply path with filename
 14170     Print #1, commentStart & " Model solved using the solver '" & Solver & "'"
 14180     Print #1, commentStart & " Model for sheet " & left(sheetName, Len(sheetName) - 1) ' remove trailing !
