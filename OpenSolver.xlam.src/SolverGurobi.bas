@@ -116,6 +116,7 @@ Function SolverVersion_Gurobi() As String
     ' Output like 'Gurobi Optimizer version 5.6.3 (win64)'
     Dim Line As String
     If FileOrDirExists(logFile) Then
+        On Error GoTo ErrHandler
         Open logFile For Input As 1
         Line Input #1, Line
         Close #1
@@ -124,6 +125,11 @@ Function SolverVersion_Gurobi() As String
     Else
         SolverVersion_Gurobi = ""
     End If
+    Exit Function
+    
+ErrHandler:
+    Close #1
+    Err.Raise Err.Number, Err.Source, Err.Description & IIf(Erl = 0, "", " (at line " & Erl & ")")
 End Function
 
 Function SolverBitness_Gurobi() As String
@@ -153,6 +159,7 @@ Function SolverBitness_Gurobi() As String
     ' Output like 'Gurobi Optimizer version 5.6.3 (win64)'
     Dim Line As String
     If FileOrDirExists(logFile) Then
+        On Error GoTo ErrHandler
         Open logFile For Input As 1
         Line Input #1, Line
         Close #1
@@ -162,6 +169,11 @@ Function SolverBitness_Gurobi() As String
             SolverBitness_Gurobi = "32"
         End If
     End If
+    Exit Function
+    
+ErrHandler:
+    Close #1
+    Err.Raise Err.Number, Err.Source, Err.Description & IIf(Erl = 0, "", " (at line " & Erl & ")")
 End Function
 Function CreateSolveScript_Gurobi(SolutionFilePathName As String, ExtraParametersString As String, SolveOptions As SolveOptionsType) As String
     Dim SolverString As String, CommandLineRunString As String, PrintingOptionString As String
@@ -331,4 +343,5 @@ exitFunction:
 readError:
 20750     Close #1
 20760     Close #2
+          Err.Raise Err.Number, Err.Source, Err.Description & IIf(Erl = 0, "", " (at line " & Erl & ")")
 End Function

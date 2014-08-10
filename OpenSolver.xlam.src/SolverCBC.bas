@@ -119,6 +119,7 @@ Function SolverVersion_CBC() As String
     ' Read version info back from output file
     Dim Line As String
     If FileOrDirExists(logFile) Then
+        On Error GoTo ErrHandler
         Open logFile For Input As 1
         Line Input #1, Line
         Line Input #1, Line
@@ -128,6 +129,11 @@ Function SolverVersion_CBC() As String
     Else
         SolverVersion_CBC = ""
     End If
+    Exit Function
+    
+ErrHandler:
+    Close #1
+    Err.Raise Err.Number, Err.Source, Err.Description & IIf(Erl = 0, "", " (at line " & Erl & ")")
 End Function
 
 Function SolverBitness_CBC() As String
@@ -197,6 +203,7 @@ End Function
 Function ReadModel_CBC(SolutionFilePathName As String, errorString As String, s As COpenSolver) As Boolean
           Dim LinearSolveStatusString As String
 20770     ReadModel_CBC = False
+          On Error GoTo ErrHandler
 20780     Open SolutionFilePathName For Input As 1 ' supply path with filename
 20790     Line Input #1, LinearSolveStatusString  ' Optimal - objective value              22
           ' Line Input #1, junk ' get rest of line
@@ -410,6 +417,12 @@ Function ReadModel_CBC(SolutionFilePathName As String, errorString As String, s 
 22420     ReadModel_CBC = True
 ExitSub:
           s.LinearSolveStatusString = LinearSolveStatusString
+          
+          Exit Function
+    
+ErrHandler:
+    Close #1
+    Err.Raise Err.Number, Err.Source, Err.Description & IIf(Erl = 0, "", " (at line " & Erl & ")")
 End Function
 
 Sub ReadSensitivityData_CBC(SolutionFilePathName As String, s As COpenSolver)
@@ -420,7 +433,8 @@ Sub ReadSensitivityData_CBC(SolutionFilePathName As String, s As COpenSolver)
           
           'Find the ranges on the constraints
           RangeFilePathName = left(SolutionFilePathName, InStrRev(SolutionFilePathName, PathDelimeter)) & RHSRangesFile_CBC
-22460     Open RangeFilePathName For Input As 2 ' supply path with filename
+22460     On Error GoTo ErrHandler
+          Open RangeFilePathName For Input As 2 ' supply path with filename
 22470     Line Input #2, Line 'Dont want first line
 22480     j = 1
 22490     While Not EOF(2)
@@ -469,7 +483,11 @@ Sub ReadSensitivityData_CBC(SolutionFilePathName As String, s As COpenSolver)
 22920         j = j + 1
 22930     Wend
 22940     Close 2
-                    
+          Exit Sub
+    
+ErrHandler:
+    Close #2
+    Err.Raise Err.Number, Err.Source, Err.Description & IIf(Erl = 0, "", " (at line " & Erl & ")")
 End Sub
 
 Sub LaunchCommandLine_CBC()

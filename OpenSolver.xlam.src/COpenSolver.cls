@@ -1667,7 +1667,7 @@ errorHandler:
               End If
               ' Exit, raising an error. None of the following actions change the Err.Number etc, but we saved them above just in case...
               Close #1 ' Close any open file; this does not seem to ever give errors
-              Err.Raise ErrorNumber, ErrorSource, ErrorDescription
+              Err.Raise Err.Number, Err.Source, Err.Description & IIf(Erl = 0, "", " (at line " & Erl & ")")
           End Sub
 
 Sub WriteLPFile(ModelFilePathName As String, SolveRelaxation As Boolean, errorString As String)
@@ -1681,6 +1681,7 @@ Sub WriteLPFile(ModelFilePathName As String, SolveRelaxation As Boolean, errorSt
           ' output the model to an LP format text file
           ' See http://lpsolve.sourceforge.net/5.5/CPLEX-format.htm
 
+          On Error GoTo ErrHandler
 14160     Open ModelFilePathName For Output As 1 ' supply path with filename
 14170     Print #1, commentStart & " Model solved using the solver '" & Solver & "'"
 14180     Print #1, commentStart & " Model for sheet " & left(sheetName, Len(sheetName) - 1) ' remove trailing !
@@ -1905,9 +1906,11 @@ Sub WriteLPFile(ModelFilePathName As String, SolveRelaxation As Boolean, errorSt
           
 ExitSub:
 15880     errorString = "ExitSub"
+          Close #1
 15890     Exit Sub
 errorHandler:
 15900     errorString = "Error writing LP File."
+          Close #1
 
 End Sub
 
@@ -1922,6 +1925,7 @@ Sub WriteAMPLFile(ModelFilePathName As String, SolveRelaxation As Boolean, error
      Dim commentStart As String  'Character for starting comments for chosen solver
      commentStart = "#"
 
+     On Error GoTo ErrHandler
      Open ModelFilePathName For Output As 1 ' supply path with filename
           
      ' Model File - Replace with Data File
@@ -2100,9 +2104,11 @@ Sub WriteAMPLFile(ModelFilePathName As String, SolveRelaxation As Boolean, error
           
 ExitSub:
      errorString = "ExitSub"
+     Close #1
      Exit Sub
 errorHandler:
      errorString = "Error writing data File."
+     Close #1
 
 End Sub
 

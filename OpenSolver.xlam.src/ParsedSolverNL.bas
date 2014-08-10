@@ -993,6 +993,7 @@ Sub OutputColFile()
     
     DeleteFileAndVerify ColFilePathName, "Writing Col File", "Couldn't delete the .col file: " & ColFilePathName
     
+    On Error GoTo ErrHandler
     Open ColFilePathName For Output As #2
     
     Dim var As Variant
@@ -1001,6 +1002,11 @@ Sub OutputColFile()
     Next var
     
     Close #2
+    Exit Sub
+    
+ErrHandler:
+    Close #2
+    Err.Raise Err.Number, Err.Source, Err.Description & IIf(Erl = 0, "", " (at line " & Erl & ")")
 End Sub
 
 ' Writes the .row summary file. This contains the constraint names listed in .nl order
@@ -1010,6 +1016,7 @@ Sub OutputRowFile()
     
     DeleteFileAndVerify RowFilePathName, "Writing Row File", "Couldn't delete the .row file: " & RowFilePathName
     
+    On Error GoTo ErrHandler
     Open RowFilePathName For Output As #3
     
     Dim con As Variant
@@ -1018,6 +1025,11 @@ Sub OutputRowFile()
     Next con
     
     Close #3
+    Exit Sub
+    
+ErrHandler:
+    Close #3
+    Err.Raise Err.Number, Err.Source, Err.Description & IIf(Erl = 0, "", " (at line " & Erl & ")")
 End Sub
 
 ' Adds a new line to the current string, appending LineText at position 0 and CommentText at position CommentSpacing

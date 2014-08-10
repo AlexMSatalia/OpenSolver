@@ -26,6 +26,7 @@ Function SolveModelParsed_PuLP(ModelFilePathName As String, m As CModelParsed, s
         Exit Function 'TODO
     End If
     
+    On Error GoTo ErrHandler
     Open SolutionFilePathName For Input As #2
     Dim CurLine As String, SplitLine() As String
     
@@ -47,6 +48,11 @@ Function SolveModelParsed_PuLP(ModelFilePathName As String, m As CModelParsed, s
     Wend
     Close #2
     SolveModelParsed_PuLP = True
+    Exit Function
+    
+ErrHandler:
+    Close #2
+    Err.Raise Err.Number, Err.Source, Err.Description & IIf(Erl = 0, "", " (at line " & Erl & ")")
 End Function
 
 Sub WritePuLPFile_Parsed(m As CModelParsed, ModelFilePathName As String, SolutionFilePathName As String)
@@ -160,9 +166,12 @@ Sub WritePuLPFile_Parsed(m As CModelParsed, ModelFilePathName As String, Solutio
     WriteToFile 1, "f = open(""" & SolutionFilePathName & """, ""w"")", 4
     WriteToFile 1, "f.write(""Error: %s"" % e.message)", 4
     WriteToFile 1, "f.close()", 4
+    Close #1
+    Exit Sub
 
 errorHandler:
     Close #1
+    Err.Raise Err.Number, Err.Source, Err.Description & IIf(Erl = 0, "", " (at line " & Erl & ")")
 End Sub
 
 Function ConvertVarTypePuLP(intVarType As Integer) As String

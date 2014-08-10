@@ -3,6 +3,7 @@ Option Explicit
 Function CallNEOS(ModelFilePathName As String, Solver As String, errorString As String) As String
     ' Import file as continuous string
     Dim message As String
+    On Error GoTo ErrHandler
     Open ModelFilePathName For Input As #1
         message = Input$(LOF(1), 1)
     Close #1
@@ -15,6 +16,11 @@ Function CallNEOS(ModelFilePathName As String, Solver As String, errorString As 
 #Else
     CallNEOS = CallNEOS_Windows(message, errorString)
 #End If
+    Exit Function
+    
+ErrHandler:
+    Close #1
+    Err.Raise Err.Number, Err.Source, Err.Description & IIf(Erl = 0, "", " (at line " & Erl & ")")
      
 End Function
 
@@ -135,9 +141,11 @@ Private Function CallNEOS_Mac(message As String, errorString As String)
     DeleteFileAndVerify ModelFilePathName, errorPrefix, "Unable to delete the job file: " & ModelFilePathName
     
     ' Create the job file
+    On Error GoTo ErrHandler
     Open ModelFilePathName For Output As #1
     Print #1, message
     Close #1
+    On Error GoTo 0
     
     ' Set up commands for NeosClient
     ' NeosClient call is of the form: NeosClient.py <job.xml> <neosresult.txt> > <logfile>
@@ -164,23 +172,31 @@ Private Function CallNEOS_Mac(message As String, errorString As String)
     Dim result As Boolean
     result = OSSolveSync(SolverPath & " " & ModelFilePathName & " " & QuotePath(ConvertHfsPath(SolutionFilePathName)), "", "", LogFilePathName)
     If Not result Then
-        GoTo errorHandler
+        GoTo NEOSError
     End If
     
     'CallingNeos.Hide
     
     ' Read in results from file
+    On Error GoTo ErrHandler
     Open SolutionFilePathName For Input As #1
         message = Input$(LOF(1), 1)
     Close #1
+    On Error GoTo 0
     
     If left(message, 6) = "Error:" Then
-        GoTo errorHandler
+        GoTo NEOSError
     End If
     CallNEOS_Mac = message
     Exit Function
     
-errorHandler:
+ErrHandler:
+    Close #1
+    errorString = Err.Description
+    CallNEOS_Mac = ""
+    Exit Function
+    
+NEOSError:
     Close #1
     errorString = "Error contacting NEOS."
     CallNEOS_Mac = ""

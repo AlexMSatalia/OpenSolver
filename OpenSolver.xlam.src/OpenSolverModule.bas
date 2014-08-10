@@ -1765,6 +1765,7 @@ End Function
 
 Public Sub CreateScriptFile(ByRef ScriptFilePath As String, FileContents As String, Optional EnableEcho As Boolean)
 ' Create a script file with the specified contents.
+    On Error GoTo ErrHandler
     Open ScriptFilePath For Output As 1
     
 #If Win32 Then
@@ -1780,6 +1781,12 @@ Public Sub CreateScriptFile(ByRef ScriptFilePath As String, FileContents As Stri
 #If Mac Then
     system ("chmod +x " & ConvertHfsPath(ScriptFilePath))
 #End If
+
+    Exit Sub
+    
+ErrHandler:
+    Close #1
+    Err.Raise Err.Number, Err.Source, Err.Description & IIf(Erl = 0, "", " (at line " & Erl & ")")
 End Sub
 
 Public Sub DeleteFileAndVerify(FilePath As String, errorPrefix As String, errorDesc As String)

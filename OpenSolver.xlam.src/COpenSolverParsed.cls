@@ -85,7 +85,7 @@ End Function
 
 Sub WriteAMPLFile_Parsed(ModelFilePathName As String, SolverType As String)
         Dim c As Range
-        
+        On Error GoTo FileError
         Open ModelFilePathName For Output As #1
 
         ' Note - We can use the following code on its own to produce a mod file
@@ -178,6 +178,11 @@ Sub WriteAMPLFile_Parsed(ModelFilePathName As String, SolverType As String)
         ' Display solving condition
         WriteToFile 1, "display solve_result_num, solve_result;"
         Close #1
+        Exit Sub
+        
+FileError:
+        Close #1
+        Err.Raise Err.Number, Err.Source, Err.Description & IIf(Erl = 0, "", " (at line " & Erl & ")")
 
 End Sub
 '==============================================================================

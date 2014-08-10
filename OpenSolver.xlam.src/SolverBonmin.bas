@@ -104,6 +104,7 @@ Function SolverVersion_Bonmin() As String
     ' Read version info back from output file
     Dim Line As String
     If FileOrDirExists(logFile) Then
+        On Error GoTo ErrHandler
         Open logFile For Input As 1
         Line Input #1, Line
         Close #1
@@ -112,6 +113,11 @@ Function SolverVersion_Bonmin() As String
     Else
         SolverVersion_Bonmin = ""
     End If
+    Exit Function
+    
+ErrHandler:
+    Close #1
+    Err.Raise Err.Number, Err.Source, Err.Description & IIf(Erl = 0, "", " (at line " & Erl & ")")
 End Function
 
 Function SolverBitness_Bonmin() As String
