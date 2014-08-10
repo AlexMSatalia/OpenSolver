@@ -1,4 +1,4 @@
-Attribute VB_Name = "modTokeniser"
+Attribute VB_Name = "Tokeniser"
 '==============================================================================
 ' OpenSolver
 ' Formula tokenizer functionality is from http://www.dailydoseofexcel.com

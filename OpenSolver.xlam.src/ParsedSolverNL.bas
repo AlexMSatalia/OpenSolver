@@ -1061,7 +1061,7 @@ Function ConvertFormulaToExpressionTree(strFormula As String) As ExpressionTree
 ' For details on modifications to algorithm
 ' http://wcipeg.com/wiki/Shunting_yard_algorithm#Conversion_into_syntax_tree
     Dim tksFormula As Tokens
-    Set tksFormula = modTokeniser.ParseFormula("=" + strFormula)
+    Set tksFormula = ParseFormula("=" + strFormula)
     
     Dim Operands As New ExpressionTreeStack, Operators As New StringStack
     

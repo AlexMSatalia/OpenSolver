@@ -32,8 +32,8 @@ Public ObjectiveCellConstant As Double
 Public ConstraintCount As Long
 Public IntegerCells As Range
 Public BinaryCells As Range
-Private LHSType() As SolverConstraintType
-Private RHSType() As SolverConstraintType
+Private LHSType() As SolverInputType
+Private RHSType() As SolverInputType
 
 Public AssumeNonNegative As Boolean
 
@@ -101,24 +101,11 @@ Public Sub ProcessSolverModel(s As COpenSolver)
     Set BinaryCells = s.BinaryCellsRange
     
     If ConstraintCount > 0 Then
-        ReDim LHSType(1 To ConstraintCount) As SolverConstraintType
-        ReDim RHSType(1 To ConstraintCount) As SolverConstraintType
+        ReDim LHSType(1 To ConstraintCount) As SolverInputType
+        ReDim RHSType(1 To ConstraintCount) As SolverInputType
         For i = 1 To ConstraintCount
-            Select Case s.LHSTypeP(i)
-            Case SolverInputType.SingleCellRange
-                LHSType(i) = ConIsSingleCell
-            Case SolverInputType.MultiCellRange
-                LHSType(i) = ConIsMultipleCell
-            End Select
-            
-            Select Case s.RHSTypeP(i)
-            Case SolverInputType.SingleCellRange
-                RHSType(i) = ConIsSingleCell
-            Case SolverInputType.MultiCellRange
-                RHSType(i) = ConIsMultipleCell
-            Case SolverInputType.constant, SolverInputType.Formula
-                RHSType(i) = ConIsValueOrFormula
-            End Select
+            LHSType(i) = s.LHSTypeP(i)
+            RHSType(i) = s.RHSTypeP(i)
         Next i
     End If
     
@@ -228,19 +215,20 @@ Private Sub ParseFormulae()
                     
                 ' Parse RHS
                 Dim strRHSFormula As String, rngRHSCell As Range
+                Select Case GetRHSType(i)
                 ' 1.1 RHS is a single cell
-                If GetRHSType(i) = ConIsSingleCell Then
+                Case SingleCellRange
                     strRHSFormula = nameRHSi.RefersToRange.Formula
                     Set rngRHSCell = nameRHSi.RefersToRange
                 ' 1.2 RHS is multiple cells
-                ElseIf GetRHSType(i) = ConIsMultipleCell Then
+                Case MultiCellRange
                     strRHSFormula = nameRHSi.RefersToRange.Cells(cRow, cCol).Formula
                     Set rngRHSCell = nameRHSi.RefersToRange.Cells(cRow, cCol)
                 ' 1.3 RHS is value or formula
-                ElseIf GetRHSType(i) = ConIsValueOrFormula Then
+                Case constant, Formula
                     strRHSFormula = nameRHSi.value
                     Set rngRHSCell = Nothing
-                End If
+                End Select
                 
                 RHSKeys.Add ExpandFormula(strRHSFormula, rngRHSCell)
             Next cCol
@@ -275,89 +263,13 @@ NextCons:
     End If
 
 End Sub
-
 '==============================================================================
-Private Sub ProcessModelOptions()
-    
-    ' Assume Non-negative
-    ' Excel adds a zero lower bound to any variable which does not have any
-    ' other lower bound specified.
-    Dim s As String
-    AssumeNonNegative = False
-    If GetStringFromName(book, strNameRoot & NameNonNegative, s) Then
-        AssumeNonNegative = (s = "1")
-    End If
-    
-    ' Excel 2007: Assume Linear Model checked.
-    ' Excel 2010: Engine Type = Simplex.
-    Dim AssumeLinearModel As Boolean ' Excel stores ...!solver_lin=1 if Assume Linear Model is turned on, 2 if off (NB: Not 0!)
-    Dim SimplexEngineSelected As Boolean '2010 excel - stores the type of engine used
-    
-    ' Try the 2007 name - may be present if opening a 2007 file in 2010.
-    AssumeLinearModel = False
-    If GetStringFromName(book, strNameRoot & NameLinear, s) Then
-        AssumeLinearModel = (s = "1")
-    End If
-    
-    ' Try to get the 2010 optimisation engine
-    SimplexEngineSelected = False
-    If Application.Version = "14.0" And GetStringFromName(book, strNameRoot & NameEngine, s) Then
-        SimplexEngineSelected = (s = "2")
-    End If
-        
-    ' If we are in Excel 2010, and the user has set "Solve Relaxtion",
-    ' then we report an error telling them to turn it off or to use
-    ' the solve relaxation command
-    If Application.Version = "14.0" And GetStringFromName(book, strNameRoot & NameRelaxation, s) Then
-        If (s = "1") Then RaiseOSErr OSErrRelaxationSet
-    End If
-    
-    ' If user has not enabled linearity, we need to ask them about it
-    If (Not SimplexEngineSelected And Not AssumeLinearModel) Then
-        Dim strLinearityMsg As String
-        strLinearityMsg = "OpenSolver assumes the model is linear." + vbNewLine
-        If Val(Application.Version) <= 12 Then ' Excel 2007 or earlier
-            strLinearityMsg = strLinearityMsg + "However, Assume Linear Model is not turned on." + vbNewLine
-        Else ' Excel 2010
-            strLinearityMsg = strLinearityMsg + "However, the Solving Method is not set as Simplex." + vbNewLine
-        End If
-        strLinearityMsg = strLinearityMsg + "If you would like to correct this, click Yes." + vbNewLine
-        strLinearityMsg = strLinearityMsg + "Click No to proceed assuming the model is linear."
-        
-        Dim msgResponse As VbMsgBoxResult
-        'msgResponse = MsgBox(strLinearityMsg, vbYesNoCancel, "OpenSolver")
-        
-        If msgResponse = vbCancel Then
-            RaiseOSErr OSErrUserCancel
-        ElseIf msgResponse = vbYes Then
-            If Val(Application.Version) <= 12 Then ' Excel 2007 or earlier
-                SetSolverNameOnSheet "lin", "=1"
-            Else ' Excel 2010
-                SetSolverNameOnSheet "eng", "=2"
-            End If
-        ElseIf msgResponse = vbNo Then
-            ' We'll just assume its linear and keep on going
-        End If
-    End If
-    
-End Sub
-
-'==============================================================================
-Public Function GetLHSType(lngConNum As Long) As SolverConstraintType
+Public Function GetLHSType(lngConNum As Long) As SolverInputType
     GetLHSType = LHSType(lngConNum)
 End Function
-Public Function GetLHSRange(lngConNum As Long) As Range
-    Set GetLHSRange = book.Names(strNameRoot + NameLHS + CStr(lngConNum)).RefersToRange
-End Function
 
-Public Function GetRHSType(lngConNum As Long) As SolverConstraintType
+Public Function GetRHSType(lngConNum As Long) As SolverInputType
     GetRHSType = RHSType(lngConNum)
-End Function
-Public Function GetRHSRange(lngConNum As Long) As Range
-    Set GetRHSRange = book.Names(strNameRoot + NameRHS + CStr(lngConNum)).RefersToRange
-End Function
-Public Function GetRHSValue(lngConNum As Long) As String
-    GetRHSValue = book.Names(strNameRoot + NameRHS + CStr(lngConNum)).RefersTo
 End Function
 
 Public Function GetAdjCellName(lngVar As Long) As String
@@ -465,7 +377,7 @@ Function ExpandFormula(ByVal strFormula As String, _
         
         ' Tokenize the formula
         Dim tksFormula As Tokens
-        Set tksFormula = modTokeniser.ParseFormula(objCurNode.strFormula)
+        Set tksFormula = ParseFormula(objCurNode.strFormula)
     
         ' If we find a reference to a cell name, it could be the beginning
         ' of a multi-cell range. So always assume thats going to happen, and
@@ -521,7 +433,7 @@ Function ExpandFormula(ByVal strFormula As String, _
                     
                 Case TokenType.ErrorText
                     ' TODO: Can't handle that, throw error
-                    RaiseOSErr OSErrPulpTokenErrText
+                    Err.Raise OpenSolver_BuildError, "Parsing model formulae", "An error token was found while parsing the formulae."
                     
                 Case TokenType.Reference
                     ' Are we trying to complete a range?
