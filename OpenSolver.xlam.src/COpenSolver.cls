@@ -1994,7 +1994,7 @@ Sub WriteAMPLFile(ModelFilePathName As String, SolveRelaxation As Boolean, error
          Print #1,
          
          Print #1, commentStart & " The objective must achieve a given target value; this constraint enforces this."
-         Print #1, "subject to TargetConstr {c in Constraints}:"
+         Print #1, "subject to TargetConstr:"
          Print #1, Line & " = " & StrEx(ObjectiveTargetValue) & ";"
      Else
          ' Determine objective direction
