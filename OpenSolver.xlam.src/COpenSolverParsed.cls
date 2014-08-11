@@ -25,12 +25,16 @@ Public Sub SolveModel(s As COpenSolver)
     Application.Calculation = xlCalculationManual
     Application.ScreenUpdating = False
     
+    Dim errorString As String
+    
     On Error GoTo ErrHandler
     
     ' Parse spreadsheet and build model
     Set m = New CModelParsed
     m.Setup ActiveWorkbook, ActiveSheet
-    m.ProcessSolverModel s
+    If Not m.ProcessSolverModel(s) Then
+        GoTo ExitSub
+    End If
     
     ' Setup output file
     Dim ModelFilePathName As String
@@ -38,7 +42,6 @@ Public Sub SolveModel(s As COpenSolver)
     
     DeleteFileAndVerify ModelFilePathName, "Solving Parsed Solver Model", "Unable to delete " & ModelFilePathName
     
-    Dim errorString As String
     GetSolveOptions m.SolverModelSheet.Name & "!", SolveOptions, errorString
     If errorString <> "" Then
         Err.Raise Number:=OpenSolver_SolveError, Source:="Solving Parsed Solver Model", Description:=errorString
@@ -60,6 +63,11 @@ Public Sub SolveModel(s As COpenSolver)
         SolveStatus = ErrorOccurred
     End If
     
+    ' Copy results to COpenSolver for reporting
+    s.SolveStatus = SolveStatus
+    s.SolveStatusComment = SolveStatusComment
+    s.SolveStatusString = SolveStatusString
+    
     Application.Calculation = xlCalculationAutomatic
     Application.ScreenUpdating = True
     
@@ -70,6 +78,11 @@ ErrHandler:
     Application.ScreenUpdating = True
     SolveStatus = ErrorOccurred
     Err.Raise Err.Number, Err.Source, Err.Description & IIf(Erl = 0, "", " (at line " & Erl & ")")
+    Exit Sub
+
+ExitSub:
+    Application.Calculation = xlCalculationAutomatic
+    Application.ScreenUpdating = True
 
 End Sub
 

@@ -63,7 +63,7 @@ Public Sub Setup(ByRef BookToUse As Workbook, ByRef SheetToUse As Worksheet)
 End Sub
 
 '==============================================================================
-Public Sub ProcessSolverModel(s As COpenSolver)
+Public Function ProcessSolverModel(s As COpenSolver) As Boolean
     Solver = s.Solver
     
     ' =========================================
@@ -116,8 +116,8 @@ Public Sub ProcessSolverModel(s As COpenSolver)
     ' =========================================
     ' Conduct parsed-specific processing
     ProcessVarTypes
-    ParseFormulae
-End Sub
+    ProcessSolverModel = ParseFormulae(s)
+End Function
 
 Private Sub ProcessVarTypes()
 ' Get var types of constraints
@@ -143,7 +143,7 @@ Private Sub ProcessVarTypes()
     Next
 End Sub
 
-Private Sub ParseFormulae()
+Private Function ParseFormulae(s As COpenSolver) As Boolean
 ' Parses all constraints and objective formulae to create formulae that depend only on variable cells and constants
 
     ' Create a collection for the spreadsheet's formulae (DAG)
@@ -199,21 +199,21 @@ Private Sub ParseFormulae()
         Set rngLHS = nameLHSi.RefersToRange
         varLHSFormulae = rngLHS.Formula
                 
+        Dim singleRngLHS As Range
         For cRow = 1 To cRowCount
             For cCol = 1 To cColCount
                 Count = Count + 1
                 
+                ' Get LHS
                 If cRowCount <> 1 Or cColCount <> 1 Then
                     curLHSFormulae = varLHSFormulae(cRow, cCol)
+                    Set singleRngLHS = rngLHS(cRow, cCol)
                 Else
                     curLHSFormulae = varLHSFormulae
+                    Set singleRngLHS = rngLHS
                 End If
-                LHSKeys.Add ExpandFormula(curLHSFormulae, rngLHS(cRow, cCol))
-
-                ' Determine appropriate relation
-                Rels.Add ConvertRelationToEnum(nameRELi.value)
-                    
-                ' Parse RHS
+                
+                ' Get RHS
                 Dim strRHSFormula As String, rngRHSCell As Range
                 Select Case GetRHSType(i)
                 ' 1.1 RHS is a single cell
@@ -229,8 +229,73 @@ Private Sub ParseFormulae()
                     strRHSFormula = nameRHSi.value
                     Set rngRHSCell = Nothing
                 End Select
+
+                ' If LHS is constant, then check if RHS is constant
+                If CellIsConstant(singleRngLHS) Then
+                    Dim isConst As Boolean
+                    isConst = False
+                     
+                    Select Case GetRHSType(i)
+                    Case constant
+                        isConst = True
+                    Case Formula
+                        isConst = StringFormulaIsConstant(strRHSFormula)
+                    Case SingleCellRange, MultiCellRange
+                        isConst = CellIsConstant(rngRHSCell)
+                    End Select
+                    
+                    ' If both sides are constant we need to see if the constraint is valid
+                    If isConst Then
+                        Dim isValid As Boolean, LHSValue As Double, RHSValue As Double
+                        isValid = True
+                        
+                        LHSValue = singleRngLHS.Value2
+                        RHSValue = Application.Evaluate(strRHSFormula)
+                        
+                        ' Test LHS and RHS in the constraint
+                        Select Case ConvertRelationToEnum(nameRELi.value)
+                        Case RelationGE
+                            If LHSValue < RHSValue Then
+                                isValid = False
+                            End If
+                        Case RelationLE
+                            If LHSValue > RHSValue Then
+                                isValid = False
+                            End If
+                        Case RelationEQ
+                            If LHSValue <> RHSValue Then
+                                isValid = False
+                            End If
+                        End Select
+                        
+                        ' If constraint is not satisfied, the model is infeasible
+                        If Not isValid Then
+                            s.SolveStatus = OpenSolverResult.Infeasible
+                            s.SolveStatusString = "Infeasible"
+                            s.SolveStatusComment = _
+                                "The model contains an Excel constraint which does not depend on the decision variables and is not satisfied." & vbCrLf & _
+                                "Constraint specifies: " & _
+                                "LHS=" & singleRngLHS.AddressLocal(RowAbsolute:=False, ColumnAbsolute:=False) & "=" & LHSValue & _
+                                "   " & SolverRelationAsString(ConvertRelationToEnum(nameRELi.value)) & "   " & _
+                                "RHS=" & "'" & strRHSFormula & "'" & "=" & RHSValue
+                            ParseFormulae = False
+                            Exit Function
+                        Else
+                            ' Otherwise the constraint is trivially satisfied, we can ignore it
+                            GoTo NextCol
+                        End If
+                    End If
+                End If
                 
+                ' Parse LHS
+                LHSKeys.Add ExpandFormula(curLHSFormulae, rngLHS(cRow, cCol))
+                
+                ' Parse RHS
                 RHSKeys.Add ExpandFormula(strRHSFormula, rngRHSCell)
+                
+                ' Determine appropriate relation
+                Rels.Add ConvertRelationToEnum(nameRELi.value)
+NextCol:
             Next cCol
         Next cRow
         
@@ -261,8 +326,8 @@ NextCons:
             Next lngIndex
         Next lngCurDepth
     End If
-
-End Sub
+    ParseFormulae = True
+End Function
 '==============================================================================
 Public Function GetLHSType(lngConNum As Long) As SolverInputType
     GetLHSType = LHSType(lngConNum)
@@ -274,6 +339,133 @@ End Function
 
 Public Function GetAdjCellName(lngVar As Long) As String
     GetAdjCellName = AdjCellNames(lngVar)
+End Function
+
+' Checks whether a cell is constant i.e. not a decision variable and does not depend on a decision variable
+Function CellIsConstant(cell As Range) As Boolean
+    ' Check if cell is a variable cell
+    If Not Intersect(cell, AdjustableCells) Is Nothing Then
+        CellIsConstant = False
+        Exit Function
+    End If
+    
+    ' Check if dependent on decision variable
+    If cell.HasFormula Then
+        If Not Intersect(cell.Precedents, AdjustableCells) Is Nothing Then
+            CellIsConstant = False
+            Exit Function
+        End If
+    End If
+    CellIsConstant = True
+End Function
+
+' Checks whether a string formula depends on variable cells or is simply constant.
+' If constant, we can evaluate it directly
+Function StringFormulaIsConstant(strFormula As String) As Boolean
+    Dim tksFormula As Tokens
+    Set tksFormula = ParseFormula(strFormula)
+    
+    Dim i As Integer, c As Range, tkn As Token, CheckForColon As Boolean
+    Dim LookingForEndOfRef As Boolean, strSheetPrefix As String, BuildingRef As String, rngBuildingRef As Range
+    
+    ' We loop through tokens looking for cell references.
+    ' If we find any, we test them to see if they depend on the variable cells
+    For i = 1 To tksFormula.Count
+        Set tkn = tksFormula.Item(i)
+        
+        If CheckForColon = True And tkn.Text <> ":" Then
+            ' We don't hit colon right after the reference, we abandon
+            ' search for another reference
+            LookingForEndOfRef = False
+            CheckForColon = False
+            If strSheetPrefix <> "" Then BuildingRef = strSheetPrefix + "!" + BuildingRef
+            Set rngBuildingRef = Range(BuildingRef)
+            
+            ' Cell reference found, check if constant
+            If rngBuildingRef.Count > 1 Then
+                For Each c In rngBuildingRef
+                    If Not CellIsConstant(c) Then GoTo NotConstant
+                Next c
+            Else
+                If Not CellIsConstant(rngBuildingRef) Then GoTo NotConstant
+            End If
+            
+            ' Reset the sheet we are tracking
+            strSheetPrefix = ""
+        End If
+    
+        ' Decide what to insert based on token type
+        Select Case tkn.TokenType
+            Case TokenType.ErrorText
+                ' TODO: Can't handle that, throw error
+                Err.Raise OpenSolver_BuildError, "Parsing model formulae", "An error token was found while parsing the formulae."
+                
+            Case TokenType.Reference
+                ' Are we trying to complete a range?
+                If LookingForEndOfRef Then
+                    ' We were, so finish building it...
+                    BuildingRef = BuildingRef + tkn.Text
+                    ' ... and stop trying to build it more
+                    LookingForEndOfRef = False
+                    CheckForColon = False
+                    
+                    ' Make sure this range is on the right sheet
+                    If strSheetPrefix <> "" Then BuildingRef = strSheetPrefix + "!" + BuildingRef
+                    
+                    ' Cell reference found, check if constant
+                    Set rngBuildingRef = Range(BuildingRef)
+                    For Each c In rngBuildingRef
+                        If Not Intersect(c.Precedents, AdjustableCells) Is Nothing Then GoTo NotConstant
+                    Next c
+
+                    ' Reset the sheet we are tracking
+                    strSheetPrefix = ""
+                    
+                Else
+                    ' This is a new range, look for : and another cell ref
+                    BuildingRef = tkn.Text
+                    CheckForColon = True
+                    LookingForEndOfRef = True
+                End If
+              
+            Case TokenType.RangeOperator
+                ' Colon. The range we were building is about to be completed
+                ' and should come up after this
+                BuildingRef = BuildingRef + ":"
+                CheckForColon = False
+                
+            Case TokenType.ReferenceQualifier
+                strSheetPrefix = "'" + tkn.Text + "'"
+                
+            Case TokenType.ExternalReferenceOperator
+                ' We'll insert the ! ourselves manually later
+
+        End Select
+    Next i
+
+    ' Are we still looking for another reference?
+    If LookingForEndOfRef = True Then
+        ' It never came - probably a solitary cell reference at the end
+        ' of a formula. Check if we need a new node, add token to parsed string
+        If strSheetPrefix <> "" Then BuildingRef = strSheetPrefix + "!" + BuildingRef
+        Set rngBuildingRef = Range(BuildingRef)
+        
+        ' Cell reference found, check if constant
+        If rngBuildingRef.Count > 1 Then
+            For Each c In rngBuildingRef
+                If Not Intersect(c.Precedents, AdjustableCells) Is Nothing Then GoTo NotConstant
+            Next c
+        Else
+            If Not Intersect(rngBuildingRef.Precedents, AdjustableCells) Is Nothing Then GoTo NotConstant
+        End If
+        
+        strSheetPrefix = ""
+    End If
+    StringFormulaIsConstant = True
+    Exit Function
+    
+NotConstant:
+    StringFormulaIsConstant = False
 End Function
 
 Function ExpandFormula(ByVal strFormula As String, _

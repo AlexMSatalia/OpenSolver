@@ -184,7 +184,8 @@ ParsedModel:
           
           ' Solve model and extract result
           OpenSolverParsed.SolveModel OpenSolver
-          RunOpenSolver = OpenSolverParsed.SolveStatus
+          RunOpenSolver = OpenSolver.SolveStatus
+          If Not MinimiseUserInteraction Then OpenSolver.ReportAnySolutionSubOptimality
           
           ' Clean up
           Set OpenSolver = Nothing

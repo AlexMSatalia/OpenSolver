@@ -618,15 +618,16 @@ Sub ProcessSingleFormula(RHSExpression As String, LHSVariable As String, Relatio
     
     ' Check that our variable LHS exists
     If Not TestKeyExists(VariableIndex, LHSVariable) Then
-        ' We have an empty formulae cell - maybe the result of a bad merged cell
-        Err.Raise OpenSolver_BuildError, errorPrefix, "A constraint formula was missing when loaded. This might be the result of referencing merged cells in the constraint. Please check for any merged cells and try again."
+        ' We must have a constant formula as the LHS, we can evaluate and merge with the constant
+        ' We are bringing the constant to the RHS so must subtract
+        constant = constant - Application.Evaluate(LHSVariable)
+    Else
+        ' Our constraint has a single term on the LHS and a formulae on the right.
+        ' The single LHS term needs to be included in the expression as a linear term with coefficient 1
+        ' Move variable from the LHS to the linear constraint with coefficient -1
+        constraint.VariablePresent(VariableIndex(LHSVariable)) = True
+        constraint.Coefficient(VariableIndex(LHSVariable)) = constraint.Coefficient(VariableIndex(LHSVariable)) - 1
     End If
-    
-    ' Our constraints all have a single term on the LHS and a formulae on the right.
-    ' The single LHS term needs to be included in the expression as a linear term with coefficient 1
-    ' Move variable from the LHS to the linear constraint with coefficient -1
-    constraint.VariablePresent(VariableIndex(LHSVariable)) = True
-    constraint.Coefficient(VariableIndex(LHSVariable)) = constraint.Coefficient(VariableIndex(LHSVariable)) - 1
     
     ' Constant must be positive in the final form of the constraint in the .nl file
     If constant < 0 Then
