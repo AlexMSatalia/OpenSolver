@@ -1925,7 +1925,7 @@ Sub WriteAMPLFile(ModelFilePathName As String, SolveRelaxation As Boolean, error
      Dim commentStart As String  'Character for starting comments for chosen solver
      commentStart = "#"
 
-     On Error GoTo ErrHandler
+     On Error GoTo errorHandler
      Open ModelFilePathName For Output As 1 ' supply path with filename
           
      ' Model File - Replace with Data File
