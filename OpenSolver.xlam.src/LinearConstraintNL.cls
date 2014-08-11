@@ -70,3 +70,14 @@ Public Sub InvertCoefficients()
         End If
     Next i
 End Sub
+
+Public Function IsEmpty() As Boolean
+    IsEmpty = True
+    Dim i As Integer
+    For i = 1 To NumVariables
+        If Coefficients(i) <> 0 Then
+            IsEmpty = False
+            Exit Function
+        End If
+    Next i
+End Function

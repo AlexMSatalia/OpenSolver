@@ -159,48 +159,40 @@ Function ReadModel_Couenne(SolutionFilePathName As String, errorString As String
     Dim solutionExpected As Boolean
     solutionExpected = True
     
-    Open SolutionFilePathName For Input As 1 ' supply path with filename
-    Line Input #1, Line ' Skip empty line at start of file
-    Line Input #1, Line
-    Line = Mid(Line, 10)
-    
-    'Get the returned status code from couenne.
-    ' These are currently just using the outputs from CBC
-    ' TODO couenne doesn't seem to write a solution file unless the solve is successful. We need to extract the solve status from the log file
-    If Line Like "Optimal*" Then
-        s.SolveStatus = OpenSolverResult.Optimal
-        s.SolveStatusString = "Optimal"
-    ElseIf Line Like "Infeasible*" Then
-        s.SolveStatus = OpenSolverResult.Infeasible
-        s.SolveStatusString = "No Feasible Solution"
-    ElseIf Line Like "Integer infeasible*" Then
-        s.SolveStatus = OpenSolverResult.Infeasible
-        s.SolveStatusString = "No Feasible Integer Solution"
-    ElseIf Line Like "Unbounded*" Then
-        s.SolveStatus = OpenSolverResult.Unbounded
-        s.SolveStatusString = "No Solution Found (Unbounded)"
+    If Not FileOrDirExists(SolutionFilePathName) Then
         solutionExpected = False
-    ElseIf Line Like "Stopped on time *" Then ' Stopped on iterations or time
-        s.SolveStatus = OpenSolverResult.TimeLimitedSubOptimal
-        s.SolveStatusString = "Stopped on Time Limit"
-    ElseIf Line Like "Stopped on iterations*" Then ' Stopped on iterations or time
-        s.SolveStatus = OpenSolverResult.TimeLimitedSubOptimal
-        s.SolveStatusString = "Stopped on Iteration Limit"
-    ElseIf Line Like "Stopped on difficulties*" Then ' Stopped on iterations or time
-        s.SolveStatus = OpenSolverResult.TimeLimitedSubOptimal
-        s.SolveStatusString = "Stopped on difficulties"
-    ElseIf Line Like "Stopped on ctrl-c*" Then ' Stopped on iterations or time
-        s.SolveStatus = OpenSolverResult.TimeLimitedSubOptimal
-        s.SolveStatusString = "Stopped on Ctrl-C"
-    ElseIf Line Like "Status unknown*" Then
-        errorString = "Coueene did not solve the problem, suggesting there was an error in the input parameters. The response was: " & vbCrLf _
-               & Line _
-               & vbCrLf & "The Couenne command line can be found at:" _
-               & vbCrLf & ScriptFilePath_Couenne()
-        GoTo exitFunction
+        If Not TryParseLogs(s) Then
+            errorString = "The solver did not create a solution file. No new solution is available."
+            GoTo exitFunction
+        End If
     Else
-        errorString = "The response from the Couenne solver is not recognised. The response was: " & Line
-        GoTo exitFunction
+        Open SolutionFilePathName For Input As 1 ' supply path with filename
+        Line Input #1, Line ' Skip empty line at start of file
+        Line Input #1, Line
+        Line = Mid(Line, 10)
+        
+        'Get the returned status code from couenne.
+        If Line Like "Optimal*" Then
+            s.SolveStatus = OpenSolverResult.Optimal
+            s.SolveStatusString = "Optimal"
+        ElseIf Line Like "Infeasible*" Then
+            s.SolveStatus = OpenSolverResult.Infeasible
+            s.SolveStatusString = "No Feasible Solution"
+            solutionExpected = False
+        ElseIf Line Like "Unbounded*" Then
+            s.SolveStatus = OpenSolverResult.Unbounded
+            s.SolveStatusString = "No Solution Found (Unbounded)"
+            solutionExpected = False
+        Else
+            If Not TryParseLogs(s) Then
+                errorString = "The response from the Couenne solver is not recognised. The response was: " & vbCrLf & _
+                              Line & vbCrLf & _
+                              "The Couenne command line can be found at:" & vbCrLf & _
+                              ScriptFilePath_Couenne()
+                GoTo exitFunction
+            End If
+            solutionExpected = False
+        End If
     End If
     
     If solutionExpected Then
@@ -233,9 +225,9 @@ Function ReadModel_Couenne(SolutionFilePathName As String, errorString As String
             Range(c.Address).Value2 = ConvertFromCurrentLocale(VariableValues(VariableIndex))
             i = i + 1
         Next c
-
-        ReadModel_Couenne = True
     End If
+
+    ReadModel_Couenne = True
 
 exitFunction:
     Close #1
@@ -246,4 +238,43 @@ readError:
     Close #1
     Close #2
     Err.Raise Err.Number, Err.Source, Err.Description & IIf(Erl = 0, "", " (at line " & Erl & ")")
+End Function
+
+Function TryParseLogs(s As COpenSolverParsed) As Boolean
+' We examine the log file if it exists to try to find more info about the solve
+    
+    ' Check if log exists
+    Dim logFile As String
+    logFile = GetTempFilePath("log1.tmp")
+    
+    If Not FileOrDirExists(logFile) Then
+        TryParseLogs = False
+        Exit Function
+    End If
+    
+    Dim message As String
+    On Error GoTo ErrHandler
+    Open logFile For Input As 3
+    message = Input$(LOF(3), 3)
+    Close #3
+    
+    If Not left(message, 7) = "Couenne" Then
+       ' Not dealing with a Couenne log, abort
+        TryParseLogs = False
+        Exit Function
+    End If
+    
+    ' Scan for information
+    
+    ' 1 - scan for infeasible
+    If message Like "*infeasible*" Then
+        s.SolveStatus = OpenSolverResult.Infeasible
+        s.SolveStatusString = "No Feasible Solution"
+        TryParseLogs = True
+        Exit Function
+    End If
+    
+ErrHandler:
+    Close #3
+    TryParseLogs = False
 End Function

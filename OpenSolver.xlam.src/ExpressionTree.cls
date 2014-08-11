@@ -70,6 +70,12 @@ Private Sub Class_Initialize()
     NodeLinearity = ExpressionTreeNonLinear
 End Sub
 
+' Test is the tree is empty
+Public Function IsEmpty() As Boolean
+    IsEmpty = NodeText = "0"
+End Function
+
+
 ' Negate the tree
 Public Function Negate() As ExpressionTree
     If NodeText <> "0" Then

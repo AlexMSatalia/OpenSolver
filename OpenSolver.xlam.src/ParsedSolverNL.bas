@@ -186,6 +186,8 @@ Function SolveModelParsed_NL(ModelFilePathName As String, model As CModelParsed,
     Dim SolutionFilePathName As String
     SolutionFilePathName = SolutionFilePath(m.Solver)
     
+    DeleteFileAndVerify SolutionFilePathName, errorPrefix, "Unable to delete solution file : " & SolutionFilePathName
+    
     Dim ExternalSolverPathName As String
     ExternalSolverPathName = CreateSolveScriptParsed(m.Solver, ModelFilePathName)
              
@@ -213,11 +215,7 @@ Function SolveModelParsed_NL(ModelFilePathName As String, model As CModelParsed,
     ' Read results from solution file
     ' =============================================================
     errorPrefix = "Reading .nl solution"
-    
-    If Not FileOrDirExists(SolutionFilePathName) Then
-        On Error GoTo ErrHandler
-        Err.Raise Number:=OpenSolver_SolveError, Source:="Solving NL model", Description:="The solver did not create a solution file. No new solution is available."
-    End If
+
     Dim solutionLoaded As Boolean, errorString As String
     solutionLoaded = ReadModelParsed(m.Solver, SolutionFilePathName, errorString, m, s)
     On Error GoTo ErrHandler
@@ -225,11 +223,16 @@ Function SolveModelParsed_NL(ModelFilePathName As String, model As CModelParsed,
         Err.Raise Number:=OpenSolver_SolveError, Source:="Solving NL model", Description:=errorString
     ElseIf Not solutionLoaded Then 'read error
         SolveModelParsed_NL = False
+        Exit Function
     End If
 
     SolveModelParsed_NL = True
     Exit Function
     
+exitFunction:
+    Close #1
+    Exit Function
+        
 ErrHandler:
     Close #1
     Err.Raise Err.Number, Err.Source, Err.Description & IIf(Erl = 0, "", " (at line " & Erl & ")")
