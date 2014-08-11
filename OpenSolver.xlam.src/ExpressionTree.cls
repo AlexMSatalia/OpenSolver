@@ -408,7 +408,8 @@ Public Sub ConvertLinearTreeToConstraint(constraint As LinearConstraintNL, const
     AddLinearTreeToConstraint constraint, constant
 End Sub
 
-' Traverses a linear tree and removes all operators other than "plus"
+' Traverses a linear tree and replaces all operators other than "plus"
+' We want a tree with constants, variables, and "plus" nodes only
 Sub CollateLinearTerms()
 
     ' First collate all children
@@ -442,63 +443,66 @@ Sub CollateLinearTerms()
         
         ' Linear operator node - we need to collate the constant and variable terms into a single variable node if possible
         Case ExpressionTreeOperator
-            If NodeText <> "plus" Then
-                ' If we have a minus node, convert it to a plus and flip the sign on the second operator
-                If NodeText = "minus" Then
-                    Children(2).CollateLinearNegative
-                    
-                    NodeText = "plus"
-                
-                ' Negate the coefficient on the variable node and remove the "neg" node
-                ElseIf NodeText = "neg" Then
-                    If Children(1).NodeType = ExpressionTreeVariable Then
-                        Children(1).LinearCoefficient = -Children(1).LinearCoefficient
-                    Else ' Children(1).NodeType = ExpressionTreeOperator
-                        ' The child is a "plus" - flip signs on both terms
-                        Children(1).GetChild(1).CollateLinearNegative
-                        Children(1).GetChild(2).CollateLinearNegative
-                    End If
-                    SetTreeToChild 1
-                
-                ' Make sure there is a constant and variable to collect with an appropriate operator
-                ElseIf (Children(1).NodeType = ExpressionTreeNumber And Children(2).NodeType = ExpressionTreeVariable) Or _
-                       (Children(1).NodeType = ExpressionTreeVariable And Children(2).NodeType = ExpressionTreeNumber) Then
-                    Select Case NodeText
-    
-                    ' Need to detect which node is variable
-                    Case "mult"
-                        If Children(1).NodeType = ExpressionTreeVariable Then
-                            LinearCoefficient = Children(1).LinearCoefficient * Children(2).LinearValue
-                            NodeText = Children(1).NodeText
-                        Else
-                            LinearCoefficient = Children(2).LinearCoefficient * Children(1).LinearValue
-                            NodeText = Children(2).NodeText
-                        End If
-                    
-                    ' First node is variable
-                    Case "div"
-                        LinearCoefficient = Children(1).LinearCoefficient / Children(2).LinearValue
-                        NodeText = Children(1).NodeText
-                        
-                    ' Second node must be 1 (as we know the expression is linear)
-                    Case "pow"
-                        LinearCoefficient = Children(1).LinearCoefficient
-                        NodeText = Children(1).NodeText
+            Select Case NodeText
             
-                    Case Else
-                        MsgBox "Unknown linear operator " & NodeText
-                    End Select
+            ' Do nothing on a plus node. This is just to escape the Else case
+            Case "plus"
+            
+            ' If we have a minus node, convert it to a plus and flip the sign on the second operator
+            Case "minus"
+                Children(2).CollateLinearNegative
+                NodeText = "plus"
+                
+            ' Negate the coefficient on the variable node and remove the "neg" node
+            Case "neg"
+                Children(1).MultiplyByConstant -1
+                SetTreeToChild 1
                     
-                    ' Remove subtrees
-                    NodeType = ExpressionTreeVariable
-                    ClearChildren
+            ' There is a constant node and a linear node attached to this mult.
+            ' We multiply the constant through the linear node (which may be a "plus" tree)
+            Case "mult"
+                If Children(1).NodeType = ExpressionTreeConstant Then
+                    Children(2).MultiplyByConstant Children(1).LinearValue
+                    SetTreeToChild 2
+                Else ' Child 2 is the constant node
+                    Children(1).MultiplyByConstant Children(2).LinearValue
+                    SetTreeToChild 1
                 End If
-            End If
+            
+            ' First node is variable
+            Case "div"
+                Children(1).MultiplyByConstant 1 / Children(2).LinearValue
+                SetTreeToChild 1
+                
+            ' Second node must be 1 (as we know the expression is linear)
+            Case "pow"
+                SetTreeToChild 1
+    
+            Case Else
+                MsgBox "Unknown linear operator " & NodeText
+            End Select
         End Select
     End Select
     
     Exit Sub
     
+End Sub
+
+' Multiplies all nodes in the linear tree by a constant
+Public Sub MultiplyByConstant(constant As Double)
+    Select Case NodeType
+    Case ExpressionTreeConstant
+        LinearValue = LinearValue * constant
+        NodeText = LinearValue
+    
+    Case ExpressionTreeVariable
+        LinearCoefficient = LinearCoefficient * constant
+        
+    Case ExpressionTreeOperator ' plus
+        Children(1).MultiplyByConstant constant
+        Children(2).MultiplyByConstant constant
+        
+    End Select
 End Sub
 
 ' Flips the sign on variable or constant
