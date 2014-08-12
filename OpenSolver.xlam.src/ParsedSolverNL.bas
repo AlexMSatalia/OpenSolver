@@ -1089,7 +1089,7 @@ Function ConvertFormulaToExpressionTree(strFormula As String) As ExpressionTree
     Dim tksFormula As Tokens
     Set tksFormula = ParseFormula("=" + strFormula)
     
-    Dim Operands As New ExpressionTreeStack, Operators As New StringStack
+    Dim Operands As New ExpressionTreeStack, Operators As New StringStack, ArgCounts As New OperatorArgCountStack
     
     Dim i As Integer, c As Range, tkn As Token, tknOld As String, Tree As ExpressionTree
     For i = 1 To tksFormula.Count
@@ -1113,6 +1113,9 @@ Function ConvertFormulaToExpressionTree(strFormula As String) As ExpressionTree
             Operators.Push ConvertExcelFunctionToNL(tkn.Text)
             Operators.Push "("
             
+            ' Start a new argument count
+            ArgCounts.PushNewCount
+            
         ' If the token is a function argument separator (e.g., a comma)
         Case TokenType.ParameterSeparator
             ' Until the token at the top of the operator stack is a left parenthesis, pop operators off the stack onto the operands stack as a new tree.
@@ -1125,6 +1128,8 @@ Function ConvertFormulaToExpressionTree(strFormula As String) As ExpressionTree
                     GoTo Mismatch
                 End If
             Loop
+            ' Increase arg count for the new parameter
+            ArgCounts.Increase
         
         ' If the token is an operator
         Case TokenType.ArithmeticOperator
@@ -1163,7 +1168,7 @@ Function ConvertFormulaToExpressionTree(strFormula As String) As ExpressionTree
             ' If the token at the top of the stack is a function token, pop it onto the operand stack as a new tree
             If Operators.Count > 0 Then
                 If IsFunctionOperator(Operators.Peek()) Then
-                    PopOperator Operators, Operands
+                    PopOperator Operators, Operands, ArgCounts.PopCount
                 End If
             End If
         End Select
@@ -1199,15 +1204,25 @@ Public Function CreateTree(NodeText As String, NodeType As Long) As ExpressionTr
     Set CreateTree = obj
 End Function
 
+Function IsNAry(FunctionName As String) As Boolean
+    Select Case FunctionName
+    Case "min", "max", "sum", "count", "numberof", "numberofs", "and_n", "or_n", "alldiff"
+        IsNAry = True
+    Case Else
+        IsNAry = False
+    End Select
+End Function
+
 ' Determines the number of operands expected by a .nl operator
-Function NumberOfOperands(FunctionName As String) As Integer
+Function NumberOfOperands(FunctionName As String, Optional ArgCount As Integer = 0) As Integer
     Select Case FunctionName
     Case "floor", "ceil", "abs", "neg", "not", "tanh", "tan", "sqrt", "sinh", "sin", "log10", "log", "exp", "cosh", "cos", "atanh", "atan", "asinh", "asin", "acosh", "acos"
         NumberOfOperands = 1
     Case "plus", "minus", "mult", "div", "rem", "pow", "less", "or", "and", "lt", "le", "eq", "ge", "gt", "ne", "atan2", "intdiv", "precision", "round", "trunc", "iff"
         NumberOfOperands = 2
     Case "min", "max", "sum", "count", "numberof", "numberofs", "and_n", "or_n", "alldiff"
-        'n-ary - TODO implement
+        'n-ary operator, read number of args from the arg counter
+        NumberOfOperands = ArgCount
     Case "if", "ifs", "implies"
         NumberOfOperands = 3
     Case Else
@@ -1306,7 +1321,7 @@ Function OperatorIsLeftAssociative(tkn As String) As Boolean
 End Function
 
 ' Pops an operator from the operator stack along with the corresponding number of operands.
-Sub PopOperator(Operators As StringStack, Operands As ExpressionTreeStack)
+Sub PopOperator(Operators As StringStack, Operands As ExpressionTreeStack, Optional ArgCount As Integer = 0)
     ' Pop the operator and create a new ExpressionTree
     Dim Operator As String
     Operator = Operators.Pop()
@@ -1315,7 +1330,7 @@ Sub PopOperator(Operators As StringStack, Operands As ExpressionTreeStack)
     
     ' Pop the required number of operands from the operand stack and set as children of the new operator tree
     Dim NumToPop As Integer, i As Integer, Tree As ExpressionTree
-    NumToPop = NumberOfOperands(Operator)
+    NumToPop = NumberOfOperands(Operator, ArgCount)
     For i = NumToPop To 1 Step -1
         Set Tree = Operands.Pop
         NewTree.SetChild i, Tree

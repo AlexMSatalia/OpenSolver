@@ -1063,14 +1063,17 @@ Function ConvertFormula_AMPL(tokenText As String) As String
     ' RADIANS
     Case "radians"
         ConvertFormula_AMPL = "pi/180*("
-    ' TODO: Unhandled yet
     Case "min", "max"
-        GoTo errorHandler
+        If Solver = "NeosCou" Then
+            Err.Raise OpenSolver_BuildError, "Parsing model formulae", "The operator " & UCase(tokenText) & " is not yet supported by Couenne."
+        End If
+        ConvertFormula_AMPL = tokenText + "("
     Case Else
         ConvertFormula_AMPL = tokenText + "("
     End Select
     Exit Function
     
+    ' If function is broken jump to here
 errorHandler:
     MsgBox tokenText & " not implemented for AMPL yet"
     ConvertFormula_AMPL = tokenText + "("
@@ -1081,11 +1084,17 @@ Function ConvertFormula_NL(tokenText As String) As String
     ' RADIANS
     Case "RADIANS"
         ConvertFormula_NL = "4*ATAN(1)/180*("
+    Case "MIN", "MAX"
+        If Solver = "Couenne" Then
+            Err.Raise OpenSolver_BuildError, "Parsing model formulae", "The operator " & UCase(tokenText) & " is not yet supported by Couenne."
+        End If
+        ConvertFormula_NL = tokenText + "("
     Case Else
         ConvertFormula_NL = tokenText + "("
     End Select
     Exit Function
     
+    ' If function is broken jump to here
 errorHandler:
     MsgBox tokenText & " not implemented for .nl solvers yet"
     ConvertFormula_NL = tokenText + "("

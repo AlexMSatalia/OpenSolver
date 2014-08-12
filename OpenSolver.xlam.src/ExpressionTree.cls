@@ -133,13 +133,24 @@ Public Function ConvertToNL() As String
     ' Construct comment
     Dim Comment As String, i As Integer
     For i = 1 To CommentIndent
-       Comment = Comment + " "
+        Comment = Comment + " "
     Next i
     Comment = Comment + NodeText + " " + DisplayLinearity()
     
     ' Add current node to output
     Dim output As String
     AddNewLine output, FormatNL(NodeText, NodeType), Comment
+    
+    ' If n-ary operator, we need the number of operators on a newline
+    If IsNAry(NodeText) Then
+        CommentIndent = CommentIndent + 2
+        Comment = ""
+        For i = 1 To CommentIndent
+            Comment = Comment + " "
+        Next i
+        AddNewLine output, CStr(NumChildren), Comment & NumChildren & " arguments"
+        CommentIndent = CommentIndent - 2
+    End If
     
     ' Add children nodes to output
     CommentIndent = CommentIndent + 4
