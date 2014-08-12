@@ -1755,38 +1755,13 @@ Sub WriteLPFile(ModelFilePathName As String, SolveRelaxation As Boolean, errorSt
 14670         End With
               
 14680         If SparseA(row).Count = 0 Then
-                  'We have a constraint that does not vary with the decision variables; check it is satisifed
-                  Dim LHSValue As Double, RHSValue As Double
-14690             GetArrayPosnFromConstraintInstance constraint, instance, i, j
-14700             LHSValue = LHSOriginalValues(constraint)(i, j)
-14710             If RHSType(constraint) <> MultiCellRange Then
-14720                 RHSValue = RHSOriginalValues(constraint)
-14730             Else
-14740                 RHSValue = RHSOriginalValues(constraint)(i, j)
-14750             End If
-                  ' GetExcelConstraintInfoFromRow Constraint, Row, LHSValue, RHSValue, Probleminstance, sLHS, sRHS
-14760             If (Relation(row) = RelationGE And LHSValue < RHSValue - EPSILON) _
-                     Or (Relation(row) = RelationEQ And Abs(LHSValue - RHSValue) > EPSILON) _
-                     Or (Relation(row) = RelationLE And LHSValue > RHSValue + EPSILON) Then
-      '                  ' AJM 28.11.2010 We cannot use any IIF() that references LHSRange(row).Address because all arguments are always evaluated, and LHSRange(row).Address is not defined and throws an error
-      '                  sLHS = LHSRange(j).Address & " = " & lhsvalue
-                        Dim LHSCellRange As Range, RHSCellRange As Range, RHSstring As String
-14770                   GetConstraintInstanceData constraint, instance, LHSCellRange, RHSCellRange, RHSstring
-                        ' If the RHS is a range, we show its address; if not, RHSString contains the RHS's constant or formula
-14780                   If Not RHSCellRange Is Nothing Then RHSstring = RHSCellRange.AddressLocal(RowAbsolute:=False, ColumnAbsolute:=False)
-14790                   SolveStatus = OpenSolverResult.Infeasible
-14800                   SolveStatusString = "Infeasible"
-14810                   SolveStatusComment = "The model contains an Excel constraint '" & ConstraintSummary(constraint) & "' for which instance " _
-                               & instance & " does not depend on the decision variables and is not satisfied." & vbCrLf _
-                              & "Constraint specifies: " _
-                               & "LHS=" & LHSCellRange.AddressLocal(RowAbsolute:=False, ColumnAbsolute:=False) & "=" & LHSValue _
-                              & " " & SolverRelationAsString(Relation(row)) & " " _
-                              & "RHS=" & RHSstring & "=" & RHSValue
-14820                   Close #1
-14830                   GoTo ExitSub
-14840             End If
-                   'We output the row as a comment
-14850             Print #1, commentStart & " (A row with all zero coeffs)";
+                ' We have a constraint that does not vary with the decision variables; check it is satisfied
+                If CheckConstantConstraintIsSatisfied(row, constraint, instance, i, j) Then
+                    ' We output the row as a comment
+                    Print #1, commentStart & " (A row with all zero coeffs)";
+                Else
+                    GoTo ExitSub
+                End If
 14860         End If
 14870         If Relation(row) = RelationGE Then
 14880             Print #1, " >= ";
@@ -2045,38 +2020,13 @@ Sub WriteAMPLFile(ModelFilePathName As String, SolveRelaxation As Boolean, error
             Print #1, Line & StrEx(RHS(row))
             
             If SparseA(row).Count = 0 Then
-                'We have a constraint that does not vary with the decision variables; check it is satisifed
-                Dim LHSValue As Double, RHSValue As Double
-                GetArrayPosnFromConstraintInstance constraint, instance, i, j
-                LHSValue = LHSOriginalValues(constraint)(i, j)
-                If RHSType(constraint) <> MultiCellRange Then
-                    RHSValue = RHSOriginalValues(constraint)
+                ' We have a constraint that does not vary with the decision variables; check it is satisfied
+                If CheckConstantConstraintIsSatisfied(row, constraint, instance, i, j) Then
+                    'We output the row as a comment
+                    Print #1, commentStart & " (A row with all zero coeffs)";
                 Else
-                    RHSValue = RHSOriginalValues(constraint)(i, j)
+                    GoTo ExitSub
                 End If
-                ' GetExcelConstraintInfoFromRow Constraint, Row, LHSValue, RHSValue, Probleminstance, sLHS, sRHS
-                If (Relation(row) = RelationGE And LHSValue < RHSValue - EPSILON) _
-                   Or (Relation(row) = RelationEQ And Abs(LHSValue - RHSValue) > EPSILON) _
-                   Or (Relation(row) = RelationLE And LHSValue > RHSValue + EPSILON) Then
-    '                  ' AJM 28.11.2010 We cannot use any IIF() that references LHSRange(row).Address because all arguments are always evaluated, and LHSRange(row).Address is not defined and throws an error
-    '                  sLHS = LHSRange(j).Address & " = " & lhsvalue
-                      Dim LHSCellRange As Range, RHSCellRange As Range, RHSstring As String
-                      GetConstraintInstanceData constraint, instance, LHSCellRange, RHSCellRange, RHSstring
-                      ' If the RHS is a range, we show its address; if not, RHSString contains the RHS's constant or formula
-                      If Not RHSCellRange Is Nothing Then RHSstring = RHSCellRange.AddressLocal(RowAbsolute:=False, ColumnAbsolute:=False)
-                      SolveStatus = OpenSolverResult.Infeasible
-                      SolveStatusString = "Infeasible"
-                      SolveStatusComment = "The model contains an Excel constraint '" & ConstraintSummary(constraint) & "' for which instance " _
-                             & instance & " does not depend on the decision variables and is not satisfied." & vbCrLf _
-                            & "Constraint specifies: " _
-                             & "LHS=" & LHSCellRange.AddressLocal(RowAbsolute:=False, ColumnAbsolute:=False) & "=" & LHSValue _
-                            & " " & SolverRelationAsString(Relation(row)) & " " _
-                            & "RHS=" & RHSstring & "=" & RHSValue
-                      Close #1
-                      GoTo ExitSub
-                End If
-                 'We output the row as a comment
-                Print #1, commentStart & " (A row with all zero coeffs)";
             End If
         
             Print #1, ";"
@@ -2111,6 +2061,40 @@ errorHandler:
      Close #1
 
 End Sub
+
+Function CheckConstantConstraintIsSatisfied(row As Long, constraint As Long, instance As Long, i As Long, j As Long) As Boolean
+    Dim LHSValue As Double, RHSValue As Double
+    GetArrayPosnFromConstraintInstance constraint, instance, i, j
+    LHSValue = LHSOriginalValues(constraint)(i, j)
+    If RHSType(constraint) <> MultiCellRange Then
+        RHSValue = RHSOriginalValues(constraint)
+    Else
+        RHSValue = RHSOriginalValues(constraint)(i, j)
+    End If
+    ' GetExcelConstraintInfoFromRow Constraint, Row, LHSValue, RHSValue, Probleminstance, sLHS, sRHS
+    If (Relation(row) = RelationGE And LHSValue < RHSValue - EPSILON) _
+       Or (Relation(row) = RelationEQ And Abs(LHSValue - RHSValue) > EPSILON) _
+       Or (Relation(row) = RelationLE And LHSValue > RHSValue + EPSILON) Then
+        ' AJM 28.11.2010 We cannot use any IIF() that references LHSRange(row).Address because all arguments are always evaluated, and LHSRange(row).Address is not defined and throws an error
+        'sLHS = LHSRange(j).Address & " = " & lhsvalue
+        Dim LHSCellRange As Range, RHSCellRange As Range, RHSstring As String
+        GetConstraintInstanceData constraint, instance, LHSCellRange, RHSCellRange, RHSstring
+        ' If the RHS is a range, we show its address; if not, RHSString contains the RHS's constant or formula
+        If Not RHSCellRange Is Nothing Then RHSstring = RHSCellRange.AddressLocal(RowAbsolute:=False, ColumnAbsolute:=False)
+        SolveStatus = OpenSolverResult.Infeasible
+        SolveStatusString = "Infeasible"
+        SolveStatusComment = "The model contains an Excel constraint '" & ConstraintSummary(constraint) & "' for which instance " _
+               & instance & " does not depend on the decision variables and is not satisfied." & vbCrLf _
+              & "Constraint specifies: " _
+               & "LHS=" & LHSCellRange.AddressLocal(RowAbsolute:=False, ColumnAbsolute:=False) & "=" & LHSValue _
+              & " " & SolverRelationAsString(Relation(row)) & " " _
+              & "RHS=" & RHSstring & "=" & RHSValue
+        Close #1
+        CheckConstantConstraintIsSatisfied = False
+        Exit Function
+    End If
+    CheckConstantConstraintIsSatisfied = True
+End Function
 
 Sub ReportAnySolutionSubOptimality()
           ' Call this after SolveModel to report to the user what happened. A dialog is shown if the optimal result was not found
