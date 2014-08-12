@@ -92,7 +92,9 @@ Public Function ProcessSolverModel(s As COpenSolver) As Boolean
     ObjectiveSense = s.ObjectiveSense
     ObjectiveTargetValue = s.ObjectiveTargetValue
     Set ObjectiveCell = s.ObjRange
-    ObjectiveCellConstant = ObjectiveCell.Value2
+    If Not ObjectiveCell Is Nothing Then
+        ObjectiveCellConstant = ObjectiveCell.Value2
+    End If
     
     ' =========================================
     ' Process constraints from COpenSolver
@@ -155,12 +157,14 @@ Private Function ParseFormulae(s As COpenSolver) As Boolean
     ' STEP 1. Parse objective cell
     Dim objresult As String
     
-    objresult = ExpandFormula(ObjectiveCell.Formula, ObjectiveCell)
-    
-    If objresult Like "*Error*" Then
-        Err.Raise OpenSolver_BuildError, Description:="The objective contains an error"
+    If Not ObjectiveCell Is Nothing Then
+        objresult = ExpandFormula(ObjectiveCell.Formula, ObjectiveCell)
+        
+        If objresult Like "*Error*" Then
+            Err.Raise OpenSolver_BuildError, Description:="The objective contains an error"
+        End If
+        CleanFormulae 1, Formulae.Count
     End If
-    CleanFormulae 1, Formulae.Count
     
     '==========================================================================
     ' STEP 2. Parse constraints

@@ -127,34 +127,34 @@ Sub WriteAMPLFile_Parsed(ModelFilePathName As String, SolverType As String)
         Next
         WriteToFile 1, ""
         
-        Dim objCellName As String
-        objCellName = ConvertCellToStandardName(m.ObjectiveCell)
-'        WriteToFile 1, "var " & objCellName & ";"
-'        WriteToFile 1, ""
-        
         Dim Formula As Variant
         For Each Formula In m.Formulae
             WriteToFile 1, "var " & Formula.strAddress & ";"
         Next Formula
         WriteToFile 1, ""
         
-        If m.ObjectiveSense = TargetObjective Then
-            ' Replace objective function with constraint
-            WriteToFile 1, "# We have no objective function as the objective must achieve a given target value"
-            WriteToFile 1, "subject to targetObj:"
-            WriteToFile 1, "    " & objCellName & " == " & m.ObjectiveTargetValue & ";"
-            WriteToFile 1, vbNewLine
-        Else
-            ' Determine objective direction
-            If m.ObjectiveSense = MaximiseObjective Then
-               WriteToFile 1, "maximize Total_Cost:"
-            Else
-               WriteToFile 1, "minimize Total_Cost:"
-            End If
+        If Not m.ObjectiveCell Is Nothing Then
+            Dim objCellName As String
+            objCellName = ConvertCellToStandardName(m.ObjectiveCell)
             
-            WriteToFile 1, "    " & objCellName & ";" & vbNewLine
+            If m.ObjectiveSense = TargetObjective Then
+                ' Replace objective function with constraint
+                WriteToFile 1, "# We have no objective function as the objective must achieve a given target value"
+                WriteToFile 1, "subject to targetObj:"
+                WriteToFile 1, "    " & objCellName & " == " & m.ObjectiveTargetValue & ";"
+                WriteToFile 1, vbNewLine
+            Else
+                ' Determine objective direction
+                If m.ObjectiveSense = MaximiseObjective Then
+                   WriteToFile 1, "maximize Total_Cost:"
+                Else
+                   WriteToFile 1, "minimize Total_Cost:"
+                End If
+                
+                WriteToFile 1, "    " & objCellName & ";" & vbNewLine
+            End If
         End If
-        
+           
         Dim i As Integer
         For i = 1 To m.LHSKeys.Count
             Dim strLHS As String, strRel As String, strRHS As String
@@ -185,8 +185,15 @@ Sub WriteAMPLFile_Parsed(ModelFilePathName As String, SolverType As String)
             cellName = ConvertCellToStandardName(c)
             WriteToFile 1, "_display " & cellName & ";"
         Next
-        ' Display objective
-        WriteToFile 1, "_display " & objCellName & ";" & vbNewLine
+        
+        If Not m.ObjectiveCell Is Nothing Then
+            ' Display objective
+            WriteToFile 1, "_display " & objCellName & ";" & vbNewLine
+        Else
+            ' We use the keyword "_display" to know where to begin scanning for variable values and also when to stop scanning.
+            ' Even if there is not an objective, we still need to display something so we can read in the variables.
+            WriteToFile 1, "_display 1;" & vbNewLine
+        End If
         
         ' Display solving condition
         WriteToFile 1, "display solve_result_num, solve_result;"

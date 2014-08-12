@@ -158,8 +158,12 @@ Function SolveModelParsed_NL(ModelFilePathName As String, model As CModelParsed,
     Print #1, MakeHeader()
     ' Write C blocks
     Print #1, MakeCBlocks()
-    ' Write O block
-    Print #1, MakeOBlocks()
+    
+    If n_obj > 0 Then
+        ' Write O block
+        Print #1, MakeOBlocks()
+    End If
+    
     ' Write d block
     Print #1, MakeDBlock()
     ' Write x block
@@ -172,8 +176,11 @@ Function SolveModelParsed_NL(ModelFilePathName As String, model As CModelParsed,
     Print #1, MakeKBlock()
     ' Write J block
     Print #1, MakeJBlocks()
-    ' Write G block
-    Print #1, MakeGBlocks()
+    
+    If n_obj > 0 Then
+        ' Write G block
+        Print #1, MakeGBlocks()
+    End If
     
     Close #1
     
@@ -521,8 +528,10 @@ Sub MakeConstraintMap()
             If i <= numActualCons Then
                 cellName = "c" & i & "_" & m.LHSKeys(i)
             ' Formulae constraints
-            Else
+            ElseIf i <= numActualCons + numFakeCons Then
                 cellName = "f" & i & "_" & m.Formulae(i - numActualCons).strAddress
+            Else
+                cellName = "seek_obj_" & ConvertCellToStandardName(m.ObjectiveCell)
             End If
             AddConstraint cellName, index, i
         End If
@@ -535,8 +544,10 @@ Sub MakeConstraintMap()
             If i <= numActualCons Then
                 cellName = "c" & i & "_" & m.LHSKeys(i)
             ' Formulae constraints
-            Else
+            ElseIf i <= numActualCons + numFakeCons Then
                 cellName = "f" & i & "_" & m.Formulae(i - numActualCons).strAddress
+            Else
+                cellName = "seek_obj_" & ConvertCellToStandardName(m.ObjectiveCell)
             End If
             AddConstraint cellName, index, i
         End If
@@ -715,28 +726,39 @@ Sub ProcessObjective()
     Set ObjectiveCells = New Collection
     Set LinearObjectives = New Collection
     
-    
+    ' =======================================================
     ' Currently just one objective - a single linear variable
-    ObjectiveCells.Add ConvertCellToStandardName(m.ObjectiveCell)
-    ObjectiveSenses.Add m.ObjectiveSense
+    ' We could move to multiple objectives if OpenSolver supported this
     
-    ' Objective non-linear constraint tree is empty
-    NonLinearObjectiveTrees.Add CreateTree("0", ExpressionTreeNodeType.ExpressionTreeNumber)
-    
-    ' Objective has a single linear term - the objective variable with coefficient 1
-    Dim Objective As New LinearConstraintNL
-    Objective.Count = n_var
-    Objective.VariablePresent(VariableIndex(ObjectiveCells(1))) = True
-    Objective.Coefficient(VariableIndex(ObjectiveCells(1))) = 1
-    
-    ' Save results
-    LinearObjectives.Add Objective
-    
-    ' Track non-zero jacobian count in objective
-    nzo = nzo + 1
-    
-    ' Adjust objective count
-    n_obj = n_obj + 1
+    If m.ObjectiveSense = TargetObjective Then
+        ' Instead of adding an objective, we add a constraint
+        ProcessSingleFormula m.ObjectiveTargetValue, ConvertCellToStandardName(m.ObjectiveCell), RelationEQ
+        n_con = n_con + 1
+        ReDim Preserve NonLinearConstraints(n_con)
+    ElseIf m.ObjectiveCell Is Nothing Then
+        ' Do nothing is objective is missing
+    Else
+        ObjectiveCells.Add ConvertCellToStandardName(m.ObjectiveCell)
+        ObjectiveSenses.Add m.ObjectiveSense
+        
+        ' Objective non-linear constraint tree is empty
+        NonLinearObjectiveTrees.Add CreateTree("0", ExpressionTreeNodeType.ExpressionTreeNumber)
+        
+        ' Objective has a single linear term - the objective variable with coefficient 1
+        Dim Objective As New LinearConstraintNL
+        Objective.Count = n_var
+        Objective.VariablePresent(VariableIndex(ObjectiveCells(1))) = True
+        Objective.Coefficient(VariableIndex(ObjectiveCells(1))) = 1
+        
+        ' Save results
+        LinearObjectives.Add Objective
+        
+        ' Track non-zero jacobian count in objective
+        nzo = nzo + 1
+        
+        ' Adjust objective count
+        n_obj = n_obj + 1
+    End If
 End Sub
 
 ' Writes header block for .nl file. This contains the model statistics
