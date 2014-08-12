@@ -24,9 +24,9 @@ Function SolverAvailable(Solver As String, Optional SolverPath As String, Option
     Case "NOMAD"
         SolverAvailable = SolverAvailable_NOMAD(errorString)
     Case "Bonmin"
-        SolverAvailable = SolverAvailable_Bonmin
+        SolverAvailable = SolverAvailable_Bonmin(SolverPath, errorString)
     Case "Couenne"
-        SolverAvailable = SolverAvailable_Couenne
+        SolverAvailable = SolverAvailable_Couenne(SolverPath, errorString)
     Case Else
         SolverAvailable = False
         SolverPath = ""

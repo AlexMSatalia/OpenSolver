@@ -43,6 +43,7 @@ Function SolverFilePath_Couenne(Optional errorString As String) As String
 #If Mac Then
     If GetExistingFilePathName(ThisWorkbook.Path, left(SolverName_Couenne, Len(SolverName_Couenne) - 4), SolverFilePath_Couenne) Then Exit Function ' Found a mac solver
     errorString = "Unable to find Mac version of Couenne ('couenne') in the folder that contains 'OpenSolver.xlam'"
+    SolverFilePath_Couenne = ""
     Exit Function
 #Else
     ' Look for the 64 bit version

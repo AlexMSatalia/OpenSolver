@@ -58,6 +58,7 @@ Function SolverFilePath_CBC(errorString As String) As String
 #If Mac Then
     If GetExistingFilePathName(ThisWorkbook.Path, left(SolverName_CBC, Len(SolverName_CBC) - 4), SolverFilePath_CBC) Then Exit Function ' Found a mac solver
     errorString = "Unable to find Mac version of CBC ('cbc') in the folder that contains 'OpenSolver.xlam'"
+    SolverFilePath_CBC = ""
     Exit Function
 #Else
     ' Look for the 64 bit version

@@ -43,6 +43,7 @@ Function SolverFilePath_Bonmin(Optional errorString As String) As String
 #If Mac Then
     If GetExistingFilePathName(ThisWorkbook.Path, left(SolverName_Bonmin, Len(SolverName_Bonmin) - 4), SolverFilePath_Bonmin) Then Exit Function ' Found a mac solver
     errorString = "Unable to find Mac version of Bonmin ('bonmin') in the folder that contains 'OpenSolver.xlam'"
+    SolverFilePath_Bonmin = ""
     Exit Function
 #Else
     ' Look for the 64 bit version
