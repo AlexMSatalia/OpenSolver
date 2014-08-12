@@ -1475,6 +1475,9 @@ End Function
 
 Sub SolveModel_LinearNeos(ModelFilePathName As String, SolveRelaxation As Boolean, errorString As String)
     Call WriteAMPLFile(ModelFilePathName, SolveRelaxation, errorString)
+    If errorString <> "" Then
+        Exit Sub
+    End If
      
     Dim solution As String
     solution = CallNEOS(ModelFilePathName, Solver, errorString)
@@ -2000,39 +2003,35 @@ Sub WriteAMPLFile(ModelFilePathName As String, SolveRelaxation As Boolean, error
                  Line = Line & StrEx(coeff) & " * " & ValidLPFileVarName(VarNames(var)) & " "
              Next i
          End With
-         
-         ' Ensure there were some non-zero coeffs
-         If Line <> "   " Then
-            
-            ' Print constraint header
-            Print #1, "subject to c" & row & ":"
-            
-            ' Check sense
-            If Relation(row) = RelationGE Then
-                Line = Line & ">= "
-            ElseIf Relation(row) = RelationLE Then
-                Line = Line & "<= "
-            ElseIf Relation(row) = RelationEQ Then
-                Line = Line & "== "
-            End If
-            
-            ' Print with RHS
-            Print #1, Line & StrEx(RHS(row))
-            
-            If SparseA(row).Count = 0 Then
-                ' We have a constraint that does not vary with the decision variables; check it is satisfied
-                If CheckConstantConstraintIsSatisfied(row, constraint, instance, i, j) Then
-                    'We output the row as a comment
-                    Print #1, commentStart & " (A row with all zero coeffs)";
-                Else
-                    GoTo ExitSub
-                End If
-            End If
         
+        ' Check sense
+        If Relation(row) = RelationGE Then
+            Line = Line & ">= "
+        ElseIf Relation(row) = RelationLE Then
+            Line = Line & "<= "
+        ElseIf Relation(row) = RelationEQ Then
+            Line = Line & "== "
+        End If
+        
+        ' Add RHS
+        Line = Line & StrEx(RHS(row))
+        
+        If SparseA(row).Count = 0 Then
+            ' We have a constraint that does not vary with the decision variables; check it is satisfied
+            If CheckConstantConstraintIsSatisfied(row, constraint, instance, i, j) Then
+                'We output the row as a comment
+                Print #1, commentStart & " (A row with all zero coeffs)" & Line & ";"
+            Else
+                GoTo ExitSub
+            End If
+        Else
+            'Output the constraint
+            Print #1, "subject to c" & row & ":"
+            Print #1, Line
             Print #1, ";"
-           
-            Print #1,   ' New line
-         End If
+        End If
+       
+        Print #1,   ' New line
      Next row
      
      ' Run Commands
