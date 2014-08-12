@@ -1366,7 +1366,7 @@ Function SolveModel_Linear(SolveRelaxation As Boolean) As Integer
           End If
           On Error GoTo errorHandler
           bGetDuals = False
-          If (IntegerCellsRange Is Nothing And BinaryCellsRange Is Nothing) And (DualsOnNewSheet Or DualsOnSameSheet) Then
+          If (IntegerCellsRange Is Nothing And BinaryCellsRange Is Nothing) And (DualsOnNewSheet Or DualsOnSameSheet) And SolverHasSensitivityAnalysis(Solver) Then
               bGetDuals = True
           End If
           
@@ -1409,21 +1409,23 @@ Function SolveModel_Linear(SolveRelaxation As Boolean) As Integer
 13750     End If
             
           '=====================Write Sensitivity Tables=========================================================
-13760     If bGetDuals And SolveStatusString = "Optimal" Then
-              'write the duals on the same sheet if the user has picked this option
-13770         If DualsOnSameSheet Then WriteConstraintListToSheet rConstraintList
-              'If the user wants a new sheet with the sensitivity data then call the functions that write this
-13780         If DualsOnNewSheet Then
-                  Dim nameSheet As String
-13790             nameSheet = MakeNewSheet(RawSheetName & " Sensitivity", sheetName)
-13800             sheet.Select
-13810             Call WriteConstraintSensitivityTable(nameSheet, Solver)
-                  'If you want to end up on the sensitivity page use this next line
-                  'Sheets(nameSheet).Select
-13820         End If
-13830     ElseIf Not bGetDuals And (DualsOnNewSheet Or DualsOnSameSheet) Then
-13840         Err.Raise Number:=OpenSolver_SolveError, Source:=errorPrefix, Description:="Could not get sensitivity analysis due to binary and/or integer constraints." & vbCrLf & vbCrLf & "Turn off sensitivity in the model dialogue or reformulate your model without these constraints." & vbCrLf & vbCrLf & "The " & Solver & " solution has been returned to the sheet." & vbCrLf
-13850     End If
+13760     If SolverHasSensitivityAnalysis(Solver) Then
+              If bGetDuals And SolveStatusString = "Optimal" Then
+                  'write the duals on the same sheet if the user has picked this option
+13770             If DualsOnSameSheet Then WriteConstraintListToSheet rConstraintList
+                  'If the user wants a new sheet with the sensitivity data then call the functions that write this
+13780             If DualsOnNewSheet Then
+                      Dim nameSheet As String
+13790                 nameSheet = MakeNewSheet(RawSheetName & " Sensitivity", sheetName)
+13800                 sheet.Select
+13810                 Call WriteConstraintSensitivityTable(nameSheet, Solver)
+                      'If you want to end up on the sensitivity page use this next line
+                      'Sheets(nameSheet).Select
+13820             End If
+13830         ElseIf Not bGetDuals And (DualsOnNewSheet Or DualsOnSameSheet) Then
+13840             Err.Raise Number:=OpenSolver_SolveError, Source:=errorPrefix, Description:="Could not get sensitivity analysis due to binary and/or integer constraints." & vbCrLf & vbCrLf & "Turn off sensitivity in the model dialogue or reformulate your model without these constraints." & vbCrLf & vbCrLf & "The " & Solver & " solution has been returned to the sheet." & vbCrLf
+13850         End If
+          End If
           '=========================================================================================================
         
 
