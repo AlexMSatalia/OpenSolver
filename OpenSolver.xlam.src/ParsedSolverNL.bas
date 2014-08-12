@@ -1268,7 +1268,7 @@ Function ConvertExcelFunctionToNL(FunctionName As String) As String
         FunctionName = "or_n"
         
     Case "log", "ceiling", "floor", "power"
-        MsgBox "Not implemented yet: " & FunctionName
+        MsgBox "Not implemented yet: " & FunctionName & vbCrLf & "Please let us know about this at opensolver.org so we can fix it."
     End Select
     ConvertExcelFunctionToNL = FunctionName
 End Function
