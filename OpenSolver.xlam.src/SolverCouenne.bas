@@ -197,6 +197,8 @@ Function ReadModel_Couenne(SolutionFilePathName As String, errorString As String
     End If
     
     If solutionExpected Then
+        Application.StatusBar = "OpenSolver: Loading Solution... " & s.SolveStatusString
+        
         Line Input #1, Line ' Throw away blank line
         Line Input #1, Line ' Throw away "Options"
         
@@ -231,11 +233,13 @@ Function ReadModel_Couenne(SolutionFilePathName As String, errorString As String
     ReadModel_Couenne = True
 
 exitFunction:
+    Application.StatusBar = False
     Close #1
     Close #2
     Exit Function
     
 readError:
+    Application.StatusBar = False
     Close #1
     Close #2
     Err.Raise Err.Number, Err.Source, Err.Description & IIf(Erl = 0, "", " (at line " & Erl & ")")

@@ -264,6 +264,7 @@ Function ReadModel_Gurobi(SolutionFilePathName As String, errorString As String,
 20040     End If
           
 20050     If solutionExpected Then
+              Application.StatusBar = "OpenSolver: Loading Solution... " & s.SolveStatusString
 20060         Dim NumVar As Long
               Line Input #1, Line  ' Optimal - objective value              22
 20070         If Line <> "" Then
@@ -336,11 +337,13 @@ Function ReadModel_Gurobi(SolutionFilePathName As String, errorString As String,
 20710     End If
 
 exitFunction:
+          Application.StatusBar = False
 20720     Close #1
 20730     Close #2
 20740     Exit Function
           
 readError:
+          Application.StatusBar = False
 20750     Close #1
 20760     Close #2
           Err.Raise Err.Number, Err.Source, Err.Description & IIf(Erl = 0, "", " (at line " & Erl & ")")

@@ -176,6 +176,8 @@ Private Function ParseFormulae(s As COpenSolver) As Boolean
     Dim Count As Long
     Count = 1
     For i = 1 To ConstraintCount
+        If i Mod 5 = 0 Then Application.StatusBar = "OpenSolver: Parsing constraints... " & i & "/" & ConstraintCount & " constraints."
+    
         Dim nameLHSi As Name, nameRELi As Name, nameRHSi As Name
         Set nameLHSi = Names(strNameRoot + "solver_lhs" + CStr(i))
         Set nameRELi = Names(strNameRoot + "solver_rel" + CStr(i))
@@ -308,6 +310,7 @@ NextCol:
         
 NextCons:
     Next i
+    Application.StatusBar = False
     
     '==========================================================================
     ' STEP 3. Make all possible substitutions in formula tree if required by solver

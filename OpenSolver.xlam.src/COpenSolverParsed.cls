@@ -74,6 +74,7 @@ Public Sub SolveModel(s As COpenSolver)
     Exit Sub
 
 ErrHandler:
+    Application.StatusBar = False
     Application.Calculation = xlCalculationAutomatic
     Application.ScreenUpdating = True
     SolveStatus = ErrorOccurred
@@ -81,6 +82,7 @@ ErrHandler:
     Exit Sub
 
 ExitSub:
+    Application.StatusBar = False
     Application.Calculation = xlCalculationAutomatic
     Application.ScreenUpdating = True
 

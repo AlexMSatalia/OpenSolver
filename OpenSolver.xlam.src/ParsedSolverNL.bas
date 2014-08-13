@@ -189,6 +189,7 @@ Function SolveModelParsed_NL(ModelFilePathName As String, model As CModelParsed,
     ' =============================================================
     
     errorPrefix = "Solving .nl model file"
+    Application.StatusBar = "OpenSolver: " & errorPrefix
     
     Dim SolutionFilePathName As String
     SolutionFilePathName = SolutionFilePath(m.Solver)
@@ -222,6 +223,7 @@ Function SolveModelParsed_NL(ModelFilePathName As String, model As CModelParsed,
     ' Read results from solution file
     ' =============================================================
     errorPrefix = "Reading .nl solution"
+    Application.StatusBar = "OpenSolver: " & errorPrefix
 
     Dim solutionLoaded As Boolean, errorString As String
     solutionLoaded = ReadModelParsed(m.Solver, SolutionFilePathName, errorString, m, s)
@@ -237,10 +239,12 @@ Function SolveModelParsed_NL(ModelFilePathName As String, model As CModelParsed,
     Exit Function
     
 exitFunction:
+    Application.StatusBar = False
     Close #1
     Exit Function
         
 ErrHandler:
+    Application.StatusBar = False
     Close #1
     Err.Raise Err.Number, Err.Source, Err.Description & IIf(Erl = 0, "", " (at line " & Erl & ")")
 End Function
@@ -588,11 +592,18 @@ Sub ProcessFormulae()
     ' Loop through all constraints and process each
     Dim i As Long
     For i = 1 To numActualCons
+        If i Mod 5 = 0 Then Application.StatusBar = "OpenSolver: Processing formulae into expression trees... " & i & "/" & n_con & " formulae."
+        
         ProcessSingleFormula m.RHSKeys(i), m.LHSKeys(i), m.Rels(i)
     Next i
+    
     For i = 1 To numFakeCons
+        If (i + numActualCons) Mod 5 = 0 Then Application.StatusBar = "OpenSolver: Processing formulae into expression trees... " & i + numActualCons & "/" & n_con & " formulae."
+        
         ProcessSingleFormula m.Formulae(i).strFormulaParsed, m.Formulae(i).strAddress, RelationConsts.RelationEQ
     Next i
+    
+    Application.StatusBar = False
 End Sub
 
 ' Processes a single constraint into .nl format. We require:
