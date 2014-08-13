@@ -59,6 +59,7 @@ Public Sub SolveModel(s As COpenSolver)
         ExecutionCompleted = False
     End Select
     
+    ' If we don't have a solve status
     If Not ExecutionCompleted Then
         SolveStatus = ErrorOccurred
     End If
@@ -92,7 +93,7 @@ Function SolveModelParsed_AMPL(ModelFilePathName As String, m As CModelParsed, s
     WriteAMPLFile_Parsed ModelFilePathName, m.Solver
     
     If RunsOnNeos(m.Solver) Then
-        SolveModelParsed_AMPL = SolveModelParsed_NEOS(ModelFilePathName, m.Solver)
+        SolveModelParsed_AMPL = SolveModelParsed_NEOS(ModelFilePathName, m.Solver, s)
     Else
         SolveModelParsed_AMPL = False
     End If
@@ -231,7 +232,8 @@ Function ConvertVarTypeAMPL(intVarType As Long) As String
     End Select
 End Function
 
-Function SolveModelParsed_NEOS(ModelFilePathName As String, Solver As String) As Boolean
+' Returns true if a solve status is loaded
+Function SolveModelParsed_NEOS(ModelFilePathName As String, Solver As String, s As COpenSolverParsed) As Boolean
     Dim solution As String, errorString As String
     solution = CallNEOS(ModelFilePathName, Solver, errorString)
     If errorString <> "" Then
@@ -249,21 +251,31 @@ Function SolveModelParsed_NEOS(ModelFilePathName As String, Solver As String) As
 
     ' Determine Feasibility
     If SolveStatusString Like "unbounded*" Then
+        s.SolveStatus = OpenSolverResult.Unbounded
+        s.SolveStatusString = "No Solution Found (Unbounded)"
+        SolveModelParsed_NEOS = True
         GoTo NeosReturn
-        '
     ElseIf SolveStatusString Like "infeasible*" Then ' Stopped on iterations or time
+        s.SolveStatus = OpenSolverResult.Infeasible
+        s.SolveStatusString = "No Feasible Solution"
+        SolveModelParsed_NEOS = True
         GoTo NeosReturn
     ElseIf Not SolveStatusString Like "solved*" Then
+        s.SolveStatus = OpenSolverResult.ErrorOccurred
         openingParen = InStr(solution, ">>>")
         If openingParen = 0 Then
             openingParen = InStr(solution, "processing commands.")
-            SolveStatusString = right(solution, Len(solution) - openingParen - Len("processing commands."))
+            s.SolveStatusString = right(solution, Len(solution) - openingParen - Len("processing commands."))
         Else
             closingParen = InStr(solution, "<<<")
-            SolveStatusString = "Error: " & Mid(solution, openingParen, closingParen - openingParen)
+            s.SolveStatusString = "Error: " & Mid(solution, openingParen, closingParen - openingParen)
         End If
+        s.SolveStatusString = "Neos Returned:" & vbNewLine & vbNewLine & s.SolveStatusString
+        SolveModelParsed_NEOS = True
         GoTo NeosReturn
     End If
+    
+    s.SolveStatusString = SolveStatusString
 
     ' Display results to sheet
     Dim c As Range
@@ -284,7 +296,5 @@ Function SolveModelParsed_NEOS(ModelFilePathName As String, Solver As String) As
     Exit Function
     
 NeosReturn:
-    SolveModelParsed_NEOS = False
-    MsgBox "OpenSolver could not solve this problem." & vbNewLine & vbNewLine & "Neos Returned:" & vbNewLine & vbNewLine & SolveStatusString
     Exit Function
 End Function
