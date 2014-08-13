@@ -158,7 +158,7 @@ Private Function ParseFormulae(s As COpenSolver) As Boolean
     Dim objresult As String
     
     If Not ObjectiveCell Is Nothing Then
-        objresult = ExpandFormula(ObjectiveCell.Formula, ObjectiveCell)
+        objresult = ExpandFormula(ObjectiveCell.Formula, ObjectiveCell, 0)
         
         If objresult Like "*Error*" Then
             Err.Raise OpenSolver_BuildError, Description:="The objective contains an error"
@@ -292,10 +292,10 @@ Private Function ParseFormulae(s As COpenSolver) As Boolean
                 End If
                 
                 ' Parse LHS
-                LHSKeys.Add ExpandFormula(curLHSFormulae, rngLHS(cRow, cCol))
+                LHSKeys.Add ExpandFormula(curLHSFormulae, rngLHS(cRow, cCol), i)
                 
                 ' Parse RHS
-                RHSKeys.Add ExpandFormula(strRHSFormula, rngRHSCell)
+                RHSKeys.Add ExpandFormula(strRHSFormula, rngRHSCell, i)
                 
                 ' Determine appropriate relation
                 Rels.Add ConvertRelationToEnum(nameRELi.value)
@@ -474,7 +474,7 @@ NotConstant:
 End Function
 
 Function ExpandFormula(ByVal strFormula As String, _
-                       ByRef rngSourceCell As Range) As String
+                       ByRef rngSourceCell As Range, Optional ConstraintNumber As Long) As String
     '==========================================================================
     ' STEP 0. Misc Setup
     ' The parsed string, this is what we store at the node
@@ -663,7 +663,10 @@ Function ExpandFormula(ByVal strFormula As String, _
                         curProgress = 0
                         For Each c In rngBuildingRef
                             curProgress = curProgress + 1
-                            Application.StatusBar = "OpenSolver: Processing formula " & lngIndex & "/" & Formulae.Count & ". Current formula progress: " & curProgress & "/" & TotalCount
+                            If curProgress Mod 10 = 0 Then _
+                                Application.StatusBar = "OpenSolver: Constraint progress: " & ConstraintNumber & "/" & ConstraintCount & ". " & _
+                                                        "Processing formula " & lngIndex & "/" & Formulae.Count & ". " & _
+                                                        "Current formula progress: " & curProgress & "/" & TotalCount
                             node = AddNodeIfNew(objCurNode, c)
                             
                             If FunctionName = "SUMPRODUCT" And Not FunctionCount = 0 Then
@@ -913,14 +916,13 @@ Function AddNodeIfNew(ByRef objCurNode As CFormula, ByRef c As Range) As String
     Dim strStdName As String
     strStdName = ConvertCellToStandardName(c)
     
-    ' Check if cell is adjustable cell, otherwise use value
-    For Each cell In AdjustableCells
-        If ConvertCellToStandardName(cell) = strStdName Then
+    ' Check if cell is an adjustable cell
+    If c.Parent.Name = SolverModelSheet.Name Then
+        If Not Intersect(c, AdjustableCells) Is Nothing Then
             AddNodeIfNew = strStdName
             GoTo finishedNode
         End If
-    Next
-    
+    End If
     '==========================================================================
     ' 0. Is Simple Cell?
     ' 0.1 Get the standard name of this cell
