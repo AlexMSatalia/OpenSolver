@@ -114,12 +114,16 @@ Sub WriteAMPLFile_Parsed(ModelFilePathName As String, SolverType As String)
         WriteToFile 1, "# 'Sheet=" + m.SolverModelSheet.Name + "'"
         
         Dim Line As String
+        
         ' Vars
         ' Initialise each variable independently
         For Each c In m.AdjustableCells
             Line = "var " & ConvertCellToStandardName(c) & ConvertVarTypeAMPL(m.VarTypeMap(ConvertCellToStandardName(c)))
             If m.AssumeNonNegative Then
-                Line = Line & " >= 0,"
+                ' If no lower bound has been applied then we need to add >= 0
+                If Not TestKeyExists(m.VarLowerBounds, c.Address(RowAbsolute:=False, ColumnAbsolute:=False)) Then
+                    Line = Line & " >= 0"
+                End If
             End If
             If VarType(c) = vbEmpty Then
                 Line = Line & " := 0"
