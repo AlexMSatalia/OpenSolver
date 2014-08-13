@@ -176,8 +176,6 @@ Private Function ParseFormulae(s As COpenSolver) As Boolean
     Dim Count As Long
     Count = 1
     For i = 1 To ConstraintCount
-        If i Mod 5 = 0 Then Application.StatusBar = "OpenSolver: Parsing constraints... " & i & "/" & ConstraintCount & " constraints."
-    
         Dim nameLHSi As Name, nameRELi As Name, nameRHSi As Name
         Set nameLHSi = Names(strNameRoot + "solver_lhs" + CStr(i))
         Set nameRELi = Names(strNameRoot + "solver_rel" + CStr(i))
@@ -557,6 +555,9 @@ Function ExpandFormula(ByVal strFormula As String, _
     Dim lngIndex As Long
     lngIndex = lngBaseIndex + 1
     
+    ' tracking variables
+    Dim TotalCount As Long, curProgress As Long
+    
     '==========================================================================
     ' STEP 2. Keep processing nodes until nothing interesting left
     Do While lngIndex <= Formulae.Count
@@ -565,7 +566,6 @@ Function ExpandFormula(ByVal strFormula As String, _
         'If lngIndex = 96 Then
         '    'Debug.Print 96
         'End If
-        
         Set objCurNode = Formulae(lngIndex)
         strParsed = ""
         strSheetPrefix = ""
@@ -659,7 +659,11 @@ Function ExpandFormula(ByVal strFormula As String, _
                         End If
                         
                         Count = 0
+                        TotalCount = rngBuildingRef.Count
+                        curProgress = 0
                         For Each c In rngBuildingRef
+                            curProgress = curProgress + 1
+                            Application.StatusBar = "OpenSolver: Processing formula " & lngIndex & "/" & Formulae.Count & ". Current formula progress: " & curProgress & "/" & TotalCount
                             node = AddNodeIfNew(objCurNode, c)
                             
                             If FunctionName = "SUMPRODUCT" And Not FunctionCount = 0 Then
