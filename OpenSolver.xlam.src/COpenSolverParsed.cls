@@ -170,12 +170,13 @@ Sub WriteAMPLFile_Parsed(ModelFilePathName As String, SolverType As String)
             strRel = ConvertRelationToAMPL(m.Rels(i))
             strRHS = m.RHSKeys(i)
 
-            ' Try to make a unique constraint name
-            WriteToFile 1, "subject to c" & i & "_" & m.LHSKeys(i) & ":"
+            WriteToFile 1, "# Actual constraint: " & strLHS & strRel & strRHS
+            WriteToFile 1, "subject to c" & i & ":"
             WriteToFile 1, "    " & strLHS & strRel & strRHS & ";" & vbNewLine
         Next i
         
         For i = 1 To m.Formulae.Count
+            WriteToFile 1, "# Parsed formula for " & m.Formulae(i).strAddress
             WriteToFile 1, "subject to f" & i & ":"
             WriteToFile 1, "    " & m.Formulae(i).strAddress & " == " & m.Formulae(i).strFormulaParsed & ";" & vbNewLine
         Next i
