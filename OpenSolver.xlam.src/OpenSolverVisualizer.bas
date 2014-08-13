@@ -23,7 +23,7 @@ Attribute VB_Name = "OpenSolverVisualizer"
 Option Explicit
 
 Private ShapeIndex As Long
-Private HighlightColorIndex As Integer   ' Used to rotate thru colours on different constraints
+Private HighlightColorIndex As Long   ' Used to rotate thru colours on different constraints
 Private colHighlightOffsets As Collection
 
 Private ShowDataItemsInColour As Boolean ' For OpenSolverStudio
@@ -109,7 +109,7 @@ NoHighlighting:
 30600     SheetHasOpenSolverHighlighting = False
 End Function
 
-Function CreateLabelShape(w As Worksheet, left As Long, top As Long, width As Long, height As Integer, label As String, HighlightColor As Long) As Shape
+Function CreateLabelShape(w As Worksheet, left As Long, top As Long, width As Long, height As Long, label As String, HighlightColor As Long) As Shape
           ' Create a label (as a msoShapeRectangle) and give it text. This is used for labelling obj function as min/max, and decision vars as binary or integer
           Dim s1 As Shape
 30610     Set s1 = w.Shapes.AddShape(msoShapeRectangle, left, top, width, height)
@@ -138,11 +138,11 @@ Function CreateLabelShape(w As Worksheet, left As Long, top As Long, width As Lo
 30820     Set CreateLabelShape = s1
 End Function
 
-Function AddLabelToRange(w As Worksheet, r As Range, voffset As Integer, height As Integer, label As String, HighlightColor As Long) As Shape
+Function AddLabelToRange(w As Worksheet, r As Range, voffset As Long, height As Long, label As String, HighlightColor As Long) As Shape
 30830     Set AddLabelToRange = CreateLabelShape(w, r.left + 1, r.top + voffset, r.width, height, label, HighlightColor)
 End Function
 
-Function AddLabelToShape(w As Worksheet, s As Shape, voffset As Integer, height As Integer, label As String, HighlightColor As Long)
+Function AddLabelToShape(w As Worksheet, s As Shape, voffset As Long, height As Long, label As String, HighlightColor As Long)
 30840     Set AddLabelToShape = CreateLabelShape(w, s.left - 1, s.top + voffset, s.width, height, label, HighlightColor)
           'Set s1 = w.Shapes.AddShape(msoShapeRectangle, s.left - 1, s.Top - height / 2, s.width, height)
 End Function
@@ -287,7 +287,7 @@ endLoop:
 31830     Loop While bottom - top2 > 0.01  ' handle float rounding
           
           ' Create & return the shapeRange containing all the shapes we added
-          Dim shapeNames(), i As Integer
+          Dim shapeNames(), i As Long
 31840     ReDim shapeNames(ShapeIndex - firstShapeIndex + 1)
 31850     If Not Bounds Then
 31860   For i = firstShapeIndex To ShapeIndex
@@ -389,7 +389,7 @@ Function AddLabelledConnector(w As Worksheet, s1 As Shape, s2 As Shape, label As
 End Function
 
 Sub HighlightConstraint(myDocument As Worksheet, LHSRange As Range, _
-                        ByVal RHSisRange As Boolean, RHSRange As Range, ByVal RHSValue As String, ByVal Sense As Integer, _
+                        ByVal RHSisRange As Boolean, RHSRange As Range, ByVal RHSValue As String, ByVal Sense As Long, _
                         ByVal Color As Long)
           ' Show a constraint of the form LHS <|=|> RHS.
           ' We always put the sign in the rightmost (or bottom-most) range so we read left-to-right or top-to-bottom.
@@ -591,7 +591,7 @@ Function ShowSolverModel() As Boolean
           Dim ObjRange As Range
 33360     If GetNamedRangeIfExists(book, sheetName & "solver_opt", ObjRange) Then
 33370         Set ObjRange = Range(sheetName & "solver_opt")
-              Dim ObjType As ObjectiveSenseType, temp As Integer, ObjectiveTargetValue As Double
+              Dim ObjType As ObjectiveSenseType, temp As Long, ObjectiveTargetValue As Double
 33380         ObjType = UnknownObjectiveSense
 33390         If GetNamedIntegerIfExists(book, sheetName & "solver_typ", temp) Then ObjType = temp
 33400         If ObjType = TargetObjective Then GetNamedNumericValueIfExists book, sheetName & "solver_val", ObjectiveTargetValue
@@ -612,7 +612,7 @@ Function ShowSolverModel() As Boolean
 33450     Application.StatusBar = "OpenSolver: Displaying Problem... " & AdjustableCells.Count & " vars, " & NumConstraints & " Solver constraints"
                   
           ' Process the decision variables as we need to compute their types (bin or int; a variable can be declared as both!)
-          'Dim NumVars As Integer
+          'Dim NumVars As Long
           Dim numVars As Double
 33460     numVars = AdjustableCells.Count
           'Dim VarNames() As String, VarTypes() As Range
@@ -648,7 +648,7 @@ Function ShowSolverModel() As Boolean
 33560             GoTo NextConstraint
 33570         End If
 
-              Dim rel As Integer
+              Dim rel As Long
 
 33580         rel = Mid(Names(sheetName & "solver_rel" & constraint), 2)
                       

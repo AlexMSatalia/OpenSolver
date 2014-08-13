@@ -21,22 +21,22 @@ Public Sub PushNewCount()
     items.Add 1
 End Sub
 
-Public Function PopCount() As Integer
-    Dim Count As Integer
+Public Function PopCount() As Long
+    Dim Count As Long
     Count = items(items.Count)
     items.Remove (items.Count)
     PopCount = Count
 End Function
 
 Public Sub Increase()
-    Dim Count As Integer
+    Dim Count As Long
     Count = items(items.Count) + 1
     items.Remove (items.Count)
     items.Add Count
 End Sub
 
 Public Function Display() As String
-    Dim i As Integer, output As String
+    Dim i As Long, output As String
     For i = 1 To items.Count
         output = output & items(i) & ", "
     Next i

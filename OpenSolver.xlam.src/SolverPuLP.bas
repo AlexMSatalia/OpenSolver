@@ -104,7 +104,7 @@ Sub WritePuLPFile_Parsed(m As CModelParsed, ModelFilePathName As String, Solutio
     Next
     WriteToFile 1, "", 4
     
-    Dim i As Integer
+    Dim i As Long
     Dim strLHS As String, strRel As String, strRHS As String
     
     ' Add constraint cell definitions
@@ -174,7 +174,7 @@ errorHandler:
     Err.Raise Err.Number, Err.Source, Err.Description & IIf(Erl = 0, "", " (at line " & Erl & ")")
 End Sub
 
-Function ConvertVarTypePuLP(intVarType As Integer) As String
+Function ConvertVarTypePuLP(intVarType As Long) As String
     Select Case intVarType
     Case VarContinuous
         ConvertVarTypePuLP = "LpContinuous"

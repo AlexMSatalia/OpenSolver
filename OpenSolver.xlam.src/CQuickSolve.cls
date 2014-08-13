@@ -69,7 +69,7 @@ Function AnalyseParameters(OpenSolver As COpenSolver, sheetName As String, _
 26460     Set CurrentParameterRange = Nothing
           
           ' Remember the current number of rows and original RHS values
-          Dim i As Long, oldCalculationMode As Integer
+          Dim i As Long, oldCalculationMode As Long
           
 26470     NumRows = OpenSolver.GetNumRows
           

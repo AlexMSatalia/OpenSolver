@@ -229,8 +229,8 @@ Private Const INFINITE = -1&
         dwYCountChars As Long
         dwFillAttribute As Long
         dwFlags As Long
-        wShowWindow As Integer
-        cbReserved2 As Integer
+        wShowWindow As Long
+        cbReserved2 As Long
         lpReserved2 As Long
         hStdInput As LongPtr
         hStdOutput As LongPtr
@@ -272,8 +272,8 @@ Private Const INFINITE = -1&
         dwYCountChars As Long
         dwFillAttribute As Long
         dwFlags As Long
-        wShowWindow As Integer
-        cbReserved2 As Integer
+        wShowWindow As Long
+        cbReserved2 As Long
         lpReserved2 As Long
         hStdInput As Long
         hStdOutput As Long
@@ -551,7 +551,7 @@ Function FileOrDirExists(pathName As String) As Boolean
      '               Accepts with/without trailing "\" (Windows)
      '               Accepts with/without trailing ":" (Macintosh)
      
-    Dim iTemp As Integer
+    Dim iTemp As Long
      
      'Ignore errors to allow for error evaluation
     On Error Resume Next
@@ -690,7 +690,7 @@ Function GetNamedNumericValueIfExists(book As Workbook, Name As String, value As
 1180      GetNamedNumericValueIfExists = Not isMissing And Not isRange And Not RefersToFormula And Not RangeRefersToError
 End Function
 
-Function GetNamedIntegerIfExists(book As Workbook, Name As String, IntegerValue As Integer) As Boolean
+Function GetNamedIntegerIfExists(book As Workbook, Name As String, IntegerValue As Long) As Boolean
           ' Get a named range that must contain an integer value
           Dim value As Double
 1190      If GetNamedNumericValueIfExists(book, Name, value) Then
@@ -767,7 +767,7 @@ Function GetDisplayAddress(r As Range, Optional showRangeName As Boolean = False
               Dim s As String
               Dim R2 As Range
               Dim Rname As Name
-              Dim i As Integer
+              Dim i As Long
           
               'Find if the range has a defined name
 1630          If r.Worksheet.Name = ActiveSheet.Name Then
@@ -849,7 +849,7 @@ Function GetDisplayAddressInCurrentLocale(r As Range) As String
 2210          Exit Function
 2220      End If
 2230      On Error GoTo Try2
-          Dim i As Integer
+          Dim i As Long
 2240      Set R2 = r.Areas(1)
 2250      s = R2.Worksheet.Name & "!" & R2.AddressLocal
           ' Conversion must also work with multiple areas, eg: A1,B5 converts to Sheet1!A1,Sheet1!B5
@@ -896,7 +896,7 @@ Function ConvertFromCurrentLocale(ByVal s As String) As String
           ' A blank string is returned if any errors occur
           ' This works by putting the expression into cell A1 on Sheet1 of the add-in!
           ' We turn off calculation & hide alerts as we don't want Excel popping up dialogs asking for references to other sheets
-          Dim oldCalculation As Integer
+          Dim oldCalculation As Long
 2540      oldCalculation = Application.Calculation
           Dim oldDisplayAlerts As Boolean
 2550      oldDisplayAlerts = Application.DisplayAlerts
@@ -932,7 +932,7 @@ Function ConvertToCurrentLocale(ByVal s As String) As String
           ' A blank string is returned if any errors occur
           ' This works by putting the expression into cell A1 on Sheet1 of the add-in; crude but seems to work
           ' We turn off calculation & hide alerts as we don't want Excel popping up dialogs asking for references to other sheets
-          Dim oldCalculation As Integer
+          Dim oldCalculation As Long
 2780      oldCalculation = Application.Calculation
           Dim oldDisplayAlerts As Boolean
 2790      oldDisplayAlerts = Application.DisplayAlerts
@@ -971,13 +971,13 @@ Function ValidLPFileVarName(s As String)
 3050      End If
 End Function
 
-'Function FullLPFileVarName(cell As Range, AdjCellsSheetIndex As Integer)
+'Function FullLPFileVarName(cell As Range, AdjCellsSheetIndex As Long)
 ' NO LONGER USED
 ' Get a valid name for the LP variable of the form A1_2 meaing cell A1 on the 2nd worksheet,
 ' or _E1 meaning cell E1 on the 'default' worksheet. We need to prefix E with _ to be safe; otherwise it can clash with exponential notation
 ' http://lpsolve.sourceforge.net/5.5/CPLEX-format.htm
 'The letter E or e, alone or followed by other valid symbols, or followed by another E or e, should be avoided as this notation is reserved for exponential entries. Thus, variables cannot be named e9, E-24, E8cats, or other names that could be interpreted as an exponent. Even variable names such as eels or example can cause a read error, depending on their placement in an input line.
-'    Dim sheetIndex As Integer, s As String
+'    Dim sheetIndex As Long, s As String
 '    sheetIndex = cell.Worksheet.Index
 '    s = cell.Address(False, False)
 '    If left(s, 1) = "E" Then s = "_" & s
@@ -985,9 +985,9 @@ End Function
 '    FullLPFileVarName = s
 'End Function
 
-'Function ConvertFullLPFileVarNameToRange(s As String, AdjCellsSheetIndex As Integer) As Range
+'Function ConvertFullLPFileVarNameToRange(s As String, AdjCellsSheetIndex As Long) As Range
 ' COnvert an encoded LP variable name back into a range on the appropriate sheet
-''    Dim i As Integer, sheetIndex As Integer
+''    Dim i As Long, sheetIndex As Long
 '    If left(s, 1) = "_" Then s = Mid(s, 2) ' Remove any protective initial _ for addresses starting E
 '    i = InStr(1, s, "_")
 '    If i = 0 Then
@@ -999,7 +999,7 @@ End Function
 '    Set ConvertFullLPFileVarNameToRange = Worksheets(sheetIndex).Range(s)
 'End Function
 
-Function SolverRelationAsUnicodeChar(rel As Integer) As String
+Function SolverRelationAsUnicodeChar(rel As Long) As String
 3060      Select Case rel
               Case RelationGE
 3070              SolverRelationAsUnicodeChar = ChrW(&H2265) ' ">" gg
@@ -1012,7 +1012,7 @@ Function SolverRelationAsUnicodeChar(rel As Integer) As String
 3140      End Select
 End Function
 
-'Function SolverRelationAsChar(rel As Integer) As String
+'Function SolverRelationAsChar(rel As Long) As String
 '1740      Select Case rel
 '              Case RelationGE
 '1750              SolverRelationAsChar = ">" ' ChrW(&H2265) ' ">" gg
@@ -1025,7 +1025,7 @@ End Function
 '1820      End Select
 'End Function
 
-Function SolverRelationAsString(rel As Integer) As String
+Function SolverRelationAsString(rel As Long) As String
 3150      Select Case rel
               Case RelationGE
 3160              SolverRelationAsString = ">="
@@ -1038,7 +1038,7 @@ Function SolverRelationAsString(rel As Integer) As String
 3230      End Select
 End Function
 
-Function ReverseRelation(rel As Integer) As Integer
+Function ReverseRelation(rel As Long) As Long
 3240      ReverseRelation 4 - rel
 End Function
 
@@ -1234,7 +1234,7 @@ Function GetOneCellInRange(r As Range, instance As Long) As Range
 4800      Set GetOneCellInRange = r.Cells(1 + RowOffset, 1 + ColOffset)
 End Function
 
-Function Max_Int(a As Integer, b As Integer) As Integer
+Function Max_Int(a As Long, b As Long) As Long
 4810      If a > b Then
 4820          Max_Int = a
 4830      Else
@@ -1271,7 +1271,7 @@ Function ForceCalculate(prompt As String, Optional MinimiseUserInteraction As Bo
 4930      Application.Calculate
 4940      If Application.CalculationState <> xlDone Then
               Application.Calculate
-              Dim i As Integer
+              Dim i As Long
               For i = 1 To 10
                   DoEvents
                   Sleep (100)
@@ -1502,7 +1502,7 @@ Function TrimBlankLines(s As String) As String
 6060      TrimBlankLines = s
 End Function
 
-Function IsAmericanNumber(s As String, Optional i As Integer = 1) As Boolean
+Function IsAmericanNumber(s As String, Optional i As Long = 1) As Boolean
           ' Check this is a number like 3.45  or +1.23e-34
           ' This does NOT test for regional variations such as 12,34
           ' This code exists because
@@ -1531,7 +1531,7 @@ Function IsAmericanNumber(s As String, Optional i As Integer = 1) As Boolean
 6220              Exit Function   ' Not a valid char
 6230          End Select
 6240      Next i
-          ' i As Integer, AllowDot As Boolean
+          ' i As Long, AllowDot As Boolean
 6250      IsAmericanNumber = SeenDigit
 End Function
 
@@ -1599,7 +1599,7 @@ End Function
 'End Function
 
 Function MakeNewSheet(namePrefix As String, sheetName As String) As String
-          Dim NeedSheet As Boolean, newSheet As Worksheet, nameSheet As String, i As Integer
+          Dim NeedSheet As Boolean, newSheet As Worksheet, nameSheet As String, i As Long
 6410      On Error Resume Next
 6420      Application.ScreenUpdating = False
           Dim s As String, value As String
@@ -1830,8 +1830,8 @@ End Function
 ' WriteToFile
 ' Writes a string to the given file number, adds a newline, and can easily
 ' uncomment debug line to print to Immediate if needed. Adds number of spaces to front if specified
-Sub WriteToFile(intFileNum As Integer, strData As String, Optional numSpaces As Integer = 0)
-    Dim spaces As String, i As Integer
+Sub WriteToFile(intFileNum As Long, strData As String, Optional numSpaces As Long = 0)
+    Dim spaces As String, i As Long
     spaces = ""
     For i = 1 To numSpaces
         spaces = spaces + " "

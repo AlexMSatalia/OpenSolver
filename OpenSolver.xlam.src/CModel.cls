@@ -353,7 +353,7 @@ Public Function FindVarsAndCons(IsFirstTime As Boolean) As Boolean
               '------------------------------------------------------------
               ' Stage Two - Constraint precedents
 38040         On Error Resume Next
-              Dim curConstraint As CConstraint, RC As Integer
+              Dim curConstraint As CConstraint, RC As Long
 38050         For Each curConstraint In Constraints
                   '''''''''''''''''''''''''''''''''''''''''''''''''''''''''
                   ' Look at LHS
@@ -659,19 +659,19 @@ Public Sub RationaliseConstraints()
           Dim AreaIndex As Long
           Dim LHSunion As Range, RHSunion As Range, RELunion As Range
           Dim CurCell As Range
-          Dim NumConstraints As Integer
+          Dim NumConstraints As Long
           Dim conNum() As Variant
           
 39320     NumConstraints = Constraints.Count
                     
 39330     ReDim conNum(NumConstraints + 1) As Variant
           
-          Dim i As Integer, j As Long
+          Dim i As Long, j As Long
 39340     For i = 1 To 5
               ' Find all constraints of type Relations(i)...
 39350         Set conKeys = New Collection
                 
-                Dim c As Long, k As Integer
+                Dim c As Long, k As Long
                 
                 'Initialise the indices of the constraints to be empty
 39360           For k = 1 To NumConstraints
@@ -947,7 +947,7 @@ Public Sub LoadFromSheet()
 40990     If GetNameValueIfExists(ActiveWorkbook, sheetName & "solver_neg", s) Then NonNegativityAssumption = (s = "1")
            
           ' OBJECTIVE SENSE (AND TARGET)
-          Dim temp As Integer
+          Dim temp As Long
 41000     ObjectiveSense = UnknownObjectiveSense
 41010     If GetNamedIntegerIfExists(ActiveWorkbook, sheetName & "solver_typ", temp) Then ObjectiveSense = temp
 41020     ObjectiveTarget = 0
@@ -976,7 +976,7 @@ Public Sub LoadFromSheet()
 41080         GetNameAsValueOrRange ActiveWorkbook, sheetName & "solver_lhs" & constraint, LHSisMissing, isRangeLHS, rLHS, LHSRefersToFormula, LHSRefersToError, sRefersToLHS, valLHS
 41090         If (LHSisMissing) Or (Not isRangeLHS) Then GoTo SkipCon
               
-              Dim rel As Integer
+              Dim rel As Long
 41100         rel = Val(Mid(Names(sheetName & "solver_rel" & constraint), 2))  ' Either <=, = or >=, or int or bin (or 'alldif' in Excel 2010)
               
 41110         If rel = RelationINT Or rel = RelationBIN Or rel = RelationAllDiff Then

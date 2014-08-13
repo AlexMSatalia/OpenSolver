@@ -13,7 +13,7 @@ Option Explicit
 ' Each ExpressionTree object actually represents a node in the tree, and the tree is built by setting the Children nodes
 
 Dim Children() As ExpressionTree                    ' The children of the current node
-Dim NumChildren As Integer                          ' The number of child nodes
+Dim NumChildren As Long                          ' The number of child nodes
 Public NodeText As String                           ' The node text - a numeric value, a variable name, or a function name
 Public NodeType As ExpressionTreeNodeType           ' The node type - number, variable, or operator
 
@@ -35,14 +35,14 @@ Public Enum ExpressionTreeNodeLinearity
 End Enum
 
 ' Getter method for children
-Public Function GetChild(index As Integer) As ExpressionTree
+Public Function GetChild(index As Long) As ExpressionTree
     Dim obj As ExpressionTree
     Set obj = Children(index)
     Set GetChild = obj
 End Function
 
 ' Setter method for children
-Public Sub SetChild(index As Integer, obj As ExpressionTree)
+Public Sub SetChild(index As Long, obj As ExpressionTree)
     If NumChildren = 0 Then
         ReDim Preserve Children(index)
         NumChildren = index
@@ -53,7 +53,7 @@ Public Sub SetChild(index As Integer, obj As ExpressionTree)
     Set Children(index) = obj
 End Sub
 
-Public Property Get GetNumChildren() As Integer
+Public Property Get GetNumChildren() As Long
     GetNumChildren = NumChildren
 End Property
 
@@ -100,7 +100,7 @@ Public Function Display() As String
         output = ""
     End If
     
-    Dim i As Integer
+    Dim i As Long
     For i = 1 To NumChildren
         output = output + Children(i).Display
     Next i
@@ -131,7 +131,7 @@ End Function
 ' Converts the tree to .nl expression tree format
 Public Function ConvertToNL() As String
     ' Construct comment
-    Dim Comment As String, i As Integer
+    Dim Comment As String, i As Long
     For i = 1 To CommentIndent
         Comment = Comment + " "
     Next i
@@ -165,14 +165,14 @@ End Function
 ' Extract all variables from the ExpressionTree into a LinearConstraintNL
 Sub ExtractVariables(constraint As LinearConstraintNL)
     If NodeType = ExpressionTreeVariable Then
-        Dim index As Integer
+        Dim index As Long
         index = VariableIndex(NodeText)
         If Not constraint.VariablePresent(index) Then
             constraint.VariablePresent(index) = True
         End If
     End If
     
-    Dim i As Integer
+    Dim i As Long
     For i = 1 To NumChildren
         Children(i).ExtractVariables constraint
     Next i
@@ -182,7 +182,7 @@ End Sub
 ' Traverse the tree and mark all nodes as Constant, Linear or Non-linear
 Sub MarkLinearity()
     ' First process all children
-    Dim i As Integer
+    Dim i As Long
     For i = 1 To NumChildren
         Children(i).MarkLinearity
     Next i
@@ -267,7 +267,7 @@ End Sub
 
 Public Sub PullUpConstants()
     ' First pull all constants in children
-    Dim i As Integer
+    Dim i As Long
     For i = 1 To NumChildren
         Children(i).PullUpConstants
     Next i
@@ -279,7 +279,7 @@ End Sub
 
 ' Evaluates a constant operator node and replaces node and all children with a numeric constant
 Public Sub EvaluateConstantOperator()
-    Dim i As Integer, Values As New Collection
+    Dim i As Long, Values As New Collection
     For i = 1 To NumChildren
         Values.Add CDbl(Children(i).NodeText)
     Next i
@@ -313,7 +313,7 @@ End Sub
 
 ' Traverses the tree and prunes all linear or constant parts from the tree
 Public Function PruneLinearTrees(LinearTrees As Collection, Optional NegativeTree As Boolean = False) As Boolean
-    Dim CanPrune As Boolean, i As Integer, NewTree As ExpressionTree
+    Dim CanPrune As Boolean, i As Long, NewTree As ExpressionTree
     CanPrune = False
     ' If the root node is linear or constant we can prune
     If NodeLinearity <> ExpressionTreeNonLinear Then
@@ -370,7 +370,7 @@ Public Function PruneLinearTrees(LinearTrees As Collection, Optional NegativeTre
 End Function
 
 ' Sets an ExpressionTree to be one of its children
-Sub SetTreeToChild(index As Integer)
+Sub SetTreeToChild(index As Long)
     ' We can't clear all children of the current tree while referring to one of it's children
     ' We therefore need to make a copy of the child tree before we clear the tree and set it to the child
     Dim NewTree As ExpressionTree
@@ -386,7 +386,7 @@ Public Function Clone() As ExpressionTree
     NewTree.LinearCoefficient = LinearCoefficient
     NewTree.LinearValue = LinearValue
     
-    Dim i As Integer
+    Dim i As Long
     For i = 1 To NumChildren
         NewTree.SetChild i, Children(i)
     Next i
@@ -404,7 +404,7 @@ Sub SetExpressionTree(NewTree As ExpressionTree)
     
     ClearChildren
     
-    Dim i As Integer
+    Dim i As Long
     For i = 1 To NewTree.GetNumChildren
         SetChild i, NewTree.GetChild(i)
     Next i
@@ -424,7 +424,7 @@ End Sub
 Sub CollateLinearTerms()
 
     ' First collate all children
-    Dim i As Integer
+    Dim i As Long
     For i = 1 To NumChildren
         Children(i).CollateLinearTerms
     Next i
@@ -537,7 +537,7 @@ Sub AddLinearTreeToConstraint(constraint As LinearConstraintNL, constant As Doub
     Select Case NodeType
     ' Add variable coefficient to constraint
     Case ExpressionTreeVariable
-        Dim VarIndex As Integer
+        Dim VarIndex As Long
         VarIndex = VariableIndex(NodeText)
         constraint.Coefficient(VarIndex) = constraint.Coefficient(VarIndex) + LinearCoefficient
     
@@ -548,7 +548,7 @@ Sub AddLinearTreeToConstraint(constraint As LinearConstraintNL, constant As Doub
     ' Recurse on all "plus" nodes
     Case ExpressionTreeOperator
         If NodeText = "plus" Then
-            Dim i As Integer
+            Dim i As Long
             For i = 1 To NumChildren
                 Children(i).AddLinearTreeToConstraint constraint, constant
             Next i

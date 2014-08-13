@@ -219,7 +219,7 @@ errorHandler:
 29020     MsgBox "OpenSolver encountered error " & Err.Number & ":" & vbCrLf & Err.Description & IIf(Erl = 0, "", " (at line " & Erl & ")") & vbCrLf & "Source = " & Err.Source, , "OpenSolver" & sOpenSolverVersion & " Error"
 End Sub
 
-Function RunQuickSolve(Optional MinimiseUserInteraction As Boolean = False) As Integer
+Function RunQuickSolve(Optional MinimiseUserInteraction As Boolean = False) As Long
 29030     On Error GoTo errorHandler
 29040     If OpenSolver Is Nothing Then
 29050         MsgBox "Error: There is no model to solve, and so the quick solve cannot be completed. Please select the Initialize Quick Solve command.", , "OpenSolver" & sOpenSolverVersion & " Error"
@@ -302,7 +302,7 @@ End Sub
 '====================================================================
 Public Sub AddMenuItems()
          
-         Dim intHelpMenu      As Integer
+         Dim intHelpMenu      As Long
          Dim objMainMenuBar   As CommandBar
          Dim objCustomMenu    As CommandBarControl
          Dim objCustomMenu2   As CommandBarControl

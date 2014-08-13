@@ -94,13 +94,13 @@ Public ObjRange As Range
 ' Details for the model that we build.
 Public numVars As Long, NumIntVars As Long, NumBinVars As Long, NumConstraints As Long
 Public NumRows As Long
-Public ObjectiveSense As Integer
+Public ObjectiveSense As Long
 Public ObjectiveTargetValue As Double  ' Used when the user wants the objective to achieve some stated target value
 Dim VarNames() As String
-Dim AdjCellsSheetIndex As Integer    ' The sheet index containing variables with no index specified in the CBC result file
+Dim AdjCellsSheetIndex As Long    ' The sheet index containing variables with no index specified in the CBC result file
 Dim CostCoeffs() As Double, ObjectiveFunctionConstant As Double
 Dim RHS() As Double ' The RHS values for each row in the LP
-Dim Relation() As Integer ' For each row, we remember its relation (=, <=, >=)
+Dim Relation() As Long ' For each row, we remember its relation (=, <=, >=)
 Public VarLowerBounds As Collection
 
 'Details for the chosen solver
@@ -144,7 +144,7 @@ Public LinearSolveStatus As LinearSolveResult ' Unsolved, etc
 Public LinearSolveStatusString As String ' The string read back from the CBC file
 Public LinearSolutionWasLoaded As Boolean ' True if we loaded a solution into the spreadsheet
 
-Dim ModelStatus As Integer
+Dim ModelStatus As Long
 Const ModelStatus_Unitialized = 0
 Const ModelStatus_Built = 1
 
@@ -158,109 +158,109 @@ Dim QuickSolve As CQuickSolve
 ' Functions for accesssing arrays from outside the COpenSolver class e.g. in Solver modules
 ' The public interfaces are defined as <array name>P
 
-Public Property Get CostCoeffsP(index As Integer) As String
+Public Property Get CostCoeffsP(index As Long) As String
     CostCoeffsP = CostCoeffs(index)
 End Property
 
-Public Property Let CostCoeffsP(index As Integer, strValue As String)
+Public Property Let CostCoeffsP(index As Long, strValue As String)
     If index > UBound(CostCoeffs) Then ReDim Preserve CostCoeffs(index)
     CostCoeffs(index) = strValue
 End Property
 
-Public Property Get FinalVarValueP(index As Integer) As String
+Public Property Get FinalVarValueP(index As Long) As String
     FinalVarValueP = FinalVarValue(index)
 End Property
 
-Public Property Let FinalVarValueP(index As Integer, strValue As String)
+Public Property Let FinalVarValueP(index As Long, strValue As String)
     If index > UBound(FinalVarValue) Then ReDim Preserve FinalVarValue(index)
     FinalVarValue(index) = strValue
 End Property
 
-Public Property Get FinalValueP(index As Integer) As String
+Public Property Get FinalValueP(index As Long) As String
     FinalValueP = FinalValue(index)
 End Property
 
-Public Property Let FinalValueP(index As Integer, strValue As String)
+Public Property Let FinalValueP(index As Long, strValue As String)
     If index > UBound(FinalValue) Then ReDim Preserve FinalValue(index)
     FinalValue(index) = strValue
 End Property
 
-Public Property Get ShadowPriceP(index As Integer) As String
+Public Property Get ShadowPriceP(index As Long) As String
     ShadowPriceP = ShadowPrice(index)
 End Property
 
-Public Property Let ShadowPriceP(index As Integer, strValue As String)
+Public Property Let ShadowPriceP(index As Long, strValue As String)
     If index > UBound(ShadowPrice) Then ReDim Preserve ShadowPrice(index)
     ShadowPrice(index) = strValue
 End Property
 
-Public Property Get ReducedCostsP(index As Integer) As String
+Public Property Get ReducedCostsP(index As Long) As String
     ReducedCostsP = ReducedCosts(index)
 End Property
 
-Public Property Let ReducedCostsP(index As Integer, strValue As String)
+Public Property Let ReducedCostsP(index As Long, strValue As String)
     If index > UBound(ReducedCosts) Then ReDim Preserve ReducedCosts(index)
     ReducedCosts(index) = strValue
 End Property
 
-Public Property Get VarCellP(index As Integer) As String
+Public Property Get VarCellP(index As Long) As String
     VarCellP = VarCell(index)
 End Property
 
-Public Property Let VarCellP(index As Integer, strValue As String)
+Public Property Let VarCellP(index As Long, strValue As String)
     If index > UBound(VarCell) Then ReDim Preserve VarCell(index)
     VarCell(index) = strValue
 End Property
 
-Public Property Get IncreaseConP(index As Integer) As String
+Public Property Get IncreaseConP(index As Long) As String
     IncreaseConP = IncreaseCon(index)
 End Property
 
-Public Property Let IncreaseConP(index As Integer, strValue As String)
+Public Property Let IncreaseConP(index As Long, strValue As String)
     If index > UBound(IncreaseCon) Then ReDim Preserve IncreaseCon(index)
     IncreaseCon(index) = strValue
 End Property
 
-Public Property Get DecreaseConP(index As Integer) As String
+Public Property Get DecreaseConP(index As Long) As String
     DecreaseConP = DecreaseCon(index)
 End Property
 
-Public Property Let DecreaseConP(index As Integer, strValue As String)
+Public Property Let DecreaseConP(index As Long, strValue As String)
     If index > UBound(DecreaseCon) Then ReDim Preserve DecreaseCon(index)
     DecreaseCon(index) = strValue
 End Property
 
-Public Property Get IncreaseVarP(index As Integer) As String
+Public Property Get IncreaseVarP(index As Long) As String
     IncreaseVarP = IncreaseVar(index)
 End Property
 
-Public Property Let IncreaseVarP(index As Integer, strValue As String)
+Public Property Let IncreaseVarP(index As Long, strValue As String)
     If index > UBound(IncreaseVar) Then ReDim Preserve IncreaseVar(index)
     IncreaseVar(index) = strValue
 End Property
 
-Public Property Get DecreaseVarP(index As Integer) As String
+Public Property Get DecreaseVarP(index As Long) As String
     DecreaseVarP = DecreaseVar(index)
 End Property
 
-Public Property Let DecreaseVarP(index As Integer, strValue As String)
+Public Property Let DecreaseVarP(index As Long, strValue As String)
     If index > UBound(DecreaseVar) Then ReDim Preserve DecreaseVar(index)
     DecreaseVar(index) = strValue
 End Property
 
-Public Property Get VarNamesP(index As Integer) As String
+Public Property Get VarNamesP(index As Long) As String
     VarNamesP = VarNames(index)
 End Property
 
-Public Property Get LHSTypeP(index As Integer) As String
+Public Property Get LHSTypeP(index As Long) As String
     LHSTypeP = LHSType(index)
 End Property
 
-Public Property Get RHSTypeP(index As Integer) As String
+Public Property Get RHSTypeP(index As Long) As String
     RHSTypeP = RHSType(index)
 End Property
 
-Public Property Get RelationP(index As Integer) As Integer
+Public Property Get RelationP(index As Long) As Long
     RelationP = Relation(index)
 End Property
 ' End of getters and setters
@@ -288,7 +288,7 @@ Public Function GetNumRows() As Long
 7050      GetNumRows = NumRows
 End Function
 
-Public Function GetSparseACount(index As Integer) As Integer
+Public Function GetSparseACount(index As Long) As Long
     GetSparseACount = SparseA(index).Count
 End Function
 
@@ -525,7 +525,7 @@ Sub BuildModelFromSolverData(Optional LinearityCheckOffset As Double = 0, Option
 8620      End If
           
           ' Change to manual calculation mode
-          Dim oldCalculationMode As Integer
+          Dim oldCalculationMode As Long
 8630      oldCalculationMode = Application.Calculation
 8640      Application.Calculation = xlCalculationManual
           
@@ -606,7 +606,7 @@ Sub BuildModelFromSolverData(Optional LinearityCheckOffset As Double = 0, Option
           ' OBJECTIVE SETUP
           '--------------------------------------------------------------------------
           ' Get the objective sense
-          Dim temp As Integer
+          Dim temp As Long
 9010      ObjectiveSense = UnknownObjectiveSense
 9020      If GetNamedIntegerIfExists(book, sheetName & "solver_typ", temp) Then ObjectiveSense = temp
 9030      ObjectiveTargetValue = 0
@@ -729,7 +729,7 @@ ModelOptions:
               '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
               ' RELATIONSHIP
               '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
-              Dim rel As Integer
+              Dim rel As Long
               ' Either <=, = or >=, or int or bin (or 'alldif' in Excel 2010)
 9650          rel = Val(Mid(Names(sheetName & "solver_rel" & constraint), 2))
                       
@@ -849,7 +849,7 @@ ModelOptions:
                       ' Single LHS, single RHS
                       ApplyLowerBound row, rel, rangeLHS, rangeRHS, valRHS, isRangeRHS, RHSRefersToFormula
                   Else
-                      Dim CurRow As Integer, RHSRowCount As Integer
+                      Dim CurRow As Long, RHSRowCount As Long
                       If rangeRHS Is Nothing Then
                           RHSRowCount = 1
                       Else
@@ -870,7 +870,7 @@ ModelOptions:
                   End If
                   
                   ' Store relations for these rows, keep track of how many rows we've added
-10290             ReDim Preserve Relation(NumRows + rangeLHS.Count) As Integer
+10290             ReDim Preserve Relation(NumRows + rangeLHS.Count) As Long
 10300             For i = 1 To rangeLHS.Count
 10310                 Relation(row + i - 1) = rel
 10320             Next i
@@ -953,7 +953,7 @@ ErrorExit:
 10760     Resume  ' Used for manual trying again after an error
 End Sub
 
-Sub ApplyLowerBound(row As Long, rel As Integer, LHS As Range, RHS As Range, RHSValue As Double, isRangeRHS As Boolean, RHSRefersToFormula As Boolean)
+Sub ApplyLowerBound(row As Long, rel As Long, LHS As Range, RHS As Range, RHSValue As Double, isRangeRHS As Boolean, RHSRefersToFormula As Boolean)
 ' Determines whether the current LHS and RHS should be applied as a lower bound
 
 ' Excel 2007 requires the following conditions to be met for a user-supplied lower bound to exist
@@ -1249,7 +1249,7 @@ ErrorExit:
 10711     Application.Cursor = xlDefault
 10721     Application.StatusBar = False ' Resume normal status bar behaviour
 10731     Application.ScreenUpdating = True
-          Dim oldCalculationMode As Integer
+          Dim oldCalculationMode As Long
 10741     Application.Calculation = oldCalculationMode
 10751     Err.Raise ErrorNumber, ErrorSource, ErrorDescription
 
@@ -1259,7 +1259,7 @@ ErrorExit:
 End Sub
 
 Sub ViewSparseA()
-          Dim i As Integer, j As Long, strA As String
+          Dim i As Long, j As Long, strA As String
           For i = 1 To UBound(SparseA)
               For j = 1 To numVars
                   strA = strA & CStr(SparseA(i).Coefficient(j)) & "    "
@@ -1269,7 +1269,7 @@ Sub ViewSparseA()
           MsgBox (strA)
 End Sub
 
-Function SolveModel(SolveRelaxation As Boolean, ShouldMinimiseUserInteraction As Boolean) As Integer
+Function SolveModel(SolveRelaxation As Boolean, ShouldMinimiseUserInteraction As Boolean) As Long
 
           Dim errorPrefix As String
 11920     errorPrefix = "OpenSolver Model Solving"
@@ -1331,7 +1331,7 @@ ErrorExit:
 
 End Function
 
-Function SolveModel_Linear(SolveRelaxation As Boolean) As Integer
+Function SolveModel_Linear(SolveRelaxation As Boolean) As Long
 12470     SolveStatus = OpenSolverResult.Unsolved
 12480     SolveStatusString = "Unsolved"
 12490     SolveStatusComment = ""
@@ -1339,7 +1339,7 @@ Function SolveModel_Linear(SolveRelaxation As Boolean) As Integer
 12510     LinearSolveStatusString = "Unsolved"
 12520     LinearSolutionWasLoaded = False
           
-          Dim oldCalculationMode As Integer
+          Dim oldCalculationMode As Long
 12530     oldCalculationMode = Application.Calculation
 12540     Application.Calculation = xlCalculationManual
           
@@ -1524,7 +1524,7 @@ Sub SolveModel_LinearNeos(ModelFilePathName As String, SolveRelaxation As Boolea
     Application.Calculation = xlCalculationAutomatic
          
     ' Display results to sheet
-    Dim var As Integer, result As String
+    Dim var As Long, result As String
     For var = 1 To numVars
         openingParen = InStr(solution, ValidLPFileVarName(VarNames(var)))
         closingParen = openingParen + InStr(right(solution, Len(solution) - openingParen), "_display")
@@ -2173,7 +2173,7 @@ Sub WriteConstraintListToSheet(r As Range)
 16270     r.Cells(row, 3).Value2 = "Inc"
 16280     r.Cells(row, 4).Value2 = "Dec"
 16290     row = row + 1
-          Dim i As Integer
+          Dim i As Long
 16300     For i = 1 To UBound(ReducedCosts)
 16310         r.Cells(row, 1).Value2 = VarCell(i)
 16320         r.Cells(row, 2).Value2 = ReducedCosts(i)
@@ -2185,7 +2185,7 @@ Sub WriteConstraintListToSheet(r As Range)
 End Sub
 
 Sub WriteModelToSheet()
-          Dim oldCalculationMode As Integer
+          Dim oldCalculationMode As Long
 16370     oldCalculationMode = Application.Calculation
 16380     Application.Calculation = xlCalculationManual
           
@@ -2294,7 +2294,7 @@ Function CanDoQuickSolveForActiveSheet() As Boolean
 16980     End If
 End Function
 
-Function DoQuickSolve(Optional MinimiseUserInteraction As Boolean = False) As Integer
+Function DoQuickSolve(Optional MinimiseUserInteraction As Boolean = False) As Long
           ' Update a previously built model
 16990     DoQuickSolve = OpenSolverResult.Unsolved
 17000     If QuickSolve Is Nothing Then
@@ -2353,7 +2353,7 @@ Sub HighlightNonLinearities(RowIsNonLinear() As Boolean, ObjectiveIsNonLinear As
 17300         End If
 17310     Next row
 17320     If ObjectiveIsNonLinear Then
-              Dim ObjType As ObjectiveSenseType, temp As Integer, ObjectiveTargetValue As Double
+              Dim ObjType As ObjectiveSenseType, temp As Long, ObjectiveTargetValue As Double
 17330         ObjType = UnknownObjectiveSense
 17340         If GetNamedIntegerIfExists(book, sheetName & "solver_typ", temp) Then ObjType = temp
 17350         If ObjType = TargetObjective Then GetNamedNumericValueIfExists book, sheetName & "solver_val", ObjectiveTargetValue   ' Target will be 0 if this fails
@@ -2767,7 +2767,7 @@ Sub WriteConstraintSensitivityTable(nameSheet As String, Solver As String)
 
       'Writes out the sensitivity table on a new page (like the solver sensitivity report)
           
-          Dim Column As Integer, row As Integer, i As Long
+          Dim Column As Long, row As Long, i As Long
 22950     Sheets(nameSheet).Cells(1, 1) = "OpenSolver Sensitivity Report - " & Solver
 22960     Sheets(nameSheet).Cells(2, 1) = "Worksheet: [" & ActiveWorkbook.Name & "] " & ActiveSheet.Name
 22970     Sheets(nameSheet).Cells(3, 1) = "Report Created: " & Now()
@@ -2849,7 +2849,7 @@ Sub WriteConstraintSensitivityTable(nameSheet As String, Solver As String)
           
 End Sub
 
-Sub FormatSensitivityTable(nameSheet As String, row As Integer, numVars As Double)
+Sub FormatSensitivityTable(nameSheet As String, row As Long, numVars As Double)
           'Formats the sensitivity table on the new page with borders and bold writing
           
 23480     Application.ScreenUpdating = False
@@ -2967,7 +2967,7 @@ Function findName(sheet As String, cell As String) As String
           'above the cell and putting these together
           
           Dim NotFoundStringLeft As Boolean, NotFoundStringTop As Boolean
-          Dim row As Integer, col As Integer, i As Integer, j As Integer
+          Dim row As Long, col As Long, i As Long, j As Long
           Dim CellValue As String, LHSName As String, AboveName As String
           
 24430     row = Sheets(sheet).Range(cell).row
@@ -3017,7 +3017,7 @@ End Function
 
 Function updateVarOS(X As Variant)
 
-          Dim i As Integer, numVars As Integer
+          Dim i As Long, numVars As Long
 
           'set new variable values on sheet
 24740     numVars = UBound(X)
@@ -3040,7 +3040,7 @@ Function updateVarOS(X As Variant)
 End Function
 
 Function getValuesOS() As Variant
-          Dim y As Variant, i As Integer, j As Integer, k As Integer, conCountB As Integer, numCons As Variant
+          Dim y As Variant, i As Long, j As Long, k As Long, conCountB As Long, numCons As Variant
 24800     numCons = getNumConstraintsOS()
 24810     ReDim y(1 To numCons(0), 1 To 1)
           '====NOMAD only does minimise so need to change objective if it is max====
@@ -3101,7 +3101,7 @@ Function getValuesOS() As Variant
 25470     getValuesOS = y
 End Function
 
-Sub SetConstraintValue(ByRef ConstraintValues As Variant, ByRef k As Integer, RHSValue As Variant, LHSValue As Variant, RelationType As Integer)
+Sub SetConstraintValue(ByRef ConstraintValues As Variant, ByRef k As Long, RHSValue As Variant, LHSValue As Variant, RelationType As Long)
           ' Sets the constraint value as appropriate for the given constraint (eg. LHS - RHS for <=) or returns
           ' "NaN" if either side contains an error (eg. #DIV/0!)
           ' This is for when the LHS and RHS ranges are the same dimension (both m x n)
@@ -3119,7 +3119,7 @@ Sub SetConstraintValue(ByRef ConstraintValues As Variant, ByRef k As Integer, RH
 
 End Sub
 
-Sub SetConstraintValueMismatchedDims(ByRef ConstraintValues As Variant, ByRef k As Integer, RHSValues As Variant, LHSValues As Variant, RelationType As Integer, i As Integer, j As Integer)
+Sub SetConstraintValueMismatchedDims(ByRef ConstraintValues As Variant, ByRef k As Long, RHSValues As Variant, LHSValues As Variant, RelationType As Long, i As Long, j As Long)
           ' Sets the constraint value as appropriate for the given constraint (eg. LHS - RHS for <=) or returns
           ' "NaN" if either side contains an error (eg. #DIV/0!)
           ' This is for when the LHS and RHS ranges have mismatched dimensions (m x n and n x m)
@@ -3155,7 +3155,7 @@ End Function
 Function getNumConstraintsOS() As Variant
           'The number of constraints is actually the number of Objectives + Number of Constraints
           'Note: Bounds do not count as constraints and equalities count as 2 constraints
-          Dim i As Integer
+          Dim i As Long
           Dim X(0 To 1) As Double
 25490     X(0) = 1
 25500     For i = 1 To NumRows
@@ -3219,7 +3219,7 @@ Function getVariableDataOS() As Variant
           'initialise all variables as continuous
 26040         X(i - 1 + 3 * numVars) = 1
 26050     Next i
-          Dim counter As Integer, types As Variant
+          Dim counter As Long, types As Variant
 26060     counter = 2
 26070     For Each types In Array(IntegerCellsRange, BinaryCellsRange)
 26080         If Not types Is Nothing Then

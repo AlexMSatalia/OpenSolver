@@ -203,7 +203,7 @@ End Function
 Function ReadModel_Gurobi(SolutionFilePathName As String, errorString As String, s As COpenSolver) As Boolean
           
 19570     ReadModel_Gurobi = False
-          Dim Line As String, index As Integer
+          Dim Line As String, index As Long
 19580     On Error GoTo readError
           Dim solutionExpected As Boolean
 19590     solutionExpected = True
@@ -264,13 +264,13 @@ Function ReadModel_Gurobi(SolutionFilePathName As String, errorString As String,
 20040     End If
           
 20050     If solutionExpected Then
-20060         Dim NumVar As Integer
+20060         Dim NumVar As Long
               Line Input #1, Line  ' Optimal - objective value              22
 20070         If Line <> "" Then
 20080             index = InStr(Line, "=")
                   Dim ObjectiveValue As Double
 20090             ObjectiveValue = Val(Mid(Line, index + 2))
-                  Dim i As Integer
+                  Dim i As Long
 20100             i = 1
 20110             While Not EOF(1)
 20120                 Line Input #1, Line
@@ -288,7 +288,7 @@ Function ReadModel_Gurobi(SolutionFilePathName As String, errorString As String,
 20200             Wend
 20210         End If
 20220         s.AdjustableCells.Value2 = 0
-              Dim j As Integer
+              Dim j As Long
 20240         For i = 1 To NumVar
                   ' Need to make sure number is in US locale when Value2 is set
 20250             s.AdjustableCells.Worksheet.Range(s.VarCellP(i)).Value2 = ConvertFromCurrentLocale(s.FinalVarValueP(i))
@@ -296,7 +296,7 @@ Function ReadModel_Gurobi(SolutionFilePathName As String, errorString As String,
               
 20270         If s.bGetDuals Then
 20350             Open Replace(SolutionFilePathName, "modelsolution", "sensitivityData") For Input As 2
-                  Dim index2 As Integer
+                  Dim index2 As Long
                   Dim Stuff() As String
 20360             ReDim Stuff(3)
 20370             For i = 1 To NumVar

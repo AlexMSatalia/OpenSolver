@@ -155,7 +155,7 @@ Sub WriteAMPLFile_Parsed(ModelFilePathName As String, SolverType As String)
             End If
         End If
            
-        Dim i As Integer
+        Dim i As Long
         For i = 1 To m.LHSKeys.Count
             Dim strLHS As String, strRel As String, strRHS As String
 
@@ -218,7 +218,7 @@ Function ConvertRelationToAMPL(Relation As RelationConsts) As String
 End Function
 
 
-Function ConvertVarTypeAMPL(intVarType As Integer) As String
+Function ConvertVarTypeAMPL(intVarType As Long) As String
     Select Case intVarType
     Case VarContinuous
         ConvertVarTypeAMPL = ""
@@ -240,7 +240,7 @@ Function SolveModelParsed_NEOS(ModelFilePathName As String, Solver As String) As
     
     Application.Calculation = xlCalculationAutomatic
 
-    Dim openingParen As Integer, closingParen As Integer, SolveStatusString As String, result As String
+    Dim openingParen As Long, closingParen As Long, SolveStatusString As String, result As String
     ' Extract the solve status
     openingParen = InStr(solution, "solve_result =")
     SolveStatusString = right(solution, Len(solution) - openingParen - Len("solve_result ="))

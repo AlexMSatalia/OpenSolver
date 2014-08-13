@@ -11,7 +11,7 @@ Dim m As CModelParsed
 Dim problem_name As String
 
 Public WriteComments As Boolean     ' Whether .nl file should include comments
-Public CommentIndent As Integer     ' Tracks the level of indenting in comments on nl output
+Public CommentIndent As Long     ' Tracks the level of indenting in comments on nl output
 Public Const CommentSpacing = 24    ' The column number at which nl comments begin
 
 Dim errorPrefix As String
@@ -22,46 +22,46 @@ Dim errorPrefix As String
 ' We use the same names as the ASL for consistency
 ' ASL header definitions available at http://www.netlib.org/ampl/solvers/asl.h
 
-Dim n_var As Integer            ' Number of variables
-Dim n_con As Integer            ' Number of constraints
-Dim n_obj As Integer            ' Number of objectives
-Dim nranges As Integer          ' Number of range constraints
-Dim n_eqn_ As Integer           ' Number of equality constraints
-Dim n_lcon As Integer           ' Number of logical constraints
+Dim n_var As Long            ' Number of variables
+Dim n_con As Long            ' Number of constraints
+Dim n_obj As Long            ' Number of objectives
+Dim nranges As Long          ' Number of range constraints
+Dim n_eqn_ As Long           ' Number of equality constraints
+Dim n_lcon As Long           ' Number of logical constraints
 
-Dim nlc As Integer              ' Number of non-linear constraints
-Dim nlo As Integer              ' Number of non-linear objectives
+Dim nlc As Long              ' Number of non-linear constraints
+Dim nlo As Long              ' Number of non-linear objectives
 
-Dim nlnc As Integer             ' Number of non-linear network constraints
-Dim lnc As Integer              ' Number of linear network constraints
+Dim nlnc As Long             ' Number of non-linear network constraints
+Dim lnc As Long              ' Number of linear network constraints
 
-Dim nlvc As Integer             ' Number of variables appearing non-linearly in constraints
-Dim nlvo As Integer             ' Number of variables appearing non-linearly in objectives
-Dim nlvb As Integer             ' Number of variables appearing non-linearly in both constraints and objectives
+Dim nlvc As Long             ' Number of variables appearing non-linearly in constraints
+Dim nlvo As Long             ' Number of variables appearing non-linearly in objectives
+Dim nlvb As Long             ' Number of variables appearing non-linearly in both constraints and objectives
 
-Dim nwv_ As Integer             ' Number of linear network variables
-Dim nfunc_ As Integer           ' Number of user-defined functions
-Dim arith As Integer            ' Not sure what this does, keep at 0. This flag may indicate whether little- or big-endian arithmetic was used to write the file.
-Dim flags As Integer            ' 1 = want output suffixes
+Dim nwv_ As Long             ' Number of linear network variables
+Dim nfunc_ As Long           ' Number of user-defined functions
+Dim arith As Long            ' Not sure what this does, keep at 0. This flag may indicate whether little- or big-endian arithmetic was used to write the file.
+Dim flags As Long            ' 1 = want output suffixes
 
-Dim nbv As Integer              ' Number of binary variables
-Dim niv As Integer              ' Number of other integer variables
-Dim nlvbi As Integer            ' Number of integer variables appearing non-linearly in both constraints and objectives
-Dim nlvci As Integer            ' Number of integer variables appearing non-linearly just in constraints
-Dim nlvoi As Integer            ' Number of integer variables appearing non-linearly just in objectives
+Dim nbv As Long              ' Number of binary variables
+Dim niv As Long              ' Number of other integer variables
+Dim nlvbi As Long            ' Number of integer variables appearing non-linearly in both constraints and objectives
+Dim nlvci As Long            ' Number of integer variables appearing non-linearly just in constraints
+Dim nlvoi As Long            ' Number of integer variables appearing non-linearly just in objectives
 
-Dim nzc As Integer              ' Number of non-zeros in the Jacobian matrix
-Dim nzo As Integer              ' Number of non-zeros in objective gradients
+Dim nzc As Long              ' Number of non-zeros in the Jacobian matrix
+Dim nzo As Long              ' Number of non-zeros in objective gradients
 
-Dim maxrownamelen_ As Integer   ' Length of longest constraint name
-Dim maxcolnamelen_ As Integer   ' Length of longest variable name
+Dim maxrownamelen_ As Long   ' Length of longest constraint name
+Dim maxcolnamelen_ As Long   ' Length of longest variable name
 
 ' Common expressions (from "defined" vars) - whatever that means!? We just set them to zero as we don't use defined vars
-Dim comb As Integer
-Dim comc As Integer
-Dim como As Integer
-Dim comc1 As Integer
-Dim como1 As Integer
+Dim comb As Long
+Dim comc As Long
+Dim como As Long
+Dim comc1 As Long
+Dim como1 As Long
 
 ' End ASL variables
 ' ===========================================================================
@@ -87,9 +87,9 @@ Dim NonLinearObjectiveTrees As Collection   ' Collection containing all non-line
 Dim NonLinearVars() As Boolean          ' Array of size n_var indicating whether each variable appears non-linearly in the model
 Dim NonLinearConstraints() As Boolean   ' Array of size n_con indicating whether each constraint has non-linear elements
 
-Dim ConstraintIndexToTreeIndex() As Integer         ' Array of size n_con storing the parsed constraint index for each .nl constraint index
-Dim VariableNLIndexToCollectionIndex() As Integer   ' Array of size n_var storing the parsed variable index for each .nl variable index
-Dim VariableCollectionIndexToNLIndex() As Integer   ' Array of size n_var storing the .nl variable index for each parsed variable index
+Dim ConstraintIndexToTreeIndex() As Long         ' Array of size n_con storing the parsed constraint index for each .nl constraint index
+Dim VariableNLIndexToCollectionIndex() As Long   ' Array of size n_var storing the parsed variable index for each .nl variable index
+Dim VariableCollectionIndexToNLIndex() As Long   ' Array of size n_var storing the .nl variable index for each parsed variable index
 
 Dim LinearConstraints As Collection     ' Collection containing the LinearConstraintNLs for each constraint stored in parsed constraint order
 Dim LinearConstants As Collection       ' Collection containing the constant (a Double) for each constraint stored in parsed constraint order
@@ -102,19 +102,19 @@ Dim ConstraintRelations As Collection   ' Collection containing the RelationCons
 Dim ObjectiveCells As Collection    ' Collection containing the objective cells for each objective stored in parsed objective order
 Dim ObjectiveSenses As Collection   ' Collection containing the objective sense for each objective stored in parsed objective order
 
-Dim numActualVars As Integer    ' The number of actual variables in the parsed model (the adjustable cells in the Solver model)
-Dim numFakeVars As Integer      ' The number of "fake" variables in the parsed model (variables that arise from parsing the formulae in the Solver model)
-Dim numActualCons As Integer    ' The number of actual constraints in the parsed model (the constraints defined in the Solver model)
-Dim numFakeCons As Integer      ' The number of "fake" constraints in the parsed model (the constraints that arise from parsing the formulae in the Solver model)
-Dim numActualEqs As Integer     ' The number of actual equality constraints in the parsed model
-Dim numActualRanges As Integer  ' The number of actual inequality constraints in the parsed model
+Dim numActualVars As Long    ' The number of actual variables in the parsed model (the adjustable cells in the Solver model)
+Dim numFakeVars As Long      ' The number of "fake" variables in the parsed model (variables that arise from parsing the formulae in the Solver model)
+Dim numActualCons As Long    ' The number of actual constraints in the parsed model (the constraints defined in the Solver model)
+Dim numFakeCons As Long      ' The number of "fake" constraints in the parsed model (the constraints that arise from parsing the formulae in the Solver model)
+Dim numActualEqs As Long     ' The number of actual equality constraints in the parsed model
+Dim numActualRanges As Long  ' The number of actual inequality constraints in the parsed model
 
-Dim NonZeroConstraintCount() As Integer ' An array of size n_var counting the number of times that each variable (in parsed variable order) appears in the linear constraints
+Dim NonZeroConstraintCount() As Long ' An array of size n_var counting the number of times that each variable (in parsed variable order) appears in the linear constraints
 
 Dim BinaryVars() As Boolean
 
 ' Public accessor for VariableCollectionIndexToNLIndex
-Public Property Get GetVariableNLIndex(index As Integer) As Integer
+Public Property Get GetVariableNLIndex(index As Long) As Long
     GetVariableNLIndex = VariableCollectionIndexToNLIndex(index)
 End Property
 
@@ -256,7 +256,7 @@ Sub InitialiseModelStats()
     numFakeCons = m.Formulae.Count
     
     ' Divide the actual constraints into equalities and inequalities (ranges)
-    Dim i As Integer
+    Dim i As Long
     numActualEqs = 0
     numActualRanges = 0
     For i = 1 To numActualCons
@@ -327,7 +327,7 @@ End Sub
 Sub CreateVariableIndex()
     Set VariableIndex = New Collection
     Set InitialVariableValues = New Collection
-    Dim c As Range, cellName As String, i As Integer
+    Dim c As Range, cellName As String, i As Long
     
     
     ' First read in actual vars
@@ -361,7 +361,7 @@ Sub MakeVariableMap()
     Dim CellNames As New Collection
     
     ' Actual variables
-    Dim c As Range, cellName As String, i As Integer
+    Dim c As Range, cellName As String, i As Long
     For Each c In m.AdjustableCells
         cellName = ConvertCellToStandardName(c)
         CellNames.Add cellName
@@ -435,7 +435,7 @@ Sub MakeVariableMap()
     Set VariableMap = New Collection
     Set VariableMapRev = New Collection
     
-    Dim index As Integer, var As Integer
+    Dim index As Long, var As Long
     index = 0
     
     ' We loop through the variables and arrange them in the required order:
@@ -488,7 +488,7 @@ End Sub
 '   variable name:            cellName
 '   .nl variable index:       index
 '   parsed variable index:    i
-Sub AddVariable(cellName As String, index As Integer, i As Integer)
+Sub AddVariable(cellName As String, index As Long, i As Long)
     ' Update variable maps
     VariableMap.Add CStr(index), cellName
     VariableMapRev.Add cellName, CStr(index)
@@ -512,7 +512,7 @@ Sub MakeConstraintMap()
     Set ConstraintMapRev = New Collection
     ReDim ConstraintIndexToTreeIndex(n_con)
     
-    Dim index As Integer, i As Integer, cellName As String
+    Dim index As Long, i As Long, cellName As String
     index = 0
     
     ' We loop through the constraints and arrange them in the required order:
@@ -558,7 +558,7 @@ End Sub
 '   constraint name:          cellName
 '   .nl constraint index:     index
 '   parsed constraint index:  i
-Sub AddConstraint(cellName As String, index As Integer, i As Integer)
+Sub AddConstraint(cellName As String, index As Long, i As Long)
     ' Update constraint maps
     ConstraintMap.Add index, cellName
     ConstraintMapRev.Add cellName, CStr(index)
@@ -586,7 +586,7 @@ Sub ProcessFormulae()
     ReDim NonZeroConstraintCount(n_var)
     
     ' Loop through all constraints and process each
-    Dim i As Integer
+    Dim i As Long
     For i = 1 To numActualCons
         ProcessSingleFormula m.RHSKeys(i), m.LHSKeys(i), m.Rels(i)
     Next i
@@ -625,7 +625,7 @@ Sub ProcessSingleFormula(RHSExpression As String, LHSVariable As String, Relatio
     ' Process linear trees to separate constants and variables
     Dim constant As Double
     constant = 0
-    Dim j As Integer
+    Dim j As Long
     For j = 1 To LinearTrees.Count
         LinearTrees(j).ConvertLinearTreeToConstraint constraint, constant
     Next j
@@ -695,7 +695,7 @@ Sub ProcessSingleFormula(RHSExpression As String, LHSVariable As String, Relatio
     ' Increase count of non-linear constraints if the non-linear tree is non-empty
     ' An empty tree has a single "0" node
     If Tree.NodeText <> "0" Then
-        Dim ConstraintIndex As Integer
+        Dim ConstraintIndex As Long
         ConstraintIndex = NonLinearConstraintTrees.Count
         NonLinearConstraints(ConstraintIndex) = True
         nlc = nlc + 1
@@ -795,7 +795,7 @@ Function MakeCBlocks() As String
     Dim Block As String
     Block = ""
     
-    Dim i As Integer
+    Dim i As Long
     For i = 1 To n_con
         ' Add block header for the constraint
         AddNewLine Block, "C" & i - 1, "CONSTRAINT NON-LINEAR SECTION " + ConstraintMapRev(CStr(i - 1))
@@ -813,7 +813,7 @@ Function MakeOBlocks() As String
     Dim Block As String
     Block = ""
     
-    Dim i As Integer
+    Dim i As Long
     For i = 1 To n_obj
         ' Add block header for the objective
         AddNewLine Block, "O" & i - 1 & " " & ConvertObjectiveSenseToNL(ObjectiveSenses(i)), "OBJECTIVE NON-LINEAR SECTION " & ObjectiveCells(i)
@@ -836,7 +836,7 @@ Function MakeDBlock() As String
     AddNewLine Block, "d" & n_con, "INITIAL DUAL GUESS"
     
     ' Set duals to zero for all constraints
-    Dim i As Integer
+    Dim i As Long
     For i = 1 To n_con
         AddNewLine Block, i - 1 & " 0", "    " & ConstraintMapRev(CStr(i - 1)) & " = " & 0
     Next i
@@ -853,7 +853,7 @@ Function MakeXBlock() As String
     AddNewLine Block, "x" & n_var, "INITIAL PRIMAL GUESS"
 
     ' Loop through the variables in .nl variable order
-    Dim i As Integer, initial As String, VariableIndex As Integer
+    Dim i As Long, initial As String, VariableIndex As Long
     For i = 1 To n_var
         VariableIndex = VariableNLIndexToCollectionIndex(i - 1)
         
@@ -879,7 +879,7 @@ Function MakeRBlock() As String
     AddNewLine Block, "r", "CONSTRAINT BOUNDS"
     
     ' Apply bounds according to the relation type
-    Dim i As Integer, BoundType As Integer, Comment As String, bound As Double
+    Dim i As Long, BoundType As Long, Comment As String, bound As Double
     For i = 1 To n_con
         bound = LinearConstants(ConstraintIndexToTreeIndex(i - 1))
         ConvertConstraintToNL ConstraintRelations(ConstraintIndexToTreeIndex(i - 1)), BoundType, Comment
@@ -897,7 +897,7 @@ Function MakeBBlock() As String
     ' Write block header
     AddNewLine Block, "b", "VARIABLE BOUNDS"
     
-    Dim i As Integer, bound As String, Comment As String, VariableIndex As Integer, VarName As String, value As Double
+    Dim i As Long, bound As String, Comment As String, VariableIndex As Long, VarName As String, value As Double
     For i = 1 To n_var
         VariableIndex = VariableNLIndexToCollectionIndex(i - 1)
         Comment = "    " & VariableMapRev(CStr(i - 1))
@@ -937,7 +937,7 @@ Function MakeKBlock() As String
     AddNewLine Block, "k" & n_var - 1, "NUMBER OF JACOBIAN ENTRIES (CUMULATIVE) FOR FIRST " & n_var - 1 & " VARIABLES"
     
     ' Loop through first n_var - 1 variables and add the non-zero count to the running total
-    Dim i As Integer, total As Integer
+    Dim i As Long, total As Long
     total = 0
     For i = 1 To n_var - 1
         total = total + NonZeroConstraintCount(VariableNLIndexToCollectionIndex(i - 1))
@@ -955,7 +955,7 @@ Function MakeJBlocks() As String
     Dim ConstraintElements() As String
     Dim CommentElements() As String
     
-    Dim i As Integer, TreeIndex As Integer, VariableIndex As Integer
+    Dim i As Long, TreeIndex As Long, VariableIndex As Long
     For i = 1 To n_con
         TreeIndex = ConstraintIndexToTreeIndex(i - 1)
     
@@ -967,7 +967,7 @@ Function MakeJBlocks() As String
         
         ' Note that the LinearConstraintNL object store the variables in parsed order, but we need to output in .nl order
         ' First we collect all the constraint elements for the variables that are present
-        Dim j As Integer
+        Dim j As Long
         For j = 1 To LinearConstraints(TreeIndex).Count
             If LinearConstraints(TreeIndex).VariablePresent(j) Then
                 VariableIndex = VariableCollectionIndexToNLIndex(j)
@@ -993,14 +993,14 @@ Function MakeGBlocks() As String
     Dim Block As String
     Block = ""
     
-    Dim i As Integer, ObjectiveVariables As Collection, ObjectiveCoefficients As Collection
+    Dim i As Long, ObjectiveVariables As Collection, ObjectiveCoefficients As Collection
     For i = 1 To n_obj
         ' Make header
         AddNewLine Block, "G" & i - 1 & " " & LinearObjectives(i).NumPresent, "OBJECTIVE LINEAR SECTION " & ObjectiveCells(i)
         
         ' This loop is not in the right order (see J blocks)
         ' Since the objective only containts one variable, the output will still be correct without reordering
-        Dim j As Integer, VariableIndex As Integer
+        Dim j As Long, VariableIndex As Long
         For j = 1 To LinearObjectives(i).Count
             If LinearObjectives(i).VariablePresent(j) Then
                 VariableIndex = VariableCollectionIndexToNLIndex(j)
@@ -1065,7 +1065,7 @@ Sub AddNewLine(CurText As String, LineText As String, Optional CommentText As St
     
     ' Add comment with padding if coment should be included
     If WriteComments And CommentText <> "" Then
-        Dim j As Integer
+        Dim j As Long
         For j = 1 To CommentSpacing - Len(LineText)
            Comment = Comment + " "
         Next j
@@ -1091,7 +1091,7 @@ Function ConvertFormulaToExpressionTree(strFormula As String) As ExpressionTree
     
     Dim Operands As New ExpressionTreeStack, Operators As New StringStack, ArgCounts As New OperatorArgCountStack
     
-    Dim i As Integer, c As Range, tkn As Token, tknOld As String, Tree As ExpressionTree
+    Dim i As Long, c As Range, tkn As Token, tknOld As String, Tree As ExpressionTree
     For i = 1 To tksFormula.Count
         Set tkn = tksFormula.Item(i)
         
@@ -1214,7 +1214,7 @@ Function IsNAry(FunctionName As String) As Boolean
 End Function
 
 ' Determines the number of operands expected by a .nl operator
-Function NumberOfOperands(FunctionName As String, Optional ArgCount As Integer = 0) As Integer
+Function NumberOfOperands(FunctionName As String, Optional ArgCount As Long = 0) As Long
     Select Case FunctionName
     Case "floor", "ceil", "abs", "neg", "not", "tanh", "tan", "sqrt", "sinh", "sin", "log10", "log", "exp", "cosh", "cos", "atanh", "atan", "asinh", "asin", "acosh", "acos"
         NumberOfOperands = 1
@@ -1274,7 +1274,7 @@ Function ConvertExcelFunctionToNL(FunctionName As String) As String
 End Function
 
 ' Determines the precedence of arithmetic operators
-Function Precedence(tkn As String) As Integer
+Function Precedence(tkn As String) As Long
     Select Case tkn
     Case "plus", "minus"
         Precedence = 2
@@ -1321,7 +1321,7 @@ Function OperatorIsLeftAssociative(tkn As String) As Boolean
 End Function
 
 ' Pops an operator from the operator stack along with the corresponding number of operands.
-Sub PopOperator(Operators As StringStack, Operands As ExpressionTreeStack, Optional ArgCount As Integer = 0)
+Sub PopOperator(Operators As StringStack, Operands As ExpressionTreeStack, Optional ArgCount As Long = 0)
     ' Pop the operator and create a new ExpressionTree
     Dim Operator As String
     Operator = Operators.Pop()
@@ -1329,7 +1329,7 @@ Sub PopOperator(Operators As StringStack, Operands As ExpressionTreeStack, Optio
     Set NewTree = CreateTree(Operator, ExpressionTreeOperator)
     
     ' Pop the required number of operands from the operand stack and set as children of the new operator tree
-    Dim NumToPop As Integer, i As Integer, Tree As ExpressionTree
+    Dim NumToPop As Long, i As Long, Tree As ExpressionTree
     NumToPop = NumberOfOperands(Operator, ArgCount)
     For i = NumToPop To 1 Step -1
         Set Tree = Operands.Pop
@@ -1374,7 +1374,7 @@ Function FormatNL(NodeText As String, NodeType As ExpressionTreeNodeType) As Str
 End Function
 
 ' Converts an operator string to .nl code
-Function ConvertOperatorToNLCode(FunctionName As String) As Integer
+Function ConvertOperatorToNLCode(FunctionName As String) As Long
     Select Case FunctionName
     Case "plus"
         ConvertOperatorToNLCode = 0
@@ -1488,7 +1488,7 @@ Function ConvertOperatorToNLCode(FunctionName As String) As Integer
 End Function
 
 ' Converts an objective sense to .nl code
-Function ConvertObjectiveSenseToNL(ObjectiveSense As ObjectiveSenseType) As Integer
+Function ConvertObjectiveSenseToNL(ObjectiveSense As ObjectiveSenseType) As Long
     Select Case ObjectiveSense
     Case ObjectiveSenseType.MaximiseObjective
         ConvertObjectiveSenseToNL = 1
@@ -1500,7 +1500,7 @@ Function ConvertObjectiveSenseToNL(ObjectiveSense As ObjectiveSenseType) As Inte
 End Function
 
 ' Converts RelationConsts enum to .nl code.
-Sub ConvertConstraintToNL(Relation As RelationConsts, BoundType As Integer, Comment As String)
+Sub ConvertConstraintToNL(Relation As RelationConsts, BoundType As Long, Comment As String)
     Select Case Relation
         Case RelationConsts.RelationLE ' Upper Bound on LHS
             BoundType = 1

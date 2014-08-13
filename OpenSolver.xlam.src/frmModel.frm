@@ -240,7 +240,7 @@ End Sub
 
 Private Sub cmdReset_Click()
                  
-          Dim NumConstraints As Single, i As Integer
+          Dim NumConstraints As Single, i As Long
                   
           'Check the user wants to reset the model
 43390     If MsgBox("This will reset the objective function, decision variables and constraints." _

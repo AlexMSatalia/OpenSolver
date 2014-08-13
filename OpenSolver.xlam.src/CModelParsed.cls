@@ -73,7 +73,7 @@ Public Function ProcessSolverModel(s As COpenSolver) As Boolean
     
     ' Get variable names
     ReDim AdjCellNames(1 To AdjustableCellCount) As String
-    Dim i As Integer
+    Dim i As Long
     For i = 1 To AdjustableCellCount
         AdjCellNames(i) = s.VarNamesP(i)
     Next i
@@ -126,7 +126,7 @@ Private Sub ProcessVarTypes()
     
     Set VarTypeMap = New Collection
     Set AdjCellNameMap = New Collection
-    Dim curVarType As Integer, lngArea As Long, cellName As String, c As Range
+    Dim curVarType As Long, lngArea As Long, cellName As String, c As Range
     For lngArea = 1 To AdjustableCells.Areas.Count
         For Each c In AdjustableCells.Areas(lngArea)
             cellName = ConvertCellToStandardName(c)
@@ -173,7 +173,7 @@ Private Function ParseFormulae(s As COpenSolver) As Boolean
     Set Rels = New Collection
 
     Dim i As Long
-    Dim Count As Integer
+    Dim Count As Long
     Count = 1
     For i = 1 To ConstraintCount
         Dim nameLHSi As Name, nameRELi As Name, nameRHSi As Name
@@ -369,7 +369,7 @@ Function StringFormulaIsConstant(strFormula As String) As Boolean
     Dim tksFormula As Tokens
     Set tksFormula = ParseFormula(strFormula)
     
-    Dim i As Integer, c As Range, tkn As Token, CheckForColon As Boolean
+    Dim i As Long, c As Range, tkn As Token, CheckForColon As Boolean
     Dim LookingForEndOfRef As Boolean, strSheetPrefix As String, BuildingRef As String, rngBuildingRef As Range
     
     ' We loop through tokens looking for cell references.
@@ -491,10 +491,10 @@ Function ExpandFormula(ByVal strFormula As String, _
     
     ' The following are used for converting SumProduct to AMPL
     Dim FunctionName As String
-    Dim FunctionCount As Integer
-    Dim start As Integer
+    Dim FunctionCount As Long
+    Dim start As Long
     Dim output As String, node As String
-    Dim Count As Integer
+    Dim Count As Long
     FunctionName = ""
     FunctionCount = 0
     
@@ -588,7 +588,7 @@ Function ExpandFormula(ByVal strFormula As String, _
         BuildingRef = ""
                 
         ' Take a walk through the tokens
-        Dim i As Integer, c As Range, tkn As Token
+        Dim i As Long, c As Range, tkn As Token
         For i = 1 To tksFormula.Count
             Set tkn = tksFormula.Item(i)
             
@@ -802,8 +802,8 @@ skipTokenising:
     Exit Function
 End Function
 
-Function FindPosition(Word As String, FindString As String, Count As Integer, Optional start As Integer = 1) As Integer
-    Dim It As Integer
+Function FindPosition(Word As String, FindString As String, Count As Long, Optional start As Long = 1) As Long
+    Dim It As Long
     
     ' Define iterator
     It = 1

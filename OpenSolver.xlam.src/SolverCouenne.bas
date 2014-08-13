@@ -155,7 +155,7 @@ End Function
 
 Function ReadModel_Couenne(SolutionFilePathName As String, errorString As String, m As CModelParsed, s As COpenSolverParsed) As Boolean
     ReadModel_Couenne = False
-    Dim Line As String, index As Integer
+    Dim Line As String, index As Long
     On Error GoTo readError
     Dim solutionExpected As Boolean
     solutionExpected = True
@@ -200,7 +200,7 @@ Function ReadModel_Couenne(SolutionFilePathName As String, errorString As String
         Line Input #1, Line ' Throw away blank line
         Line Input #1, Line ' Throw away "Options"
         
-        Dim i As Integer
+        Dim i As Long
         For i = 1 To 8
             Line Input #1, Line ' Skip all options lines
         Next i
@@ -217,7 +217,7 @@ Function ReadModel_Couenne(SolutionFilePathName As String, errorString As String
         
         ' Loop through variable cells and find the corresponding value from VariableValues
         i = 1
-        Dim c As Range, VariableIndex As Integer
+        Dim c As Range, VariableIndex As Long
         For Each c In m.AdjustableCells
             ' Extract the correct variable value
             VariableIndex = GetVariableNLIndex(i) + 1

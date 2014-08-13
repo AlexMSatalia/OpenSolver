@@ -298,7 +298,7 @@ Function ReadModel_CBC(SolutionFilePathName As String, errorString As String, s 
               ' ...being? : Index Name Value ReducedCost
               Dim Line As String, SplitLine() As String, index As Double, NameValue As String, value As Double, CBCConstraintIndex As Long
 21420         If s.bGetDuals Then
-                  Dim j As Integer, row As Integer, i As Integer
+                  Dim j As Long, row As Long, i As Long
                   'Dim FinalValue() As String, ShadowPrice() As String
 21430
 21450             j = 1
@@ -429,8 +429,8 @@ End Function
 Sub ReadSensitivityData_CBC(SolutionFilePathName As String, s As COpenSolver)
           'Reads the two files with the limits on the bounds of shadow prices and reduced costs
 
-          Dim RangeFilePathName As String, Stuff(5) As String, index2 As Integer
-          Dim Line As String, row As Integer, j As Integer, i As Integer
+          Dim RangeFilePathName As String, Stuff(5) As String, index2 As Long
+          Dim Line As String, row As Long, j As Long, i As Long
           
           'Find the ranges on the constraints
           RangeFilePathName = left(SolutionFilePathName, InStrRev(SolutionFilePathName, PathDelimeter)) & RHSRangesFile_CBC

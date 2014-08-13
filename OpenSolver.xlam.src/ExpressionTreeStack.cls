@@ -40,7 +40,7 @@ Property Get Count() As Long
 End Property
 
 Public Function Display() As String
-    Dim i As Integer, output As String
+    Dim i As Long, output As String
     For i = 1 To colTreeStack.Count
         output = output & colTreeStack(i).Display & ", "
     Next i

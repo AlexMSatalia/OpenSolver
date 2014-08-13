@@ -127,7 +127,7 @@ Function SolverBitness_NOMAD() As String
     End If
 End Function
 
-Function SolveModel_Nomad(SolveRelaxation As Boolean, s As COpenSolver) As Integer
+Function SolveModel_Nomad(SolveRelaxation As Boolean, s As COpenSolver) As Long
           Dim ScreenStatus As Boolean
 48140     ScreenStatus = Application.ScreenUpdating
           Dim Show As String
@@ -155,7 +155,7 @@ Function SolveModel_Nomad(SolveRelaxation As Boolean, s As COpenSolver) As Integ
           ' Set OS for the calls back into Excel from NOMAD
           Set OS = s
           
-          Dim oldCalculationMode As Integer
+          Dim oldCalculationMode As Long
 48180     oldCalculationMode = Application.Calculation
 48190     Application.Calculation = xlCalculationManual
           
