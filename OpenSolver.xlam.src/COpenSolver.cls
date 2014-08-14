@@ -102,6 +102,7 @@ Dim CostCoeffs() As Double, ObjectiveFunctionConstant As Double
 Dim RHS() As Double ' The RHS values for each row in the LP
 Dim Relation() As Long ' For each row, we remember its relation (=, <=, >=)
 Public VarLowerBounds As Collection
+Public VarUpperBounds As Collection
 
 'Details for the chosen solver
 Public Solver As String 'Name of solver we will be using
@@ -686,6 +687,7 @@ ModelOptions:
 9470          ReDim MappingRowsToConstraints(NumConstraints + 1) As Long
 9480      End If
           Set VarLowerBounds = New Collection
+          Set VarUpperBounds = New Collection
           ReDim VariableBounds(1)
           ' Reset number of rows in the LP model
 9490      NumRows = 0
@@ -844,10 +846,10 @@ ModelOptions:
 10270                 RHSOriginalValues(constraint) = valRHS
 10280             End If
 
-                  ' Check if this constraint applies any lower bounds
+                  ' Check if this constraint applies any bounds on decision variables
                   If RowCount = 1 Then
                       ' Single LHS, single RHS
-                      ApplyLowerBound row, rel, rangeLHS, rangeRHS, valRHS, isRangeRHS, RHSRefersToFormula
+                      ApplyBounds row, rel, rangeLHS, rangeRHS, valRHS, isRangeRHS, RHSRefersToFormula
                   Else
                       Dim CurRow As Long, RHSRowCount As Long
                       If rangeRHS Is Nothing Then
@@ -859,12 +861,12 @@ ModelOptions:
                       If RHSRowCount > 1 Then
                           ' multiple LHS, multiple RHS
                           For CurRow = 1 To RowCount
-                              ApplyLowerBound row + CurRow - 1, rel, rangeLHS(CurRow), rangeRHS(CurRow), valRHS, isRangeRHS, RHSRefersToFormula
+                              ApplyBounds row + CurRow - 1, rel, rangeLHS(CurRow), rangeRHS(CurRow), valRHS, isRangeRHS, RHSRefersToFormula
                           Next CurRow
                       Else
                           ' multiple LHS, single RHS
                           For CurRow = 1 To RowCount
-                              ApplyLowerBound row + CurRow - 1, rel, rangeLHS(CurRow), rangeRHS, valRHS, isRangeRHS, RHSRefersToFormula
+                              ApplyBounds row + CurRow - 1, rel, rangeLHS(CurRow), rangeRHS, valRHS, isRangeRHS, RHSRefersToFormula
                           Next CurRow
                       End If
                   End If
@@ -953,8 +955,8 @@ ErrorExit:
 10760     Resume  ' Used for manual trying again after an error
 End Sub
 
-Sub ApplyLowerBound(row As Long, rel As Long, LHS As Range, RHS As Range, RHSValue As Double, isRangeRHS As Boolean, RHSRefersToFormula As Boolean)
-' Determines whether the current LHS and RHS should be applied as a lower bound
+Sub ApplyBounds(row As Long, rel As Long, LHS As Range, RHS As Range, RHSValue As Double, isRangeRHS As Boolean, RHSRefersToFormula As Boolean)
+' Determines whether the current LHS and RHS should be applied as a bound
 
 ' Excel 2007 requires the following conditions to be met for a user-supplied lower bound to exist
 '  The LHS range includes a decision variable directly (not via a formula referring to the decision var).
@@ -962,12 +964,11 @@ Sub ApplyLowerBound(row As Long, rel As Long, LHS As Range, RHS As Range, RHSVal
 '  be specified as a formula (even one evaluating to a constant)
 ' Note: Excel 2010 seems a bit different in that the WHOLE LHS range must be decision variables. We adopt the 2007 behaviour
 ' Note: A constraint of the form 'range <= decision var' does NOT count as a lower bound; the decision var MUST be in the LHS
-    
-    ' Only GE constraints can provide lower bounds
-    If rel <> RelationGE Then
+        
+    If rel <> RelationGE And rel <> RelationLE Then
         Exit Sub
     End If
-    
+     
     ' Following Solver, we don't apply formulae as lower bounds, even if constant
     If RHSRefersToFormula Then
         Exit Sub
@@ -981,28 +982,42 @@ Sub ApplyLowerBound(row As Long, rel As Long, LHS As Range, RHS As Range, RHSVal
     If isRangeRHS Then
         If Not RHS.HasFormula Then
             ' The RHS range is a constant - apply a bound
-            UpdateLowerBound row, LHS.Address, CDbl(RHS)
+            UpdateBound row, LHS.Address, CDbl(RHS), rel
         Else
             ' The RHS range is a formula, check if this depends on the decision vars
             If Intersect(RHS.Precedents, AdjustableCells) Is Nothing Then
-                UpdateLowerBound row, LHS.Address, CDbl(RHS)
+                UpdateBound row, LHS.Address, CDbl(RHS), rel
             End If
         End If
     Else
         ' The RHS is a numeric constant - apply a bound
-        UpdateLowerBound row, LHS.Address, RHSValue
+        UpdateBound row, LHS.Address, RHSValue, rel
     End If
 End Sub
 
-Sub UpdateLowerBound(row As Long, VarName As String, LowerBound As Double)
-    ' Remove existing lower bound on variable if our new one is better
-    If TestKeyExists(VarLowerBounds, VarName) Then
-        If LowerBound > VarLowerBounds(VarName) Then
-            VarLowerBounds.Remove VarName
-        End If
-    End If
+Sub UpdateBound(row As Long, VarName As String, bound As Double, rel As Long)
     
-    VarLowerBounds.Add LowerBound, VarName
+    ' Only GE constraints can provide lower bounds
+    If rel = RelationGE Then
+        ' Remove existing lower bound on variable if our new one is better
+        If TestKeyExists(VarLowerBounds, VarName) Then
+            If bound > VarLowerBounds(VarName) Then
+                VarLowerBounds.Remove VarName
+            End If
+        End If
+        
+        VarLowerBounds.Add bound, VarName
+    ' Only GE constraints can provide lower bounds
+    ElseIf rel = RelationLE Then
+        ' Remove existing upper bound on variable if our new one is better
+        If TestKeyExists(VarUpperBounds, VarName) Then
+            If bound < VarUpperBounds(VarName) Then
+                VarUpperBounds.Remove VarName
+            End If
+        End If
+        
+        VarUpperBounds.Add bound, VarName
+    End If
     
     ' Track that this constraint row applies a bound
     If UBound(VariableBounds) < row Then ReDim Preserve VariableBounds(row)
@@ -3070,16 +3085,18 @@ Function getValuesOS() As Variant
 24950     row = 1
           Dim CurrentLHSValues As Variant
           Dim CurrentRHSValues As Variant
-24960     For constraint = 1 To NumConstraints
+          For constraint = 1 To NumConstraints
               ' Check to see what is different and add rows to sparsea
 24970         If Not LHSRange(constraint) Is Nothing Then ' skip Binary and Integer constraints
                   ' Get current value(s) for LHS and RHS of this constraint off the sheet. LHS is always an array (even if 1x1)
 24980             GetCurrentConstraintValues constraint, CurrentLHSValues, CurrentRHSValues
-24990             If RHSType(constraint) = SolverInputType.MultiCellRange Then
-25000                 For i = 1 To UBound(LHSOriginalValues(constraint), 1)
+24990             If LHSType(constraint) = SolverInputType.MultiCellRange Then
+                      For i = 1 To UBound(LHSOriginalValues(constraint), 1)
 25010                     For j = 1 To UBound(LHSOriginalValues(constraint), 2)
 25020                         If VariableBounds(conCountB) = False Then
-                                  If UBound(LHSOriginalValues(constraint), 1) = UBound(RHSOriginalValues(constraint), 1) Then
+                                  If RHSType(constraint) <> SolverInputType.MultiCellRange Then
+                                      SetConstraintValue y, k, CurrentRHSValues, CurrentLHSValues(i, j), Relation(conCountB)
+                                  ElseIf UBound(LHSOriginalValues(constraint), 1) = UBound(RHSOriginalValues(constraint), 1) Then
                                       SetConstraintValue y, k, CurrentRHSValues(i, j), CurrentLHSValues(i, j), Relation(conCountB)
                                   Else
                                       SetConstraintValueMismatchedDims y, k, CurrentRHSValues, CurrentLHSValues, Relation(conCountB), i, j
