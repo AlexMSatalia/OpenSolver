@@ -19,7 +19,9 @@ OpenSolver has been developed for Excel 2007 and 2010 running on Windows. It sho
 
 OpenSolver is being developed by Andrew Mason in the Department of Engineering Science at the University of Auckland. 
 
-OpenSolver uses the open source COIN-OR CBC optimization engine. CBC is released as open source code under the  Common Public License (CPL). It is available from the  COIN-OR initiative. The CBC code has been written by primarily by John J. Forrest, and is maintained by Ted Ralphs.
+OpenSolver uses the open source COIN-OR CBC optimization engine. CBC is released as open source code under the Eclipse Public License (EPL). It is available from the COIN-OR initiative. The CBC code has been written by primarily by John J. Forrest, and is maintained by Ted Ralphs.
+
+The COIN-OR COUENNE and BONMIN solvers are also included. These are also released under the Eclipse Public License (EPL).
 
 OpenSolver also uses the NOMAD non-linear solver which is released under the GNU Lesser General Public License.
 
