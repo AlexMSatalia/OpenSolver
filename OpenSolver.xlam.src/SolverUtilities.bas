@@ -135,6 +135,15 @@ Function RunsOnNeos(Solver As String) As Boolean
     End If
 End Function
 
+Function SolverUsesUpperBounds(Solver As String) As Boolean
+    Select Case Solver
+    Case "NOMAD"
+        SolverUsesUpperBounds = True
+    Case Else
+        SolverUsesUpperBounds = False
+    End Select
+End Function
+
 Sub GetNeosValues(Solver As String, Category As String, SolverType As String)
     Select Case Solver
     Case "NeosCBC"

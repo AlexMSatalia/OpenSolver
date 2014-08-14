@@ -968,6 +968,11 @@ Sub ApplyBounds(row As Long, rel As Long, LHS As Range, RHS As Range, RHSValue A
     If rel <> RelationGE And rel <> RelationLE Then
         Exit Sub
     End If
+    
+    ' Check if we need upper bounds
+    If Not SolverUsesUpperBounds(Solver) And rel = RelationLE Then
+        Exit Sub
+    End If
      
     ' Following Solver, we don't apply formulae as lower bounds, even if constant
     If RHSRefersToFormula Then
@@ -985,6 +990,8 @@ Sub ApplyBounds(row As Long, rel As Long, LHS As Range, RHS As Range, RHSValue A
             UpdateBound row, LHS.Address, CDbl(RHS), rel
         Else
             ' The RHS range is a formula, check if this depends on the decision vars
+            ' Will raise an error is no precedents are found (e.g. if they are on another sheet
+            On Error GoTo NoPrecedents
             If Intersect(RHS.Precedents, AdjustableCells) Is Nothing Then
                 UpdateBound row, LHS.Address, CDbl(RHS), rel
             End If
@@ -993,6 +1000,15 @@ Sub ApplyBounds(row As Long, rel As Long, LHS As Range, RHS As Range, RHSValue A
         ' The RHS is a numeric constant - apply a bound
         UpdateBound row, LHS.Address, RHSValue, rel
     End If
+    Exit Sub
+    
+NoPrecedents:
+    ' Ignore a 'No cells were found' precedents error
+    If Err.Number = 1004 Then
+        Exit Sub
+    End If
+    
+    Err.Raise Err.Number, Err.Source, Err.Description & IIf(Erl = 0, "", " (at line " & Erl & ")")
 End Sub
 
 Sub UpdateBound(row As Long, VarName As String, bound As Double, rel As Long)
