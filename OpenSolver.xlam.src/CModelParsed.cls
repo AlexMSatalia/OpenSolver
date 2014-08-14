@@ -561,7 +561,9 @@ Function ExpandFormula(ByVal strFormula As String, _
     '==========================================================================
     ' STEP 2. Keep processing nodes until nothing interesting left
     Do While lngIndex <= Formulae.Count
-        'DoEvents
+        Application.StatusBar = "OpenSolver: Constraint progress: " & ConstraintNumber & "/" & ConstraintCount & ". " & _
+                                "Processing formula " & lngIndex & "/" & Formulae.Count & ". "
+        DoEvents
         'Debug.Print lngIndex, Formulae.Count
         'If lngIndex = 96 Then
         '    'Debug.Print 96
@@ -662,11 +664,15 @@ Function ExpandFormula(ByVal strFormula As String, _
                         TotalCount = rngBuildingRef.Count
                         curProgress = 0
                         For Each c In rngBuildingRef
+                            ' Update status
                             curProgress = curProgress + 1
-                            If curProgress Mod 10 = 0 Then _
+                            If curProgress Mod 10 = 0 Then
                                 Application.StatusBar = "OpenSolver: Constraint progress: " & ConstraintNumber & "/" & ConstraintCount & ". " & _
                                                         "Processing formula " & lngIndex & "/" & Formulae.Count & ". " & _
                                                         "Current formula progress: " & curProgress & "/" & TotalCount
+                                DoEvents
+                            End If
+                            
                             node = AddNodeIfNew(objCurNode, c)
                             
                             If FunctionName = "SUMPRODUCT" And Not FunctionCount = 0 Then
