@@ -496,11 +496,11 @@ Private Sub UserForm_Activate()
 36220     labelVersion.Caption = "Version " & sOpenSolverVersion & " (" & sOpenSolverDate & ") running on " & IIf(SystemIs64Bit, "64", "32") & " bit " & OS & " in " & VBAversion & " in " & ExcelBitness & " bit Excel " & Application.Version
           
           txtAbout.Text = About_OpenSolver
-          txtAbout.Text = About_CBC & vbNewLine & vbNewLine & txtAbout.Text
-          txtAbout.Text = About_Gurobi & vbNewLine & vbNewLine & txtAbout.Text
-          txtAbout.Text = About_NOMAD & vbNewLine & vbNewLine & txtAbout.Text
-          txtAbout.Text = About_Couenne & vbNewLine & vbNewLine & txtAbout.Text
-          txtAbout.Text = About_Bonmin & vbNewLine & vbNewLine & txtAbout.Text
+          txtAbout.Text = txtAbout.Text & About_CBC & vbNewLine & vbNewLine
+          txtAbout.Text = txtAbout.Text & About_Gurobi & vbNewLine & vbNewLine
+          txtAbout.Text = txtAbout.Text & About_NOMAD & vbNewLine & vbNewLine
+          txtAbout.Text = txtAbout.Text & About_Bonmin & vbNewLine & vbNewLine
+          txtAbout.Text = txtAbout.Text & About_Couenne & vbNewLine & vbNewLine
           
 36230     labelFilePath = "OpenSolverFile: " & ThisWorkbook.FullName
           ' ShowOpenSolverStudioStatus
@@ -527,6 +527,7 @@ vbNewLine & _
 vbNewLine & _
 "OpenSolver is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.  You should have received a copy of the GNU General Public License along with OpenSolver.  If not, see http://www.gnu.org/licenses/" & vbNewLine & _
 vbNewLine & _
-"Excel Solver is a product developed by Frontline Systems (www.solver.com) for Microsoft. OpenSolver has no affiliation with, nor is recommend by, Microsoft or Frontline Systems. All trademark terms are the property of their respective owners." & vbNewLine
+"Excel Solver is a product developed by Frontline Systems (www.solver.com) for Microsoft. OpenSolver has no affiliation with, nor is recommend by, Microsoft or Frontline Systems. All trademark terms are the property of their respective owners." & vbNewLine & _
+vbNewLine
 
 End Function
