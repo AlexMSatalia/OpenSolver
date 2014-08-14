@@ -472,6 +472,10 @@ Private Sub ShowOpenSolverStudioStatus()
 End Sub
 
 Private Sub UserForm_Activate()
+          
+          Application.StatusBar = "OpenSolver: Fetching solver information..."
+          Application.Cursor = xlWait
+
           Dim VBAversion As String
 36190     VBAversion = "VBA"
 #If VBA7 Then
@@ -508,6 +512,9 @@ Private Sub UserForm_Activate()
 36250     EventsEnabled = True
           txtAbout.SetFocus
           txtAbout.SelStart = 0
+          
+          Application.StatusBar = False
+          Application.Cursor = xlDefault
 End Sub
 
 
