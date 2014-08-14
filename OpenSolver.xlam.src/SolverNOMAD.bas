@@ -173,32 +173,34 @@ Function SolveModel_Nomad(SolveRelaxation As Boolean, s As COpenSolver) As Long
 48370     If NomadRetVal = 1 Then
 48380         Err.Raise Number:=OpenSolver_NomadError, Source:=errorPrefix, Description:="There " _
                 & "was an error while Nomad was solving. No solution has been loaded into the sheet."
-48390         s.SolveStatus = ErrorOccurred
+48390         s.SolveStatus = OpenSolverResult.ErrorOccurred
 48400     ElseIf NomadRetVal = 2 Then
-48410         Err.Raise Number:=OpenSolver_NomadError, Source:=errorPrefix, Description:="Nomad reached " _
-                & "the maximum number of iterations and returned the best feasible solution it found. This " _
-                & "solution is not guaranteed to be an optimal solution." & vbCrLf & vbCrLf & "You can increase " _
-                & "the maximum time and iterations under the options in the model dialogue or check whether your model is feasible."
-48420         s.SolveStatus = -1 'Unsolved
+48410         s.SolveStatusComment = "Nomad reached the maximum number of iterations and returned the best feasible solution it found. This solution is not guaranteed to be an optimal solution." & vbCrLf & vbCrLf & _
+                                     "You can increase the maximum time and iterations under the options in the model dialogue or check whether your model is feasible."
+48420         s.SolveStatus = OpenSolverResult.TimeLimitedSubOptimal
+              s.SolveStatusString = "Stopped on Iteration Limit"
+              s.LinearSolutionWasLoaded = True
 48430     ElseIf NomadRetVal = 3 Then
-48440         Err.Raise Number:=OpenSolver_NomadError, Source:=errorPrefix, Description:="Nomad reached the " _
-                & "maximum time and returned the best feasible solution it found. This solution is not " _
-                & "guaranteed to be an optimal solution." & vbCrLf & vbCrLf & "You can increase the maximum " _
-                & "time and iterations under the options in the model dialogue or check whether your model is feasible."
-48450         s.SolveStatus = TimeLimitedSubOptimal
+48440         s.SolveStatusComment = "Nomad reached the maximum time and returned the best feasible solution it found. This solution is not guaranteed to be an optimal solution." & vbCrLf & vbCrLf & _
+                                     "You can increase the maximum time and iterations under the options in the model dialogue or check whether your model is feasible."
+48450         s.SolveStatus = OpenSolverResult.TimeLimitedSubOptimal
+              s.SolveStatusString = "Stopped on Time Limit"
+              s.LinearSolutionWasLoaded = True
 48460     ElseIf NomadRetVal = 4 Then
-48470         Err.Raise Number:=OpenSolver_NomadError, Source:=errorPrefix, Description:="Nomad reached the maximum time " _
-                & "or number of iterations without finding a feasible solution. The best infeasible solution has been returned " _
-                & "to the sheet." & vbCrLf & vbCrLf & "You can increase the maximum time and iterations under the options in the " _
-                & "model dialogue or check whether your model is feasible."
-48480         s.SolveStatus = 5 'infeasible
+48470         s.SolveStatusComment = "Nomad reached the maximum time or number of iterations without finding a feasible solution. The best infeasible solution has been returned to the sheet." & vbCrLf & vbCrLf & _
+                                     "You can increase the maximum time and iterations under the options in the model dialogue or check whether your model is feasible."
+48480         s.SolveStatus = OpenSolverResult.Infeasible
+              s.SolveStatusString = "No Feasible Solution"
+              s.LinearSolutionWasLoaded = True
 48490     ElseIf NomadRetVal = 10 Then
-48500         Err.Raise Number:=OpenSolver_NomadError, Source:=errorPrefix, Description:="Nomad could not find a feasible solution. " _
-                & "The best infeasible solution has been returned to the sheet." & vbCrLf & vbCrLf & "Try resolving at a different start point or check whether your model " _
-                & "is feasible or relax some of your constraints."
-48510         s.SolveStatus = 5 'infeasible
+48500         s.SolveStatusComment = "Nomad could not find a feasible solution. The best infeasible solution has been returned to the sheet." & vbCrLf & vbCrLf & _
+                                     "Try resolving at a different start point or check whether your model is feasible or relax some of your constraints."
+48510         s.SolveStatus = OpenSolverResult.Infeasible
+              s.SolveStatusString = "No Feasible Solution"
+              s.LinearSolutionWasLoaded = True
 48520     Else
 48530         s.SolveStatus = NomadRetVal 'optimal
+20830         s.SolveStatusString = "Optimal"
 48540     End If
           
 ExitSub:
