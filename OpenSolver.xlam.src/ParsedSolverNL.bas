@@ -1237,7 +1237,7 @@ Function NumberOfOperands(FunctionName As String, Optional ArgCount As Long = 0)
     Case "if", "ifs", "implies"
         NumberOfOperands = 3
     Case Else
-        MsgBox "Unknown function " & FunctionName
+        Err.Raise OpenSolver_BuildError, "Building expression tree", "Unknown function " & FunctionName & vbCrLf & "Please let us know about this at opensolver.org so we can fix it."
     End Select
 End Function
 
@@ -1279,7 +1279,7 @@ Function ConvertExcelFunctionToNL(FunctionName As String) As String
         FunctionName = "or_n"
         
     Case "log", "ceiling", "floor", "power"
-        MsgBox "Not implemented yet: " & FunctionName & vbCrLf & "Please let us know about this at opensolver.org so we can fix it."
+        Err.Raise OpenSolver_BuildError, "Building expression tree", "Not implemented yet: " & FunctionName & vbCrLf & "Please let us know about this at opensolver.org so we can fix it."
     End Select
     ConvertExcelFunctionToNL = FunctionName
 End Function

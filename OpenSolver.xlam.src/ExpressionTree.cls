@@ -302,7 +302,7 @@ Public Sub EvaluateConstantOperator()
         NewValue = Atn(Values(1))
     Case Else
         NewValue = 0
-        MsgBox "Constant evaluation of " & NodeText & " not implemented yet in collation of linear terms" & vbCrLf & "Please let us know about this at opensolver.org so we can fix it."
+        Err.Raise OpenSolver_BuildError, "Building expression tree", "Constant evaluation of " & NodeText & " not implemented yet in collation of linear terms" & vbCrLf & "Please let us know about this at opensolver.org so we can fix it."
     End Select
         
     ' Replace subtree with a constant node
@@ -490,7 +490,7 @@ Sub CollateLinearTerms()
                 SetTreeToChild 1
     
             Case Else
-                MsgBox "Unknown linear operator " & NodeText & vbCrLf & "Please let us know about this at opensolver.org so we can fix it."
+                Err.Raise OpenSolver_BuildError, "Collating linear terms", "Unknown linear operator " & NodeText & vbCrLf & "Please let us know about this at opensolver.org so we can fix it."
             End Select
         End Select
     End Select
@@ -553,7 +553,7 @@ Sub AddLinearTreeToConstraint(constraint As LinearConstraintNL, constant As Doub
                 Children(i).AddLinearTreeToConstraint constraint, constant
             Next i
         Else
-            MsgBox "Operator that isn't plus at the last stage of the linear tree pruning: " & NodeText & vbCrLf & "Please let us know about this at opensolver.org so we can fix it."
+            Err.Raise OpenSolver_BuildError, "Collating linear terms", "Operator that isn't plus at the last stage of the linear tree pruning: " & NodeText & vbCrLf & "Please let us know about this at opensolver.org so we can fix it."
         End If
     End Select
 End Sub
