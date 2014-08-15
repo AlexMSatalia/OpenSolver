@@ -970,6 +970,7 @@ Sub CleanFormulae(ByVal lngFStart As Long, ByVal lngFEnd As Long, Optional Const
     
         If Formulae(lngIndex).boolCanBeRemoved Then Formulae.Remove lngIndex
     Next lngIndex
+    Exit Sub
     
 EscapeHandler:
     ' We only trap Escape (Err.Number=18) here; all other errors are passed back to the caller.

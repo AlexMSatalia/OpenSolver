@@ -70,6 +70,7 @@ Public Sub SolveModel(s As COpenSolver)
     s.SolveStatusComment = SolveStatusComment
     s.SolveStatusString = SolveStatusString
     
+    Application.StatusBar = False
     Application.Calculation = xlCalculationAutomatic
     Application.ScreenUpdating = True
     
@@ -240,6 +241,9 @@ End Function
 
 ' Returns true if a solve status is loaded
 Function SolveModelParsed_NEOS(ModelFilePathName As String, Solver As String, s As COpenSolverParsed) As Boolean
+    
+    Application.StatusBar = "OpenSolver: Solving model on NEOS... "
+    
     Dim solution As String, errorString As String
     solution = CallNEOS(ModelFilePathName, Solver, errorString)
     If errorString <> "" Then

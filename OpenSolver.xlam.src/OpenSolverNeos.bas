@@ -74,6 +74,8 @@ Private Function CallNEOS_Windows(message As String, errorString As String)
     CallingNeos.Show False
     
     ' Loop until job is done
+    Dim time As Long
+    time = 0
     While Done = False
         DoEvents
         
@@ -96,6 +98,9 @@ Private Function CallNEOS_Windows(message As String, errorString As String)
             GoTo ExitSub
         Else
             Application.Wait (Now + TimeValue("0:00:01"))
+            time = time + 1
+            Application.StatusBar = "OpenSolver: Solving model on NEOS... Time Elapsed: " & time & " seconds"
+            DoEvents
         End If
     Wend
     
@@ -165,8 +170,9 @@ Private Function CallNEOS_Mac(message As String, errorString As String)
     DeleteFileAndVerify LogFilePathName, errorPrefix, "Unable to delete the log file: " & LogFilePathName
     LogFilePathName = " > " & QuotePath(ConvertHfsPath(LogFilePathName))
 
-    ' Forms seem to block the thread on Mac
+    ' Mac doesn't support modal forms
     'CallingNeos.Show False
+    Application.Cursor = xlWait
 
     ' Run NeosClient.py
     Dim result As Boolean
@@ -174,6 +180,8 @@ Private Function CallNEOS_Mac(message As String, errorString As String)
     If Not result Then
         GoTo NEOSError
     End If
+    
+    Application.Cursor = xlDefault
     
     'CallingNeos.Hide
     
