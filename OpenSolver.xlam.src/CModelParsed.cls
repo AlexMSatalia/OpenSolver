@@ -147,7 +147,8 @@ End Sub
 
 Private Function ParseFormulae(s As COpenSolver) As Boolean
 ' Parses all constraints and objective formulae to create formulae that depend only on variable cells and constants
-
+    On Error GoTo EscapeHandler
+    
     ' Create a collection for the spreadsheet's formulae (DAG)
     Set Formulae = New Collection
     ' Remember the greatest depth of the DAG
@@ -304,7 +305,7 @@ NextCol:
         Next cRow
         
         ' Clean Formulae
-        CleanFormulae lngFormulaeCountBefore + 1, Formulae.Count
+        CleanFormulae lngFormulaeCountBefore + 1, Formulae.Count, i
         
 NextCons:
     Next i
@@ -332,6 +333,33 @@ NextCons:
         Next lngCurDepth
     End If
     ParseFormulae = True
+    Exit Function
+    
+EscapeHandler:
+    ' We only trap Escape (Err.Number=18) here; all other errors are passed back to the caller.
+    ' Save error message
+    Dim ErrorNumber As Long, ErrorDescription As String, ErrorSource As String
+    ErrorNumber = Err.Number
+    ErrorDescription = Err.Description & IIf(Erl = 0, "", " (at line " & Erl & ")")
+    ErrorSource = Err.Source
+
+    If Err.Number = 18 Then
+        If MsgBox("You have pressed the Escape key. Do you wish to cancel?", _
+                   vbCritical + vbYesNo + vbDefaultButton1, _
+                   "OpenSolver: User Interrupt Occured...") = vbNo Then
+            Resume 'continue on from where error occured
+        Else
+            ' Raise a "user cancelled" error. We cannot use Raise, as that exits immediately without going thru our code below
+            ErrorNumber = OpenSolver_UserCancelledError
+            ErrorSource = "Parsing formulae"
+            ErrorDescription = "Model building cancelled by user."
+        End If
+    End If
+    
+ErrorExit:
+    ' Exit, raising an error; none of the following change the Err.Number etc, but we saved them above just in case...
+    Application.StatusBar = False
+    Err.Raise ErrorNumber, ErrorSource, ErrorDescription
 End Function
 '==============================================================================
 Public Function GetLHSType(lngConNum As Long) As SolverInputType
@@ -475,6 +503,8 @@ End Function
 
 Function ExpandFormula(ByVal strFormula As String, _
                        ByRef rngSourceCell As Range, Optional ConstraintNumber As Long) As String
+    On Error GoTo EscapeHandler
+
     '==========================================================================
     ' STEP 0. Misc Setup
     ' The parsed string, this is what we store at the node
@@ -816,6 +846,32 @@ skipTokenising:
     Loop
     
     Exit Function
+    
+EscapeHandler:
+    ' We only trap Escape (Err.Number=18) here; all other errors are passed back to the caller.
+    ' Save error message
+    Dim ErrorNumber As Long, ErrorDescription As String, ErrorSource As String
+    ErrorNumber = Err.Number
+    ErrorDescription = Err.Description & IIf(Erl = 0, "", " (at line " & Erl & ")")
+    ErrorSource = Err.Source
+
+    If Err.Number = 18 Then
+        If MsgBox("You have pressed the Escape key. Do you wish to cancel?", _
+                   vbCritical + vbYesNo + vbDefaultButton1, _
+                   "OpenSolver: User Interrupt Occured...") = vbNo Then
+            Resume 'continue on from where error occured
+        Else
+            ' Raise a "user cancelled" error. We cannot use Raise, as that exits immediately without going thru our code below
+            ErrorNumber = OpenSolver_UserCancelledError
+            ErrorSource = "Parsing formulae"
+            ErrorDescription = "Model building cancelled by user."
+        End If
+    End If
+    
+ErrorExit:
+    ' Exit, raising an error; none of the following change the Err.Number etc, but we saved them above just in case...
+    Application.StatusBar = False
+    Err.Raise ErrorNumber, ErrorSource, ErrorDescription
 End Function
 
 Function FindPosition(Word As String, FindString As String, Count As Long, Optional start As Long = 1) As Long
@@ -834,7 +890,9 @@ Function FindPosition(Word As String, FindString As String, Count As Long, Optio
     Wend
 End Function
 
-Sub CleanFormulae(ByVal lngFStart As Long, ByVal lngFEnd As Long)
+Sub CleanFormulae(ByVal lngFStart As Long, ByVal lngFEnd As Long, Optional ConstraintNumber As Long = 0)
+
+    On Error GoTo EscapeHandler
 
     Dim objCurNode As CFormula, lngIndex As Long, varReturn As Variant
 
@@ -842,6 +900,10 @@ Sub CleanFormulae(ByVal lngFStart As Long, ByVal lngFEnd As Long)
     Dim lngCurDepth As Long, strChildAddr As Variant
     For lngCurDepth = lngMaxDepth To 0 Step -1
         For lngIndex = lngFStart To lngFEnd
+            Application.StatusBar = "OpenSolver: Constraint progress: " & ConstraintNumber & "/" & ConstraintCount & ". " & _
+                                    "Cleaning decision variables in formula " & lngIndex & "/" & Formulae.Count & ". "
+            DoEvents
+            
             Set objCurNode = Formulae(lngIndex)
             If objCurNode.lngDepth = lngCurDepth Then
                 If objCurNode.intRefsAdjCell = AdjCellUnknown And Not objCurNode.boolIsRoot Then
@@ -879,6 +941,10 @@ Sub CleanFormulae(ByVal lngFStart As Long, ByVal lngFEnd As Long)
     Dim strParentAdr As Variant
     For lngCurDepth = lngMaxDepth To 0 Step -1
         For lngIndex = lngFStart To lngFEnd
+            Application.StatusBar = "OpenSolver: Constraint progress: " & ConstraintNumber & "/" & ConstraintCount & ". " & _
+                                    "Cleaning constants in formula " & lngIndex & "/" & Formulae.Count & ". "
+            DoEvents
+            
             If Formulae(lngIndex).lngDepth = lngCurDepth Then
                 If Formulae(lngIndex).boolIsConstant Then
                     ' Constant - so can pull up into its parents
@@ -898,8 +964,38 @@ Sub CleanFormulae(ByVal lngFStart As Long, ByVal lngFEnd As Long)
     
     ' Remove any unneeded nodes
     For lngIndex = lngFEnd To lngFStart Step -1
+        Application.StatusBar = "OpenSolver: Constraint progress: " & ConstraintNumber & "/" & ConstraintCount & ". " & _
+                                "Removing uneccessary formulae: " & lngIndex & "/" & Formulae.Count & ". "
+        DoEvents
+    
         If Formulae(lngIndex).boolCanBeRemoved Then Formulae.Remove lngIndex
     Next lngIndex
+    
+EscapeHandler:
+    ' We only trap Escape (Err.Number=18) here; all other errors are passed back to the caller.
+    ' Save error message
+    Dim ErrorNumber As Long, ErrorDescription As String, ErrorSource As String
+    ErrorNumber = Err.Number
+    ErrorDescription = Err.Description & IIf(Erl = 0, "", " (at line " & Erl & ")")
+    ErrorSource = Err.Source
+
+    If Err.Number = 18 Then
+        If MsgBox("You have pressed the Escape key. Do you wish to cancel?", _
+                   vbCritical + vbYesNo + vbDefaultButton1, _
+                   "OpenSolver: User Interrupt Occured...") = vbNo Then
+            Resume 'continue on from where error occured
+        Else
+            ' Raise a "user cancelled" error. We cannot use Raise, as that exits immediately without going thru our code below
+            ErrorNumber = OpenSolver_UserCancelledError
+            ErrorSource = "Parsing formulae"
+            ErrorDescription = "Model building cancelled by user."
+        End If
+    End If
+    
+ErrorExit:
+    ' Exit, raising an error; none of the following change the Err.Number etc, but we saved them above just in case...
+    Application.StatusBar = False
+    Err.Raise ErrorNumber, ErrorSource, ErrorDescription
 End Sub
 
 Sub PUSHDOWN(ByRef objNode As CFormula, ByVal lngNewDepth As Long)
@@ -917,6 +1013,7 @@ End Sub
 
 Function AddNodeIfNew(ByRef objCurNode As CFormula, ByRef c As Range) As String
     Dim cell As Range
+    On Error GoTo EscapeHandler
     
     ' 1.1 Get the standard name of this cell
     Dim strStdName As String
@@ -1057,6 +1154,33 @@ Function AddNodeIfNew(ByRef objCurNode As CFormula, ByRef c As Range) As String
     AddNodeIfNew = strStdName
 
 finishedNode:
+    Exit Function
+    
+EscapeHandler:
+    ' We only trap Escape (Err.Number=18) here; all other errors are passed back to the caller.
+    ' Save error message
+    Dim ErrorNumber As Long, ErrorDescription As String, ErrorSource As String
+    ErrorNumber = Err.Number
+    ErrorDescription = Err.Description & IIf(Erl = 0, "", " (at line " & Erl & ")")
+    ErrorSource = Err.Source
+
+    If Err.Number = 18 Then
+        If MsgBox("You have pressed the Escape key. Do you wish to cancel?", _
+                   vbCritical + vbYesNo + vbDefaultButton1, _
+                   "OpenSolver: User Interrupt Occured...") = vbNo Then
+            Resume 'continue on from where error occured
+        Else
+            ' Raise a "user cancelled" error. We cannot use Raise, as that exits immediately without going thru our code below
+            ErrorNumber = OpenSolver_UserCancelledError
+            ErrorSource = "Parsing formulae"
+            ErrorDescription = "Model building cancelled by user."
+        End If
+    End If
+    
+ErrorExit:
+    ' Exit, raising an error; none of the following change the Err.Number etc, but we saved them above just in case...
+    Application.StatusBar = False
+    Err.Raise ErrorNumber, ErrorSource, ErrorDescription
 End Function
 
 Function ConvertFormula(Solver As String, tokenText As String) As String

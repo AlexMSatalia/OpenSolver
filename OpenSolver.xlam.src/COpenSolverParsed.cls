@@ -27,6 +27,7 @@ Public Sub SolveModel(s As COpenSolver)
     
     Dim errorString As String
     
+    Application.EnableCancelKey = xlErrorHandler
     On Error GoTo ErrHandler
     
     ' Parse spreadsheet and build model
