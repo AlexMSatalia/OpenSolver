@@ -55,7 +55,7 @@ Function About_Gurobi() As String
     ' Assemble version info
     About_Gurobi = "Gurobi " & SolverBitness_Gurobi & "-bit" & _
                      " v" & SolverVersion_Gurobi & _
-                     " at " & SolverPath
+                     " at " & MakeSpacesNonBreaking(SolverPath)
 End Function
 
 Function GetGurobiBinFolder() As String

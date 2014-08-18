@@ -51,7 +51,7 @@ Function About_CBC() As String
     ' Assemble version info
     About_CBC = "CBC " & SolverBitness_CBC & "-bit" & _
                      " v" & SolverVersion_CBC & _
-                     " at " & SolverPath
+                     " at " & MakeSpacesNonBreaking(SolverPath)
 End Function
 
 Function SolverFilePath_CBC(errorString As String) As String

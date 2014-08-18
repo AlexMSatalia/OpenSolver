@@ -1074,19 +1074,24 @@ Sub BuildModelOptions(s As String, succeeded As Boolean)
 10900     If GetNameValueIfExists(ActiveWorkbook, sheetName & "solver_eng", s) Then SimplexEngineSelected = s = "2"
 
 10910     If (Not SimplexEngineSelected And Not AssumeLinearModel) Then
+#If Mac Then
+              Dim f As New MacCustomForm
+#Else
+              Dim f As New CustomForm
+#End If
               ' User has not told us to use the Simplex method...
 10920         If Application.Version <= 12# Then ' Excel 2007
-10930              CustomForm.TextBox1.Caption = "OpenSolver assumes the model is linear. However, Assume Linear Model is not turned on. Would you like to continue anyway (and solve the problem as if Assume Linear Model was turned on)?"
-10940              CustomForm.CheckBox1.Caption = "Turn on Assume Linear Model"
+10930              f.TextBox1.Caption = "OpenSolver assumes the model is linear. However, Assume Linear Model is not turned on. Would you like to continue anyway (and solve the problem as if Assume Linear Model was turned on)?"
+10940              f.CheckBox1.Caption = "Turn on Assume Linear Model"
 10950         Else   'if its excel 2010
-10960              CustomForm.TextBox1.Caption = "OpenSolver always uses the simplex algorithm. However, the Solving Method is not set as Simplex. Would you like to continue anyway (and solve the problem using the Simplex method)?"
-10970              CustomForm.CheckBox1.Caption = "Set the Solving Method to Simplex"
+10960              f.TextBox1.Caption = "OpenSolver always uses the simplex algorithm. However, the Solving Method is not set as Simplex. Would you like to continue anyway (and solve the problem using the Simplex method)?"
+10970              f.CheckBox1.Caption = "Set the Solving Method to Simplex"
 10980         End If
-10990         CustomForm.Tag = ""
-11000         CustomForm.Show
-11010         If CustomForm.Tag = "Cancelled" Then
+10990         f.Tag = ""
+11000         f.Show
+11010         If f.Tag = "Cancelled" Then
 11020             Exit Sub
-11030         ElseIf CustomForm.CheckBox1.value = True Then
+11030         ElseIf f.CheckBox1.value = True Then
 11040             AssumeLinearModel = True
 11050             If Application.Version <= 12# Then   ' Excel 2007, or earlier
 11060                 SetSolverNameOnSheet "lin", "=1"
@@ -1095,10 +1100,10 @@ Sub BuildModelOptions(s As String, succeeded As Boolean)
 11090             End If
 11100         Else    'if the user continues without correcting issues warn them of the dangers
 11110             If MsgBox("Warning are you sure you want to continue without changing your model's settings?", vbCritical + vbYesNo + vbDefaultButton1, "OpenSolver Warning") = vbNo Then
-11120                 CustomForm.Show
-11130                 If CustomForm.Tag = "Cancelled" Then
+11120                 f.Show
+11130                 If f.Tag = "Cancelled" Then
 11140                     Exit Sub
-11150                 ElseIf CustomForm.CheckBox1.value = True Then
+11150                 ElseIf f.CheckBox1.value = True Then
 11160                     AssumeLinearModel = True
 11170                     If Application.Version = 12# Then   ' Excel 2007
 11180                         SetSolverNameOnSheet "lin", "=1"
@@ -2504,34 +2509,43 @@ Sub CheckLinearityOfModel()
 18090     SetRangeValues AdjustableCells, OriginalSolutionValues
           
           'display dialog to user
-18100     NonlinearForm.TextBox2.Caption = TrimBlankLines(nonlinearinformation)
+#If Mac Then
+          Dim f As New MacNonlinearForm
+#Else
+          Dim f As New NonlinearForm
+#End If
+18100     f.TextBox2.Caption = TrimBlankLines(nonlinearinformation)
 18110     If nonlinearinformation = "" Then
-18120         NonlinearForm.TextBox2.Caption = "There have been no instances of nonlinearity found in this model. Some models can generate warnings of non-linearity " _
-                                             & "because of numerical errors that accumulate in the spreadsheet. OpenSolver's non-linearity check can be disabled under OpenSolver's " _
-                                             & "Options settings."
+18120         f.TextBox2.Caption = "There have been no instances of nonlinearity found in this model. Some models can generate warnings of non-linearity " & _
+                                    "because of numerical errors that accumulate in the spreadsheet. OpenSolver's non-linearity check can be disabled under OpenSolver's " & _
+                                    "Options settings."
 18130     End If
-18140     NonlinearForm.TextBox2.TextAlign = fmTextAlignLeft
-18150     NonlinearForm.TextBox2.AutoSize = False
-18160     NonlinearForm.TextBox2.height = 20
-18170     NonlinearForm.TextBox2.AutoSize = True
-18180     NonlinearForm.TextBox2.AutoSize = False
-18190     If NonlinearForm.TextBox2.height > 250 Then NonlinearForm.TextBox2.height = 250
-18200     NonlinearForm.TextBox2.width = 546
-          ' NonlinearForm.TextBox2.top = 1
-18210     NonlinearForm.width = NonlinearForm.TextBox2.width + 2 * NonlinearForm.TextBox2.left
-          'NonlinearForm.TextBox2.left = NonlinearForm.TextBox2.width * 0.1
-18220     NonlinearForm.FullCheck.Visible = False
-18230     NonlinearForm.HighlightBox.Visible = True
-          'NonlinearForm.ContinueButton.left = Int(NonlinearForm.TextBox2.left + NonlinearForm.TextBox2.width * 0.5 - (NonlinearForm.ContinueButton.width / 2))
-          'NonlinearForm.HighlightBox.left = NonlinearForm.TextBox2.left
-18240     NonlinearForm.HighlightBox.top = NonlinearForm.TextBox2.top + NonlinearForm.TextBox2.height + 5
-          'NonlinearForm.FullCheck.left = NonlinearForm.TextBox2.left
-          ' NonlinearForm.FullCheck.top = NonlinearForm.HighlightBox.top + NonlinearForm.HighlightBox.height + 5
-18250     NonlinearForm.ContinueButton.top = NonlinearForm.HighlightBox.top  ' Enought space around check box
-18260     NonlinearForm.height = NonlinearForm.ContinueButton.top + NonlinearForm.ContinueButton.height + 30
-18270     NonlinearForm.Show
+18140     f.TextBox2.TextAlign = fmTextAlignLeft
+18150     f.TextBox2.AutoSize = False
+18160     f.TextBox2.height = 20
+18170     f.TextBox2.AutoSize = True
+18180     f.TextBox2.AutoSize = False
+18190     If f.TextBox2.height > 250 Then f.TextBox2.height = 250
+18200     f.TextBox2.width = 546
+          ' f.TextBox2.top = 1
+18210     f.width = f.TextBox2.width + 2 * f.TextBox2.left
+          'f.TextBox2.left = f.TextBox2.width * 0.1
+18220     f.FullCheck.Visible = False
+18230     f.HighlightBox.Visible = True
+          'f.ContinueButton.left = Int(f.TextBox2.left + f.TextBox2.width * 0.5 - (f.ContinueButton.width / 2))
+          'f.HighlightBox.left = f.TextBox2.left
+18240     f.HighlightBox.top = f.TextBox2.top + f.TextBox2.height + 5
+          'f.FullCheck.left = f.TextBox2.left
+          ' f.FullCheck.top = f.HighlightBox.top + f.HighlightBox.height + 5
+#If Mac Then
+          f.ContinueButton.top = f.HighlightBox.top + 11
+#Else
+          f.ContinueButton.top = f.HighlightBox.top + 6 ' Enough space around check box anyway
+#End If
+18260     f.height = f.ContinueButton.top + f.ContinueButton.height + 30
+18270     f.Show
           
-18280     If NonlinearForm.HighlightBox.value = True Then
+18280     If f.HighlightBox.value = True Then
 18290         HighlightNonLinearities RowIsNonLinear, ObjectiveIsNonLinear
 18300     End If
 End Sub
@@ -2709,47 +2723,57 @@ Sub QuickLinearityCheck(fullLinearityCheckWasPerformed As Boolean)
 19290     If NonLinearInfo <> "" Then
               SolveStatus = NotLinear
               If Not MinimiseUserInteraction Then
-19300             NonlinearForm.TextBox2.Caption = "WARNING : " & vbNewLine & TrimBlankLines(NonLinearInfo)
+#If Mac Then
+                  Dim f As New MacNonlinearForm
+#Else
+                  Dim f As New NonlinearForm
+#End If
+
+                  f.TextBox2.Caption = "WARNING : " & vbNewLine & TrimBlankLines(NonLinearInfo)
               
                   'If its only the objective function hide the full check
-                  'If NonlinearConstraint = True Then
-19310             NonlinearForm.FullCheck.Visible = True
+                  'If f = True Then
+19310             f.FullCheck.Visible = True
                   'Else
-                  '    NonlinearForm.FullCheck.Visible = False
-                  '    NonlinearForm.FullCheck.value = False
+                  '    f.FullCheck.Visible = False
+                  '    f.FullCheck.value = False
                   'End If
               
-                  'formatting of the user form NonlinearForm.TextBox2.AutoSize = True
-19320             NonlinearForm.TextBox2.AutoSize = False
-19330             NonlinearForm.TextBox2.height = 20
-19340             NonlinearForm.TextBox2.AutoSize = True
-19350             NonlinearForm.TextBox2.AutoSize = False
-19360             If NonlinearForm.TextBox2.height > 250 Then NonlinearForm.TextBox2.height = 250
-19370             NonlinearForm.TextBox2.width = 546
-19380             NonlinearForm.width = NonlinearForm.TextBox2.width + 2 * NonlinearForm.TextBox2.left
-                  'NonlinearForm.TextBox2.left = NonlinearForm.TextBox2.width * 0.1
-19390             NonlinearForm.TextBox2.TextAlign = fmTextAlignLeft
-19400             NonlinearForm.HighlightBox.Visible = True
-19410             NonlinearForm.FullCheck.Caption = "Run a full linearity check. (This will destroy the current solution) "
-19420             NonlinearForm.Caption = "OpenSolver: Linearity check "
-19430             NonlinearForm.HighlightBox.Caption = "Highlight the nonlinearities"
-                  'NonlinearForm.HighlightBox.left = NonlinearForm.TextBox2.left
-                  'NonlinearForm.FullCheck.left = NonlinearForm.TextBox2.left
-19440             NonlinearForm.HighlightBox.top = NonlinearForm.TextBox2.height + NonlinearForm.TextBox2.top + 5
-19450             NonlinearForm.FullCheck.top = NonlinearForm.HighlightBox.top + NonlinearForm.HighlightBox.height + 0 ' Enought space around check box anyway
-                  ' NonlinearForm.ContinueButton.top = NonlinearForm.FullCheck.top + NonlinearForm.FullCheck.height + 3 ' Enough space around check box anyway
-19460             NonlinearForm.ContinueButton.top = NonlinearForm.HighlightBox.top + 6 ' Enough space around check box anyway
-                  'NonlinearForm.ContinueButton.left = NonlinearForm.TextBox2.width * 0.4
-19470             NonlinearForm.height = NonlinearForm.ContinueButton.top + NonlinearForm.ContinueButton.height + 30
-                  'NonlinearForm.height = (NonlinearForm.TextBox2.top + NonlinearForm.TextBox2.height + NonlinearForm.FullCheck.height _
-                  '        + NonlinearForm.HighlightBox.height + NonlinearForm.ContinueButton.height + NonlinearForm.ContinueButton.top) * 0.8
-19480             NonlinearForm.Show
+                  'formatting of the user form f.TextBox2.AutoSize = True
+19320             f.TextBox2.AutoSize = False
+19330             f.TextBox2.height = 20
+19340             f.TextBox2.AutoSize = True
+19350             f.TextBox2.AutoSize = False
+19360             If f.TextBox2.height > 250 Then f.TextBox2.height = 250
+19370             f.TextBox2.width = 546
+19380             f.width = f.TextBox2.width + 2 * f.TextBox2.left
+                  'f.TextBox2.left = f.TextBox2.width * 0.1
+19390             f.TextBox2.TextAlign = fmTextAlignLeft
+19400             f.HighlightBox.Visible = True
+19410             f.FullCheck.Caption = "Run a full linearity check. (This will destroy the current solution) "
+19420             f.Caption = "OpenSolver: Linearity check "
+19430             f.HighlightBox.Caption = "Highlight the nonlinearities"
+                  'f.HighlightBox.left = f.TextBox2.left
+                  'f.FullCheck.left = f.TextBox2.left
+19440             f.HighlightBox.top = f.TextBox2.height + f.TextBox2.top + 5
+19450             f.FullCheck.top = f.HighlightBox.top + f.HighlightBox.height + 0 ' Enought space around check box anyway
+                  ' f.ContinueButton.top = f.FullCheck.top + f.FullCheck.height + 3 ' Enough space around check box anyway
+#If Mac Then
+                  f.ContinueButton.top = f.HighlightBox.top + 11
+#Else
+19460             f.ContinueButton.top = f.HighlightBox.top + 6 ' Enough space around check box anyway
+#End If
+                  'f.ContinueButton.left = f.TextBox2.width * 0.4
+19470             f.height = f.FullCheck.top + f.FullCheck.height + 30
+                  'f.height = (f.TextBox2.top + f.TextBox2.height + f.FullCheck.height _
+                  '        + f.HighlightBox.height + f.ContinueButton.height + f.ContinueButton.top) * 0.8
+19480             f.Show
               
                   'showing the nonlinear constraints
-19490             If NonlinearForm.HighlightBox.value = True Then
+19490             If f.HighlightBox.value = True Then
 19500                 HighlightNonLinearities RowIsNonLinear, ObjectiveIsNonLinear
 19510             End If
-19520             If NonlinearForm.FullCheck.value = True Then
+19520             If f.FullCheck.value = True Then
                       'Full linearity check run
 19530                 CheckLinearityOfModel
 19540                 fullLinearityCheckWasPerformed = True

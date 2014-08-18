@@ -36,7 +36,7 @@ Function About_Couenne() As String
     ' Assemble version info
     About_Couenne = "Couenne " & SolverBitness_Couenne & "-bit" & _
                     " v" & SolverVersion_Couenne & _
-                    " at " & SolverPath
+                    " at " & MakeSpacesNonBreaking(SolverPath)
 End Function
 
 Function SolverFilePath_Couenne(Optional errorString As String) As String

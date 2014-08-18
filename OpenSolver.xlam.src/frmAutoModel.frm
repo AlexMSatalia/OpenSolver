@@ -2,9 +2,9 @@ VERSION 5.00
 Begin {C62A69F0-16DC-11CE-9E98-00AA00574A4F} frmAutoModel 
    Caption         =   "OpenSolver - AutoModel"
    ClientHeight    =   4480
-   ClientLeft      =   45
-   ClientTop       =   375
-   ClientWidth     =   8805.001
+   ClientLeft      =   42
+   ClientTop       =   378
+   ClientWidth     =   8806
    OleObjectBlob   =   "frmAutoModel.frx":0000
    StartUpPosition =   1  'CenterOwner
 End
@@ -49,6 +49,7 @@ Public GuessObjStatus As String
 
 
 Private Sub cmdCancel_Click()
+          Unload frmAutoModel
 41310     Unload Me
 End Sub
 
@@ -59,8 +60,12 @@ End Sub
 ' Written by:       IRD
 '--------------------------------------------------------------------
 Private Sub UserForm_Activate()
+    frmAutoModel.AutoModelActivate Me
+End Sub
+
+Public Sub AutoModelActivate(f As UserForm)
           ' Reset enabled flags
-41320     Me.ResetEverything
+41320     ResetEverything f
           ' Make sure sheet is up to date
 41330     On Error Resume Next
 41340     Application.Calculate
@@ -73,7 +78,7 @@ Private Sub UserForm_Activate()
           ' Get ready to process
 41370     DoEvents
           ' Show results of finding objective
-41380     GuessObj
+41380     GuessObj f
 End Sub
 
 '--------------------------------------------------------------------
@@ -82,11 +87,11 @@ End Sub
 '
 ' Written by:       IRD
 '--------------------------------------------------------------------
-Public Sub ResetEverything()
+Public Sub ResetEverything(f As UserForm)
 
-41390     optMax.value = False
-41400     optMin.value = False
-41410     refObj.Text = ""
+41390     f.optMax.value = False
+41400     f.optMin.value = False
+41410     f.refObj.Text = ""
 
 End Sub
 
@@ -97,25 +102,25 @@ End Sub
 '
 ' Written by:       IRD
 '--------------------------------------------------------------------
-Private Sub GuessObj()
+Private Sub GuessObj(f As UserForm)
               
 41420     Select Case GuessObjStatus
               Case "NoSense"
                   ' Didn't find anything
-41430             lblStatus.Caption = _
+41430             f.lblStatus.Caption = _
                   "AutoModel was unable to guess anything." + vbNewLine + _
                   "Please enter the objective sense and the objective function cell."
                   'lblStatus.ForeColor = vbRed
 41440         Case "SenseNoCell"
-41450             If model.ObjectiveSense = MaximiseObjective Then optMax.value = True
-41460             If model.ObjectiveSense = MinimiseObjective Then optMin.value = True
+41450             If model.ObjectiveSense = MaximiseObjective Then f.optMax.value = True
+41460             If model.ObjectiveSense = MinimiseObjective Then f.optMin.value = True
                   'lblStatus.ForeColor = vbBlue
-41470             lblStatus.Caption = _
+41470             f.lblStatus.Caption = _
                   "AutoModel found the objective sense, but couldn't find the objective cell." + vbNewLine + _
                   "Please check the objective sense and enter the objective function cell."
 41480     End Select
           
-41490     Me.Repaint
+41490     f.Repaint
 41500     DoEvents
 End Sub
 
@@ -127,13 +132,17 @@ End Sub
 ' Written by:       IRD
 '--------------------------------------------------------------------
 Private Sub cmdFinish_Click()
+         frmAutoModel.AutoModelFinish Me
+End Sub
+
+Public Sub AutoModelFinish(f As UserForm)
           ' Check if user changed objective cell
 41510     On Error GoTo BadObjRef
-41520     Set model.ObjectiveFunctionCell = ActiveSheet.Range(refObj.Text)
+41520     Set model.ObjectiveFunctionCell = ActiveSheet.Range(f.refObj.Text)
           
           ' Get the objective sense
-41530     If optMax.value = True Then model.ObjectiveSense = MaximiseObjective
-41540     If optMin.value = True Then model.ObjectiveSense = MinimiseObjective
+41530     If f.optMax.value = True Then model.ObjectiveSense = MaximiseObjective
+41540     If f.optMin.value = True Then model.ObjectiveSense = MinimiseObjective
 41550     If model.ObjectiveSense = UnknownObjectiveSense Then
 41560         MsgBox "Error: Please select an objective sense (minimise or maximise)!", vbExclamation + vbOKOnly, "AutoModel"
               'frmModel.Show
@@ -151,6 +160,7 @@ Private Sub cmdFinish_Click()
           
           'frmModel.Show
 41630     Unload Me
+          Unload f
           
 41640     Exit Sub
           
@@ -158,7 +168,7 @@ BadObjRef:
           ' Couldn't turn the objective cell address into a range
 41650     MsgBox "Error: the cell address for the objective is invalid. Please correct " + _
                   "and click 'Finish AutoModel' again.", vbExclamation + vbOKOnly, "AutoModel"
-41660     refObj.SetFocus ' Set the focus back to the RefEdit
+41660     f.refObj.SetFocus ' Set the focus back to the RefEdit
 41670     DoEvents ' Try to stop RefEdit bugs
 41680     Exit Sub
 End Sub

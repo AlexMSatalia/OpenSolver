@@ -2,9 +2,9 @@ VERSION 5.00
 Begin {C62A69F0-16DC-11CE-9E98-00AA00574A4F} frmOptions 
    Caption         =   "OpenSolver - Solve Options"
    ClientHeight    =   4170
-   ClientLeft      =   45
-   ClientTop       =   375
-   ClientWidth     =   4140
+   ClientLeft      =   42
+   ClientTop       =   378
+   ClientWidth     =   4144
    OleObjectBlob   =   "frmOptions.frx":0000
    StartUpPosition =   1  'CenterOwner
 End
@@ -20,14 +20,18 @@ Private Sub cmdCancel_Click()
 End Sub
 
 Private Sub cmdOK_Click()
+    frmOptions.OptionsOK Me
+    Unload Me
+End Sub
 
-41700     If chkNonNeg.value = True Then
+Public Sub OptionsOK(f As UserForm)
+41700     If f.chkNonNeg.value = True Then
 41710         SetSolverNameOnSheet "neg", "=1"
 41720     Else
 41730         SetSolverNameOnSheet "neg", "=2"     ' 2 means false
 41740     End If
           
-41750     If chkShowSolverProgress.value = True Then
+41750     If f.chkShowSolverProgress.value = True Then
 41760         SetSolverNameOnSheet "sho", "=1"
 41770     Else
 41780         SetSolverNameOnSheet "sho", "=2"     ' 2 means false
@@ -35,7 +39,7 @@ Private Sub cmdOK_Click()
           
           ' Because the "solver_eng" is a new option, and not always available, we only update its value if it already exists
           Dim s As String
-41800     If chkLinear.value = True Then
+41800     If f.chkLinear.value = True Then
 41810         SetSolverNameOnSheet "lin", "=1"
 41820         If GetNameValueIfExists(ActiveWorkbook, "'" & Replace(ActiveSheet.Name, "'", "''") & "'!solver_eng", s) Then SetSolverNameOnSheet "eng", "=2" ' 2=simplex
 41830     Else
@@ -43,14 +47,14 @@ Private Sub cmdOK_Click()
 41850         If GetNameValueIfExists(ActiveWorkbook, "'" & Replace(ActiveSheet.Name, "'", "''") & "'!solver_eng", s) Then SetSolverNameOnSheet "eng", "=1" ' 1=non-linear
 41860     End If
           
-41870     SetSolverNameOnSheet "tim", "=" & Trim(str(CDbl(txtMaxTime.Text)))  ' Trim the leading space which str puts in for +'ve values
-41880     SetSolverNameOnSheet "itr", "=" & Trim(str(CDbl(txtMaxIter.Text)))  ' Trim the leading space which str puts in for +'ve values
-41890     SetSolverNameOnSheet "pre", "=" & Trim(str(CDbl(txtPre.Text)))  ' Trim the leading space which str puts in for +'ve values
-41900     txtTol.Text = Replace(txtTol.Text, "%", "")
-41910     SetSolverNameOnSheet "tol", "=" & Trim(str(CDbl(txtTol.Text) / 100))    ' Str() uses . for decimal
+41870     SetSolverNameOnSheet "tim", "=" & Trim(str(CDbl(f.txtMaxTime.Text)))  ' Trim the leading space which str puts in for +'ve values
+41880     SetSolverNameOnSheet "itr", "=" & Trim(str(CDbl(f.txtMaxIter.Text)))  ' Trim the leading space which str puts in for +'ve values
+41890     SetSolverNameOnSheet "pre", "=" & Trim(str(CDbl(f.txtPre.Text)))  ' Trim the leading space which str puts in for +'ve values
+41900     f.txtTol.Text = Replace(f.txtTol.Text, "%", "")
+41910     SetSolverNameOnSheet "tol", "=" & Trim(str(CDbl(f.txtTol.Text) / 100))    ' Str() uses . for decimal
                                                                       ' CDbl respects the locale. We trim the leading space which str puts in for +'ve values
                                                                       
-41920     If chkPerformLinearityCheck.value = True Then
+41920     If f.chkPerformLinearityCheck.value = True Then
               ' Default is "do check", so we just delete the option
 41930         DeleteNameOnSheet "OpenSolver_LinearityCheck"
 41940     Else
@@ -62,7 +66,10 @@ Private Sub cmdOK_Click()
 End Sub
 
 Private Sub UserForm_Activate()
+          frmOptions.OptionsActivate Me
+End Sub
 
+Public Sub OptionsActivate(f As UserForm)
 41980     SetAnyMissingDefaultExcel2007SolverOptions
 
           Dim nonNeg As Boolean, s As String
@@ -114,14 +121,14 @@ Private Sub UserForm_Activate()
 42190         performLinearityCheck = s = "1"
 42200     End If
 
-42210     chkNonNeg.value = nonNeg
-42220     chkLinear.value = AssumeLinearModel
-42230     chkShowSolverProgress.value = ShowSolverProgress
-42240     txtMaxTime.Text = CStr(maxTime)
-42250     txtTol.Text = tol * 100
-42260     txtMaxIter.Text = CStr(maxIter)
-42270     txtPre = CStr(conPre)
-42280     chkPerformLinearityCheck.value = performLinearityCheck
+42210     f.chkNonNeg.value = nonNeg
+42220     f.chkLinear.value = AssumeLinearModel
+42230     f.chkShowSolverProgress.value = ShowSolverProgress
+42240     f.txtMaxTime.Text = CStr(maxTime)
+42250     f.txtTol.Text = tol * 100
+42260     f.txtMaxIter.Text = CStr(maxIter)
+42270     f.txtPre = CStr(conPre)
+42280     f.chkPerformLinearityCheck.value = performLinearityCheck
 
           Dim Solver As String
 42290     If Not GetNameValueIfExists(ActiveWorkbook, "'" & Replace(ActiveSheet.Name, "'", "''") & "'!OpenSolver_ChosenSolver", Solver) Then
@@ -131,15 +138,15 @@ Private Sub UserForm_Activate()
 
           If SolverType(Solver) = OpenSolver_SolverType.NonLinear Then
               ' Disable linearity options
-42820         frmOptions.chkLinear.Enabled = False
-42830         frmOptions.chkPerformLinearityCheck.Enabled = False
-42840         frmOptions.txtTol.Enabled = False
+42820         f.chkLinear.Enabled = False
+42830         f.chkPerformLinearityCheck.Enabled = False
+42840         f.txtTol.Enabled = False
           End If
           
 42850     If Solver <> "NOMAD" Then
               ' Disable NOMAD only options
-42860         frmOptions.txtMaxIter.Enabled = False
-42870         frmOptions.txtPre.Enabled = False
+42860         f.txtMaxIter.Enabled = False
+42870         f.txtPre.Enabled = False
 42880     End If
 End Sub
 

@@ -167,9 +167,11 @@ Private SearchRangeNameCACHE As Collection  'by ASL 20130126
 #If Mac Then
     Public Const PathDelimeter = ":"
     Public Const ScriptExtension = ".sh"
+    Public Const NBSP = 202 ' ascii char code for non-breaking space on Mac
 #Else
     Public Const PathDelimeter = "\"
     Public Const ScriptExtension = ".bat"
+    Public Const NBSP = 160 ' ascii char code for non-breaking space on Windows
 #End If
 
 Public Const ExternalSolverExeName As String = "cbc.exe"   ' The Executable to run (with no path)
@@ -457,8 +459,12 @@ errorHandler:
               ' See http://www.everythingaccess.com/tutorials.asp?ID=Bring-an-external-application-window-to-the-foreground
               '     for an example of finding a given running application's window
 
-              Dim f As UserFormInterrupt
+              Dim f As UserForm
+#If Mac Then
+              Set f = New MacUserFormInterrupt
+#Else
 320           Set f = New UserFormInterrupt
+#End If
 330           Application.Cursor = xlDefault
 340           f.Show
               'If msgbox("You have pressed the Escape key. Do you wish to cancel?", _
@@ -1863,4 +1869,8 @@ Function TestIntersect(ByRef R1 As Range, ByRef R2 As Range) As Boolean
     '    R1_Y2 >= R2_Y1        ' Cond D
 End Function
 
+' Replaces all spaces with NBSP char
+Function MakeSpacesNonBreaking(Text As String) As String
+    MakeSpacesNonBreaking = Replace(Text, Chr(32), Chr(NBSP))
+End Function
 

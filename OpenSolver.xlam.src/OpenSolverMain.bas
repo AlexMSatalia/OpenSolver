@@ -42,12 +42,20 @@ End Sub
 
 Sub OpenSolver_ModelOptions(Optional Control)
 27830     If Not CheckWorksheetAvailable Then Exit Sub
-27840     frmOptions.Show vbModal
+#If Mac Then
+          MacOptions.Show
+#Else
+          frmOptions.Show vbModal
+#End If
 End Sub
 
 Sub OpenSolver_SolverOptions(Optional Control)
 27850     If Not CheckWorksheetAvailable Then Exit Sub
-27860     frmSolverChange.Show
+#If Mac Then
+          MacSolverChange.Show
+#Else
+          frmSolverChange.Show
+#End If
 End Sub
 
 Sub OpenSolver_SolveRelaxationClickHandler(Optional Control)
@@ -133,7 +141,11 @@ Sub OpenSolver_OnlineHelp(Optional Control)
 End Sub
 
 Sub OpenSolver_AboutClickHandler(Optional Control)
-28780     UserFormAbout.Show
+#If Mac Then
+    MacUserFormAbout.Show
+#Else
+    UserFormAbout.Show
+#End If
 End Sub
 
 Sub OpenSolver_AboutCoinOR(Optional Control)
@@ -239,7 +251,11 @@ Sub OpenSolver_ModelClick(Optional Control)
           'frmAutoModel.Show
           'frmAutoModel2.Show
 29110     If Not CheckWorksheetAvailable Then Exit Sub
+#If Mac Then
+          MacModel.Show
+#Else
 29120     frmModel.Show
+#End If
 29130     DoEvents
 End Sub
 

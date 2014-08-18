@@ -36,7 +36,7 @@ Function About_Bonmin() As String
     ' Assemble version info
     About_Bonmin = "Bonmin " & SolverBitness_Bonmin & "-bit" & _
                     " v" & SolverVersion_Bonmin & _
-                    " at " & SolverPath
+                    " at " & MakeSpacesNonBreaking(SolverPath)
 End Function
 
 Function SolverFilePath_Bonmin(Optional errorString As String) As String
