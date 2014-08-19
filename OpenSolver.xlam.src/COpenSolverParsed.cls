@@ -241,9 +241,6 @@ End Function
 
 ' Returns true if a solve status is loaded
 Function SolveModelParsed_NEOS(ModelFilePathName As String, Solver As String, s As COpenSolverParsed) As Boolean
-    
-    Application.StatusBar = "OpenSolver: Solving model on NEOS... "
-    
     Dim solution As String, errorString As String
     solution = CallNEOS(ModelFilePathName, Solver, errorString)
     If errorString <> "" Then

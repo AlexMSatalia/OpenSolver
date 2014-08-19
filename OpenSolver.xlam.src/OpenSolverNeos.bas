@@ -141,6 +141,11 @@ Private Function CallNEOS_Mac(message As String, errorString As String)
     Dim errorPrefix As String
     errorPrefix = "Sending model to NEOS"
     
+    ' For some reason this status bar doesn't stick unless we update the screen
+    Application.ScreenUpdating = True
+    Application.StatusBar = "OpenSolver: Solving model on NEOS... "
+    Application.ScreenUpdating = False
+    
     Dim ModelFilePathName As String
     ModelFilePathName = GetTempFilePath("job.xml")
     DeleteFileAndVerify ModelFilePathName, errorPrefix, "Unable to delete the job file: " & ModelFilePathName

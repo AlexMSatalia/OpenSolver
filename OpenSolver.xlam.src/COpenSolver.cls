@@ -1517,8 +1517,6 @@ Sub SolveModel_LinearNeos(ModelFilePathName As String, SolveRelaxation As Boolea
         Exit Sub
     End If
     
-    Application.StatusBar = "OpenSolver: Solving model on NEOS... "
-     
     Dim solution As String
     solution = CallNEOS(ModelFilePathName, Solver, errorString)
     If errorString <> "" Then
