@@ -158,7 +158,7 @@ Private Function CallNEOS_Mac(message As String, errorString As String)
     On Error GoTo 0
     
     ' Set up commands for NeosClient
-    ' NeosClient call is of the form: NeosClient.py <job.xml> <neosresult.txt> > <logfile>
+    ' NeosClient call is of the form: NeosClient.py <method> <neosresult.txt> <extra params> >> <logfile>
     ModelFilePathName = QuotePath(ConvertHfsPath(ModelFilePathName))
     
     Dim SolverPath As String
@@ -173,22 +173,69 @@ Private Function CallNEOS_Mac(message As String, errorString As String)
     Dim LogFilePathName As String
     LogFilePathName = GetTempFilePath("log1.tmp")
     DeleteFileAndVerify LogFilePathName, errorPrefix, "Unable to delete the log file: " & LogFilePathName
-    LogFilePathName = " > " & QuotePath(ConvertHfsPath(LogFilePathName))
+    LogFilePathName = " >> " & QuotePath(ConvertHfsPath(LogFilePathName))
 
-    ' Mac doesn't support modal forms
+    ' Mac doesn't support modeless forms
     'CallingNeos.Show False
-    Application.Cursor = xlWait
+    Application.ScreenUpdating = True
+    Application.Cursor = xlWait ' doesn't seem to work on mac
 
-    ' Run NeosClient.py
+    ' Run NeosClient.py->send
     Dim result As Boolean
-    result = OSSolveSync(SolverPath & " " & ModelFilePathName & " " & QuotePath(ConvertHfsPath(SolutionFilePathName)), "", "", LogFilePathName)
+    result = OSSolveSync(SolverPath & " send " & QuotePath(ConvertHfsPath(SolutionFilePathName)) & " " & ModelFilePathName, "", "", LogFilePathName)
     If Not result Then
         GoTo NEOSError
     End If
     
-    Application.Cursor = xlDefault
+    ' Read in job number and password
+    Dim jobNumber As String, Password As String
+    On Error GoTo ErrHandler
+    Open SolutionFilePathName For Input As #1
+        Line Input #1, message
+        jobNumber = Mid(message, Len("jobNumber = ") + 1)
+        Line Input #1, message
+        Password = Mid(message, Len("password = ") + 1)
+    Close #1
+    On Error GoTo 0
+    DeleteFileAndVerify SolutionFilePathName, errorPrefix, "Unable to delete the solution file: " & SolutionFilePathName
+
+    ' Loop until job is done
+    Dim time As Long, Done As Boolean
+    Done = False
+    time = 0
+    While Done = False
+        ' Run NeosClient.py->check
+        result = OSSolveSync(SolverPath & " check " & QuotePath(ConvertHfsPath(SolutionFilePathName)) & " " & jobNumber & " " & Password, "", "", LogFilePathName)
+        If Not result Then
+            GoTo NEOSError
+        End If
+        Open SolutionFilePathName For Input As #1
+            Line Input #1, message
+        Close #1
+        DeleteFileAndVerify SolutionFilePathName, errorPrefix, "Unable to delete the solution file: " & SolutionFilePathName
+
+        ' Evaluate result
+        If message = "Done" Then
+            Done = True
+        ElseIf message <> "Waiting" And message <> "Running" Then
+            GoTo NEOSError
+        Else
+            Application.Wait (Now + TimeValue("0:00:01"))
+            time = time + 1
+            Application.StatusBar = "OpenSolver: Solving model on NEOS... Time Elapsed: " & time & " seconds"
+            DoEvents
+        End If
+    Wend
     
+    Application.Cursor = xlDefault
+    Application.ScreenUpdating = False
     'CallingNeos.Hide
+    
+    ' Run NeosClient.py->check
+    result = OSSolveSync(SolverPath & " read " & QuotePath(ConvertHfsPath(SolutionFilePathName)) & " " & jobNumber & " " & Password, "", "", LogFilePathName)
+    If Not result Then
+        GoTo NEOSError
+    End If
     
     ' Read in results from file
     On Error GoTo ErrHandler
