@@ -591,13 +591,12 @@ Function ExpandFormula(ByVal strFormula As String, _
     '==========================================================================
     ' STEP 2. Keep processing nodes until nothing interesting left
     Do While lngIndex <= Formulae.Count
-        Application.StatusBar = "OpenSolver: Constraint progress: " & ConstraintNumber & "/" & ConstraintCount & ". " & _
-                                "Processing formula " & lngIndex & "/" & Formulae.Count & ". "
+        If lngIndex Mod 100 = 0 Then
+            Application.StatusBar = "OpenSolver: Constraint progress: " & ConstraintNumber & "/" & ConstraintCount & ". " & _
+                                    "Processing formula " & lngIndex & "/" & Formulae.Count & ". "
+        End If
         DoEvents
-        'Debug.Print lngIndex, Formulae.Count
-        'If lngIndex = 96 Then
-        '    'Debug.Print 96
-        'End If
+        
         Set objCurNode = Formulae(lngIndex)
         strParsed = ""
         strSheetPrefix = ""
@@ -696,7 +695,7 @@ Function ExpandFormula(ByVal strFormula As String, _
                         For Each c In rngBuildingRef
                             ' Update status
                             curProgress = curProgress + 1
-                            If curProgress Mod 10 = 0 Then
+                            If curProgress Mod 100 = 0 Then
                                 Application.StatusBar = "OpenSolver: Constraint progress: " & ConstraintNumber & "/" & ConstraintCount & ". " & _
                                                         "Processing formula " & lngIndex & "/" & Formulae.Count & ". " & _
                                                         "Current formula progress: " & curProgress & "/" & TotalCount
@@ -900,8 +899,10 @@ Sub CleanFormulae(ByVal lngFStart As Long, ByVal lngFEnd As Long, Optional Const
     Dim lngCurDepth As Long, strChildAddr As Variant
     For lngCurDepth = lngMaxDepth To 0 Step -1
         For lngIndex = lngFStart To lngFEnd
-            Application.StatusBar = "OpenSolver: Constraint progress: " & ConstraintNumber & "/" & ConstraintCount & ". " & _
-                                    "Cleaning decision variables in formula " & lngIndex & "/" & Formulae.Count & ". "
+            If lngIndex Mod 100 = 0 Then
+                Application.StatusBar = "OpenSolver: Constraint progress: " & ConstraintNumber & "/" & ConstraintCount & ". " & _
+                                        "Cleaning decision variables in formula " & lngIndex & "/" & Formulae.Count & ". "
+            End If
             DoEvents
             
             Set objCurNode = Formulae(lngIndex)
@@ -941,8 +942,10 @@ Sub CleanFormulae(ByVal lngFStart As Long, ByVal lngFEnd As Long, Optional Const
     Dim strParentAdr As Variant
     For lngCurDepth = lngMaxDepth To 0 Step -1
         For lngIndex = lngFStart To lngFEnd
-            Application.StatusBar = "OpenSolver: Constraint progress: " & ConstraintNumber & "/" & ConstraintCount & ". " & _
-                                    "Cleaning constants in formula " & lngIndex & "/" & Formulae.Count & ". "
+            If lngIndex Mod 100 = 0 Then
+                Application.StatusBar = "OpenSolver: Constraint progress: " & ConstraintNumber & "/" & ConstraintCount & ". " & _
+                                        "Cleaning constants in formula " & lngIndex & "/" & Formulae.Count & ". "
+            End If
             DoEvents
             
             If Formulae(lngIndex).lngDepth = lngCurDepth Then
@@ -964,8 +967,10 @@ Sub CleanFormulae(ByVal lngFStart As Long, ByVal lngFEnd As Long, Optional Const
     
     ' Remove any unneeded nodes
     For lngIndex = lngFEnd To lngFStart Step -1
-        Application.StatusBar = "OpenSolver: Constraint progress: " & ConstraintNumber & "/" & ConstraintCount & ". " & _
-                                "Removing uneccessary formulae: " & lngIndex & "/" & Formulae.Count & ". "
+        If lngIndex Mod 100 = 0 Then
+            Application.StatusBar = "OpenSolver: Constraint progress: " & ConstraintNumber & "/" & ConstraintCount & ". " & _
+                                    "Removing uneccessary formulae: " & lngIndex & "/" & Formulae.Count & ". "
+        End If
         DoEvents
     
         If Formulae(lngIndex).boolCanBeRemoved Then Formulae.Remove lngIndex

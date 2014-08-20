@@ -286,7 +286,9 @@ Sub InitialiseModelStats()
     numActualEqs = 0
     numActualRanges = 0
     For i = 1 To numActualCons
-        Application.StatusBar = "OpenSolver: Creating .nl file. Counting constraints: " & i & "/" & numActualCons & ". "
+        If i Mod 100 = 0 Then
+            Application.StatusBar = "OpenSolver: Creating .nl file. Counting constraints: " & i & "/" & numActualCons & ". "
+        End If
         DoEvents
         
         If m.Rels(i) = RelationConsts.RelationEQ Then
@@ -362,7 +364,9 @@ Sub CreateVariableIndex()
     ' First read in actual vars
     i = 1
     For Each c In m.AdjustableCells
-        Application.StatusBar = "OpenSolver: Creating .nl file. Counting variables: " & i & "/" & numActualVars & ". "
+        If i Mod 100 = 0 Then
+            Application.StatusBar = "OpenSolver: Creating .nl file. Counting variables: " & i & "/" & numActualVars & ". "
+        End If
         DoEvents
         
         cellName = ConvertCellToStandardName(c)
@@ -378,7 +382,9 @@ Sub CreateVariableIndex()
     
     ' Next read in fake formulae vars
     For i = 1 To numFakeVars
-        Application.StatusBar = "OpenSolver: Creating .nl file. Counting formulae variables: " & i & "/" & numFakeVars & ". "
+        If i Mod 100 = 0 Then
+            Application.StatusBar = "OpenSolver: Creating .nl file. Counting formulae variables: " & i & "/" & numFakeVars & ". "
+        End If
         DoEvents
         
         cellName = m.Formulae(i).strAddress
@@ -397,17 +403,23 @@ Sub MakeVariableMap()
     
     ' Actual variables
     Dim c As Range, cellName As String, i As Long
+    i = 1
     For Each c In m.AdjustableCells
-        Application.StatusBar = "OpenSolver: Creating .nl file. Classifying variables: " & i & "/" & numActualVars & ". "
+        If i Mod 100 = 0 Then
+            Application.StatusBar = "OpenSolver: Creating .nl file. Classifying variables: " & i & "/" & numActualVars & ". "
+        End If
         DoEvents
         
+        i = i + 1
         cellName = ConvertCellToStandardName(c)
         CellNames.Add cellName
     Next c
     
     ' Formulae variables
     For i = 1 To m.Formulae.Count
-        Application.StatusBar = "OpenSolver: Creating .nl file. Classifying formulae variables: " & i & "/" & numFakeVars & ". "
+        If i Mod 100 = 0 Then
+            Application.StatusBar = "OpenSolver: Creating .nl file. Classifying formulae variables: " & i & "/" & numFakeVars & ". "
+        End If
         DoEvents
         
         cellName = m.Formulae(i).strAddress
@@ -458,7 +470,9 @@ Sub MakeVariableMap()
     Dim LinearInteger As New Collection
     
     For i = 1 To n_var
-        Application.StatusBar = "OpenSolver: Creating .nl file. Sorting variables: " & i & "/" & n_var & ". "
+        If i Mod 100 = 0 Then
+            Application.StatusBar = "OpenSolver: Creating .nl file. Sorting variables: " & i & "/" & n_var & ". "
+        End If
         DoEvents
         
         If NonLinearVars(i) Then
@@ -498,7 +512,9 @@ Sub MakeVariableMap()
     
     ' Non-linear continuous
     For i = 1 To NonLinearContinuous.Count
-        Application.StatusBar = "OpenSolver: Creating .nl file. Outputting non-linear continuous vars"
+        If i Mod 100 = 0 Then
+            Application.StatusBar = "OpenSolver: Creating .nl file. Outputting non-linear continuous vars"
+        End If
         DoEvents
         
         var = NonLinearContinuous(i)
@@ -507,7 +523,9 @@ Sub MakeVariableMap()
     
     ' Non-linear integer
     For i = 1 To NonLinearInteger.Count
-        Application.StatusBar = "OpenSolver: Creating .nl file. Outputting non-linear integer vars"
+        If i Mod 100 = 0 Then
+            Application.StatusBar = "OpenSolver: Creating .nl file. Outputting non-linear integer vars"
+        End If
         DoEvents
         
         var = NonLinearInteger(i)
@@ -516,7 +534,9 @@ Sub MakeVariableMap()
     
     ' Linear continuous
     For i = 1 To LinearContinuous.Count
-        Application.StatusBar = "OpenSolver: Creating .nl file. Outputting linear continuous vars"
+        If i Mod 100 = 0 Then
+            Application.StatusBar = "OpenSolver: Creating .nl file. Outputting linear continuous vars"
+        End If
         DoEvents
         
         var = LinearContinuous(i)
@@ -525,7 +545,9 @@ Sub MakeVariableMap()
     
     ' Linear binary
     For i = 1 To LinearBinary.Count
-        Application.StatusBar = "OpenSolver: Creating .nl file. Outputting linear binary vars"
+        If i Mod 100 = 0 Then
+            Application.StatusBar = "OpenSolver: Creating .nl file. Outputting linear binary vars"
+        End If
         DoEvents
         
         var = LinearBinary(i)
@@ -534,7 +556,9 @@ Sub MakeVariableMap()
     
     ' Linear integer
     For i = 1 To LinearInteger.Count
-        Application.StatusBar = "OpenSolver: Creating .nl file. Outputting linear integer vars"
+        If i Mod 100 = 0 Then
+            Application.StatusBar = "OpenSolver: Creating .nl file. Outputting linear integer vars"
+        End If
         DoEvents
         
         var = LinearInteger(i)
@@ -588,7 +612,9 @@ Sub MakeConstraintMap()
     
     ' Non-linear constraints
     For i = 1 To n_con
-        Application.StatusBar = "OpenSolver: Creating .nl file. Outputting non-linear constraints" & i & "/" & n_con
+        If i Mod 100 = 0 Then
+            Application.StatusBar = "OpenSolver: Creating .nl file. Outputting non-linear constraints" & i & "/" & n_con
+        End If
         DoEvents
         
         If NonLinearConstraints(i) Then
@@ -607,7 +633,9 @@ Sub MakeConstraintMap()
     
     ' Linear constraints
     For i = 1 To n_con
-        Application.StatusBar = "OpenSolver: Creating .nl file. Outputting linear constraints" & i & "/" & n_con
+        If i Mod 100 = 0 Then
+            Application.StatusBar = "OpenSolver: Creating .nl file. Outputting linear constraints" & i & "/" & n_con
+        End If
         DoEvents
         
         If Not NonLinearConstraints(i) Then
@@ -659,14 +687,18 @@ Sub ProcessFormulae()
     ' Loop through all constraints and process each
     Dim i As Long
     For i = 1 To numActualCons
-        Application.StatusBar = "OpenSolver: Processing formulae into expression trees... " & i & "/" & n_con & " formulae."
+        If i Mod 100 = 0 Then
+            Application.StatusBar = "OpenSolver: Processing formulae into expression trees... " & i & "/" & n_con & " formulae."
+        End If
         DoEvents
         
         ProcessSingleFormula m.RHSKeys(i), m.LHSKeys(i), m.Rels(i)
     Next i
     
     For i = 1 To numFakeCons
-        Application.StatusBar = "OpenSolver: Processing formulae into expression trees... " & i + numActualCons & "/" & n_con & " formulae."
+        If i Mod 100 = 0 Then
+            Application.StatusBar = "OpenSolver: Processing formulae into expression trees... " & i + numActualCons & "/" & n_con & " formulae."
+        End If
         DoEvents
         
         ProcessSingleFormula m.Formulae(i).strFormulaParsed, m.Formulae(i).strAddress, RelationConsts.RelationEQ
@@ -877,7 +909,9 @@ Function MakeCBlocks() As String
     
     Dim i As Long
     For i = 1 To n_con
-        Application.StatusBar = "OpenSolver: Creating .nl file. Writing non-linear constraints" & i & "/" & n_con
+        If i Mod 100 = 0 Then
+            Application.StatusBar = "OpenSolver: Creating .nl file. Writing non-linear constraints" & i & "/" & n_con
+        End If
         DoEvents
         
         ' Add block header for the constraint
@@ -921,7 +955,9 @@ Function MakeDBlock() As String
     ' Set duals to zero for all constraints
     Dim i As Long
     For i = 1 To n_con
-        Application.StatusBar = "OpenSolver: Creating .nl file. Writing initial duals " & i & "/" & n_con
+        If i Mod 100 = 0 Then
+            Application.StatusBar = "OpenSolver: Creating .nl file. Writing initial duals " & i & "/" & n_con
+        End If
         DoEvents
         
         AddNewLine Block, i - 1 & " 0", "    " & ConstraintMapRev(CStr(i - 1)) & " = " & 0
@@ -941,7 +977,9 @@ Function MakeXBlock() As String
     ' Loop through the variables in .nl variable order
     Dim i As Long, initial As String, VariableIndex As Long
     For i = 1 To n_var
-        Application.StatusBar = "OpenSolver: Creating .nl file. Writing initial values " & i & "/" & n_var
+        If i Mod 100 = 0 Then
+            Application.StatusBar = "OpenSolver: Creating .nl file. Writing initial values " & i & "/" & n_var
+        End If
         DoEvents
         
         VariableIndex = VariableNLIndexToCollectionIndex(i - 1)
@@ -970,7 +1008,9 @@ Function MakeRBlock() As String
     ' Apply bounds according to the relation type
     Dim i As Long, BoundType As Long, Comment As String, bound As Double
     For i = 1 To n_con
-        Application.StatusBar = "OpenSolver: Creating .nl file. Writing constraint bounds " & i & "/" & n_con
+        If i Mod 100 = 0 Then
+            Application.StatusBar = "OpenSolver: Creating .nl file. Writing constraint bounds " & i & "/" & n_con
+        End If
         DoEvents
         
         bound = LinearConstants(ConstraintIndexToTreeIndex(i - 1))
@@ -991,7 +1031,9 @@ Function MakeBBlock() As String
     
     Dim i As Long, bound As String, Comment As String, VariableIndex As Long, VarName As String, value As Double
     For i = 1 To n_var
-        Application.StatusBar = "OpenSolver: Creating .nl file. Writing variable bounds " & i & "/" & n_var
+        If i Mod 100 = 0 Then
+            Application.StatusBar = "OpenSolver: Creating .nl file. Writing variable bounds " & i & "/" & n_var
+        End If
         DoEvents
         
         VariableIndex = VariableNLIndexToCollectionIndex(i - 1)
@@ -1035,7 +1077,9 @@ Function MakeKBlock() As String
     Dim i As Long, total As Long
     total = 0
     For i = 1 To n_var - 1
-        Application.StatusBar = "OpenSolver: Creating .nl file. Writing jacobian counts " & i & "/" & n_var - 1
+        If i Mod 100 = 0 Then
+            Application.StatusBar = "OpenSolver: Creating .nl file. Writing jacobian counts " & i & "/" & n_var - 1
+        End If
         DoEvents
         
         total = total + NonZeroConstraintCount(VariableNLIndexToCollectionIndex(i - 1))
@@ -1055,7 +1099,9 @@ Function MakeJBlocks() As String
     
     Dim i As Long, TreeIndex As Long, VariableIndex As Long
     For i = 1 To n_con
-        Application.StatusBar = "OpenSolver: Creating .nl file. Writing linear constraints" & i & "/" & n_con
+        If i Mod 100 = 0 Then
+            Application.StatusBar = "OpenSolver: Creating .nl file. Writing linear constraints" & i & "/" & n_con
+        End If
         DoEvents
         
         TreeIndex = ConstraintIndexToTreeIndex(i - 1)
