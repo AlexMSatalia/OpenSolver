@@ -1,5 +1,6 @@
 Attribute VB_Name = "SolverNOMAD"
 Public OS As COpenSolver
+Dim IterationCount As Long
 
 Public Const SolverTitle_NOMAD = "NOMAD (Non-linear Solver)"
 Public Const SolverDesc_NOMAD = "Nomad (Nonsmooth Optimization by Mesh Adaptive Direct search) is a C++ implementation of the Mesh Adaptive Direct Search (Mads) algorithm that solves non-linear problems. It works by updating the values on the sheet and passing them to the C++ solver. Like many non-linear solvers NOMAD cannot guarantee optimality of its solutions."
@@ -164,6 +165,8 @@ Function SolveModel_Nomad(SolveRelaxation As Boolean, s As COpenSolver) As Long
 48200     currentDir = CurDir
           
 48270     SetCurrentDirectory ThisWorkbook.Path
+
+          IterationCount = 0
           
           ' We need to call NomadMain directly rather than use Application.Run .
           ' Using Application.Run causes the API calls inside the DLL to fail on 64 bit Office
@@ -253,7 +256,24 @@ ErrorExit:
 
 End Function
 
-Function updateVar(X As Variant)
+Function updateVar(X As Variant, Optional BestSolution As Variant = Nothing, Optional Infeasible As Boolean = False)
+          IterationCount = IterationCount + 1
+          If IterationCount Mod 5 = 0 Then
+              Dim status As String
+              status = "OpenSolver: Running NOMAD. Iteration " & IterationCount & "."
+              ' Check for BestSolution = Nothing
+              If Not VarType(BestSolution) = 9 Then
+                  ' Flip solution if maximisation
+                  If OS.ObjectiveSense = MaximiseObjective Then BestSolution = -BestSolution
+                  
+                  status = status & " Best solution so far: " & BestSolution
+                  If Infeasible Then
+                      status = status & " (infeasible)"
+                  End If
+              End If
+              Application.StatusBar = status
+              DoEvents
+          End If
 48870     OS.updateVarOS (X)
 End Function
 

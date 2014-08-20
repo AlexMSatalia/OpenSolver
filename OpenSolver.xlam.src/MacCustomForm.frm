@@ -3,8 +3,8 @@ Begin {C62A69F0-16DC-11CE-9E98-00AA00574A4F} MacCustomForm
    Caption         =   "OpenSolver Warning"
    ClientHeight    =   3563
    ClientLeft      =   0
-   ClientTop       =   -882
-   ClientWidth     =   4998
+   ClientTop       =   -885
+   ClientWidth     =   4995
    OleObjectBlob   =   "MacCustomForm.frx":0000
    StartUpPosition =   1  'CenterOwner
 End
