@@ -286,25 +286,288 @@ Public Sub EvaluateConstantOperator()
     
     Dim NewValue As Double
     Select Case NodeText
+    
     Case "plus"
         NewValue = Values(1) + Values(2)
+    
     Case "minus"
         NewValue = Values(1) - Values(2)
+    
     Case "mult"
         NewValue = Values(1) * Values(2)
+    
     Case "div"
         NewValue = Values(1) / Values(2)
+    
+    Case "rem"
+        NewValue = Values(1) Mod Values(2)
+    
     Case "pow"
         NewValue = Values(1) ^ Values(2)
+    
+    Case "less"
+        ' Returns max(arg1 - arg2, 0)
+        NewValue = Values(1) - Values(2)
+        If NewValue < 0 Then NewValue = 0
+    
+    Case "min"
+        NewValue = 10000000000000# ' a big number
+        For i = 1 To NumChildren
+            If Values(i) < NewValue Then NewValue = Values(i)
+        Next i
+    
+    Case "max"
+        NewValue = -10000000000000# ' a small number
+        For i = 1 To NumChildren
+            If Values(i) > NewValue Then NewValue = Values(i)
+        Next i
+    
+    Case "floor"
+        NewValue = Int(Values(1))
+    
+    Case "ceil"
+        NewValue = WorksheetFunction.Ceiling(Values(1), 1)
+    
+    Case "abs"
+        NewValue = Abs(Values(1))
+    
     Case "neg"
         NewValue = -Values(1)
+    
+    Case "or"
+        ' Returns 1 if any arg is non-zero
+        If Not IsZero(Values(1)) Or Not IsZero(Values(2)) Then
+            NewValue = 1
+        Else
+            NewValue = 0
+        End If
+    
+    Case "and"
+        ' Returns 1 if both args are non-zero
+        If Not IsZero(Values(1)) And Not IsZero(Values(2)) Then
+            NewValue = 1
+        Else
+            NewValue = 0
+        End If
+    
+    Case "lt"
+        If Values(1) < Values(2) Then
+            NewValue = 1
+        Else
+            NewValue = 0
+        End If
+    
+    Case "le"
+        If Values(1) <= Values(2) Then
+            NewValue = 1
+        Else
+            NewValue = 0
+        End If
+    
+    Case "eq"
+        If IsZero(Values(1) - Values(2)) Then
+            NewValue = 1
+        Else
+            NewValue = 0
+        End If
+    
+    Case "ge"
+        If Values(1) >= Values(2) Then
+            NewValue = 1
+        Else
+            NewValue = 0
+        End If
+    
+    Case "gt"
+        If Values(1) > Values(2) Then
+            NewValue = 1
+        Else
+            NewValue = 0
+        End If
+    
+    Case "ne"
+        If Not IsZero(Values(1) - Values(2)) Then
+            NewValue = 1
+        Else
+            NewValue = 0
+        End If
+    
+    Case "if"
+        If Not IsZero(Values(1)) Then
+            NewValue = Values(2)
+        Else
+            NewValue = Values(3)
+        End If
+    
+    Case "not"
+        ' Turn zero into 1, and everything else to 0
+        If IsZero(Values(1)) Then
+            NewValue = 1
+        Else
+            NewValue = 0
+        End If
+    
+    Case "tanh"
+        NewValue = WorksheetFunction.Tanh(Values(1))
+    
+    Case "tan"
+        NewValue = Tan(Values(1))
+    
+    Case "sqrt"
+        NewValue = Sqr(Values(1))
+    
+    Case "sinh"
+        NewValue = WorksheetFunction.Sinh(Values(1))
+    
+    Case "sin"
+        NewValue = Sin(Values(1))
+    
+    Case "log10"
+        ' VBA log is the natural logarithm - convert to base 10
+        NewValue = Log(Values(1)) / Log(10)
+    
+    Case "log"
+        NewValue = Log(Values(1))
+    
+    Case "exp"
+        NewValue = Exp(Values(1))
+    
+    Case "cosh"
+        NewValue = WorksheetFunction.Cosh(Values(1))
+    
+    Case "cos"
+        NewValue = Cos(Values(1))
+    
+    Case "atanh"
+        NewValue = WorksheetFunction.Atanh(Values(1))
+    
+    Case "atan2"
+        NewValue = WorksheetFunction.Atan2(Values(1), Values(2))
+    
     Case "atan"
         NewValue = Atn(Values(1))
+    
+    Case "asinh"
+        NewValue = WorksheetFunction.Asinh(Values(1))
+    
+    Case "asin"
+        NewValue = WorksheetFunction.Asin(Values(1))
+    
+    Case "acosh"
+        NewValue = WorksheetFunction.Acosh(Values(1))
+    
+    Case "acos"
+        NewValue = WorksheetFunction.Acos(Values(1))
+        
+    Case "sum"
+        NewValue = 0
+        For i = 1 To NumChildren
+            NewValue = NewValue + Values(i)
+        Next i
+        
+    Case "intdiv"
+        NewValue = Values(1) \ Values(2)
+        
+    Case "precision"
+        ' Rounds number to specified number of sig figs
+        ' Formula from http://stackoverflow.com/a/15976194
+        NewValue = Round(Values(1), Values(2) - (Int(Log(Values(1)) / Log(10#)) + 1))
+        
+    Case "round"
+        ' Rounds number to specified number of decimals
+        NewValue = Round(Values(1), Values(2))
+        
+    Case "trunc"
+        ' Truncates number to specified number of decimals
+        NewValue = WorksheetFunction.RoundDown(Values(1), Values(2))
+        
+    Case "count"
+        ' Counts number of non-zero arguments
+        NewValue = 0
+        For i = 1 To NumChildren
+            If Not IsZero(Values(i)) Then NewValue = NewValue + 1
+        Next i
+        
+    Case "numberof"
+        ' Counts number of numeric args that match the first
+        Dim NumToMatch As Double
+        NumToMatch = Values(1)
+        NewValue = 0
+        For i = 2 To NumChildren
+            If IsZero(NumToMatch - Values(i)) Then NewValue = NewValue + 1
+        Next i
+        
+    Case "numberofs"
+        ' Counts number of string args that match the first
+        Dim StringToMatch As String
+        StringToMatch = Values(1)
+        NewValue = 0
+        For i = 2 To NumChildren
+            If StringToMatch = Values(i) Then NewValue = NewValue + 1
+        Next i
+        
+    Case "ifs"
+        If Not IsZero(Values(1)) Then
+            NewValue = Values(2)
+        Else
+            NewValue = Values(3)
+        End If
+        
+    Case "and_n"
+        ' Returns 1 if all args are non-zero
+        NewValue = 1
+        For i = 1 To NumChildren
+            If IsZero(Values(i)) Then
+                NewValue = 0
+                GoTo FinishNode
+            End If
+        Next i
+        
+    Case "or_n"
+        ' Returns 1 if any args are non-zero
+        NewValue = 0
+        For i = 1 To NumChildren
+            If Not IsZero(Values(i)) Then
+                NewValue = 1
+                GoTo FinishNode
+            End If
+        Next i
+        
+    Case "implies"
+        If Not IsZero(Values(1)) Then
+            NewValue = Values(2)
+        Else
+            NewValue = Values(3)
+        End If
+        
+    Case "iff"
+        ' Returns 1 if both args are non-zero or both are zero (XNOR)
+        If (Not IsZero(Values(1)) And Not IsZero(Values(2))) Or (IsZero(Values(1)) And IsZero(Values(2))) Then
+            NewValue = 1
+        Else
+            NewValue = 0
+        End If
+        
+    Case "alldiff"
+        ' Returns 1 if all arguments are different
+        Dim Args As New Collection, key As String
+        For i = 1 To NumChildren
+            ' Create key using the var type so we distinguish between 1.23 and "1.23"
+            key = CStr(VarType(Values(i))) & CStr(Values(i))
+            If TestKeyExists(Args, key) Then
+                NewValue = 0 ' Duplicate found
+                GoTo FinishNode
+            Else
+                Args.Add 0, key ' Value doesn't matter, we just want to track the key
+            End If
+        Next i
+        
     Case Else
         NewValue = 0
         Err.Raise OpenSolver_BuildError, "Building expression tree", "Constant evaluation of " & NodeText & " not implemented yet in collation of linear terms" & vbCrLf & "Please let us know about this at opensolver.org so we can fix it."
     End Select
         
+FinishNode:
     ' Replace subtree with a constant node
     NodeType = ExpressionTreeNumber
     NodeText = NewValue

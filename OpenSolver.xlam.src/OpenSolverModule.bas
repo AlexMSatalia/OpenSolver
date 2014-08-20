@@ -1874,3 +1874,11 @@ Function MakeSpacesNonBreaking(Text As String) As String
     MakeSpacesNonBreaking = Replace(Text, Chr(32), Chr(NBSP))
 End Function
 
+' Returns true if a number is zero (within tolerance)
+Function IsZero(num As Double) As Boolean
+    If Abs(num) < EPSILON Then
+        IsZero = True
+    Else
+        IsZero = False
+    End If
+End Function

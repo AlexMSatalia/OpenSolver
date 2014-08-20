@@ -25,7 +25,7 @@ End Sub
 Public Sub ChangeSolver(f As UserForm)
           ChosenSolver = ReverseSolverTitle(f.cboSolver.Text)
           f.lblSolver.Caption = SolverDesc(ChosenSolver)
-          f.lblHyperlink = SolverLink(ChosenSolver)
+          f.lblHyperLink = SolverLink(ChosenSolver)
           
           Dim errorString As String
           If SolverAvailable(ChosenSolver, errorString:=errorString) Then
@@ -37,7 +37,7 @@ Public Sub ChangeSolver(f As UserForm)
 End Sub
 
 Private Sub lblHyperlink_Click()
-    OpenURL lblHyperlink.Caption
+    OpenURL lblHyperLink.Caption
 End Sub
 
 Private Sub UserForm_Activate()
