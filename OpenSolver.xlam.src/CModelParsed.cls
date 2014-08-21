@@ -1208,6 +1208,8 @@ Function ConvertFormula_AMPL(tokenText As String) As String
     ' RADIANS
     Case "radians"
         ConvertFormula_AMPL = "pi/180*("
+    Case "pi"
+        ConvertFormula_AMPL = "(pi"
     Case "min", "max"
         If Solver = "NeosCou" Then
             Err.Raise OpenSolver_BuildError, "Parsing model formulae", "The operator " & UCase(tokenText) & " is not yet supported by Couenne."
@@ -1229,6 +1231,8 @@ Function ConvertFormula_NL(tokenText As String) As String
     ' RADIANS
     Case "RADIANS"
         ConvertFormula_NL = "4*ATAN(1)/180*("
+    Case "PI"
+        ConvertFormula_NL = "(4*ATAN(1)"
     Case "MIN", "MAX"
         If Solver = "Couenne" Then
             Err.Raise OpenSolver_BuildError, "Parsing model formulae", "The operator " & UCase(tokenText) & " is not yet supported by Couenne."
