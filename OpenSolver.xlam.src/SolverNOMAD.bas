@@ -258,12 +258,7 @@ ErrorExit:
 
 End Function
 
-' Updates variables on sheet with new NOMAD point. Returns True if UserAbort is detected
-Function updateVar(X As Variant, Optional BestSolution As Variant = Nothing, Optional Infeasible As Boolean = False) As Boolean
-          ' Trap Escape key
-          On Error GoTo ErrHandler
-          Application.EnableCancelKey = xlErrorHandler
-          
+Function updateVar(X As Variant, Optional BestSolution As Variant = Nothing, Optional Infeasible As Boolean = False)
           IterationCount = IterationCount + 1
 
           ' Update solution
@@ -284,63 +279,15 @@ Function updateVar(X As Variant, Optional BestSolution As Variant = Nothing, Opt
           End If
           
 48870     OS.updateVarOS (X)
-          updateVar = False
-          Exit Function
-          
-ErrHandler:
-    If Err.Number = 18 Then
-        If MsgBox("You have pressed the Escape key. Do you wish to cancel?", _
-                   vbCritical + vbYesNo + vbDefaultButton1, _
-                   "OpenSolver: User Interrupt Occured...") = vbNo Then
-            Resume 'continue on from where error occured
-        Else
-            updateVar = True
-        End If
-    End If
 End Function
 
-' Gets values of constraints at the current NOMAD point. Returns True if UserAbort is detected
 Function getValues() As Variant
-          ' Trap Escape key
-          On Error GoTo ErrHandler
-          Application.EnableCancelKey = xlErrorHandler
-          
 48880     getValues = OS.getValuesOS()
-          Exit Function
-          
-ErrHandler:
-    If Err.Number = 18 Then
-        If MsgBox("You have pressed the Escape key. Do you wish to cancel?", _
-                   vbCritical + vbYesNo + vbDefaultButton1, _
-                   "OpenSolver: User Interrupt Occured...") = vbNo Then
-            Resume 'continue on from where error occured
-        Else
-            getValues = True
-        End If
-    End If
 End Function
 
-' Recalculates sheet. Returns True if UserAbort is detected
-Function RecalculateValues() As Boolean
-          ' Trap Escape key
-          On Error GoTo ErrHandler
-          Application.EnableCancelKey = xlErrorHandler
-          
+Sub RecalculateValues()
 48890     Sheets(ActiveSheet.Name).Calculate
-          RecalculateValues = False
-          Exit Function
-          
-ErrHandler:
-    If Err.Number = 18 Then
-        If MsgBox("You have pressed the Escape key. Do you wish to cancel?", _
-                   vbCritical + vbYesNo + vbDefaultButton1, _
-                   "OpenSolver: User Interrupt Occured...") = vbNo Then
-            Resume 'continue on from where error occured
-        Else
-            RecalculateValues = True
-        End If
-    End If
-End Function
+End Sub
 
 Function getNumVariables() As Variant
 48900     getNumVariables = OS.getNumVariablesOS
