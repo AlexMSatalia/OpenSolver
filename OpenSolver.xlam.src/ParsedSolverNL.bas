@@ -746,6 +746,7 @@ Sub ProcessSingleFormula(RHSExpression As String, LHSVariable As String, Relatio
     If Not TestKeyExists(VariableIndex, LHSVariable) Then
         ' We must have a constant formula as the LHS, we can evaluate and merge with the constant
         ' We are bringing the constant to the RHS so must subtract
+        If Not left(LHSVariable, 1) = "=" Then LHSVariable = "=" & LHSVariable
         constant = constant - Application.Evaluate(LHSVariable)
     Else
         ' Our constraint has a single term on the LHS and a formulae on the right.
@@ -1285,8 +1286,13 @@ Function ConvertFormulaToExpressionTree(strFormula As String) As ExpressionTree
             ArgCounts.Increase
         
         ' If the token is an operator
-        Case TokenType.ArithmeticOperator
-            tkn.Text = ConvertExcelFunctionToNL(tkn.Text)
+        Case TokenType.ArithmeticOperator, TokenType.UnaryOperator
+            ' The only unary operator '-' is "neg", which is different to "minus"
+            If tkn.TokenType = TokenType.UnaryOperator Then
+                tkn.Text = "neg"
+            Else
+                tkn.Text = ConvertExcelFunctionToNL(tkn.Text)
+            End If
             ' While there is an operator token at the top of the operator stack
             Do While Operators.Count > 0
                 tknOld = Operators.Peek()
