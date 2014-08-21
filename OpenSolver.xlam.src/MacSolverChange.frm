@@ -20,7 +20,7 @@ Private Sub cboSolver_Change()
 End Sub
 
 Private Sub lblHyperlink_Click()
-    OpenURL lblHyperLink.Caption
+    OpenURL lblHyperlink.Caption
 End Sub
 
 Private Sub UserForm_Activate()

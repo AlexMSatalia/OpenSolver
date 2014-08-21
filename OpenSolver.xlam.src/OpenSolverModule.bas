@@ -100,6 +100,9 @@ Public Enum LinearSolveResult
     IntegerInfeasible = 5
 End Enum
 
+Public Const ModelStatus_Unitialized = 0
+Public Const ModelStatus_Built = 1
+
 ' OpenSolver error numbers.
 Public Const OpenSolver_BuildError = vbObjectError + 1000 ' An error occured while building the model
 Public Const OpenSolver_SolveError = vbObjectError + 1001 ' An error occured while solving the model

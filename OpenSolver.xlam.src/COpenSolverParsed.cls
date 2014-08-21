@@ -30,6 +30,10 @@ Public Sub SolveModel(s As COpenSolver)
     Application.EnableCancelKey = xlErrorHandler
     On Error GoTo ErrHandler
     
+    If s.ModelStatus <> ModelStatus_Built Then
+        Err.Raise Number:=OpenSolver_SolveError, Source:="Solving Parsed Solver Model", Description:="The model cannot be solved as it has not yet been built."
+    End If
+    
     ' Parse spreadsheet and build model
     Set m = New CModelParsed
     m.Setup ActiveWorkbook, ActiveSheet

@@ -145,9 +145,7 @@ Public LinearSolveStatus As LinearSolveResult ' Unsolved, etc
 Public LinearSolveStatusString As String ' The string read back from the CBC file
 Public LinearSolutionWasLoaded As Boolean ' True if we loaded a solution into the spreadsheet
 
-Dim ModelStatus As Long
-Const ModelStatus_Unitialized = 0
-Const ModelStatus_Built = 1
+Public ModelStatus As Long
 
 ' The following are calculated differently; TimeTakenToBuildModel fails if we cross midnight!
 Dim TimeTakenToBuildModel As Single, SecondsTakenToBuildModel As Long
