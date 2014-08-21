@@ -143,7 +143,7 @@ Function SolveModel_Nomad(SolveRelaxation As Boolean, s As COpenSolver) As Long
 48220     On Error GoTo errorHandler
           Dim errorPrefix As String
 48230     errorPrefix = "OpenSolver Nomad Model Solving"
-48240     If ModelStatus <> ModelStatus_Built Then
+48240     If s.ModelStatus <> ModelStatus_Built Then
 48250         Err.Raise Number:=OpenSolver_NomadError, Source:=errorPrefix, Description:="The model cannot be solved as it has not yet been built."
 48260     End If
           
