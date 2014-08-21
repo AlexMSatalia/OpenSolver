@@ -1071,7 +1071,7 @@ Sub BuildModelOptions(s As String, succeeded As Boolean)
 10890     SimplexEngineSelected = False ' a non-linear solver
 10900     If GetNameValueIfExists(ActiveWorkbook, sheetName & "solver_eng", s) Then SimplexEngineSelected = s = "2"
 
-10910     If (Not SimplexEngineSelected And Not AssumeLinearModel) Then
+10910     If (Not SimplexEngineSelected And Not AssumeLinearModel) And SolverType(Solver) = OpenSolver_SolverType.Linear Then
 #If Mac Then
               Dim f As New MacCustomForm
 #Else
