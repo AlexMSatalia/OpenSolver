@@ -202,6 +202,8 @@ Function SolveModel_Nomad(SolveRelaxation As Boolean, s As COpenSolver) As Long
 48510         s.SolveStatus = OpenSolverResult.Infeasible
               s.SolveStatusString = "No Feasible Solution"
               s.LinearSolutionWasLoaded = True
+          ElseIf NomadRetVal = -3 Then
+              Err.Raise OpenSolver_UserCancelledError, "Running NOMAD", "Model solve cancelled by user."
 48520     Else
 48530         s.SolveStatus = NomadRetVal 'optimal
 20830         s.SolveStatusString = "Optimal"
@@ -256,8 +258,15 @@ ErrorExit:
 
 End Function
 
-Function updateVar(X As Variant, Optional BestSolution As Variant = Nothing, Optional Infeasible As Boolean = False)
+' Updates variables on sheet with new NOMAD point. Returns True if UserAbort is detected
+Function updateVar(X As Variant, Optional BestSolution As Variant = Nothing, Optional Infeasible As Boolean = False) As Boolean
+          ' Trap Escape key
+          On Error GoTo ErrHandler
+          Application.EnableCancelKey = xlErrorHandler
+          
           IterationCount = IterationCount + 1
+
+          ' Update solution
           If IterationCount Mod 5 = 0 Then
               Dim status As String
               status = "OpenSolver: Running NOMAD. Iteration " & IterationCount & "."
@@ -265,25 +274,73 @@ Function updateVar(X As Variant, Optional BestSolution As Variant = Nothing, Opt
               If Not VarType(BestSolution) = 9 Then
                   ' Flip solution if maximisation
                   If OS.ObjectiveSense = MaximiseObjective Then BestSolution = -BestSolution
-                  
+
                   status = status & " Best solution so far: " & BestSolution
                   If Infeasible Then
                       status = status & " (infeasible)"
                   End If
               End If
               Application.StatusBar = status
-              DoEvents
           End If
+          
 48870     OS.updateVarOS (X)
+          updateVar = False
+          Exit Function
+          
+ErrHandler:
+    If Err.Number = 18 Then
+        If MsgBox("You have pressed the Escape key. Do you wish to cancel?", _
+                   vbCritical + vbYesNo + vbDefaultButton1, _
+                   "OpenSolver: User Interrupt Occured...") = vbNo Then
+            Resume 'continue on from where error occured
+        Else
+            updateVar = True
+        End If
+    End If
 End Function
 
+' Gets values of constraints at the current NOMAD point. Returns True if UserAbort is detected
 Function getValues() As Variant
+          ' Trap Escape key
+          On Error GoTo ErrHandler
+          Application.EnableCancelKey = xlErrorHandler
+          
 48880     getValues = OS.getValuesOS()
+          Exit Function
+          
+ErrHandler:
+    If Err.Number = 18 Then
+        If MsgBox("You have pressed the Escape key. Do you wish to cancel?", _
+                   vbCritical + vbYesNo + vbDefaultButton1, _
+                   "OpenSolver: User Interrupt Occured...") = vbNo Then
+            Resume 'continue on from where error occured
+        Else
+            getValues = True
+        End If
+    End If
 End Function
 
-Sub RecalculateValues()
+' Recalculates sheet. Returns True if UserAbort is detected
+Function RecalculateValues() As Boolean
+          ' Trap Escape key
+          On Error GoTo ErrHandler
+          Application.EnableCancelKey = xlErrorHandler
+          
 48890     Sheets(ActiveSheet.Name).Calculate
-End Sub
+          RecalculateValues = False
+          Exit Function
+          
+ErrHandler:
+    If Err.Number = 18 Then
+        If MsgBox("You have pressed the Escape key. Do you wish to cancel?", _
+                   vbCritical + vbYesNo + vbDefaultButton1, _
+                   "OpenSolver: User Interrupt Occured...") = vbNo Then
+            Resume 'continue on from where error occured
+        Else
+            RecalculateValues = True
+        End If
+    End If
+End Function
 
 Function getNumVariables() As Variant
 48900     getNumVariables = OS.getNumVariablesOS

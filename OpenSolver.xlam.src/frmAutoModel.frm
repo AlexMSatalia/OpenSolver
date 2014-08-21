@@ -4,7 +4,7 @@ Begin {C62A69F0-16DC-11CE-9E98-00AA00574A4F} frmAutoModel
    ClientHeight    =   4480
    ClientLeft      =   45
    ClientTop       =   375
-   ClientWidth     =   8805
+   ClientWidth     =   8805.001
    OleObjectBlob   =   "frmAutoModel.frx":0000
    StartUpPosition =   1  'CenterOwner
 End
