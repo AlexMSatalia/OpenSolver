@@ -2,7 +2,7 @@ Attribute VB_Name = "SolverCBC"
 
 Option Explicit
 
-Public Const SolverTitle_CBC = "COIN-OR CBC (Linear Solver)"
+Public Const SolverTitle_CBC = "COIN-OR CBC (Linear solver)"
 Public Const SolverDesc_CBC = "The COIN Branch and Cut solver (CBC) is the default solver for OpenSolver and is an open-source mixed-integer program (MIP) solver written in C++. CBC is an active open-source project led by John Forrest at www.coin-or.org."
 Public Const SolverLink_CBC = "http://www.coin-or.org/Cbc/cbcuserguide.html"
 Public Const SolverType_CBC = OpenSolver_SolverType.Linear

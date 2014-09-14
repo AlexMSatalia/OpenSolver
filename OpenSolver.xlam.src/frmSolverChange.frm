@@ -4,7 +4,7 @@ Begin {C62A69F0-16DC-11CE-9E98-00AA00574A4F} frmSolverChange
    ClientHeight    =   4485
    ClientLeft      =   45
    ClientTop       =   375
-   ClientWidth     =   3990
+   ClientWidth     =   4815
    OleObjectBlob   =   "frmSolverChange.frx":0000
    StartUpPosition =   1  'CenterOwner
 End
@@ -25,7 +25,7 @@ End Sub
 Public Sub ChangeSolver(f As UserForm)
           ChosenSolver = ReverseSolverTitle(f.cboSolver.Text)
           f.lblSolver.Caption = SolverDesc(ChosenSolver)
-          f.lblHyperLink = SolverLink(ChosenSolver)
+          f.lblHyperlink = SolverLink(ChosenSolver)
           
           Dim errorString As String
           If SolverAvailable(ChosenSolver, errorString:=errorString) Then
@@ -37,7 +37,7 @@ Public Sub ChangeSolver(f As UserForm)
 End Sub
 
 Private Sub lblHyperlink_Click()
-    OpenURL lblHyperLink.Caption
+    OpenURL lblHyperlink.Caption
 End Sub
 
 Private Sub UserForm_Activate()

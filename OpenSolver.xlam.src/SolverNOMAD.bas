@@ -2,7 +2,7 @@ Attribute VB_Name = "SolverNOMAD"
 Public OS As COpenSolver
 Dim IterationCount As Long
 
-Public Const SolverTitle_NOMAD = "NOMAD (Non-linear Solver)"
+Public Const SolverTitle_NOMAD = "NOMAD (Non-linear solver)"
 Public Const SolverDesc_NOMAD = "Nomad (Nonsmooth Optimization by Mesh Adaptive Direct search) is a C++ implementation of the Mesh Adaptive Direct Search (Mads) algorithm that solves non-linear problems. It works by updating the values on the sheet and passing them to the C++ solver. Like many non-linear solvers NOMAD cannot guarantee optimality of its solutions."
 Public Const SolverLink_NOMAD = "http://www.gerad.ca/nomad/Project/Home.html"
 Public Const SolverType_NOMAD = OpenSolver_SolverType.NonLinear

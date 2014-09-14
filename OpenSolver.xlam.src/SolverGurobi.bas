@@ -1,7 +1,7 @@
 Attribute VB_Name = "SolverGurobi"
 Option Explicit
 
-Public Const SolverTitle_Gurobi = "Gurobi (Linear Solver)"
+Public Const SolverTitle_Gurobi = "Gurobi (Linear solver)"
 Public Const SolverDesc_Gurobi = "Gurobi is a solver for linear programming (LP), quadratic and quadratically constrained programming (QP and QCP), and mixed-integer programming (MILP, MIQP, and MIQCP). It requires the user to download and install a version of the Gurobi and to have GurobiOSRun.py in the OpenSolver directory."
 Public Const SolverLink_Gurobi = "http://www.gurobi.com/resources/documentation"
 Public Const SolverType_Gurobi = OpenSolver_SolverType.Linear

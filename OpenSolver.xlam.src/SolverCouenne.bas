@@ -1,7 +1,7 @@
 Attribute VB_Name = "SolverCouenne"
 Option Explicit
 
-Public Const SolverTitle_Couenne = "COIN-OR Couenne (Non-linear Solver)"
+Public Const SolverTitle_Couenne = "COIN-OR Couenne (Non-linear, non-convex solver)"
 Public Const SolverDesc_Couenne = "Couenne (Convex Over and Under ENvelopes for Nonlinear Estimation) is a branch & bound algorithm to solve Mixed-Integer Nonlinear Programming (MINLP) problems of specific forms. Couenne aims at finding global optima of nonconvex MINLPs. It implements linearization, bound reduction, and branching methods within a branch-and-bound framework."
 Public Const SolverLink_Couenne = "https://projects.coin-or.org/Couenne"
 Public Const SolverType_Couenne = OpenSolver_SolverType.NonLinear
@@ -70,6 +70,7 @@ Function SolverAvailable_Couenne(Optional SolverPath As String, Optional errorSt
         SolverAvailable_Couenne = False
     Else
         SolverAvailable_Couenne = True
+        errorString = "WARNING: Couenne is EXPERIMENTAL and is not guaranteed to give optimal or even good solutions. Proceed with caution." & vbCrLf & vbCrLf & errorString
 
 #If Mac Then
         ' Make sure couenne is executable on Mac
