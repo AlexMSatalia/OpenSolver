@@ -1693,6 +1693,8 @@ Private Sub SearchRangeName_LoadCache(sheet As Worksheet)
 6900          Set TestName = ActiveWorkbook.Names(i)
               
 6910          If TestName.Visible = True Then  'Iterate through the visible names only
+                      ' Skip any references to external workbooks
+                      If left$(TestName.RefersTo, 1) = "=" And InStr(TestName.RefersTo, "[") > 1 Then GoTo tryNext
 6920                  On Error GoTo tryerror
                       'Build the Cache with the range address as key (='sheet1'!$A$1:$B$3)
 6930                  Set rComp = TestName.RefersToRange
