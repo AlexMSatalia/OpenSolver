@@ -520,7 +520,7 @@ Sub BuildModelFromSolverData(Optional LinearityCheckOffset As Double = 0, Option
           
 8590      If Err.Number <> 0 Then
 8600          On Error GoTo errorHandler
-8610          Err.Raise Number:=OpenSolver_BuildError, Source:=errorPrefix, Description:="No Solver model was found on sheet " & RawSheetName
+8610          Err.Raise Number:=OpenSolver_BuildError, Source:=errorPrefix, Description:="No Solver model with decision variables was found on sheet " & RawSheetName
 8620      End If
           
           ' Change to manual calculation mode
