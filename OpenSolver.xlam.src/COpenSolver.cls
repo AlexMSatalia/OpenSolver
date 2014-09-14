@@ -1404,7 +1404,7 @@ Function SolveModel_Linear(SolveRelaxation As Boolean) As Long
               bGetDuals = True
           End If
           
-          ' Set up arrays to hold solution values (to avoid dynmaically resizing them later)
+          ' Set up arrays to hold solution values (to avoid dynamically resizing them later)
           ReDim FinalVarValue(1)
           ReDim VarCell(1)
           If bGetDuals Then

@@ -299,10 +299,15 @@ Function ReadModel_CBC(SolutionFilePathName As String, errorString As String, s 
               Dim Line As String, SplitLine() As String, index As Double, NameValue As String, value As Double, CBCConstraintIndex As Long
 21420         If s.bGetDuals Then
                   Dim j As Long, row As Long, i As Long
-                  'Dim FinalValue() As String, ShadowPrice() As String
-21430
+                  CBCConstraintIndex = 0
+                  
+                  ' Throw away first constraint if it was from a seek objective model
+21430             If s.ObjectiveSense = TargetObjective Then
+                      Line Input #1, Line
+                      CBCConstraintIndex = CBCConstraintIndex + 1
+                  End If
+
 21450             j = 1
-21460             CBCConstraintIndex = 0
 21470             For row = 1 To s.NumRows
 21480                 If s.GetSparseACount(row) = 0 Then
                           ' This constraint was not written to the model, as it had no coefficients. Just ignore it.
