@@ -177,8 +177,7 @@ Private SearchRangeNameCACHE As Collection  'by ASL 20130126
     Public Const NBSP = 160 ' ascii char code for non-breaking space on Windows
 #End If
 
-Public Const ExternalSolverExeName As String = "cbc.exe"   ' The Executable to run (with no path)
-Public Const ExternalSolverExeName64 As String = "cbc64.exe"   ' The Executable to run (with no path) in 64 bit systems (if it exists)
+Public TempFolderPathCached As String
 
 ' TODO: These & other declarations, and type definitons, need to be updated for 64 bit systems; see:
 '   http://msdn.microsoft.com/en-us/library/ee691831.aspx
@@ -517,20 +516,21 @@ End Function
 
 
 Function GetTempFolder() As String
+
+    If TempFolderPathCached = "" Then
 #If Mac Then
-    GetTempFolder = MacScript("return (path to temporary items) as string")
-    Exit Function
+        TempFolderPathCached = MacScript("return (path to temporary items) as string")
 #Else
           'Get Temp Folder
           ' See http://www.pcreview.co.uk/forums/thread-934893.php
           Dim fctRet As Long
-640       GetTempFolder = String$(255, 0)
-650       fctRet = GetTempPath(255, GetTempFolder)
+640       TempFolderPathCached = String$(255, 0)
+650       fctRet = GetTempPath(255, TempFolderPathCached)
 660       If fctRet <> 0 Then
-670           GetTempFolder = left(GetTempFolder, fctRet)
-680           If right(GetTempFolder, 1) <> "\" Then GetTempFolder = GetTempFolder & "\"
+670           TempFolderPathCached = left(TempFolderPathCached, fctRet)
+680           If right(GetTempFolder, 1) <> "\" Then TempFolderPathCached = TempFolderPathCached & "\"
 690       Else
-700           GetTempFolder = ""
+700           TempFolderPathCached = ""
 710       End If
 
         '  NEW CODE 2013-01-22 - Andres Sommerhoff (ASL) - Country: Chile
@@ -539,10 +539,14 @@ Function GetTempFolder() As String
         '  is used instead of saving the option in the excel.
         '  This also work as workaround to avoid problem with spaces in the temp path.
 720       If Environ("OpenSolverTempPath") <> "" Then
-730             GetTempFolder = Environ("OpenSolverTempPath")
+730             TempFolderPathCached = Environ("OpenSolverTempPath")
 740       End If
         '  ASL END NEW CODE
 #End If
+
+    End If
+    GetTempFolder = TempFolderPathCached
+    Exit Function
 End Function
 
 Function GetTempFilePath(FileName As String) As String
