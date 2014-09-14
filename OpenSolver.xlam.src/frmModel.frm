@@ -114,13 +114,11 @@ Sub Disabler(TrueIfEnable As Boolean, f As UserForm)
 42680     f.cmdBuild.Enabled = TrueIfEnable
 42690     f.cmdCancel.Enabled = TrueIfEnable
 #If Mac Then
-          MacOptions.chkLinear.Enabled = True
           MacOptions.chkPerformLinearityCheck.Enabled = True
           MacOptions.txtTol.Enabled = True
           MacOptions.txtMaxIter.Enabled = True
           MacOptions.txtPre.Enabled = True
 #Else
-42700     frmOptions.chkLinear.Enabled = True
 42710     frmOptions.chkPerformLinearityCheck.Enabled = True
 42720     frmOptions.txtTol.Enabled = True
 42730     frmOptions.txtMaxIter.Enabled = True
@@ -548,12 +546,8 @@ Public Sub ModelRunAutoModel(f As UserForm)
 44560             model.FindVarsAndCons IsFirstTime:=True
 44570     End Select
 
-          ' Force the automatically created model to be a linear one, and turn on AssumeNonNegative
+          ' Force the automatically created model to be AssumeNonNegative
 44580     model.NonNegativityAssumption = True
-44590     SetSolverNameOnSheet "lin", "=1"
-          Dim s As String
-44600     If GetNameValueIfExists(ActiveWorkbook, "'" & Replace(ActiveSheet.Name, "'", "''") & "'!solver_eng", s) Then SetSolverNameOnSheet "eng", "=2"
-                      ' Set this for Solver 2010 models, but only if this name is already defined
 
 44610     UpdateFormFromMemory f
 44620     DoEvents

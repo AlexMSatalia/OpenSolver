@@ -1155,7 +1155,6 @@ Sub SetAnyMissingDefaultExcel2007SolverOptions()
 3910      If Not GetNameValueIfExists(ActiveWorkbook, "'" & Replace(ActiveSheet.Name, "'", "''") & "'!solver_drv", s) Then SetSolverNameOnSheet "drv", "=1"
 3920      If Not GetNameValueIfExists(ActiveWorkbook, "'" & Replace(ActiveSheet.Name, "'", "''") & "'!solver_est", s) Then SetSolverNameOnSheet "est", "=1"
 3930      If Not GetNameValueIfExists(ActiveWorkbook, "'" & Replace(ActiveSheet.Name, "'", "''") & "'!solver_itr", s) Then SetSolverNameOnSheet "itr", "=100" ' OpenSolver ignores this
-3940      If Not GetNameValueIfExists(ActiveWorkbook, "'" & Replace(ActiveSheet.Name, "'", "''") & "'!solver_lin", s) Then SetSolverNameOnSheet "lin", "=1"  ' Not "=2" as we want a linear model
 3950      If Not GetNameValueIfExists(ActiveWorkbook, "'" & Replace(ActiveSheet.Name, "'", "''") & "'!solver_neg", s) Then SetSolverNameOnSheet "neg", "=1"  ' Not "=2" as we want >=0 constraints
 3960      If Not GetNameValueIfExists(ActiveWorkbook, "'" & Replace(ActiveSheet.Name, "'", "''") & "'!solver_num", s) Then SetSolverNameOnSheet "num", "=0"
 3970      If Not GetNameValueIfExists(ActiveWorkbook, "'" & Replace(ActiveSheet.Name, "'", "''") & "'!solver_nwt", s) Then SetSolverNameOnSheet "nwt", "=1"

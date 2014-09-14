@@ -1047,11 +1047,6 @@ Sub BuildModelOptions(s As String, succeeded As Boolean)
           ' MODEL OPTIONS
           '--------------------------------------------------------------------------
           
-          ' Check that the user has Assume Linear Model checked.
-          ' In Excel 2010, Assume Linear Model has been replaced by an Engine Type as Simplex.
-10790     Dim AssumeLinearModel As Boolean ' Excel stores ...!solver_lin=1 if Assume Linear Model is turned on, 2 if off (NB: Not 0!)
-          Dim SimplexEngineSelected As Boolean '2010 excel - stores the type of engine used
-
           ' If we are in Excel 2010, and the user has set "Solve Relaxtion", then we report an error
           Dim IngoreIntConstraints As Boolean
 10800     IngoreIntConstraints = False
@@ -1063,55 +1058,6 @@ Sub BuildModelOptions(s As String, succeeded As Boolean)
 10850         Err.Raise Number:=OpenSolver_BuildError, Source:=errorPrefix, Description:="You have the 'ignore integer constraints' option turned on. Please turn this off and start OpenSolver again or choose OpenSolver's solve relaxed model option"
 10860     End If
 
-          ' Get "Assume Linear Model option"; this is an Excel 2007 option; may not be present in Excel 2010 (unless opening an old file)
-10870     AssumeLinearModel = False
-10880     If GetNameValueIfExists(ActiveWorkbook, sheetName & "solver_lin", s) Then AssumeLinearModel = s = "1"
-
-          ' Get the selected optimisation Engine, an Excel 2010 option (eg Nonlinear Solver, GA, LP). Will not be present in models built using Excel 2007
-10890     SimplexEngineSelected = False ' a non-linear solver
-10900     If GetNameValueIfExists(ActiveWorkbook, sheetName & "solver_eng", s) Then SimplexEngineSelected = s = "2"
-
-10910     If (Not SimplexEngineSelected And Not AssumeLinearModel) And SolverType(Solver) = OpenSolver_SolverType.Linear Then
-#If Mac Then
-              Dim f As New MacCustomForm
-#Else
-              Dim f As New CustomForm
-#End If
-              ' User has not told us to use the Simplex method...
-10920         If Application.Version <= 12# Then ' Excel 2007
-10930              f.TextBox1.Caption = "OpenSolver assumes the model is linear. However, Assume Linear Model is not turned on. Would you like to continue anyway (and solve the problem as if Assume Linear Model was turned on)?"
-10940              f.CheckBox1.Caption = "Turn on Assume Linear Model"
-10950         Else   'if its excel 2010
-10960              f.TextBox1.Caption = "OpenSolver always uses the simplex algorithm. However, the Solving Method is not set as Simplex. Would you like to continue anyway (and solve the problem using the Simplex method)?"
-10970              f.CheckBox1.Caption = "Set the Solving Method to Simplex"
-10980         End If
-10990         f.Tag = ""
-11000         f.Show
-11010         If f.Tag = "Cancelled" Then
-11020             Exit Sub
-11030         ElseIf f.CheckBox1.value = True Then
-11040             AssumeLinearModel = True
-11050             If Application.Version <= 12# Then   ' Excel 2007, or earlier
-11060                 SetSolverNameOnSheet "lin", "=1"
-11070             Else 'excel 2010
-11080                 SetSolverNameOnSheet "eng", "=2"
-11090             End If
-11100         Else    'if the user continues without correcting issues warn them of the dangers
-11110             If MsgBox("Warning are you sure you want to continue without changing your model's settings?", vbCritical + vbYesNo + vbDefaultButton1, "OpenSolver Warning") = vbNo Then
-11120                 f.Show
-11130                 If f.Tag = "Cancelled" Then
-11140                     Exit Sub
-11150                 ElseIf f.CheckBox1.value = True Then
-11160                     AssumeLinearModel = True
-11170                     If Application.Version = 12# Then   ' Excel 2007
-11180                         SetSolverNameOnSheet "lin", "=1"
-11190                     Else 'excel 2010
-11200                         SetSolverNameOnSheet "eng", "=2"
-11210                     End If
-11220                 End If
-11230             End If
-11240         End If
-11250     End If
 11260     succeeded = True
 End Sub
 

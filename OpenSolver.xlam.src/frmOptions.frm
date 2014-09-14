@@ -1,7 +1,7 @@
 VERSION 5.00
 Begin {C62A69F0-16DC-11CE-9E98-00AA00574A4F} frmOptions 
    Caption         =   "OpenSolver - Solve Options"
-   ClientHeight    =   4170
+   ClientHeight    =   3855
    ClientLeft      =   45
    ClientTop       =   375
    ClientWidth     =   4140
@@ -36,16 +36,6 @@ Public Sub OptionsOK(f As UserForm)
 41770     Else
 41780         SetSolverNameOnSheet "sho", "=2"     ' 2 means false
 41790     End If
-          
-          ' Because the "solver_eng" is a new option, and not always available, we only update its value if it already exists
-          Dim s As String
-41800     If f.chkLinear.value = True Then
-41810         SetSolverNameOnSheet "lin", "=1"
-41820         If GetNameValueIfExists(ActiveWorkbook, "'" & Replace(ActiveSheet.Name, "'", "''") & "'!solver_eng", s) Then SetSolverNameOnSheet "eng", "=2" ' 2=simplex
-41830     Else
-41840         SetSolverNameOnSheet "lin", "=2"     ' 2 means false
-41850         If GetNameValueIfExists(ActiveWorkbook, "'" & Replace(ActiveSheet.Name, "'", "''") & "'!solver_eng", s) Then SetSolverNameOnSheet "eng", "=1" ' 1=non-linear
-41860     End If
           
 41870     SetSolverNameOnSheet "tim", "=" & Trim(str(CDbl(f.txtMaxTime.Text)))  ' Trim the leading space which str puts in for +'ve values
 41880     SetSolverNameOnSheet "itr", "=" & Trim(str(CDbl(f.txtMaxIter.Text)))  ' Trim the leading space which str puts in for +'ve values
@@ -84,22 +74,6 @@ Public Sub OptionsActivate(f As UserForm)
 42030         ShowSolverProgress = s = "1"
 42040     End If
           
-          ' Excel 2007
-          Dim AssumeLinearModel As Boolean
-          ' AssumeLinearModel = True    ' A sensible default
-42050     If GetNameValueIfExists(ActiveWorkbook, "'" & Replace(ActiveSheet.Name, "'", "''") & "'!solver_lin", s) Then
-42060         AssumeLinearModel = s = "1"
-42070     End If
-          
-          ' Excel 2010
-          Dim SimplexEngineSelected
-42080     SimplexEngineSelected = False
-42090     If GetNameValueIfExists(ActiveWorkbook, "'" & Replace(ActiveSheet.Name, "'", "''") & "'!solver_eng", s) Then
-42100         SimplexEngineSelected = s = "2"
-42110     End If
-          
-42120     AssumeLinearModel = AssumeLinearModel Or SimplexEngineSelected
-          
           Dim maxTime As Double
           ' maxTime = 9999 ' A default value if none is yet defined
 42130     GetNamedNumericValueIfExists ActiveWorkbook, "'" & Replace(ActiveSheet.Name, "'", "''") & "'!solver_tim", maxTime
@@ -122,8 +96,7 @@ Public Sub OptionsActivate(f As UserForm)
 42200     End If
 
 42210     f.chkNonNeg.value = nonNeg
-42220     f.chkLinear.value = AssumeLinearModel
-42230     f.chkShowSolverProgress.value = ShowSolverProgress
+42220     f.chkShowSolverProgress.value = ShowSolverProgress
 42240     f.txtMaxTime.Text = CStr(maxTime)
 42250     f.txtTol.Text = tol * 100
 42260     f.txtMaxIter.Text = CStr(maxIter)
@@ -138,8 +111,7 @@ Public Sub OptionsActivate(f As UserForm)
 
           If SolverType(Solver) = OpenSolver_SolverType.NonLinear Then
               ' Disable linearity options
-42820         f.chkLinear.Enabled = False
-42830         f.chkPerformLinearityCheck.Enabled = False
+42820         f.chkPerformLinearityCheck.Enabled = False
 42840         f.txtTol.Enabled = False
           End If
           
