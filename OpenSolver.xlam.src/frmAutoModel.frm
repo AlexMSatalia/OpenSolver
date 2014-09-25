@@ -2,9 +2,9 @@ VERSION 5.00
 Begin {C62A69F0-16DC-11CE-9E98-00AA00574A4F} frmAutoModel 
    Caption         =   "OpenSolver - AutoModel"
    ClientHeight    =   4480
-   ClientLeft      =   45
-   ClientTop       =   375
-   ClientWidth     =   8805
+   ClientLeft      =   42
+   ClientTop       =   378
+   ClientWidth     =   8806
    OleObjectBlob   =   "frmAutoModel.frx":0000
    StartUpPosition =   1  'CenterOwner
 End
@@ -49,6 +49,7 @@ Public GuessObjStatus As String
 
 
 Private Sub cmdCancel_Click()
+          DoEvents
           Unload frmAutoModel
 41310     Unload Me
 End Sub
@@ -161,7 +162,7 @@ Public Sub AutoModelFinish(f As UserForm)
           'frmModel.Show
 41630     Unload Me
           Unload f
-          
+          DoEvents
 41640     Exit Sub
           
 BadObjRef:

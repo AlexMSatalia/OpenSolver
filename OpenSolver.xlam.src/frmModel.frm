@@ -1,10 +1,10 @@
 VERSION 5.00
 Begin {C62A69F0-16DC-11CE-9E98-00AA00574A4F} frmModel 
    Caption         =   "OpenSolver - Model"
-   ClientHeight    =   8265
-   ClientLeft      =   45
-   ClientTop       =   375
-   ClientWidth     =   9855
+   ClientHeight    =   8260
+   ClientLeft      =   42
+   ClientTop       =   378
+   ClientWidth     =   9856
    OleObjectBlob   =   "frmModel.frx":0000
    StartUpPosition =   1  'CenterOwner
 End
@@ -538,6 +538,7 @@ Public Sub ModelRunAutoModel(f As UserForm)
 #If Mac Then
                   'MacAutoModel.Show
                   ' Mac can't use a RefEdit properly when multiple forms are open since it doesn't support modeless forms properly
+                  ' Trying to fix this using DoEvents and hiding forms seems to be hard. Random RefEdits take focus in places, so diasabling for now
                   MsgBox ("Couldn't find objective cell, and couldn't finish as a result.")
 #Else
 44520             frmAutoModel.Show vbModal

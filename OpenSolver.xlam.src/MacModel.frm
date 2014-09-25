@@ -4,7 +4,7 @@ Begin {C62A69F0-16DC-11CE-9E98-00AA00574A4F} MacModel
    ClientHeight    =   10003
    ClientLeft      =   0
    ClientTop       =   -9240
-   ClientWidth     =   14205
+   ClientWidth     =   14203
    OleObjectBlob   =   "MacModel.frx":0000
    StartUpPosition =   1  'CenterOwner
 End
@@ -83,7 +83,11 @@ Private Sub cmdCancel_Click()
 End Sub
 
 Private Sub cmdRunAutoModel_Click()
+          'Me.Hide
+          DoEvents
           frmModel.ModelRunAutoModel Me
+          DoEvents
+          'Me.Show
 End Sub
 
 Private Sub cmdBuild_Click()

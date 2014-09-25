@@ -3,8 +3,8 @@ Begin {C62A69F0-16DC-11CE-9E98-00AA00574A4F} MacOptions
    Caption         =   "OpenSolver - Solve Options"
    ClientHeight    =   5205
    ClientLeft      =   0
-   ClientTop       =   -2640
-   ClientWidth     =   6240
+   ClientTop       =   -2639
+   ClientWidth     =   6237
    OleObjectBlob   =   "MacOptions.frx":0000
    StartUpPosition =   1  'CenterOwner
 End
