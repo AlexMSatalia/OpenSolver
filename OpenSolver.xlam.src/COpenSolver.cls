@@ -693,6 +693,8 @@ ModelOptions:
 9500      row = 1
           ' Iterate through each solver constraint
 9510      For constraint = 1 To NumConstraints
+              If constraint Mod 5 = 0 Then Application.StatusBar = "OpenSolver: Setting Up Constraints... " & numVars & " vars, " & constraint & "/" & NumConstraints & " Solver constraints"
+              
               '**********************************************************************
               ' Note: Solver enforces the following requirements.
               ' The LHS mut be a range with one or more cells
