@@ -7,27 +7,17 @@ Public Const SolverDesc_NOMAD = "Nomad (Nonsmooth Optimization by Mesh Adaptive 
 Public Const SolverLink_NOMAD = "http://www.gerad.ca/nomad/Project/Home.html"
 Public Const SolverType_NOMAD = OpenSolver_SolverType.NonLinear
 
-#If Win64 Then
-Public Const NomadDllName = "OpenSolverNomadDll64.dll"
-#Else
-Public Const NomadDllName = "OpenSolverNomadDll.dll"
-#End If
+Public Const NomadDllName = "OpenSolverNomad.dll"
 
 ' Don't forget we need to chdir to the directory containing the DLL before calling any of the functions
 #If VBA7 Then
-    #If Win64 Then
-        Public Declare PtrSafe Function NomadMain Lib "OpenSolverNomadDll64.dll" (ByVal SolveRelaxation As Boolean) As Long
-        Private Declare PtrSafe Function NomadVersion Lib "OpenSolverNomadDll64.dll" () As String
-        Private Declare PtrSafe Function NomadDllVersion Lib "OpenSolverNomadDll64.dll" Alias "NomadDLLVersion" () As String
-    #Else
-        Public Declare PtrSafe Function NomadMain Lib "OpenSolverNomadDll.dll" (ByVal SolveRelaxation As Boolean) As Long
-        Private Declare PtrSafe Function NomadVersion Lib "OpenSolverNomadDll.dll" () As String
-        Private Declare PtrSafe Function NomadDllVersion Lib "OpenSolverNomadDll.dll" Alias "NomadDLLVersion" () As String
-    #End If
-#Else ' All VBA6 is 32 bit
-    Public Declare Function NomadMain Lib "OpenSolverNomadDll.dll" (ByVal SolveRelaxation As Boolean) As Long
-    Private Declare Function NomadVersion Lib "OpenSolverNomadDll.dll" () As String
-    Private Declare Function NomadDllVersion Lib "OpenSolverNomadDll.dll" Alias "NomadDLLVersion" () As String
+    Public Declare PtrSafe Function NomadMain Lib "OpenSolverNomad.dll" (ByVal SolveRelaxation As Boolean) As Long
+    Private Declare PtrSafe Function NomadVersion Lib "OpenSolverNomad.dll" () As String
+    Private Declare PtrSafe Function NomadDllVersion Lib "OpenSolverNomad.dll" Alias "NomadDLLVersion" () As String
+#Else
+    Public Declare Function NomadMain Lib "OpenSolverNomad.dll" (ByVal SolveRelaxation As Boolean) As Long
+    Private Declare Function NomadVersion Lib "OpenSolverNomad.dll" () As String
+    Private Declare Function NomadDllVersion Lib "OpenSolverNomad.dll" Alias "NomadDLLVersion" () As String
 #End If
 
 
@@ -42,6 +32,15 @@ Function About_NOMAD() As String
                   " using OpenSolverNomadDLL v" & DllVersion_NOMAD() & " at " & MakeSpacesNonBreaking(DllPath_NOMAD())
 End Function
 
+Function NomadDir() As String
+    NomadDir = JoinPaths(ThisWorkbook.Path, SolverDir)
+#If Win64 Then
+    NomadDir = JoinPaths(NomadDir, SolverDirWin64)
+#Else
+    NomadDir = JoinPaths(NomadDir, SolverDirWin32)
+#End If
+End Function
+
 Function SolverAvailable_NOMAD(Optional errorString As String) As Boolean
 #If Mac Then
     errorString = "NOMAD for OpenSolver is not currently supported on Mac"
@@ -51,7 +50,7 @@ Function SolverAvailable_NOMAD(Optional errorString As String) As Boolean
     ' Set current dir for finding the DLL
     Dim currentDir As String
     currentDir = CurDir
-    SetCurrentDirectory ThisWorkbook.Path
+    SetCurrentDirectory NomadDir()
     
     ' Try to access DLL - throws error if not found
     On Error GoTo NotFound
@@ -79,7 +78,7 @@ Function SolverVersion_NOMAD() As String
     
     ' Set current dir for finding the DLL
     currentDir = CurDir
-    SetCurrentDirectory ThisWorkbook.Path
+    SetCurrentDirectory NomadDir()
     
     ' Get version info from DLL
     sNomadVersion = NomadVersion()
@@ -100,7 +99,7 @@ Function DllVersion_NOMAD() As String
     
     ' Set current dir for finding the DLL
     currentDir = CurDir
-    SetCurrentDirectory ThisWorkbook.Path
+    SetCurrentDirectory NomadDir()
     
     ' Get version info from DLL
     sDllVersion = NomadDllVersion()
@@ -164,7 +163,7 @@ Function SolveModel_Nomad(SolveRelaxation As Boolean, s As COpenSolver) As Long
           Dim currentDir As String
 48200     currentDir = CurDir
           
-48270     SetCurrentDirectory ThisWorkbook.Path
+48270     SetCurrentDirectory NomadDir()
 
           IterationCount = 0
           

@@ -6,7 +6,12 @@ Public Const SolverDesc_Couenne = "Couenne (Convex Over and Under ENvelopes for 
 Public Const SolverLink_Couenne = "https://projects.coin-or.org/Couenne"
 Public Const SolverType_Couenne = OpenSolver_SolverType.NonLinear
 
+#If Mac Then
+Public Const SolverName_Couenne = "couenne"
+#Else
 Public Const SolverName_Couenne = "couenne.exe"
+#End If
+
 Public Const SolverScript_Couenne = "couenne" & ScriptExtension
 
 Public Const SolutionFile_Couenne = "model.sol"
@@ -40,27 +45,7 @@ Function About_Couenne() As String
 End Function
 
 Function SolverFilePath_Couenne(Optional errorString As String) As String
-#If Mac Then
-    If GetExistingFilePathName(ThisWorkbook.Path, left(SolverName_Couenne, Len(SolverName_Couenne) - 4), SolverFilePath_Couenne) Then Exit Function ' Found a mac solver
-    errorString = "Unable to find Mac version of Couenne ('couenne') in the folder that contains 'OpenSolver.xlam'"
-    SolverFilePath_Couenne = ""
-    Exit Function
-#Else
-    ' Look for the 64 bit version
-    If SystemIs64Bit Then
-        If GetExistingFilePathName(ThisWorkbook.Path, Replace(SolverName_Couenne, ".exe", "64.exe"), SolverFilePath_Couenne) Then Exit Function ' Found a 64 bit solver
-    End If
-    ' Look for the 32 bit version
-    If GetExistingFilePathName(ThisWorkbook.Path, SolverName_Couenne, SolverFilePath_Couenne) Then
-        If SystemIs64Bit Then
-            errorString = "Unable to find 64-bit Couenne (couenne64.exe) in the 'OpenSolver.xlam' folder. 32-bit Couenne will be used instead."
-        End If
-        Exit Function
-    End If
-    ' Fail
-    SolverFilePath_Couenne = ""
-    errorString = "Unable to find 32-bit Couenne (couenne.exe) or 64-bit Couenne (couenne64.exe) in the 'OpenSolver.xlam' folder."
-#End If
+    SolverFilePath_Couenne = SolverFilePath_Default("Couenne", errorString)
 End Function
 
 Function SolverAvailable_Couenne(Optional SolverPath As String, Optional errorString As String) As Boolean
@@ -129,12 +114,17 @@ Function SolverBitness_Couenne() As String
         SolverBitness_Couenne = ""
         Exit Function
     End If
-    
-    If right(SolverPath, 6) = "64.exe" Or right(SolverPath, 2) = "64" Then
+        
+    ' All Macs are 64-bit so we only provide 64-bit binaries
+#If Mac Then
+    SolverBitness_Couenne = "64"
+#Else
+    If right(SolverPath, 14) = "64\couenne.exe" Then
         SolverBitness_Couenne = "64"
     Else
         SolverBitness_Couenne = "32"
     End If
+#End If
 End Function
 
 Function CreateSolveScript_Couenne(ModelFilePathName As String) As String

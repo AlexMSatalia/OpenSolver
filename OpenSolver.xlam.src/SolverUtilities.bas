@@ -6,10 +6,15 @@ Public Const AMPLFileName As String = "model.ampl"
 Public Const NLFileName As String = "model.nl"
 Public Const PuLPFileName As String = "opensolver.py"
 
+Public Const SolverDir As String = "Solvers"
+Public Const SolverDirMac As String = "osx"
+Public Const SolverDirWin32 As String = "win32"
+Public Const SolverDirWin64 As String = "win64"
+
 Function SolverAvailable(Solver As String, Optional SolverPath As String, Optional errorString As String) As Boolean
 ' Delegated function returns True if solver is available and sets SolverPath to location of solver
     
-    'All Neos solver always available
+    'All Neos solvers always available
     If RunsOnNeos(Solver) Then
         SolverAvailable = True
         SolverPath = ""
@@ -33,6 +38,33 @@ Function SolverAvailable(Solver As String, Optional SolverPath As String, Option
     End Select
 End Function
 
+Function SolverFilePath_Default(Solver As String, Optional errorString As String) As String
+    Dim SearchPath As String
+    SearchPath = JoinPaths(ThisWorkbook.Path, SolverDir)
+    
+#If Mac Then
+    If GetExistingFilePathName(JoinPaths(SearchPath, SolverDirMac), SolverName(Solver), SolverFilePath_Default) Then Exit Function ' Found a mac solver
+    errorString = "Unable to find Mac version of " & Solver & " ('" & SolverName(Solver) & "') in the Solvers folder."
+    SolverFilePath_Default = ""
+    Exit Function
+#Else
+    ' Look for the 64 bit version
+    If SystemIs64Bit Then
+        If GetExistingFilePathName(JoinPaths(SearchPath, SolverDirWin64), SolverName(Solver), SolverFilePath_Default) Then Exit Function ' Found a 64 bit solver
+    End If
+    ' Look for the 32 bit version
+    If GetExistingFilePathName(JoinPaths(SearchPath, SolverDirWin32), SolverName(Solver), SolverFilePath_Default) Then
+        If SystemIs64Bit Then
+            errorString = "Unable to find 64-bit " & Solver & " in the Solvers folder. A 32-bit version will be used instead."
+        End If
+        Exit Function
+    End If
+    ' Fail
+    SolverFilePath_Default = ""
+    errorString = "Unable to find " & Solver & " ('" & SolverName(Solver) & "') in the Solvers folder."
+#End If
+End Function
+
 Function SolverType(Solver As String) As String
     Select Case Solver
     Case "CBC"
@@ -53,6 +85,21 @@ Function SolverType(Solver As String) As String
         SolverType = SolverType_Couenne
     Case Else
         SolverType = OpenSolver_SolverType.Unknown
+    End Select
+End Function
+
+Function SolverName(Solver As String) As String
+    Select Case Solver
+    Case "CBC"
+        SolverName = SolverName_CBC
+    Case "Gurobi"
+        SolverName = SolverName_Gurobi
+    Case "Bonmin"
+        SolverName = SolverName_Bonmin
+    Case "Couenne"
+        SolverName = SolverName_Couenne
+    Case Else
+        SolverName = ""
     End Select
 End Function
 

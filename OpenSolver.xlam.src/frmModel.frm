@@ -2,9 +2,9 @@ VERSION 5.00
 Begin {C62A69F0-16DC-11CE-9E98-00AA00574A4F} frmModel 
    Caption         =   "OpenSolver - Model"
    ClientHeight    =   8260
-   ClientLeft      =   42
-   ClientTop       =   378
-   ClientWidth     =   9856
+   ClientLeft      =   45
+   ClientTop       =   375
+   ClientWidth     =   9855
    OleObjectBlob   =   "frmModel.frx":0000
    StartUpPosition =   1  'CenterOwner
 End
@@ -474,9 +474,9 @@ Public Sub ModelActivate(f As UserForm)
 44250     f.cboConRel.ListIndex = cboPosition("=")    ' We set an initial value just in case there is no model, and the user goes straight to AddNewConstraint
           
           'Find current solver
-          Dim solverName As String
-44260     If GetNameValueIfExists(ActiveWorkbook, "'" & Replace(ActiveWorkbook.ActiveSheet.Name, "'", "''") & "'!OpenSolver_ChosenSolver", solverName) Then
-44270         f.lblSolver.Caption = "Current Solver Engine: " & UCase(left(solverName, 1)) & Mid(solverName, 2)
+          Dim SolverName As String
+44260     If GetNameValueIfExists(ActiveWorkbook, "'" & Replace(ActiveWorkbook.ActiveSheet.Name, "'", "''") & "'!OpenSolver_ChosenSolver", SolverName) Then
+44270         f.lblSolver.Caption = "Current Solver Engine: " & UCase(left(SolverName, 1)) & Mid(SolverName, 2)
 44280     Else: f.lblSolver.Caption = "Current Solver Engine: CBC"
 44290     End If
           ' Load the model on the sheet into memory

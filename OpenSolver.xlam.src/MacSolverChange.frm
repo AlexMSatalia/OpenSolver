@@ -3,8 +3,8 @@ Begin {C62A69F0-16DC-11CE-9E98-00AA00574A4F} MacSolverChange
    Caption         =   "Choose Solver"
    ClientHeight    =   6000
    ClientLeft      =   0
-   ClientTop       =   -6167
-   ClientWidth     =   7112
+   ClientTop       =   -6165
+   ClientWidth     =   7110
    OleObjectBlob   =   "MacSolverChange.frx":0000
    StartUpPosition =   1  'CenterOwner
 End

@@ -7,7 +7,12 @@ Public Const SolverDesc_CBC = "The COIN Branch and Cut solver (CBC) is the defau
 Public Const SolverLink_CBC = "http://www.coin-or.org/Cbc/cbcuserguide.html"
 Public Const SolverType_CBC = OpenSolver_SolverType.Linear
 
+#If Mac Then
+Public Const SolverName_CBC = "cbc"
+#Else
 Public Const SolverName_CBC = "cbc.exe"
+#End If
+
 Public Const SolverScript_CBC = "cbc" & ScriptExtension
 
 Public Const SolutionFile_CBC = "modelsolution.txt"
@@ -55,27 +60,7 @@ Function About_CBC() As String
 End Function
 
 Function SolverFilePath_CBC(errorString As String) As String
-#If Mac Then
-    If GetExistingFilePathName(ThisWorkbook.Path, left(SolverName_CBC, Len(SolverName_CBC) - 4), SolverFilePath_CBC) Then Exit Function ' Found a mac solver
-    errorString = "Unable to find Mac version of CBC ('cbc') in the folder that contains 'OpenSolver.xlam'"
-    SolverFilePath_CBC = ""
-    Exit Function
-#Else
-    ' Look for the 64 bit version
-    If SystemIs64Bit Then
-        If GetExistingFilePathName(ThisWorkbook.Path, Replace(SolverName_CBC, ".exe", "64.exe"), SolverFilePath_CBC) Then Exit Function ' Found a 64 bit solver
-    End If
-    ' Look for the 32 bit version
-    If GetExistingFilePathName(ThisWorkbook.Path, SolverName_CBC, SolverFilePath_CBC) Then
-        If SystemIs64Bit Then
-            errorString = "Unable to find 64-bit CBC (cbc64.exe) in the 'OpenSolver.xlam' folder. 32-bit CBC will be used instead."
-        End If
-        Exit Function
-    End If
-    ' Fail
-    SolverFilePath_CBC = ""
-    errorString = "Unable to find 32-bit CBC (cbc.exe) or 64-bit CBC (cbc64.exe) in the 'OpenSolver.xlam' folder."
-#End If
+    SolverFilePath_CBC = SolverFilePath_Default("CBC", errorString)
 End Function
 
 Function SolverAvailable_CBC(Optional SolverPath As String, Optional errorString As String) As Boolean
@@ -145,11 +130,16 @@ Function SolverBitness_CBC() As String
         Exit Function
     End If
     
-    If right(SolverPath, 6) = "64.exe" Or right(SolverPath, 2) = "64" Then
+    ' All Macs are 64-bit so we only provide 64-bit binaries
+#If Mac Then
+    SolverBitness_CBC = "64"
+#Else
+    If right(SolverPath, 10) = "64\cbc.exe" Then
         SolverBitness_CBC = "64"
     Else
         SolverBitness_CBC = "32"
     End If
+#End If
 End Function
 
 Function GetExtraParameters_CBC(sheet As Worksheet, errorString As String) As String

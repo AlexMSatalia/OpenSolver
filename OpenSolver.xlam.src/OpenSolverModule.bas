@@ -586,6 +586,12 @@ Function GetParamRangeName() As String
 790       GetParamRangeName = ParamRangeName
 End Function
 
+Function JoinPaths(Path1 As String, Path2 As String) As String
+    JoinPaths = Path1
+    If right(" " & JoinPaths, 1) <> PathDelimeter Then JoinPaths = JoinPaths & PathDelimeter
+    JoinPaths = JoinPaths & Path2
+End Function
+
 'Function GetNameRefersTo(TheName As String) As String
     ' See http://www.cpearson.com/excel/DefinedNames.aspx
 '    Dim s As String
@@ -1209,8 +1215,7 @@ Public Function fHandleFile(stFile As String, lShowHow As Long)
 End Function
 
 Function GetExistingFilePathName(Directory As String, FileName As String, ByRef pathName As String) As Boolean
-4260     If right(" " & Directory, 1) <> PathDelimeter Then Directory = Directory & PathDelimeter
-4270     pathName = Directory & FileName
+4260     pathName = JoinPaths(Directory, FileName)
 4280     GetExistingFilePathName = FileOrDirExists(pathName)
 End Function
 

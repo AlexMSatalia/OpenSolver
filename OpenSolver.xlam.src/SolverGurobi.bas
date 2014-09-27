@@ -24,7 +24,7 @@ Function SolutionFilePath_Gurobi() As String
 End Function
 
 Function SolverPythonScriptPath_Gurobi() As String
-    GetExistingFilePathName ThisWorkbook.Path, SolverPythonScript_Gurobi, SolverPythonScriptPath_Gurobi
+    GetExistingFilePathName JoinPaths(ThisWorkbook.Path, SolverDir), SolverPythonScript_Gurobi, SolverPythonScriptPath_Gurobi
 End Function
 
 Function ScriptFilePath_Gurobi() As String

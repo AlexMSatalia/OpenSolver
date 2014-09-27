@@ -3,8 +3,8 @@ Begin {C62A69F0-16DC-11CE-9E98-00AA00574A4F} MacNonlinearForm
    Caption         =   "UserForm1"
    ClientHeight    =   6405
    ClientLeft      =   0
-   ClientTop       =   -882
-   ClientWidth     =   11298
+   ClientTop       =   -885
+   ClientWidth     =   11295
    OleObjectBlob   =   "MacNonlinearForm.frx":0000
    StartUpPosition =   1  'CenterOwner
 End

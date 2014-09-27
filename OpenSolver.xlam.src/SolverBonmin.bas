@@ -6,7 +6,12 @@ Public Const SolverDesc_Bonmin = "Bonmin (Basic Open-source Nonlinear Mixed INte
 Public Const SolverLink_Bonmin = "https://projects.coin-or.org/Bonmin"
 Public Const SolverType_Bonmin = OpenSolver_SolverType.NonLinear
 
+#If Mac Then
+Public Const SolverName_Bonmin = "bonmin"
+#Else
 Public Const SolverName_Bonmin = "bonmin.exe"
+#End If
+
 Public Const SolverScript_Bonmin = "bonmin" & ScriptExtension
 
 Public Const SolutionFile_Bonmin = "model.sol"
@@ -40,27 +45,7 @@ Function About_Bonmin() As String
 End Function
 
 Function SolverFilePath_Bonmin(Optional errorString As String) As String
-#If Mac Then
-    If GetExistingFilePathName(ThisWorkbook.Path, left(SolverName_Bonmin, Len(SolverName_Bonmin) - 4), SolverFilePath_Bonmin) Then Exit Function ' Found a mac solver
-    errorString = "Unable to find Mac version of Bonmin ('bonmin') in the folder that contains 'OpenSolver.xlam'"
-    SolverFilePath_Bonmin = ""
-    Exit Function
-#Else
-    ' Look for the 64 bit version
-    If SystemIs64Bit Then
-        If GetExistingFilePathName(ThisWorkbook.Path, Replace(SolverName_Bonmin, ".exe", "64.exe"), SolverFilePath_Bonmin) Then Exit Function ' Found a 64 bit solver
-    End If
-    ' Look for the 32 bit version
-    If GetExistingFilePathName(ThisWorkbook.Path, SolverName_Bonmin, SolverFilePath_Bonmin) Then
-        If SystemIs64Bit Then
-            errorString = "Unable to find 64-bit Bonmin (bonmin64.exe) in the 'OpenSolver.xlam' folder. 32-bit Bonmin will be used instead."
-        End If
-        Exit Function
-    End If
-    ' Fail
-    SolverFilePath_Bonmin = ""
-    errorString = "Unable to find 32-bit Bonmin (bonmin.exe) or 64-bit Bonmin (bonmin64.exe) in the 'OpenSolver.xlam' folder."
-#End If
+    SolverFilePath_Bonmin = SolverFilePath_Default("Bonmin", errorString)
 End Function
 
 Function SolverAvailable_Bonmin(Optional SolverPath As String, Optional errorString As String) As Boolean
@@ -129,11 +114,16 @@ Function SolverBitness_Bonmin() As String
         Exit Function
     End If
     
-    If right(SolverPath, 6) = "64.exe" Or right(SolverPath, 2) = "64" Then
+    ' All Macs are 64-bit so we only provide 64-bit binaries
+#If Mac Then
+    SolverBitness_Bonmin = "64"
+#Else
+    If right(SolverPath, 13) = "64\bonmin.exe" Then
         SolverBitness_Bonmin = "64"
     Else
         SolverBitness_Bonmin = "32"
     End If
+#End If
 End Function
 
 Function CreateSolveScript_Bonmin(ModelFilePathName As String) As String
