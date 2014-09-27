@@ -161,8 +161,11 @@ Private Function CallNEOS_Mac(message As String, errorString As String)
     ' NeosClient call is of the form: NeosClient.py <method> <neosresult.txt> <extra params> >> <logfile>
     ModelFilePathName = QuotePath(ConvertHfsPath(ModelFilePathName))
     
-    Dim SolverPath As String
-    GetExistingFilePathName ThisWorkbook.Path, "NeosClient.py", SolverPath
+    Dim SolverPath As String, NeosClientDir As String
+    NeosClientDir = JoinPaths(ThisWorkbook.Path, SolverDir)
+    NeosClientDir = JoinPaths(NeosClientDir, SolverDirMac)
+    
+    GetExistingFilePathName NeosClientDir, "NeosClient.py", SolverPath
     SolverPath = QuotePath(ConvertHfsPath(SolverPath))
     system ("chmod +x " & SolverPath)
     

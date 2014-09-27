@@ -121,11 +121,11 @@ Function SolverBitness_NOMAD() As String
         Exit Function
     End If
     
-    If right(NomadDllName, 6) = "64.dll" Then
+#If Win64 Then
         SolverBitness_NOMAD = "64"
-    Else
+#Else
         SolverBitness_NOMAD = "32"
-    End If
+#End If
 End Function
 
 Function SolveModel_Nomad(SolveRelaxation As Boolean, s As COpenSolver) As Long
