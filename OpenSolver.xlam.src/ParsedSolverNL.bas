@@ -121,6 +121,7 @@ End Property
 ' Creates .nl file and solves model
 Function SolveModelParsed_NL(ModelFilePathName As String, model As CModelParsed, s As COpenSolverParsed, Optional ShouldWriteComments As Boolean = True)
     Set m = model
+    
     WriteComments = ShouldWriteComments
     
     errorPrefix = "Constructing .nl file"
@@ -132,6 +133,11 @@ Function SolveModelParsed_NL(ModelFilePathName As String, model As CModelParsed,
     ' =============================================================
     
     InitialiseModelStats
+    
+    On Error GoTo ErrHandler
+    If n_obj = 0 And n_con = 0 Then
+        Err.Raise OpenSolver_BuildError, errorPrefix, "The model has no constraints that depend on the adjustable cells, and has no objective. There is nothing for the solver to do."
+    End If
     
     CreateVariableIndex
     
@@ -150,14 +156,14 @@ Function SolveModelParsed_NL(ModelFilePathName As String, model As CModelParsed,
     OutputRowFile
     
     ' Write .nl file
-    On Error GoTo ErrHandler
-    
     Open ModelFilePathName For Output As #1
     
     ' Write header
     Print #1, MakeHeader()
     ' Write C blocks
-    Print #1, MakeCBlocks()
+    If n_con > 0 Then
+        Print #1, MakeCBlocks()
+    End If
     
     If n_obj > 0 Then
         ' Write O block
@@ -165,17 +171,30 @@ Function SolveModelParsed_NL(ModelFilePathName As String, model As CModelParsed,
     End If
     
     ' Write d block
-    Print #1, MakeDBlock()
+    If n_con > 0 Then
+        Print #1, MakeDBlock()
+    End If
+    
     ' Write x block
     Print #1, MakeXBlock()
+    
     ' Write r block
-    Print #1, MakeRBlock()
+    If n_con > 0 Then
+        Print #1, MakeRBlock()
+    End If
+    
     ' Write b block
     Print #1, MakeBBlock()
+    
     ' Write k block
-    Print #1, MakeKBlock()
+    If n_con > 0 Then
+        Print #1, MakeKBlock()
+    End If
+    
     ' Write J block
-    Print #1, MakeJBlocks()
+    If n_con > 0 Then
+        Print #1, MakeJBlocks()
+    End If
     
     If n_obj > 0 Then
         ' Write G block
@@ -1231,7 +1250,11 @@ End Sub
 
 ' Removes a "\n" character from the end of a string
 Function StripTrailingNewline(Block As String) As String
-    StripTrailingNewline = left(Block, Len(Block) - 2)
+    If Len(Block) > 1 Then
+        StripTrailingNewline = left(Block, Len(Block) - 2)
+    Else
+        StripTrailingNewline = Block
+    End If
 End Function
 
 Function ConvertFormulaToExpressionTree(strFormula As String) As ExpressionTree

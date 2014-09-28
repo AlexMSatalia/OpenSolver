@@ -255,7 +255,11 @@ Private Function ParseFormulae(s As COpenSolver) As Boolean
                         isValid = True
                         
                         LHSValue = singleRngLHS.Value2
-                        RHSValue = Application.Evaluate(strRHSFormula)
+                        If strRHSFormula = "" Then
+                            RHSValue = 0
+                        Else
+                            RHSValue = Application.Evaluate(strRHSFormula)
+                        End If
                         
                         ' Test LHS and RHS in the constraint
                         Select Case ConvertRelationToEnum(nameRELi.value)
