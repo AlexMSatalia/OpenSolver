@@ -437,7 +437,7 @@ Sub HighlightConstraint(myDocument As Worksheet, LHSRange As Range, _
               ' Reverse the sense if the objects are shown in the reverse order
 32540         Set s2 = HighlightRange(Range2, SolverRelationAsUnicodeChar(IIf(Reversed, 4 - Sense, Sense)), Color)
               
-32550         If Range1.Worksheet.Name = Range2.Worksheet.Name Then
+32550         If Range1.Worksheet.Name = Range2.Worksheet.Name And Range1.Worksheet.Name = ActiveSheet.Name Then
 32560             AddLabelledConnector Range1.Worksheet, s1(1), s2(1), ""
 32570         End If
 32580     Else 'this was added if there is only a lhs that needs highlighting in linearity
