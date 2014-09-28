@@ -174,8 +174,12 @@ Function SolveModel_Nomad(SolveRelaxation As Boolean, s As COpenSolver) As Long
           
           'Catch any errors that occured while Nomad was solving
 48370     If NomadRetVal = 1 Then
-48380         Err.Raise Number:=OpenSolver_NomadError, Source:=errorPrefix, Description:="There " _
-                & "was an error while Nomad was solving. No solution has been loaded into the sheet."
+              Dim errorString As String
+              errorString = "There was an error while Nomad was solving. No solution has been loaded into the sheet."
+              ' Check logs for more info
+              CheckNomadLogs errorString
+              
+48380         Err.Raise Number:=OpenSolver_NomadError, Source:=errorPrefix, Description:=errorString
 48390         s.SolveStatus = OpenSolverResult.ErrorOccurred
 48400     ElseIf NomadRetVal = 2 Then
 48410         s.SolveStatusComment = "Nomad reached the maximum number of iterations and returned the best feasible solution it found. This solution is not guaranteed to be an optimal solution." & vbCrLf & vbCrLf & _
@@ -256,6 +260,33 @@ ErrorExit:
 48860     Err.Raise ErrorNumber, ErrorSource, ErrorDescription
 
 End Function
+
+Sub CheckNomadLogs(errorString As String)
+' If NOMAD encounters an error, we dump the exception to the log file. We can use this to deduce what went wrong
+    Dim logFile As String
+    logFile = GetTempFilePath("log1.tmp")
+    
+    If Not FileOrDirExists(logFile) Then
+        Exit Sub
+    End If
+    
+    Dim message As String
+    On Error GoTo ErrHandler
+    Open logFile For Input As 3
+    message = Input$(LOF(3), 3)
+    Close #3
+    
+    If Not message Like "*NOMAD*" Then
+       Exit Sub
+    End If
+    
+    If message Like "*invalid parameter*" Then
+        errorString = "One of the parameters supplied to Nomad was invalid. This usually happens if the precision is too large. Try adjusting the values in the Solve Options dialog box."
+    End If
+    
+ErrHandler:
+    Close #3
+End Sub
 
 Function updateVar(X As Variant, Optional BestSolution As Variant = Nothing, Optional Infeasible As Boolean = False)
           IterationCount = IterationCount + 1
