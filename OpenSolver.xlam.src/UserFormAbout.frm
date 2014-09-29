@@ -158,7 +158,7 @@ End Sub
 Public Function About_OpenSolver() As String
 About_OpenSolver = _
 "(c) Andrew J Mason 2011 , 2012" & vbNewLine & _
-"Developed by Andrew Mason, Iain Dunning and Jack Dunn, with coding assistance by Kat Gilbert, Matthew Milner, Kris Atkins. Assistance with Mac version given by Zhanibek Datbayev." & vbNewLine & _
+"Developed by Andrew Mason, Iain Dunning and Jack Dunn, with coding assistance by Kat Gilbert, Matthew Milner, Kris Atkins. Various contributions have been made by Andres Sommerhoff, and assistance with Mac version was given by Zhanibek Datbayev." & vbNewLine & _
 "Department of Engineering Science" & vbNewLine & _
 "University of Auckland, New Zealand" & vbNewLine & _
 vbNewLine & _
