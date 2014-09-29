@@ -532,7 +532,7 @@ Function GetTempFolder() As String
 690       Else
 700           TempFolderPathCached = ""
 710       End If
-
+#End If
         '  NEW CODE 2013-01-22 - Andres Sommerhoff (ASL) - Country: Chile
         '  Use Environment Var to have the option to a different Temp path for Opensolver.
         '  To allow have independent configuration in different computers, Environment Var
@@ -542,7 +542,6 @@ Function GetTempFolder() As String
 730             TempFolderPathCached = Environ("OpenSolverTempPath")
 740       End If
         '  ASL END NEW CODE
-#End If
 
     End If
     GetTempFolder = TempFolderPathCached
