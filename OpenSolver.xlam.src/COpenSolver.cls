@@ -693,7 +693,7 @@ ModelOptions:
 9500      row = 1
           ' Iterate through each solver constraint
 9510      For constraint = 1 To NumConstraints
-              If constraint Mod 5 = 0 Then Application.StatusBar = "OpenSolver: Setting Up Constraints... " & numVars & " vars, " & constraint & "/" & NumConstraints & " Solver constraints"
+              If constraint Mod 5 = 1 Then Application.StatusBar = "OpenSolver: Setting Up Constraints... " & numVars & " vars, " & constraint & "/" & NumConstraints & " Solver constraints"
               
               '**********************************************************************
               ' Note: Solver enforces the following requirements.
@@ -1088,7 +1088,7 @@ Sub BuildConstraintMatrix(objIsMissing As Boolean, objValue As Double, SparseA()
               ' Count how many variables we've processed, let the user know
               ' that the program hasn't crashed!
 11300         var = var + 1
-11310         If var Mod 10 = 0 Then Application.StatusBar = "OpenSolver: Setting Up Problem... " & var & "/" & numVars & " vars, " & NumRows & " rows."
+11310         If var Mod 10 = 1 Then Application.StatusBar = "OpenSolver: Setting Up Problem... " & var & "/" & numVars & " vars, " & NumRows & " rows."
 
               ' Increment the value of this cell to find its coefficients
               ' Because its all linear, we can simply check the change in the objective/constraints

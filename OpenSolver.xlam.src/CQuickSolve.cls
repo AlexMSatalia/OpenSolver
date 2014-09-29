@@ -128,7 +128,7 @@ Function AnalyseParameters(OpenSolver As COpenSolver, sheetName As String, _
 26780             GoTo ExitSub
 26790         End If
 26800         param = param + 1
-26810         If param Mod 10 = 0 Then Application.StatusBar = "OpenSolver: Analysing Parameters... " & param & "/" & NumParams & " parameters"
+26810         If param Mod 10 = 1 Then Application.StatusBar = "OpenSolver: Analysing Parameters... " & param & "/" & NumParams & " parameters"
               Dim OldFormula As String
 26820         On Error Resume Next
 26830         OldFormula = c.Formula

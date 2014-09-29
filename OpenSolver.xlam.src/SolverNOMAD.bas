@@ -292,7 +292,7 @@ Function updateVar(X As Variant, Optional BestSolution As Variant = Nothing, Opt
           IterationCount = IterationCount + 1
 
           ' Update solution
-          If IterationCount Mod 5 = 0 Then
+          If IterationCount Mod 5 = 1 Then
               Dim status As String
               status = "OpenSolver: Running NOMAD. Iteration " & IterationCount & "."
               ' Check for BestSolution = Nothing
