@@ -11,7 +11,7 @@ set version=%1
 
 :: Common elements of the 7-zip command
 set start=7z a Release\
-set end=. -xr!.git* -xr!OpenSolver.xlam.src -xr!Release -x!make_releases.* -x!upload_releases.*
+set end=. -xr!.git* -xr!OpenSolver.xlam.src -xr!Release -x!make_releases.* -x!upload_releases.* -xr!*~$*
 
 :: All files to exclude in the Windows and Mac Releases
 set windows=-xr!Solvers\osx
