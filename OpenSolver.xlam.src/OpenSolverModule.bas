@@ -528,7 +528,7 @@ Function GetTempFolder() As String
 650       fctRet = GetTempPath(255, TempFolderPathCached)
 660       If fctRet <> 0 Then
 670           TempFolderPathCached = left(TempFolderPathCached, fctRet)
-680           If right(GetTempFolder, 1) <> "\" Then TempFolderPathCached = TempFolderPathCached & "\"
+680           If right(TempFolderPathCached, 1) <> "\" Then TempFolderPathCached = TempFolderPathCached & "\"
 690       Else
 700           TempFolderPathCached = ""
 710       End If

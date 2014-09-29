@@ -75,13 +75,13 @@ Function SolverVersion_Couenne() As String
     
     ' Set up Couenne to write version info to text file
     Dim logFile As String
-    logFile = GetTempFolder & "couenneversion.txt"
+    logFile = GetTempFilePath("couenneversion.txt")
     If FileOrDirExists(logFile) Then Kill logFile
     
     Dim RunPath As String, FileContents As String
     RunPath = ScriptFilePath_Couenne()
     If FileOrDirExists(RunPath) Then Kill RunPath
-    FileContents = """" & ConvertHfsPath(SolverPath) & """" & " -v" & " > """ & ConvertHfsPath(logFile) & """"
+    FileContents = QuotePath(ConvertHfsPath(SolverPath)) & " -v" & " > " & QuotePath(ConvertHfsPath(logFile))
     CreateScriptFile RunPath, FileContents
     
     ' Run Couenne

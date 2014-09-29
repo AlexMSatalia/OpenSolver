@@ -99,7 +99,7 @@ Function SolverVersion_Gurobi() As String
     
     ' Set up Gurobi to write version info to text file
     Dim logFile As String
-    logFile = GetTempFolder & "gurobiversion.txt"
+    logFile = GetTempFilePath("gurobiversion.txt")
     If FileOrDirExists(logFile) Then Kill logFile
     
     Dim RunPath As String, FileContents As String
@@ -142,7 +142,7 @@ Function SolverBitness_Gurobi() As String
     
     ' Set up Gurobi to write version info to text file
     Dim logFile As String
-    logFile = GetTempFolder & "gurobiversion.txt"
+    logFile = GetTempFilePath("gurobiversion.txt")
     If FileOrDirExists(logFile) Then Kill logFile
     
     Dim RunPath As String, FileContents As String

@@ -1579,11 +1579,11 @@ Sub SolveModel_LinearLocal(ModelFilePathName As String, SolveRelaxation As Boole
               
               Dim logCommand As String, logFileName As String
               logFileName = "log1.tmp"
-              logCommand = " > " & """" & ConvertHfsPath(GetTempFolder) & logFileName & """"
+              logCommand = " > " & QuotePath(ConvertHfsPath(GetTempFilePath(logFileName)))
                   
               Dim ExecutionCompleted As Boolean
               'ExecutionCompleted = OSSolveSync(CBCRunString, IIf(ShowIterationResults, SW_SHOWNORMAL, SW_SHOWMINIMIZED), True) ' This stops escape being detected properly unless Excel is first 'activated?' with a click
-13160         ExternalSolverPathName = """" & ConvertHfsPath(ExternalSolverPathName) & """" ' fix error for Gurobi with spaces in path name by quoting path
+13160         ExternalSolverPathName = QuotePath(ConvertHfsPath(ExternalSolverPathName)) ' fix error for Gurobi with spaces in path name by quoting path
               Dim exeResult As Long, userCancelled As Boolean
 13170         ExecutionCompleted = OSSolveSync(ExternalSolverPathName, "", "", logCommand, IIf(SolveOptions.ShowIterationResults And Not MinimiseUserInteraction, SW_SHOWNORMAL, SW_HIDE), True, userCancelled, exeResult) ' Run solver, waiting for completion
 13180         If userCancelled Then

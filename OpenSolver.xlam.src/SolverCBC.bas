@@ -89,13 +89,13 @@ Function SolverVersion_CBC() As String
     
     ' Set up cbc to write version info to text file
     Dim logFile As String
-    logFile = GetTempFolder & "cbcversion.txt"
+    logFile = GetTempFilePath("cbcversion.txt")
     If FileOrDirExists(logFile) Then Kill logFile
     
     Dim RunPath As String, FileContents As String
     RunPath = ScriptFilePath_CBC()
     If FileOrDirExists(RunPath) Then Kill RunPath
-    FileContents = """" & ConvertHfsPath(SolverPath) & """" & " -exit" & " > """ & ConvertHfsPath(logFile) & """"
+    FileContents = QuotePath(ConvertHfsPath(SolverPath)) & " -exit" & " > " & QuotePath(ConvertHfsPath(logFile))
     CreateScriptFile RunPath, FileContents
     
     ' Run cbc
@@ -168,14 +168,14 @@ End Function
 Function CreateSolveScript_CBC(SolutionFilePathName As String, ExtraParametersString As String, SolveOptions As SolveOptionsType, s As COpenSolver) As String
     Dim CommandLineRunString As String, PrintingOptionString As String
     ' have to split up the command line as excel couldn't have a string longer than 255 characters??
-    CommandLineRunString = " -directory " & ConvertHfsPath(GetTempFolder) _
-                         & " -import """ & ConvertHfsPath(s.ModelFilePathName) & """" _
+    CommandLineRunString = " -directory " & QuotePath(ConvertHfsPath(left(GetTempFolder, Len(GetTempFolder) - 1))) _
+                         & " -import " & QuotePath(ConvertHfsPath(s.ModelFilePathName)) _
                          & " -ratioGap " & str(SolveOptions.Tolerance) _
                          & " -seconds " & str(SolveOptions.maxTime) _
                          & ExtraParametersString _
                          & " -solve " _
                          & IIf(s.bGetDuals, " -printingOptions all ", "") _
-                         & " -solution " & ConvertHfsPath(SolutionFilePathName)
+                         & " -solution " & QuotePath(ConvertHfsPath(SolutionFilePathName))
     '-------------------sensitivity analysis-----------------------------------------------------------
     'extra command line option of -printingOptions rhs -solution rhsranges.txt gives the allowable increase for constraint rhs.
     '-this file has the increase as the third input and allowable decrease as the fifth input
@@ -185,7 +185,7 @@ Function CreateSolveScript_CBC(SolutionFilePathName As String, ExtraParametersSt
                   
     Dim scriptFile As String, scriptFileContents As String
     scriptFile = ScriptFilePath_CBC()
-    scriptFileContents = """" & ConvertHfsPath(s.ExternalSolverPathName) & """" & CommandLineRunString & PrintingOptionString
+    scriptFileContents = QuotePath(ConvertHfsPath(s.ExternalSolverPathName)) & CommandLineRunString & PrintingOptionString
     CreateScriptFile scriptFile, scriptFileContents
     
     CreateSolveScript_CBC = scriptFile
@@ -522,7 +522,7 @@ Sub LaunchCommandLine_CBC()
 28050     End If
              
           Dim CBCRunString As String
-28060     CBCRunString = " -directory " & ConvertHfsPath(GetTempFolder) _
+28060     CBCRunString = " -directory " & QuotePath(ConvertHfsPath(left(GetTempFolder, Len(GetTempFolder) - 1))) _
                            & " -import " & QuotePath(ConvertHfsPath(ModelFilePathName)) _
                            & SolveOptionsString _
                            & ExtraParametersString _

@@ -74,13 +74,13 @@ Function SolverVersion_Bonmin() As String
     
     ' Set up Bonmin to write version info to text file
     Dim logFile As String
-    logFile = GetTempFolder & "bonminversion.txt"
+    logFile = GetTempFilePath("bonminversion.txt")
     If FileOrDirExists(logFile) Then Kill logFile
     
     Dim RunPath As String, FileContents As String
     RunPath = ScriptFilePath_Bonmin()
     If FileOrDirExists(RunPath) Then Kill RunPath
-    FileContents = """" & ConvertHfsPath(SolverPath) & """" & " -v" & " > """ & ConvertHfsPath(logFile) & """"
+    FileContents = QuotePath(ConvertHfsPath(SolverPath)) & " -v" & " > " & QuotePath(ConvertHfsPath(logFile))
     CreateScriptFile RunPath, FileContents
     
     ' Run Bonmin
