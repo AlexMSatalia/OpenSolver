@@ -179,6 +179,13 @@ Private SearchRangeNameCACHE As Collection  'by ASL 20130126
 
 Public TempFolderPathCached As String
 
+' Variables for caching error messages on Mac when control passes between Class and Module
+#If Mac Then
+    Public OpenSolver_ErrNumber As Long
+    Public OpenSolver_ErrSource As String
+    Public OpenSolver_ErrDescription As String
+#End If
+
 ' TODO: These & other declarations, and type definitons, need to be updated for 64 bit systems; see:
 '   http://msdn.microsoft.com/en-us/library/ee691831.aspx
 '   http://technet.microsoft.com/en-us/library/ee833946.aspx
@@ -1894,3 +1901,21 @@ Function IsZero(num As Double) As Boolean
 788           IsZero = False
 789       End If
 End Function
+
+' Update error cache
+Sub UpdateErrorCache(ErrorNumber As Long, ErrorSource As String, ErrorDescription As String)
+#If Mac Then
+    OpenSolver_ErrNumber = ErrorNumber
+    OpenSolver_ErrSource = ErrorSource
+    OpenSolver_ErrDescription = ErrorDescription
+#End If
+End Sub
+
+' Clear any cached errors
+Sub ResetErrorCache()
+#If Mac Then
+    OpenSolver_ErrNumber = 0
+    OpenSolver_ErrSource = ""
+    OpenSolver_ErrDescription = ""
+#End If
+End Sub

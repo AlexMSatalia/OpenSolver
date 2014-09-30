@@ -85,6 +85,7 @@ ErrHandler:
 7173      Application.Calculation = xlCalculationAutomatic
 7174      Application.ScreenUpdating = True
 7175      SolveStatus = ErrorOccurred
+          UpdateErrorCache Err.Number, Err.Source, Err.Description & IIf(Erl = 0, "", " (at line " & Erl & ")")
 7176      Err.Raise Err.Number, Err.Source, Err.Description & IIf(Erl = 0, "", " (at line " & Erl & ")")
 7177      Exit Sub
 

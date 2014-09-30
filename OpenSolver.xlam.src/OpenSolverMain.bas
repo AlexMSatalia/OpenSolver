@@ -172,6 +172,7 @@ Sub AutoOpenSolver()
 End Sub
 
 Function RunOpenSolver(Optional SolveRelaxation As Boolean = False, Optional MinimiseUserInteraction As Boolean = False, Optional LinearityCheckOffset As Double = 0) As OpenSolverResult
+          ResetErrorCache
 2802      On Error GoTo errorHandler
 
           'Save iterative calcalation state
@@ -214,12 +215,19 @@ errorHandler:
 2825      Set OpenSolver = Nothing    ' Free any OpenSolver memory used
 2826      Application.Iteration = oldIterationMode
 2827      RunOpenSolver = OpenSolverResult.ErrorOccurred
+#If Mac Then
+          ' Reload error message from cache if they exist
+          If OpenSolver_ErrNumber <> 0 Then Err.Number = OpenSolver_ErrNumber
+          If OpenSolver_ErrSource <> "" Then Err.Source = OpenSolver_ErrSource
+          If OpenSolver_ErrDescription <> "" Then Err.Description = OpenSolver_ErrDescription
+#End If
 2828      If Err.Number <> OpenSolver_UserCancelledError And Not MinimiseUserInteraction Then
-2829          MsgBox "OpenSolver" & sOpenSolverVersion & " encountered an error:" & vbCrLf & Err.Description & IIf(Erl = 0, "", " (at line " & Erl & ")") & vbCrLf & vbCrLf & "Source = " & Err.Source & ", ErrNumber=" & Err.Number, , "OpenSolver" & sOpenSolverVersion & " Error"
+              MsgBox "OpenSolver" & sOpenSolverVersion & " encountered an error:" & vbCrLf & Err.Description & IIf(Erl = 0, "", " (at line " & Erl & ")") & vbCrLf & vbCrLf & "Source = " & Err.Source & ", ErrNumber=" & Err.Number, , "OpenSolver" & sOpenSolverVersion & " Error"
 2830      End If
 End Function
 
 Sub InitializeQuickSolve()
+          ResetErrorCache
 2831      On Error GoTo errorHandler
 2832      If CheckModelHasParameterRange Then
 2833          Set OpenSolver = New COpenSolver
@@ -228,10 +236,17 @@ Sub InitializeQuickSolve()
 2836      End If
 2837      Exit Sub
 errorHandler:
+#If Mac Then
+          ' Reload error message from cache if they exist
+          If OpenSolver_ErrNumber <> 0 Then Err.Number = OpenSolver_ErrNumber
+          If OpenSolver_ErrSource <> "" Then Err.Source = OpenSolver_ErrSource
+          If OpenSolver_ErrDescription <> "" Then Err.Description = OpenSolver_ErrDescription
+#End If
 2838      MsgBox "OpenSolver encountered error " & Err.Number & ":" & vbCrLf & Err.Description & IIf(Erl = 0, "", " (at line " & Erl & ")") & vbCrLf & "Source = " & Err.Source, , "OpenSolver" & sOpenSolverVersion & " Error"
 End Sub
 
 Function RunQuickSolve(Optional MinimiseUserInteraction As Boolean = False) As Long
+          ResetErrorCache
 2839      On Error GoTo errorHandler
 2840      If OpenSolver Is Nothing Then
 2841          MsgBox "Error: There is no model to solve, and so the quick solve cannot be completed. Please select the Initialize Quick Solve command.", , "OpenSolver" & sOpenSolverVersion & " Error"
@@ -241,6 +256,12 @@ Function RunQuickSolve(Optional MinimiseUserInteraction As Boolean = False) As L
 2845      End If
 2846      Exit Function
 errorHandler:
+#If Mac Then
+          ' Reload error message from cache if they exist
+          If OpenSolver_ErrNumber <> 0 Then Err.Number = OpenSolver_ErrNumber
+          If OpenSolver_ErrSource <> "" Then Err.Source = OpenSolver_ErrSource
+          If OpenSolver_ErrDescription <> "" Then Err.Description = OpenSolver_ErrDescription
+#End If
 2847      If Not MinimiseUserInteraction Then
 2848          MsgBox "OpenSolver encountered error " & Err.Number & ":" & vbCrLf & Err.Description & IIf(Erl = 0, "", " (at line " & Erl & ")") & vbCrLf & "Source = " & Err.Source, , "OpenSolver" & sOpenSolverVersion & " Error"
 2849      End If

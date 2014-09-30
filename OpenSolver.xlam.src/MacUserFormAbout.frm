@@ -3,8 +3,8 @@ Begin {C62A69F0-16DC-11CE-9E98-00AA00574A4F} MacUserFormAbout
    Caption         =   "About OpenSolver"
    ClientHeight    =   7995
    ClientLeft      =   0
-   ClientTop       =   -1755
-   ClientWidth     =   10005
+   ClientTop       =   -1757
+   ClientWidth     =   10003
    OleObjectBlob   =   "MacUserFormAbout.frx":0000
    StartUpPosition =   1  'CenterOwner
 End

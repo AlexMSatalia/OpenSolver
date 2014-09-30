@@ -472,6 +472,11 @@ Sub BuildModelFromSolverData(Optional LinearityCheckOffset As Double = 0, Option
 940       LinearSolutionWasLoaded = False
           
 941       ModelStatus = ModelStatus_Unitialized
+
+          ' Change to manual calculation mode
+          Dim oldCalculationMode As Long
+969       oldCalculationMode = Application.Calculation
+970       Application.Calculation = xlCalculationManual
           
           Dim errorPrefix As String
 942       errorPrefix = "OpenSolver Model Build"
@@ -522,11 +527,6 @@ Sub BuildModelFromSolverData(Optional LinearityCheckOffset As Double = 0, Option
 966           On Error GoTo errorHandler
 967           Err.Raise Number:=OpenSolver_BuildError, Source:=errorPrefix, Description:="No Solver model with decision variables was found on sheet " & RawSheetName
 968       End If
-          
-          ' Change to manual calculation mode
-          Dim oldCalculationMode As Long
-969       oldCalculationMode = Application.Calculation
-970       Application.Calculation = xlCalculationManual
           
           Dim i As Long
 
@@ -949,6 +949,7 @@ ErrorExit:
 1212      Application.StatusBar = False ' Resume normal status bar behaviour
 1213      Application.ScreenUpdating = True
 1214      Application.Calculation = oldCalculationMode
+          UpdateErrorCache ErrorNumber, ErrorSource, ErrorDescription ' Update error cache since we are leaving a class module
 1215      Err.Raise ErrorNumber, ErrorSource, ErrorDescription
 
       ' Debugging resume; never reached via code
@@ -1309,6 +1310,7 @@ ErrorExit:
 1403      Application.Cursor = xlDefault
 1404      Application.StatusBar = False ' Resume normal status bar behaviour
 1405      Application.ScreenUpdating = True
+          UpdateErrorCache ErrorNumber, ErrorSource, ErrorDescription ' Update error cache since we are leaving a class module
 1406      Err.Raise ErrorNumber, ErrorSource, ErrorDescription
 
 End Function
@@ -2250,6 +2252,7 @@ Sub ClearQuickSolve()
 End Sub
 
 Function InitializeQuickSolve() As Boolean
+          On Error GoTo errorHandler
 1993      InitializeQuickSolve = False
 1994      If ModelStatus <> ModelStatus_Built Then
 1995          MsgBox "QuickSolve Initialisation Failed: The model cannot be solved as it has not yet been built.", , "OpenSolver" & sOpenSolverVersion & " Error"
@@ -2262,6 +2265,11 @@ Function InitializeQuickSolve() As Boolean
 2001      Else
 2002          Set QuickSolve = Nothing
 2003      End If
+          Exit Function
+
+errorHandler:
+          UpdateErrorCache Err.Number, Err.Source, Err.Description ' Update error cache since we are leaving a class module
+          Err.Raise Err.Number, Err.Source, Err.Description
 End Function
 
 Function CanDoQuickSolveForActiveSheet() As Boolean
@@ -2277,6 +2285,8 @@ Function CanDoQuickSolveForActiveSheet() As Boolean
 End Function
 
 Function DoQuickSolve(Optional MinimiseUserInteraction As Boolean = False) As Long
+          On Error GoTo errorHandler
+          
           ' Update a previously built model
 2012      DoQuickSolve = OpenSolverResult.Unsolved
 2013      If QuickSolve Is Nothing Then
@@ -2286,6 +2296,11 @@ Function DoQuickSolve(Optional MinimiseUserInteraction As Boolean = False) As Lo
 2017              DoQuickSolve = SolveModel(False, MinimiseUserInteraction)
 2018          End If
 2019      End If
+          Exit Function
+
+errorHandler:
+          UpdateErrorCache Err.Number, Err.Source, Err.Description ' Update error cache since we are leaving a class module
+          Err.Raise Err.Number, Err.Source, Err.Description
 End Function
 
 'Iain dunning
