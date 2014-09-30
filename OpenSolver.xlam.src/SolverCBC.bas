@@ -428,7 +428,7 @@ Sub ReadSensitivityData_CBC(SolutionFilePathName As String, s As COpenSolver)
           Dim Line As String, row As Long, j As Long, i As Long
           
           'Find the ranges on the constraints
-6295      RangeFilePathName = left(SolutionFilePathName, InStrRev(SolutionFilePathName, PathDelimeter)) & RHSRangesFile_CBC
+6295      RangeFilePathName = left(SolutionFilePathName, InStrRev(SolutionFilePathName, Application.PathSeparator)) & RHSRangesFile_CBC
 6296      On Error GoTo ErrHandler
 6297      Open RangeFilePathName For Input As 2 ' supply path with filename
 6298      Line Input #2, Line 'Dont want first line
@@ -453,7 +453,7 @@ Sub ReadSensitivityData_CBC(SolutionFilePathName As String, s As COpenSolver)
           
 6317      j = 1
           'Find the ranges on the variables
-6318      RangeFilePathName = left(SolutionFilePathName, InStrRev(SolutionFilePathName, PathDelimeter)) & CostRangesFile_CBC
+6318      RangeFilePathName = left(SolutionFilePathName, InStrRev(SolutionFilePathName, Application.PathSeparator)) & CostRangesFile_CBC
 6319      Open RangeFilePathName For Input As 2 ' supply path with filename
 6320      Line Input #2, Line 'Dont want first line
 6321      row = s.NumRows + 2

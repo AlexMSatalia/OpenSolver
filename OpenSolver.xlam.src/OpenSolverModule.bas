@@ -168,11 +168,9 @@ Const ParamRangeName As String = "OpenSolverModelParameters"
 Private SearchRangeNameCACHE As Collection  'by ASL 20130126
 
 #If Mac Then
-    Public Const PathDelimeter = ":"
     Public Const ScriptExtension = ".sh"
     Public Const NBSP = 202 ' ascii char code for non-breaking space on Mac
 #Else
-    Public Const PathDelimeter = "\"
     Public Const ScriptExtension = ".bat"
     Public Const NBSP = 160 ' ascii char code for non-breaking space on Windows
 #End If
@@ -594,7 +592,7 @@ End Function
 
 Function JoinPaths(Path1 As String, Path2 As String) As String
 114       JoinPaths = Path1
-115       If right(" " & JoinPaths, 1) <> PathDelimeter Then JoinPaths = JoinPaths & PathDelimeter
+115       If right(" " & JoinPaths, 1) <> Application.PathSeparator Then JoinPaths = JoinPaths & Application.PathSeparator
 116       JoinPaths = JoinPaths & Path2
 End Function
 
@@ -1830,7 +1828,7 @@ Public Sub OpenFile(FilePath As String, notFoundMessage As String)
               ' Check that there is no workbook open with the same name
               Dim w As Workbook
 765           On Error Resume Next
-766           Set w = Workbooks(right(FilePath, InStr(FilePath, PathDelimeter)))
+766           Set w = Workbooks(right(FilePath, InStr(FilePath, Application.PathSeparator)))
 767           On Error GoTo errorHandler
 768           Workbooks.Open FileName:=FilePath, ReadOnly:=True ' , Format:=Tabs
 769       End If
