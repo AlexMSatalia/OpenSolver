@@ -14,32 +14,32 @@ Option Explicit
 Private items As Collection
 
 Private Sub Class_Initialize()
-    Set items = New Collection
+9163      Set items = New Collection
 End Sub
 
 Public Sub PushNewCount()
-    items.Add 1
+9164      items.Add 1
 End Sub
 
 Public Function PopCount() As Long
-    Dim Count As Long
-    Count = items(items.Count)
-    items.Remove (items.Count)
-    PopCount = Count
+          Dim Count As Long
+9165      Count = items(items.Count)
+9166      items.Remove (items.Count)
+9167      PopCount = Count
 End Function
 
 Public Sub Increase()
-    Dim Count As Long
-    Count = items(items.Count) + 1
-    items.Remove (items.Count)
-    items.Add Count
+          Dim Count As Long
+9168      Count = items(items.Count) + 1
+9169      items.Remove (items.Count)
+9170      items.Add Count
 End Sub
 
 Public Function Display() As String
-    Dim i As Long, output As String
-    For i = 1 To items.Count
-        output = output & items(i) & ", "
-    Next i
-    Display = output
+          Dim i As Long, output As String
+9171      For i = 1 To items.Count
+9172          output = output & items(i) & ", "
+9173      Next i
+9174      Display = output
 End Function
 

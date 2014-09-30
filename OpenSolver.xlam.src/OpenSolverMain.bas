@@ -36,120 +36,120 @@ Private Const strMenuName  As String = "&OpenSolver"
 Dim OpenSolver As COpenSolver
 
 Sub OpenSolver_SolveClickHandler(Optional Control)
-27810     If Not CheckWorksheetAvailable Then Exit Sub
-27820     RunOpenSolver False
+2754      If Not CheckWorksheetAvailable Then Exit Sub
+2755      RunOpenSolver False
 End Sub
 
 Sub OpenSolver_ModelOptions(Optional Control)
-27830     If Not CheckWorksheetAvailable Then Exit Sub
+2756      If Not CheckWorksheetAvailable Then Exit Sub
 #If Mac Then
-          MacOptions.Show
+2757      MacOptions.Show
 #Else
-          frmOptions.Show vbModal
+2758      frmOptions.Show vbModal
 #End If
 End Sub
 
 Sub OpenSolver_SolverOptions(Optional Control)
-27850     If Not CheckWorksheetAvailable Then Exit Sub
+2759      If Not CheckWorksheetAvailable Then Exit Sub
 #If Mac Then
-          MacSolverChange.Show
+2760      MacSolverChange.Show
 #Else
-          frmSolverChange.Show
+2761      frmSolverChange.Show
 #End If
 End Sub
 
 Sub OpenSolver_SolveRelaxationClickHandler(Optional Control)
-27870     If Not CheckWorksheetAvailable Then Exit Sub
-27880     RunOpenSolver True
+2762      If Not CheckWorksheetAvailable Then Exit Sub
+2763      RunOpenSolver True
 End Sub
 
 Sub OpenSolver_LaunchCBCCommandLine(Optional Control)
-          LaunchCommandLine_CBC
+2764            LaunchCommandLine_CBC
 End Sub
 
 Sub OpenSolver_ShowHideModelClickHandler(Optional Control)
-28110     If Not CheckWorksheetAvailable Then Exit Sub
+2765      If Not CheckWorksheetAvailable Then Exit Sub
           Dim sheet As Worksheet
-28120     On Error GoTo ExitSub
-28130     Set sheet = ActiveSheet
+2766      On Error GoTo ExitSub
+2767      Set sheet = ActiveSheet
           'If SheetHasOpenSolverDataHighlighting(sheet) Then
           '    HideSolverModel ' Hide the OpenSolverStudio data highlighting, and then show the model
           '    ShowSolverModel
           'ElseIf SheetHasOpenSolverModelHighlighting(sheet) Then
-28140     If SheetHasOpenSolverHighlighting(sheet) Then
-28150         HideSolverModel
-28160     Else
-28170         ShowSolverModel
-28180     End If
+2768      If SheetHasOpenSolverHighlighting(sheet) Then
+2769          HideSolverModel
+2770      Else
+2771          ShowSolverModel
+2772      End If
 ExitSub:
 End Sub
 
 Sub OpenSolver_SetQuickSolveParametersClickHandler(Optional Control)
-28190     If Not CheckWorksheetAvailable Then Exit Sub
-28200     If UserSetQuickSolveParameterRange Then
-28210         Set OpenSolver = Nothing ' Was: OpenSolver.ClearQuickSolve  ' Reset any pre-initialized quicksolve data
-28220     End If
+2773      If Not CheckWorksheetAvailable Then Exit Sub
+2774      If UserSetQuickSolveParameterRange Then
+2775          Set OpenSolver = Nothing ' Was: OpenSolver.ClearQuickSolve  ' Reset any pre-initialized quicksolve data
+2776      End If
 End Sub
 
 Sub OpenSolver_InitQuickSolveClickHandler(Optional Control)
-28230     If Not CheckWorksheetAvailable Then Exit Sub
-28240     InitializeQuickSolve
+2777      If Not CheckWorksheetAvailable Then Exit Sub
+2778      InitializeQuickSolve
 End Sub
 
 Sub OpenSolver_QuickSolveClickHandler(Optional Control)
-28250     If Not CheckWorksheetAvailable Then Exit Sub
-28260     RunQuickSolve
+2779      If Not CheckWorksheetAvailable Then Exit Sub
+2780      RunQuickSolve
 End Sub
 
 Sub OpenSolver_ViewLastModelClickHandler(Optional Control)
-          Dim notFoundMessage As String, FilePath As String
-          FilePath = GetTempFilePath(LPFileName)
-          notFoundMessage = "Error: There is no LP file (" & FilePath & ") to open. Please solve the model using one of the linear solvers within OpenSolver, and then try again."
-          OpenFile FilePath, notFoundMessage
+                Dim notFoundMessage As String, FilePath As String
+2781            FilePath = GetTempFilePath(LPFileName)
+2782            notFoundMessage = "Error: There is no LP file (" & FilePath & ") to open. Please solve the model using one of the linear solvers within OpenSolver, and then try again."
+2783            OpenFile FilePath, notFoundMessage
 End Sub
 
 Sub OpenSolver_ViewLastAmplClickHandler(Optional Control)
-          Dim notFoundMessage As String, FilePath As String
-          FilePath = GetTempFilePath(AMPLFileName)
-          notFoundMessage = "Error: There is no AMPL file (" & FilePath & ") to open. Please solve the model using one of the NEOS solvers within OpenSolver, and then try again."
-          OpenFile FilePath, notFoundMessage
+                Dim notFoundMessage As String, FilePath As String
+2784            FilePath = GetTempFilePath(AMPLFileName)
+2785            notFoundMessage = "Error: There is no AMPL file (" & FilePath & ") to open. Please solve the model using one of the NEOS solvers within OpenSolver, and then try again."
+2786            OpenFile FilePath, notFoundMessage
 End Sub
 
 Sub OpenSolver_ViewLogFile(Optional Control)
-          Dim notFoundMessage As String, FilePath As String
-          FilePath = GetTempFilePath("log1.tmp")
-          notFoundMessage = "Error: There is no log file (" & FilePath & ") to open. Please re-solve the OpenSolver model, and then try again."
-          OpenFile FilePath, notFoundMessage
+                Dim notFoundMessage As String, FilePath As String
+2787            FilePath = GetTempFilePath("log1.tmp")
+2788            notFoundMessage = "Error: There is no log file (" & FilePath & ") to open. Please re-solve the OpenSolver model, and then try again."
+2789            OpenFile FilePath, notFoundMessage
 End Sub
 
 Sub OpenSolver_ViewLastSolutionClickHandler(Optional Control)
-          Dim notFoundMessage As String, FilePath As String
-          FilePath = SolutionFilePath_CBC()
-          notFoundMessage = "Error: There is no solution file (" & FilePath & ") to open. Please solve the model using the CBC solver for OpenSolver, and then try again. Or if you solved your model using a different solver try opening that file instead."
-          OpenFile FilePath, notFoundMessage
+                Dim notFoundMessage As String, FilePath As String
+2790            FilePath = SolutionFilePath_CBC()
+2791            notFoundMessage = "Error: There is no solution file (" & FilePath & ") to open. Please solve the model using the CBC solver for OpenSolver, and then try again. Or if you solved your model using a different solver try opening that file instead."
+2792            OpenFile FilePath, notFoundMessage
 End Sub
 
 Sub OpenSolver_ViewLastGurobiSolutionClickHandler(Optional Control)
-          Dim notFoundMessage As String, FilePath As String
-          FilePath = SolutionFilePath_Gurobi()
-          notFoundMessage = "Error: There is no solution file (" & FilePath & ") to open. Please solve the model using the Gurobi solver for OpenSolver, and then try again. Or if you solved your model using a different solver try opening that file instead."
-          OpenFile FilePath, notFoundMessage
+                Dim notFoundMessage As String, FilePath As String
+2793            FilePath = SolutionFilePath_Gurobi()
+2794            notFoundMessage = "Error: There is no solution file (" & FilePath & ") to open. Please solve the model using the Gurobi solver for OpenSolver, and then try again. Or if you solved your model using a different solver try opening that file instead."
+2795            OpenFile FilePath, notFoundMessage
 End Sub
 
 Sub OpenSolver_OnlineHelp(Optional Control)
-28770     Call OpenURL("http://help.opensolver.org")
+2796      Call OpenURL("http://help.opensolver.org")
 End Sub
 
 Sub OpenSolver_AboutClickHandler(Optional Control)
 #If Mac Then
-    MacUserFormAbout.Show
+2797      MacUserFormAbout.Show
 #Else
-    UserFormAbout.Show
+2798      UserFormAbout.Show
 #End If
 End Sub
 
 Sub OpenSolver_AboutCoinOR(Optional Control)
-28790     MsgBox "COIN-OR" & vbCrLf & _
+2799      MsgBox "COIN-OR" & vbCrLf & _
                  "http://www.Coin-OR.org" & vbCrLf & _
                  vbCrLf & _
                  "The Computational Infrastructure for Operations Research (COIN-OR, or simply COIN)  project is an initiative to spur the development of open-source software for the operations research community." & vbCrLf & _
@@ -158,11 +158,11 @@ Sub OpenSolver_AboutCoinOR(Optional Control)
 End Sub
 
 Sub OpenSolver_VisitOpenSolverOrg(Optional Control)
-28800     Call OpenURL("http://www.opensolver.org")
+2800      Call OpenURL("http://www.opensolver.org")
 End Sub
 
 Sub OpenSolver_VisitCoinOROrg(Optional Control)
-28810     Call OpenURL("http://www.coin-or.org")
+2801      Call OpenURL("http://www.coin-or.org")
 End Sub
 
 Sub AutoOpenSolver()
@@ -172,124 +172,124 @@ Sub AutoOpenSolver()
 End Sub
 
 Function RunOpenSolver(Optional SolveRelaxation As Boolean = False, Optional MinimiseUserInteraction As Boolean = False, Optional LinearityCheckOffset As Double = 0) As OpenSolverResult
-28820     On Error GoTo errorHandler
+2802      On Error GoTo errorHandler
 
           'Save iterative calcalation state
           Dim oldIterationMode As Boolean
-          oldIterationMode = Application.Iteration
+2803      oldIterationMode = Application.Iteration
 
-28830     RunOpenSolver = OpenSolverResult.Unsolved
-28840     Set OpenSolver = New COpenSolver
-28850     OpenSolver.BuildModelFromSolverData LinearityCheckOffset, MinimiseUserInteraction
-          If UsesParsedModel(OpenSolver.Solver) Then
-              GoTo ParsedModel
-          End If
-28860     RunOpenSolver = OpenSolver.SolveModel(SolveRelaxation, MinimiseUserInteraction)
-28870     If Not MinimiseUserInteraction Then OpenSolver.ReportAnySolutionSubOptimality
-28880     Set OpenSolver = Nothing    ' Free any OpenSolver memory used
-          Application.Iteration = oldIterationMode
-28890     Exit Function
+2804      RunOpenSolver = OpenSolverResult.Unsolved
+2805      Set OpenSolver = New COpenSolver
+2806      OpenSolver.BuildModelFromSolverData LinearityCheckOffset, MinimiseUserInteraction
+2807      If UsesParsedModel(OpenSolver.Solver) Then
+2808          GoTo ParsedModel
+2809      End If
+2810      RunOpenSolver = OpenSolver.SolveModel(SolveRelaxation, MinimiseUserInteraction)
+2811      If Not MinimiseUserInteraction Then OpenSolver.ReportAnySolutionSubOptimality
+2812      Set OpenSolver = Nothing    ' Free any OpenSolver memory used
+2813      Application.Iteration = oldIterationMode
+2814      Exit Function
 
 ParsedModel:
-          On Error GoTo CleanParsedModel
+2815      On Error GoTo CleanParsedModel
           Dim OpenSolverParsed As New COpenSolverParsed
           
           ' Solve model and extract result
-          OpenSolverParsed.SolveModel OpenSolver
-          RunOpenSolver = OpenSolver.SolveStatus
-          If Not MinimiseUserInteraction Then OpenSolver.ReportAnySolutionSubOptimality
+2816      OpenSolverParsed.SolveModel OpenSolver
+2817      RunOpenSolver = OpenSolver.SolveStatus
+2818      If Not MinimiseUserInteraction Then OpenSolver.ReportAnySolutionSubOptimality
           
           ' Clean up
-          Set OpenSolver = Nothing
-          Set OpenSolverParsed = Nothing
-          Application.Iteration = oldIterationMode
-          Exit Function
-    
+2819      Set OpenSolver = Nothing
+2820      Set OpenSolverParsed = Nothing
+2821      Application.Iteration = oldIterationMode
+2822      Exit Function
+          
 CleanParsedModel:
           ' Clear OpenSolverParsed before moving on to main error handler
-          Set OpenSolverParsed = Nothing
-          GoTo errorHandler
+2823      Set OpenSolverParsed = Nothing
+2824      GoTo errorHandler
 
 errorHandler:
-28900     Set OpenSolver = Nothing    ' Free any OpenSolver memory used
-          Application.Iteration = oldIterationMode
-28910     RunOpenSolver = OpenSolverResult.ErrorOccurred
-28920     If Err.Number <> OpenSolver_UserCancelledError And Not MinimiseUserInteraction Then
-28930         MsgBox "OpenSolver" & sOpenSolverVersion & " encountered an error:" & vbCrLf & Err.Description & IIf(Erl = 0, "", " (at line " & Erl & ")") & vbCrLf & vbCrLf & "Source = " & Err.Source & ", ErrNumber=" & Err.Number, , "OpenSolver" & sOpenSolverVersion & " Error"
-28940     End If
+2825      Set OpenSolver = Nothing    ' Free any OpenSolver memory used
+2826      Application.Iteration = oldIterationMode
+2827      RunOpenSolver = OpenSolverResult.ErrorOccurred
+2828      If Err.Number <> OpenSolver_UserCancelledError And Not MinimiseUserInteraction Then
+2829          MsgBox "OpenSolver" & sOpenSolverVersion & " encountered an error:" & vbCrLf & Err.Description & IIf(Erl = 0, "", " (at line " & Erl & ")") & vbCrLf & vbCrLf & "Source = " & Err.Source & ", ErrNumber=" & Err.Number, , "OpenSolver" & sOpenSolverVersion & " Error"
+2830      End If
 End Function
 
 Sub InitializeQuickSolve()
-28950     On Error GoTo errorHandler
-28960     If CheckModelHasParameterRange Then
-28970         Set OpenSolver = New COpenSolver
-28980         OpenSolver.BuildModelFromSolverData
-28990         OpenSolver.InitializeQuickSolve
-29000     End If
-29010     Exit Sub
+2831      On Error GoTo errorHandler
+2832      If CheckModelHasParameterRange Then
+2833          Set OpenSolver = New COpenSolver
+2834          OpenSolver.BuildModelFromSolverData
+2835          OpenSolver.InitializeQuickSolve
+2836      End If
+2837      Exit Sub
 errorHandler:
-29020     MsgBox "OpenSolver encountered error " & Err.Number & ":" & vbCrLf & Err.Description & IIf(Erl = 0, "", " (at line " & Erl & ")") & vbCrLf & "Source = " & Err.Source, , "OpenSolver" & sOpenSolverVersion & " Error"
+2838      MsgBox "OpenSolver encountered error " & Err.Number & ":" & vbCrLf & Err.Description & IIf(Erl = 0, "", " (at line " & Erl & ")") & vbCrLf & "Source = " & Err.Source, , "OpenSolver" & sOpenSolverVersion & " Error"
 End Sub
 
 Function RunQuickSolve(Optional MinimiseUserInteraction As Boolean = False) As Long
-29030     On Error GoTo errorHandler
-29040     If OpenSolver Is Nothing Then
-29050         MsgBox "Error: There is no model to solve, and so the quick solve cannot be completed. Please select the Initialize Quick Solve command.", , "OpenSolver" & sOpenSolverVersion & " Error"
-              RunQuickSolve = OpenSolverResult.ErrorOccurred
-29060     ElseIf OpenSolver.CanDoQuickSolveForActiveSheet Then    ' This will report any errors
-29070         RunQuickSolve = OpenSolver.DoQuickSolve(MinimiseUserInteraction)
-29080     End If
-29090     Exit Function
+2839      On Error GoTo errorHandler
+2840      If OpenSolver Is Nothing Then
+2841          MsgBox "Error: There is no model to solve, and so the quick solve cannot be completed. Please select the Initialize Quick Solve command.", , "OpenSolver" & sOpenSolverVersion & " Error"
+2842          RunQuickSolve = OpenSolverResult.ErrorOccurred
+2843      ElseIf OpenSolver.CanDoQuickSolveForActiveSheet Then    ' This will report any errors
+2844          RunQuickSolve = OpenSolver.DoQuickSolve(MinimiseUserInteraction)
+2845      End If
+2846      Exit Function
 errorHandler:
-          If Not MinimiseUserInteraction Then
-29100         MsgBox "OpenSolver encountered error " & Err.Number & ":" & vbCrLf & Err.Description & IIf(Erl = 0, "", " (at line " & Erl & ")") & vbCrLf & "Source = " & Err.Source, , "OpenSolver" & sOpenSolverVersion & " Error"
-          End If
-          RunQuickSolve = OpenSolverResult.ErrorOccurred
+2847      If Not MinimiseUserInteraction Then
+2848          MsgBox "OpenSolver encountered error " & Err.Number & ":" & vbCrLf & Err.Description & IIf(Erl = 0, "", " (at line " & Erl & ")") & vbCrLf & "Source = " & Err.Source, , "OpenSolver" & sOpenSolverVersion & " Error"
+2849      End If
+2850      RunQuickSolve = OpenSolverResult.ErrorOccurred
 End Function
 
 Sub OpenSolver_ModelClick(Optional Control)
           'frmAutoModel.Show
           'frmAutoModel2.Show
-29110     If Not CheckWorksheetAvailable Then Exit Sub
+2851      If Not CheckWorksheetAvailable Then Exit Sub
 #If Mac Then
-          MacModel.Show
+2852      MacModel.Show
 #Else
-29120     frmModel.Show
+2853      frmModel.Show
 #End If
-29130     DoEvents
+2854      DoEvents
 End Sub
 
 Sub OpenSolver_QuickAutoModelClick(Optional Control)
-29140     If Not CheckWorksheetAvailable Then Exit Sub
+2855      If Not CheckWorksheetAvailable Then Exit Sub
           Dim model As New CModel
-29150     If Not CheckWorksheetAvailable Then Exit Sub
-29160     If Not model.FindObjective(ActiveSheet) = "OK" Then
-29170         MsgBox "Couldn't find objective, and couldn't finish as a result."
-29180         Exit Sub
-29190     End If
-29200     If Not model.FindVarsAndCons(True) Then
-29210         MsgBox "Error while looking for variables and constraints"
-29220         Exit Sub
-29230     End If
-29240     model.NonNegativityAssumption = True
-29250     model.BuildModel
-29260     If MsgBox("Done! Show model?", vbYesNo, "Quick AutoModel") = vbYes Then
-29270         OpenSolverVisualizer.ShowSolverModel
-29280     Else
-29290         OpenSolverVisualizer.HideSolverModel
-29300     End If
+2856      If Not CheckWorksheetAvailable Then Exit Sub
+2857      If Not model.FindObjective(ActiveSheet) = "OK" Then
+2858          MsgBox "Couldn't find objective, and couldn't finish as a result."
+2859          Exit Sub
+2860      End If
+2861      If Not model.FindVarsAndCons(True) Then
+2862          MsgBox "Error while looking for variables and constraints"
+2863          Exit Sub
+2864      End If
+2865      model.NonNegativityAssumption = True
+2866      model.BuildModel
+2867      If MsgBox("Done! Show model?", vbYesNo, "Quick AutoModel") = vbYes Then
+2868          OpenSolverVisualizer.ShowSolverModel
+2869      Else
+2870          OpenSolverVisualizer.HideSolverModel
+2871      End If
 End Sub
 
 Sub OpenSolver_AutoModelAndSolveClick(Optional Control)
-29310     If Not CheckWorksheetAvailable Then Exit Sub
+2872      If Not CheckWorksheetAvailable Then Exit Sub
           Dim model As New CModel
           Dim status As String
           
-29320     status = model.FindObjective(ActiveSheet)
+2873      status = model.FindObjective(ActiveSheet)
                 
           ' Pass it the model reference
-29330     Set frmAutoModel.model = model
-29340     frmAutoModel.GuessObjStatus = status
+2874      Set frmAutoModel.model = model
+2875      frmAutoModel.GuessObjStatus = status
 
       '--------------No Longer requires an objective to solve------------------------------
       '    If Not model.FindObjective(ActiveSheet) = "OK" Then
@@ -299,17 +299,17 @@ Sub OpenSolver_AutoModelAndSolveClick(Optional Control)
       '    End If
       '-------------------------------------------------------------------------------------
           
-29350     If Not model.FindVarsAndCons(True) Then
-29360         MsgBox "Error while looking for variables and constraints"
-29370         GoTo Viewer
-29380     End If
-29390     model.NonNegativityAssumption = True
-29400     model.BuildModel
+2876      If Not model.FindVarsAndCons(True) Then
+2877          MsgBox "Error while looking for variables and constraints"
+2878          GoTo Viewer
+2879      End If
+2880      model.NonNegativityAssumption = True
+2881      model.BuildModel
           
-29410     RunOpenSolver False
+2882      RunOpenSolver False
          
 Viewer:
-29420     OpenSolverVisualizer.ShowSolverModel
+2883      OpenSolverVisualizer.ShowSolverModel
 
 End Sub
 '====================================================================
@@ -323,178 +323,178 @@ Public Sub AddMenuItems()
          Dim objCustomMenu    As CommandBarControl
          Dim objCustomMenu2   As CommandBarControl
          
-29430    Call DelMenuItems
+2884     Call DelMenuItems
          
-29440    Set objMainMenuBar = Application.CommandBars("Worksheet Menu Bar")
+2885     Set objMainMenuBar = Application.CommandBars("Worksheet Menu Bar")
          
          'intHelpMenu = objMainMenuBar.Controls("Help").Index
          
          'Set objCustomMenu = objMainMenuBar.Controls.Add(Type:=msoControlPopup, Before:=intHelpMenu)
-29450    Set objCustomMenu = objMainMenuBar.Controls.Add(Type:=msoControlPopup)
+2886     Set objCustomMenu = objMainMenuBar.Controls.Add(Type:=msoControlPopup)
          
-29460    objCustomMenu.Caption = strMenuName
+2887     objCustomMenu.Caption = strMenuName
          
          
          'Model menu items
-         Set objCustomMenu2 = objCustomMenu.Controls.Add(Type:=msoControlPopup)
-         objCustomMenu2.Caption = "&Model"
-         objCustomMenu2.BeginGroup = True
+2888     Set objCustomMenu2 = objCustomMenu.Controls.Add(Type:=msoControlPopup)
+2889     objCustomMenu2.Caption = "&Model"
+2890     objCustomMenu2.BeginGroup = True
          
-29470    With objCustomMenu2.Controls.Add(Type:=msoControlButton)
-29480       .Caption = "&Model..."
-29490       .OnAction = "OpenSolver_ModelClick"
-29500       .FaceId = 0
-29510    End With
+2891     With objCustomMenu2.Controls.Add(Type:=msoControlButton)
+2892        .Caption = "&Model..."
+2893        .OnAction = "OpenSolver_ModelClick"
+2894        .FaceId = 0
+2895     End With
 
-         With objCustomMenu2.Controls.Add(Type:=msoControlButton)
-            .Caption = "Quick AutoModel"
-            .OnAction = "OpenSolver_QuickAutoModelClick"
-            .FaceId = 0
-         End With
+2896     With objCustomMenu2.Controls.Add(Type:=msoControlButton)
+2897        .Caption = "Quick AutoModel"
+2898        .OnAction = "OpenSolver_QuickAutoModelClick"
+2899        .FaceId = 0
+2900     End With
 
-         With objCustomMenu2.Controls.Add(Type:=msoControlButton)
-            .Caption = "&AutoModel and Solve"
-            .OnAction = "OpenSolver_AutoModelAndSolveClick"
-            .FaceId = 0
-         End With
+2901     With objCustomMenu2.Controls.Add(Type:=msoControlButton)
+2902        .Caption = "&AutoModel and Solve"
+2903        .OnAction = "OpenSolver_AutoModelAndSolveClick"
+2904        .FaceId = 0
+2905     End With
 
-         With objCustomMenu2.Controls.Add(Type:=msoControlButton)
-            .Caption = "&Solver Engine..."
-            .OnAction = "OpenSolver_SolverOptions"
-            .FaceId = 0
-         End With
+2906     With objCustomMenu2.Controls.Add(Type:=msoControlButton)
+2907        .Caption = "&Solver Engine..."
+2908        .OnAction = "OpenSolver_SolverOptions"
+2909        .FaceId = 0
+2910     End With
 
-         With objCustomMenu2.Controls.Add(Type:=msoControlButton)
-            .Caption = "&Options..."
-            .OnAction = "OpenSolver_ModelOptions"
-            .FaceId = 0
-         End With
+2911     With objCustomMenu2.Controls.Add(Type:=msoControlButton)
+2912        .Caption = "&Options..."
+2913        .OnAction = "OpenSolver_ModelOptions"
+2914        .FaceId = 0
+2915     End With
          
          ' Main menu items
-29520    With objCustomMenu.Controls.Add(Type:=msoControlButton)
-29530       .Caption = "&Solve"
-29540       .OnAction = "OpenSolver_SolveClickHandler"
-29550       .FaceId = 0
-29560    End With
+2916     With objCustomMenu.Controls.Add(Type:=msoControlButton)
+2917        .Caption = "&Solve"
+2918        .OnAction = "OpenSolver_SolveClickHandler"
+2919        .FaceId = 0
+2920     End With
          
-29570    With objCustomMenu.Controls.Add(Type:=msoControlButton)
-29580       .Caption = "Show/&Hide Model"
-29590       .OnAction = "OpenSolver_ShowHideModelClickHandler"
-29600       .FaceId = 0
-29610    End With
+2921     With objCustomMenu.Controls.Add(Type:=msoControlButton)
+2922        .Caption = "Show/&Hide Model"
+2923        .OnAction = "OpenSolver_ShowHideModelClickHandler"
+2924        .FaceId = 0
+2925     End With
          
-29620    With objCustomMenu.Controls.Add(Type:=msoControlButton)
-29630       .Caption = "&Quick Solve"
-29640       .OnAction = "OpenSolver_QuickSolveClickHandler"
-29650       .FaceId = 0
-29660    End With
+2926     With objCustomMenu.Controls.Add(Type:=msoControlButton)
+2927        .Caption = "&Quick Solve"
+2928        .OnAction = "OpenSolver_QuickSolveClickHandler"
+2929        .FaceId = 0
+2930     End With
          
          
          'OpenSolver menu items
-29670    Set objCustomMenu = objCustomMenu.Controls.Add(Type:=msoControlPopup)
-29680    objCustomMenu.Caption = strAddInName
-29690    objCustomMenu.BeginGroup = True
+2931     Set objCustomMenu = objCustomMenu.Controls.Add(Type:=msoControlPopup)
+2932     objCustomMenu.Caption = strAddInName
+2933     objCustomMenu.BeginGroup = True
          
-29700    With objCustomMenu.Controls.Add(Type:=msoControlButton)
-29710       .Caption = "Set Quick Solve Parameters..."
-29720       .OnAction = "OpenSolver_SetQuickSolveParametersClickHandler"
-29730       .FaceId = 0
-29740       .BeginGroup = True
-29750    End With
+2934     With objCustomMenu.Controls.Add(Type:=msoControlButton)
+2935        .Caption = "Set Quick Solve Parameters..."
+2936        .OnAction = "OpenSolver_SetQuickSolveParametersClickHandler"
+2937        .FaceId = 0
+2938        .BeginGroup = True
+2939     End With
          
-29760    With objCustomMenu.Controls.Add(Type:=msoControlButton)
-29770       .Caption = "Initialize Quick Solve"
-29780       .OnAction = "OpenSolver_InitQuickSolveClickHandler"
-29790       .FaceId = 0
-29800    End With
-         
-         
-29810    With objCustomMenu.Controls.Add(Type:=msoControlButton)
-29820       .Caption = "Solve LP Relaxation"
-29830       .OnAction = "OpenSolver_SolveRelaxationClickHandler"
-29840       .FaceId = 0
-29850       .BeginGroup = True
-29860    End With
-         
-29870    With objCustomMenu.Controls.Add(Type:=msoControlButton)
-29880       .Caption = "View Last Model .lp File"
-29890       .OnAction = "OpenSolver_ViewLastModelClickHandler"
-29900       .FaceId = 0
-29910    End With
-         
-         With objCustomMenu.Controls.Add(Type:=msoControlButton)
-            .Caption = "View Last AMPL File"
-            .OnAction = "OpenSolver_ViewLastAmplClickHandler"
-            .FaceId = 0
-         End With
-         
-         With objCustomMenu.Controls.Add(Type:=msoControlButton)
-            .Caption = "View Last Log File"
-            .OnAction = "OpenSolver_ViewLogFile"
-            .FaceId = 0
-         End With
-         
-29920    With objCustomMenu.Controls.Add(Type:=msoControlButton)
-29930       .Caption = "View Last CBC Solution File"
-29940       .OnAction = "OpenSolver_ViewLastSolutionClickHandler"
-29950       .FaceId = 0
-            .BeginGroup = True
-29960    End With
-         
-29970    With objCustomMenu.Controls.Add(Type:=msoControlButton)
-29980       .Caption = "Open Last Model in CBC..."
-29990       .OnAction = "OpenSolver_LaunchCBCCommandLine"
-30000       .FaceId = 0
-30010    End With
+2940     With objCustomMenu.Controls.Add(Type:=msoControlButton)
+2941        .Caption = "Initialize Quick Solve"
+2942        .OnAction = "OpenSolver_InitQuickSolveClickHandler"
+2943        .FaceId = 0
+2944     End With
          
          
-         With objCustomMenu.Controls.Add(Type:=msoControlButton)
-            .Caption = "View Last Gurobi Solution File"
-            .OnAction = "OpenSolver_ViewLastGurobiSolutionClickHandler"
-            .FaceId = 0
-            .BeginGroup = True
-         End With
+2945     With objCustomMenu.Controls.Add(Type:=msoControlButton)
+2946        .Caption = "Solve LP Relaxation"
+2947        .OnAction = "OpenSolver_SolveRelaxationClickHandler"
+2948        .FaceId = 0
+2949        .BeginGroup = True
+2950     End With
          
-30020    With objCustomMenu.Controls.Add(Type:=msoControlButton)
-30030       .Caption = "Online Help..."
-30040       .OnAction = "OpenSolver_OnlineHelp"
-30050       .FaceId = 0 '984 '49
-30060       .BeginGroup = True
-30070    End With
+2951     With objCustomMenu.Controls.Add(Type:=msoControlButton)
+2952        .Caption = "View Last Model .lp File"
+2953        .OnAction = "OpenSolver_ViewLastModelClickHandler"
+2954        .FaceId = 0
+2955     End With
+         
+2956     With objCustomMenu.Controls.Add(Type:=msoControlButton)
+2957        .Caption = "View Last AMPL File"
+2958        .OnAction = "OpenSolver_ViewLastAmplClickHandler"
+2959        .FaceId = 0
+2960     End With
+         
+2961     With objCustomMenu.Controls.Add(Type:=msoControlButton)
+2962        .Caption = "View Last Log File"
+2963        .OnAction = "OpenSolver_ViewLogFile"
+2964        .FaceId = 0
+2965     End With
+         
+2966     With objCustomMenu.Controls.Add(Type:=msoControlButton)
+2967        .Caption = "View Last CBC Solution File"
+2968        .OnAction = "OpenSolver_ViewLastSolutionClickHandler"
+2969        .FaceId = 0
+2970        .BeginGroup = True
+2971     End With
+         
+2972     With objCustomMenu.Controls.Add(Type:=msoControlButton)
+2973        .Caption = "Open Last Model in CBC..."
+2974        .OnAction = "OpenSolver_LaunchCBCCommandLine"
+2975        .FaceId = 0
+2976     End With
          
          
-30080    With objCustomMenu.Controls.Add(Type:=msoControlButton)
-30090       .Caption = "About " & strAddInName & "..."
-30100       .OnAction = "OpenSolver_AboutClickHandler"
-30110       .FaceId = 0
-30120       .BeginGroup = True
-30130    End With
+2977     With objCustomMenu.Controls.Add(Type:=msoControlButton)
+2978        .Caption = "View Last Gurobi Solution File"
+2979        .OnAction = "OpenSolver_ViewLastGurobiSolutionClickHandler"
+2980        .FaceId = 0
+2981        .BeginGroup = True
+2982     End With
          
-30140    With objCustomMenu.Controls.Add(Type:=msoControlButton)
-30150       .Caption = "About COIN-OR..."
-30160       .OnAction = "OpenSolver_AboutCoinOr"
-30170       .FaceId = 0
-30180    End With
+2983     With objCustomMenu.Controls.Add(Type:=msoControlButton)
+2984        .Caption = "Online Help..."
+2985        .OnAction = "OpenSolver_OnlineHelp"
+2986        .FaceId = 0 '984 '49
+2987        .BeginGroup = True
+2988     End With
          
          
-30190    With objCustomMenu.Controls.Add(Type:=msoControlButton)
-30200       .Caption = "Open " & strAddInName & ".org..."
-30210       .OnAction = "OpenSolver_VisitOpenSolverOrg"
-30220       .FaceId = 0
-30230       .BeginGroup = True
-30240    End With
+2989     With objCustomMenu.Controls.Add(Type:=msoControlButton)
+2990        .Caption = "About " & strAddInName & "..."
+2991        .OnAction = "OpenSolver_AboutClickHandler"
+2992        .FaceId = 0
+2993        .BeginGroup = True
+2994     End With
          
-30250    With objCustomMenu.Controls.Add(Type:=msoControlButton)
-30260       .Caption = "Open COIN-OR.org..."
-30270       .OnAction = "OpenSolver_VisitCoinOrOrg"
-30280       .FaceId = 0
-30290    End With
+2995     With objCustomMenu.Controls.Add(Type:=msoControlButton)
+2996        .Caption = "About COIN-OR..."
+2997        .OnAction = "OpenSolver_AboutCoinOr"
+2998        .FaceId = 0
+2999     End With
+         
+         
+3000     With objCustomMenu.Controls.Add(Type:=msoControlButton)
+3001        .Caption = "Open " & strAddInName & ".org..."
+3002        .OnAction = "OpenSolver_VisitOpenSolverOrg"
+3003        .FaceId = 0
+3004        .BeginGroup = True
+3005     End With
+         
+3006     With objCustomMenu.Controls.Add(Type:=msoControlButton)
+3007        .Caption = "Open COIN-OR.org..."
+3008        .OnAction = "OpenSolver_VisitCoinOrOrg"
+3009        .FaceId = 0
+3010     End With
          
 End Sub
 
 Public Sub DelMenuItems()
-30300     On Error Resume Next
-30310     Application.CommandBars("Worksheet Menu Bar").Controls(strMenuName).Delete
+3011      On Error Resume Next
+3012      Application.CommandBars("Worksheet Menu Bar").Controls(strMenuName).Delete
 End Sub
 '====================================================================
 ' Excel 2003 Menu Code

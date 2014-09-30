@@ -65,154 +65,154 @@ Function AnalyseParameters(OpenSolver As COpenSolver, sheetName As String, _
           ' Note: Will update arguments LHSValue and RHSValue to the current values of these cells on the spreadsheet
           ' This remembers the parameter range for which we have built the model for checking later
           
-26450     On Error GoTo errorHandler
-26460     Set CurrentParameterRange = Nothing
+2618      On Error GoTo errorHandler
+2619      Set CurrentParameterRange = Nothing
           
           ' Remember the current number of rows and original RHS values
           Dim i As Long, oldCalculationMode As Long
           
-26470     NumRows = OpenSolver.GetNumRows
+2620      NumRows = OpenSolver.GetNumRows
           
-26480     oldCalculationMode = Application.Calculation
+2621      oldCalculationMode = Application.Calculation
 
-26490     If NumRows > 0 Then ReDim OriginalRHS(NumRows) As Double
-26500     For i = 1 To NumRows
-26510         OriginalRHS(i) = RHS(i)
-26520     Next i
+2622      If NumRows > 0 Then ReDim OriginalRHS(NumRows) As Double
+2623      For i = 1 To NumRows
+2624          OriginalRHS(i) = RHS(i)
+2625      Next i
           
           ' Find the Parameter range, and get the numer of parameters
           Dim ParamRange As Range
-26530     If Not OpenSolverModule.CheckModelHasParameterRange Then
-26540         Exit Function   ' Error message already shown
-26550     End If
-26560     Set ParamRange = OpenSolverModule.RemoveRangeOverlap(Range(sheetName & OpenSolverModule.GetParamRangeName))
+2626      If Not OpenSolverModule.CheckModelHasParameterRange Then
+2627          Exit Function   ' Error message already shown
+2628      End If
+2629      Set ParamRange = OpenSolverModule.RemoveRangeOverlap(Range(sheetName & OpenSolverModule.GetParamRangeName))
           
           Dim BadCell As Range
-26570     If Not OpenSolverModule.CheckRangeContainsNoAmbiguousMergedCells(ParamRange, BadCell) Then
-26580         MsgBox "QuickSolve Initialisation Failed: The parameter " & BadCell.AddressLocal(RowAbsolute:=False, ColumnAbsolute:=False) & " is inaccessible as it is within the merged range " & BadCell.MergeArea.AddressLocal(RowAbsolute:=False, ColumnAbsolute:=False) & ".", , "OpenSolver" & sOpenSolverVersion & " Error"
-26590         GoTo ExitSub
-26600     End If
+2630      If Not OpenSolverModule.CheckRangeContainsNoAmbiguousMergedCells(ParamRange, BadCell) Then
+2631          MsgBox "QuickSolve Initialisation Failed: The parameter " & BadCell.AddressLocal(RowAbsolute:=False, ColumnAbsolute:=False) & " is inaccessible as it is within the merged range " & BadCell.MergeArea.AddressLocal(RowAbsolute:=False, ColumnAbsolute:=False) & ".", , "OpenSolver" & sOpenSolverVersion & " Error"
+2632          GoTo ExitSub
+2633      End If
           
-26610     NumParams = ParamRange.Count
+2634      NumParams = ParamRange.Count
           
           ' Remember the original parameter values
           ' Warning: Do not use ParamRange(i) as this fails with more than 1 area; using "for each" seems to work
           ' TODO: THis is very slow; speed it up
           Dim c As Range
-26620     If NumParams > 0 Then ReDim OriginalParamValues(NumParams) As Double
-26630     i = 1
-26640     For Each c In ParamRange
-26650         OriginalParamValues(i) = c.Value2
-26660         i = i + 1
-26670     Next c
+2635      If NumParams > 0 Then ReDim OriginalParamValues(NumParams) As Double
+2636      i = 1
+2637      For Each c In ParamRange
+2638          OriginalParamValues(i) = c.Value2
+2639          i = i + 1
+2640      Next c
           
           ' Get current values for the LHS cell and RHS cell of the Excel constraints
           ' Note: If LHSIsRange(i)=false, then LHSValue(i) already contains the fixed constant value given in the constraint
           
           ' Look at how the LHSRange and RHSRange values now change as we perturb the parameters, and hence deduce how the OpenSolver model's RHS values alter
-26680     Application.Calculation = xlCalculationManual
-26690     Application.ScreenUpdating = False
+2641      Application.Calculation = xlCalculationManual
+2642      Application.ScreenUpdating = False
           
           Dim param As Long, row As Long, NonZeros As Long, constraint As Long
           Dim CurrentLHSValues  As Variant, CurrentRHSValues As Variant
-26700     param = 0
+2643      param = 0
           
-26710     If NumRows > 0 And NumParams > 0 Then ReDim SparseA(NumRows) ' ReDim a(NumRows, NumParams) As Double
-26720     For row = 1 To NumRows
-26730         Set SparseA(row) = New CIndexedCoeffs
-26740     Next row
+2644      If NumRows > 0 And NumParams > 0 Then ReDim SparseA(NumRows) ' ReDim a(NumRows, NumParams) As Double
+2645      For row = 1 To NumRows
+2646          Set SparseA(row) = New CIndexedCoeffs
+2647      Next row
          
-26750     For Each c In ParamRange
-26760         If c.HasArray Then
-26770             MsgBox "QuickSolve Initialisation Failed: OpenSolver cannot perform quick solves for parameters that contain array formulae.", , "OpenSolver" & sOpenSolverVersion & " Error"
-26780             GoTo ExitSub
-26790         End If
-26800         param = param + 1
-26810         If param Mod 10 = 1 Then Application.StatusBar = "OpenSolver: Analysing Parameters... " & param & "/" & NumParams & " parameters"
+2648      For Each c In ParamRange
+2649          If c.HasArray Then
+2650              MsgBox "QuickSolve Initialisation Failed: OpenSolver cannot perform quick solves for parameters that contain array formulae.", , "OpenSolver" & sOpenSolverVersion & " Error"
+2651              GoTo ExitSub
+2652          End If
+2653          param = param + 1
+2654          If param Mod 10 = 1 Then Application.StatusBar = "OpenSolver: Analysing Parameters... " & param & "/" & NumParams & " parameters"
               Dim OldFormula As String
-26820         On Error Resume Next
-26830         OldFormula = c.Formula
-26840         If Err.Number <> 0 Then
+2655          On Error Resume Next
+2656          OldFormula = c.Formula
+2657          If Err.Number <> 0 Then
                   ' There was an error changing a paramater cell; inform the user
-26850             MsgBox "QuickSolve Initialisation Failed: An error (" & Err.Number & " " & Err.Description & IIf(Erl = 0, "", " at line " & Erl) & ") occurred while changing the value in parameter cell " & c.AddressLocal(RowAbsolute:=False, ColumnAbsolute:=False) & ".", , "OpenSolver" & sOpenSolverVersion & " Error"
-26860             GoTo ExitSub
-26870         End If
+2658              MsgBox "QuickSolve Initialisation Failed: An error (" & Err.Number & " " & Err.Description & IIf(Erl = 0, "", " at line " & Erl) & ") occurred while changing the value in parameter cell " & c.AddressLocal(RowAbsolute:=False, ColumnAbsolute:=False) & ".", , "OpenSolver" & sOpenSolverVersion & " Error"
+2659              GoTo ExitSub
+2660          End If
               ' Change the parameter value, and see hopw the RHS's change
-26880         On Error GoTo errorHandler
-26890         c.Value2 = OriginalParamValues(param) + 1
-26900         Application.Calculate
-26910         row = 1
+2661          On Error GoTo errorHandler
+2662          c.Value2 = OriginalParamValues(param) + 1
+2663          Application.Calculate
+2664          row = 1
               Dim j As Long, coeff As Double
-26920         For constraint = 1 To NumConstraints
+2665          For constraint = 1 To NumConstraints
                   ' Check to see what is different and add rows to sparsea
-26930             If Not LHSRange(constraint) Is Nothing Then ' skip Binary and Integer constraints
+2666              If Not LHSRange(constraint) Is Nothing Then ' skip Binary and Integer constraints
                       Dim OriginalLHSValues As Variant
                       Dim OriginalRHSValues As Variant
-26940                 OriginalLHSValues = LHSOriginalValues(constraint)
-26950                 OriginalRHSValues = RHSOriginalValues(constraint)
+2667                  OriginalLHSValues = LHSOriginalValues(constraint)
+2668                  OriginalRHSValues = RHSOriginalValues(constraint)
                       ' Get current value(s) for LHS and RHS of this constraint off the sheet. LHS is always an array (even if 1x1)
-26960                 OpenSolver.GetCurrentConstraintValues constraint, CurrentLHSValues, CurrentRHSValues
+2669                  OpenSolver.GetCurrentConstraintValues constraint, CurrentLHSValues, CurrentRHSValues
                       'TODO Put in better error trapping for errors that occur on the s/sheet
-26970                 For i = 1 To UBound(OriginalLHSValues, 1) ' number of rows
-26980                     For j = 1 To UBound(OriginalLHSValues, 2) ' number of columns
-26990                         If RHSType(constraint) = SolverInputType.MultiCellRange Then
-27000                             coeff = -(CurrentLHSValues(i, j) - OriginalLHSValues(i, j)) + (CurrentRHSValues(i, j) - OriginalRHSValues(i, j))
+2670                  For i = 1 To UBound(OriginalLHSValues, 1) ' number of rows
+2671                      For j = 1 To UBound(OriginalLHSValues, 2) ' number of columns
+2672                          If RHSType(constraint) = SolverInputType.MultiCellRange Then
+2673                              coeff = -(CurrentLHSValues(i, j) - OriginalLHSValues(i, j)) + (CurrentRHSValues(i, j) - OriginalRHSValues(i, j))
                                   'a(Row, param)  = coeff
-27010                             If coeff <> 0 Then
-27020                                 SparseA(row).Add param, coeff
-27030                                 NonZeros = NonZeros + 1
-27040                             End If
-27050                         ElseIf RHSType(constraint) = SolverInputType.SingleCellRange Or RHSType(constraint) = SolverInputType.Formula Then
-27060                             coeff = -(CurrentLHSValues(i, j) - OriginalLHSValues(i, j)) + (CurrentRHSValues - OriginalRHSValues)
-27070                             If coeff <> 0 Then
-27080                                 SparseA(row).Add param, coeff
-27090                                 NonZeros = NonZeros + 1
-27100                             End If
-27110                         Else 'the rhs of this constraint is a constant
-27120                             coeff = -(CurrentLHSValues(i, j) - OriginalLHSValues(i, j))
-27130                             If coeff <> 0 Then
-27140                                 SparseA(row).Add param, coeff
-27150                                 NonZeros = NonZeros + 1
-27160                             End If
-27170                         End If
-27180                         row = row + 1
-27190                     Next j
-27200                 Next i
+2674                              If coeff <> 0 Then
+2675                                  SparseA(row).Add param, coeff
+2676                                  NonZeros = NonZeros + 1
+2677                              End If
+2678                          ElseIf RHSType(constraint) = SolverInputType.SingleCellRange Or RHSType(constraint) = SolverInputType.Formula Then
+2679                              coeff = -(CurrentLHSValues(i, j) - OriginalLHSValues(i, j)) + (CurrentRHSValues - OriginalRHSValues)
+2680                              If coeff <> 0 Then
+2681                                  SparseA(row).Add param, coeff
+2682                                  NonZeros = NonZeros + 1
+2683                              End If
+2684                          Else 'the rhs of this constraint is a constant
+2685                              coeff = -(CurrentLHSValues(i, j) - OriginalLHSValues(i, j))
+2686                              If coeff <> 0 Then
+2687                                  SparseA(row).Add param, coeff
+2688                                  NonZeros = NonZeros + 1
+2689                              End If
+2690                          End If
+2691                          row = row + 1
+2692                      Next j
+2693                  Next i
                       ' End If
-27210             End If
-27220         Next constraint
-27230         c.Formula = OldFormula
-27240     Next c
+2694              End If
+2695          Next constraint
+2696          c.Formula = OldFormula
+2697      Next c
           
-27250     If NonZeros = 0 Then
-27260         MsgBox "QuickSolve Initialisation Failed: The model's constraints do not depend on the QuickSolve parameter cells; please try again. (The QuickSolve process is used for repeatedly solving a model after making changes to the parameter cells, where these changes result in changes to the model's constraints.)", , "OpenSolver" & sOpenSolverVersion & " Error"
-27270         GoTo ExitSub
-27280     End If
+2698      If NonZeros = 0 Then
+2699          MsgBox "QuickSolve Initialisation Failed: The model's constraints do not depend on the QuickSolve parameter cells; please try again. (The QuickSolve process is used for repeatedly solving a model after making changes to the parameter cells, where these changes result in changes to the model's constraints.)", , "OpenSolver" & sOpenSolverVersion & " Error"
+2700          GoTo ExitSub
+2701      End If
           
-27290     Set CurrentParameterRange = ParamRange
-27300     AnalyseParameters = True    ' success
+2702      Set CurrentParameterRange = ParamRange
+2703      AnalyseParameters = True    ' success
           
 ExitSub:
           ' On Error GoTo 0
-27310     Application.StatusBar = False ' Resume normal status bar behaviour
-27320     Application.ScreenUpdating = True
-27330     Application.Calculation = oldCalculationMode
+2704      Application.StatusBar = False ' Resume normal status bar behaviour
+2705      Application.ScreenUpdating = True
+2706      Application.Calculation = oldCalculationMode
               
-27340     Exit Function
+2707      Exit Function
 
 errorHandler:
-27350     If Err.Number = 18 Then
-27360         If MsgBox("You have pressed the Escape key. Do you wish to cancel?", _
+2708      If Err.Number = 18 Then
+2709          If MsgBox("You have pressed the Escape key. Do you wish to cancel?", _
                          vbCritical + vbYesNo + vbDefaultButton1, _
                          "OpenSolver: User Interrupt Occured...") = vbNo Then
-27370             Resume 'continue on from where error occured
-27380         Else
-27390             Resume ExitSub
-27400         End If
-27410     End If
-27420     MsgBox "OpenSolver encountered error " & Err.Number & ":" & vbCrLf & Err.Description & IIf(Erl = 0, "", " (at line " & Erl & ")") & vbCrLf & "Source = " & Err.Source, , "OpenSolver Code Error"
-27430     Resume ExitSub
-27440     Resume
+2710              Resume 'continue on from where error occured
+2711          Else
+2712              Resume ExitSub
+2713          End If
+2714      End If
+2715      MsgBox "OpenSolver encountered error " & Err.Number & ":" & vbCrLf & Err.Description & IIf(Erl = 0, "", " (at line " & Erl & ")") & vbCrLf & "Source = " & Err.Source, , "OpenSolver Code Error"
+2716      Resume ExitSub
+2717      Resume
 End Function
 
 Public Function UpdateModelRHS(sheetName As String, ByRef RHS() As Double) As Boolean
@@ -220,52 +220,52 @@ Public Function UpdateModelRHS(sheetName As String, ByRef RHS() As Double) As Bo
           
           ' Find the Parameter range on the given (current) sheet, and check that this is the range we are set up for
           Dim ParamRange As Range
-27450     On Error Resume Next
-27460     Set ParamRange = Range(sheetName & GetParamRangeName)
-27470     If Err.Number <> 0 Then
-27480         MsgBox "Error: No Parameter range could be found on the worksheet.", , "OpenSolver" & sOpenSolverVersion & " Error"
-27490         UpdateModelRHS = False
-27500         Exit Function
-27510     End If
-27520     On Error GoTo 0
-27530     If (CurrentParameterRange.Address <> ParamRange.Address) Or (CurrentParameterRange.Worksheet.Name <> ParamRange.Worksheet.Name) Then
-27540         MsgBox "QuickSolve Failed: You need to initialize the QuickSolve engine for the current parameters.", title:="OpenSolver" & sOpenSolverVersion & " Error"
-27550         UpdateModelRHS = False
-27560         Exit Function
-27570     End If
-27580     If NumParams <> ParamRange.Count Then
-27590         MsgBox "QuickSolve Failed: The number of values in the Parameter range has changed, and so the model update can not be completed.", , "OpenSolver" & sOpenSolverVersion & " Error"
-27600         UpdateModelRHS = False
-27610         Exit Function
-27620     End If
+2718      On Error Resume Next
+2719      Set ParamRange = Range(sheetName & GetParamRangeName)
+2720      If Err.Number <> 0 Then
+2721          MsgBox "Error: No Parameter range could be found on the worksheet.", , "OpenSolver" & sOpenSolverVersion & " Error"
+2722          UpdateModelRHS = False
+2723          Exit Function
+2724      End If
+2725      On Error GoTo 0
+2726      If (CurrentParameterRange.Address <> ParamRange.Address) Or (CurrentParameterRange.Worksheet.Name <> ParamRange.Worksheet.Name) Then
+2727          MsgBox "QuickSolve Failed: You need to initialize the QuickSolve engine for the current parameters.", title:="OpenSolver" & sOpenSolverVersion & " Error"
+2728          UpdateModelRHS = False
+2729          Exit Function
+2730      End If
+2731      If NumParams <> ParamRange.Count Then
+2732          MsgBox "QuickSolve Failed: The number of values in the Parameter range has changed, and so the model update can not be completed.", , "OpenSolver" & sOpenSolverVersion & " Error"
+2733          UpdateModelRHS = False
+2734          Exit Function
+2735      End If
           
           Dim ParamChanges() As Double
-27630     If NumParams > 0 Then ReDim ParamChanges(NumParams) As Double
+2736      If NumParams > 0 Then ReDim ParamChanges(NumParams) As Double
           Dim param As Long, c As Range
-27640     param = 1
-27650     For Each c In ParamRange
-27660         ParamChanges(param) = c.Value2 - OriginalParamValues(param)
-27670         param = param + 1
-27680     Next c
+2737      param = 1
+2738      For Each c In ParamRange
+2739          ParamChanges(param) = c.Value2 - OriginalParamValues(param)
+2740          param = param + 1
+2741      Next c
           
           Dim row As Long, value As Double, i As Long, coeff As Double
-27690     For row = 1 To NumRows
-27700         value = OriginalRHS(row)
+2742      For row = 1 To NumRows
+2743          value = OriginalRHS(row)
               'For param = 1 To NumParams
               '    If a(Row, param) <> 0 Then
               '        Value = Value + a(Row, param) * ParamChanges(param)
               '    End If
               'Next param
-27710         With SparseA(row)
-27720             For i = 1 To .Count
-27730                 param = .index(i)
-27740                 coeff = .Coefficient(i)
-27750                 value = value + coeff * ParamChanges(param)
-27760             Next i
-27770         End With
-27780         RHS(row) = value
-27790     Next row
+2744          With SparseA(row)
+2745              For i = 1 To .Count
+2746                  param = .index(i)
+2747                  coeff = .Coefficient(i)
+2748                  value = value + coeff * ParamChanges(param)
+2749              Next i
+2750          End With
+2751          RHS(row) = value
+2752      Next row
           
-27800     UpdateModelRHS = True    ' success
+2753      UpdateModelRHS = True    ' success
 
 End Function

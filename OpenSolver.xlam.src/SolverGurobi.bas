@@ -20,331 +20,331 @@ Public Const SolutionFile_Gurobi = "modelsolution.sol"
 Public Const SensitivityFile_Gurobi = "sensitivityData.sol"
 
 Function SolutionFilePath_Gurobi() As String
-    SolutionFilePath_Gurobi = GetTempFilePath(SolutionFile_Gurobi)
+6369      SolutionFilePath_Gurobi = GetTempFilePath(SolutionFile_Gurobi)
 End Function
 
 Function SolverPythonScriptPath_Gurobi() As String
-    GetExistingFilePathName JoinPaths(ThisWorkbook.Path, SolverDir), SolverPythonScript_Gurobi, SolverPythonScriptPath_Gurobi
+6370      GetExistingFilePathName JoinPaths(ThisWorkbook.Path, SolverDir), SolverPythonScript_Gurobi, SolverPythonScriptPath_Gurobi
 End Function
 
 Function ScriptFilePath_Gurobi() As String
-    ScriptFilePath_Gurobi = GetTempFilePath(SolverScript_Gurobi)
+6371      ScriptFilePath_Gurobi = GetTempFilePath(SolverScript_Gurobi)
 End Function
 
 Function SensitivityFilePath_Gurobi() As String
-    SensitivityFilePath_Gurobi = GetTempFilePath(SensitivityFile_Gurobi)
+6372      SensitivityFilePath_Gurobi = GetTempFilePath(SensitivityFile_Gurobi)
 End Function
 
 Sub CleanFiles_Gurobi(errorPrefix As String)
-    ' Solution file
-    DeleteFileAndVerify SolutionFilePath_Gurobi(), errorPrefix, "Unable to delete the Gurobi solver solution file: " & SolutionFilePath_Gurobi()
-    ' Cost Range file
-    DeleteFileAndVerify SensitivityFilePath_Gurobi(), errorPrefix, "Unable to delete the Gurobi solver sensitivity data file: " & SensitivityFilePath_Gurobi()
+          ' Solution file
+6373      DeleteFileAndVerify SolutionFilePath_Gurobi(), errorPrefix, "Unable to delete the Gurobi solver solution file: " & SolutionFilePath_Gurobi()
+          ' Cost Range file
+6374      DeleteFileAndVerify SensitivityFilePath_Gurobi(), errorPrefix, "Unable to delete the Gurobi solver sensitivity data file: " & SensitivityFilePath_Gurobi()
 End Sub
 
 Function About_Gurobi() As String
-' Return string for "About" form
-    Dim SolverPath As String, errorString As String
-    If Not SolverAvailable_Gurobi(SolverPath, errorString) Then
-        About_Gurobi = errorString
-        Exit Function
-    End If
-    
-    SolverPath = SolverFilePath_Gurobi()
-    
-    ' Assemble version info
-    About_Gurobi = "Gurobi " & SolverBitness_Gurobi & "-bit" & _
-                     " v" & SolverVersion_Gurobi & _
-                     " at " & MakeSpacesNonBreaking(SolverPath)
+      ' Return string for "About" form
+          Dim SolverPath As String, errorString As String
+6375      If Not SolverAvailable_Gurobi(SolverPath, errorString) Then
+6376          About_Gurobi = errorString
+6377          Exit Function
+6378      End If
+          
+6379      SolverPath = SolverFilePath_Gurobi()
+          
+          ' Assemble version info
+6380      About_Gurobi = "Gurobi " & SolverBitness_Gurobi & "-bit" & _
+                           " v" & SolverVersion_Gurobi & _
+                           " at " & MakeSpacesNonBreaking(SolverPath)
 End Function
 
 Function GetGurobiBinFolder() As String
 #If Mac Then
-    GetGurobiBinFolder = "Macintosh HD:usr:local:bin:"
+6381      GetGurobiBinFolder = "Macintosh HD:usr:local:bin:"
 #Else
-    GetExistingFilePathName Environ("GUROBI_HOME"), "bin", GetGurobiBinFolder
+6382      GetExistingFilePathName Environ("GUROBI_HOME"), "bin", GetGurobiBinFolder
 #End If
 End Function
 
 Function SolverFilePath_Gurobi() As String
 #If Mac Then
-    ' On Mac, using the gurobi interactive shell causes errors when there are spaces in the filepath.
-    ' The mac gurobi.sh script, unlike windows, doesn't have a check for a gurobi install, thus it doesn't do anything for us here and is safe to skip.
-    ' We can just run python by itself. We need to use the default system python (pre-installed on mac) and not any other version (e.g. a version from homebrew)
-    SolverFilePath_Gurobi = "Macintosh HD:usr:bin:python"
+          ' On Mac, using the gurobi interactive shell causes errors when there are spaces in the filepath.
+          ' The mac gurobi.sh script, unlike windows, doesn't have a check for a gurobi install, thus it doesn't do anything for us here and is safe to skip.
+          ' We can just run python by itself. We need to use the default system python (pre-installed on mac) and not any other version (e.g. a version from homebrew)
+6383      SolverFilePath_Gurobi = "Macintosh HD:usr:bin:python"
 #Else
-    GetExistingFilePathName GetGurobiBinFolder(), Solver_Gurobi, SolverFilePath_Gurobi
+6384      GetExistingFilePathName GetGurobiBinFolder(), Solver_Gurobi, SolverFilePath_Gurobi
 #End If
 End Function
 
 Function SolverAvailable_Gurobi(Optional SolverPath As String, Optional errorString As String) As Boolean
-' Returns true if Gurobi is available and sets SolverPath as path to gurobi_cl
-    If GetExistingFilePathName(GetGurobiBinFolder, SolverName_Gurobi, SolverPath) And _
-       FileOrDirExists(SolverPythonScriptPath_Gurobi()) Then
-        SolverAvailable_Gurobi = True
-    Else
-        SolverPath = ""
-        errorString = "No Gurobi installation was detected."
-        SolverAvailable_Gurobi = False
-    End If
+      ' Returns true if Gurobi is available and sets SolverPath as path to gurobi_cl
+6385      If GetExistingFilePathName(GetGurobiBinFolder, SolverName_Gurobi, SolverPath) And _
+             FileOrDirExists(SolverPythonScriptPath_Gurobi()) Then
+6386          SolverAvailable_Gurobi = True
+6387      Else
+6388          SolverPath = ""
+6389          errorString = "No Gurobi installation was detected."
+6390          SolverAvailable_Gurobi = False
+6391      End If
 End Function
 
 Function SolverVersion_Gurobi() As String
-' Get Gurobi version by running 'gurobi_cl -v' at command line
-    Dim SolverPath As String
-    If Not SolverAvailable_Gurobi(SolverPath) Then
-        SolverVersion_Gurobi = ""
-        Exit Function
-    End If
-    
-    ' Set up Gurobi to write version info to text file
-    Dim logFile As String
-    logFile = GetTempFilePath("gurobiversion.txt")
-    If FileOrDirExists(logFile) Then Kill logFile
-    
-    Dim RunPath As String, FileContents As String
-    RunPath = ScriptFilePath_Gurobi()
-    If FileOrDirExists(RunPath) Then Kill RunPath
-    FileContents = QuotePath(ConvertHfsPath(SolverPath)) & " -v" & " > " & QuotePath(ConvertHfsPath(logFile))
-    CreateScriptFile RunPath, FileContents
-    
-    ' Run Gurobi
-    Dim completed As Boolean
-    completed = OSSolveSync(ConvertHfsPath(RunPath), "", "", "", SW_HIDE, True)
-    
-    ' Read version info back from output file
-    ' Output like 'Gurobi Optimizer version 5.6.3 (win64)'
-    Dim Line As String
-    If FileOrDirExists(logFile) Then
-        On Error GoTo ErrHandler
-        Open logFile For Input As 1
-        Line Input #1, Line
-        Close #1
-        SolverVersion_Gurobi = right(Line, Len(Line) - 25)
-        SolverVersion_Gurobi = left(SolverVersion_Gurobi, 5)
-    Else
-        SolverVersion_Gurobi = ""
-    End If
-    Exit Function
-    
+      ' Get Gurobi version by running 'gurobi_cl -v' at command line
+          Dim SolverPath As String
+6392      If Not SolverAvailable_Gurobi(SolverPath) Then
+6393          SolverVersion_Gurobi = ""
+6394          Exit Function
+6395      End If
+          
+          ' Set up Gurobi to write version info to text file
+          Dim logFile As String
+6396      logFile = GetTempFilePath("gurobiversion.txt")
+6397      If FileOrDirExists(logFile) Then Kill logFile
+          
+          Dim RunPath As String, FileContents As String
+6398      RunPath = ScriptFilePath_Gurobi()
+6399      If FileOrDirExists(RunPath) Then Kill RunPath
+6400      FileContents = QuotePath(ConvertHfsPath(SolverPath)) & " -v" & " > " & QuotePath(ConvertHfsPath(logFile))
+6401      CreateScriptFile RunPath, FileContents
+          
+          ' Run Gurobi
+          Dim completed As Boolean
+6402      completed = OSSolveSync(ConvertHfsPath(RunPath), "", "", "", SW_HIDE, True)
+          
+          ' Read version info back from output file
+          ' Output like 'Gurobi Optimizer version 5.6.3 (win64)'
+          Dim Line As String
+6403      If FileOrDirExists(logFile) Then
+6404          On Error GoTo ErrHandler
+6405          Open logFile For Input As 1
+6406          Line Input #1, Line
+6407          Close #1
+6408          SolverVersion_Gurobi = right(Line, Len(Line) - 25)
+6409          SolverVersion_Gurobi = left(SolverVersion_Gurobi, 5)
+6410      Else
+6411          SolverVersion_Gurobi = ""
+6412      End If
+6413      Exit Function
+          
 ErrHandler:
-    Close #1
-    Err.Raise Err.Number, Err.Source, Err.Description & IIf(Erl = 0, "", " (at line " & Erl & ")")
+6414      Close #1
+6415      Err.Raise Err.Number, Err.Source, Err.Description & IIf(Erl = 0, "", " (at line " & Erl & ")")
 End Function
 
 Function SolverBitness_Gurobi() As String
-' Get Gurobi bitness by running 'gurobi_cl -v' at command line
-    Dim SolverPath As String
-    If Not SolverAvailable_Gurobi(SolverPath) Then
-        SolverBitness_Gurobi = ""
-        Exit Function
-    End If
-    
-    ' Set up Gurobi to write version info to text file
-    Dim logFile As String
-    logFile = GetTempFilePath("gurobiversion.txt")
-    If FileOrDirExists(logFile) Then Kill logFile
-    
-    Dim RunPath As String, FileContents As String
-    RunPath = ScriptFilePath_Gurobi()
-    If FileOrDirExists(RunPath) Then Kill RunPath
-    FileContents = QuotePath(ConvertHfsPath(SolverPath)) & " -v" & " > " & QuotePath(ConvertHfsPath(logFile))
-    CreateScriptFile RunPath, FileContents
-    
-    ' Run Gurobi
-    Dim completed As Boolean
-    completed = OSSolveSync(ConvertHfsPath(RunPath), "", "", "", SW_HIDE, True)
-    
-    ' Read bitness info back from output file
-    ' Output like 'Gurobi Optimizer version 5.6.3 (win64)'
-    Dim Line As String
-    If FileOrDirExists(logFile) Then
-        On Error GoTo ErrHandler
-        Open logFile For Input As 1
-        Line Input #1, Line
-        Close #1
-        If right(Line, 3) = "64)" Then
-            SolverBitness_Gurobi = "64"
-        Else
-            SolverBitness_Gurobi = "32"
-        End If
-    End If
-    Exit Function
-    
+      ' Get Gurobi bitness by running 'gurobi_cl -v' at command line
+          Dim SolverPath As String
+6416      If Not SolverAvailable_Gurobi(SolverPath) Then
+6417          SolverBitness_Gurobi = ""
+6418          Exit Function
+6419      End If
+          
+          ' Set up Gurobi to write version info to text file
+          Dim logFile As String
+6420      logFile = GetTempFilePath("gurobiversion.txt")
+6421      If FileOrDirExists(logFile) Then Kill logFile
+          
+          Dim RunPath As String, FileContents As String
+6422      RunPath = ScriptFilePath_Gurobi()
+6423      If FileOrDirExists(RunPath) Then Kill RunPath
+6424      FileContents = QuotePath(ConvertHfsPath(SolverPath)) & " -v" & " > " & QuotePath(ConvertHfsPath(logFile))
+6425      CreateScriptFile RunPath, FileContents
+          
+          ' Run Gurobi
+          Dim completed As Boolean
+6426      completed = OSSolveSync(ConvertHfsPath(RunPath), "", "", "", SW_HIDE, True)
+          
+          ' Read bitness info back from output file
+          ' Output like 'Gurobi Optimizer version 5.6.3 (win64)'
+          Dim Line As String
+6427      If FileOrDirExists(logFile) Then
+6428          On Error GoTo ErrHandler
+6429          Open logFile For Input As 1
+6430          Line Input #1, Line
+6431          Close #1
+6432          If right(Line, 3) = "64)" Then
+6433              SolverBitness_Gurobi = "64"
+6434          Else
+6435              SolverBitness_Gurobi = "32"
+6436          End If
+6437      End If
+6438      Exit Function
+          
 ErrHandler:
-    Close #1
-    Err.Raise Err.Number, Err.Source, Err.Description & IIf(Erl = 0, "", " (at line " & Erl & ")")
+6439      Close #1
+6440      Err.Raise Err.Number, Err.Source, Err.Description & IIf(Erl = 0, "", " (at line " & Erl & ")")
 End Function
 Function CreateSolveScript_Gurobi(SolutionFilePathName As String, ExtraParametersString As String, SolveOptions As SolveOptionsType) As String
-    Dim SolverString As String, CommandLineRunString As String, PrintingOptionString As String
-    SolverString = QuotePath(ConvertHfsPath(SolverFilePath_Gurobi()))
+          Dim SolverString As String, CommandLineRunString As String, PrintingOptionString As String
+6441      SolverString = QuotePath(ConvertHfsPath(SolverFilePath_Gurobi()))
 
-    CommandLineRunString = QuotePath(ConvertHfsPath(SolverPythonScriptPath_Gurobi()))
-    '========================================================================================
-    'Gurobi can also be run at the command line using gurobi_cl with the following commands
-    '
-    'Solver="gurobi_cl.exe"
-    'CommandLineRunString = " Threads=1" & " TimeLimit=" & Replace(Str(SolveOptions.maxTime), " ", "") & " ResultFile="
-    '             & GetTempFolder & Replace(SolutionFileName, ".txt", ".sol") _
-    '             & " " & ModelFilePathName
-    '
-    '========================================================================================
-    PrintingOptionString = ""
-    
-    Dim scriptFile As String, scriptFileContents As String
-    scriptFile = ScriptFilePath_Gurobi()
-    scriptFileContents = SolverString & " " & CommandLineRunString & PrintingOptionString
-    CreateScriptFile scriptFile, scriptFileContents
-    
-    CreateSolveScript_Gurobi = scriptFile
+6442      CommandLineRunString = QuotePath(ConvertHfsPath(SolverPythonScriptPath_Gurobi()))
+          '========================================================================================
+          'Gurobi can also be run at the command line using gurobi_cl with the following commands
+          '
+          'Solver="gurobi_cl.exe"
+          'CommandLineRunString = " Threads=1" & " TimeLimit=" & Replace(Str(SolveOptions.maxTime), " ", "") & " ResultFile="
+          '             & GetTempFolder & Replace(SolutionFileName, ".txt", ".sol") _
+          '             & " " & ModelFilePathName
+          '
+          '========================================================================================
+6443      PrintingOptionString = ""
+          
+          Dim scriptFile As String, scriptFileContents As String
+6444      scriptFile = ScriptFilePath_Gurobi()
+6445      scriptFileContents = SolverString & " " & CommandLineRunString & PrintingOptionString
+6446      CreateScriptFile scriptFile, scriptFileContents
+          
+6447      CreateSolveScript_Gurobi = scriptFile
 End Function
 
 
 Function ReadModel_Gurobi(SolutionFilePathName As String, errorString As String, s As COpenSolver) As Boolean
           
-19570     ReadModel_Gurobi = False
+6448      ReadModel_Gurobi = False
           Dim Line As String, index As Long
-19580     On Error GoTo readError
+6449      On Error GoTo readError
           Dim solutionExpected As Boolean
-19590     solutionExpected = True
+6450      solutionExpected = True
           
-19600     Open SolutionFilePathName For Input As 1 ' supply path with filename
-19610     Line Input #1, Line
+6451      Open SolutionFilePathName For Input As 1 ' supply path with filename
+6452      Line Input #1, Line
           ' Check for python exception while running Gurobi
           Dim GurobiError As String ' The string that identifies a gurobi error in the model file
-          GurobiError = "Gurobi Error: "
-          If left(Line, Len(GurobiError)) = GurobiError Then
-              errorString = Line
-              GoTo exitFunction
-          End If
+6453      GurobiError = "Gurobi Error: "
+6454      If left(Line, Len(GurobiError)) = GurobiError Then
+6455          errorString = Line
+6456          GoTo exitFunction
+6457      End If
           'Get the returned status code from gurobi.
           'List of return codes can be seen at - http://www.gurobi.com/documentation/5.1/reference-manual/node865#sec:StatusCodes
-19620     If Line = GurobiResult.Optimal Then
-19630         s.SolveStatus = OpenSolverResult.Optimal
-19640         s.SolveStatusString = "Optimal"
-19650         s.LinearSolveStatus = LinearSolveResult.Optimal
-19660     ElseIf Line = GurobiResult.Infeasible Then
-19670         s.SolveStatus = OpenSolverResult.Infeasible
-19680         s.SolveStatusString = "No Feasible Solution"
-19690         solutionExpected = False
-19700         s.LinearSolveStatus = LinearSolveResult.Infeasible
-19710     ElseIf Line = GurobiResult.InfOrUnbound Then
-19720         s.SolveStatus = OpenSolverResult.Unbounded
-19730         s.SolveStatusString = "No Solution Found (Infeasible or Unbounded)"
-19740         solutionExpected = False
-19750         s.LinearSolveStatus = LinearSolveResult.Unbounded
-19760     ElseIf Line = GurobiResult.Unbounded Then
-19770         s.SolveStatus = OpenSolverResult.Unbounded
-19780         s.SolveStatusString = "No Solution Found (Unbounded)"
-19790         solutionExpected = False
-19800         s.LinearSolveStatus = LinearSolveResult.Unbounded
-19810     ElseIf Line = GurobiResult.SolveStoppedTime Then
-19820         s.SolveStatus = OpenSolverResult.TimeLimitedSubOptimal
-19830         s.SolveStatusString = "Stopped on Time Limit"
-19840         s.LinearSolveStatus = LinearSolveResult.SolveStopped
-19850     ElseIf Line = GurobiResult.SolveStoppedIter Then
-19860         s.SolveStatus = OpenSolverResult.TimeLimitedSubOptimal
-19870         s.SolveStatusString = "Stopped on Iteration Limit"
-19880         s.LinearSolveStatus = LinearSolveResult.SolveStopped
-19890     ElseIf Line = GurobiResult.SolveStoppedUser Then
-19900         s.SolveStatus = OpenSolverResult.TimeLimitedSubOptimal
-19910         s.SolveStatusString = "Stopped on Ctrl-C"
-19920         s.LinearSolveStatus = LinearSolveResult.SolveStopped
-19930     ElseIf Line = GurobiResult.Unsolved Then
-19940         s.SolveStatus = OpenSolverResult.TimeLimitedSubOptimal
-19950         s.SolveStatusString = "Stopped on Gurobi Numerical difficulties"
-19960         s.LinearSolveStatus = LinearSolveResult.SolveStopped
-19970     ElseIf Line = GurobiResult.SubOptimal Then
-19980         s.SolveStatus = OpenSolverResult.TimeLimitedSubOptimal
-19990         s.SolveStatusString = "Unable to satisfy optimality tolerances; a sub-optimal solution is available."
-20000         s.LinearSolveStatus = LinearSolveResult.SolveStopped
-20010     Else
-20020         errorString = "The response from the Gurobi solver is not recognised. The response was: " & Line
-20030         GoTo readError
-20040     End If
+6458      If Line = GurobiResult.Optimal Then
+6459          s.SolveStatus = OpenSolverResult.Optimal
+6460          s.SolveStatusString = "Optimal"
+6461          s.LinearSolveStatus = LinearSolveResult.Optimal
+6462      ElseIf Line = GurobiResult.Infeasible Then
+6463          s.SolveStatus = OpenSolverResult.Infeasible
+6464          s.SolveStatusString = "No Feasible Solution"
+6465          solutionExpected = False
+6466          s.LinearSolveStatus = LinearSolveResult.Infeasible
+6467      ElseIf Line = GurobiResult.InfOrUnbound Then
+6468          s.SolveStatus = OpenSolverResult.Unbounded
+6469          s.SolveStatusString = "No Solution Found (Infeasible or Unbounded)"
+6470          solutionExpected = False
+6471          s.LinearSolveStatus = LinearSolveResult.Unbounded
+6472      ElseIf Line = GurobiResult.Unbounded Then
+6473          s.SolveStatus = OpenSolverResult.Unbounded
+6474          s.SolveStatusString = "No Solution Found (Unbounded)"
+6475          solutionExpected = False
+6476          s.LinearSolveStatus = LinearSolveResult.Unbounded
+6477      ElseIf Line = GurobiResult.SolveStoppedTime Then
+6478          s.SolveStatus = OpenSolverResult.TimeLimitedSubOptimal
+6479          s.SolveStatusString = "Stopped on Time Limit"
+6480          s.LinearSolveStatus = LinearSolveResult.SolveStopped
+6481      ElseIf Line = GurobiResult.SolveStoppedIter Then
+6482          s.SolveStatus = OpenSolverResult.TimeLimitedSubOptimal
+6483          s.SolveStatusString = "Stopped on Iteration Limit"
+6484          s.LinearSolveStatus = LinearSolveResult.SolveStopped
+6485      ElseIf Line = GurobiResult.SolveStoppedUser Then
+6486          s.SolveStatus = OpenSolverResult.TimeLimitedSubOptimal
+6487          s.SolveStatusString = "Stopped on Ctrl-C"
+6488          s.LinearSolveStatus = LinearSolveResult.SolveStopped
+6489      ElseIf Line = GurobiResult.Unsolved Then
+6490          s.SolveStatus = OpenSolverResult.TimeLimitedSubOptimal
+6491          s.SolveStatusString = "Stopped on Gurobi Numerical difficulties"
+6492          s.LinearSolveStatus = LinearSolveResult.SolveStopped
+6493      ElseIf Line = GurobiResult.SubOptimal Then
+6494          s.SolveStatus = OpenSolverResult.TimeLimitedSubOptimal
+6495          s.SolveStatusString = "Unable to satisfy optimality tolerances; a sub-optimal solution is available."
+6496          s.LinearSolveStatus = LinearSolveResult.SolveStopped
+6497      Else
+6498          errorString = "The response from the Gurobi solver is not recognised. The response was: " & Line
+6499          GoTo readError
+6500      End If
           
-20050     If solutionExpected Then
-              Application.StatusBar = "OpenSolver: Loading Solution... " & s.SolveStatusString
-20060         Dim NumVar As Long
-              Line Input #1, Line  ' Optimal - objective value              22
-20070         If Line <> "" Then
-20080             index = InStr(Line, "=")
+6501      If solutionExpected Then
+6502          Application.StatusBar = "OpenSolver: Loading Solution... " & s.SolveStatusString
+              Dim NumVar As Long
+6503          Line Input #1, Line  ' Optimal - objective value              22
+6504          If Line <> "" Then
+6505              index = InStr(Line, "=")
                   Dim ObjectiveValue As Double
-20090             ObjectiveValue = Val(Mid(Line, index + 2))
+6506              ObjectiveValue = Val(Mid(Line, index + 2))
                   Dim i As Long
-20100             i = 1
-20110             While Not EOF(1)
-20120                 Line Input #1, Line
-20130                 index = InStr(Line, " ")
-20160                 s.FinalVarValueP(i) = Val(right(Line, Len(Line) - index))
+6507              i = 1
+6508              While Not EOF(1)
+6509                  Line Input #1, Line
+6510                  index = InStr(Line, " ")
+6511                  s.FinalVarValueP(i) = Val(right(Line, Len(Line) - index))
                       'Get the variable name
-20170                 s.VarCellP(i) = left(Line, index - 1)
-20180                 If left(s.VarCellP(i), 1) = "_" Then
+6512                  s.VarCellP(i) = left(Line, index - 1)
+6513                  If left(s.VarCellP(i), 1) = "_" Then
                           ' Strip any _ character added to make a valid name
-                          s.VarCellP(i) = Mid(s.VarCellP(i), 2)
-20190                 End If
+6514                      s.VarCellP(i) = Mid(s.VarCellP(i), 2)
+6515                  End If
                       ' Save number of vars read
-                      NumVar = i
-                      i = i + 1
-20200             Wend
-20210         End If
-20220         s.AdjustableCells.Value2 = 0
+6516                  NumVar = i
+6517                  i = i + 1
+6518              Wend
+6519          End If
+6520          s.AdjustableCells.Value2 = 0
               Dim j As Long
-20240         For i = 1 To NumVar
+6521          For i = 1 To NumVar
                   ' Need to make sure number is in US locale when Value2 is set
-20250             s.AdjustableCells.Worksheet.Range(s.VarCellP(i)).Value2 = ConvertFromCurrentLocale(s.FinalVarValueP(i))
-20260         Next i
+6522              s.AdjustableCells.Worksheet.Range(s.VarCellP(i)).Value2 = ConvertFromCurrentLocale(s.FinalVarValueP(i))
+6523          Next i
               
-20270         If s.bGetDuals Then
-20350             Open Replace(SolutionFilePathName, "modelsolution", "sensitivityData") For Input As 2
+6524          If s.bGetDuals Then
+6525              Open Replace(SolutionFilePathName, "modelsolution", "sensitivityData") For Input As 2
                   Dim index2 As Long
                   Dim Stuff() As String
-20360             ReDim Stuff(3)
-20370             For i = 1 To NumVar
-20380                 Line Input #2, Line
-20390                 For j = 1 To 3
-20400                     index2 = InStr(Line, ",")
-20410                     If index2 <> 0 Then
-20420                         Stuff(j) = left(Line, index2 - 1)
-20430                     Else
-20440                         Stuff(j) = Line
-20450                     End If
-20460                     Line = Mid(Line, index2 + 1)
-20470                 Next j
-20480                 s.ReducedCostsP(i) = Stuff(1)
-20490                 s.IncreaseVarP(i) = Stuff(3) - s.CostCoeffsP(i)
-20500                 s.DecreaseVarP(i) = s.CostCoeffsP(i) - Stuff(2)
-20510             Next i
-20520             ReDim Stuff(5)
-20530             For i = 1 To s.NumRows
-20540                 Line Input #2, Line
-20550                 For j = 1 To 5
-20560                     index2 = InStr(Line, ",")
-20570                     If index2 <> 0 Then
-20580                         Stuff(j) = left(Line, index2 - 1)
-20590                     Else
-20600                         Stuff(j) = Line
-20610                     End If
-20620                     Line = Mid(Line, index2 + 1)
-20630                 Next j
-20640                 s.ShadowPriceP(i) = Stuff(1)
-20650                 s.IncreaseConP(i) = Stuff(5) - Stuff(2)
-20660                 s.DecreaseConP(i) = Stuff(2) - Stuff(4)
-20670                 s.FinalValueP(i) = Stuff(2) - Stuff(3)
-20680             Next i
-20690         End If
-20700         ReadModel_Gurobi = True
-20710     End If
+6526              ReDim Stuff(3)
+6527              For i = 1 To NumVar
+6528                  Line Input #2, Line
+6529                  For j = 1 To 3
+6530                      index2 = InStr(Line, ",")
+6531                      If index2 <> 0 Then
+6532                          Stuff(j) = left(Line, index2 - 1)
+6533                      Else
+6534                          Stuff(j) = Line
+6535                      End If
+6536                      Line = Mid(Line, index2 + 1)
+6537                  Next j
+6538                  s.ReducedCostsP(i) = Stuff(1)
+6539                  s.IncreaseVarP(i) = Stuff(3) - s.CostCoeffsP(i)
+6540                  s.DecreaseVarP(i) = s.CostCoeffsP(i) - Stuff(2)
+6541              Next i
+6542              ReDim Stuff(5)
+6543              For i = 1 To s.NumRows
+6544                  Line Input #2, Line
+6545                  For j = 1 To 5
+6546                      index2 = InStr(Line, ",")
+6547                      If index2 <> 0 Then
+6548                          Stuff(j) = left(Line, index2 - 1)
+6549                      Else
+6550                          Stuff(j) = Line
+6551                      End If
+6552                      Line = Mid(Line, index2 + 1)
+6553                  Next j
+6554                  s.ShadowPriceP(i) = Stuff(1)
+6555                  s.IncreaseConP(i) = Stuff(5) - Stuff(2)
+6556                  s.DecreaseConP(i) = Stuff(2) - Stuff(4)
+6557                  s.FinalValueP(i) = Stuff(2) - Stuff(3)
+6558              Next i
+6559          End If
+6560          ReadModel_Gurobi = True
+6561      End If
 
 exitFunction:
-          Application.StatusBar = False
-20720     Close #1
-20730     Close #2
-20740     Exit Function
+6562      Application.StatusBar = False
+6563      Close #1
+6564      Close #2
+6565      Exit Function
           
 readError:
-          Application.StatusBar = False
-20750     Close #1
-20760     Close #2
-          Err.Raise Err.Number, Err.Source, Err.Description & IIf(Erl = 0, "", " (at line " & Erl & ")")
+6566      Application.StatusBar = False
+6567      Close #1
+6568      Close #2
+6569      Err.Raise Err.Number, Err.Source, Err.Description & IIf(Erl = 0, "", " (at line " & Erl & ")")
 End Function

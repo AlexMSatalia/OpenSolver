@@ -19,27 +19,27 @@ Option Explicit
 Private colTokens As Collection
 
 Private Sub Class_Initialize()
-    Set colTokens = New Collection
+5482      Set colTokens = New Collection
 End Sub
 
 Public Sub Push(Token As Token)
-    colTokens.Add Token
+5483      colTokens.Add Token
 End Sub
 
 Public Function Pop() As Token
-    Dim obj As Token
-    Set obj = colTokens(colTokens.Count)
-    colTokens.Remove (colTokens.Count)
-    Set Pop = obj
+          Dim obj As Token
+5484      Set obj = colTokens(colTokens.Count)
+5485      colTokens.Remove (colTokens.Count)
+5486      Set Pop = obj
 End Function
 
 Public Function Peek() As Token
-    Dim obj As Token
-    Set obj = colTokens(colTokens.Count)
-    Set Peek = obj
+          Dim obj As Token
+5487      Set obj = colTokens(colTokens.Count)
+5488      Set Peek = obj
 End Function
 
 Property Get Count() As Long
-    Count = colTokens.Count
+5489      Count = colTokens.Count
 End Property
 

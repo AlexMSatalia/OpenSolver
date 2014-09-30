@@ -16,24 +16,24 @@ Attribute VB_Exposed = False
 Option Explicit
 
 Private Sub cboSolver_Change()
-    frmSolverChange.ChangeSolver Me
+9181      frmSolverChange.ChangeSolver Me
 End Sub
 
 Private Sub lblHyperlink_Click()
-    OpenURL lblHyperlink.Caption
+9182      OpenURL lblHyperLink.Caption
 End Sub
 
 Private Sub UserForm_Activate()
-    frmSolverChange.ActivateSolverChange Me
+9183      frmSolverChange.ActivateSolverChange Me
 End Sub
 
 Private Sub cmdOK_Click()
-    frmSolverChange.SolverChangeConfirm Me
-    Unload Me
+9184      frmSolverChange.SolverChangeConfirm Me
+9185      Unload Me
 End Sub
 
 Private Sub cmdCancel_Click()
-    Unload frmSolverChange
-    Unload Me
+9186      Unload frmSolverChange
+9187      Unload Me
 End Sub
 

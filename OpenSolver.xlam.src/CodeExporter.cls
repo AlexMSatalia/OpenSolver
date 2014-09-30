@@ -18,65 +18,65 @@ Private exportFolder As String
 Private fso As Object 'FileSystemObject
 
 Public Property Set SourceWorkbook(book As Excel.Workbook)
-   Set wkbk = book
+6021     Set wkbk = book
 End Property
 
 Public Sub ExportTo(where As String)
-   ' Modification JWD: We need late binding on FSO here to avoid a dependence on Microsoft Scripting Runtime
-   Set fso = CreateObject("Scripting.FileSystemObject")
-   
-   If Not fso.FolderExists(where) Then
-       fso.CreateFolder where
-   End If
+         ' Modification JWD: We need late binding on FSO here to avoid a dependence on Microsoft Scripting Runtime
+6022     Set fso = CreateObject("Scripting.FileSystemObject")
+         
+6023     If Not fso.FolderExists(where) Then
+6024         fso.CreateFolder where
+6025     End If
 
-   exportFolder = where
+6026     exportFolder = where
 
-   WriteCode
+6027     WriteCode
 
 End Sub
 
 Private Sub WriteCode()
 
-Dim c As VBComponent
-Dim curMod As VBIDE.CodeModule
+      Dim c As VBComponent
+      Dim curMod As VBIDE.CodeModule
 
-   For Each c In wkbk.VBProject.VBComponents
-   
-       Set curMod = c.CodeModule
-       
-       c.Export fso.BuildPath(exportFolder, ExportFileNameFor(c))
-       
-   Next
+6028     For Each c In wkbk.VBProject.VBComponents
+         
+6029         Set curMod = c.CodeModule
+             
+6030         c.Export fso.BuildPath(exportFolder, ExportFileNameFor(c))
+             
+6031     Next
 
 End Sub
 
 Private Function IsExportable(codeComponent As VBComponent) As Boolean
-   
-   Select Case codeComponent.Type
-       Case vbext_ct_ClassModule, vbext_ct_MSForm, vbext_ct_StdModule
-           IsExportable = True
-       Case Else
-           IsExportable = True
-   End Select
+         
+6032     Select Case codeComponent.Type
+             Case vbext_ct_ClassModule, vbext_ct_MSForm, vbext_ct_StdModule
+6033             IsExportable = True
+6034         Case Else
+6035             IsExportable = True
+6036     End Select
 
 End Function
 
 Private Function ExportFileNameFor(codeComponent As VBComponent) As String
 
-Dim extension As String
+      Dim extension As String
 
-   Select Case codeComponent.Type
-       Case vbext_ct_ClassModule
-           extension = "cls"
-       Case vbext_ct_MSForm
-           extension = "frm"
-       Case vbext_ct_StdModule
-           extension = "bas"
-       Case vbext_ct_Document
-           extension = "cls"
-   End Select
+6037     Select Case codeComponent.Type
+             Case vbext_ct_ClassModule
+6038             extension = "cls"
+6039         Case vbext_ct_MSForm
+6040             extension = "frm"
+6041         Case vbext_ct_StdModule
+6042             extension = "bas"
+6043         Case vbext_ct_Document
+6044             extension = "cls"
+6045     End Select
 
-   ExportFileNameFor = codeComponent.Name & "." & extension
+6046     ExportFileNameFor = codeComponent.Name & "." & extension
 
 End Function
 '====================================================================

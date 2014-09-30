@@ -16,17 +16,17 @@ Attribute VB_Exposed = False
 Option Explicit
 
 Private Sub cmdCancel_Click()
-          Unload frmOptions
-41690     Unload Me
+9216      Unload frmOptions
+9217      Unload Me
 End Sub
 
 Private Sub cmdOK_Click()
-          frmOptions.OptionsOK Me
-          Unload Me
+9218            frmOptions.OptionsOK Me
+9219            Unload Me
 End Sub
 
 Private Sub UserForm_Activate()
-          frmOptions.OptionsActivate Me
+9220            frmOptions.OptionsActivate Me
 End Sub
 
 

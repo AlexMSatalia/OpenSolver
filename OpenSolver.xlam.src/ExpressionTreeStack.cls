@@ -15,36 +15,36 @@ Option Explicit
 Private colTreeStack As Collection
 
 Private Sub Class_Initialize()
-    Set colTreeStack = New Collection
+8498      Set colTreeStack = New Collection
 End Sub
 
 Public Sub Push(Tree As ExpressionTree)
-    colTreeStack.Add Tree
+8499      colTreeStack.Add Tree
 End Sub
 
 Public Function Pop() As ExpressionTree
-    Dim obj As ExpressionTree
-    Set obj = colTreeStack(colTreeStack.Count)
-    colTreeStack.Remove (colTreeStack.Count)
-    Set Pop = obj
+          Dim obj As ExpressionTree
+8500      Set obj = colTreeStack(colTreeStack.Count)
+8501      colTreeStack.Remove (colTreeStack.Count)
+8502      Set Pop = obj
 End Function
 
 Public Function Peek() As ExpressionTree
-    Dim obj As ExpressionTree
-    Set obj = colTreeStack(colTreeStack.Count)
-    Set Peek = obj
+          Dim obj As ExpressionTree
+8503      Set obj = colTreeStack(colTreeStack.Count)
+8504      Set Peek = obj
 End Function
 
 Property Get Count() As Long
-    Count = colTreeStack.Count
+8505      Count = colTreeStack.Count
 End Property
 
 Public Function Display() As String
-    Dim i As Long, output As String
-    For i = 1 To colTreeStack.Count
-        output = output & colTreeStack(i).Display & ", "
-    Next i
-    Display = output
+          Dim i As Long, output As String
+8506      For i = 1 To colTreeStack.Count
+8507          output = output & colTreeStack(i).Display & ", "
+8508      Next i
+8509      Display = output
 End Function
 
 

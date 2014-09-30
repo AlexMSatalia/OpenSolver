@@ -14,6 +14,6 @@ Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = True
 Attribute VB_Exposed = False
 Private Sub ContinueButton_Click()
-36730     Me.Hide
+9234      Me.Hide
 End Sub
 

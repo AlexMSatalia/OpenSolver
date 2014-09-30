@@ -22,316 +22,316 @@ Public Const NomadDllName = "OpenSolverNomad.dll"
 
 
 Function About_NOMAD() As String
-    Dim errorString As String
-    If Not SolverAvailable_NOMAD(errorString) Then
-        About_NOMAD = errorString
-        Exit Function
-    End If
-    ' Assemble version info
-    About_NOMAD = "NOMAD " & SolverBitness_NOMAD & "-bit v" & SolverVersion_NOMAD() & _
-                  " using OpenSolverNomadDLL v" & DllVersion_NOMAD() & " at " & MakeSpacesNonBreaking(DllPath_NOMAD())
+          Dim errorString As String
+6968      If Not SolverAvailable_NOMAD(errorString) Then
+6969          About_NOMAD = errorString
+6970          Exit Function
+6971      End If
+          ' Assemble version info
+6972      About_NOMAD = "NOMAD " & SolverBitness_NOMAD & "-bit v" & SolverVersion_NOMAD() & _
+                        " using OpenSolverNomadDLL v" & DllVersion_NOMAD() & " at " & MakeSpacesNonBreaking(DllPath_NOMAD())
 End Function
 
 Function NomadDir() As String
-    NomadDir = JoinPaths(ThisWorkbook.Path, SolverDir)
+6973      NomadDir = JoinPaths(ThisWorkbook.Path, SolverDir)
 #If Win64 Then
-    NomadDir = JoinPaths(NomadDir, SolverDirWin64)
+6974      NomadDir = JoinPaths(NomadDir, SolverDirWin64)
 #Else
-    NomadDir = JoinPaths(NomadDir, SolverDirWin32)
+6975      NomadDir = JoinPaths(NomadDir, SolverDirWin32)
 #End If
 End Function
 
 Function SolverAvailable_NOMAD(Optional errorString As String) As Boolean
 #If Mac Then
-    errorString = "NOMAD for OpenSolver is not currently supported on Mac"
-    SolverAvailable_NOMAD = False
-    Exit Function
+6976      errorString = "NOMAD for OpenSolver is not currently supported on Mac"
+6977      SolverAvailable_NOMAD = False
+6978      Exit Function
 #Else
-    ' Set current dir for finding the DLL
-    Dim currentDir As String
-    currentDir = CurDir
-    SetCurrentDirectory NomadDir()
-    
-    ' Try to access DLL - throws error if not found
-    On Error GoTo NotFound
-    NomadVersion
-    
-    SetCurrentDirectory currentDir
-    SolverAvailable_NOMAD = True
-    Exit Function
+          ' Set current dir for finding the DLL
+          Dim currentDir As String
+6979      currentDir = CurDir
+6980      SetCurrentDirectory NomadDir()
+          
+          ' Try to access DLL - throws error if not found
+6981      On Error GoTo NotFound
+6982      NomadVersion
+          
+6983      SetCurrentDirectory currentDir
+6984      SolverAvailable_NOMAD = True
+6985      Exit Function
 
 NotFound:
-    SetCurrentDirectory currentDir
-    SolverAvailable_NOMAD = False
-    errorString = "Unable to find the Nomad DLL file `" & NomadDllName & "' in the folder that contains `OpenSolver.xlam'"
-    Exit Function
+6986      SetCurrentDirectory currentDir
+6987      SolverAvailable_NOMAD = False
+6988      errorString = "Unable to find the Nomad DLL file `" & NomadDllName & "' in the folder that contains `OpenSolver.xlam'"
+6989      Exit Function
 #End If
 End Function
 
 Function SolverVersion_NOMAD() As String
-    If Not SolverAvailable_NOMAD() Then
-        SolverVersion_NOMAD = ""
-        Exit Function
-    End If
-    
-    Dim currentDir As String, sNomadVersion As String
-    
-    ' Set current dir for finding the DLL
-    currentDir = CurDir
-    SetCurrentDirectory NomadDir()
-    
-    ' Get version info from DLL
-    sNomadVersion = NomadVersion()
-    sNomadVersion = left(sNomadVersion, InStr(sNomadVersion, vbNullChar) - 1)
-    
-    SetCurrentDirectory currentDir
-    
-    SolverVersion_NOMAD = sNomadVersion
+6990      If Not SolverAvailable_NOMAD() Then
+6991          SolverVersion_NOMAD = ""
+6992          Exit Function
+6993      End If
+          
+          Dim currentDir As String, sNomadVersion As String
+          
+          ' Set current dir for finding the DLL
+6994      currentDir = CurDir
+6995      SetCurrentDirectory NomadDir()
+          
+          ' Get version info from DLL
+6996      sNomadVersion = NomadVersion()
+6997      sNomadVersion = left(sNomadVersion, InStr(sNomadVersion, vbNullChar) - 1)
+          
+6998      SetCurrentDirectory currentDir
+          
+6999      SolverVersion_NOMAD = sNomadVersion
 End Function
 
 Function DllVersion_NOMAD() As String
-    If Not SolverAvailable_NOMAD() Then
-        DllVersion_NOMAD = ""
-        Exit Function
-    End If
-    
-    Dim currentDir As String, sDllVersion As String
-    
-    ' Set current dir for finding the DLL
-    currentDir = CurDir
-    SetCurrentDirectory NomadDir()
-    
-    ' Get version info from DLL
-    sDllVersion = NomadDllVersion()
-    sDllVersion = left(sDllVersion, InStr(sDllVersion, vbNullChar) - 1)
-    
-    SetCurrentDirectory currentDir
-    
-    DllVersion_NOMAD = sDllVersion
+7000      If Not SolverAvailable_NOMAD() Then
+7001          DllVersion_NOMAD = ""
+7002          Exit Function
+7003      End If
+          
+          Dim currentDir As String, sDllVersion As String
+          
+          ' Set current dir for finding the DLL
+7004      currentDir = CurDir
+7005      SetCurrentDirectory NomadDir()
+          
+          ' Get version info from DLL
+7006      sDllVersion = NomadDllVersion()
+7007      sDllVersion = left(sDllVersion, InStr(sDllVersion, vbNullChar) - 1)
+          
+7008      SetCurrentDirectory currentDir
+          
+7009      DllVersion_NOMAD = sDllVersion
 End Function
 
 Function DllPath_NOMAD() As String
-    GetExistingFilePathName ThisWorkbook.Path, NomadDllName, DllPath_NOMAD
+7010      GetExistingFilePathName ThisWorkbook.Path, NomadDllName, DllPath_NOMAD
 End Function
 
 Function SolverBitness_NOMAD() As String
-' Get Bitness of NOMAD solver
-    If Not SolverAvailable_NOMAD() Then
-        SolverBitness_NOMAD = ""
-        Exit Function
-    End If
-    
+      ' Get Bitness of NOMAD solver
+7011      If Not SolverAvailable_NOMAD() Then
+7012          SolverBitness_NOMAD = ""
+7013          Exit Function
+7014      End If
+          
 #If Win64 Then
-        SolverBitness_NOMAD = "64"
+7015          SolverBitness_NOMAD = "64"
 #Else
-        SolverBitness_NOMAD = "32"
+7016          SolverBitness_NOMAD = "32"
 #End If
 End Function
 
 Function SolveModel_Nomad(SolveRelaxation As Boolean, s As COpenSolver) As Long
           Dim ScreenStatus As Boolean
-48140     ScreenStatus = Application.ScreenUpdating
+7017      ScreenStatus = Application.ScreenUpdating
           Dim Show As String
-48150     If GetNameValueIfExists(ActiveWorkbook, "'" & Replace(ActiveSheet.Name, "'", "''") & "'!solver_sho", Show) Then
-48160         If Show <> 1 Then Application.ScreenUpdating = False
-48170     End If
+7018      If GetNameValueIfExists(ActiveWorkbook, "'" & Replace(ActiveSheet.Name, "'", "''") & "'!solver_sho", Show) Then
+7019          If Show <> 1 Then Application.ScreenUpdating = False
+7020      End If
 
           ' Trap Escape key
-48210     Application.EnableCancelKey = xlErrorHandler
+7021      Application.EnableCancelKey = xlErrorHandler
           
-48220     On Error GoTo errorHandler
+7022      On Error GoTo errorHandler
           Dim errorPrefix As String
-48230     errorPrefix = "OpenSolver Nomad Model Solving"
-48240     If s.ModelStatus <> ModelStatus_Built Then
-48250         Err.Raise Number:=OpenSolver_NomadError, Source:=errorPrefix, Description:="The model cannot be solved as it has not yet been built."
-48260     End If
+7023      errorPrefix = "OpenSolver Nomad Model Solving"
+7024      If s.ModelStatus <> ModelStatus_Built Then
+7025          Err.Raise Number:=OpenSolver_NomadError, Source:=errorPrefix, Description:="The model cannot be solved as it has not yet been built."
+7026      End If
           
           ' Loop through all decision vars and set their values
           ' This is to try and catch any protected cells as we can't catch VBA errors that occur while NOMAD calls back into VBA
           Dim c As Range
-          For Each c In s.AdjustableCells
-              c.Value2 = c.Value2
-          Next c
+7027      For Each c In s.AdjustableCells
+7028          c.Value2 = c.Value2
+7029      Next c
           
           ' Set OS for the calls back into Excel from NOMAD
-          Set OS = s
+7030      Set OS = s
           
           Dim oldCalculationMode As Long
-48180     oldCalculationMode = Application.Calculation
-48190     Application.Calculation = xlCalculationManual
+7031      oldCalculationMode = Application.Calculation
+7032      Application.Calculation = xlCalculationManual
           
           Dim currentDir As String
-48200     currentDir = CurDir
+7033      currentDir = CurDir
           
-48270     SetCurrentDirectory NomadDir()
+7034      SetCurrentDirectory NomadDir()
 
-          IterationCount = 0
+7035      IterationCount = 0
           
           ' We need to call NomadMain directly rather than use Application.Run .
           ' Using Application.Run causes the API calls inside the DLL to fail on 64 bit Office
           Dim NomadRetVal As Long
-48330     NomadRetVal = NomadMain(SolveRelaxation)
+7036      NomadRetVal = NomadMain(SolveRelaxation)
           
           'Catch any errors that occured while Nomad was solving
-48370     If NomadRetVal = 1 Then
+7037      If NomadRetVal = 1 Then
               Dim errorString As String
-              errorString = "There was an error while Nomad was solving. No solution has been loaded into the sheet."
+7038          errorString = "There was an error while Nomad was solving. No solution has been loaded into the sheet."
               ' Check logs for more info
-              CheckNomadLogs errorString
+7039          CheckNomadLogs errorString
               
-48380         Err.Raise Number:=OpenSolver_NomadError, Source:=errorPrefix, Description:=errorString
-48390         s.SolveStatus = OpenSolverResult.ErrorOccurred
-48400     ElseIf NomadRetVal = 2 Then
-48410         s.SolveStatusComment = "Nomad reached the maximum number of iterations and returned the best feasible solution it found. This solution is not guaranteed to be an optimal solution." & vbCrLf & vbCrLf & _
+7040          Err.Raise Number:=OpenSolver_NomadError, Source:=errorPrefix, Description:=errorString
+7041          s.SolveStatus = OpenSolverResult.ErrorOccurred
+7042      ElseIf NomadRetVal = 2 Then
+7043          s.SolveStatusComment = "Nomad reached the maximum number of iterations and returned the best feasible solution it found. This solution is not guaranteed to be an optimal solution." & vbCrLf & vbCrLf & _
                                      "You can increase the maximum time and iterations under the options in the model dialogue or check whether your model is feasible."
-48420         s.SolveStatus = OpenSolverResult.TimeLimitedSubOptimal
-              s.SolveStatusString = "Stopped on Iteration Limit"
-              s.LinearSolutionWasLoaded = True
-48430     ElseIf NomadRetVal = 3 Then
-48440         s.SolveStatusComment = "Nomad reached the maximum time and returned the best feasible solution it found. This solution is not guaranteed to be an optimal solution." & vbCrLf & vbCrLf & _
+7044          s.SolveStatus = OpenSolverResult.TimeLimitedSubOptimal
+7045          s.SolveStatusString = "Stopped on Iteration Limit"
+7046          s.LinearSolutionWasLoaded = True
+7047      ElseIf NomadRetVal = 3 Then
+7048          s.SolveStatusComment = "Nomad reached the maximum time and returned the best feasible solution it found. This solution is not guaranteed to be an optimal solution." & vbCrLf & vbCrLf & _
                                      "You can increase the maximum time and iterations under the options in the model dialogue or check whether your model is feasible."
-48450         s.SolveStatus = OpenSolverResult.TimeLimitedSubOptimal
-              s.SolveStatusString = "Stopped on Time Limit"
-              s.LinearSolutionWasLoaded = True
-48460     ElseIf NomadRetVal = 4 Then
-48470         s.SolveStatusComment = "Nomad reached the maximum time or number of iterations without finding a feasible solution. The best infeasible solution has been returned to the sheet." & vbCrLf & vbCrLf & _
+7049          s.SolveStatus = OpenSolverResult.TimeLimitedSubOptimal
+7050          s.SolveStatusString = "Stopped on Time Limit"
+7051          s.LinearSolutionWasLoaded = True
+7052      ElseIf NomadRetVal = 4 Then
+7053          s.SolveStatusComment = "Nomad reached the maximum time or number of iterations without finding a feasible solution. The best infeasible solution has been returned to the sheet." & vbCrLf & vbCrLf & _
                                      "You can increase the maximum time and iterations under the options in the model dialogue or check whether your model is feasible."
-48480         s.SolveStatus = OpenSolverResult.Infeasible
-              s.SolveStatusString = "No Feasible Solution"
-              s.LinearSolutionWasLoaded = True
-48490     ElseIf NomadRetVal = 10 Then
-48500         s.SolveStatusComment = "Nomad could not find a feasible solution. The best infeasible solution has been returned to the sheet." & vbCrLf & vbCrLf & _
+7054          s.SolveStatus = OpenSolverResult.Infeasible
+7055          s.SolveStatusString = "No Feasible Solution"
+7056          s.LinearSolutionWasLoaded = True
+7057      ElseIf NomadRetVal = 10 Then
+7058          s.SolveStatusComment = "Nomad could not find a feasible solution. The best infeasible solution has been returned to the sheet." & vbCrLf & vbCrLf & _
                                      "Try resolving at a different start point or check whether your model is feasible or relax some of your constraints."
-48510         s.SolveStatus = OpenSolverResult.Infeasible
-              s.SolveStatusString = "No Feasible Solution"
-              s.LinearSolutionWasLoaded = True
-          ElseIf NomadRetVal = -3 Then
-              Err.Raise OpenSolver_UserCancelledError, "Running NOMAD", "Model solve cancelled by user."
-48520     Else
-48530         s.SolveStatus = NomadRetVal 'optimal
-20830         s.SolveStatusString = "Optimal"
-48540     End If
+7059          s.SolveStatus = OpenSolverResult.Infeasible
+7060          s.SolveStatusString = "No Feasible Solution"
+7061          s.LinearSolutionWasLoaded = True
+7062      ElseIf NomadRetVal = -3 Then
+7063          Err.Raise OpenSolver_UserCancelledError, "Running NOMAD", "Model solve cancelled by user."
+7064      Else
+7065          s.SolveStatus = NomadRetVal 'optimal
+7066          s.SolveStatusString = "Optimal"
+7067      End If
           
 ExitSub:
           ' We can fall thru to here
-48550     SetCurrentDirectory currentDir
-48560     Application.Cursor = xlDefault
-48570     Application.StatusBar = False ' Resume normal status bar behaviour
-48580     Application.ScreenUpdating = True
-48590     Application.Calculation = oldCalculationMode
-48600     Application.Calculate
-48610     Application.ScreenUpdating = ScreenStatus
-48620     Close #1 ' Close any open file; this does not seem to ever give errors
-48630     SolveModel_Nomad = s.SolveStatus    ' Return the main result
-          Set OS = Nothing
-48650     Exit Function
+7068      SetCurrentDirectory currentDir
+7069      Application.Cursor = xlDefault
+7070      Application.StatusBar = False ' Resume normal status bar behaviour
+7071      Application.ScreenUpdating = True
+7072      Application.Calculation = oldCalculationMode
+7073      Application.Calculate
+7074      Application.ScreenUpdating = ScreenStatus
+7075      Close #1 ' Close any open file; this does not seem to ever give errors
+7076      SolveModel_Nomad = s.SolveStatus    ' Return the main result
+7077      Set OS = Nothing
+7078      Exit Function
           
 errorHandler:
           ' We only trap Escape (Err.Number=18) here; all other errors are passed back to the caller.
           ' Save error message
           Dim ErrorNumber As Long, ErrorDescription As String, ErrorSource As String
-48660     ErrorNumber = Err.Number
-48670     ErrorDescription = Err.Description & IIf(Erl = 0, "", " (at line " & Erl & ")")
-48680     ErrorSource = Err.Source
-48690     If Err.Number = 18 Then
-48700         If MsgBox("You have pressed the Escape key. Do you wish to cancel?", _
+7079      ErrorNumber = Err.Number
+7080      ErrorDescription = Err.Description & IIf(Erl = 0, "", " (at line " & Erl & ")")
+7081      ErrorSource = Err.Source
+7082      If Err.Number = 18 Then
+7083          If MsgBox("You have pressed the Escape key. Do you wish to cancel?", _
                          vbCritical + vbYesNo + vbDefaultButton1, _
                          "OpenSolver: User Interrupt Occured...") = vbNo Then
-48710             Resume 'continue on from where error occured
-48720         Else
+7084              Resume 'continue on from where error occured
+7085          Else
                   ' Raise a "user cancelled" error. We cannot use Raise, as that exits immediately without going thru our code below
-48730             ErrorNumber = OpenSolver_UserCancelledError
-48740             ErrorSource = errorPrefix
-48750             ErrorDescription = "Model solve cancelled by user."
-48760         End If
-48770     End If
+7086              ErrorNumber = OpenSolver_UserCancelledError
+7087              ErrorSource = errorPrefix
+7088              ErrorDescription = "Model solve cancelled by user."
+7089          End If
+7090      End If
 
 ErrorExit:
           ' Exit, raising an error. None of the following actions change the Err.Number etc, but we saved them above just in case...
-48790     SetCurrentDirectory currentDir
+7091      SetCurrentDirectory currentDir
           'Application.DefaultFilePath = currentExcelDir
-48800     Application.Cursor = xlDefault
-48810     Application.StatusBar = False ' Resume normal status bar behaviour
-48820     Application.ScreenUpdating = True
-48830     Application.Calculation = oldCalculationMode
-48840     Application.Calculate
-48850     Close #1 ' Close any open file; this does not seem to ever give errors
-          Set OS = Nothing
-48860     Err.Raise ErrorNumber, ErrorSource, ErrorDescription
+7092      Application.Cursor = xlDefault
+7093      Application.StatusBar = False ' Resume normal status bar behaviour
+7094      Application.ScreenUpdating = True
+7095      Application.Calculation = oldCalculationMode
+7096      Application.Calculate
+7097      Close #1 ' Close any open file; this does not seem to ever give errors
+7098      Set OS = Nothing
+7099      Err.Raise ErrorNumber, ErrorSource, ErrorDescription
 
 End Function
 
 Sub CheckNomadLogs(errorString As String)
-' If NOMAD encounters an error, we dump the exception to the log file. We can use this to deduce what went wrong
-    Dim logFile As String
-    logFile = GetTempFilePath("log1.tmp")
-    
-    If Not FileOrDirExists(logFile) Then
-        Exit Sub
-    End If
-    
-    Dim message As String
-    On Error GoTo ErrHandler
-    Open logFile For Input As 3
-    message = Input$(LOF(3), 3)
-    Close #3
-    
-    If Not message Like "*NOMAD*" Then
-       Exit Sub
-    End If
-    
-    If message Like "*invalid parameter*" Then
-        errorString = "One of the parameters supplied to Nomad was invalid. This usually happens if the precision is too large. Try adjusting the values in the Solve Options dialog box."
-    End If
-    
+      ' If NOMAD encounters an error, we dump the exception to the log file. We can use this to deduce what went wrong
+          Dim logFile As String
+7100      logFile = GetTempFilePath("log1.tmp")
+          
+7101      If Not FileOrDirExists(logFile) Then
+7102          Exit Sub
+7103      End If
+          
+          Dim message As String
+7104      On Error GoTo ErrHandler
+7105      Open logFile For Input As 3
+7106      message = Input$(LOF(3), 3)
+7107      Close #3
+          
+7108      If Not message Like "*NOMAD*" Then
+7109         Exit Sub
+7110      End If
+          
+7111      If message Like "*invalid parameter*" Then
+7112          errorString = "One of the parameters supplied to Nomad was invalid. This usually happens if the precision is too large. Try adjusting the values in the Solve Options dialog box."
+7113      End If
+          
 ErrHandler:
-    Close #3
+7114      Close #3
 End Sub
 
 Function updateVar(X As Variant, Optional BestSolution As Variant = Nothing, Optional Infeasible As Boolean = False)
-          IterationCount = IterationCount + 1
+7115      IterationCount = IterationCount + 1
 
           ' Update solution
-          If IterationCount Mod 5 = 1 Then
+7116      If IterationCount Mod 5 = 1 Then
               Dim status As String
-              status = "OpenSolver: Running NOMAD. Iteration " & IterationCount & "."
+7117          status = "OpenSolver: Running NOMAD. Iteration " & IterationCount & "."
               ' Check for BestSolution = Nothing
-              If Not VarType(BestSolution) = 9 Then
+7118          If Not VarType(BestSolution) = 9 Then
                   ' Flip solution if maximisation
-                  If OS.ObjectiveSense = MaximiseObjective Then BestSolution = -BestSolution
+7119              If OS.ObjectiveSense = MaximiseObjective Then BestSolution = -BestSolution
 
-                  status = status & " Best solution so far: " & BestSolution
-                  If Infeasible Then
-                      status = status & " (infeasible)"
-                  End If
-              End If
-              Application.StatusBar = status
-          End If
+7120              status = status & " Best solution so far: " & BestSolution
+7121              If Infeasible Then
+7122                  status = status & " (infeasible)"
+7123              End If
+7124          End If
+7125          Application.StatusBar = status
+7126      End If
           
-48870     OS.updateVarOS (X)
+7127      OS.updateVarOS (X)
 End Function
 
 Function getValues() As Variant
-48880     getValues = OS.getValuesOS()
+7128      getValues = OS.getValuesOS()
 End Function
 
 Sub RecalculateValues()
-48890     Sheets(ActiveSheet.Name).Calculate
+7129      Sheets(ActiveSheet.Name).Calculate
 End Sub
 
 Function getNumVariables() As Variant
-48900     getNumVariables = OS.getNumVariablesOS
+7130      getNumVariables = OS.getNumVariablesOS
 End Function
 
 Function getNumConstraints() As Variant
-48910     getNumConstraints = OS.getNumConstraintsOS
+7131      getNumConstraints = OS.getNumConstraintsOS
 End Function
 
 Function getVariableData() As Variant
-48920     getVariableData = OS.getVariableDataOS()
+7132      getVariableData = OS.getVariableDataOS()
 End Function
 
 Function getOptionData() As Variant
-48930     getOptionData = OS.getOptionDataOS()
+7133      getOptionData = OS.getOptionDataOS()
 End Function
 

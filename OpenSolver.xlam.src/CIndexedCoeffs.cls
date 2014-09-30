@@ -15,64 +15,64 @@ Private Values() As Double
 Private NumEntries As Long
 
 Public Sub Add(index As Long, value As Double)
-36360     If NumEntries = 0 Then
-36370         ReDim Indices(10) As Long
-36380         ReDim Values(10) As Double
-36390     ElseIf NumEntries = UBound(Indices) Then
+3550      If NumEntries = 0 Then
+3551          ReDim Indices(10) As Long
+3552          ReDim Values(10) As Double
+3553      ElseIf NumEntries = UBound(Indices) Then
               ' Array needs to grow
-36400         ReDim Preserve Indices(UBound(Indices) + Int(UBound(Indices) * 0.5) + 1) As Long
-36410         ReDim Preserve Values(UBound(Indices)) As Double
-36420     End If
-36430     NumEntries = NumEntries + 1
-36440     Indices(NumEntries) = index
-36450     Values(NumEntries) = value
+3554          ReDim Preserve Indices(UBound(Indices) + Int(UBound(Indices) * 0.5) + 1) As Long
+3555          ReDim Preserve Values(UBound(Indices)) As Double
+3556      End If
+3557      NumEntries = NumEntries + 1
+3558      Indices(NumEntries) = index
+3559      Values(NumEntries) = value
 End Sub
 
 Public Function index(i As Long) As Long
-36460     index = Indices(i)
+3560      index = Indices(i)
 End Function
 
 Public Function Coefficient(i As Long) As Double
-36470     Coefficient = Values(i)
+3561      Coefficient = Values(i)
 End Function
 
 Public Function Count() As Long
-36480     Count = NumEntries
+3562      Count = NumEntries
 End Function
 
 Public Function Evaluate(DecisionVariableValues() As Double) As Double
           ' Evaluate the equation's value for the given variable values
           Dim i As Long, v As Double, vMax As Double
-36490     For i = 1 To NumEntries
-36500         v = v + Coefficient(i) * DecisionVariableValues(index(i))
-36510         If Abs(v) > vMax Then vMax = Abs(v)
-36520     Next i
-36530     Evaluate = v
+3563      For i = 1 To NumEntries
+3564          v = v + Coefficient(i) * DecisionVariableValues(index(i))
+3565          If Abs(v) > vMax Then vMax = Abs(v)
+3566      Next i
+3567      Evaluate = v
 End Function
 
 Public Function Evaluate_RecordPrecision(DecisionVariableValues() As Double, vMax As Double) As Double
           ' Evaluate the equation's value for the given variable values
           Dim i As Long, v As Double, value As Double, coeff As Double
-36540     vMax = 0
-36550     For i = 1 To NumEntries
-36560         coeff = Coefficient(i)
-36570         value = DecisionVariableValues(index(i))
-36580         v = v + coeff * value
-36590         If Abs(v) > vMax Then vMax = Abs(v)
-36600         If Abs(coeff) > vMax Then vMax = Abs(coeff)
-36610         If Abs(value) > vMax Then vMax = Abs(value)
-36620     Next i
-36630     Evaluate_RecordPrecision = v
+3568      vMax = 0
+3569      For i = 1 To NumEntries
+3570          coeff = Coefficient(i)
+3571          value = DecisionVariableValues(index(i))
+3572          v = v + coeff * value
+3573          If Abs(v) > vMax Then vMax = Abs(v)
+3574          If Abs(coeff) > vMax Then vMax = Abs(coeff)
+3575          If Abs(value) > vMax Then vMax = Abs(value)
+3576      Next i
+3577      Evaluate_RecordPrecision = v
 End Function
 
 Public Function Clone() As CIndexedCoeffs
           ' Return a copy of this class
           Dim v As CIndexedCoeffs, i As Long
-36640     Set v = New CIndexedCoeffs
+3578      Set v = New CIndexedCoeffs
           'ReDim v.Indices(count)
           'ReDim v.Values(count)
-36650     For i = 1 To Count
-36660         v.Add index(i), Coefficient(i)
-36670     Next i
-36680     Set Clone = v
+3579      For i = 1 To Count
+3580          v.Add index(i), Coefficient(i)
+3581      Next i
+3582      Set Clone = v
 End Function

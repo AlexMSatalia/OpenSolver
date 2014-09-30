@@ -16,20 +16,20 @@ Attribute VB_Exposed = False
 Option Explicit
 
 Private Sub cmdCancel_Click()
-          DoEvents
-          Unload frmAutoModel
-          Unload Me
-          DoEvents
+9221            DoEvents
+9222            Unload frmAutoModel
+9223            Unload Me
+9224            DoEvents
 End Sub
 
 Private Sub UserForm_Activate()
-    frmAutoModel.AutoModelActivate Me
+9225      frmAutoModel.AutoModelActivate Me
 End Sub
 
 
 Private Sub cmdFinish_Click()
-         DoEvents
-         frmAutoModel.AutoModelFinish Me
-         DoEvents
+9226           DoEvents
+9227           frmAutoModel.AutoModelFinish Me
+9228           DoEvents
 End Sub
 

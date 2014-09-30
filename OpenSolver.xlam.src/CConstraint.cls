@@ -39,9 +39,9 @@ Public Function GetKey() As String
           
           
           ' Disregard above - standardised key introduced 18June2011
-36310     If RHS Is Nothing Then
-36320         GetKey = LHS.Address + ConstraintType + RHSstring
-36330     Else
-36340         GetKey = LHS.Address + ConstraintType + RHS.Address
-36350     End If
+3545      If RHS Is Nothing Then
+3546          GetKey = LHS.Address + ConstraintType + RHSstring
+3547      Else
+3548          GetKey = LHS.Address + ConstraintType + RHS.Address
+3549      End If
 End Function

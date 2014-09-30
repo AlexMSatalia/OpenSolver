@@ -16,109 +16,109 @@ Attribute VB_Exposed = False
 Option Explicit
 
 Private Sub cmdCancel_Click()
-41690     Unload Me
+4089      Unload Me
 End Sub
 
 Private Sub cmdOK_Click()
-    frmOptions.OptionsOK Me
-    Unload Me
+4090      frmOptions.OptionsOK Me
+4091      Unload Me
 End Sub
 
 Public Sub OptionsOK(f As UserForm)
-41700     If f.chkNonNeg.value = True Then
-41710         SetSolverNameOnSheet "neg", "=1"
-41720     Else
-41730         SetSolverNameOnSheet "neg", "=2"     ' 2 means false
-41740     End If
+4092      If f.chkNonNeg.value = True Then
+4093          SetSolverNameOnSheet "neg", "=1"
+4094      Else
+4095          SetSolverNameOnSheet "neg", "=2"     ' 2 means false
+4096      End If
           
-41750     If f.chkShowSolverProgress.value = True Then
-41760         SetSolverNameOnSheet "sho", "=1"
-41770     Else
-41780         SetSolverNameOnSheet "sho", "=2"     ' 2 means false
-41790     End If
+4097      If f.chkShowSolverProgress.value = True Then
+4098          SetSolverNameOnSheet "sho", "=1"
+4099      Else
+4100          SetSolverNameOnSheet "sho", "=2"     ' 2 means false
+4101      End If
           
-41870     SetSolverNameOnSheet "tim", "=" & Trim(str(CDbl(f.txtMaxTime.Text)))  ' Trim the leading space which str puts in for +'ve values
-41880     SetSolverNameOnSheet "itr", "=" & Trim(str(CDbl(f.txtMaxIter.Text)))  ' Trim the leading space which str puts in for +'ve values
-41890     SetSolverNameOnSheet "pre", "=" & Trim(str(CDbl(f.txtPre.Text)))  ' Trim the leading space which str puts in for +'ve values
-41900     f.txtTol.Text = Replace(f.txtTol.Text, "%", "")
-41910     SetSolverNameOnSheet "tol", "=" & Trim(str(CDbl(f.txtTol.Text) / 100))    ' Str() uses . for decimal
+4102      SetSolverNameOnSheet "tim", "=" & Trim(str(CDbl(f.txtMaxTime.Text)))  ' Trim the leading space which str puts in for +'ve values
+4103      SetSolverNameOnSheet "itr", "=" & Trim(str(CDbl(f.txtMaxIter.Text)))  ' Trim the leading space which str puts in for +'ve values
+4104      SetSolverNameOnSheet "pre", "=" & Trim(str(CDbl(f.txtPre.Text)))  ' Trim the leading space which str puts in for +'ve values
+4105      f.txtTol.Text = Replace(f.txtTol.Text, "%", "")
+4106      SetSolverNameOnSheet "tol", "=" & Trim(str(CDbl(f.txtTol.Text) / 100))    ' Str() uses . for decimal
                                                                       ' CDbl respects the locale. We trim the leading space which str puts in for +'ve values
                                                                       
-41920     If f.chkPerformLinearityCheck.value = True Then
+4107      If f.chkPerformLinearityCheck.value = True Then
               ' Default is "do check", so we just delete the option
-41930         DeleteNameOnSheet "OpenSolver_LinearityCheck"
-41940     Else
+4108          DeleteNameOnSheet "OpenSolver_LinearityCheck"
+4109      Else
               ' Set the name, with a value of 2=off
-41950         SetNameOnSheet "OpenSolver_LinearityCheck", "=2"
-41960     End If
+4110          SetNameOnSheet "OpenSolver_LinearityCheck", "=2"
+4111      End If
                                                                       
-41970     Unload Me
+4112      Unload Me
 End Sub
 
 Private Sub UserForm_Activate()
-          frmOptions.OptionsActivate Me
+4113            frmOptions.OptionsActivate Me
 End Sub
 
 Public Sub OptionsActivate(f As UserForm)
-41980     SetAnyMissingDefaultExcel2007SolverOptions
+4114      SetAnyMissingDefaultExcel2007SolverOptions
 
           Dim nonNeg As Boolean, s As String
           ' nonNeg = True   ' a sensible default
-41990     If GetNameValueIfExists(ActiveWorkbook, "'" & Replace(ActiveSheet.Name, "'", "''") & "'!solver_neg", s) Then
-42000         nonNeg = s = "1"
-42010     End If
+4115      If GetNameValueIfExists(ActiveWorkbook, "'" & Replace(ActiveSheet.Name, "'", "''") & "'!solver_neg", s) Then
+4116          nonNeg = s = "1"
+4117      End If
           
           Dim ShowSolverProgress As Boolean
           ' ShowSolverProgress = False
-42020     If GetNameValueIfExists(ActiveWorkbook, "'" & Replace(ActiveSheet.Name, "'", "''") & "'!solver_sho", s) Then
-42030         ShowSolverProgress = s = "1"
-42040     End If
+4118      If GetNameValueIfExists(ActiveWorkbook, "'" & Replace(ActiveSheet.Name, "'", "''") & "'!solver_sho", s) Then
+4119          ShowSolverProgress = s = "1"
+4120      End If
           
           Dim maxTime As Double
           ' maxTime = 9999 ' A default value if none is yet defined
-42130     GetNamedNumericValueIfExists ActiveWorkbook, "'" & Replace(ActiveSheet.Name, "'", "''") & "'!solver_tim", maxTime
+4121      GetNamedNumericValueIfExists ActiveWorkbook, "'" & Replace(ActiveSheet.Name, "'", "''") & "'!solver_tim", maxTime
           
           Dim maxIter As Double
-42140     GetNamedNumericValueIfExists ActiveWorkbook, "'" & Replace(ActiveSheet.Name, "'", "''") & "'!solver_itr", maxIter
+4122      GetNamedNumericValueIfExists ActiveWorkbook, "'" & Replace(ActiveSheet.Name, "'", "''") & "'!solver_itr", maxIter
 
           Dim conPre As Double
-42150     GetNamedNumericValueIfExists ActiveWorkbook, "'" & Replace(ActiveSheet.Name, "'", "''") & "'!solver_pre", conPre
+4123      GetNamedNumericValueIfExists ActiveWorkbook, "'" & Replace(ActiveSheet.Name, "'", "''") & "'!solver_pre", conPre
 
           Dim tol As Double
           ' tol = 0.05  ' A default value if none is yet defined
-42160     GetNamedNumericValueIfExists ActiveWorkbook, "'" & Replace(ActiveSheet.Name, "'", "''") & "'!solver_tol", tol
+4124      GetNamedNumericValueIfExists ActiveWorkbook, "'" & Replace(ActiveSheet.Name, "'", "''") & "'!solver_tol", tol
           
           ' We perform a linearity check by default unless the defined name exists with value 2=off
           Dim performLinearityCheck As Boolean
-42170     performLinearityCheck = True
-42180     If GetNameValueIfExists(ActiveWorkbook, "'" & Replace(ActiveSheet.Name, "'", "''") & "'!OpenSolver_LinearityCheck", s) Then
-42190         performLinearityCheck = s = "1"
-42200     End If
+4125      performLinearityCheck = True
+4126      If GetNameValueIfExists(ActiveWorkbook, "'" & Replace(ActiveSheet.Name, "'", "''") & "'!OpenSolver_LinearityCheck", s) Then
+4127          performLinearityCheck = s = "1"
+4128      End If
 
-42210     f.chkNonNeg.value = nonNeg
-42220     f.chkShowSolverProgress.value = ShowSolverProgress
-42240     f.txtMaxTime.Text = CStr(maxTime)
-42250     f.txtTol.Text = tol * 100
-42260     f.txtMaxIter.Text = CStr(maxIter)
-42270     f.txtPre = CStr(conPre)
-42280     f.chkPerformLinearityCheck.value = performLinearityCheck
+4129      f.chkNonNeg.value = nonNeg
+4130      f.chkShowSolverProgress.value = ShowSolverProgress
+4131      f.txtMaxTime.Text = CStr(maxTime)
+4132      f.txtTol.Text = tol * 100
+4133      f.txtMaxIter.Text = CStr(maxIter)
+4134      f.txtPre = CStr(conPre)
+4135      f.chkPerformLinearityCheck.value = performLinearityCheck
 
           Dim Solver As String
-42290     If Not GetNameValueIfExists(ActiveWorkbook, "'" & Replace(ActiveSheet.Name, "'", "''") & "'!OpenSolver_ChosenSolver", Solver) Then
-              Solver = "CBC"
-42300         Call SetNameOnSheet("OpenSolver_ChosenSolver", "=" & Solver)
-42310     End If
+4136      If Not GetNameValueIfExists(ActiveWorkbook, "'" & Replace(ActiveSheet.Name, "'", "''") & "'!OpenSolver_ChosenSolver", Solver) Then
+4137          Solver = "CBC"
+4138          Call SetNameOnSheet("OpenSolver_ChosenSolver", "=" & Solver)
+4139      End If
 
-          If SolverType(Solver) = OpenSolver_SolverType.NonLinear Then
+4140      If SolverType(Solver) = OpenSolver_SolverType.NonLinear Then
               ' Disable linearity options
-42820         f.chkPerformLinearityCheck.Enabled = False
-42840         f.txtTol.Enabled = False
-          End If
+4141          f.chkPerformLinearityCheck.Enabled = False
+4142          f.txtTol.Enabled = False
+4143      End If
           
-42850     If Solver <> "NOMAD" Then
+4144      If Solver <> "NOMAD" Then
               ' Disable NOMAD only options
-42860         f.txtMaxIter.Enabled = False
-42870         f.txtPre.Enabled = False
-42880     End If
+4145          f.txtMaxIter.Enabled = False
+4146          f.txtPre.Enabled = False
+4147      End If
 End Sub
 

@@ -15,16 +15,16 @@ Attribute VB_PredeclaredId = True
 Attribute VB_Exposed = False
 
 Private Sub CommandButtonAbort_Click()
-36260     Me.Tag = vbCancel
-36270     Me.Hide
+9229      Me.Tag = vbCancel
+9230      Me.Hide
 End Sub
 
 Private Sub CommandButtonContinue_Click()
-36280     Me.Tag = vbOK
-36290     Me.Hide
+9231      Me.Tag = vbOK
+9232      Me.Hide
 End Sub
 
 Private Sub UserForm_QueryClose(Cancel As Integer, CloseMode As Integer)
-36300     If CloseMode = vbFormControlMenu Then Cancel = True
+9233      If CloseMode = vbFormControlMenu Then Cancel = True
 End Sub
 

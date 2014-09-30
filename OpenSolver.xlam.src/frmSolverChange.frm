@@ -19,82 +19,82 @@ Public ChosenSolver As String
 Dim Solvers As Collection
 
 Private Sub cboSolver_Change()
-    ChangeSolver Me
+4723      ChangeSolver Me
 End Sub
 
 Public Sub ChangeSolver(f As UserForm)
-          ChosenSolver = ReverseSolverTitle(f.cboSolver.Text)
-          f.lblSolver.Caption = SolverDesc(ChosenSolver)
-          f.lblHyperlink = SolverLink(ChosenSolver)
-          
-          Dim errorString As String
-          If SolverAvailable(ChosenSolver, errorString:=errorString) Then
-              f.cmdOK.Enabled = True
-          Else
-              f.cmdOK.Enabled = False
-          End If
-          f.lblError.Caption = errorString ' empty if no errors found
+4724            ChosenSolver = ReverseSolverTitle(f.cboSolver.Text)
+4725            f.lblSolver.Caption = SolverDesc(ChosenSolver)
+4726            f.lblHyperLink = SolverLink(ChosenSolver)
+                
+                Dim errorString As String
+4727            If SolverAvailable(ChosenSolver, errorString:=errorString) Then
+4728                f.cmdOK.Enabled = True
+4729            Else
+4730                f.cmdOK.Enabled = False
+4731            End If
+4732            f.lblError.Caption = errorString ' empty if no errors found
 End Sub
 
 Private Sub lblHyperlink_Click()
-    OpenURL lblHyperlink.Caption
+4733      OpenURL lblHyperLink.Caption
 End Sub
 
 Private Sub UserForm_Activate()
-    ActivateSolverChange Me
+4734      ActivateSolverChange Me
 End Sub
 
 Public Sub ActivateSolverChange(f As UserForm)
-          Set Solvers = New Collection
-          Solvers.Add "CBC"
-          Solvers.Add "Gurobi"
+4735      Set Solvers = New Collection
+4736      Solvers.Add "CBC"
+4737      Solvers.Add "Gurobi"
           'Solvers.Add "Cplex"
-          Solvers.Add "NeosCBC"
-          Solvers.Add "Bonmin"
-          Solvers.Add "Couenne"
-          Solvers.Add "NOMAD"
-          Solvers.Add "NeosBon"
-          Solvers.Add "NeosCou"
+4738      Solvers.Add "NeosCBC"
+4739      Solvers.Add "Bonmin"
+4740      Solvers.Add "Couenne"
+4741      Solvers.Add "NOMAD"
+4742      Solvers.Add "NeosBon"
+4743      Solvers.Add "NeosCou"
           'Solvers.Add "PuLP"
           
-47890     f.cboSolver.Clear
-47930     f.cboSolver.MatchRequired = True
-47940     f.cboSolver.Style = fmStyleDropDownList
+4744      f.cboSolver.Clear
+4745      f.cboSolver.MatchRequired = True
+4746      f.cboSolver.Style = fmStyleDropDownList
           
           Dim Solver As Variant
-          For Each Solver In Solvers
-              f.cboSolver.AddItem SolverTitle(CStr(Solver))
-          Next Solver
+4747      For Each Solver In Solvers
+4748          f.cboSolver.AddItem SolverTitle(CStr(Solver))
+4749      Next Solver
 
           Dim value As String
-47950     If GetNameValueIfExists(ActiveWorkbook, "'" & Replace(ActiveWorkbook.ActiveSheet.Name, "'", "''") & "'!OpenSolver_ChosenSolver", value) Then
-              On Error GoTo setDefault
-              f.cboSolver.Text = SolverTitle(value)
-48050     Else
+4750      If GetNameValueIfExists(ActiveWorkbook, "'" & Replace(ActiveWorkbook.ActiveSheet.Name, "'", "''") & "'!OpenSolver_ChosenSolver", value) Then
+4751          On Error GoTo setDefault
+4752          f.cboSolver.Text = SolverTitle(value)
+4753      Else
 setDefault:
-48060         f.cboSolver.Text = SolverTitle("CBC")
-48070     End If
+4754          f.cboSolver.Text = SolverTitle("CBC")
+4755      End If
 End Sub
 
 Private Sub cmdOK_Click()
-    SolverChangeConfirm Me
-    Unload Me
+4756      SolverChangeConfirm Me
+4757      Unload Me
 End Sub
 
 Public Sub SolverChangeConfirm(f As UserForm)
           'Add the chosen solver as a hidden name in the workbook
-48090     Call SetNameOnSheet("OpenSolver_ChosenSolver", "=" & ChosenSolver)
+4758      Call SetNameOnSheet("OpenSolver_ChosenSolver", "=" & ChosenSolver)
 #If Mac Then
-          MacModel.lblSolver.Caption = "Current Solver Engine: " & UCase(left(ChosenSolver, 1)) & Mid(ChosenSolver, 2)
-          frmModel.Disabler True, MacModel
+4759      MacModel.lblSolver.Caption = "Current Solver Engine: " & UCase(left(ChosenSolver, 1)) & Mid(ChosenSolver, 2)
+4760      frmModel.Disabler True, MacModel
 #Else
-48100     frmModel.lblSolver.Caption = "Current Solver Engine: " & UCase(left(ChosenSolver, 1)) & Mid(ChosenSolver, 2)
-48110     frmModel.Disabler True, frmModel
+4761      frmModel.lblSolver.Caption = "Current Solver Engine: " & UCase(left(ChosenSolver, 1)) & Mid(ChosenSolver, 2)
+4762      frmModel.Disabler True, frmModel
 #End If
 
-48120     Unload Me
+4763      Unload Me
 End Sub
 
 Private Sub cmdCancel_Click()
-48130     Unload Me
+4764      Unload Me
 End Sub

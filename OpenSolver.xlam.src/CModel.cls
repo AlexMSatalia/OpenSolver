@@ -36,53 +36,53 @@ Public Function FindObjective(ByRef s As Worksheet) As String
           ' Supported keywords:   min, minimise, minimize,
           '                       max, maximise, maximize
           Dim ObjSenseCell As Range
-36740     Set ObjSenseCell = Nothing
-36750     ObjectiveSense = UnknownObjectiveSense
+3586      Set ObjSenseCell = Nothing
+3587      ObjectiveSense = UnknownObjectiveSense
           
-36760     Application.StatusBar = "OpenSolver: Trying to determine objective sense..."
-36770     Application.Cursor = xlWait
+3588      Application.StatusBar = "OpenSolver: Trying to determine objective sense..."
+3589      Application.Cursor = xlWait
           
           ' MIN
-36780     FindObjSense s, "min", ObjSenseCell
-36790     If Not (ObjSenseCell Is Nothing) Then
-36800         ObjectiveSense = MinimiseObjective: GoTo StopSearchingForModelType
-36810     End If
-36820     FindObjSense s, "minimise", ObjSenseCell
-36830     If Not (ObjSenseCell Is Nothing) Then
-36840         ObjectiveSense = MinimiseObjective: GoTo StopSearchingForModelType
-36850     End If
-36860     FindObjSense s, "minimize", ObjSenseCell
-36870     If Not (ObjSenseCell Is Nothing) Then
-36880         ObjectiveSense = MinimiseObjective: GoTo StopSearchingForModelType
-36890     End If
+3590      FindObjSense s, "min", ObjSenseCell
+3591      If Not (ObjSenseCell Is Nothing) Then
+3592          ObjectiveSense = MinimiseObjective: GoTo StopSearchingForModelType
+3593      End If
+3594      FindObjSense s, "minimise", ObjSenseCell
+3595      If Not (ObjSenseCell Is Nothing) Then
+3596          ObjectiveSense = MinimiseObjective: GoTo StopSearchingForModelType
+3597      End If
+3598      FindObjSense s, "minimize", ObjSenseCell
+3599      If Not (ObjSenseCell Is Nothing) Then
+3600          ObjectiveSense = MinimiseObjective: GoTo StopSearchingForModelType
+3601      End If
           
           ' MAX
-36900     FindObjSense s, "max", ObjSenseCell
-36910     If Not (ObjSenseCell Is Nothing) Then
-36920         ObjectiveSense = MaximiseObjective: GoTo StopSearchingForModelType
-36930     End If
-36940     FindObjSense s, "maximise", ObjSenseCell
-36950     If Not (ObjSenseCell Is Nothing) Then
-36960         ObjectiveSense = MaximiseObjective: GoTo StopSearchingForModelType
-36970     End If
-36980     FindObjSense s, "maximize", ObjSenseCell
-36990     If Not (ObjSenseCell Is Nothing) Then
-37000         ObjectiveSense = MaximiseObjective: GoTo StopSearchingForModelType
-37010     End If
+3602      FindObjSense s, "max", ObjSenseCell
+3603      If Not (ObjSenseCell Is Nothing) Then
+3604          ObjectiveSense = MaximiseObjective: GoTo StopSearchingForModelType
+3605      End If
+3606      FindObjSense s, "maximise", ObjSenseCell
+3607      If Not (ObjSenseCell Is Nothing) Then
+3608          ObjectiveSense = MaximiseObjective: GoTo StopSearchingForModelType
+3609      End If
+3610      FindObjSense s, "maximize", ObjSenseCell
+3611      If Not (ObjSenseCell Is Nothing) Then
+3612          ObjectiveSense = MaximiseObjective: GoTo StopSearchingForModelType
+3613      End If
           
 StopSearchingForModelType:
 
           ' Success?
-37020     If ObjectiveSense = UnknownObjectiveSense Then
+3614      If ObjectiveSense = UnknownObjectiveSense Then
               ' Didn't find anything, give up here and report failure
-37030         FindObjective = "NoSense"
-37040         Application.Cursor = xlDefault
+3615          FindObjective = "NoSense"
+3616          Application.Cursor = xlDefault
               'Application.StatusBar = "OpenSolver: Couldn't determine objective sense!"
-37050         Application.StatusBar = False
-37060         Exit Function
-37070     Else
+3617          Application.StatusBar = False
+3618          Exit Function
+3619      Else
               ' At least got the sense, can continue
-37080     End If
+3620      End If
           
           '----------------------------------------------------------------
           ' Search for objective function cell
@@ -91,57 +91,57 @@ StopSearchingForModelType:
           ' - Otherwise find the first cell with a sum product in it
           '   looking across columns, then down rows
           ' - Can't find, give up
-37090     Application.StatusBar = "OpenSolver: Found objective sense, looking for objective cell..."
+3621      Application.StatusBar = "OpenSolver: Found objective sense, looking for objective cell..."
           Dim RowLBound As Long, RowUBound As Long
           
           
           ' Prevent out of range errors
-37100     If ObjSenseCell.row - 1 <= 0 Then
-37110         RowLBound = 1
-37120     Else
-37130         RowLBound = ObjSenseCell.row - 1
-37140     End If
-37150     RowUBound = ObjSenseCell.row + 1
+3622      If ObjSenseCell.row - 1 <= 0 Then
+3623          RowLBound = 1
+3624      Else
+3625          RowLBound = ObjSenseCell.row - 1
+3626      End If
+3627      RowUBound = ObjSenseCell.row + 1
           
           ' SUMPRODUCT SEARCH FIRST
           ' SAME ROW AS MODEL TYPE
-          FindObjCell s, ObjSenseCell.row, "sumproduct", ObjectiveFunctionCell
-37170     If Not (ObjectiveFunctionCell Is Nothing) Then GoTo FoundObjCell
+3628      FindObjCell s, ObjSenseCell.row, "sumproduct", ObjectiveFunctionCell
+3629      If Not (ObjectiveFunctionCell Is Nothing) Then GoTo FoundObjCell
           ' ROW ABOVE
-          FindObjCell s, RowLBound, "sumproduct", ObjectiveFunctionCell
-37190     If Not (ObjectiveFunctionCell Is Nothing) Then GoTo FoundObjCell
+3630      FindObjCell s, RowLBound, "sumproduct", ObjectiveFunctionCell
+3631      If Not (ObjectiveFunctionCell Is Nothing) Then GoTo FoundObjCell
           ' ROW BELOW
-          FindObjCell s, RowUBound, "sumproduct", ObjectiveFunctionCell
-37210     If Not (ObjectiveFunctionCell Is Nothing) Then GoTo FoundObjCell
+3632      FindObjCell s, RowUBound, "sumproduct", ObjectiveFunctionCell
+3633      If Not (ObjectiveFunctionCell Is Nothing) Then GoTo FoundObjCell
           
           ' NEXT SEARCH FOR ANY FORMULA
           ' SAME ROW AS MODEL TYPE
-          FindObjCell s, ObjSenseCell.row, "=", ObjectiveFunctionCell
-37230     If Not (ObjectiveFunctionCell Is Nothing) Then GoTo FoundObjCell
+3634      FindObjCell s, ObjSenseCell.row, "=", ObjectiveFunctionCell
+3635      If Not (ObjectiveFunctionCell Is Nothing) Then GoTo FoundObjCell
           ' ROW ABOVE
-          FindObjCell s, RowLBound, "=", ObjectiveFunctionCell
-37250     If Not (ObjectiveFunctionCell Is Nothing) Then GoTo FoundObjCell
+3636      FindObjCell s, RowLBound, "=", ObjectiveFunctionCell
+3637      If Not (ObjectiveFunctionCell Is Nothing) Then GoTo FoundObjCell
           ' ROW BELOW
-          FindObjCell s, RowUBound, "=", ObjectiveFunctionCell
-37270     If Not (ObjectiveFunctionCell Is Nothing) Then GoTo FoundObjCell
+3638      FindObjCell s, RowUBound, "=", ObjectiveFunctionCell
+3639      If Not (ObjectiveFunctionCell Is Nothing) Then GoTo FoundObjCell
          
 FoundObjCell:
 
-37280     If ObjectiveFunctionCell Is Nothing Then
+3640      If ObjectiveFunctionCell Is Nothing Then
               ' Couldn't find it
-37290         FindObjective = "SenseNoCell"
-37300         Application.Cursor = xlDefault
+3641          FindObjective = "SenseNoCell"
+3642          Application.Cursor = xlDefault
               'Application.StatusBar = "OpenSolver: Determined objective sense, couldn't find obj. cell!"
-37310         Application.StatusBar = False
-37320         Exit Function
-37330     Else
+3643          Application.StatusBar = False
+3644          Exit Function
+3645      Else
               ' Found something!
-37340     End If
+3646      End If
               
-37350     FindObjective = "OK"
-37360     Application.Cursor = xlDefault
+3647      FindObjective = "OK"
+3648      Application.Cursor = xlDefault
           'Application.StatusBar = "OpenSolver: Found objective cell and sense."
-37370     Application.StatusBar = False
+3649      Application.StatusBar = False
           
 End Function
 
@@ -154,7 +154,7 @@ End Function
 ' Written by:       IRD
 '--------------------------------------------------------------------
 Private Sub FindObjSense(ByRef s As Worksheet, ByVal searchStr As String, ByRef result As Range)
-37380     Set result = s.Cells.Find( _
+3650      Set result = s.Cells.Find( _
                       What:=searchStr, After:=[a1], _
                       LookIn:=xlValues, SearchOrder:=xlByRows, _
                       SearchDirection:=xlPrevious, MatchCase:=False)
@@ -169,19 +169,19 @@ End Sub
 ' Written by:       JWD
 '--------------------------------------------------------------------
 Private Sub FindObjCell(ByRef s As Worksheet, ByVal rowNum As Long, ByVal searchStr As String, ByRef result As Range)
-' Mac cannot handle SearchFormat parameter
+      ' Mac cannot handle SearchFormat parameter
 #If Mac Then
-          Set result = _
-              s.Rows(rowNum).Find(What:=searchStr, _
-                  LookIn:=xlFormulas, lookat:=xlPart, _
-                  SearchOrder:=xlByRows, SearchDirection:=xlNext, _
-                  MatchCase:=False)
+3651            Set result = _
+                    s.Rows(rowNum).Find(What:=searchStr, _
+                        LookIn:=xlFormulas, lookat:=xlPart, _
+                        SearchOrder:=xlByRows, SearchDirection:=xlNext, _
+                        MatchCase:=False)
 #Else
-          Set result = _
-              s.Rows(rowNum).Find(What:=searchStr, _
-                  LookIn:=xlFormulas, lookat:=xlPart, _
-                  SearchOrder:=xlByRows, SearchDirection:=xlNext, _
-                  MatchCase:=False, SearchFormat:=False)
+3652            Set result = _
+                    s.Rows(rowNum).Find(What:=searchStr, _
+                        LookIn:=xlFormulas, lookat:=xlPart, _
+                        SearchOrder:=xlByRows, SearchDirection:=xlNext, _
+                        MatchCase:=False, SearchFormat:=False)
 #End If
 End Sub
 
@@ -204,17 +204,17 @@ Public Function FindVarsAndCons(IsFirstTime As Boolean) As Boolean
           
           '----------------------------------------------------------------
           ' Clear existing solution, if requested
-37390     If IsFirstTime Then
-37400         Set DecisionVariables = Nothing
-37410         Set Constraints = New Collection
-37420     End If
+3653      If IsFirstTime Then
+3654          Set DecisionVariables = Nothing
+3655          Set Constraints = New Collection
+3656      End If
           
           '----------------------------------------------------------------
           ' Phase One
           '   - Look for constraints (i.e. <=, >=, =) and add them if they
           '     seem at all interesting (i.e. LHS or RHS has precedents)
-37430     Application.StatusBar = "OpenSolver:  Looking for constraints"
-37440     On Error GoTo ConstraintErr
+3657      Application.StatusBar = "OpenSolver:  Looking for constraints"
+3658      On Error GoTo ConstraintErr
           
               '------------------------------------------------------------
               ' Stage One - Find all the "relational operator" cells on the
@@ -222,21 +222,21 @@ Public Function FindVarsAndCons(IsFirstTime As Boolean) As Boolean
 
               ' Find the cells
               Dim FoundLEQ As Range, FoundGEQ As Range, FoundEQ As Range
-37450         If Not ObjectiveFunctionCell Is Nothing Then
-37460             FindAllCells "<=", FoundLEQ, ObjectiveFunctionCell.Parent
-37470             FindAllCells ">=", FoundGEQ, ObjectiveFunctionCell.Parent
-37480             FindAllCells "=", FoundEQ, ObjectiveFunctionCell.Parent
-37490         Else
-37500             FindAllCells "<=", FoundLEQ, ActiveSheet
-37510             FindAllCells ">=", FoundGEQ, ActiveSheet
-37520             FindAllCells "=", FoundEQ, ActiveSheet
-37530         End If
+3659          If Not ObjectiveFunctionCell Is Nothing Then
+3660              FindAllCells "<=", FoundLEQ, ObjectiveFunctionCell.Parent
+3661              FindAllCells ">=", FoundGEQ, ObjectiveFunctionCell.Parent
+3662              FindAllCells "=", FoundEQ, ObjectiveFunctionCell.Parent
+3663          Else
+3664              FindAllCells "<=", FoundLEQ, ActiveSheet
+3665              FindAllCells ">=", FoundGEQ, ActiveSheet
+3666              FindAllCells "=", FoundEQ, ActiveSheet
+3667          End If
               
               ' Combine them as much as possible
               Dim AllCompOps As Range
-37540         Set AllCompOps = FoundEQ
-37550         Set AllCompOps = ProperUnion(AllCompOps, FoundLEQ)
-37560         Set AllCompOps = ProperUnion(AllCompOps, FoundGEQ)
+3668          Set AllCompOps = FoundEQ
+3669          Set AllCompOps = ProperUnion(AllCompOps, FoundLEQ)
+3670          Set AllCompOps = ProperUnion(AllCompOps, FoundGEQ)
           
               '------------------------------------------------------------
               ' Stage Two - Now we have the blocks of constraints. For
@@ -244,76 +244,76 @@ Public Function FindVarsAndCons(IsFirstTime As Boolean) As Boolean
               ' and right. For more columns than rows, up and down. For
               ' single cells, look in all directions
               Dim AreaIndex As Long
-37570         For AreaIndex = 1 To AllCompOps.Areas.Count
+3671          For AreaIndex = 1 To AllCompOps.Areas.Count
                   ''Debug.Print "FindVarsAndCons: Con area" + Str(AreaIndex)
                   
                   ' Determine the shape of the area
                   Dim RowCount As Long, ColCount As Long
-37580             RowCount = AllCompOps.Areas(AreaIndex).Rows.Count
-37590             ColCount = AllCompOps.Areas(AreaIndex).Columns.Count
+3672              RowCount = AllCompOps.Areas(AreaIndex).Rows.Count
+3673              ColCount = AllCompOps.Areas(AreaIndex).Columns.Count
                   
                   ' Depending on the shape, set the LHS and RHS
                   ' NB: in the case of row of constraints, LHS refers to
                   '     the cells above the row, RHS the cells below.
                   Dim LHSs As Range, RHSs As Range
-37600             If ColCount = 1 And RowCount > 1 Then
+3674              If ColCount = 1 And RowCount > 1 Then
                       ' Vertical
                       ''Debug.Print "FindVarsAndCons: Vertical", AreaIndex
-37610                 Set LHSs = AllCompOps.Areas(AreaIndex).Offset(0, -1)
-37620                 Set RHSs = AllCompOps.Areas(AreaIndex).Offset(0, 1)
-37630                 If CheckPrecedentCells(LHSs, RHSs) Then
+3675                  Set LHSs = AllCompOps.Areas(AreaIndex).Offset(0, -1)
+3676                  Set RHSs = AllCompOps.Areas(AreaIndex).Offset(0, 1)
+3677                  If CheckPrecedentCells(LHSs, RHSs) Then
                           ' Its ok, add them
-37640                     AddRangeToConstraints LHSs, AllCompOps.Areas(AreaIndex), RHSs, True, Constraints
+3678                      AddRangeToConstraints LHSs, AllCompOps.Areas(AreaIndex), RHSs, True, Constraints
                           ''Debug.Print "FindVarsAndCons: Added", AreaIndex
-37650                 End If
+3679                  End If
                       
-37660             ElseIf ColCount > 1 And RowCount = 1 Then
+3680              ElseIf ColCount > 1 And RowCount = 1 Then
                       ' Horizontal
                       ''Debug.Print "FindVarsAndCons: Horizontal", AreaIndex
-37670                 Set LHSs = AllCompOps.Areas(AreaIndex).Offset(-1, 0)
-37680                 Set RHSs = AllCompOps.Areas(AreaIndex).Offset(1, 0)
-37690                 If CheckPrecedentCells(LHSs, RHSs) Then
+3681                  Set LHSs = AllCompOps.Areas(AreaIndex).Offset(-1, 0)
+3682                  Set RHSs = AllCompOps.Areas(AreaIndex).Offset(1, 0)
+3683                  If CheckPrecedentCells(LHSs, RHSs) Then
                           ' Its ok, add them
-37700                     AddRangeToConstraints LHSs, AllCompOps.Areas(AreaIndex), RHSs, False, Constraints
+3684                      AddRangeToConstraints LHSs, AllCompOps.Areas(AreaIndex), RHSs, False, Constraints
                           ''Debug.Print "FindVarsAndCons: Added", AreaIndex
-37710                 End If
+3685                  End If
                       
-37720             ElseIf ColCount = 1 And RowCount = 1 Then
+3686              ElseIf ColCount = 1 And RowCount = 1 Then
                       ' Singleton
                       ''Debug.Print "FindVarsAndCons: Singleton", AreaIndex
                       ' Look Left-Right
-37730                 Set LHSs = AllCompOps.Areas(AreaIndex).Offset(0, -1)
-37740                 Set RHSs = AllCompOps.Areas(AreaIndex).Offset(0, 1)
-37750                 If CheckPrecedentCells(LHSs, RHSs) Then
+3687                  Set LHSs = AllCompOps.Areas(AreaIndex).Offset(0, -1)
+3688                  Set RHSs = AllCompOps.Areas(AreaIndex).Offset(0, 1)
+3689                  If CheckPrecedentCells(LHSs, RHSs) Then
                           ' Its ok, add them
-37760                     AddRangeToConstraints LHSs, AllCompOps.Areas(AreaIndex), RHSs, True, Constraints
+3690                      AddRangeToConstraints LHSs, AllCompOps.Areas(AreaIndex), RHSs, True, Constraints
                           ''Debug.Print "FindVarsAndCons: Added LR", AreaIndex
-37770                 Else
+3691                  Else
                           ' Didn't find anything interesting LR, look UD
-37780                     Set LHSs = AllCompOps.Areas(AreaIndex).Offset(-1, 0)
-37790                     Set RHSs = AllCompOps.Areas(AreaIndex).Offset(1, 0)
-37800                     If CheckPrecedentCells(LHSs, RHSs) Then
+3692                      Set LHSs = AllCompOps.Areas(AreaIndex).Offset(-1, 0)
+3693                      Set RHSs = AllCompOps.Areas(AreaIndex).Offset(1, 0)
+3694                      If CheckPrecedentCells(LHSs, RHSs) Then
                               ' Its ok, add them
-37810                         AddRangeToConstraints LHSs, AllCompOps.Areas(AreaIndex), RHSs, False, Constraints
+3695                          AddRangeToConstraints LHSs, AllCompOps.Areas(AreaIndex), RHSs, False, Constraints
                               ''Debug.Print "FindVarsAndCons: Added UD", AreaIndex
-37820                     End If
-37830                 End If
-37840             Else
+3696                      End If
+3697                  End If
+3698              Else
                       ' Block
                       ' TODO - Handle this somehow, if it has an application
                       ''Debug.Print "FindVarsAndCons: Block TODO", AreaIndex
-37850             End If
+3699              End If
                   
-37860         Next AreaIndex
+3700          Next AreaIndex
 
-37870         RationaliseConstraints
+3701          RationaliseConstraints
               
               
           '----------------------------------------------------------------
           ' Phase Two
           '       - use precedents of objective function and constraints
           '         to find the set of possible decision variables
-37880     Application.StatusBar = "OpenSolver: Searching for decision variables"
+3702      Application.StatusBar = "OpenSolver: Searching for decision variables"
           
           ' NB: The first collection has cell addresses as keys, and reference
           '     counts as values.
@@ -325,85 +325,85 @@ Public Function FindVarsAndCons(IsFirstTime As Boolean) As Boolean
           
               '------------------------------------------------------------
               ' Stage One - Objective function precedents
-37890         On Error Resume Next
+3703          On Error Resume Next
               ' Find the precedents of the objective function
-37900         Set PrecedentCells = Nothing
-37910         Set PrecedentCells = ObjectiveFunctionCell.Precedents
-37920         If PrecedentCells Is Nothing Then
+3704          Set PrecedentCells = Nothing
+3705          Set PrecedentCells = ObjectiveFunctionCell.Precedents
+3706          If PrecedentCells Is Nothing Then
                   ' Objective function must be constant, this is not necessarily an issue
                   ''Debug.Print "FindVarsAndCons: Constant objective, skipping stage one of phase two"
-37930         Else
+3707          Else
                   ' Go through each precedent of the objective function, and set the
                   ' reference counter for it to 1
-37940             On Error GoTo DecisionErr
-37950             For Each CurPrecedent In PrecedentCells.Cells
-37960                 If Not CurPrecedent.HasFormula Then
-37970                     If Not TestKeyExists(DecRefCount, CurPrecedent.Address) Then
-37980                         DecRefCount.Add 1, CurPrecedent.Address
-37990                         DecRefAddress.Add CurPrecedent.Address, CurPrecedent.Address
+3708              On Error GoTo DecisionErr
+3709              For Each CurPrecedent In PrecedentCells.Cells
+3710                  If Not CurPrecedent.HasFormula Then
+3711                      If Not TestKeyExists(DecRefCount, CurPrecedent.Address) Then
+3712                          DecRefCount.Add 1, CurPrecedent.Address
+3713                          DecRefAddress.Add CurPrecedent.Address, CurPrecedent.Address
                               ''Debug.Print "obj", CurPrecedent.Address, 1
-38000                     End If
-38010                 End If
-38020             Next
-38030         End If
+3714                      End If
+3715                  End If
+3716              Next
+3717          End If
               
               ''Debug.Print "FindVarsAndCons: End of Phase One Stage One"
 
 
               '------------------------------------------------------------
               ' Stage Two - Constraint precedents
-38040         On Error Resume Next
+3718          On Error Resume Next
               Dim curConstraint As CConstraint, RC As Long
-38050         For Each curConstraint In Constraints
+3719          For Each curConstraint In Constraints
                   '''''''''''''''''''''''''''''''''''''''''''''''''''''''''
                   ' Look at LHS
-38060             On Error Resume Next
-38070             Set PrecedentCells = Nothing
-38080             Set PrecedentCells = curConstraint.LHS.Precedents
-38090             If Not PrecedentCells Is Nothing Then
-38100                 For Each CurPrecedent In PrecedentCells.Cells
-38110                     If TestKeyExists(DecRefCount, CurPrecedent.Address) Then
+3720              On Error Resume Next
+3721              Set PrecedentCells = Nothing
+3722              Set PrecedentCells = curConstraint.LHS.Precedents
+3723              If Not PrecedentCells Is Nothing Then
+3724                  For Each CurPrecedent In PrecedentCells.Cells
+3725                      If TestKeyExists(DecRefCount, CurPrecedent.Address) Then
                               ' Exists, increment
                               ' Annoyingly, collections are read-only
                               ' I'm not sure how slow this is, but a way to
                               ' optimise would be to only do this if RC = 1, because
                               ' once RC hits two we will pick it anyway
-38120                         RC = DecRefCount(CurPrecedent.Address)
-38130                         DecRefCount.Remove CurPrecedent.Address
-38140                         DecRefCount.Add RC + 1, CurPrecedent.Address
+3726                          RC = DecRefCount(CurPrecedent.Address)
+3727                          DecRefCount.Remove CurPrecedent.Address
+3728                          DecRefCount.Add RC + 1, CurPrecedent.Address
                               ''Debug.Print "con", CurPrecedent.Address, RC + 1
-38150                     Else
+3729                      Else
                               ' Doesn't exist yet, start it at 1
-38160                         If Not CurPrecedent.HasFormula Then
-38170                             DecRefCount.Add 1, CurPrecedent.Address
-38180                             DecRefAddress.Add CurPrecedent.Address, CurPrecedent.Address
+3730                          If Not CurPrecedent.HasFormula Then
+3731                              DecRefCount.Add 1, CurPrecedent.Address
+3732                              DecRefAddress.Add CurPrecedent.Address, CurPrecedent.Address
                                   ''Debug.Print "connew", CurPrecedent.Address, 1
-38190                         End If
-38200                     End If
-38210                 Next
-38220             End If
+3733                          End If
+3734                      End If
+3735                  Next
+3736              End If
                   
                   '''''''''''''''''''''''''''''''''''''''''''''''''''''''''
                   ' Look at RHS
-38230             On Error Resume Next
-38240             Set PrecedentCells = Nothing
-38250             Set PrecedentCells = curConstraint.RHS.Precedents
-38260             If Not PrecedentCells Is Nothing Then
-38270                 For Each CurPrecedent In PrecedentCells.Cells
-38280                     If TestKeyExists(DecRefCount, CurPrecedent.Address) Then
+3737              On Error Resume Next
+3738              Set PrecedentCells = Nothing
+3739              Set PrecedentCells = curConstraint.RHS.Precedents
+3740              If Not PrecedentCells Is Nothing Then
+3741                  For Each CurPrecedent In PrecedentCells.Cells
+3742                      If TestKeyExists(DecRefCount, CurPrecedent.Address) Then
                               ' Exists, increment
-38290                         DecRefCount(CurPrecedent.Address) = DecRefCount(CurPrecedent.Address) + 1
-38300                     Else
+3743                          DecRefCount(CurPrecedent.Address) = DecRefCount(CurPrecedent.Address) + 1
+3744                      Else
                               ' Doesn't exist yet, start it at 1
-38310                         If Not CurPrecedent.HasFormula Then
-38320                             DecRefCount.Add 1, CurPrecedent.Address
-38330                             DecRefAddress.Add CurPrecedent.Address, CurPrecedent.Address
-38340                         End If
-38350                     End If
-38360                 Next
-38370             End If
+3745                          If Not CurPrecedent.HasFormula Then
+3746                              DecRefCount.Add 1, CurPrecedent.Address
+3747                              DecRefAddress.Add CurPrecedent.Address, CurPrecedent.Address
+3748                          End If
+3749                      End If
+3750                  Next
+3751              End If
               
-38380         Next
+3752          Next
           
           
           
@@ -413,77 +413,77 @@ Public Function FindVarsAndCons(IsFirstTime As Boolean) As Boolean
           '   really can't be sure it is a decision variable - constants
           '   are also referenced once. So take anything that is two or
           '   or higher
-38390     Application.StatusBar = "OpenSolver: Selecting most likely decision variables"
+3753      Application.StatusBar = "OpenSolver: Selecting most likely decision variables"
               
               Dim addressKey As Variant
               
-38400         For Each addressKey In DecRefAddress
-38410             If DecRefCount(addressKey) >= 2 Then
-38420                 Set DecisionVariables = ProperUnion(DecisionVariables, ActiveSheet.Range(CStr(addressKey)))
-38430             End If
-38440         Next
+3754          For Each addressKey In DecRefAddress
+3755              If DecRefCount(addressKey) >= 2 Then
+3756                  Set DecisionVariables = ProperUnion(DecisionVariables, ActiveSheet.Range(CStr(addressKey)))
+3757              End If
+3758          Next
               
           '----------------------------------------------------------------
           ' Phase Four
           '   - Look for type restrictions on decision variables
-38450     Application.StatusBar = "OpenSolver: Looking for variable type restrictions"
+3759      Application.StatusBar = "OpenSolver: Looking for variable type restrictions"
               Dim CurDecVar As Range, PossibleType As String
           
-38460         For Each CurDecVar In DecisionVariables
+3760          For Each CurDecVar In DecisionVariables
                   ' Look below it to see if there is type information
-38470             PossibleType = LCase(Trim(CurDecVar.Offset(1, 0).value))
-38480             If PossibleType = "integer" Or PossibleType = "int" Or PossibleType = "i" Then
+3761              PossibleType = LCase(Trim(CurDecVar.Offset(1, 0).value))
+3762              If PossibleType = "integer" Or PossibleType = "int" Or PossibleType = "i" Then
                       ' This variable is integer
-38490                 Set curConstraint = New CConstraint
-38500                 With curConstraint
-38510                     Set .LHS = CurDecVar
-38520                     Set .RHS = Nothing
-38530                     Set .Relation = Nothing
-38540                     .ConstraintType = "int"
-38550                 End With
-38560                 Constraints.Add curConstraint ', curConstraint.GetKey
-38570             ElseIf PossibleType = "binary" Or PossibleType = "bin" Or PossibleType = "b" Then
+3763                  Set curConstraint = New CConstraint
+3764                  With curConstraint
+3765                      Set .LHS = CurDecVar
+3766                      Set .RHS = Nothing
+3767                      Set .Relation = Nothing
+3768                      .ConstraintType = "int"
+3769                  End With
+3770                  Constraints.Add curConstraint ', curConstraint.GetKey
+3771              ElseIf PossibleType = "binary" Or PossibleType = "bin" Or PossibleType = "b" Then
                       ' This variable is BINARY
-38580                 Set curConstraint = New CConstraint
-38590                 With curConstraint
-38600                     Set .LHS = CurDecVar
-38610                     Set .RHS = Nothing
-38620                     Set .Relation = Nothing
-38630                     .ConstraintType = "bin"
-38640                 End With
-38650                 Constraints.Add curConstraint ', curConstraint.GetKey
-38660             End If
-38670         Next
+3772                  Set curConstraint = New CConstraint
+3773                  With curConstraint
+3774                      Set .LHS = CurDecVar
+3775                      Set .RHS = Nothing
+3776                      Set .Relation = Nothing
+3777                      .ConstraintType = "bin"
+3778                  End With
+3779                  Constraints.Add curConstraint ', curConstraint.GetKey
+3780              End If
+3781          Next
           
           
           '----------------------------------------------------------------
           ' Finished!
-38680     Application.StatusBar = "OpenSolver: Rationalising constraints"
+3782      Application.StatusBar = "OpenSolver: Rationalising constraints"
           'RationaliseConstraints ' Make constraints prettier ' BROKEN IN 1.3 COS USES KEYS
-38690     FindVarsAndCons = True
+3783      FindVarsAndCons = True
           'Application.StatusBar = "OpenSolver: Finished finding decision variables and constraints"
-38700     Application.StatusBar = False
-38710     Exit Function
+3784      Application.StatusBar = False
+3785      Exit Function
           
 DecisionErr:
           ' Error occurred while trying to find decision variables
-38720     MsgBox "Error: an issue arose while finding decision variables." + vbNewLine + _
+3786      MsgBox "Error: an issue arose while finding decision variables." + vbNewLine + _
                  "Error number:" + str(Err.Number) + vbNewLine + _
                  "Error description: " + Err.Description & IIf(Erl = 0, "", " (at line " & Erl & ")"), _
                  vbExclamation Or vbOKOnly, "AutoModel"
-38730     FindVarsAndCons = False
-38740     Application.StatusBar = False
-38750     Exit Function
+3787      FindVarsAndCons = False
+3788      Application.StatusBar = False
+3789      Exit Function
           
 ConstraintErr:
           ' Error occurred while trying to find constraints
-38760     MsgBox "Error: an issue arose while finding constraints." + vbNewLine + _
+3790      MsgBox "Error: an issue arose while finding constraints." + vbNewLine + _
                  "Error number:" + str(Err.Number) + vbNewLine + _
                  "Error description: " + Err.Description & IIf(Erl = 0, "", " (at line " & Erl & ")"), _
                  vbExclamation Or vbOKOnly, "AutoModel"
-38770     FindVarsAndCons = False
-38780     Application.StatusBar = False
-38790     Exit Function
+3791      FindVarsAndCons = False
+3792      Application.StatusBar = False
+3793      Exit Function
 End Function
 
 
@@ -507,31 +507,31 @@ Private Sub FindAllCells(ByVal searchStr As String, ByRef FoundCells As Range, _
 
           ' Initialise
           Dim LastCell As Range, FirstCell As Range
-38800     Set FoundCells = Nothing
+3794      Set FoundCells = Nothing
           
           ' Find first cell that meets requirements
-38810     Set LastCell = sheet.Cells.Find(What:=searchStr, _
+3795      Set LastCell = sheet.Cells.Find(What:=searchStr, _
                                   After:=[a1], _
                                   LookIn:=xlValues, _
                                   SearchOrder:=XlSearchOrder.xlByRows, _
                                   lookat:=XlLookAt.xlWhole, _
                                   SearchDirection:=XlSearchDirection.xlNext _
                                   )
-38820     Set FirstCell = LastCell
-38830     If LastCell Is Nothing Then Exit Sub ' If not even one, stop immediately
+3796      Set FirstCell = LastCell
+3797      If LastCell Is Nothing Then Exit Sub ' If not even one, stop immediately
           
-38840     Do
+3798      Do
               ' Add it...
-38850         If FoundCells Is Nothing Then
-38860             Set FoundCells = Range(LastCell.Address)
-38870         Else
-38880             Set FoundCells = Union(FoundCells, LastCell)
-38890         End If
+3799          If FoundCells Is Nothing Then
+3800              Set FoundCells = Range(LastCell.Address)
+3801          Else
+3802              Set FoundCells = Union(FoundCells, LastCell)
+3803          End If
               ' ...and find next
-38900         Set LastCell = sheet.Cells.FindNext(LastCell)
+3804          Set LastCell = sheet.Cells.FindNext(LastCell)
               ' Loop until we don't find another cell, or until we get back to the
               ' initial cell we found
-38910     Loop While (Not LastCell Is Nothing) And (FirstCell.Address <> LastCell.Address)
+3805      Loop While (Not LastCell Is Nothing) And (FirstCell.Address <> LastCell.Address)
           
 End Sub
 
@@ -555,22 +555,22 @@ End Sub
 Function CheckPrecedentCells(ByRef LHSs As Range, ByRef RHSs As Range) As Boolean
           Dim CurCell As Range, PrecCells As Range
           Dim BothSides As Range
-38920     Set BothSides = Union(LHSs, RHSs)
+3806      Set BothSides = Union(LHSs, RHSs)
 
-38930     For Each CurCell In BothSides.Cells
+3807      For Each CurCell In BothSides.Cells
               ' Check if cell has a precedent
               ' If no precedents, error is thrown
-38940         Err.Clear
-38950         On Error Resume Next
-38960         Set PrecCells = CurCell.Precedents
-38970         If Err.Number = 1004 Then
+3808          Err.Clear
+3809          On Error Resume Next
+3810          Set PrecCells = CurCell.Precedents
+3811          If Err.Number = 1004 Then
                   ' No precedents for this cell
-38980         ElseIf Err.Number = 0 Then
+3812          ElseIf Err.Number = 0 Then
                   ' There is a precedent
-38990             CheckPrecedentCells = True
-39000             Exit Function
-39010         End If
-39020     Next
+3813              CheckPrecedentCells = True
+3814              Exit Function
+3815          End If
+3816      Next
           
 End Function
 
@@ -595,40 +595,40 @@ Sub AddRangeToConstraints(ByRef LHSs As Range, ByRef RelRange As Range, _
                             ByRef RHSs As Range, IsVertical As Boolean, _
                             ByRef Constraints As Collection)
           Dim CellCount As Long
-39030     CellCount = LHSs.Count
+3817      CellCount = LHSs.Count
           
           Dim i As Long
           Dim LHSi As Range, RELi As Range, RHSi As Range
           Dim NewConstraint As CConstraint
           
           ' For each cell
-39040     For i = 1 To CellCount
-39050         If IsVertical Then
-39060             Set LHSi = LHSs(RowIndex:=i)
-39070             Set RELi = RelRange(RowIndex:=i)
-39080             Set RHSi = RHSs(RowIndex:=i)
-39090         Else
-39100             Set LHSi = LHSs(ColumnIndex:=i)
-39110             Set RELi = RelRange(ColumnIndex:=i)
-39120             Set RHSi = RHSs(ColumnIndex:=i)
-39130         End If
+3818      For i = 1 To CellCount
+3819          If IsVertical Then
+3820              Set LHSi = LHSs(RowIndex:=i)
+3821              Set RELi = RelRange(RowIndex:=i)
+3822              Set RHSi = RHSs(RowIndex:=i)
+3823          Else
+3824              Set LHSi = LHSs(ColumnIndex:=i)
+3825              Set RELi = RelRange(ColumnIndex:=i)
+3826              Set RHSi = RHSs(ColumnIndex:=i)
+3827          End If
               ' Check if added
-39140         If Not TestKeyExists(Constraints, RELi.Address) Then
+3828          If Not TestKeyExists(Constraints, RELi.Address) Then
                   ' Constraint not already added - so add it!
-39150             Set NewConstraint = New CConstraint
-39160             With NewConstraint
-39170                 Set .LHS = LHSi
-39180                 Set .RHS = RHSi
-39190                 Set .Relation = RELi
-39200                 .ConstraintType = RELi.value
+3829              Set NewConstraint = New CConstraint
+3830              With NewConstraint
+3831                  Set .LHS = LHSi
+3832                  Set .RHS = RHSi
+3833                  Set .Relation = RELi
+3834                  .ConstraintType = RELi.value
                       ''Debug.Print "Con added:", .LHS.Address, .ConstraintType, .RHS.Address
-39210             End With
-39220             Constraints.Add NewConstraint ', NewConstraint.GetKey
-39230         Else
+3835              End With
+3836              Constraints.Add NewConstraint ', NewConstraint.GetKey
+3837          Else
                   ' Added already
                   'Debug.Print "Con already added", LHSi.Address, RELi.Value, RHSi.Address
-39240         End If
-39250     Next i
+3838          End If
+3839      Next i
       '          RationaliseConstraints
 End Sub
 
@@ -643,13 +643,13 @@ End Sub
 ' Written by:       MJVM & IRD
 '--------------------------------------------------------------------
 Public Sub RationaliseConstraints()
-39260     On Error GoTo 0
+3840      On Error GoTo 0
           Dim Relations(1 To 5) As String
-39270     Relations(1) = "="
-39280     Relations(2) = "<="
-39290     Relations(3) = ">="
-39300     Relations(4) = "int"
-39310     Relations(5) = "bin"
+3841      Relations(1) = "="
+3842      Relations(2) = "<="
+3843      Relations(3) = ">="
+3844      Relations(4) = "int"
+3845      Relations(5) = "bin"
           
           Dim NewConstraints As New Collection
           Dim NewConstraint As CConstraint
@@ -662,94 +662,94 @@ Public Sub RationaliseConstraints()
           Dim NumConstraints As Long
           Dim conNum() As Variant
           
-39320     NumConstraints = Constraints.Count
+3846      NumConstraints = Constraints.Count
                     
-39330     ReDim conNum(NumConstraints + 1) As Variant
+3847      ReDim conNum(NumConstraints + 1) As Variant
           
           Dim i As Long, j As Long
-39340     For i = 1 To 5
+3848      For i = 1 To 5
               ' Find all constraints of type Relations(i)...
-39350         Set conKeys = New Collection
+3849          Set conKeys = New Collection
                 
                 Dim c As Long, k As Long
                 
                 'Initialise the indices of the constraints to be empty
-39360           For k = 1 To NumConstraints
-39370               conNum(k) = Empty
-39380           Next k
+3850            For k = 1 To NumConstraints
+3851                conNum(k) = Empty
+3852            Next k
                 
-39390           c = 1
-39400           k = 1
+3853            c = 1
+3854            k = 1
                 
-39410         For Each curCon In Constraints
+3855          For Each curCon In Constraints
                   ' ... and add a reference to them in a collection and save the index of the constraint
-39420             If curCon.ConstraintType = Relations(i) Then
-39430                 If 1 <= i And i <= 3 Then
-39440                       conKeys.Add curCon.Relation.Address, curCon.Relation.Address
-39450                       conNum(k) = c
-39460                       k = k + 1
-39470                 End If
-39480                 If 4 <= i And i <= 5 Then
-39490                       conKeys.Add curCon.LHS.Address, curCon.LHS.Address
-39500                       conNum(k) = c
-39510                       k = k + 1
-39520                 End If
-39530             End If
-39540             c = c + 1
-39550         Next
+3856              If curCon.ConstraintType = Relations(i) Then
+3857                  If 1 <= i And i <= 3 Then
+3858                        conKeys.Add curCon.Relation.Address, curCon.Relation.Address
+3859                        conNum(k) = c
+3860                        k = k + 1
+3861                  End If
+3862                  If 4 <= i And i <= 5 Then
+3863                        conKeys.Add curCon.LHS.Address, curCon.LHS.Address
+3864                        conNum(k) = c
+3865                        k = k + 1
+3866                  End If
+3867              End If
+3868              c = c + 1
+3869          Next
 
-39560         If conKeys.Count > 0 Then
-39570             Set UnionRange = Nothing
+3870          If conKeys.Count > 0 Then
+3871              Set UnionRange = Nothing
                   'Find the number of constraints for relations(i)
-39580             k = 1
+3872              k = 1
                   
-39590             Do While conNum(k) <> ""
-39600                 k = k + 1
-39610             Loop
+3873              Do While conNum(k) <> ""
+3874                  k = k + 1
+3875              Loop
                 
                 ' Build up a range that is the union of all the constraints
-39620             For j = 1 To (k - 1)
-39630                 If 1 <= i And i <= 3 Then Set UnionRange = ProperUnion(UnionRange, Constraints(conNum(j)).Relation)
-39640                 If 4 <= i And i <= 5 Then Set UnionRange = ProperUnion(UnionRange, Constraints(conNum(j)).LHS)
-39650             Next j
+3876              For j = 1 To (k - 1)
+3877                  If 1 <= i And i <= 3 Then Set UnionRange = ProperUnion(UnionRange, Constraints(conNum(j)).Relation)
+3878                  If 4 <= i And i <= 5 Then Set UnionRange = ProperUnion(UnionRange, Constraints(conNum(j)).LHS)
+3879              Next j
                   ' Now iterate through each area of the range - each represents a block
                   ' of constraints that are next to each other, with the same relation
                   
                   Dim SavedNum As Long, num As Long
                   
-39660             SavedNum = 1
+3880              SavedNum = 1
                   
-39670             For AreaIndex = 1 To UnionRange.Areas.Count
+3881              For AreaIndex = 1 To UnionRange.Areas.Count
                       'Debug.Print "Relation " + Relations(i) + ", area" + str(AreaIndex)
-39680                 num = SavedNum
-39690                 Set LHSunion = Nothing
-39700                 Set RHSunion = Nothing
-39710                 Set RELunion = Nothing
+3882                  num = SavedNum
+3883                  Set LHSunion = Nothing
+3884                  Set RHSunion = Nothing
+3885                  Set RELunion = Nothing
 
-39720                 For Each CurCell In UnionRange.Areas(AreaIndex).Cells
-39730                     Set LHSunion = ProperUnion(LHSunion, Constraints(conNum(num)).LHS)
-39740                     Set RHSunion = ProperUnion(RHSunion, Constraints(conNum(num)).RHS)
-39750                     Set RELunion = ProperUnion(RELunion, Constraints(conNum(num)).Relation)
-39760                     num = num + 1
-39770                 Next
-39780                 SavedNum = num
+3886                  For Each CurCell In UnionRange.Areas(AreaIndex).Cells
+3887                      Set LHSunion = ProperUnion(LHSunion, Constraints(conNum(num)).LHS)
+3888                      Set RHSunion = ProperUnion(RHSunion, Constraints(conNum(num)).RHS)
+3889                      Set RELunion = ProperUnion(RELunion, Constraints(conNum(num)).Relation)
+3890                      num = num + 1
+3891                  Next
+3892                  SavedNum = num
 
-39790                 Set NewConstraint = New CConstraint
-39800                 With NewConstraint
-39810                     Set .LHS = LHSunion
-39820                     Set .RHS = RHSunion
-39830                     Set .Relation = RELunion
-39840                     .ConstraintType = Relations(i)
+3893                  Set NewConstraint = New CConstraint
+3894                  With NewConstraint
+3895                      Set .LHS = LHSunion
+3896                      Set .RHS = RHSunion
+3897                      Set .Relation = RELunion
+3898                      .ConstraintType = Relations(i)
                           ''Debug.Print "SuperCon added:", .LHS.Address, .ConstraintType, .RHS.Address
-39850                 End With
-39860                 If 1 <= i And i <= 3 Then NewConstraints.Add NewConstraint, NewConstraint.Relation.Address
-39870                 If 4 <= i And i <= 5 Then NewConstraints.Add NewConstraint, NewConstraint.LHS.Address
-39880             Next
-39890         End If
-39900     Next i
+3899                  End With
+3900                  If 1 <= i And i <= 3 Then NewConstraints.Add NewConstraint, NewConstraint.Relation.Address
+3901                  If 4 <= i And i <= 5 Then NewConstraints.Add NewConstraint, NewConstraint.LHS.Address
+3902              Next
+3903          End If
+3904      Next i
           
           ' Update old constraints
-39910     Set Constraints = NewConstraints
+3905      Set Constraints = NewConstraints
 End Sub
 
 
@@ -763,89 +763,89 @@ End Sub
 '--------------------------------------------------------------------
 Sub BuildModel()
           ' Decision variables
-39920     If DecisionVariables Is Nothing Then
-39930         DeleteSolverNameOnSheet "adj"
-39940     Else
-39950         SetSolverNamedRangeOnSheet "adj", DecisionVariables
-39960     End If
+3906      If DecisionVariables Is Nothing Then
+3907          DeleteSolverNameOnSheet "adj"
+3908      Else
+3909          SetSolverNamedRangeOnSheet "adj", DecisionVariables
+3910      End If
           
           ' Objective function cell
-39970     If ObjectiveFunctionCell Is Nothing Then
-39980         DeleteSolverNameOnSheet "opt"
-39990     Else
-40000         SetSolverNamedRangeOnSheet "opt", ObjectiveFunctionCell
-40010     End If
+3911      If ObjectiveFunctionCell Is Nothing Then
+3912          DeleteSolverNameOnSheet "opt"
+3913      Else
+3914          SetSolverNamedRangeOnSheet "opt", ObjectiveFunctionCell
+3915      End If
           
           ' Objective type
-40020     If ObjectiveSense = MinimiseObjective Then
-40030         SetSolverNameOnSheet "typ", "=2"
-40040     ElseIf ObjectiveSense = MaximiseObjective Then
-40050         SetSolverNameOnSheet "typ", "=1"
-40060     ElseIf ObjectiveSense = TargetObjective Then
-40070         SetSolverNameOnSheet "typ", "=3"
-40080         SetSolverNameOnSheet "val", "=" + Trim(str(ObjectiveTarget)) ' AJM Changed from CStr to Str as we must store this using US numbers, and we must strip any leading space
-40090     End If
+3916      If ObjectiveSense = MinimiseObjective Then
+3917          SetSolverNameOnSheet "typ", "=2"
+3918      ElseIf ObjectiveSense = MaximiseObjective Then
+3919          SetSolverNameOnSheet "typ", "=1"
+3920      ElseIf ObjectiveSense = TargetObjective Then
+3921          SetSolverNameOnSheet "typ", "=3"
+3922          SetSolverNameOnSheet "val", "=" + Trim(str(ObjectiveTarget)) ' AJM Changed from CStr to Str as we must store this using US numbers, and we must strip any leading space
+3923      End If
           
           ' Check int/bin constraints not set on non-decision variables
           Dim c As Long, intersection As Range
-40100     For c = 1 To Constraints.Count
-40110         If Constraints(c).ConstraintType = "bin" _
+3924      For c = 1 To Constraints.Count
+3925          If Constraints(c).ConstraintType = "bin" _
               Or Constraints(c).ConstraintType = "int" Then
-40120             Set intersection = Intersect(Constraints(c).LHS, DecisionVariables)
-40130             If intersection Is Nothing Then
-40140                 MsgBox "Warning: an int/bin constraint has been set on cells that are not decision variables. OpenSolver does not support this yet. An error message will appear if you have selected to show the Model."
-40150             Else
-40160                 If intersection.Count <> Constraints(c).LHS.Count Then
-40170                     MsgBox "Warning: an int/bin constraint has been set on cells that are not decision variables. OpenSolver does not support this yet. An error message will appear if you have selected to show the Model."
-40180                 End If
-40190             End If
-40200         End If
-40210     Next c
+3926              Set intersection = Intersect(Constraints(c).LHS, DecisionVariables)
+3927              If intersection Is Nothing Then
+3928                  MsgBox "Warning: an int/bin constraint has been set on cells that are not decision variables. OpenSolver does not support this yet. An error message will appear if you have selected to show the Model."
+3929              Else
+3930                  If intersection.Count <> Constraints(c).LHS.Count Then
+3931                      MsgBox "Warning: an int/bin constraint has been set on cells that are not decision variables. OpenSolver does not support this yet. An error message will appear if you have selected to show the Model."
+3932                  End If
+3933              End If
+3934          End If
+3935      Next c
           
           ' Constraints
-40220     SetSolverNameOnSheet "num", "=" + CStr(Constraints.Count)
-40230     For c = 1 To Constraints.Count
-40240         If Constraints(c).ConstraintType = "bin" Then
-40250             SetSolverNamedRangeOnSheet "lhs" & CStr(c), Constraints(c).LHS
-40260             SetSolverNameOnSheet "rel" & CStr(c), "=5"
-40270             SetSolverNameOnSheet "rhs" & CStr(c), "=binary"
-40280         ElseIf Constraints(c).ConstraintType = "int" Then
-40290             SetSolverNamedRangeOnSheet "lhs" & CStr(c), Constraints(c).LHS
-40300             SetSolverNameOnSheet "rel" & CStr(c), "=4"
-40310             SetSolverNameOnSheet "rhs" & CStr(c), "=integer"
-40320         ElseIf Constraints(c).ConstraintType = "alldiff" Then
-40330             SetSolverNamedRangeOnSheet "lhs" & CStr(c), Constraints(c).LHS
-40340             SetSolverNameOnSheet "rel" & CStr(c), "=6"
-40350             SetSolverNameOnSheet "rhs" & CStr(c), "=alldiff"
-40360         Else
-40370             SetSolverNamedRangeOnSheet "lhs" & CStr(c), Constraints(c).LHS
-40380             If Constraints(c).RHS Is Nothing Then
-40390                 If Mid(Constraints(c).RHSstring, 1, 1) = "=" Then
-40400                     SetSolverNameOnSheet "rhs" & CStr(c), Constraints(c).RHSstring
-40410                 Else
-40420                     SetSolverNameOnSheet "rhs" & CStr(c), "=" & Constraints(c).RHSstring
-40430                 End If
-40440             Else
-40450                 SetSolverNamedRangeOnSheet "rhs" & CStr(c), Constraints(c).RHS
-40460             End If
-40470             If Constraints(c).ConstraintType = ">=" Then SetSolverNameOnSheet "rel" & CStr(c), "=3"
-40480             If Constraints(c).ConstraintType = ">" Then SetSolverNameOnSheet "rel" & CStr(c), "=3"
-40490             If Constraints(c).ConstraintType = "<=" Then SetSolverNameOnSheet "rel" & CStr(c), "=1"
-40500             If Constraints(c).ConstraintType = "<" Then SetSolverNameOnSheet "rel" & CStr(c), "=1"
-40510             If Constraints(c).ConstraintType = "=" Then SetSolverNameOnSheet "rel" & CStr(c), "=2"
-40520             If Constraints(c).ConstraintType = "'=" Then SetSolverNameOnSheet "rel" & CStr(c), "=2"
-40530         End If
-40540     Next c
+3936      SetSolverNameOnSheet "num", "=" + CStr(Constraints.Count)
+3937      For c = 1 To Constraints.Count
+3938          If Constraints(c).ConstraintType = "bin" Then
+3939              SetSolverNamedRangeOnSheet "lhs" & CStr(c), Constraints(c).LHS
+3940              SetSolverNameOnSheet "rel" & CStr(c), "=5"
+3941              SetSolverNameOnSheet "rhs" & CStr(c), "=binary"
+3942          ElseIf Constraints(c).ConstraintType = "int" Then
+3943              SetSolverNamedRangeOnSheet "lhs" & CStr(c), Constraints(c).LHS
+3944              SetSolverNameOnSheet "rel" & CStr(c), "=4"
+3945              SetSolverNameOnSheet "rhs" & CStr(c), "=integer"
+3946          ElseIf Constraints(c).ConstraintType = "alldiff" Then
+3947              SetSolverNamedRangeOnSheet "lhs" & CStr(c), Constraints(c).LHS
+3948              SetSolverNameOnSheet "rel" & CStr(c), "=6"
+3949              SetSolverNameOnSheet "rhs" & CStr(c), "=alldiff"
+3950          Else
+3951              SetSolverNamedRangeOnSheet "lhs" & CStr(c), Constraints(c).LHS
+3952              If Constraints(c).RHS Is Nothing Then
+3953                  If Mid(Constraints(c).RHSstring, 1, 1) = "=" Then
+3954                      SetSolverNameOnSheet "rhs" & CStr(c), Constraints(c).RHSstring
+3955                  Else
+3956                      SetSolverNameOnSheet "rhs" & CStr(c), "=" & Constraints(c).RHSstring
+3957                  End If
+3958              Else
+3959                  SetSolverNamedRangeOnSheet "rhs" & CStr(c), Constraints(c).RHS
+3960              End If
+3961              If Constraints(c).ConstraintType = ">=" Then SetSolverNameOnSheet "rel" & CStr(c), "=3"
+3962              If Constraints(c).ConstraintType = ">" Then SetSolverNameOnSheet "rel" & CStr(c), "=3"
+3963              If Constraints(c).ConstraintType = "<=" Then SetSolverNameOnSheet "rel" & CStr(c), "=1"
+3964              If Constraints(c).ConstraintType = "<" Then SetSolverNameOnSheet "rel" & CStr(c), "=1"
+3965              If Constraints(c).ConstraintType = "=" Then SetSolverNameOnSheet "rel" & CStr(c), "=2"
+3966              If Constraints(c).ConstraintType = "'=" Then SetSolverNameOnSheet "rel" & CStr(c), "=2"
+3967          End If
+3968      Next c
           
-40550     If Duals Is Nothing Then
-40560         DeleteNameOnSheet "OpenSolver_Duals"
-40570     Else
-40580         SetNamedRangeOnSheet "OpenSolver_Duals", Duals
-40590     End If
+3969      If Duals Is Nothing Then
+3970          DeleteNameOnSheet "OpenSolver_Duals"
+3971      Else
+3972          SetNamedRangeOnSheet "OpenSolver_Duals", Duals
+3973      End If
           
           ' Set the default Solver properties
           ' These values must be given in English, not using the local language (eg with . and not ,)
-40600     SetSolverNameOnSheet "neg", IIf(NonNegativityAssumption, "=1", "=2")
+3974      SetSolverNameOnSheet "neg", IIf(NonNegativityAssumption, "=1", "=2")
           ' All of these have been initialised if any were missing when the dialog was first shown
           'SetSolverNameOnSheet "tim", "=100"
           'SetSolverNameOnSheet "itr", "=100"
@@ -868,15 +868,15 @@ Public Sub AddConstraint(newLHS As Range, newRHS As Range, newRHSstring As Strin
           
           Dim NewConstraint As New CConstraint
           
-40610     With NewConstraint
-40620         Set .LHS = newLHS
-40630         Set .Relation = Nothing
-40640         Set .RHS = newRHS
-40650         .RHSstring = newRHSstring
-40660         .ConstraintType = newType
-40670     End With
+3975      With NewConstraint
+3976          Set .LHS = newLHS
+3977          Set .Relation = Nothing
+3978          Set .RHS = newRHS
+3979          .RHSstring = newRHSstring
+3980          .ConstraintType = newType
+3981      End With
           
-40680     Constraints.Add NewConstraint ', NewConstraint.GetKey
+3982      Constraints.Add NewConstraint ', NewConstraint.GetKey
           
 End Sub
 
@@ -892,33 +892,33 @@ Public Sub PopulateConstraintListBox(ByRef lst As Object)
           Dim oldLI As Long
           
           Dim showNameRange As Boolean
-40690     showNameRange = frmModel.chkNameRange.value
-40700     If showNameRange Then SearchRangeName_DestroyCache
+3983      showNameRange = frmModel.chkNameRange.value
+3984      If showNameRange Then SearchRangeName_DestroyCache
           
-40710     oldLI = lst.ListIndex
-40720     lst.Clear
-40730     lst.AddItem "<Add new constraint>"
-40740     For c = 1 To Constraints.Count
-40750         With Constraints(c)
-40760             CS = GetDisplayAddress(.LHS, showNameRange) + " " + .ConstraintType
-40770             If Not (.RHS Is Nothing) Then
+3985      oldLI = lst.ListIndex
+3986      lst.Clear
+3987      lst.AddItem "<Add new constraint>"
+3988      For c = 1 To Constraints.Count
+3989          With Constraints(c)
+3990              CS = GetDisplayAddress(.LHS, showNameRange) + " " + .ConstraintType
+3991              If Not (.RHS Is Nothing) Then
                       ' This is not a type restriction, so it has a RHS
-40780                 CS = CS + " " + GetDisplayAddress(.RHS, showNameRange)
-40790             ElseIf .RHS Is Nothing And .RHSstring <> "" Then
-40800                 If Mid(.RHSstring, 1, 1) = "=" Then
-40810                     CS = CS + " " + RemoveActiveSheetNameFromString(Mid(.RHSstring, 2, Len(.RHSstring)))
-40820                 Else
-40830                     CS = CS + " " + RemoveActiveSheetNameFromString(.RHSstring)
-40840                 End If
-40850             End If
-40860         End With
-40870         lst.AddItem CS
-40880     Next c
-40890     If oldLI >= 0 And oldLI <= lst.ListCount - 1 Then
-40900         lst.ListIndex = oldLI
-40910     Else
-40920         lst.ListIndex = lst.ListCount - 1
-40930     End If
+3992                  CS = CS + " " + GetDisplayAddress(.RHS, showNameRange)
+3993              ElseIf .RHS Is Nothing And .RHSstring <> "" Then
+3994                  If Mid(.RHSstring, 1, 1) = "=" Then
+3995                      CS = CS + " " + RemoveActiveSheetNameFromString(Mid(.RHSstring, 2, Len(.RHSstring)))
+3996                  Else
+3997                      CS = CS + " " + RemoveActiveSheetNameFromString(.RHSstring)
+3998                  End If
+3999              End If
+4000          End With
+4001          lst.AddItem CS
+4002      Next c
+4003      If oldLI >= 0 And oldLI <= lst.ListCount - 1 Then
+4004          lst.ListIndex = oldLI
+4005      Else
+4006          lst.ListIndex = lst.ListCount - 1
+4007      End If
 End Sub
 
 
@@ -931,37 +931,37 @@ End Sub
 '--------------------------------------------------------------------
 Public Sub LoadFromSheet()
 
-40940     On Error Resume Next ' TODO: This should not run under a blank RESUME NEXT
-40950     Set Constraints = New Collection
+4008      On Error Resume Next ' TODO: This should not run under a blank RESUME NEXT
+4009      Set Constraints = New Collection
 
 
           Dim sheetName As String
-40960     sheetName = "'" & Replace(ActiveWorkbook.ActiveSheet.Name, "'", "''") & "'!"   ' Must include quotes to handle sheet names with spaces
+4010      sheetName = "'" & Replace(ActiveWorkbook.ActiveSheet.Name, "'", "''") & "'!"   ' Must include quotes to handle sheet names with spaces
 
           ' ADJUSTABLE CELLS
-40970     Set DecisionVariables = Range(sheetName & "solver_adj")
+4011      Set DecisionVariables = Range(sheetName & "solver_adj")
           
           ' NON-NEGATIVITY
           Dim s As String
-40980     NonNegativityAssumption = False
-40990     If GetNameValueIfExists(ActiveWorkbook, sheetName & "solver_neg", s) Then NonNegativityAssumption = (s = "1")
+4012      NonNegativityAssumption = False
+4013      If GetNameValueIfExists(ActiveWorkbook, sheetName & "solver_neg", s) Then NonNegativityAssumption = (s = "1")
            
           ' OBJECTIVE SENSE (AND TARGET)
           Dim temp As Long
-41000     ObjectiveSense = UnknownObjectiveSense
-41010     If GetNamedIntegerIfExists(ActiveWorkbook, sheetName & "solver_typ", temp) Then ObjectiveSense = temp
-41020     ObjectiveTarget = 0
-41030     GetNamedNumericValueIfExists ActiveWorkbook, sheetName & "solver_val", ObjectiveTarget
+4014      ObjectiveSense = UnknownObjectiveSense
+4015      If GetNamedIntegerIfExists(ActiveWorkbook, sheetName & "solver_typ", temp) Then ObjectiveSense = temp
+4016      ObjectiveTarget = 0
+4017      GetNamedNumericValueIfExists ActiveWorkbook, sheetName & "solver_val", ObjectiveTarget
           
           ' OBJECTIVE CELL
-41040     Set ObjectiveFunctionCell = Nothing
-41050     Set ObjectiveFunctionCell = ActiveWorkbook.Names(sheetName & "solver_opt").RefersToRange
+4018      Set ObjectiveFunctionCell = Nothing
+4019      Set ObjectiveFunctionCell = ActiveWorkbook.Names(sheetName & "solver_opt").RefersToRange
           
           ' CONSTRAINTS
           Dim constraint As Long, NumConstraints As Long
           
-41060     NumConstraints = Val(Mid(Names(sheetName & "solver_num"), 2))
-41070     For constraint = 1 To NumConstraints
+4020      NumConstraints = Val(Mid(Names(sheetName & "solver_num"), 2))
+4021      For constraint = 1 To NumConstraints
               ' Note: Solver enforces the following requirements.
               ' The LHS mut be a range with one or more cells
               ' The RHS can be either:
@@ -973,39 +973,39 @@ Public Sub LoadFromSheet()
               Dim isRangeLHS As Boolean, valLHS As Double, rLHS As Range, LHSRefersToError As Boolean, LHSRefersToFormula As Boolean, sRefersToLHS As String, LHSisMissing As Boolean
               Dim isRangeRHS As Boolean, valRHS As Double, rRHS As Range, RHSRefersToError As Boolean, RHSRefersToFormula As Boolean, sRefersToRHS As String, RHSisMissing As Boolean
               
-41080         GetNameAsValueOrRange ActiveWorkbook, sheetName & "solver_lhs" & constraint, LHSisMissing, isRangeLHS, rLHS, LHSRefersToFormula, LHSRefersToError, sRefersToLHS, valLHS
-41090         If (LHSisMissing) Or (Not isRangeLHS) Then GoTo SkipCon
+4022          GetNameAsValueOrRange ActiveWorkbook, sheetName & "solver_lhs" & constraint, LHSisMissing, isRangeLHS, rLHS, LHSRefersToFormula, LHSRefersToError, sRefersToLHS, valLHS
+4023          If (LHSisMissing) Or (Not isRangeLHS) Then GoTo SkipCon
               
               Dim rel As Long
-41100         rel = Val(Mid(Names(sheetName & "solver_rel" & constraint), 2))  ' Either <=, = or >=, or int or bin (or 'alldif' in Excel 2010)
+4024          rel = Val(Mid(Names(sheetName & "solver_rel" & constraint), 2))  ' Either <=, = or >=, or int or bin (or 'alldif' in Excel 2010)
               
-41110         If rel = RelationINT Or rel = RelationBIN Or rel = RelationAllDiff Then
+4025          If rel = RelationINT Or rel = RelationBIN Or rel = RelationAllDiff Then
                   ' Make the LHS variables integer or binary
-41120             If rel = RelationINT Then AddConstraint rLHS, Nothing, "", "int"
-41130             If rel = RelationBIN Then AddConstraint rLHS, Nothing, "", "bin"
-41140             If rel = RelationAllDiff Then AddConstraint rLHS, Nothing, "", "alldiff"
-41150         Else
+4026              If rel = RelationINT Then AddConstraint rLHS, Nothing, "", "int"
+4027              If rel = RelationBIN Then AddConstraint rLHS, Nothing, "", "bin"
+4028              If rel = RelationAllDiff Then AddConstraint rLHS, Nothing, "", "alldiff"
+4029          Else
                   ' Constraint is a full equation with a RHS
-41160             GetNameAsValueOrRange ActiveWorkbook, sheetName & "solver_rhs" & constraint, RHSisMissing, isRangeRHS, rRHS, RHSRefersToFormula, RHSRefersToError, sRefersToRHS, valRHS
-41170             If RHSisMissing Then GoTo SkipCon
+4030              GetNameAsValueOrRange ActiveWorkbook, sheetName & "solver_rhs" & constraint, RHSisMissing, isRangeRHS, rRHS, RHSRefersToFormula, RHSRefersToError, sRefersToRHS, valRHS
+4031              If RHSisMissing Then GoTo SkipCon
                   
-41180             If rel <> RelationLE And rel <> RelationEQ And rel <> RelationGE Then GoTo SkipCon
+4032              If rel <> RelationLE And rel <> RelationEQ And rel <> RelationGE Then GoTo SkipCon
 
-41190             If Not isRangeRHS Then
-41200                 If rel = RelationEQ Then AddConstraint rLHS, Nothing, Mid(Names(sheetName & "solver_rhs" & constraint), 2), "="
-41210                 If rel = RelationLE Then AddConstraint rLHS, Nothing, Mid(Names(sheetName & "solver_rhs" & constraint), 2), "<="
-41220                 If rel = RelationGE Then AddConstraint rLHS, Nothing, Mid(Names(sheetName & "solver_rhs" & constraint), 2), ">="
-41230             Else
-41240                 If rel = RelationEQ Then AddConstraint rLHS, rRHS, "", "="
-41250                 If rel = RelationLE Then AddConstraint rLHS, rRHS, "", "<="
-41260                 If rel = RelationGE Then AddConstraint rLHS, rRHS, "", ">="
-41270             End If
-41280         End If
+4033              If Not isRangeRHS Then
+4034                  If rel = RelationEQ Then AddConstraint rLHS, Nothing, Mid(Names(sheetName & "solver_rhs" & constraint), 2), "="
+4035                  If rel = RelationLE Then AddConstraint rLHS, Nothing, Mid(Names(sheetName & "solver_rhs" & constraint), 2), "<="
+4036                  If rel = RelationGE Then AddConstraint rLHS, Nothing, Mid(Names(sheetName & "solver_rhs" & constraint), 2), ">="
+4037              Else
+4038                  If rel = RelationEQ Then AddConstraint rLHS, rRHS, "", "="
+4039                  If rel = RelationLE Then AddConstraint rLHS, rRHS, "", "<="
+4040                  If rel = RelationGE Then AddConstraint rLHS, rRHS, "", ">="
+4041              End If
+4042          End If
 SkipCon:
-41290     Next constraint
+4043      Next constraint
           
           ' DUALS
-41300     Set Duals = Range(sheetName & "OpenSolver_Duals")
+4044      Set Duals = Range(sheetName & "OpenSolver_Duals")
           
 ExitSub:
 End Sub

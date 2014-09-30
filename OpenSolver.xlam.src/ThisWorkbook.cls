@@ -14,19 +14,19 @@ Option Explicit
 ' Provided by Paul Becker of Eclipse Engineering (www.eclipseeng.com)
 '====================================================================
 Private Sub Workbook_AddinInstall()
-10        AlterMenuItems (True)
+1         AlterMenuItems (True)
 End Sub
 
 Private Sub Workbook_AddinUninstall()
-20        AlterMenuItems (False)
+2         AlterMenuItems (False)
 End Sub
 
 Private Sub Workbook_BeforeClose(Cancel As Boolean)
-30        AlterMenuItems (False)
+3         AlterMenuItems (False)
 End Sub
 
 Private Sub Workbook_Open()
-40        AlterMenuItems (True)
+4         AlterMenuItems (True)
 End Sub
 '====================================================================
 ' Excel 2003 Menu Code
@@ -34,18 +34,18 @@ End Sub
 '====================================================================
 
 Sub AlterMenuItems(AddItems As Boolean)
-    Dim NeedToAdd As Boolean
-    NeedToAdd = Application.Version = "11.0"
+          Dim NeedToAdd As Boolean
+5         NeedToAdd = Application.Version = "11.0"
 #If Mac Then
-    NeedToAdd = True
+6         NeedToAdd = True
 #End If
-    If NeedToAdd Then
-        If AddItems Then
-            Call OpenSolverMain.AddMenuItems
-        Else
-            Call OpenSolverMain.DelMenuItems
-        End If
-    End If
+7         If NeedToAdd Then
+8             If AddItems Then
+9                 Call OpenSolverMain.AddMenuItems
+10            Else
+11                Call OpenSolverMain.DelMenuItems
+12            End If
+13        End If
 End Sub
 
 '====================================================================
@@ -54,31 +54,31 @@ End Sub
 '====================================================================
 Private Sub Workbook_BeforeSave(ByVal SaveAsUI As Boolean, Cancel As Boolean)
 
-    If MsgBox("Export VBA Code?", vbYesNo, "Before you go") = vbYes Then
-        ExportVBACode
-    End If
+14        If MsgBox("Export VBA Code?", vbYesNo, "Before you go") = vbYes Then
+15            ExportVBACode
+16        End If
 
 End Sub
 
 Public Sub ExportVBACode()
 
-    With New CodeExporter
-        Set .SourceWorkbook = ThisWorkbook
-        .ExportTo exportPath
-    End With
+17        With New CodeExporter
+18            Set .SourceWorkbook = ThisWorkbook
+19            .ExportTo exportPath
+20        End With
 
 End Sub
 
 Private Function exportPath() As String
 
-    exportPath = ThisWorkbook.FullName & ".src"
-    If Not FileOrDirExists(exportPath) Then
-        ' Modification JWD: We need late binding on FSO here to avoid a dependence on Microsoft Scripting Runtime
-        Dim fso As Object ' FileSystemObject
-        Set fso = CreateObject("Scripting.FileSystemObject")
-        fso.GetFolder(ThisWorkbook.Path).SubFolders.Add (ThisWorkbook.Name & ".src")
-    End If
-        
+21        exportPath = ThisWorkbook.FullName & ".src"
+22        If Not FileOrDirExists(exportPath) Then
+              ' Modification JWD: We need late binding on FSO here to avoid a dependence on Microsoft Scripting Runtime
+              Dim fso As Object ' FileSystemObject
+23            Set fso = CreateObject("Scripting.FileSystemObject")
+24            fso.GetFolder(ThisWorkbook.Path).SubFolders.Add (ThisWorkbook.Name & ".src")
+25        End If
+              
 
 End Function
 '====================================================================

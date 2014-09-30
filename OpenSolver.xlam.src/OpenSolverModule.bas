@@ -388,72 +388,72 @@ Private Const ERROR_BAD_FORMAT = 11&
 ' Modified by A Mason
 Function OSSolveSync(SolverPath As String, pathName As String, PrintingOptionString As String, logPath As String, Optional WindowStyle As Long, Optional WaitForCompletion As Boolean, Optional userCancelled As Boolean, Optional exeResult As Long) As Boolean
 #If Mac Then
-    Dim ret As Long
-    ret = system(SolverPath & pathName & PrintingOptionString & logPath)
-    If ret = 0 Then OSSolveSync = True
+          Dim ret As Long
+26        ret = system(SolverPath & pathName & PrintingOptionString & logPath)
+27        If ret = 0 Then OSSolveSync = True
 #Else
       'TODO: Optional for Boolean doesn't seem to work IsMissing is always false and value is false?
       ' Returns true if successful completion, false if escape was pressed
-50        OSSolveSync = False
-          userCancelled = False
-          exeResult = -1
+28        OSSolveSync = False
+29        userCancelled = False
+30        exeResult = -1
           Dim proc As PROCESS_INFORMATION
           Dim start As STARTUPINFO
           Dim ret As Long
           ' Initialize the STARTUPINFO structure:
-60        With start
-70            .cb = Len(start)
-80        If Not isMissing(WindowStyle) Then
-90            .dwFlags = STARTF_USESHOWWINDOW
-100           .wShowWindow = WindowStyle
-110       End If
-120       End With
+31        With start
+32            .cb = Len(start)
+33        If Not isMissing(WindowStyle) Then
+34            .dwFlags = STARTF_USESHOWWINDOW
+35            .wShowWindow = WindowStyle
+36        End If
+37        End With
           ' Start the shelled application:
-130       ret& = CreateProcessA(0&, SolverPath & pathName & PrintingOptionString & logPath, 0&, 0&, 1&, _
+38        ret& = CreateProcessA(0&, SolverPath & pathName & PrintingOptionString & logPath, 0&, 0&, 1&, _
                                 NORMAL_PRIORITY_CLASS, 0&, 0&, start, proc)
-140       If ret& = 0 Then
-              pathName = SolverPath & " " & pathName
-150           Err.Raise Number:=OpenSolver_CBCExecutionError, Source:="OpenSolver", _
+39        If ret& = 0 Then
+40            pathName = SolverPath & " " & pathName
+41            Err.Raise Number:=OpenSolver_CBCExecutionError, Source:="OpenSolver", _
               Description:="Unable to run the external program: " & pathName & ". " & vbCrLf & vbCrLf _
               & "Error " & Err.LastDllError & ": " & DLLErrorText(Err.LastDllError)
-160       End If
-170       If Not isMissing(WaitForCompletion) Then
-180           If Not WaitForCompletion Then GoTo ExitSuccessfully
-190       End If
+42        End If
+43        If Not isMissing(WaitForCompletion) Then
+44            If Not WaitForCompletion Then GoTo ExitSuccessfully
+45        End If
           
           ' Wait for the shelled application to finish:
           ' Allow the user to cancel the run. Pressing ESC seems to be well detected with this loop structure
           ' if the new process is hidden; if it is just minimized, then Escape does not seem to be well detected.
           'TODO: Put up a modal dialog for long runs....
-200       On Error GoTo errorHandler
-210       Do
+46        On Error GoTo errorHandler
+47        Do
               ' ret& = WaitForSingleObject(proc.hProcess, INFINITE)
-220           ret& = WaitForSingleObject(proc.hProcess, 50) ' Wait for up to 50 milliseconds
+48            ret& = WaitForSingleObject(proc.hProcess, 50) ' Wait for up to 50 milliseconds
               ' Application.CheckAbort  ' We don't need this as the escape key already causes any error
-230       Loop Until ret& <> 258
+49        Loop Until ret& <> 258
 
           ' Get the return code for the executable; http://msdn.microsoft.com/en-us/library/windows/desktop/ms683189%28v=vs.85%29.aspx
           Dim lExitCode As Long
-231       If GetExitCodeProcess(proc.hProcess, lExitCode) = 0 Then GoTo DLLErrorHandler
-232       If Not isMissing(exeResult) Then
-233           exeResult = lExitCode
-234       End If
+50        If GetExitCodeProcess(proc.hProcess, lExitCode) = 0 Then GoTo DLLErrorHandler
+51        If Not isMissing(exeResult) Then
+52            exeResult = lExitCode
+53        End If
 
 ExitSuccessfully:
-240       OSSolveSync = True
+54        OSSolveSync = True
           
 ExitSub:
-250       On Error Resume Next
-260       ret& = CloseHandle(proc.hProcess)
-270       Exit Function
+55        On Error Resume Next
+56        ret& = CloseHandle(proc.hProcess)
+57        Exit Function
           
 errorHandler:
           Dim ErrorNumber As Long, ErrorDescription As String, ErrorSource As String
-280       ErrorNumber = Err.Number
-290       ErrorDescription = Err.Description & IIf(Erl = 0, "", " (at line " & Erl & ")")
-300       ErrorSource = Err.Source
+58        ErrorNumber = Err.Number
+59        ErrorDescription = Err.Description & IIf(Erl = 0, "", " (at line " & Erl & ")")
+60        ErrorSource = Err.Source
           
-310       If Err.Number = 18 Then
+61        If Err.Number = 18 Then
               ' Firstly show the CBC
               ' m_dwSirenProcessID = proc.dwProcessID;
               ' hWnd = GetWindowHandle(m_dwSirenProcessID); enumerates windows, using GetWindowThreadProcessId
@@ -463,37 +463,37 @@ errorHandler:
 
               Dim f As UserForm
 #If Mac Then
-              Set f = New MacUserFormInterrupt
+62            Set f = New MacUserFormInterrupt
 #Else
-320           Set f = New UserFormInterrupt
+63            Set f = New UserFormInterrupt
 #End If
-330           Application.Cursor = xlDefault
-340           f.Show
+64            Application.Cursor = xlDefault
+65            f.Show
               'If msgbox("You have pressed the Escape key. Do you wish to cancel?", _
                          vbQuestion + vbYesNo + vbDefaultButton1, _
                          "OpenSolver: User Interrupt Occured...") = vbNo Then
               Dim StopSolving As Boolean
-350           StopSolving = f.Tag = vbCancel
-360           Unload f
-370           Application.Cursor = xlWait
-380           If Not StopSolving Then
-390               Resume 'continue on from where error occured
-400           Else
+66            StopSolving = f.Tag = vbCancel
+67            Unload f
+68            Application.Cursor = xlWait
+69            If Not StopSolving Then
+70                Resume 'continue on from where error occured
+71            Else
                   ' Kill CBC (if it is still running?)
-410               TerminateProcess proc.hProcess, 0   ' Give an exit code of 0?
-415               userCancelled = True
-420               Resume ExitSub
-430           End If
-440       End If
+72                TerminateProcess proc.hProcess, 0   ' Give an exit code of 0?
+73                userCancelled = True
+74                Resume ExitSub
+75            End If
+76        End If
           
-450       On Error Resume Next
-460       ret& = CloseHandle(proc.hProcess)
-470       Err.Raise ErrorNumber, "OpenSolver OSSolveSync", ErrorDescription
-          Exit Function
+77        On Error Resume Next
+78        ret& = CloseHandle(proc.hProcess)
+79        Err.Raise ErrorNumber, "OpenSolver OSSolveSync", ErrorDescription
+80        Exit Function
 DLLErrorHandler:
-471       On Error Resume Next
-472       ret& = CloseHandle(proc.hProcess)
-          Err.Raise Err.LastDllError, "OpenSolver OSSolverSync", DLLErrorText(Err.LastDllError) & IIf(Erl = 0, "", " (at line " & Erl & ")")
+81        On Error Resume Next
+82        ret& = CloseHandle(proc.hProcess)
+83        Err.Raise Err.LastDllError, "OpenSolver OSSolverSync", DLLErrorText(Err.LastDllError) & IIf(Erl = 0, "", " (at line " & Erl & ")")
 #End If
 End Function
 '***************** Code End Terry Kreft ****************
@@ -507,88 +507,88 @@ Public Function DLLErrorText(ByVal lLastDLLError As Long) As String
           Const FORMAT_MESSAGE_FROM_SYSTEM = &H1000, FORMAT_MESSAGE_IGNORE_INSERTS = &H200
           Const FORMAT_MESSAGE_MAX_WIDTH_MASK = &HFF
 
-600       lCount = FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM Or FORMAT_MESSAGE_IGNORE_INSERTS, 0, lLastDLLError, 0&, sBuff, Len(sBuff), ByVal 0)
-610       If lCount Then
-620           DLLErrorText = left$(sBuff, lCount - 2) ' Remove line feeds
-630       End If
+84        lCount = FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM Or FORMAT_MESSAGE_IGNORE_INSERTS, 0, lLastDLLError, 0&, sBuff, Len(sBuff), ByVal 0)
+85        If lCount Then
+86            DLLErrorText = left$(sBuff, lCount - 2) ' Remove line feeds
+87        End If
 
 End Function
 
 
 Function GetTempFolder() As String
 
-    If TempFolderPathCached = "" Then
+88        If TempFolderPathCached = "" Then
 #If Mac Then
-        TempFolderPathCached = MacScript("return (path to temporary items) as string")
+89      TempFolderPathCached = MacScript("return (path to temporary items) as string")
 #Else
           'Get Temp Folder
           ' See http://www.pcreview.co.uk/forums/thread-934893.php
           Dim fctRet As Long
-640       TempFolderPathCached = String$(255, 0)
-650       fctRet = GetTempPath(255, TempFolderPathCached)
-660       If fctRet <> 0 Then
-670           TempFolderPathCached = left(TempFolderPathCached, fctRet)
-680           If right(TempFolderPathCached, 1) <> "\" Then TempFolderPathCached = TempFolderPathCached & "\"
-690       Else
-700           TempFolderPathCached = ""
-710       End If
+90        TempFolderPathCached = String$(255, 0)
+91        fctRet = GetTempPath(255, TempFolderPathCached)
+92        If fctRet <> 0 Then
+93            TempFolderPathCached = left(TempFolderPathCached, fctRet)
+94            If right(TempFolderPathCached, 1) <> "\" Then TempFolderPathCached = TempFolderPathCached & "\"
+95        Else
+96            TempFolderPathCached = ""
+97        End If
 #End If
         '  NEW CODE 2013-01-22 - Andres Sommerhoff (ASL) - Country: Chile
         '  Use Environment Var to have the option to a different Temp path for Opensolver.
         '  To allow have independent configuration in different computers, Environment Var
         '  is used instead of saving the option in the excel.
         '  This also work as workaround to avoid problem with spaces in the temp path.
-720       If Environ("OpenSolverTempPath") <> "" Then
-730             TempFolderPathCached = Environ("OpenSolverTempPath")
-740       End If
+98        If Environ("OpenSolverTempPath") <> "" Then
+99              TempFolderPathCached = Environ("OpenSolverTempPath")
+100       End If
         '  ASL END NEW CODE
 
-    End If
-    GetTempFolder = TempFolderPathCached
-    Exit Function
+101       End If
+102       GetTempFolder = TempFolderPathCached
+103       Exit Function
 End Function
 
 Function GetTempFilePath(FileName As String) As String
-    GetTempFilePath = GetTempFolder & FileName
+104       GetTempFilePath = GetTempFolder & FileName
 End Function
 
 Function FileOrDirExists(pathName As String) As Boolean
-     ' from http://www.vbaexpress.com/kb/getarticle.php?kb_id=559
-     'Macro Purpose: Function returns TRUE if the specified file
-     '               or folder exists, false if not.
-     'PathName     : Supports Windows mapped drives or UNC
-     '             : Supports Macintosh paths
-     'File usage   : Provide full file path and extension
-     'Folder usage : Provide full folder path
-     '               Accepts with/without trailing "\" (Windows)
-     '               Accepts with/without trailing ":" (Macintosh)
-     
-    Dim iTemp As Long
-     
-     'Ignore errors to allow for error evaluation
-    On Error Resume Next
-    iTemp = GetAttr(pathName)
-     
-     'Check if error exists and set response appropriately
-    Select Case Err.Number
-    Case Is = 0
-        FileOrDirExists = True
-    Case Else
-        FileOrDirExists = False
-    End Select
-     
-     'Resume error checking
-    On Error GoTo 0
+           ' from http://www.vbaexpress.com/kb/getarticle.php?kb_id=559
+           'Macro Purpose: Function returns TRUE if the specified file
+           '               or folder exists, false if not.
+           'PathName     : Supports Windows mapped drives or UNC
+           '             : Supports Macintosh paths
+           'File usage   : Provide full file path and extension
+           'Folder usage : Provide full folder path
+           '               Accepts with/without trailing "\" (Windows)
+           '               Accepts with/without trailing ":" (Macintosh)
+           
+          Dim iTemp As Long
+           
+           'Ignore errors to allow for error evaluation
+105       On Error Resume Next
+106       iTemp = GetAttr(pathName)
+           
+           'Check if error exists and set response appropriately
+107       Select Case Err.Number
+          Case Is = 0
+108           FileOrDirExists = True
+109       Case Else
+110           FileOrDirExists = False
+111       End Select
+           
+           'Resume error checking
+112       On Error GoTo 0
 End Function
 
 Function GetParamRangeName() As String
-790       GetParamRangeName = ParamRangeName
+113       GetParamRangeName = ParamRangeName
 End Function
 
 Function JoinPaths(Path1 As String, Path2 As String) As String
-    JoinPaths = Path1
-    If right(" " & JoinPaths, 1) <> PathDelimeter Then JoinPaths = JoinPaths & PathDelimeter
-    JoinPaths = JoinPaths & Path2
+114       JoinPaths = Path1
+115       If right(" " & JoinPaths, 1) <> PathDelimeter Then JoinPaths = JoinPaths & PathDelimeter
+116       JoinPaths = JoinPaths & Path2
 End Function
 
 'Function GetNameRefersTo(TheName As String) As String
@@ -628,34 +628,34 @@ Function GetNameValueIfExists(w As Workbook, theName As String, ByRef value As S
           Dim r As Range
           Dim NM As Name
           
-800       On Error Resume Next
-810       Set NM = w.Names(theName)
-820       If Err.Number <> 0 Then ' Name does not exist
-830           value = ""
-840           GetNameValueIfExists = False
-850           Exit Function
-860       End If
+117       On Error Resume Next
+118       Set NM = w.Names(theName)
+119       If Err.Number <> 0 Then ' Name does not exist
+120           value = ""
+121           GetNameValueIfExists = False
+122           Exit Function
+123       End If
           
-870       On Error Resume Next
-880       Set r = NM.RefersToRange
-890       If Err.Number = 0 Then
-900           HasRef = True
-910       Else
-920           HasRef = False
-930       End If
-940       If HasRef = True Then
-950           value = r.value
-960       Else
-970           s = NM.RefersTo
-980           If StrComp(Mid(s, 2, 1), Chr(34), vbBinaryCompare) = 0 Then
+124       On Error Resume Next
+125       Set r = NM.RefersToRange
+126       If Err.Number = 0 Then
+127           HasRef = True
+128       Else
+129           HasRef = False
+130       End If
+131       If HasRef = True Then
+132           value = r.value
+133       Else
+134           s = NM.RefersTo
+135           If StrComp(Mid(s, 2, 1), Chr(34), vbBinaryCompare) = 0 Then
                   ' text constant
-990               value = Mid(s, 3, Len(s) - 3)
-1000          Else
+136               value = Mid(s, 3, Len(s) - 3)
+137           Else
                   ' numeric contant (AJM: or Formula)
-1010              value = Mid(s, 2)
-1020          End If
-1030      End If
-1040      GetNameValueIfExists = True
+138               value = Mid(s, 2)
+139           End If
+140       End If
+141       GetNameValueIfExists = True
 End Function
 
 'Function NamedRangeExists(Name As String) As Boolean
@@ -669,34 +669,34 @@ Function NameExistsInWorkbook(book As Workbook, Name As String) As Boolean
           ' WARNING: If the name has a sheet prefix, eg Sheet1!OpenSolverCBCParameters, then this will NOT find the range
           ' if the range has been defined globally (which happens when the user defines a name if that name exists only once)
           Dim o As Object
-1050      On Error Resume Next
-1060      Set o = book.Names(Name)
-1070      NameExistsInWorkbook = (Err.Number = 0)
+142       On Error Resume Next
+143       Set o = book.Names(Name)
+144       NameExistsInWorkbook = (Err.Number = 0)
 End Function
 
 Function GetNameRefersToIfExists(book As Workbook, Name As String, RefersTo As String) As Boolean
           ' WARNING: If the name has a sheet prefix, eg Sheet1!OpenSolverCBCParameters, then this will NOT find the range
           ' if the range has been defined globally (which happens when the user defines a name if that name exists only once)
-1080      On Error Resume Next
-1090      RefersTo = book.Names(Name).RefersTo
-1100      GetNameRefersToIfExists = (Err.Number = 0)
+145       On Error Resume Next
+146       RefersTo = book.Names(Name).RefersTo
+147       GetNameRefersToIfExists = (Err.Number = 0)
 End Function
 
 Function GetNamedRangeIfExists(book As Workbook, Name As String, r As Range) As Boolean
           ' WARNING: If the name has a sheet prefix, eg Sheet1!OpenSolverCBCParameters, then this will NOT find the range
           ' if the range has been defined globally (which happens when the user defines a name if that name exists only once)
-1110      On Error Resume Next
-1120      Set r = book.Names(Name).RefersToRange
-1130      GetNamedRangeIfExists = (Err.Number = 0)
+148       On Error Resume Next
+149       Set r = book.Names(Name).RefersToRange
+150       GetNamedRangeIfExists = (Err.Number = 0)
 End Function
 
 Function GetNamedRangeIfExistsOnSheet(sheet As Worksheet, Name As String, r As Range) As Boolean
           ' This finds a named range (either local or global) if it exists, and if it refers to the specified sheet.
           ' It will not find a globally defined name
           ' GetNamedRangeIfExistsOnSheet = False
-1140      On Error Resume Next
-1150      Set r = sheet.Range(Name)   ' This will return either a local or globally defined named range, that must refer to the specified sheet. OTherwise there is an error
-1160      GetNamedRangeIfExistsOnSheet = Err.Number = 0
+151       On Error Resume Next
+152       Set r = sheet.Range(Name)   ' This will return either a local or globally defined named range, that must refer to the specified sheet. OTherwise there is an error
+153       GetNamedRangeIfExistsOnSheet = Err.Number = 0
           ' If r.Worksheet.Name <> Sheet.Name Then Exit Function
           ' GetNamedRangeIfExistsOnSheet = True
 End Function
@@ -704,61 +704,61 @@ End Function
 Function GetNamedNumericValueIfExists(book As Workbook, Name As String, value As Double) As Boolean
           ' Get a named range that must contain a double value or the form "=12.34" or "=12" etc, with no spaces
           Dim isRange As Boolean, r As Range, RefersToFormula As Boolean, RangeRefersToError As Boolean, RefersTo As String, isMissing As Boolean
-1170      GetNameAsValueOrRange book, Name, isMissing, isRange, r, RefersToFormula, RangeRefersToError, RefersTo, value
-1180      GetNamedNumericValueIfExists = Not isMissing And Not isRange And Not RefersToFormula And Not RangeRefersToError
+154       GetNameAsValueOrRange book, Name, isMissing, isRange, r, RefersToFormula, RangeRefersToError, RefersTo, value
+155       GetNamedNumericValueIfExists = Not isMissing And Not isRange And Not RefersToFormula And Not RangeRefersToError
 End Function
 
 Function GetNamedIntegerIfExists(book As Workbook, Name As String, IntegerValue As Long) As Boolean
           ' Get a named range that must contain an integer value
           Dim value As Double
-1190      If GetNamedNumericValueIfExists(book, Name, value) Then
-1200          IntegerValue = Int(value)
-1210          GetNamedIntegerIfExists = IntegerValue = value
-1220      Else
-1230          GetNamedIntegerIfExists = False
-1240      End If
+156       If GetNamedNumericValueIfExists(book, Name, value) Then
+157           IntegerValue = Int(value)
+158           GetNamedIntegerIfExists = IntegerValue = value
+159       Else
+160           GetNamedIntegerIfExists = False
+161       End If
 End Function
 
 Function GetNamedStringIfExists(book As Workbook, Name As String, value As String) As Boolean
           ' Get a named range that must contain a string value (probably with quotes)
-1250      If GetNameRefersToIfExists(book, Name, value) Then
-1260          If left(value, 2) = "=""" Then ' Remove delimiters and equals in: ="...."
-1270              value = Mid(value, 3, Len(value) - 3)
-1280          ElseIf left(value, 1) = "=" Then
-1290              value = Mid(value, 2)
-1300          End If
-1310          GetNamedStringIfExists = True
-1320      Else
-1330          GetNamedStringIfExists = False
-1340      End If
+162       If GetNameRefersToIfExists(book, Name, value) Then
+163           If left(value, 2) = "=""" Then ' Remove delimiters and equals in: ="...."
+164               value = Mid(value, 3, Len(value) - 3)
+165           ElseIf left(value, 1) = "=" Then
+166               value = Mid(value, 2)
+167           End If
+168           GetNamedStringIfExists = True
+169       Else
+170           GetNamedStringIfExists = False
+171       End If
 End Function
 
 Sub GetNameAsValueOrRange(book As Workbook, theName As String, isMissing As Boolean, isRange As Boolean, r As Range, RefersToFormula As Boolean, RangeRefersToError As Boolean, RefersTo As String, value As Double)
           ' See http://www.cpearson.com/excel/DefinedNames.aspx, but see below for internationalisation problems with this code
-1350      RangeRefersToError = False
-1360      RefersToFormula = False
+172       RangeRefersToError = False
+173       RefersToFormula = False
           ' Dim r As Range
           Dim NM As Name
-1370      On Error Resume Next
-1380      Set NM = book.Names(theName)
-1390      If Err.Number <> 0 Then
-1400          isMissing = True
-1410          Exit Sub
-1420      End If
-1430      isMissing = False
-1440      On Error Resume Next
-1450      Set r = NM.RefersToRange
-1460      If Err.Number = 0 Then
-1470          isRange = True
-1480      Else
-1490          isRange = False
-1500      End If
-1510      If Not isRange Then
+174       On Error Resume Next
+175       Set NM = book.Names(theName)
+176       If Err.Number <> 0 Then
+177           isMissing = True
+178           Exit Sub
+179       End If
+180       isMissing = False
+181       On Error Resume Next
+182       Set r = NM.RefersToRange
+183       If Err.Number = 0 Then
+184           isRange = True
+185       Else
+186           isRange = False
+187       End If
+188       If Not isRange Then
               ' String will be of form: "=5", or "=Sheet1!#REF!" or "=Test4!$M$11/4+Test4!$A$3"
-1520          RefersTo = Mid(NM.RefersTo, 2)
-1530          If right(RefersTo, 6) = "!#REF!" Then
-1540              RangeRefersToError = True
-1550          Else
+189           RefersTo = Mid(NM.RefersTo, 2)
+190           If right(RefersTo, 6) = "!#REF!" Then
+191               RangeRefersToError = True
+192           Else
               ' If StrComp(Mid(S, 2, 1), Chr(34), vbBinaryCompare) = 0 Then
                   ' text constant
               '    S = Mid(S, 3, Len(S) - 3)
@@ -771,13 +771,13 @@ Sub GetNameAsValueOrRange(book As Workbook, theName As String, isMissing As Bool
                   ' End If
                   
                   ' Test for a numeric constant, in US format
-1560              If IsAmericanNumber(RefersTo) Then
-1570                  value = Val(RefersTo)   ' Force a conversion to a number using Val which uses US settings (no regionalisation)
-1580              Else
-1590                  RefersToFormula = True
-1600              End If
-1610          End If
-1620      End If
+193               If IsAmericanNumber(RefersTo) Then
+194                   value = Val(RefersTo)   ' Force a conversion to a number using Val which uses US settings (no regionalisation)
+195               Else
+196                   RefersToFormula = True
+197               End If
+198           End If
+199       End If
 End Sub
 
 Function GetDisplayAddress(r As Range, Optional showRangeName As Boolean = False) As String
@@ -788,124 +788,124 @@ Function GetDisplayAddress(r As Range, Optional showRangeName As Boolean = False
               Dim i As Long
           
               'Find if the range has a defined name
-1630          If r.Worksheet.Name = ActiveSheet.Name Then
-1640              GetDisplayAddress = r.Address
-1650              If showRangeName Then
-1660                  Set Rname = SearchRangeInVisibleNames(r)
-1670                  If Not Rname Is Nothing Then
-1680                      GetDisplayAddress = StripWorksheetNameAndDollars(Rname.Name, ActiveSheet)
-1690                  End If
-1700              End If
-1710              Exit Function
-1720          End If
+200           If r.Worksheet.Name = ActiveSheet.Name Then
+201               GetDisplayAddress = r.Address
+202               If showRangeName Then
+203                   Set Rname = SearchRangeInVisibleNames(r)
+204                   If Not Rname Is Nothing Then
+205                       GetDisplayAddress = StripWorksheetNameAndDollars(Rname.Name, ActiveSheet)
+206                   End If
+207               End If
+208               Exit Function
+209           End If
 
               ' We first attempt converting without quoting the worksheet name
-1730          On Error GoTo Try2
-1740          Set R2 = r.Areas(1)
-1750          s = R2.Worksheet.Name & "!" & R2.Address
-1760          If showRangeName Then
-1770              Set Rname = SearchRangeInVisibleNames(R2)
-1780              If Not Rname Is Nothing Then
-1790                  s = R2.Worksheet.Name & "!" & StripWorksheetNameAndDollars(Rname.Name, R2.Worksheet)
-1800              End If
-1810          End If
+210           On Error GoTo Try2
+211           Set R2 = r.Areas(1)
+212           s = R2.Worksheet.Name & "!" & R2.Address
+213           If showRangeName Then
+214               Set Rname = SearchRangeInVisibleNames(R2)
+215               If Not Rname Is Nothing Then
+216                   s = R2.Worksheet.Name & "!" & StripWorksheetNameAndDollars(Rname.Name, R2.Worksheet)
+217               End If
+218           End If
 
               Dim pre As String
               ' Conversion must also work with multiple areas, eg: A1,B5 converts to Sheet1!A1,Sheet1!B5
-1820          For i = 2 To r.Areas.Count
-1830              Set R2 = r.Areas(i)
-1840              pre = R2.Worksheet.Name & "!" & R2.Address
-1850              If showRangeName Then
-1860                  Set Rname = SearchRangeInVisibleNames(R2)
-1870                  If Not Rname Is Nothing Then
-1880                      pre = R2.Worksheet.Name & "!" & StripWorksheetNameAndDollars(Rname.Name, R2.Worksheet)
-1890                  End If
-1900              End If
-1910              s = s & "," & pre
-1920          Next i
-1930          Set R2 = Range(s) ' Check it has worked!
-1940          GetDisplayAddress = s
-1950          Exit Function
+219           For i = 2 To r.Areas.Count
+220               Set R2 = r.Areas(i)
+221               pre = R2.Worksheet.Name & "!" & R2.Address
+222               If showRangeName Then
+223                   Set Rname = SearchRangeInVisibleNames(R2)
+224                   If Not Rname Is Nothing Then
+225                       pre = R2.Worksheet.Name & "!" & StripWorksheetNameAndDollars(Rname.Name, R2.Worksheet)
+226                   End If
+227               End If
+228               s = s & "," & pre
+229           Next i
+230           Set R2 = Range(s) ' Check it has worked!
+231           GetDisplayAddress = s
+232           Exit Function
 
 Try2:
               ' We now try with quotes around the worksheet name
               ' TODO: This can probably be done more efficiently!
               ' Note that we need to double any single quotes in the name to double quotes in the process (2012.10.29)
-1960          On Error GoTo 0 ' Turn back on error handling; a failure now shoudl throw an error
-1970          Set R2 = r.Areas(1)
-1980          s = "'" & Replace(R2.Worksheet.Name, "'", "''") & "'!" & R2.Address
-1990          If showRangeName Then
-2000              Set Rname = SearchRangeInVisibleNames(R2)
-2010              If Not Rname Is Nothing Then
-2020                  s = "'" & Replace(R2.Worksheet.Name, "'", "''") & "'!" & StripWorksheetNameAndDollars(Rname.Name, R2.Worksheet)
-2030              End If
-2040          End If
+233           On Error GoTo 0 ' Turn back on error handling; a failure now shoudl throw an error
+234           Set R2 = r.Areas(1)
+235           s = "'" & Replace(R2.Worksheet.Name, "'", "''") & "'!" & R2.Address
+236           If showRangeName Then
+237               Set Rname = SearchRangeInVisibleNames(R2)
+238               If Not Rname Is Nothing Then
+239                   s = "'" & Replace(R2.Worksheet.Name, "'", "''") & "'!" & StripWorksheetNameAndDollars(Rname.Name, R2.Worksheet)
+240               End If
+241           End If
               ' Conversion must also work with multiple areas, eg: A1,B5 converts to Sheet1!A1,Sheet1!B5
-2050          For i = 2 To r.Areas.Count
-2060              Set R2 = r.Areas(i)
-2070              pre = "'" & Replace(R2.Worksheet.Name, "'", "''") & "'!" & R2.Address
-2080              If showRangeName Then
-2090                  Set Rname = SearchRangeInVisibleNames(R2)
-2100                  If Not Rname Is Nothing Then
-2110                      pre = "'" & Replace(R2.Worksheet.Name, "'", "''") & "'!" & StripWorksheetNameAndDollars(Rname.Name, R2.Worksheet)
-2120                  End If
-2130              End If
-2140              s = s & "," & pre
-2150          Next i
-2160          Set R2 = Range(s) ' Check it has worked!
+242           For i = 2 To r.Areas.Count
+243               Set R2 = r.Areas(i)
+244               pre = "'" & Replace(R2.Worksheet.Name, "'", "''") & "'!" & R2.Address
+245               If showRangeName Then
+246                   Set Rname = SearchRangeInVisibleNames(R2)
+247                   If Not Rname Is Nothing Then
+248                       pre = "'" & Replace(R2.Worksheet.Name, "'", "''") & "'!" & StripWorksheetNameAndDollars(Rname.Name, R2.Worksheet)
+249                   End If
+250               End If
+251               s = s & "," & pre
+252           Next i
+253           Set R2 = Range(s) ' Check it has worked!
               'Show the proper sheet name without the doubled quotes
               's = Replace(s, "''", "'")
-2170          GetDisplayAddress = s
-2180          Exit Function
+254           GetDisplayAddress = s
+255           Exit Function
 End Function
 
 Function GetDisplayAddressInCurrentLocale(r As Range) As String
       ' Get a name to display for this range which includes a sheet name if this range is not on the active sheet
           Dim s As String, R2 As Range
-2190      If r.Worksheet.Name = ActiveSheet.Name Then
-2200          GetDisplayAddressInCurrentLocale = r.AddressLocal
-2210          Exit Function
-2220      End If
-2230      On Error GoTo Try2
+256       If r.Worksheet.Name = ActiveSheet.Name Then
+257           GetDisplayAddressInCurrentLocale = r.AddressLocal
+258           Exit Function
+259       End If
+260       On Error GoTo Try2
           Dim i As Long
-2240      Set R2 = r.Areas(1)
-2250      s = R2.Worksheet.Name & "!" & R2.AddressLocal
+261       Set R2 = r.Areas(1)
+262       s = R2.Worksheet.Name & "!" & R2.AddressLocal
           ' Conversion must also work with multiple areas, eg: A1,B5 converts to Sheet1!A1,Sheet1!B5
-2260      For i = 2 To r.Areas.Count
-2270         Set R2 = r.Areas(i)
-2280         s = s & Application.International(xlListSeparator) & R2.Worksheet.Name & "!" & R2.AddressLocal
-2290      Next i
-2300      Set R2 = Range(ConvertFromCurrentLocale(s)) ' Check it has worked!
-2310      GetDisplayAddressInCurrentLocale = s
-2320      Exit Function
+263       For i = 2 To r.Areas.Count
+264          Set R2 = r.Areas(i)
+265          s = s & Application.International(xlListSeparator) & R2.Worksheet.Name & "!" & R2.AddressLocal
+266       Next i
+267       Set R2 = Range(ConvertFromCurrentLocale(s)) ' Check it has worked!
+268       GetDisplayAddressInCurrentLocale = s
+269       Exit Function
 Try2:
-2330      On Error GoTo 0 ' Turn back on error handling; a failure now should throw an error
-2340      Set R2 = r.Areas(1)
-2350      s = "'" & Replace(R2.Worksheet.Name, "'", "''") & "'!" & R2.Address ' NB: We jhave to double any single quotes when we quote the name
+270       On Error GoTo 0 ' Turn back on error handling; a failure now should throw an error
+271       Set R2 = r.Areas(1)
+272       s = "'" & Replace(R2.Worksheet.Name, "'", "''") & "'!" & R2.Address ' NB: We jhave to double any single quotes when we quote the name
           ' Conversion must also work with multiple areas, eg: A1,B5 converts to Sheet1!A1,Sheet1!B5
-2360      For i = 2 To r.Areas.Count
-2370         Set R2 = r.Areas(i)
-2380         s = s & Application.International(xlListSeparator) & "'" & Replace(R2.Worksheet.Name, "'", "''") & "'!" & R2.AddressLocal
-2390      Next i
-2400      Set R2 = Range(ConvertFromCurrentLocale(s)) ' Check it has worked!
-2410      GetDisplayAddressInCurrentLocale = s
-2420      Exit Function
+273       For i = 2 To r.Areas.Count
+274          Set R2 = r.Areas(i)
+275          s = s & Application.International(xlListSeparator) & "'" & Replace(R2.Worksheet.Name, "'", "''") & "'!" & R2.AddressLocal
+276       Next i
+277       Set R2 = Range(ConvertFromCurrentLocale(s)) ' Check it has worked!
+278       GetDisplayAddressInCurrentLocale = s
+279       Exit Function
 End Function
 
 Function RemoveActiveSheetNameFromString(s As String) As String
           ' Try the active sheet name in quotes first
           Dim sheetName As String
-2430      sheetName = "'" & Replace(ActiveSheet.Name, "'", "''") & "'!" ' We double any single quotes when we quote the name
-2440      If InStr(s, sheetName) Then
-2450          RemoveActiveSheetNameFromString = Replace(s, sheetName, "")
-2460          Exit Function
-2470      End If
-2480      sheetName = ActiveSheet.Name & "!"
-2490      If InStr(s, sheetName) Then
-2500          RemoveActiveSheetNameFromString = Replace(s, sheetName, "")
-2510          Exit Function
-2520      End If
-2530      RemoveActiveSheetNameFromString = s
+280       sheetName = "'" & Replace(ActiveSheet.Name, "'", "''") & "'!" ' We double any single quotes when we quote the name
+281       If InStr(s, sheetName) Then
+282           RemoveActiveSheetNameFromString = Replace(s, sheetName, "")
+283           Exit Function
+284       End If
+285       sheetName = ActiveSheet.Name & "!"
+286       If InStr(s, sheetName) Then
+287           RemoveActiveSheetNameFromString = Replace(s, sheetName, "")
+288           Exit Function
+289       End If
+290       RemoveActiveSheetNameFromString = s
 End Function
 
 Function ConvertFromCurrentLocale(ByVal s As String) As String
@@ -915,33 +915,33 @@ Function ConvertFromCurrentLocale(ByVal s As String) As String
           ' This works by putting the expression into cell A1 on Sheet1 of the add-in!
           ' We turn off calculation & hide alerts as we don't want Excel popping up dialogs asking for references to other sheets
           Dim oldCalculation As Long
-2540      oldCalculation = Application.Calculation
+291       oldCalculation = Application.Calculation
           Dim oldDisplayAlerts As Boolean
-2550      oldDisplayAlerts = Application.DisplayAlerts
-2560      On Error GoTo errorHandler
-2570      s = Trim(s)
+292       oldDisplayAlerts = Application.DisplayAlerts
+293       On Error GoTo errorHandler
+294       s = Trim(s)
           Dim equalsAdded As Boolean
-2580      If left(s, 1) <> "=" Then
-2590          s = "=" & s
-2600          equalsAdded = True
-2610      End If
-2620      Application.Calculation = xlCalculationManual
-2630      Application.DisplayAlerts = False
-2640      ThisWorkbook.Sheets(1).Cells(1, 1).FormulaLocal = s
-2650      s = ThisWorkbook.Sheets(1).Cells(1, 1).Formula
-2660      If equalsAdded Then
-2670          If left(s, 1) = "=" Then s = Mid(s, 2)
-2680      End If
-2690      ConvertFromCurrentLocale = s
-2700      ThisWorkbook.Sheets(1).Cells(1, 1).Clear
-2710      Application.Calculation = oldCalculation
-2720      Application.DisplayAlerts = oldDisplayAlerts
-2730      Exit Function
+295       If left(s, 1) <> "=" Then
+296           s = "=" & s
+297           equalsAdded = True
+298       End If
+299       Application.Calculation = xlCalculationManual
+300       Application.DisplayAlerts = False
+301       ThisWorkbook.Sheets(1).Cells(1, 1).FormulaLocal = s
+302       s = ThisWorkbook.Sheets(1).Cells(1, 1).Formula
+303       If equalsAdded Then
+304           If left(s, 1) = "=" Then s = Mid(s, 2)
+305       End If
+306       ConvertFromCurrentLocale = s
+307       ThisWorkbook.Sheets(1).Cells(1, 1).Clear
+308       Application.Calculation = oldCalculation
+309       Application.DisplayAlerts = oldDisplayAlerts
+310       Exit Function
 errorHandler:
-2740      ThisWorkbook.Sheets(1).Cells(1, 1).Clear
-2750      Application.Calculation = oldCalculation
-2760      Application.DisplayAlerts = oldDisplayAlerts
-2770      ConvertFromCurrentLocale = ""
+311       ThisWorkbook.Sheets(1).Cells(1, 1).Clear
+312       Application.Calculation = oldCalculation
+313       Application.DisplayAlerts = oldDisplayAlerts
+314       ConvertFromCurrentLocale = ""
 End Function
 
 Function ConvertToCurrentLocale(ByVal s As String) As String
@@ -951,42 +951,42 @@ Function ConvertToCurrentLocale(ByVal s As String) As String
           ' This works by putting the expression into cell A1 on Sheet1 of the add-in; crude but seems to work
           ' We turn off calculation & hide alerts as we don't want Excel popping up dialogs asking for references to other sheets
           Dim oldCalculation As Long
-2780      oldCalculation = Application.Calculation
+315       oldCalculation = Application.Calculation
           Dim oldDisplayAlerts As Boolean
-2790      oldDisplayAlerts = Application.DisplayAlerts
-2800      On Error GoTo errorHandler
-2810      s = Trim(s)
+316       oldDisplayAlerts = Application.DisplayAlerts
+317       On Error GoTo errorHandler
+318       s = Trim(s)
           Dim equalsAdded As Boolean
-2820      If left(s, 1) <> "=" Then
-2830          s = "=" & s
-2840          equalsAdded = True
-2850      End If
-2860      Application.Calculation = xlCalculationManual
-2870      Application.DisplayAlerts = False
-2880      ThisWorkbook.Sheets(1).Cells(1, 1).Formula = s
-2890      s = ThisWorkbook.Sheets(1).Cells(1, 1).FormulaLocal
-2900      If equalsAdded Then
-2910          If left(s, 1) = "=" Then s = Mid(s, 2)
-2920      End If
-2930      ConvertToCurrentLocale = s
-2940      ThisWorkbook.Sheets(1).Cells(1, 1).Clear
-2950      Application.Calculation = oldCalculation
-2960      Exit Function
+319       If left(s, 1) <> "=" Then
+320           s = "=" & s
+321           equalsAdded = True
+322       End If
+323       Application.Calculation = xlCalculationManual
+324       Application.DisplayAlerts = False
+325       ThisWorkbook.Sheets(1).Cells(1, 1).Formula = s
+326       s = ThisWorkbook.Sheets(1).Cells(1, 1).FormulaLocal
+327       If equalsAdded Then
+328           If left(s, 1) = "=" Then s = Mid(s, 2)
+329       End If
+330       ConvertToCurrentLocale = s
+331       ThisWorkbook.Sheets(1).Cells(1, 1).Clear
+332       Application.Calculation = oldCalculation
+333       Exit Function
 errorHandler:
-2970      ThisWorkbook.Sheets(1).Cells(1, 1).Clear
-2980      Application.DisplayAlerts = oldDisplayAlerts
-2990      Application.Calculation = oldCalculation
-3000      ConvertToCurrentLocale = ""
+334       ThisWorkbook.Sheets(1).Cells(1, 1).Clear
+335       Application.DisplayAlerts = oldDisplayAlerts
+336       Application.Calculation = oldCalculation
+337       ConvertToCurrentLocale = ""
 End Function
 
 Function ValidLPFileVarName(s As String)
       ' http://lpsolve.sourceforge.net/5.5/CPLEX-format.htm
       'The letter E or e, alone or followed by other valid symbols, or followed by another E or e, should be avoided as this notation is reserved for exponential entries. Thus, variables cannot be named e9, E-24, E8cats, or other names that could be interpreted as an exponent. Even variable names such as eels or example can cause a read error, depending on their placement in an input line.
-3010      If left(s, 1) = "E" Then
-3020          ValidLPFileVarName = "_" & s
-3030      Else
-3040          ValidLPFileVarName = s
-3050      End If
+338       If left(s, 1) = "E" Then
+339           ValidLPFileVarName = "_" & s
+340       Else
+341           ValidLPFileVarName = s
+342       End If
 End Function
 
 'Function FullLPFileVarName(cell As Range, AdjCellsSheetIndex As Long)
@@ -1018,16 +1018,16 @@ End Function
 'End Function
 
 Function SolverRelationAsUnicodeChar(rel As Long) As String
-3060      Select Case rel
+343       Select Case rel
               Case RelationGE
-3070              SolverRelationAsUnicodeChar = ChrW(&H2265) ' ">" gg
-3080          Case RelationEQ
-3090              SolverRelationAsUnicodeChar = "="
-3100          Case RelationLE
-3110              SolverRelationAsUnicodeChar = ChrW(&H2264) ' "<"
-3120          Case Else
-3130              SolverRelationAsUnicodeChar = "(unknown)"
-3140      End Select
+344               SolverRelationAsUnicodeChar = ChrW(&H2265) ' ">" gg
+345           Case RelationEQ
+346               SolverRelationAsUnicodeChar = "="
+347           Case RelationLE
+348               SolverRelationAsUnicodeChar = ChrW(&H2264) ' "<"
+349           Case Else
+350               SolverRelationAsUnicodeChar = "(unknown)"
+351       End Select
 End Function
 
 'Function SolverRelationAsChar(rel As Long) As String
@@ -1044,137 +1044,137 @@ End Function
 'End Function
 
 Function SolverRelationAsString(rel As Long) As String
-3150      Select Case rel
+352       Select Case rel
               Case RelationGE
-3160              SolverRelationAsString = ">="
-3170          Case RelationEQ
-3180              SolverRelationAsString = "="
-3190          Case RelationLE
-3200              SolverRelationAsString = "<="
-3210          Case Else
-3220              SolverRelationAsString = "(unknown)"
-3230      End Select
+353               SolverRelationAsString = ">="
+354           Case RelationEQ
+355               SolverRelationAsString = "="
+356           Case RelationLE
+357               SolverRelationAsString = "<="
+358           Case Else
+359               SolverRelationAsString = "(unknown)"
+360       End Select
 End Function
 
 Function ReverseRelation(rel As Long) As Long
-3240      ReverseRelation 4 - rel
+361       ReverseRelation 4 - rel
 End Function
 
 Function UserSetQuickSolveParameterRange() As Boolean
-3250      UserSetQuickSolveParameterRange = False
-3260      If Application.Workbooks.Count = 0 Then
-3270          MsgBox "Error: No active workbook available", , "OpenSolver" & sOpenSolverVersion & " Error"
-3280          Exit Function
-3290      End If
+362       UserSetQuickSolveParameterRange = False
+363       If Application.Workbooks.Count = 0 Then
+364           MsgBox "Error: No active workbook available", , "OpenSolver" & sOpenSolverVersion & " Error"
+365           Exit Function
+366       End If
 
           Dim sheetName As String
-3300      On Error Resume Next
-3310      sheetName = "'" & Replace(ActiveWorkbook.ActiveSheet.Name, "'", "''") & "'!" ' NB: We have to double any ' when we quote the name
-3320      If Err.Number <> 0 Then
-3330          MsgBox "Error: Unable to access the active sheet", , "OpenSolver" & sOpenSolverVersion & " Error"
-3340          Exit Function
-3350      End If
-3360      On Error GoTo 0
+367       On Error Resume Next
+368       sheetName = "'" & Replace(ActiveWorkbook.ActiveSheet.Name, "'", "''") & "'!" ' NB: We have to double any ' when we quote the name
+369       If Err.Number <> 0 Then
+370           MsgBox "Error: Unable to access the active sheet", , "OpenSolver" & sOpenSolverVersion & " Error"
+371           Exit Function
+372       End If
+373       On Error GoTo 0
           
           ' Find the Parameter range
           Dim ParamRange As Range
-3370      On Error Resume Next
-3380      Set ParamRange = Range(sheetName & ParamRangeName)
-3390      On Error GoTo 0
+374       On Error Resume Next
+375       Set ParamRange = Range(sheetName & ParamRangeName)
+376       On Error GoTo 0
           
           ' Get a range from the user
           Dim NewRange As Range
-3400      On Error Resume Next
-3410      If ParamRange Is Nothing Then
-3420          Set NewRange = Application.InputBox(prompt:="Please select the 'parameter' cells that you will be changing between successsive solves of the model.", Type:=8, title:="OpenSolver Quick Solve Parameters")
-3430      Else
-3440          Set NewRange = Application.InputBox(prompt:="Please select the 'parameter' cells that you will be changing between successsive solves of the model.", Type:=8, Default:=ParamRange.Address, title:="OpenSolver Quick Solve Parameters")
-3450      End If
-3460      On Error GoTo 0
+377       On Error Resume Next
+378       If ParamRange Is Nothing Then
+379           Set NewRange = Application.InputBox(prompt:="Please select the 'parameter' cells that you will be changing between successsive solves of the model.", Type:=8, title:="OpenSolver Quick Solve Parameters")
+380       Else
+381           Set NewRange = Application.InputBox(prompt:="Please select the 'parameter' cells that you will be changing between successsive solves of the model.", Type:=8, Default:=ParamRange.Address, title:="OpenSolver Quick Solve Parameters")
+382       End If
+383       On Error GoTo 0
           
-3470      If Not NewRange Is Nothing Then
-3480          If NewRange.Worksheet.Name <> ActiveSheet.Name Then
-3490              MsgBox "Error: The parameter cells need to be on the current worksheet.", , "OpenSolver" & sOpenSolverVersion & " Error"
-3500              Exit Function
-3510          End If
+384       If Not NewRange Is Nothing Then
+385           If NewRange.Worksheet.Name <> ActiveSheet.Name Then
+386               MsgBox "Error: The parameter cells need to be on the current worksheet.", , "OpenSolver" & sOpenSolverVersion & " Error"
+387               Exit Function
+388           End If
               'On Error Resume Next
-3520          If Not ParamRange Is Nothing Then
+389           If Not ParamRange Is Nothing Then
                   ' Name needs to be deleted first
-3530              ActiveWorkbook.Names(sheetName & ParamRangeName).Delete
-3540          End If
-3550          Names.Add Name:=sheetName & ParamRangeName, RefersTo:=NewRange 'ActiveWorkbook.
+390               ActiveWorkbook.Names(sheetName & ParamRangeName).Delete
+391           End If
+392           Names.Add Name:=sheetName & ParamRangeName, RefersTo:=NewRange 'ActiveWorkbook.
               ' Return true as we have succeeded
-3560          UserSetQuickSolveParameterRange = True
-3570      End If
+393           UserSetQuickSolveParameterRange = True
+394       End If
 End Function
 
 Function CheckModelHasParameterRange()
-3580      If Application.Workbooks.Count = 0 Then
-3590          MsgBox "Error: No active workbook available", , "OpenSolver" & sOpenSolverVersion & " Error"
-3600          Exit Function
-3610      End If
+395       If Application.Workbooks.Count = 0 Then
+396           MsgBox "Error: No active workbook available", , "OpenSolver" & sOpenSolverVersion & " Error"
+397           Exit Function
+398       End If
 
           Dim sheetName As String
-3620      On Error Resume Next
-3630      sheetName = "'" & Replace(ActiveWorkbook.ActiveSheet.Name, "'", "''") & "'!" ' NB: We have to double any ' when we quote the name
-3640      If Err.Number <> 0 Then
-3650          MsgBox "Error: Unable to access the active sheet", , "OpenSolver" & sOpenSolverVersion & " Error"
-3660          Exit Function
-3670      End If
-3680      On Error GoTo 0
+399       On Error Resume Next
+400       sheetName = "'" & Replace(ActiveWorkbook.ActiveSheet.Name, "'", "''") & "'!" ' NB: We have to double any ' when we quote the name
+401       If Err.Number <> 0 Then
+402           MsgBox "Error: Unable to access the active sheet", , "OpenSolver" & sOpenSolverVersion & " Error"
+403           Exit Function
+404       End If
+405       On Error GoTo 0
           
-3690      CheckModelHasParameterRange = True
+406       CheckModelHasParameterRange = True
           ' Find the Parameter range
           Dim ParamRange As Range
-3700      On Error Resume Next
-3710      Set ParamRange = Range(sheetName & ParamRangeName)
-3720      If Err.Number <> 0 Then
-3730          MsgBox "Error: No parameter range could be found on the worksheet. Please use the Initialize Quick Solve Parameters menu item to define the cells that you wish to change between successive OpenSolver solves. Note that changes to these cells must lead to changes in the underlying model's right hand side values for its constraints.", title:="OpenSolver" & sOpenSolverVersion & " Error"
-3740          CheckModelHasParameterRange = False
-3750          Exit Function
-3760      End If
+407       On Error Resume Next
+408       Set ParamRange = Range(sheetName & ParamRangeName)
+409       If Err.Number <> 0 Then
+410           MsgBox "Error: No parameter range could be found on the worksheet. Please use the Initialize Quick Solve Parameters menu item to define the cells that you wish to change between successive OpenSolver solves. Note that changes to these cells must lead to changes in the underlying model's right hand side values for its constraints.", title:="OpenSolver" & sOpenSolverVersion & " Error"
+411           CheckModelHasParameterRange = False
+412           Exit Function
+413       End If
 End Function
 
 Sub GetSolveOptions(sheetName As String, SolveOptions As SolveOptionsType, errorString As String)
           ' Get the Solver Options, stored in named ranges with values such as "=0.12"
           ' Because these are NAMEs, they are always in English, not the local language, so get their value using Val
-3770      On Error GoTo errorHandler
-3780      errorString = ""
-3790      SetAnyMissingDefaultExcel2007SolverOptions ' This can happen if they have created the model using an old version of OpenSolver
-3800      With SolveOptions
-3810          .maxTime = Val(Mid(Names(sheetName & "solver_tim").value, 2)) ' Trim the "="; use Val to get a conversion in English, not the local language
-3820          .MaxIterations = Val(Mid(Names(sheetName & "solver_itr").value, 2))
-3830          .Precision = Val(Mid(Names(sheetName & "solver_pre").value, 2))
-3840          .Tolerance = Val(Mid(Names(sheetName & "solver_tol").value, 2))  ' Stored as a value between 0 and 1 by Excel's Solver (representing a percentage)
+414       On Error GoTo errorHandler
+415       errorString = ""
+416       SetAnyMissingDefaultExcel2007SolverOptions ' This can happen if they have created the model using an old version of OpenSolver
+417       With SolveOptions
+418           .maxTime = Val(Mid(Names(sheetName & "solver_tim").value, 2)) ' Trim the "="; use Val to get a conversion in English, not the local language
+419           .MaxIterations = Val(Mid(Names(sheetName & "solver_itr").value, 2))
+420           .Precision = Val(Mid(Names(sheetName & "solver_pre").value, 2))
+421           .Tolerance = Val(Mid(Names(sheetName & "solver_tol").value, 2))  ' Stored as a value between 0 and 1 by Excel's Solver (representing a percentage)
               ' .Convergence = Val(Mid(Names(SheetName & "solver_cvg").Value, 2)) NOT USED BY OPEN SOLVER, YET!
               ' Excel stores ...!solver_sho=1 if Show Iteration Results is turned on, 2 if off (NB: Not 0!)
-3850          .ShowIterationResults = Names(sheetName & "solver_sho").value = "=1"
-3860      End With
+422           .ShowIterationResults = Names(sheetName & "solver_sho").value = "=1"
+423       End With
 ExitSub:
-3870      Exit Sub
+424       Exit Sub
 errorHandler:
-3880      errorString = "No Solve options (such as Tolerance) could be found - perhaps a model has not been defined on this sheet?"
+425       errorString = "No Solve options (such as Tolerance) could be found - perhaps a model has not been defined on this sheet?"
 End Sub
 
 Sub SetAnyMissingDefaultExcel2007SolverOptions()
           ' We set all the default values, as per Solver in Excel 2007, but with some changes. This ensures Solver does not delete the few values we actually use
-3890      If ActiveWorkbook Is Nothing Then Exit Sub
-3900      If ActiveSheet Is Nothing Then Exit Sub
+426       If ActiveWorkbook Is Nothing Then Exit Sub
+427       If ActiveSheet Is Nothing Then Exit Sub
           Dim s As String
-3910      If Not GetNameValueIfExists(ActiveWorkbook, "'" & Replace(ActiveSheet.Name, "'", "''") & "'!solver_drv", s) Then SetSolverNameOnSheet "drv", "=1"
-3920      If Not GetNameValueIfExists(ActiveWorkbook, "'" & Replace(ActiveSheet.Name, "'", "''") & "'!solver_est", s) Then SetSolverNameOnSheet "est", "=1"
-3930      If Not GetNameValueIfExists(ActiveWorkbook, "'" & Replace(ActiveSheet.Name, "'", "''") & "'!solver_itr", s) Then SetSolverNameOnSheet "itr", "=100" ' OpenSolver ignores this
-3950      If Not GetNameValueIfExists(ActiveWorkbook, "'" & Replace(ActiveSheet.Name, "'", "''") & "'!solver_neg", s) Then SetSolverNameOnSheet "neg", "=1"  ' Not "=2" as we want >=0 constraints
-3960      If Not GetNameValueIfExists(ActiveWorkbook, "'" & Replace(ActiveSheet.Name, "'", "''") & "'!solver_num", s) Then SetSolverNameOnSheet "num", "=0"
-3970      If Not GetNameValueIfExists(ActiveWorkbook, "'" & Replace(ActiveSheet.Name, "'", "''") & "'!solver_nwt", s) Then SetSolverNameOnSheet "nwt", "=1"
-3980      If Not GetNameValueIfExists(ActiveWorkbook, "'" & Replace(ActiveSheet.Name, "'", "''") & "'!solver_pre", s) Then SetSolverNameOnSheet "pre", "=0.000001"
-3990      If Not GetNameValueIfExists(ActiveWorkbook, "'" & Replace(ActiveSheet.Name, "'", "''") & "'!solver_scl", s) Then SetSolverNameOnSheet "scl", "=2"
-4000      If Not GetNameValueIfExists(ActiveWorkbook, "'" & Replace(ActiveSheet.Name, "'", "''") & "'!solver_sho", s) Then SetSolverNameOnSheet "sho", "=2"
-4010      If Not GetNameValueIfExists(ActiveWorkbook, "'" & Replace(ActiveSheet.Name, "'", "''") & "'!solver_tim", s) Then SetSolverNameOnSheet "tim", "=9999999999"  ' not "=100" as we want longer runs; Solver will force this to be no more than 9999
-4020      If Not GetNameValueIfExists(ActiveWorkbook, "'" & Replace(ActiveSheet.Name, "'", "''") & "'!solver_tol", s) Then SetSolverNameOnSheet "tol", "=0.05"
-4030      If Not GetNameValueIfExists(ActiveWorkbook, "'" & Replace(ActiveSheet.Name, "'", "''") & "'!solver_typ", s) Then SetSolverNameOnSheet "typ", "=1"
-4040      If Not GetNameValueIfExists(ActiveWorkbook, "'" & Replace(ActiveSheet.Name, "'", "''") & "'!solver_val", s) Then SetSolverNameOnSheet "val", "=0"
-4050      If Not GetNameValueIfExists(ActiveWorkbook, "'" & Replace(ActiveSheet.Name, "'", "''") & "'!solver_cvg", s) Then SetSolverNameOnSheet "cvg", "=0.0001"  ' probably not needed, but set it to be safe
+428       If Not GetNameValueIfExists(ActiveWorkbook, "'" & Replace(ActiveSheet.Name, "'", "''") & "'!solver_drv", s) Then SetSolverNameOnSheet "drv", "=1"
+429       If Not GetNameValueIfExists(ActiveWorkbook, "'" & Replace(ActiveSheet.Name, "'", "''") & "'!solver_est", s) Then SetSolverNameOnSheet "est", "=1"
+430       If Not GetNameValueIfExists(ActiveWorkbook, "'" & Replace(ActiveSheet.Name, "'", "''") & "'!solver_itr", s) Then SetSolverNameOnSheet "itr", "=100" ' OpenSolver ignores this
+431       If Not GetNameValueIfExists(ActiveWorkbook, "'" & Replace(ActiveSheet.Name, "'", "''") & "'!solver_neg", s) Then SetSolverNameOnSheet "neg", "=1"  ' Not "=2" as we want >=0 constraints
+432       If Not GetNameValueIfExists(ActiveWorkbook, "'" & Replace(ActiveSheet.Name, "'", "''") & "'!solver_num", s) Then SetSolverNameOnSheet "num", "=0"
+433       If Not GetNameValueIfExists(ActiveWorkbook, "'" & Replace(ActiveSheet.Name, "'", "''") & "'!solver_nwt", s) Then SetSolverNameOnSheet "nwt", "=1"
+434       If Not GetNameValueIfExists(ActiveWorkbook, "'" & Replace(ActiveSheet.Name, "'", "''") & "'!solver_pre", s) Then SetSolverNameOnSheet "pre", "=0.000001"
+435       If Not GetNameValueIfExists(ActiveWorkbook, "'" & Replace(ActiveSheet.Name, "'", "''") & "'!solver_scl", s) Then SetSolverNameOnSheet "scl", "=2"
+436       If Not GetNameValueIfExists(ActiveWorkbook, "'" & Replace(ActiveSheet.Name, "'", "''") & "'!solver_sho", s) Then SetSolverNameOnSheet "sho", "=2"
+437       If Not GetNameValueIfExists(ActiveWorkbook, "'" & Replace(ActiveSheet.Name, "'", "''") & "'!solver_tim", s) Then SetSolverNameOnSheet "tim", "=9999999999"  ' not "=100" as we want longer runs; Solver will force this to be no more than 9999
+438       If Not GetNameValueIfExists(ActiveWorkbook, "'" & Replace(ActiveSheet.Name, "'", "''") & "'!solver_tol", s) Then SetSolverNameOnSheet "tol", "=0.05"
+439       If Not GetNameValueIfExists(ActiveWorkbook, "'" & Replace(ActiveSheet.Name, "'", "''") & "'!solver_typ", s) Then SetSolverNameOnSheet "typ", "=1"
+440       If Not GetNameValueIfExists(ActiveWorkbook, "'" & Replace(ActiveSheet.Name, "'", "''") & "'!solver_val", s) Then SetSolverNameOnSheet "val", "=0"
+441       If Not GetNameValueIfExists(ActiveWorkbook, "'" & Replace(ActiveSheet.Name, "'", "''") & "'!solver_cvg", s) Then SetSolverNameOnSheet "cvg", "=0.0001"  ' probably not needed, but set it to be safe
 End Sub
 
 'Code Courtesy of
@@ -1186,57 +1186,57 @@ Public Function fHandleFile(stFile As String, lShowHow As Long)
           ' Dim StartDoc
           ' hwnd = apiFindWindow("OPUSAPP", "0")
           'First try ShellExecute
-4060      lRet = apiShellExecute(hwnd, vbNullString, _
+442       lRet = apiShellExecute(hwnd, vbNullString, _
                   stFile, vbNullString, vbNullString, lShowHow)
                   
-4070      If lRet > ERROR_SUCCESS Then
-4080          stRet = vbNullString
-4090          lRet = -1
-4100      Else
-4110          Select Case lRet
+443       If lRet > ERROR_SUCCESS Then
+444           stRet = vbNullString
+445           lRet = -1
+446       Else
+447           Select Case lRet
                   Case ERROR_NO_ASSOC:
                       'Try the OpenWith dialog
-4120                  varTaskID = Shell("rundll32.exe shell32.dll,OpenAs_RunDLL " _
+448                   varTaskID = Shell("rundll32.exe shell32.dll,OpenAs_RunDLL " _
                               & stFile, WIN_NORMAL)
-4130                  lRet = (varTaskID <> 0)
-4140              Case ERROR_OUT_OF_MEM:
-4150                  stRet = "Error: Out of Memory/Resources. Couldn't Execute!"
-4160              Case ERROR_FILE_NOT_FOUND:
-4170                  stRet = "Error: File not found.  Couldn't Execute!"
-4180              Case ERROR_PATH_NOT_FOUND:
-4190                  stRet = "Error: Path not found. Couldn't Execute!"
-4200              Case ERROR_BAD_FORMAT:
-4210                  stRet = "Error:  Bad File Format. Couldn't Execute!"
-4220              Case Else:
-4230          End Select
-4240      End If
-4250      fHandleFile = lRet & IIf(stRet = "", vbNullString, ", " & stRet)
+449                   lRet = (varTaskID <> 0)
+450               Case ERROR_OUT_OF_MEM:
+451                   stRet = "Error: Out of Memory/Resources. Couldn't Execute!"
+452               Case ERROR_FILE_NOT_FOUND:
+453                   stRet = "Error: File not found.  Couldn't Execute!"
+454               Case ERROR_PATH_NOT_FOUND:
+455                   stRet = "Error: Path not found. Couldn't Execute!"
+456               Case ERROR_BAD_FORMAT:
+457                   stRet = "Error:  Bad File Format. Couldn't Execute!"
+458               Case Else:
+459           End Select
+460       End If
+461       fHandleFile = lRet & IIf(stRet = "", vbNullString, ", " & stRet)
 End Function
 
 Function GetExistingFilePathName(Directory As String, FileName As String, ByRef pathName As String) As Boolean
-4260     pathName = JoinPaths(Directory, FileName)
-4280     GetExistingFilePathName = FileOrDirExists(pathName)
+462      pathName = JoinPaths(Directory, FileName)
+463      GetExistingFilePathName = FileOrDirExists(pathName)
 End Function
 
 Function CheckWorksheetAvailable(Optional SuppressDialogs As Boolean = False, Optional ThrowError As Boolean = False) As Boolean
-4630      CheckWorksheetAvailable = False
+464       CheckWorksheetAvailable = False
           ' Check there is a workbook
-4640      If Application.Workbooks.Count = 0 Then
-4650          If ThrowError Then Err.Raise Number:=OpenSolver_NoWorkbook, Source:="OpenSolver", Description:="No active workbook available."
-4660          If Not SuppressDialogs Then MsgBox "Error: No active workbook available", , "OpenSolver" & sOpenSolverVersion & " Error"
-4670          Exit Function
-4680      End If
+465       If Application.Workbooks.Count = 0 Then
+466           If ThrowError Then Err.Raise Number:=OpenSolver_NoWorkbook, Source:="OpenSolver", Description:="No active workbook available."
+467           If Not SuppressDialogs Then MsgBox "Error: No active workbook available", , "OpenSolver" & sOpenSolverVersion & " Error"
+468           Exit Function
+469       End If
           ' Check we can access the worksheet
           Dim w As Worksheet
-4690      On Error Resume Next
-4700      Set w = ActiveWorkbook.ActiveSheet
-4710      If Err.Number <> 0 Then
-4720          If ThrowError Then Err.Raise Number:=OpenSolver_NoWorksheet, Source:="OpenSolver", Description:="The active sheet is not a worksheet."
-4730          If Not SuppressDialogs Then MsgBox "Error: The active sheet is not a worksheet.", , "OpenSolver" & sOpenSolverVersion & " Error"
-4740          Exit Function
-4750      End If
+470       On Error Resume Next
+471       Set w = ActiveWorkbook.ActiveSheet
+472       If Err.Number <> 0 Then
+473           If ThrowError Then Err.Raise Number:=OpenSolver_NoWorksheet, Source:="OpenSolver", Description:="The active sheet is not a worksheet."
+474           If Not SuppressDialogs Then MsgBox "Error: The active sheet is not a worksheet.", , "OpenSolver" & sOpenSolverVersion & " Error"
+475           Exit Function
+476       End If
           ' OK
-4760      CheckWorksheetAvailable = True
+477       CheckWorksheetAvailable = True
 End Function
 
 Function GetOneCellInRange(r As Range, instance As Long) As Range
@@ -1244,33 +1244,33 @@ Function GetOneCellInRange(r As Range, instance As Long) As Range
           Dim RowOffset As Long, ColOffset As Long
           Dim NumCols As Long
           ' Debug.Assert r.Areas.count = 1
-4770      NumCols = r.Columns.Count
-4780      RowOffset = ((instance - 1) \ NumCols)
-4790      ColOffset = ((instance - 1) Mod NumCols)
-4800      Set GetOneCellInRange = r.Cells(1 + RowOffset, 1 + ColOffset)
+478       NumCols = r.Columns.Count
+479       RowOffset = ((instance - 1) \ NumCols)
+480       ColOffset = ((instance - 1) Mod NumCols)
+481       Set GetOneCellInRange = r.Cells(1 + RowOffset, 1 + ColOffset)
 End Function
 
 Function Max_Int(a As Long, b As Long) As Long
-4810      If a > b Then
-4820          Max_Int = a
-4830      Else
-4840          Max_Int = b
-4850      End If
+482       If a > b Then
+483           Max_Int = a
+484       Else
+485           Max_Int = b
+486       End If
 End Function
 
 Function Max_Double(a As Double, b As Double) As Double
-4860      If a > b Then
-4870          Max_Double = a
-4880      Else
-4890          Max_Double = b
-4900      End If
+487       If a > b Then
+488           Max_Double = a
+489       Else
+490           Max_Double = b
+491       End If
 End Function
 
 Function Create1x1Array(X As Variant) As Variant
           ' Create a 1x1 array containing the value x
           Dim v(1, 1) As Variant
-4910      v(1, 1) = X
-4920      Create1x1Array = v
+492       v(1, 1) = X
+493       Create1x1Array = v
 End Function
 
 Function ForceCalculate(prompt As String, Optional MinimiseUserInteraction As Boolean = False) As Boolean
@@ -1280,165 +1280,165 @@ Function ForceCalculate(prompt As String, Optional MinimiseUserInteraction As Bo
           'In Excel 2011 the Application.CalculationState is not included:
           'http://sysmod.wordpress.com/2011/10/24/more-differences-mainly-vba/
           'Try calling 'Calculate' two times just to be safe? This will probably cause problems down the line, maybe Office 2014 will fix it?
-          Application.Calculate
-          Application.Calculate
-          ForceCalculate = True
+494       Application.Calculate
+495       Application.Calculate
+496       ForceCalculate = True
 #Else
-4930      Application.Calculate
-4940      If Application.CalculationState <> xlDone Then
-              Application.Calculate
+497       Application.Calculate
+498       If Application.CalculationState <> xlDone Then
+499           Application.Calculate
               Dim i As Long
-              For i = 1 To 10
-                  DoEvents
-                  Sleep (100)
-              Next i
-          End If
-4950      If Application.CalculationState <> xlDone Then Application.Calculate
-4960      If Application.CalculationState <> xlDone Then
-4970          DoEvents
-4980          Application.CalculateFullRebuild
-4990          DoEvents
-5000      End If
+500           For i = 1 To 10
+501               DoEvents
+502               Sleep (100)
+503           Next i
+504       End If
+505       If Application.CalculationState <> xlDone Then Application.Calculate
+506       If Application.CalculationState <> xlDone Then
+507           DoEvents
+508           Application.CalculateFullRebuild
+509           DoEvents
+510       End If
           
           ' Check for circular references causing problems, which can happen if iterative calculation mode is enabled.
-          If Application.CalculationState <> xlDone Then
-              If Application.Iteration Then
-                  If MinimiseUserInteraction Then
-                      Application.Iteration = False
-                      Application.Calculate
-                  ElseIf MsgBox("Iterative calculation mode is enabled and may be interfering with the inital calculation. Would you like to try disabling iterative calculation mode to see if this fixes the problem?", _
+511       If Application.CalculationState <> xlDone Then
+512           If Application.Iteration Then
+513               If MinimiseUserInteraction Then
+514                   Application.Iteration = False
+515                   Application.Calculate
+516               ElseIf MsgBox("Iterative calculation mode is enabled and may be interfering with the inital calculation. Would you like to try disabling iterative calculation mode to see if this fixes the problem?", _
                             vbYesNo, _
                             "OpenSolver: Iterative Calculation Mode Detected...") = vbYes Then
-                      Application.Iteration = False
-                      Application.Calculate
-                  End If
-              End If
-          End If
+517                   Application.Iteration = False
+518                   Application.Calculate
+519               End If
+520           End If
+521       End If
           
-5010      While Application.CalculationState <> xlDone
-              If MinimiseUserInteraction Then
-                  ForceCalculate = False
-                  Exit Function
-5020          ElseIf MsgBox(prompt, _
+522       While Application.CalculationState <> xlDone
+523           If MinimiseUserInteraction Then
+524               ForceCalculate = False
+525               Exit Function
+526           ElseIf MsgBox(prompt, _
                           vbCritical + vbRetryCancel + vbDefaultButton1, _
                           "OpenSolver: Calculation Error Occured...") = vbCancel Then
-5030              ForceCalculate = False
-5040              Exit Function
-5050          Else 'Recalculate the workbook if the user wants to retry
-5060              Application.Calculate
-5070          End If
-5080      Wend
-          ForceCalculate = True
+527               ForceCalculate = False
+528               Exit Function
+529           Else 'Recalculate the workbook if the user wants to retry
+530               Application.Calculate
+531           End If
+532       Wend
+533       ForceCalculate = True
 #End If
 End Function
 
 Function ProperUnion(R1 As Range, R2 As Range) As Range
           ' Return the union of r1 and r2, where r1 may be Nothing
           ' TODO: Handle the fact that Union will return a range with multiple copies of overlapping cells - does this matter?
-5100      If R1 Is Nothing Then
-5110          Set ProperUnion = R2
-5120      ElseIf R2 Is Nothing Then
-5130          Set ProperUnion = R1
-5140      ElseIf R1 Is Nothing And R2 Is Nothing Then
-5150          Set ProperUnion = Nothing
-5160      Else
-5170          Set ProperUnion = Union(R1, R2)
-5180      End If
+534       If R1 Is Nothing Then
+535           Set ProperUnion = R2
+536       ElseIf R2 Is Nothing Then
+537           Set ProperUnion = R1
+538       ElseIf R1 Is Nothing And R2 Is Nothing Then
+539           Set ProperUnion = Nothing
+540       Else
+541           Set ProperUnion = Union(R1, R2)
+542       End If
 End Function
 
 Function GetRangeValues(r As Range) As Variant()
           ' This copies the values from a possible multi-area range into a variant
           Dim v() As Variant, i As Long
-5190      ReDim v(r.Areas.Count)
-5200      For i = 1 To r.Areas.Count
-5210          v(i) = r.Areas(i).Value2 ' Copy the entire area into the i'th entry of v
-5220      Next i
-5230      GetRangeValues = v
+543       ReDim v(r.Areas.Count)
+544       For i = 1 To r.Areas.Count
+545           v(i) = r.Areas(i).Value2 ' Copy the entire area into the i'th entry of v
+546       Next i
+547       GetRangeValues = v
 End Function
 
 Sub SetRangeValues(r As Range, v() As Variant)
           ' This copies the values from a variant into a possibly multi-area range; see GetRangeValues
           Dim i As Long
-5240      For i = 1 To r.Areas.Count
-5250          r.Areas(i).Value2 = v(i)
-5260      Next i
+548       For i = 1 To r.Areas.Count
+549           r.Areas(i).Value2 = v(i)
+550       Next i
 End Sub
 
 Function MergeRangesCellByCell(R1 As Range, R2 As Range) As Range
           ' This merges range r2 into r1 cell by cell.
           ' This shoulsd be fastest if range r2 is smaller than r1
           Dim result As Range, cell As Range
-5270      Set result = R1
-5280      For Each cell In R2
-5290          Set result = Union(result, cell)
-5300      Next cell
-5310      Set MergeRangesCellByCell = result
+551       Set result = R1
+552       For Each cell In R2
+553           Set result = Union(result, cell)
+554       Next cell
+555       Set MergeRangesCellByCell = result
 End Function
 
 Function RemoveRangeOverlap(r As Range) As Range
           ' This creates a new range from r which does not contain any multiple repetitions of cells
           ' This works around the fact that Excel allows range like "A1:A2,A2:A3", which has a .count of 4 cells
           ' The Union function does NOT remove all overlaps; call this after the union to
-5320      If r.Areas.Count = 1 Then
-5330          Set RemoveRangeOverlap = r
-5340          Exit Function
-5350      End If
+556       If r.Areas.Count = 1 Then
+557           Set RemoveRangeOverlap = r
+558           Exit Function
+559       End If
           Dim s As Range, i As Long
-5360      Set s = r.Areas(1)
-5370      For i = 2 To r.Areas.Count
-5380          If Intersect(s, r.Areas(i)) Is Nothing Then
+560       Set s = r.Areas(1)
+561       For i = 2 To r.Areas.Count
+562           If Intersect(s, r.Areas(i)) Is Nothing Then
                   ' Just take the standard union
-5390              Set s = Union(s, r.Areas(i))
-5400          Else
+563               Set s = Union(s, r.Areas(i))
+564           Else
                   ' Merge these two ranges cell by cell; this seems to remove the overlap in my tests, but also see http://www.cpearson.com/excel/BetterUnion.aspx
                   ' Merge the smaller range into the larger
-5410              If s.Count < r.Areas(i).Count Then
-5420                  Set s = MergeRangesCellByCell(r.Areas(i), s)
-5430              Else
-5440                  Set s = MergeRangesCellByCell(s, r.Areas(i))
-5450              End If
-5460          End If
-5470      Next i
-5480      Set RemoveRangeOverlap = s
+565               If s.Count < r.Areas(i).Count Then
+566                   Set s = MergeRangesCellByCell(r.Areas(i), s)
+567               Else
+568                   Set s = MergeRangesCellByCell(s, r.Areas(i))
+569               End If
+570           End If
+571       Next i
+572       Set RemoveRangeOverlap = s
 End Function
 
 Function CheckRangeContainsNoAmbiguousMergedCells(r As Range, BadCell As Range) As Boolean
           ' This checks that if the range contains any merged cells, those cells are the 'home' cell (top left) in the merged cell block
           ' and thus references to these cells are indeed to a unique cell
           ' If we have a cell that is not the top left of a merged cell, then this will be read as blank, and writing to this will effect other cells.
-5490      CheckRangeContainsNoAmbiguousMergedCells = True
-5500      If Not r.MergeCells Then
-5510          Exit Function
-5520      End If
+573       CheckRangeContainsNoAmbiguousMergedCells = True
+574       If Not r.MergeCells Then
+575           Exit Function
+576       End If
           Dim cell As Range
-5530      For Each cell In r
-5540          If cell.MergeCells Then
-5550              If cell.Address <> cell.MergeArea.Cells(1, 1).Address Then
-5560                  Set BadCell = cell
-5570                  CheckRangeContainsNoAmbiguousMergedCells = False
-5580                  Exit Function
-5590              End If
-5600          End If
-5610      Next cell
+577       For Each cell In r
+578           If cell.MergeCells Then
+579               If cell.Address <> cell.MergeArea.Cells(1, 1).Address Then
+580                   Set BadCell = cell
+581                   CheckRangeContainsNoAmbiguousMergedCells = False
+582                   Exit Function
+583               End If
+584           End If
+585       Next cell
 End Function
 
 Function StripWorksheetNameAndDollars(s As String, currentSheet As Worksheet) As String
           ' Remove the current worksheet name from a formula, along with any $
           ' Shorten the formula (eg Test4!$M$11/4+Test4!$A$3) by removing the current sheet name and all $
-5620      StripWorksheetNameAndDollars = Replace(s, currentSheet.Name & "!", "")   ' Remove names like Test4!
-5630      StripWorksheetNameAndDollars = Replace(StripWorksheetNameAndDollars, "'" & Replace(currentSheet.Name, "'", "''") & "'!", "") ' Remove names with spaces that are quoted, like 'Test 4'!; we have to double any ' when we quote the name
-5640      StripWorksheetNameAndDollars = Replace(StripWorksheetNameAndDollars, "$", "")
+586       StripWorksheetNameAndDollars = Replace(s, currentSheet.Name & "!", "")   ' Remove names like Test4!
+587       StripWorksheetNameAndDollars = Replace(StripWorksheetNameAndDollars, "'" & Replace(currentSheet.Name, "'", "''") & "'!", "") ' Remove names with spaces that are quoted, like 'Test 4'!; we have to double any ' when we quote the name
+588       StripWorksheetNameAndDollars = Replace(StripWorksheetNameAndDollars, "$", "")
 End Function
 
 ' If a key doesn't exist we have to add it, otherwise we just set it
 ' Note: Numeric values should be passed as strings in English (not the local language)
 Sub SetSolverNameOnSheet(Name As String, value As String)
-5650      Name = "'" & Replace(ActiveWorkbook.ActiveSheet.Name, "'", "''") & "'!solver_" + Name ' NB: We have to double any ' when we quote the name
+589       Name = "'" & Replace(ActiveWorkbook.ActiveSheet.Name, "'", "''") & "'!solver_" + Name ' NB: We have to double any ' when we quote the name
     On Error GoTo doesntExist:
-5660      Names(Name).value = value
-5670      Exit Sub
+590       Names(Name).value = value
+591       Exit Sub
 doesntExist:
-5680      Names.Add Name, value, False
+592       Names.Add Name, value, False
 End Sub
 
 ' NB: This is a different functiom to SetSolverNameOnSheet as we want to pass a range (on an arbitrary sheet)
@@ -1446,76 +1446,76 @@ End Sub
 ' If a key doesn't exist we have to add it, otherwise we just set it
 ' Solver stores names like Sheet1!$A$1; the sheet name is always given
 Sub SetSolverNamedRangeOnSheet(Name As String, value As Range)
-5690      Name = "'" & Replace(ActiveWorkbook.ActiveSheet.Name, "'", "''") & "'!solver_" + Name ' NB: We have to double any ' when we quote the name
+593       Name = "'" & Replace(ActiveWorkbook.ActiveSheet.Name, "'", "''") & "'!solver_" + Name ' NB: We have to double any ' when we quote the name
     On Error GoTo doesntExist:
-5700      Names(Name).value = "=" & GetDisplayAddress(value, False) ' Cannot simply assign Names(name).Value=Value as this assigns the value in a single cell, not its address
-5710      Exit Sub
+594       Names(Name).value = "=" & GetDisplayAddress(value, False) ' Cannot simply assign Names(name).Value=Value as this assigns the value in a single cell, not its address
+595       Exit Sub
 doesntExist:
-5720      Names.Add Name, "=" & GetDisplayAddress(value, False), False ' GetDisplayAddress(value), False
+596       Names.Add Name, "=" & GetDisplayAddress(value, False), False ' GetDisplayAddress(value), False
 End Sub
 
 Sub DeleteSolverNameOnSheet(Name As String)
-5730      Name = "'" & Replace(ActiveWorkbook.ActiveSheet.Name, "'", "''") & "'!solver_" + Name ' NB: We have to double any ' when we quote the name
-5740      On Error Resume Next
-5750      Names(Name).Delete
+597       Name = "'" & Replace(ActiveWorkbook.ActiveSheet.Name, "'", "''") & "'!solver_" + Name ' NB: We have to double any ' when we quote the name
+598       On Error Resume Next
+599       Names(Name).Delete
 doesntExist:
 End Sub
 
 ' If a key doesn't exist we have to add it, otherwise we just set it
 ' Note: Numeric values should be passed as strings in English (not the local language)
 Sub SetNameOnSheet(Name As String, value As String)
-5760      Name = "'" & Replace(ActiveWorkbook.ActiveSheet.Name, "'", "''") & "'!" + Name ' NB: We have to double any ' when we quote the name
+600       Name = "'" & Replace(ActiveWorkbook.ActiveSheet.Name, "'", "''") & "'!" + Name ' NB: We have to double any ' when we quote the name
     On Error GoTo doesntExist:
-5770      Names(Name).value = value
-5780      Exit Sub
+601       Names(Name).value = value
+602       Exit Sub
 doesntExist:
-5790      Names.Add Name, value, False
+603       Names.Add Name, value, False
 End Sub
 
 ' NB: Simply using a variant in SetSolverNameOnSheet fails as passing a range can simply pass its cell value
 ' If a key doesn't exist we have to add it, otherwise we just set it
 ' Note: Numeric values should be passed as strings in English (not the local language)
 Sub SetNamedRangeOnSheet(Name As String, value As Range)
-5800      Name = "'" & Replace(ActiveWorkbook.ActiveSheet.Name, "'", "''") & "'!" + Name ' NB: We have to double any ' when we quote the name
+604       Name = "'" & Replace(ActiveWorkbook.ActiveSheet.Name, "'", "''") & "'!" + Name ' NB: We have to double any ' when we quote the name
     On Error GoTo doesntExist:
-5810      Names(Name).value = "=" & GetDisplayAddress(value, False) ' "=" & GetDisplayAddress(Value)
-5820      Exit Sub
+605       Names(Name).value = "=" & GetDisplayAddress(value, False) ' "=" & GetDisplayAddress(Value)
+606       Exit Sub
 doesntExist:
-5830      Names.Add Name, "=" & GetDisplayAddress(value, False), False ' "=" & GetDisplayAddress(Value, False), False
+607       Names.Add Name, "=" & GetDisplayAddress(value, False), False ' "=" & GetDisplayAddress(Value, False), False
 End Sub
 
 ' If a key doesn't exist we have to add it, otherwise we just set it
 ' Note: Numeric values should be passed as strings in English (not the local language)
 Sub DeleteNameOnSheet(Name As String)
-5840      Name = "'" & Replace(ActiveWorkbook.ActiveSheet.Name, "'", "''") & "'!" + Name '  ' NB: We have to double any ' when we quote the name
-5850      On Error Resume Next
-5860      Names(Name).Delete
+608       Name = "'" & Replace(ActiveWorkbook.ActiveSheet.Name, "'", "''") & "'!" + Name '  ' NB: We have to double any ' when we quote the name
+609       On Error Resume Next
+610       Names(Name).Delete
 doesntExist:
 End Sub
 
 Function TrimBlankLines(s As String) As String
           ' Remove any blank lines at the beginning or end of s
           Dim Done As Boolean
-5870      While Not Done
-5880          If Len(s) < Len(vbNewLine) Then
-5890              Done = True
-5900          ElseIf left(s, Len(vbNewLine)) = vbNewLine Then
-5910             s = Mid(s, 3)
-5920          Else
-5930              Done = True
-5940          End If
-5950      Wend
-5960      Done = False
-5970      While Not Done
-5980          If Len(s) < Len(vbNewLine) Then
-5990              Done = True
-6000          ElseIf right(s, Len(vbNewLine)) = vbNewLine Then
-6010             s = left(s, Len(s) - 2)
-6020          Else
-6030              Done = True
-6040          End If
-6050      Wend
-6060      TrimBlankLines = s
+611       While Not Done
+612           If Len(s) < Len(vbNewLine) Then
+613               Done = True
+614           ElseIf left(s, Len(vbNewLine)) = vbNewLine Then
+615              s = Mid(s, 3)
+616           Else
+617               Done = True
+618           End If
+619       Wend
+620       Done = False
+621       While Not Done
+622           If Len(s) < Len(vbNewLine) Then
+623               Done = True
+624           ElseIf right(s, Len(vbNewLine)) = vbNewLine Then
+625              s = left(s, Len(s) - 2)
+626           Else
+627               Done = True
+628           End If
+629       Wend
+630       TrimBlankLines = s
 End Function
 
 Function IsAmericanNumber(s As String, Optional i As Long = 1) As Boolean
@@ -1528,61 +1528,61 @@ Function IsAmericanNumber(s As String, Optional i As Long = 1) As Boolean
           '   IsNumeric(“($1,23,,3.4,,,5,,E67$)”)=True! See http://www.eggheadcafe.com/software/aspnet/31496070/another-vba-bug.aspx)
 
           Dim MustBeInteger As Boolean, SeenDot As Boolean, SeenDigit As Boolean
-6070      MustBeInteger = i > 1   ' We call this a second time after seeing the "E", when only an int is allowed
-6080      IsAmericanNumber = False    ' Assume we fail
-6090      If Len(s) = 0 Then Exit Function ' Not a number
-6100      If Mid(s, i, 1) = "+" Or Mid(s, i, 1) = "-" Then i = i + 1 ' Skip leading sign
-6110      For i = i To Len(s)
-6120          Select Case Asc(Mid(s, i, 1))
+631       MustBeInteger = i > 1   ' We call this a second time after seeing the "E", when only an int is allowed
+632       IsAmericanNumber = False    ' Assume we fail
+633       If Len(s) = 0 Then Exit Function ' Not a number
+634       If Mid(s, i, 1) = "+" Or Mid(s, i, 1) = "-" Then i = i + 1 ' Skip leading sign
+635       For i = i To Len(s)
+636           Select Case Asc(Mid(s, i, 1))
               Case Asc("E"), Asc("e")
-6130              If MustBeInteger Or Not SeenDigit Then Exit Function ' No exponent allowed (as must be a simple integer)
-6140              IsAmericanNumber = IsAmericanNumber(s, i + 1)   ' Process an int after the E
-6150              Exit Function
-6160          Case Asc(".")
-6170              If SeenDot Then Exit Function
-6180              SeenDot = True
-6190          Case Asc("0") To Asc("9")
-6200              SeenDigit = True
-6210          Case Else
-6220              Exit Function   ' Not a valid char
-6230          End Select
-6240      Next i
+637               If MustBeInteger Or Not SeenDigit Then Exit Function ' No exponent allowed (as must be a simple integer)
+638               IsAmericanNumber = IsAmericanNumber(s, i + 1)   ' Process an int after the E
+639               Exit Function
+640           Case Asc(".")
+641               If SeenDot Then Exit Function
+642               SeenDot = True
+643           Case Asc("0") To Asc("9")
+644               SeenDigit = True
+645           Case Else
+646               Exit Function   ' Not a valid char
+647           End Select
+648       Next i
           ' i As Long, AllowDot As Boolean
-6250      IsAmericanNumber = SeenDigit
+649       IsAmericanNumber = SeenDigit
 End Function
 
 Sub TestIsAmericanNumber()
-6260      Debug.Assert (IsAmericanNumber("12.34") = True)
-6270      Debug.Assert (IsAmericanNumber("12.34e3") = True)
-6280      Debug.Assert (IsAmericanNumber("+12.34e3") = True)
-6290      Debug.Assert (IsAmericanNumber("-12.34e-3") = True)
-6300      Debug.Assert (IsAmericanNumber("12.34e") = False)
-6310      Debug.Assert (IsAmericanNumber("1e") = False)
-6320      Debug.Assert (IsAmericanNumber("+") = False)
-6330      Debug.Assert (IsAmericanNumber("+1e-") = False)
-6340      Debug.Assert (IsAmericanNumber("E1") = False)
-6350      Debug.Assert (IsAmericanNumber("12.3.4") = False)
-6360      Debug.Assert (IsAmericanNumber("-") = False)
-6370      Debug.Assert (IsAmericanNumber("-+3") = False)
+650       Debug.Assert (IsAmericanNumber("12.34") = True)
+651       Debug.Assert (IsAmericanNumber("12.34e3") = True)
+652       Debug.Assert (IsAmericanNumber("+12.34e3") = True)
+653       Debug.Assert (IsAmericanNumber("-12.34e-3") = True)
+654       Debug.Assert (IsAmericanNumber("12.34e") = False)
+655       Debug.Assert (IsAmericanNumber("1e") = False)
+656       Debug.Assert (IsAmericanNumber("+") = False)
+657       Debug.Assert (IsAmericanNumber("+1e-") = False)
+658       Debug.Assert (IsAmericanNumber("E1") = False)
+659       Debug.Assert (IsAmericanNumber("12.3.4") = False)
+660       Debug.Assert (IsAmericanNumber("-") = False)
+661       Debug.Assert (IsAmericanNumber("-+3") = False)
 End Sub
 
 Sub test()
           Dim r As Range
-6380      Set r = Range("A1")
-6390      Debug.Print OpenSolver.GetDisplayAddress(r, False)
+662       Set r = Range("A1")
+663       Debug.Print OpenSolver.GetDisplayAddress(r, False)
 End Sub
 
 Function SystemIs64Bit() As Boolean
 #If Mac Then
-    ' Check bitness of Mac by attempting to load 64-bit kernel
-    ' http://macscripter.net/viewtopic.php?pid=137569#p137569
-    Dim script As String
-    script = "try" & vbNewLine & _
+          ' Check bitness of Mac by attempting to load 64-bit kernel
+          ' http://macscripter.net/viewtopic.php?pid=137569#p137569
+          Dim script As String
+664       script = "try" & vbNewLine & _
                  "return ((do shell script ""sysctl -n hw.optional.x86_64"") as integer) as boolean" & vbNewLine & _
              "on error" & vbNewLine & _
                  "return false" & vbNewLine & _
              "end try"
-    SystemIs64Bit = MacScript(script)
+665       SystemIs64Bit = MacScript(script)
 #Else
           ' Is true if the Windows system is a 64 bit one
           ' If Not Environ("ProgramFiles(x86)") = "" Then Is64Bit=True, or
@@ -1591,7 +1591,7 @@ Function SystemIs64Bit() As Boolean
           ' http://www.mrexcel.com/forum/showthread.php?542727-Determining-If-OS-Is-32-Bit-Or-64-Bit-Using-VBA and
           ' http://stackoverflow.com/questions/6256140/how-to-detect-if-the-computer-is-x32-or-x64 and
           ' http://msdn.microsoft.com/en-us/library/ms684139%28v=vs.85%29.aspx
-6400     SystemIs64Bit = Environ("ProgramFiles(x86)") <> ""
+666      SystemIs64Bit = Environ("ProgramFiles(x86)") <> ""
 #End If
 End Function
 
@@ -1616,38 +1616,38 @@ End Function
 
 Function MakeNewSheet(namePrefix As String, sheetName As String) As String
           Dim NeedSheet As Boolean, newSheet As Worksheet, nameSheet As String, i As Long
-6410      On Error Resume Next
-6420      Application.ScreenUpdating = False
+667       On Error Resume Next
+668       Application.ScreenUpdating = False
           Dim s As String, value As String
-6430      s = Sheets(namePrefix).Name
-6440      If Err.Number <> 0 Then
-6450          Set newSheet = Sheets.Add
-6460          newSheet.Name = namePrefix
-6470          nameSheet = namePrefix
-6480          ActiveWindow.DisplayGridlines = False
-6490      Else
-6500          Call GetNameValueIfExists(ActiveWorkbook, sheetName & "OpenSolver_UpdateSensitivity", value)
-6510          If value Then
-6520              Sheets(namePrefix).Cells.Delete
-6530              nameSheet = namePrefix
-6540          Else
-6550              i = 1
-6560              Set newSheet = Sheets.Add
-6570              NeedSheet = True
-6580              On Error Resume Next
-6590              While NeedSheet
-6600                  nameSheet = namePrefix & " " & i
-6610                  newSheet.Name = nameSheet
-6620                  If Err.Number = 0 Then NeedSheet = False
-6630                  i = i + 1
-6640                  Err.Number = 0
-6650              Wend
-6660              ActiveWindow.DisplayGridlines = False
-6670          End If
-6680      End If
+669       s = Sheets(namePrefix).Name
+670       If Err.Number <> 0 Then
+671           Set newSheet = Sheets.Add
+672           newSheet.Name = namePrefix
+673           nameSheet = namePrefix
+674           ActiveWindow.DisplayGridlines = False
+675       Else
+676           Call GetNameValueIfExists(ActiveWorkbook, sheetName & "OpenSolver_UpdateSensitivity", value)
+677           If value Then
+678               Sheets(namePrefix).Cells.Delete
+679               nameSheet = namePrefix
+680           Else
+681               i = 1
+682               Set newSheet = Sheets.Add
+683               NeedSheet = True
+684               On Error Resume Next
+685               While NeedSheet
+686                   nameSheet = namePrefix & " " & i
+687                   newSheet.Name = nameSheet
+688                   If Err.Number = 0 Then NeedSheet = False
+689                   i = i + 1
+690                   Err.Number = 0
+691               Wend
+692               ActiveWindow.DisplayGridlines = False
+693           End If
+694       End If
           
-6690      MakeNewSheet = nameSheet
-6700      Application.ScreenUpdating = True
+695       MakeNewSheet = nameSheet
+696       Application.ScreenUpdating = True
 End Function
 
 '==================================================================
@@ -1656,12 +1656,12 @@ End Function
 
 '''''' ASL NEW FUNCTION 2012-01-23 - Andres Sommerhoff
 Public Sub SearchRangeName_DestroyCache()
-6710      If Not SearchRangeNameCACHE Is Nothing Then
-6720          While SearchRangeNameCACHE.Count > 0
-6730              SearchRangeNameCACHE.Remove 1
-6740          Wend
-6750      End If
-6760      Set SearchRangeNameCACHE = Nothing
+697       If Not SearchRangeNameCACHE Is Nothing Then
+698           While SearchRangeNameCACHE.Count > 0
+699               SearchRangeNameCACHE.Remove 1
+700           Wend
+701       End If
+702       Set SearchRangeNameCACHE = Nothing
 End Sub
 
 '''''' ASL NEW FUNCTION 2012-01-23- Andres Sommerhoff
@@ -1678,219 +1678,219 @@ Private Sub SearchRangeName_LoadCache(sheet As Worksheet)
           Dim CurrSheetName As String
           Dim CurrFileName As String
 
-6770      On Error Resume Next
-6780      CurrNamesCount = sheet.Parent.Names.Count
-6790      CurrSheetName = sheet.Name
-6800      CurrFileName = sheet.Parent.Name
+703       On Error Resume Next
+704       CurrNamesCount = sheet.Parent.Names.Count
+705       CurrSheetName = sheet.Name
+706       CurrFileName = sheet.Parent.Name
           
-6810      If LastNamesCount <> CurrNamesCount _
+707       If LastNamesCount <> CurrNamesCount _
              Or LastSheetName <> CurrSheetName _
              Or LastFileName <> CurrFileName Then
-6820                  SearchRangeName_DestroyCache  'Check confirm it is obsolote. Cache need to redone...
-6830      End If
+708                   SearchRangeName_DestroyCache  'Check confirm it is obsolote. Cache need to redone...
+709       End If
               
-6840      If SearchRangeNameCACHE Is Nothing Then
-6850          Set SearchRangeNameCACHE = New Collection  'Start building a new Cache
-6860      Else
-6870          Exit Sub 'Cache is ok -> return back
-6880      End If
+710       If SearchRangeNameCACHE Is Nothing Then
+711           Set SearchRangeNameCACHE = New Collection  'Start building a new Cache
+712       Else
+713           Exit Sub 'Cache is ok -> return back
+714       End If
 
           'Here the Cache will be filled with visible range names only
-6890      For i = 1 To ActiveWorkbook.Names.Count
-6900          Set TestName = ActiveWorkbook.Names(i)
+715       For i = 1 To ActiveWorkbook.Names.Count
+716           Set TestName = ActiveWorkbook.Names(i)
               
-6910          If TestName.Visible = True Then  'Iterate through the visible names only
+717           If TestName.Visible = True Then  'Iterate through the visible names only
                       ' Skip any references to external workbooks
-                      If left$(TestName.RefersTo, 1) = "=" And InStr(TestName.RefersTo, "[") > 1 Then GoTo tryNext
-6920                  On Error GoTo tryerror
+718                   If left$(TestName.RefersTo, 1) = "=" And InStr(TestName.RefersTo, "[") > 1 Then GoTo tryNext
+719                   On Error GoTo tryerror
                       'Build the Cache with the range address as key (='sheet1'!$A$1:$B$3)
-6930                  Set rComp = TestName.RefersToRange
-6940                  SearchRangeNameCACHE.Add TestName, (rComp.Name)
-6950                  GoTo tryNext
+720                   Set rComp = TestName.RefersToRange
+721                   SearchRangeNameCACHE.Add TestName, (rComp.Name)
+722                   GoTo tryNext
 tryerror:
-6960                  Resume tryNext
+723                   Resume tryNext
 tryNext:
-6970          End If
-6980      Next i
+724           End If
+725       Next i
           
-6990      LastNamesCount = CurrNamesCount
-7000      LastSheetName = CurrSheetName
-7010      LastFileName = CurrFileName
+726       LastNamesCount = CurrNamesCount
+727       LastSheetName = CurrSheetName
+728       LastFileName = CurrFileName
           
 End Sub
 
 ' ASL NEW FUNCTION 2012-01-23 - Andres Sommerhoff
 Public Function SearchRangeInVisibleNames(r As Range) As Name
-7020      SearchRangeName_LoadCache r.Parent  'Use a collection as cache. Without cache is a little bit slow.
+729       SearchRangeName_LoadCache r.Parent  'Use a collection as cache. Without cache is a little bit slow.
                                               'To refresh the cache use SearchRangeName_DestroyCache()
-7030      On Error Resume Next
-7040      Set SearchRangeInVisibleNames = SearchRangeNameCACHE.Item((r.Name))
+730       On Error Resume Next
+731       Set SearchRangeInVisibleNames = SearchRangeNameCACHE.Item((r.Name))
           
 End Function
 
 Public Sub OpenURL(URL As String)
 
 #If Mac Then
-    ' Use applescript to open the webpage
-    Dim s As String
-    s = "open location """ + URL + """"
-    MacScript s
+          ' Use applescript to open the webpage
+          Dim s As String
+732       s = "open location """ + URL + """"
+733       MacScript s
 #Else
-    ' Use windows file handler to open webpage
-    Call fHandleFile(URL, WIN_NORMAL)
+          ' Use windows file handler to open webpage
+734       Call fHandleFile(URL, WIN_NORMAL)
 #End If
 
 End Sub
 
 Public Sub SetCurrentDirectory(NewPath As String)
 #If Mac Then
-    ChDir NewPath
+735       ChDir NewPath
 #Else
-    SetCurrentDirectoryA NewPath
+736       SetCurrentDirectoryA NewPath
 #End If
 End Sub
 
 Public Function ReplaceDelimitersMac(Path As String) As String
-    ReplaceDelimitersMac = Replace(Path, ":", "/")
+737       ReplaceDelimitersMac = Replace(Path, ":", "/")
 End Function
 
 Public Function ConvertHfsPath(Path As String) As String
-' Any direct file system access (using 'system' or in script files) on Mac requires
-' that HFS-style paths are converted to normal posix paths. On windows this
-' function does nothing, so it can safely wrap all file system calls on any platform
-' Input (HFS path):   "Macintosh HD:Users:jack:filename.txt"
-' Output (posix path): "/Users/jack/filename.txt"
+      ' Any direct file system access (using 'system' or in script files) on Mac requires
+      ' that HFS-style paths are converted to normal posix paths. On windows this
+      ' function does nothing, so it can safely wrap all file system calls on any platform
+      ' Input (HFS path):   "Macintosh HD:Users:jack:filename.txt"
+      ' Output (posix path): "/Users/jack/filename.txt"
 #If Mac Then
-    ' Check we have an HFS path and not posix
-    If InStr(Path, ":") > 0 Then
-        ' Remove disk name (everything up to first ':')
-        ConvertHfsPath = right(Path, Len(Path) - InStr(Path, ":") + 1)
-        ' Convert path delimiters
-        ConvertHfsPath = ReplaceDelimitersMac(ConvertHfsPath)
-    Else
-        ' Path is already posix
-        ConvertHfsPath = Path
-    End If
+          ' Check we have an HFS path and not posix
+738       If InStr(Path, ":") > 0 Then
+              ' Remove disk name (everything up to first ':')
+739           ConvertHfsPath = right(Path, Len(Path) - InStr(Path, ":") + 1)
+              ' Convert path delimiters
+740           ConvertHfsPath = ReplaceDelimitersMac(ConvertHfsPath)
+741       Else
+              ' Path is already posix
+742           ConvertHfsPath = Path
+743       End If
 #Else
-    ConvertHfsPath = Path
+744       ConvertHfsPath = Path
 #End If
 End Function
 
 Public Function QuotePath(Path As String) As String
-    ' Quote path
-    QuotePath = """" & Path & """"
+          ' Quote path
+745       QuotePath = """" & Path & """"
 End Function
 
 Public Sub CreateScriptFile(ByRef ScriptFilePath As String, FileContents As String, Optional EnableEcho As Boolean)
-' Create a script file with the specified contents.
-    On Error GoTo ErrHandler
-    Open ScriptFilePath For Output As 1
-    
+      ' Create a script file with the specified contents.
+746       On Error GoTo ErrHandler
+747       Open ScriptFilePath For Output As 1
+          
 #If Win32 Then
-    ' Add echo off for windows
-    If Not EnableEcho Then
-        Print #1, "@echo off" & vbCrLf
-    End If
+          ' Add echo off for windows
+748       If Not EnableEcho Then
+749           Print #1, "@echo off" & vbCrLf
+750       End If
 #End If
-    Print #1, FileContents
-    Close #1
-    
-    ' Make shell script executable on Mac
+751       Print #1, FileContents
+752       Close #1
+          
+          ' Make shell script executable on Mac
 #If Mac Then
-    system ("chmod +x " & ConvertHfsPath(ScriptFilePath))
+753       system ("chmod +x " & ConvertHfsPath(ScriptFilePath))
 #End If
 
-    Exit Sub
-    
+754       Exit Sub
+          
 ErrHandler:
-    Close #1
-    Err.Raise Err.Number, Err.Source, Err.Description & IIf(Erl = 0, "", " (at line " & Erl & ")")
+755       Close #1
+756       Err.Raise Err.Number, Err.Source, Err.Description & IIf(Erl = 0, "", " (at line " & Erl & ")")
 End Sub
 
 Public Sub DeleteFileAndVerify(FilePath As String, errorPrefix As String, errorDesc As String)
-' Deletes file and raises error if not successful
-    If FileOrDirExists(FilePath) Then Kill FilePath
-    If FileOrDirExists(FilePath) Then
-        Err.Raise Number:=OpenSolver_SolveError, Source:=errorPrefix, Description:=errorDesc
-    End If
+      ' Deletes file and raises error if not successful
+757       If FileOrDirExists(FilePath) Then Kill FilePath
+758       If FileOrDirExists(FilePath) Then
+759           Err.Raise Number:=OpenSolver_SolveError, Source:=errorPrefix, Description:=errorDesc
+760       End If
 End Sub
 
 Public Sub OpenFile(FilePath As String, notFoundMessage As String)
-28270     On Error GoTo errorHandler
-28280     If Not FileOrDirExists(FilePath) Then
-28290         MsgBox notFoundMessage, , "OpenSolver" & sOpenSolverVersion & " Error"
-28300     Else
+761       On Error GoTo errorHandler
+762       If Not FileOrDirExists(FilePath) Then
+763           MsgBox notFoundMessage, , "OpenSolver" & sOpenSolverVersion & " Error"
+764       Else
               ' Check that there is no workbook open with the same name
               Dim w As Workbook
-28310         On Error Resume Next
-28320         Set w = Workbooks(right(FilePath, InStr(FilePath, PathDelimeter)))
-28330         On Error GoTo errorHandler
-28340         Workbooks.Open FileName:=FilePath, ReadOnly:=True ' , Format:=Tabs
-28350     End If
+765           On Error Resume Next
+766           Set w = Workbooks(right(FilePath, InStr(FilePath, PathDelimeter)))
+767           On Error GoTo errorHandler
+768           Workbooks.Open FileName:=FilePath, ReadOnly:=True ' , Format:=Tabs
+769       End If
 ExitSub:
-28360     Exit Sub
+770       Exit Sub
 errorHandler:
-28370     MsgBox "OpenSolver encountered error " & Err.Number & ":" & vbCrLf & Err.Description & IIf(Erl = 0, "", " (at line " & Erl & ")") & vbCrLf & "Source = " & Err.Source, , "OpenSolver Code Error"
-28380     Resume ExitSub
+771       MsgBox "OpenSolver encountered error " & Err.Number & ":" & vbCrLf & Err.Description & IIf(Erl = 0, "", " (at line " & Erl & ")") & vbCrLf & "Source = " & Err.Source, , "OpenSolver Code Error"
+772       Resume ExitSub
 End Sub
 
 '==============================================================================
 ' ConvertRelationToEnum
 ' Given the value of a solver_relX Name, pick the equivalent OpenSolver operator
 Function ConvertRelationToEnum(ByVal strNameContents As String) As Variant
-    Select Case Mid(strNameContents, 2)
-        Case "1": ConvertRelationToEnum = RelationConsts.RelationLE
-        Case "2": ConvertRelationToEnum = RelationConsts.RelationEQ
-        Case "3": ConvertRelationToEnum = RelationConsts.RelationGE
-    End Select
+773       Select Case Mid(strNameContents, 2)
+              Case "1": ConvertRelationToEnum = RelationConsts.RelationLE
+774           Case "2": ConvertRelationToEnum = RelationConsts.RelationEQ
+775           Case "3": ConvertRelationToEnum = RelationConsts.RelationGE
+776       End Select
 End Function
 
 ' WriteToFile
 ' Writes a string to the given file number, adds a newline, and can easily
 ' uncomment debug line to print to Immediate if needed. Adds number of spaces to front if specified
 Sub WriteToFile(intFileNum As Long, strData As String, Optional numSpaces As Long = 0)
-    Dim spaces As String, i As Long
-    spaces = ""
-    For i = 1 To numSpaces
-        spaces = spaces + " "
-    Next i
-    Print #intFileNum, spaces & strData
-    'Debug.Print strData
+          Dim spaces As String, i As Long
+777       spaces = ""
+778       For i = 1 To numSpaces
+779           spaces = spaces + " "
+780       Next i
+781       Print #intFileNum, spaces & strData
+          'Debug.Print strData
 End Sub
 
 '==============================================================================
 Function TestIntersect(ByRef R1 As Range, ByRef R2 As Range) As Boolean
-    Dim r3 As Range
-    Set r3 = Intersect(R1, R2)
-    TestIntersect = Not (r3 Is Nothing)
-    ' Below: a test to see if I could do it faster - I couldn't
-    'Dim R1_X1 As Long, R1_Y1 As Long, R1_X2 As Long, R1_Y2 As Long
-    'Dim R2_X1 As Long, R2_Y1 As Long, R2_X2 As Long, R2_Y2 As Long
-    'R1_X1 = R1.Column
-    'R1_X2 = R1_X1 + R1.Columns.Count - 1
-    'R2_X1 = R2.Column
-    'R2_X2 = R2_X1 + R2.Columns.Count - 1
-    'R1_Y1 = R1.Row
-    'R1_Y2 = R1_Y2 + R1.Rows.Height - 1
-    'R2_Y1 = R2.Row
-    'R2_Y2 = R2_Y2 + R2.Rows.Height - 1
-    'TestIntersect = _
-    '    R1_X1 <= R2_X2 And _  ' Cond A
-    '    R1_X2 >= R2_X1 And _  ' Cond B
-    '    R1_Y1 <= R2_Y2 And _  ' Cond C
-    '    R1_Y2 >= R2_Y1        ' Cond D
+          Dim r3 As Range
+782       Set r3 = Intersect(R1, R2)
+783       TestIntersect = Not (r3 Is Nothing)
+          ' Below: a test to see if I could do it faster - I couldn't
+          'Dim R1_X1 As Long, R1_Y1 As Long, R1_X2 As Long, R1_Y2 As Long
+          'Dim R2_X1 As Long, R2_Y1 As Long, R2_X2 As Long, R2_Y2 As Long
+          'R1_X1 = R1.Column
+          'R1_X2 = R1_X1 + R1.Columns.Count - 1
+          'R2_X1 = R2.Column
+          'R2_X2 = R2_X1 + R2.Columns.Count - 1
+          'R1_Y1 = R1.Row
+          'R1_Y2 = R1_Y2 + R1.Rows.Height - 1
+          'R2_Y1 = R2.Row
+          'R2_Y2 = R2_Y2 + R2.Rows.Height - 1
+          'TestIntersect = _
+          '    R1_X1 <= R2_X2 And _  ' Cond A
+          '    R1_X2 >= R2_X1 And _  ' Cond B
+          '    R1_Y1 <= R2_Y2 And _  ' Cond C
+          '    R1_Y2 >= R2_Y1        ' Cond D
 End Function
 
 ' Replaces all spaces with NBSP char
 Function MakeSpacesNonBreaking(Text As String) As String
-    MakeSpacesNonBreaking = Replace(Text, Chr(32), Chr(NBSP))
+784       MakeSpacesNonBreaking = Replace(Text, Chr(32), Chr(NBSP))
 End Function
 
 ' Returns true if a number is zero (within tolerance)
 Function IsZero(num As Double) As Boolean
-    If Abs(num) < EPSILON Then
-        IsZero = True
-    Else
-        IsZero = False
-    End If
+785       If Abs(num) < EPSILON Then
+786           IsZero = True
+787       Else
+788           IsZero = False
+789       End If
 End Function

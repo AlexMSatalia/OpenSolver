@@ -16,104 +16,104 @@ Attribute VB_Exposed = False
 Option Explicit
 
 Private Sub chkGetDuals_Click()
-          frmModel.UpdateGetDuals Me
+9188            frmModel.UpdateGetDuals Me
 End Sub
 
 Private Sub chkGetDuals2_Click()
-          frmModel.UpdateGetDuals2 Me
+9189            frmModel.UpdateGetDuals2 Me
 End Sub
 
 Private Sub chkNameRange_Click()
-          frmModel.UpdateNameRange Me
+9190            frmModel.UpdateNameRange Me
 End Sub
 
 Private Sub cmdCancelCon_Click()
-          frmModel.ModelCancel Me
+9191            frmModel.ModelCancel Me
 End Sub
 
 Private Sub cmdChange_Click()
-          frmModel.ModelSolverClick Me
+9192            frmModel.ModelSolverClick Me
 End Sub
 
 Private Sub cmdOptions_Click()
-          frmModel.ModelOptionsClick Me
+9193            frmModel.ModelOptionsClick Me
 End Sub
 
 Private Sub cmdReset_Click()
-          frmModel.ModelReset Me
+9194            frmModel.ModelReset Me
 End Sub
 
 Private Sub optMax_Click()
-          frmModel.ModelMaxClick Me
+9195            frmModel.ModelMaxClick Me
 End Sub
 
 Private Sub optMin_Click()
-          frmModel.ModelMinClick Me
+9196            frmModel.ModelMinClick Me
 End Sub
 
 Private Sub optNew_Click()
-          frmModel.ModelNewClick Me
+9197            frmModel.ModelNewClick Me
 End Sub
 
 Private Sub optTarget_Click()
-          frmModel.ModelTargetClick Me
+9198            frmModel.ModelTargetClick Me
 End Sub
 
 Private Sub optUpdate_Click()
-          frmModel.ModelUpdateClick Me
+9199            frmModel.ModelUpdateClick Me
 End Sub
 
 Private Sub refConLHS_Change()
-          frmModel.ModelChangeLHS Me
+9200            frmModel.ModelChangeLHS Me
 End Sub
 
 Private Sub refConRHS_Change()
-          frmModel.ModelChangeRHS Me
+9201            frmModel.ModelChangeRHS Me
 End Sub
 
 Private Sub UserForm_Activate()
-          frmModel.ModelActivate Me
+9202            frmModel.ModelActivate Me
 End Sub
 
 Private Sub cmdCancel_Click()
-          frmModel.ModelCancelClick Me
-          ' Remove any focus taken by a RefEdit
-          DoEvents
-          Me.Hide
+9203            frmModel.ModelCancelClick Me
+                ' Remove any focus taken by a RefEdit
+9204            DoEvents
+9205            Me.Hide
 End Sub
 
 Private Sub cmdRunAutoModel_Click()
-          'Me.Hide
-          DoEvents
-          frmModel.ModelRunAutoModel Me
-          DoEvents
-          'Me.Show
+                'Me.Hide
+9206            DoEvents
+9207            frmModel.ModelRunAutoModel Me
+9208            DoEvents
+                'Me.Show
 End Sub
 
 Private Sub cmdBuild_Click()
-         frmModel.ModelBuild Me
-         Me.Hide
+9209           frmModel.ModelBuild Me
+9210           Me.Hide
 End Sub
 
 Private Sub cboConRel_Change()
-          frmModel.ModelChangeConRel Me
+9211            frmModel.ModelChangeConRel Me
 End Sub
 
 Private Sub cmdAddCon_Click()
-          frmModel.ModelAddConstraint Me
+9212            frmModel.ModelAddConstraint Me
 End Sub
 
 Private Sub cmdDelSelCon_Click()
-         frmModel.ModelDeleteConstraint Me
+9213           frmModel.ModelDeleteConstraint Me
 End Sub
 
 Private Sub lstConstraints_Change()
-    frmModel.ModelLstConstraintsChange Me
+9214      frmModel.ModelLstConstraintsChange Me
 End Sub
 
 Private Sub lstConstraints_Exit(ByVal Cancel As MSForms.ReturnBoolean)
           ' When the focus leaves this list, we want to remove any highlighting shown by selected cells
-47540     ActiveCell.Select
+9215      ActiveCell.Select
 End Sub
 
 

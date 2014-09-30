@@ -16,24 +16,24 @@ Attribute VB_Exposed = False
 Option Explicit
 
 Private Sub buttonOK_Click()
-    Me.Hide
+9175      Me.Hide
 End Sub
 
 Private Sub buttonUninstall_Click()
-    UserFormAbout.ChangeAutoloadStatus False, Me
+9176      UserFormAbout.ChangeAutoloadStatus False, Me
 End Sub
 
 Private Sub chkAutoLoad_Change()
-    If Not UserFormAbout.EventsEnabled Then Exit Sub
-    UserFormAbout.ChangeAutoloadStatus chkAutoLoad.value, Me
+9177      If Not UserFormAbout.EventsEnabled Then Exit Sub
+9178      UserFormAbout.ChangeAutoloadStatus chkAutoLoad.value, Me
 End Sub
 
 
 Private Sub labelOpenSolverOrg_Click()
-    Call OpenURL("http://www.opensolver.org")
+9179      Call OpenURL("http://www.opensolver.org")
 End Sub
 
 Private Sub UserForm_Activate()
-    UserFormAbout.ActivateAboutForm Me
+9180      UserFormAbout.ActivateAboutForm Me
 End Sub
 

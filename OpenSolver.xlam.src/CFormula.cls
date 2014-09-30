@@ -34,36 +34,36 @@ Public Children As Collection
 Public Parents As Collection
  
 Private Sub Class_Initialize()
-    Set rngAddress = Nothing
-    strAddress = ""
-    
-    lngDepth = 0
-    boolCanEval = False
-    boolIsConstant = False
-    intRefsAdjCell = AdjCellUnknown
-    boolEvaledWithCalculate = False
-    
-    Set Children = New Collection
-    Set Parents = New Collection
+4765      Set rngAddress = Nothing
+4766      strAddress = ""
+          
+4767      lngDepth = 0
+4768      boolCanEval = False
+4769      boolIsConstant = False
+4770      intRefsAdjCell = AdjCellUnknown
+4771      boolEvaledWithCalculate = False
+          
+4772      Set Children = New Collection
+4773      Set Parents = New Collection
 End Sub
 
 
 Public Function GetSheet() As String
-    If rngAddress Is Nothing Then
-        GetSheet = ""
-    Else
-        GetSheet = rngAddress.Parent.Name
-    End If
+4774      If rngAddress Is Nothing Then
+4775          GetSheet = ""
+4776      Else
+4777          GetSheet = rngAddress.Parent.Name
+4778      End If
 End Function
 
 
 Public Function IsDependentOn(rngAdjDepedents As Range) As Boolean
-    IsDependentOn = True
-    ' Check this just in case. Shouldn't ever happen, because
-    ' there should be sheet check before this is done, and for
-    ' that to happen it must NOT be Nothing.
-    If rngAddress Is Nothing Then Exit Function
-    'If Intersect(rngAddress, rngAdjDepedents) Is Nothing Then
-    IsDependentOn = TestIntersect(rngAddress, rngAdjDepedents)
+4779      IsDependentOn = True
+          ' Check this just in case. Shouldn't ever happen, because
+          ' there should be sheet check before this is done, and for
+          ' that to happen it must NOT be Nothing.
+4780      If rngAddress Is Nothing Then Exit Function
+          'If Intersect(rngAddress, rngAdjDepedents) Is Nothing Then
+4781      IsDependentOn = TestIntersect(rngAddress, rngAdjDepedents)
 End Function
 

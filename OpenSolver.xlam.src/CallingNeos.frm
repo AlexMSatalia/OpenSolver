@@ -16,9 +16,8 @@ Attribute VB_Exposed = False
 Private Sub Cancel_Click()
 
           'Unload the userform
-36690     Me.Tag = "Cancelled"
-36700     Me.Hide
-End
+3583      Me.Tag = "Cancelled"
+3584      Me.Hide
 
 End Sub
 
