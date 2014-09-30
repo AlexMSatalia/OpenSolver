@@ -1,10 +1,10 @@
 VERSION 5.00
 Begin {C62A69F0-16DC-11CE-9E98-00AA00574A4F} MacUserFormInterrupt 
    Caption         =   "OpenSolver User Interrupt"
-   ClientHeight    =   1883
+   ClientHeight    =   1890
    ClientLeft      =   0
-   ClientTop       =   -882
-   ClientWidth     =   6237
+   ClientTop       =   -885
+   ClientWidth     =   6240
    OleObjectBlob   =   "MacUserFormInterrupt.frx":0000
    StartUpPosition =   1  'CenterOwner
 End

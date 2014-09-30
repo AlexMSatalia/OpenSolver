@@ -381,16 +381,32 @@ End Function
 ' Checks whether a cell is constant i.e. not a decision variable and does not depend on a decision variable
 Function CellIsConstant(cell As Range) As Boolean
           ' Check if cell is a variable cell
-4964      If Not Intersect(cell, AdjustableCells) Is Nothing Then
-4965          CellIsConstant = False
-4966          Exit Function
-4967      End If
+          If cell.Parent.Name = AdjustableCells.Parent.Name Then
+4964          If Not Intersect(cell, AdjustableCells) Is Nothing Then
+4965              CellIsConstant = False
+4966              Exit Function
+4967          End If
+          End If
           
           ' Check if dependent on decision variable
 4968      If cell.HasFormula Then
-4969          If Not Intersect(cell.Precedents, AdjustableCells) Is Nothing Then
-4970              CellIsConstant = False
-4971              Exit Function
+              
+              ' Try and get cell precedents. If the precedents are in another sheet we get stuck
+              ' TODO: We could try this: http://www.mrexcel.com/forum/excel-questions/371863-test-if-cell-has-dependents-precedents.html#post1851288
+              Dim CellPrecedents As Range
+              On Error Resume Next
+              Set CellPrecedents = cell.Precedents
+              If Err.Number = 1004 Then
+                  CellIsConstant = True
+                  Exit Function
+              End If
+              On Error GoTo 0
+              
+              If cell.Precedents.Parent.Name = AdjustableCells.Parent.Name Then
+4969              If Not Intersect(cell.Precedents, AdjustableCells) Is Nothing Then
+4970                  CellIsConstant = False
+4971                  Exit Function
+                  End If
 4972          End If
 4973      End If
 4974      CellIsConstant = True
