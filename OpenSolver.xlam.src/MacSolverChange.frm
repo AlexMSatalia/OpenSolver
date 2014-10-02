@@ -4,7 +4,7 @@ Begin {C62A69F0-16DC-11CE-9E98-00AA00574A4F} MacSolverChange
    ClientHeight    =   6000
    ClientLeft      =   0
    ClientTop       =   -6165
-   ClientWidth     =   7110
+   ClientWidth     =   7350
    OleObjectBlob   =   "MacSolverChange.frx":0000
    StartUpPosition =   1  'CenterOwner
 End

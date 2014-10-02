@@ -2,7 +2,7 @@ Attribute VB_Name = "SolverCouenne"
 Option Explicit
 
 Public Const SolverTitle_Couenne = "COIN-OR Couenne (Non-linear, non-convex solver)"
-Public Const SolverDesc_Couenne = "Couenne (Convex Over and Under ENvelopes for Nonlinear Estimation) is a branch & bound algorithm to solve Mixed-Integer Nonlinear Programming (MINLP) problems of specific forms. Couenne aims at finding global optima of nonconvex MINLPs. It implements linearization, bound reduction, and branching methods within a branch-and-bound framework."
+Public Const SolverDesc_Couenne = "Couenne (Convex Over and Under ENvelopes for Nonlinear Estimation) is a branch & bound algorithm to solve Mixed-Integer Nonlinear Programming (MINLP) problems of specific forms. Couenne aims at finding global optima of nonconvex MINLPs. It implements linearization, bound reduction, and branching methods within a branch-and-bound framework. This solver will fail if your spreadsheet uses functions OpenSolver cannot interpret."
 Public Const SolverLink_Couenne = "https://projects.coin-or.org/Couenne"
 Public Const SolverType_Couenne = OpenSolver_SolverType.NonLinear
 
