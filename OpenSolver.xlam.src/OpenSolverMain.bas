@@ -27,7 +27,7 @@ Option Explicit
 
 ' Version information (as displayed in the About box...)
 Public Const sOpenSolverVersion As String = "2.6"
-Public Const sOpenSolverDate As String = "2014.09.29"
+Public Const sOpenSolverDate As String = "2014.10.08"
 
 ' Used for the 2003 menu code
 Private Const strAddInName As String = "OpenSolver"
