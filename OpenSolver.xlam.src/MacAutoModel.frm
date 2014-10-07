@@ -3,8 +3,8 @@ Begin {C62A69F0-16DC-11CE-9E98-00AA00574A4F} MacAutoModel
    Caption         =   "OpenSolver - AutoModel"
    ClientHeight    =   5955
    ClientLeft      =   0
-   ClientTop       =   -1757
-   ClientWidth     =   10003
+   ClientTop       =   -1755
+   ClientWidth     =   10005
    OleObjectBlob   =   "MacAutoModel.frx":0000
    StartUpPosition =   1  'CenterOwner
 End

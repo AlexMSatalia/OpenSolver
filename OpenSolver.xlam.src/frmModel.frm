@@ -1,10 +1,10 @@
 VERSION 5.00
 Begin {C62A69F0-16DC-11CE-9E98-00AA00574A4F} frmModel 
    Caption         =   "OpenSolver - Model"
-   ClientHeight    =   8260
-   ClientLeft      =   42
-   ClientTop       =   378
-   ClientWidth     =   9856
+   ClientHeight    =   8265
+   ClientLeft      =   45
+   ClientTop       =   375
+   ClientWidth     =   9855
    OleObjectBlob   =   "frmModel.frx":0000
    StartUpPosition =   1  'CenterOwner
 End
@@ -94,6 +94,7 @@ Sub Disabler(TrueIfEnable As Boolean, f As UserForm)
 4175      f.chkNonNeg.Enabled = TrueIfEnable
 4176      f.cmdCancelCon.Enabled = Not TrueIfEnable
 4177      f.cmdDelSelCon.Enabled = TrueIfEnable
+          f.chkNameRange.Enabled = TrueIfEnable
           
 4178      f.frameDiv4.Enabled = False
           
@@ -113,6 +114,8 @@ Sub Disabler(TrueIfEnable As Boolean, f As UserForm)
 4188      f.cmdOptions.Enabled = TrueIfEnable
 4189      f.cmdBuild.Enabled = TrueIfEnable
 4190      f.cmdCancel.Enabled = TrueIfEnable
+          f.cmdReset.Enabled = TrueIfEnable
+          f.cmdChange.Enabled = TrueIfEnable
 #If Mac Then
 4191      MacOptions.chkPerformLinearityCheck.Enabled = True
 4192      MacOptions.txtTol.Enabled = True
