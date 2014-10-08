@@ -3204,20 +3204,30 @@ Function getVariableDataOS() As Variant
 2556      Next i
           
           ' Reindex bounded variables by relative address so that VarNames(var) can search the collection
-          Dim BoundedVariables As New Collection, c As Range
+          Dim LowerBoundedVariables As New Collection, c As Range
 2557      For Each c In AdjustableCells
 2558          If TestKeyExists(VarLowerBounds, c.Address) Then
-2559              BoundedVariables.Add VarLowerBounds(c.Address), c.Address(RowAbsolute:=False, ColumnAbsolute:=False)
+2559              LowerBoundedVariables.Add VarLowerBounds(c.Address), c.Address(RowAbsolute:=False, ColumnAbsolute:=False)
 2560          End If
 2561      Next c
+
+          Dim UpperBoundedVariables As New Collection
+          For Each c In AdjustableCells
+              If TestKeyExists(VarUpperBounds, c.Address) Then
+                  UpperBoundedVariables.Add VarUpperBounds(c.Address), c.Address(RowAbsolute:=False, ColumnAbsolute:=False)
+              End If
+          Next c
           
           
-          ' Apply lower bounds
+          ' Apply bounds
           Dim var As Long
 2562      For var = 1 To numVars
-2563          If TestKeyExists(BoundedVariables, VarNames(var)) Then
-2564              X(2 * var - 2) = BoundedVariables(VarNames(var))
+2563          If TestKeyExists(LowerBoundedVariables, VarNames(var)) Then
+2564              X(2 * var - 2) = LowerBoundedVariables(VarNames(var))
 2565          End If
+              If TestKeyExists(UpperBoundedVariables, VarNames(var)) Then
+                  X(2 * var - 1) = UpperBoundedVariables(VarNames(var))
+              End If
 2566      Next var
 
           'Get the starting point
