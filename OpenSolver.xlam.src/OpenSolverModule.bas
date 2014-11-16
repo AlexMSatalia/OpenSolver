@@ -39,6 +39,9 @@ Attribute VB_Name = "OpenSolverModule"
 Option Explicit
 Option Base 1
 
+Public Const EPSILON = 0.000001
+Public Const ZERO = 0.00000001
+
 'Solution results, as reported by Excel Solver
 ' FROM http://msdn.microsoft.com/en-us/library/ff197237.aspx
 ' 0 Solver found a solution. All constraints and optimality conditions are satisfied.
@@ -1893,7 +1896,7 @@ End Function
 
 ' Returns true if a number is zero (within tolerance)
 Function IsZero(num As Double) As Boolean
-785       If Abs(num) < EPSILON Then
+785       If Abs(num) < OpenSolver.EPSILON Then
 786           IsZero = True
 787       Else
 788           IsZero = False

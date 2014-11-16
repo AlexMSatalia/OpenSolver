@@ -1281,9 +1281,17 @@ Function ConvertFormulaToExpressionTree(strFormula As String) As ExpressionTree
 8062                  AddNegToTree Tree
 8063              End If
 8064              Operands.Push Tree
-                  
+                      
+              Case TokenType.Text
+                  Operands.Push CreateTree(tkn.Text, ExpressionTreeString)
 8065          Case TokenType.Reference
-8066              Operands.Push CreateTree(tkn.Text, ExpressionTreeVariable)
+                  ' TODO this is a hacky way of distinguishing strings eg "A1" from model variables "Sheet_A1"
+                  ' Obviously it will fail if the string has an underscore.
+                  If InStr(tkn.Text, "_") Then
+8066                  Operands.Push CreateTree(tkn.Text, ExpressionTreeVariable)
+                  Else
+                      Operands.Push CreateTree(tkn.Text, ExpressionTreeString)
+                  End If
                   
               ' If the token is a function token, then push it onto the operators stack along with a left parenthesis (tokeniser strips the parenthesis).
 8067          Case TokenType.FunctionOpen
@@ -1309,7 +1317,7 @@ Function ConvertFormulaToExpressionTree(strFormula As String) As ExpressionTree
 8078              ArgCounts.Increase
               
               ' If the token is an operator
-8079          Case TokenType.ArithmeticOperator, TokenType.UnaryOperator
+8079          Case TokenType.ArithmeticOperator, TokenType.UnaryOperator, TokenType.ComparisonOperator
                   ' The only unary operator '-' is "neg", which is different to "minus"
 8080              If tkn.TokenType = TokenType.UnaryOperator Then
 8081                  tkn.Text = "neg"
@@ -1458,6 +1466,8 @@ End Function
 ' Determines the precedence of arithmetic operators
 Function Precedence(tkn As String) As Long
 8177      Select Case tkn
+          Case "eq", "ne", "gt", "ge", "lt", "le"
+              Precedence = 1
           Case "plus", "minus"
 8178          Precedence = 2
 8179      Case "mult", "div"
@@ -1493,7 +1503,7 @@ End Function
 ' Determines the left-associativity of arithmetic operators
 Function OperatorIsLeftAssociative(tkn As String) As Boolean
 8201      Select Case tkn
-          Case "plus", "minus", "mult", "div"
+          Case "plus", "minus", "mult", "div", "eq", "ne", "gt", "ge", "lt", "le"
 8202          OperatorIsLeftAssociative = True
 8203      Case "pow"
 8204          OperatorIsLeftAssociative = False

@@ -54,9 +54,6 @@ Attribute VB_Exposed = False
 Option Explicit
 Option Base 1
 
-Const EPSILON = 0.000001
-Const ZERO = 0.00000001
-
 Dim sheetName As String ' Sheetname in quotes as used for prefixing
 Dim RawSheetName As String ' Just the worksheet name
 Dim RawWorkBookName As String ' Just the workbook name

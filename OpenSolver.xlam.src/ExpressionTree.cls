@@ -26,6 +26,7 @@ Public Enum ExpressionTreeNodeType
     ExpressionTreeNumber = 0
     ExpressionTreeVariable = 1
     ExpressionTreeOperator = 2
+    ExpressionTreeString = 3
 End Enum
 
 Public Enum ExpressionTreeNodeLinearity
@@ -189,7 +190,7 @@ Sub MarkLinearity()
 
 8589      Select Case NodeType
           ' A constant node is constant
-          Case ExpressionTreeNumber
+          Case ExpressionTreeNumber, ExpressionTreeString
 8590          NodeLinearity = ExpressionTreeConstant
           
           ' A variable is linear
@@ -248,6 +249,23 @@ Sub MarkLinearity()
                   ' Same linearity as child
 8625              NodeLinearity = Children(1).NodeLinearity
                   
+              Case "if"
+                  If Children(1).NodeLinearity = ExpressionTreeConstant Then
+                      ' We know the outcome of the node already. Replace it with the result
+                      Children(1).PullUpConstants
+                      If Children(1).NodeText = 1 Then
+                          ' Result was true. Replace with second node
+                          SetTreeToChild 2
+                      Else
+                          ' Result was false. Replace with third node
+                          SetTreeToChild 3
+                      End If
+                  Else
+                      ' We can't tell which branch of the if will be taken
+                      NodeLinearity = ExpressionTreeNonLinear
+                  End If
+                  
+                  
 8626          Case Else
                   ' Other functions
                   ' If all arguments const, then node is const
@@ -279,293 +297,351 @@ End Sub
 
 ' Evaluates a constant operator node and replaces node and all children with a numeric constant
 Public Sub EvaluateConstantOperator()
-          Dim i As Long, Values As New Collection
+          Dim i As Long, Values As New Collection, HasString As Boolean
+          HasString = False
 8642      For i = 1 To NumChildren
-8643          Values.Add CDbl(Children(i).NodeText)
+              If Children(i).NodeType = ExpressionTreeNumber Then
+8643              Values.Add CDbl(Children(i).NodeText)
+              Else
+                  Values.Add Children(i).NodeText
+                  HasString = True
+              End If
 8644      Next i
           
           Dim NewValue As Double
-8645      Select Case NodeText
           
-          Case "plus"
-8646          NewValue = Values(1) + Values(2)
-          
-8647      Case "minus"
-8648          NewValue = Values(1) - Values(2)
-          
-8649      Case "mult"
-8650          NewValue = Values(1) * Values(2)
-          
-8651      Case "div"
-8652          NewValue = Values(1) / Values(2)
-          
-8653      Case "rem"
-8654          NewValue = Values(1) Mod Values(2)
-          
-8655      Case "pow"
-8656          NewValue = Values(1) ^ Values(2)
-          
-8657      Case "less"
-              ' Returns max(arg1 - arg2, 0)
-8658          NewValue = Values(1) - Values(2)
-8659          If NewValue < 0 Then NewValue = 0
-          
-8660      Case "min"
-8661          NewValue = 10000000000000# ' a big number
-8662          For i = 1 To NumChildren
-8663              If Values(i) < NewValue Then NewValue = Values(i)
-8664          Next i
-          
-8665      Case "max"
-8666          NewValue = -10000000000000# ' a small number
-8667          For i = 1 To NumChildren
-8668              If Values(i) > NewValue Then NewValue = Values(i)
-8669          Next i
-          
-8670      Case "floor"
-8671          NewValue = Int(Values(1))
-          
-8672      Case "ceil"
-8673          NewValue = WorksheetFunction.Ceiling(Values(1), 1)
-          
-8674      Case "abs"
-8675          NewValue = Abs(Values(1))
-          
-8676      Case "neg"
-8677          NewValue = -Values(1)
-          
-8678      Case "or"
-              ' Returns 1 if any arg is non-zero
-8679          If Not IsZero(Values(1)) Or Not IsZero(Values(2)) Then
-8680              NewValue = 1
-8681          Else
-8682              NewValue = 0
-8683          End If
-          
-8684      Case "and"
-              ' Returns 1 if both args are non-zero
-8685          If Not IsZero(Values(1)) And Not IsZero(Values(2)) Then
-8686              NewValue = 1
-8687          Else
-8688              NewValue = 0
-8689          End If
-          
-8690      Case "lt"
-8691          If Values(1) < Values(2) Then
-8692              NewValue = 1
-8693          Else
-8694              NewValue = 0
-8695          End If
-          
-8696      Case "le"
-8697          If Values(1) <= Values(2) Then
-8698              NewValue = 1
-8699          Else
-8700              NewValue = 0
-8701          End If
-          
-8702      Case "eq"
-8703          If IsZero(Values(1) - Values(2)) Then
-8704              NewValue = 1
-8705          Else
-8706              NewValue = 0
-8707          End If
-          
-8708      Case "ge"
-8709          If Values(1) >= Values(2) Then
-8710              NewValue = 1
-8711          Else
-8712              NewValue = 0
-8713          End If
-          
-8714      Case "gt"
-8715          If Values(1) > Values(2) Then
-8716              NewValue = 1
-8717          Else
-8718              NewValue = 0
-8719          End If
-          
-8720      Case "ne"
-8721          If Not IsZero(Values(1) - Values(2)) Then
-8722              NewValue = 1
-8723          Else
-8724              NewValue = 0
-8725          End If
-          
-8726      Case "if"
-8727          If Not IsZero(Values(1)) Then
-8728              NewValue = Values(2)
-8729          Else
-8730              NewValue = Values(3)
-8731          End If
-          
-8732      Case "not"
-              ' Turn zero into 1, and everything else to 0
-8733          If IsZero(Values(1)) Then
-8734              NewValue = 1
-8735          Else
-8736              NewValue = 0
-8737          End If
-          
-8738      Case "tanh"
-8739          NewValue = WorksheetFunction.Tanh(Values(1))
-          
-8740      Case "tan"
-8741          NewValue = Tan(Values(1))
-          
-8742      Case "sqrt"
-8743          NewValue = Sqr(Values(1))
-          
-8744      Case "sinh"
-8745          NewValue = WorksheetFunction.Sinh(Values(1))
-          
-8746      Case "sin"
-8747          NewValue = Sin(Values(1))
-          
-8748      Case "log10"
-              ' VBA log is the natural logarithm - convert to base 10
-8749          NewValue = Log(Values(1)) / Log(10)
-          
-8750      Case "log"
-8751          NewValue = Log(Values(1))
-          
-8752      Case "exp"
-8753          NewValue = Exp(Values(1))
-          
-8754      Case "cosh"
-8755          NewValue = WorksheetFunction.Cosh(Values(1))
-          
-8756      Case "cos"
-8757          NewValue = Cos(Values(1))
-          
-8758      Case "atanh"
-8759          NewValue = WorksheetFunction.Atanh(Values(1))
-          
-8760      Case "atan2"
-8761          NewValue = WorksheetFunction.Atan2(Values(1), Values(2))
-          
-8762      Case "atan"
-8763          NewValue = Atn(Values(1))
-          
-8764      Case "asinh"
-8765          NewValue = WorksheetFunction.Asinh(Values(1))
-          
-8766      Case "asin"
-8767          NewValue = WorksheetFunction.Asin(Values(1))
-          
-8768      Case "acosh"
-8769          NewValue = WorksheetFunction.Acosh(Values(1))
-          
-8770      Case "acos"
-8771          NewValue = WorksheetFunction.Acos(Values(1))
+          If HasString Then
+              Select Case NodeText
+              Case "lt"
+                  If Values(1) < Values(2) Then
+                      NewValue = 1
+                  Else
+                      NewValue = 0
+                  End If
               
-8772      Case "sum"
-8773          NewValue = 0
-8774          For i = 1 To NumChildren
-8775              NewValue = NewValue + Values(i)
-8776          Next i
+              Case "le"
+                  If Values(1) <= Values(2) Then
+                      NewValue = 1
+                  Else
+                      NewValue = 0
+                  End If
+                  
+              Case "eq"
+                  If Values(1) = Values(2) Then
+                      NewValue = 1
+                  Else
+                      NewValue = 0
+                  End If
+                  
+              Case "ge"
+                  If Values(1) >= Values(2) Then
+                      NewValue = 1
+                  Else
+                      NewValue = 0
+                  End If
               
-8777      Case "intdiv"
-8778          NewValue = Values(1) \ Values(2)
+              Case "gt"
+                  If Values(1) > Values(2) Then
+                      NewValue = 1
+                  Else
+                      NewValue = 0
+                  End If
               
-8779      Case "precision"
-              ' Rounds number to specified number of sig figs
-              ' Formula from http://stackoverflow.com/a/15976194
-8780          NewValue = Round(Values(1), Values(2) - (Int(Log(Values(1)) / Log(10#)) + 1))
+              Case "ne"
+                  If Values(1) <> Values(2) Then
+                      NewValue = 1
+                  Else
+                      NewValue = 0
+                  End If
               
-8781      Case "round"
-              ' Rounds number to specified number of decimals
-8782          NewValue = Round(Values(1), Values(2))
+              Case Else
+                  NewValue = 0
+                  Err.Raise OpenSolver_BuildError, "Building expression tree", "String evaluation of " & NodeText & " not implemented yet in collation of linear terms" & vbCrLf & "Please let us know about this at opensolver.org so we can fix it."
+              End Select
+          Else
+          
+8645          Select Case NodeText
+          
+              Case "plus"
+8646              NewValue = Values(1) + Values(2)
+          
+8647          Case "minus"
+8648              NewValue = Values(1) - Values(2)
+          
+8649          Case "mult"
+8650              NewValue = Values(1) * Values(2)
+          
+8651          Case "div"
+8652              NewValue = Values(1) / Values(2)
               
-8783      Case "trunc"
-              ' Truncates number to specified number of decimals
-8784          NewValue = WorksheetFunction.RoundDown(Values(1), Values(2))
+8653          Case "rem"
+8654              NewValue = Values(1) Mod Values(2)
               
-8785      Case "count"
-              ' Counts number of non-zero arguments
-8786          NewValue = 0
-8787          For i = 1 To NumChildren
-8788              If Not IsZero(Values(i)) Then NewValue = NewValue + 1
-8789          Next i
+8655          Case "pow"
+8656              NewValue = Values(1) ^ Values(2)
               
-8790      Case "numberof"
-              ' Counts number of numeric args that match the first
-              Dim NumToMatch As Double
-8791          NumToMatch = Values(1)
-8792          NewValue = 0
-8793          For i = 2 To NumChildren
-8794              If IsZero(NumToMatch - Values(i)) Then NewValue = NewValue + 1
-8795          Next i
+8657          Case "less"
+                  ' Returns max(arg1 - arg2, 0)
+8658              NewValue = Values(1) - Values(2)
+8659              If NewValue < 0 Then NewValue = 0
               
-8796      Case "numberofs"
-              ' Counts number of string args that match the first
-              Dim StringToMatch As String
-8797          StringToMatch = Values(1)
-8798          NewValue = 0
-8799          For i = 2 To NumChildren
-8800              If StringToMatch = Values(i) Then NewValue = NewValue + 1
-8801          Next i
+8660          Case "min"
+8661              NewValue = 10000000000000# ' a big number
+8662              For i = 1 To NumChildren
+8663                  If Values(i) < NewValue Then NewValue = Values(i)
+8664              Next i
               
-8802      Case "ifs"
-8803          If Not IsZero(Values(1)) Then
-8804              NewValue = Values(2)
-8805          Else
-8806              NewValue = Values(3)
-8807          End If
+8665          Case "max"
+8666              NewValue = -10000000000000# ' a small number
+8667              For i = 1 To NumChildren
+8668                  If Values(i) > NewValue Then NewValue = Values(i)
+8669              Next i
               
-8808      Case "and_n"
-              ' Returns 1 if all args are non-zero
-8809          NewValue = 1
-8810          For i = 1 To NumChildren
-8811              If IsZero(Values(i)) Then
-8812                  NewValue = 0
-8813                  GoTo FinishNode
-8814              End If
-8815          Next i
+8670          Case "floor"
+8671              NewValue = Int(Values(1))
               
-8816      Case "or_n"
-              ' Returns 1 if any args are non-zero
-8817          NewValue = 0
-8818          For i = 1 To NumChildren
-8819              If Not IsZero(Values(i)) Then
-8820                  NewValue = 1
-8821                  GoTo FinishNode
-8822              End If
-8823          Next i
+8672          Case "ceil"
+8673              NewValue = WorksheetFunction.Ceiling(Values(1), 1)
               
-8824      Case "implies"
-8825          If Not IsZero(Values(1)) Then
-8826              NewValue = Values(2)
-8827          Else
-8828              NewValue = Values(3)
-8829          End If
+8674          Case "abs"
+8675              NewValue = Abs(Values(1))
               
-8830      Case "iff"
-              ' Returns 1 if both args are non-zero or both are zero (XNOR)
-8831          If (Not IsZero(Values(1)) And Not IsZero(Values(2))) Or (IsZero(Values(1)) And IsZero(Values(2))) Then
-8832              NewValue = 1
-8833          Else
-8834              NewValue = 0
-8835          End If
+8676          Case "neg"
+8677              NewValue = -Values(1)
               
-8836      Case "alldiff"
-              ' Returns 1 if all arguments are different
-              Dim Args As New Collection, key As String
-8837          For i = 1 To NumChildren
-                  ' Create key using the var type so we distinguish between 1.23 and "1.23"
-8838              key = CStr(VarType(Values(i))) & CStr(Values(i))
-8839              If TestKeyExists(Args, key) Then
-8840                  NewValue = 0 ' Duplicate found
-8841                  GoTo FinishNode
-8842              Else
-8843                  Args.Add 0, key ' Value doesn't matter, we just want to track the key
-8844              End If
-8845          Next i
+8678          Case "or"
+                  ' Returns 1 if any arg is non-zero
+8679              If Not IsZero(Values(1)) Or Not IsZero(Values(2)) Then
+8680                  NewValue = 1
+8681              Else
+8682                  NewValue = 0
+8683              End If
               
-8846      Case Else
-8847          NewValue = 0
-8848          Err.Raise OpenSolver_BuildError, "Building expression tree", "Constant evaluation of " & NodeText & " not implemented yet in collation of linear terms" & vbCrLf & "Please let us know about this at opensolver.org so we can fix it."
-8849      End Select
+8684          Case "and"
+                  ' Returns 1 if both args are non-zero
+8685              If Not IsZero(Values(1)) And Not IsZero(Values(2)) Then
+8686                  NewValue = 1
+8687              Else
+8688                  NewValue = 0
+8689              End If
+              
+8690          Case "lt"
+8691              If Values(1) < Values(2) Then
+8692                  NewValue = 1
+8693              Else
+8694                  NewValue = 0
+8695              End If
+              
+8696          Case "le"
+8697              If Values(1) <= Values(2) Then
+8698                  NewValue = 1
+8699              Else
+8700                  NewValue = 0
+8701              End If
+              
+8702          Case "eq"
+                  If IsZero(Values(1) - Values(2)) Then
+8704                  NewValue = 1
+8705              Else
+8706                  NewValue = 0
+8707              End If
+              
+8708          Case "ge"
+8709              If Values(1) >= Values(2) Then
+8710                  NewValue = 1
+8711              Else
+8712                  NewValue = 0
+8713              End If
+              
+8714          Case "gt"
+8715              If Values(1) > Values(2) Then
+8716                  NewValue = 1
+8717              Else
+8718                  NewValue = 0
+8719              End If
+              
+8720          Case "ne"
+8721              If Not IsZero(Values(1) - Values(2)) Then
+8722                  NewValue = 1
+8723              Else
+8724                  NewValue = 0
+8725              End If
+              
+8726          Case "if"
+8727              If Not IsZero(Values(1)) Then
+8728                  NewValue = Values(2)
+8729              Else
+8730                  NewValue = Values(3)
+8731              End If
+              
+8732          Case "not"
+                  ' Turn zero into 1, and everything else to 0
+8733              If IsZero(Values(1)) Then
+8734                  NewValue = 1
+8735              Else
+8736                  NewValue = 0
+8737              End If
+              
+8738          Case "tanh"
+8739              NewValue = WorksheetFunction.Tanh(Values(1))
+              
+8740          Case "tan"
+8741              NewValue = Tan(Values(1))
+              
+8742          Case "sqrt"
+8743              NewValue = Sqr(Values(1))
+              
+8744          Case "sinh"
+8745              NewValue = WorksheetFunction.Sinh(Values(1))
+              
+8746          Case "sin"
+8747              NewValue = Sin(Values(1))
+              
+8748          Case "log10"
+                  ' VBA log is the natural logarithm - convert to base 10
+8749              NewValue = Log(Values(1)) / Log(10)
+              
+8750          Case "log"
+8751              NewValue = Log(Values(1))
+              
+8752          Case "exp"
+8753              NewValue = Exp(Values(1))
+              
+8754          Case "cosh"
+8755              NewValue = WorksheetFunction.Cosh(Values(1))
+              
+8756          Case "cos"
+8757              NewValue = Cos(Values(1))
+              
+8758          Case "atanh"
+8759              NewValue = WorksheetFunction.Atanh(Values(1))
+              
+8760          Case "atan2"
+8761              NewValue = WorksheetFunction.Atan2(Values(1), Values(2))
+              
+8762          Case "atan"
+8763              NewValue = Atn(Values(1))
+              
+8764          Case "asinh"
+8765              NewValue = WorksheetFunction.Asinh(Values(1))
+              
+8766          Case "asin"
+8767              NewValue = WorksheetFunction.Asin(Values(1))
+              
+8768          Case "acosh"
+8769              NewValue = WorksheetFunction.Acosh(Values(1))
+              
+8770          Case "acos"
+8771              NewValue = WorksheetFunction.Acos(Values(1))
+                  
+8772          Case "sum"
+8773              NewValue = 0
+8774              For i = 1 To NumChildren
+8775                  NewValue = NewValue + Values(i)
+8776              Next i
+                  
+8777          Case "intdiv"
+8778              NewValue = Values(1) \ Values(2)
+                  
+8779          Case "precision"
+                  ' Rounds number to specified number of sig figs
+                  ' Formula from http://stackoverflow.com/a/15976194
+8780              NewValue = Round(Values(1), Values(2) - (Int(Log(Values(1)) / Log(10#)) + 1))
+                  
+8781          Case "round"
+                  ' Rounds number to specified number of decimals
+8782              NewValue = Round(Values(1), Values(2))
+                  
+8783          Case "trunc"
+                  ' Truncates number to specified number of decimals
+8784              NewValue = WorksheetFunction.RoundDown(Values(1), Values(2))
+                  
+8785          Case "count"
+                  ' Counts number of non-zero arguments
+8786              NewValue = 0
+8787              For i = 1 To NumChildren
+8788                  If Not IsZero(Values(i)) Then NewValue = NewValue + 1
+8789              Next i
+                  
+8790          Case "numberof"
+                  ' Counts number of numeric args that match the first
+                  Dim NumToMatch As Double
+8791              NumToMatch = Values(1)
+8792              NewValue = 0
+8793              For i = 2 To NumChildren
+8794                  If IsZero(NumToMatch - Values(i)) Then NewValue = NewValue + 1
+8795              Next i
+                  
+8796          Case "numberofs"
+                  ' Counts number of string args that match the first
+                  Dim StringToMatch As String
+8797              StringToMatch = Values(1)
+8798              NewValue = 0
+8799              For i = 2 To NumChildren
+8800                  If StringToMatch = Values(i) Then NewValue = NewValue + 1
+8801              Next i
+                  
+8802          Case "ifs"
+8803              If Not IsZero(Values(1)) Then
+8804                  NewValue = Values(2)
+8805              Else
+8806                  NewValue = Values(3)
+8807              End If
+                  
+8808          Case "and_n"
+                  ' Returns 1 if all args are non-zero
+8809              NewValue = 1
+8810              For i = 1 To NumChildren
+8811                  If IsZero(Values(i)) Then
+8812                      NewValue = 0
+8813                      GoTo FinishNode
+8814                  End If
+8815              Next i
+                  
+8816          Case "or_n"
+                  ' Returns 1 if any args are non-zero
+8817              NewValue = 0
+8818              For i = 1 To NumChildren
+8819                  If Not IsZero(Values(i)) Then
+8820                      NewValue = 1
+8821                      GoTo FinishNode
+8822                  End If
+8823              Next i
+                  
+8824          Case "implies"
+8825              If Not IsZero(Values(1)) Then
+8826                  NewValue = Values(2)
+8827              Else
+8828                  NewValue = Values(3)
+8829              End If
+                  
+8830          Case "iff"
+                  ' Returns 1 if both args are non-zero or both are zero (XNOR)
+8831              If (Not IsZero(Values(1)) And Not IsZero(Values(2))) Or (IsZero(Values(1)) And IsZero(Values(2))) Then
+8832                  NewValue = 1
+8833              Else
+8834                  NewValue = 0
+8835              End If
+                  
+8836          Case "alldiff"
+                  ' Returns 1 if all arguments are different
+                  Dim Args As New Collection, key As String
+8837              For i = 1 To NumChildren
+                      ' Create key using the var type so we distinguish between 1.23 and "1.23"
+8838                  key = CStr(VarType(Values(i))) & CStr(Values(i))
+8839                  If TestKeyExists(Args, key) Then
+8840                      NewValue = 0 ' Duplicate found
+8841                      GoTo FinishNode
+8842                  Else
+8843                      Args.Add 0, key ' Value doesn't matter, we just want to track the key
+8844                  End If
+8845              Next i
+                  
+8846          Case Else
+8847              NewValue = 0
+8848              Err.Raise OpenSolver_BuildError, "Building expression tree", "Constant evaluation of " & NodeText & " not implemented yet in collation of linear terms" & vbCrLf & "Please let us know about this at opensolver.org so we can fix it."
+8849          End Select
+          End If
               
 FinishNode:
           ' Replace subtree with a constant node

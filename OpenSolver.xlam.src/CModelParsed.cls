@@ -708,6 +708,34 @@ Function ExpandFormula(ByVal strFormula As String, _
 5123                          If FunctionName = "SUM" And FunctionCount > 0 Then
 5124                              strParsed = left(strParsed, Len(strParsed) - 1) + "+"
 5125                          End If
+
+                              'If we are starting a SUMIF, we need to get the next argument now
+                              If FunctionName = "SUMIF" And FunctionCount = 0 Then
+                                  Dim NewToken As Token, IfOperator As String
+                                  Set NewToken = tksFormula.Item(i + 1)
+                                  If NewToken.Text <> "," Then
+                                      MsgBox "Misformed SUMIF"
+                                  End If
+                                  
+                                  Set NewToken = tksFormula.Item(i + 2)
+                                  IfOperator = "="
+                                  If NewToken.TokenType = Text Then
+                                      Select Case left(NewToken.Text, 2)
+                                          Case "<=", ">=", "<>"
+                                              IfOperator = ""
+                                      End Select
+                                      Select Case left(NewToken.Text, 1)
+                                          Case "<", ">", "="
+                                              IfOperator = ""
+                                      End Select
+                                  End If
+                                  If NewToken.TokenType = TokenType.Reference Then
+                                      IfOperator = IfOperator + AddNodeIfNew(objCurNode, Range(NewToken.Text))
+                                  Else
+                                      IfOperator = IfOperator + CStr(NewToken.Text)
+                                  End If
+                                  i = i + 2
+                              End If
                               
                               ' If we are building up a function, save the start of the function so we don't overwrite earlier work
 5126                          If FunctionCount = 0 Then
@@ -736,6 +764,15 @@ Function ExpandFormula(ByVal strFormula As String, _
 5143                                  Else
 5144                                      strParsed = Replace(strParsed, ",", "*" & node & "+", 1, 1)
 5145                                  End If
+                                  ElseIf FunctionName = "SUMIF" Then
+                                      If FunctionCount = 0 Then
+                                          strParsed = strParsed + "if(" + node + IfOperator + ","
+                                      Else
+                                          Dim Position As Long
+                                          Count = Count + 1
+                                          Position = FindPosition(strParsed, ",", 2 * Count)
+                                          strParsed = left(strParsed, Position) + node + ",0)+" + Mid(strParsed, Position + 1)
+                                      End If
 5146                              ElseIf FunctionName = "SUM" Then
 5147                                  strParsed = strParsed + node + "+"
 5148                              Else
@@ -909,7 +946,7 @@ Function FindPosition(Word As String, FindString As String, Count As Long, Optio
           
           ' Loop until count reached
 5252      While It < Count
-5253          FindPosition = FindPosition + InStr(1, Word, FindString)
+5253          FindPosition = InStr(FindPosition + 1, Word, FindString)
 5254          It = It + 1
 5255      Wend
 End Function
@@ -1240,6 +1277,9 @@ Function ConvertFormula_AMPL(tokenText As String) As String
 5444              Err.Raise OpenSolver_BuildError, "Parsing model formulae", "The operator " & UCase(tokenText) & " is not yet supported by Couenne."
 5445          End If
 5446          ConvertFormula_AMPL = tokenText + "("
+          Case "sumif"
+              Err.Raise OpenSolver_BuildError, "Parsing model formulae", "The operator " & UCase(tokenText) & " is not yet supported by OpenSolver when using the NEOS solvers."
+              ConvertFormula_AMPL = tokenText + "("
 5447      Case Else
 5448          ConvertFormula_AMPL = tokenText + "("
 5449      End Select
@@ -1256,6 +1296,8 @@ Function ConvertFormula_NL(tokenText As String) As String
           ' RADIANS
           Case "RADIANS"
 5454          ConvertFormula_NL = "4*ATAN(1)/180*("
+          Case "SUMIF"
+              ConvertFormula_NL = "("
 5455      Case "PI"
 5456          ConvertFormula_NL = "(4*ATAN(1)"
 5457      Case "MIN", "MAX"
