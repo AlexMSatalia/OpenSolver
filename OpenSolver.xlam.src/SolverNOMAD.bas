@@ -63,7 +63,7 @@ Function SolverAvailable_NOMAD(Optional errorString As String) As Boolean
 NotFound:
 6986      SetCurrentDirectory currentDir
 6987      SolverAvailable_NOMAD = False
-6988      errorString = "Unable to find the Nomad DLL file `" & NomadDllName & "' in the folder that contains `OpenSolver.xlam'"
+6988      errorString = "Unable to find NOMAD (" & NomadDllName & ") in the `Solvers` folder (" & NomadDir() & ")"
 6989      Exit Function
 #End If
 End Function
