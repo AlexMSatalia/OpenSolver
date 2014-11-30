@@ -59,6 +59,9 @@ Public Sub Setup(ByRef BookToUse As Workbook, ByRef SheetToUse As Worksheet)
 4782      Set book = BookToUse
 4783      Set SolverModelSheet = SheetToUse
 4784      strNameRoot = "'" & SolverModelSheet.Name & "'" & "!"
+          Set OpenSolverParser.SheetNameMap = New Collection
+          Set OpenSolverParser.SheetNameMapReverse = New Collection
+          
           
 End Sub
 

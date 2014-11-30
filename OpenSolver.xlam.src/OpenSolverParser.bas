@@ -1,20 +1,46 @@
 Attribute VB_Name = "OpenSolverParser"
 Option Explicit
 
+Public SheetNameMap As Collection          ' Stores a map from sheet name to cleaned name
+Public SheetNameMapReverse As Collection   ' Stores a map from cleaned name to sheet name
+
+
 '==============================================================================
 ' ConvertCellToStandardName
 ' Range's address property always gives a $A$1 style address, but doesn't
 ' include the sheet. This function removes any nasty characters, and sticks
 ' the sheet name at the front, thus giving nice unique names for Python and
 ' VBA collections to use.
-Function ConvertCellToStandardName(rngCell As Range, Optional strCleanParentName As String = "") As String
+Function ConvertCellToStandardName(rngCell As Range, Optional strParentName As String = "") As String
           Dim strCleanAddress As String
 7438      strCleanAddress = rngCell.Address
-7439      If strCleanParentName = "" Then strCleanParentName = Replace(rngCell.Parent.Name, " ", "_")
-7440      strCleanParentName = Replace(strCleanParentName, "-", "_")
 7441      strCleanAddress = Replace(strCleanAddress, "$", "")
 7442      strCleanAddress = Replace(strCleanAddress, ":", "_")
 7443      strCleanAddress = Replace(strCleanAddress, "-", "_")
+
+7439      If strParentName = "" Then strParentName = Replace(rngCell.Parent.Name, " ", "_")
+          
+          Dim strCleanParentName As String
+          If TestKeyExists(SheetNameMap, strParentName) Then
+              strCleanParentName = SheetNameMap(strParentName)
+          Else
+7440          strCleanParentName = Replace(strParentName, "-", "_")
+              strCleanParentName = Replace(strCleanParentName, "+", "_")
+              strCleanParentName = Replace(strCleanParentName, " ", "_")
+              strCleanParentName = Replace(strCleanParentName, "(", "_")
+              strCleanParentName = Replace(strCleanParentName, ")", "_")
+              strCleanParentName = Replace(strCleanParentName, ":", "_")
+              strCleanParentName = Replace(strCleanParentName, "*", "_")
+              strCleanParentName = Replace(strCleanParentName, "/", "_")
+              strCleanParentName = Replace(strCleanParentName, "^", "_")
+              ' If the cleaned name already exists, append an extra "1"
+              Do While TestKeyExists(SheetNameMapReverse, strCleanParentName)
+                  strCleanParentName = strCleanParentName & "1"
+              Loop
+              SheetNameMap.Add strCleanParentName, strParentName
+              SheetNameMapReverse.Add strParentName, strCleanParentName
+          End If
+
 7444      ConvertCellToStandardName = strCleanParentName + "_" + strCleanAddress
 End Function
 '==============================================================================
