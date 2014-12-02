@@ -73,7 +73,7 @@ Private Function ExportFileNameFor(codeComponent As VBComponent) As String
 6041         Case vbext_ct_StdModule
 6042             extension = "bas"
 6043         Case vbext_ct_Document
-6044             extension = "cls"
+6044             extension = "sht"
 6045     End Select
 
 6046     ExportFileNameFor = codeComponent.Name & "." & extension

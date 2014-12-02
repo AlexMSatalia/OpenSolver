@@ -1,5 +1,4 @@
 Attribute VB_Name = "SolverCBC"
-
 Option Explicit
 
 Public Const SolverTitle_CBC = "COIN-OR CBC (Linear solver)"

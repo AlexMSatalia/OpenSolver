@@ -13,7 +13,6 @@ Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = True
 Attribute VB_Exposed = False
-
 Private Sub CommandButtonAbort_Click()
 9229      Me.Tag = vbCancel
 9230      Me.Hide
