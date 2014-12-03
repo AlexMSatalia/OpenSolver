@@ -50,7 +50,7 @@ Public Const ZERO = 0.00000001
 ' 3 Stop chosen when the maximum iteration limit was reached.
 ' 4 The Objective Cell values do not converge.
 ' 5 Solver could not find a feasible solution.
-' 6 Solver stopped at user’s request.
+' 6 Solver stopped at user's request.
 ' 7 The linearity conditions required by this LP Solver are not satisfied.
 ' 8 The problem is too large for Solver to handle.
 ' 9 Solver encountered an error value in a target or constraint cell.
@@ -180,11 +180,14 @@ Private SearchRangeNameCACHE As Collection  'by ASL 20130126
 
 Public TempFolderPathCached As String
 
-' Variables for caching error messages on Mac when control passes between Class and Module
 #If Mac Then
+    ' Variables for caching error messages on Mac when control passes between Class and Module
     Public OpenSolver_ErrNumber As Long
     Public OpenSolver_ErrSource As String
     Public OpenSolver_ErrDescription As String
+    
+    ' Variable to save Drive name
+    Public CachedDriveName As String
 #End If
 
 ' TODO: These & other declarations, and type definitons, need to be updated for 64 bit systems; see:
@@ -1533,7 +1536,7 @@ Function IsAmericanNumber(s As String, Optional i As Long = 1) As Boolean
           '   val("12+3") gives 12 with no error
           '   Assigning a string to a double uses region-specific translation, so x="1,2" works in French
           '   IsNumeric("12,45") is true even on a US English system (and even worse...)
-          '   IsNumeric(“($1,23,,3.4,,,5,,E67$)”)=True! See http://www.eggheadcafe.com/software/aspnet/31496070/another-vba-bug.aspx)
+          '   IsNumeric("($1,23,,3.4,,,5,,E67$)")=True! See http://www.eggheadcafe.com/software/aspnet/31496070/another-vba-bug.aspx)
 
           Dim MustBeInteger As Boolean, SeenDot As Boolean, SeenDigit As Boolean
 631       MustBeInteger = i > 1   ' We call this a second time after seeing the "E", when only an int is allowed
@@ -1781,6 +1784,18 @@ Public Function ConvertHfsPath(Path As String) As String
 743       End If
 #Else
 744       ConvertHfsPath = Path
+#End If
+End Function
+
+Public Function GetDriveName() As String
+#If Mac Then
+    If CachedDriveName = "" Then
+        Dim Path As String
+        Path = GetTempFolder()
+        CachedDriveName = left(Path, InStr(Path, ":") - 1)
+    End If
+    
+    GetDriveName = CachedDriveName
 #End If
 End Function
 

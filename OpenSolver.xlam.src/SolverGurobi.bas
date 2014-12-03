@@ -60,7 +60,7 @@ End Function
 
 Function GetGurobiBinFolder() As String
 #If Mac Then
-6381      GetGurobiBinFolder = "Macintosh HD:usr:local:bin:"
+6381      GetGurobiBinFolder = GetDriveName() & ":usr:local:bin:"
 #Else
 6382      GetExistingFilePathName Environ("GUROBI_HOME"), "bin", GetGurobiBinFolder
 #End If
@@ -71,7 +71,7 @@ Function SolverFilePath_Gurobi() As String
           ' On Mac, using the gurobi interactive shell causes errors when there are spaces in the filepath.
           ' The mac gurobi.sh script, unlike windows, doesn't have a check for a gurobi install, thus it doesn't do anything for us here and is safe to skip.
           ' We can just run python by itself. We need to use the default system python (pre-installed on mac) and not any other version (e.g. a version from homebrew)
-6383      SolverFilePath_Gurobi = "Macintosh HD:usr:bin:python"
+6383      SolverFilePath_Gurobi = GetDriveName() & ":usr:bin:python"
 #Else
 6384      GetExistingFilePathName GetGurobiBinFolder(), Solver_Gurobi, SolverFilePath_Gurobi
 #End If
