@@ -400,7 +400,7 @@ Function CellIsConstant(cell As Range) As Boolean
               On Error Resume Next
               Set CellPrecedents = cell.Precedents
               If Err.Number = 1004 Then
-                  If Err.Description = "No cells were found" Then
+                  If Err.Description Like "No cells were found*" Then
                       CellIsConstant = True
                       Exit Function
                   Else
