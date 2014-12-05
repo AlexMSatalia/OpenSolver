@@ -1183,6 +1183,9 @@ Function AddNodeIfNew(ByRef objCurNode As CFormula, ByRef c As Range) As String
 5384                  c.Calculate
 5385                  AddNodeIfNew = CStr(c.value)
 5386                  GoTo finishedNode
+                  ElseIf IsArray(varReturn) Then
+                      AddNodeIfNew = varReturn(1)
+                      GoTo finishedNode
 5387              Else
 5388                  AddNodeIfNew = varReturn
 5389                  GoTo finishedNode
