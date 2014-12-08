@@ -1570,16 +1570,23 @@ Sub SolveModel_LinearLocal(ModelFilePathName As String, SolveRelaxation As Boole
               Dim SolutionFilePathName As String
 1568          SolutionFilePathName = SolutionFilePath(Solver)
          
+              Dim logCommand As String, logFileName As String
+              Dim mteePath As String
+              Dim position2 As Integer
+              'Truncate the string at the S in \Solvers
+              position2 = InStr(ExternalSolverPathName, "Solver") - 1
+              mteePath = left(ExternalSolverPathName, position2)
+              mteePath = mteePath & "Utils\mtee\mtee.exe"
+              'Then append the mte path to the end
+1570          logFileName = "log1.tmp"
+1571          logCommand = " | " & Chr(34) & mteePath & Chr(34) & " " & QuotePath(ConvertHfsPath(GetTempFilePath(logFileName)))
+         
 1569          ExternalSolverPathName = CreateSolveScript(Solver, SolutionFilePathName, ExtraParametersString, SolveOptions, Me)
       '13120         ElseIf Solver = "cplex.exe" Then
       '13130             CommandLineRunString = """" & GetTempFolder & ModelFilePathName & """" & " write=" & Replace(SolutionFileName, ".txt", ".sol")
       '13140             PrintingOptionString = ""
       '13150         End If
               
-              Dim logCommand As String, logFileName As String
-1570          logFileName = "log1.tmp"
-1571          logCommand = " > " & QuotePath(ConvertHfsPath(GetTempFilePath(logFileName)))
-                  
               Dim ExecutionCompleted As Boolean
               'ExecutionCompleted = OSSolveSync(CBCRunString, IIf(ShowIterationResults, SW_SHOWNORMAL, SW_SHOWMINIMIZED), True) ' This stops escape being detected properly unless Excel is first 'activated?' with a click
 1572          ExternalSolverPathName = QuotePath(ConvertHfsPath(ExternalSolverPathName)) ' fix error for Gurobi with spaces in path name by quoting path

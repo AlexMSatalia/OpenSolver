@@ -300,7 +300,7 @@ Function Stream_BinaryToString(Binary)
 6960       BinaryStream.Write Binary
            
            'Change stream type To text/string
-6961       BinaryStream.Position = 0
+6961       BinaryStream.position = 0
 6962       BinaryStream.Type = adTypeText
            
            'Specify charset For the output text (unicode) data.
