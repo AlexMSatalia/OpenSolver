@@ -29,9 +29,6 @@ Option Explicit
 Public Const sOpenSolverVersion As String = "2.6"
 Public Const sOpenSolverDate As String = "2014.10.08"
 
-'Josh Dawes Edit: Creating a temporary workbook for use by "ConvertFromCurrentLocale", which used to access Cell A1 of Sheet 1 (which is quite plausibly in use already)
-Public TempWorkbook As Workbook
-
 ' Used for the 2003 menu code
 Private Const strAddInName As String = "OpenSolver"
 Private Const strMenuName  As String = "&OpenSolver"
@@ -40,30 +37,7 @@ Dim OpenSolver As COpenSolver
 
 Sub OpenSolver_SolveClickHandler(Optional Control)
 2754      If Not CheckWorksheetAvailable Then Exit Sub
-
-          'TODO
-          'This might not belong here, it should be at a level so that the workbook is always available for ConvertFromCurentLocale calls, even not through this click handler.
-          
-          'Store original active sheet
-          Dim ActiveBookName As String
-          ActiveBookName = ActiveWorkbook.Name
-          
-          'Create Workbook
-          Set TempWorkbook = Workbooks.Add
-          TempWorkbook.Windows(1).Visible = False
-          TempWorkbook.Saved = True 'So that the dev isn't prompted to save after using break, which stops the workbook from being deleted.
-          
-                    
-          'Reset Active Book
-          Workbooks(ActiveBookName).Activate
-          
-          'Run Opensolver
 2755      RunOpenSolver False
-
-          'Remove the sheet once completed, surpressing the confirmation
-          Application.DisplayAlerts = False
-          TempWorkbook.Close 0
-          Application.DisplayAlerts = True
 End Sub
 
 Sub OpenSolver_ModelOptions(Optional Control)
@@ -241,13 +215,6 @@ errorHandler:
 2825      Set OpenSolver = Nothing    ' Free any OpenSolver memory used
 2826      Application.Iteration = oldIterationMode
 2827      RunOpenSolver = OpenSolverResult.ErrorOccurred
-
-          'if the temporary workbook is still open, close it
-          If Not TempWorkbook Is Nothing Then
-            TempWorkbook.Saved = True 'So that the dev isn't prompted to save after using break, which stops the workbook from being deleted.
-            TempWorkbook.Close 0
-          End If
-
 #If Mac Then
           ' Reload error message from cache if they exist
           If OpenSolver_ErrNumber <> 0 Then Err.Number = OpenSolver_ErrNumber
@@ -554,5 +521,3 @@ End Sub
 ' Excel 2003 Menu Code
 ' Provided by Paul Becker of Eclipse Engineering (www.eclipseeng.com)
 '====================================================================
-
-
