@@ -963,10 +963,10 @@ errorHandler:
 DecimalFixer: 'Ensures decimal character used is correct.
         If Application.DecimalSeparator = "." Then
             s = Replace(s, ".", ",")
-            TempWorkbook.Sheets(1).Range("A1").FormulaLocal = s
+            ThisWorkbook.Sheets(1).Cells(1, 1).FormulaLocal = s
         ElseIf Application.DecimalSeparator = "," Then
             s = Replace(s, ",", ".")
-            TempWorkbook.Sheets(1).Range("A1").FormulaLocal = s
+            ThisWorkbook.Sheets(1).Cells(1, 1).FormulaLocal = s
         End If
         Resume
 
