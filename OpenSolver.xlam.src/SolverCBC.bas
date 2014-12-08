@@ -383,6 +383,7 @@ Function ReadModel_CBC(SolutionFilePathName As String, errorString As String, s 
 6266                  i = i + 1
 6267              Wend
 6268              s.FinalVarValueP(j) = Val(SplitLine(i))
+'CDbl(SplitLine(i))
                   'Write to the sheet containing the decision variables (which may not be the active sheet)
                   'Value assigned to Value2 must be in US locale
 6269              s.AdjustableCells.Worksheet.Range(NameValue).Value2 = ConvertFromCurrentLocale(s.FinalVarValueP(j))
@@ -534,3 +535,5 @@ errorHandler:
 6367      MsgBox "OpenSolver encountered error " & Err.Number & ":" & vbCrLf & Err.Description & IIf(Erl = 0, "", " (at line " & Erl & ")") & vbCrLf & "Source = " & Err.Source, , "OpenSolver Code Error"
 6368      Resume ExitSub
 End Sub
+
+
