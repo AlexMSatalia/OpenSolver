@@ -2,9 +2,9 @@ VERSION 5.00
 Begin {C62A69F0-16DC-11CE-9E98-00AA00574A4F} UserFormAbout 
    Caption         =   "About OpenSolver"
    ClientHeight    =   7140
-   ClientLeft      =   42
-   ClientTop       =   343
-   ClientWidth     =   8883
+   ClientLeft      =   45
+   ClientTop       =   345
+   ClientWidth     =   8880
    OleObjectBlob   =   "UserFormAbout.frx":0000
    StartUpPosition =   1  'CenterOwner
 End
@@ -143,7 +143,6 @@ Public Sub ActivateAboutForm(f As UserForm)
 3530      f.txtAbout.Text = f.txtAbout.Text & About_Couenne & vbNewLine & vbNewLine
 3531      f.txtAbout.Text = f.txtAbout.Text & "OpenSolverFile: " & MakeSpacesNonBreaking(ThisWorkbook.FullName)
           
-3531      f.labelFilePath = "OpenSolverFile: " & MakeSpacesNonBreaking(ThisWorkbook.FullName)
 3532      ReflectOpenSolverStatus f
 3533      EventsEnabled = True
 
