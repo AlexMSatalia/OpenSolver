@@ -99,7 +99,7 @@ Function SolverVersion_CBC() As String
           
           ' Run cbc
           Dim completed As Boolean
-6078      completed = OSSolveSync(ConvertHfsPath(RunPath), "", "", "", SW_HIDE, True)
+6078      completed = RunExternalCommand(ConvertHfsPath(RunPath), "", SW_HIDE, True) 'OSSolveSync
           
           ' Read version info back from output file
           Dim Line As String
@@ -527,7 +527,7 @@ Sub LaunchCommandLine_CBC()
                            & SolveOptionsString _
                            & ExtraParametersString _
                            & " -" ' Force CBC to accept commands from the command line
-6365      OSSolveSync QuotePath(ConvertHfsPath(SolverPath)), CBCRunString, "", "", SW_SHOWNORMAL, False
+6365      RunExternalCommand QuotePath(ConvertHfsPath(SolverPath)) & CBCRunString, "", SW_SHOWNORMAL, False 'OSSolveSync
 
 ExitSub:
 6366      Exit Sub

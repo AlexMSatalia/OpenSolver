@@ -86,7 +86,7 @@ Function SolverVersion_Couenne() As String
           
           ' Run Couenne
           Dim completed As Boolean
-8386      completed = OSSolveSync(ConvertHfsPath(RunPath), "", "", "", SW_HIDE, True)
+8386      completed = RunExternalCommand(ConvertHfsPath(RunPath), "", SW_HIDE, True)
           
           ' Read version info back from output file
           Dim Line As String

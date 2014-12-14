@@ -85,7 +85,7 @@ Function SolverVersion_Bonmin() As String
           
           ' Run Bonmin
           Dim completed As Boolean
-9048      completed = OSSolveSync(ConvertHfsPath(RunPath), "", "", "", SW_HIDE, True)
+9048      completed = RunExternalCommand(ConvertHfsPath(RunPath), "", SW_HIDE, True) 'OSSolveSync
           
           ' Read version info back from output file
           Dim Line As String

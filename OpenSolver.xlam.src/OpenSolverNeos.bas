@@ -185,7 +185,7 @@ Private Function CallNEOS_Mac(message As String, errorString As String)
 
           ' Run NeosClient.py->send
           Dim result As Boolean
-6891      result = OSSolveSync(SolverPath & " send " & QuotePath(ConvertHfsPath(SolutionFilePathName)) & " " & ModelFilePathName, "", "", LogFilePathName)
+6891      result = RunExternalCommand(SolverPath & " send " & QuotePath(ConvertHfsPath(SolutionFilePathName)) & " " & ModelFilePathName, LogFilePathName)
 6892      If Not result Then
 6893          GoTo NEOSError
 6894      End If
@@ -208,7 +208,7 @@ Private Function CallNEOS_Mac(message As String, errorString As String)
 6905      time = 0
 6906      While Done = False
               ' Run NeosClient.py->check
-6907          result = OSSolveSync(SolverPath & " check " & QuotePath(ConvertHfsPath(SolutionFilePathName)) & " " & jobNumber & " " & Password, "", "", LogFilePathName)
+6907          result = RunExternalCommand(SolverPath & " check " & QuotePath(ConvertHfsPath(SolutionFilePathName)) & " " & jobNumber & " " & Password, LogFilePathName)
 6908          If Not result Then
 6909              GoTo NEOSError
 6910          End If
@@ -235,7 +235,7 @@ Private Function CallNEOS_Mac(message As String, errorString As String)
           'CallingNeos.Hide
           
           ' Run NeosClient.py->check
-6928      result = OSSolveSync(SolverPath & " read " & QuotePath(ConvertHfsPath(SolutionFilePathName)) & " " & jobNumber & " " & Password, "", "", LogFilePathName)
+6928      result = RunExternalCommand(SolverPath & " read " & QuotePath(ConvertHfsPath(SolutionFilePathName)) & " " & jobNumber & " " & Password, LogFilePathName)
 6929      If Not result Then
 6930          GoTo NEOSError
 6931      End If

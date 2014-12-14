@@ -226,7 +226,7 @@ Function SolveModelParsed_NL(ModelFilePathName As String, model As CModelParsed,
 7507      ExternalSolverPathName = QuotePath(ConvertHfsPath(ExternalSolverPathName))
                     
           Dim exeResult As Long, userCancelled As Boolean
-7508      ExecutionCompleted = OSSolveSync(ExternalSolverPathName, "", "", logCommand, IIf(s.GetShowIterationResults, SW_SHOWNORMAL, SW_HIDE), True, userCancelled, exeResult) ' Run solver, waiting for completion
+7508      ExecutionCompleted = RunExternalCommand(ExternalSolverPathName, logCommand, IIf(s.GetShowIterationResults, SW_SHOWNORMAL, SW_HIDE), True, userCancelled, exeResult) ' Run solver, waiting for completion
 7509      If userCancelled Then
               ' User pressed escape. Dialogs have already been shown. Exit with a 'cancelled' error
 7510          On Error GoTo ErrHandler

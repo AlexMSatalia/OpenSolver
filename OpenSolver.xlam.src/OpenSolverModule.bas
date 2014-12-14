@@ -397,15 +397,15 @@ Private Const ERROR_BAD_FORMAT = 11&
 'Code Courtesy of
 'Terry Kreft
 ' Modified by A Mason
-Function OSSolveSync(SolverPath As String, pathName As String, PrintingOptionString As String, logPath As String, Optional WindowStyle As Long, Optional WaitForCompletion As Boolean, Optional userCancelled As Boolean, Optional exeResult As Long) As Boolean
+Function RunExternalCommand(CommandString As String, Optional logPath As String, Optional WindowStyle As Long, Optional WaitForCompletion As Boolean, Optional userCancelled As Boolean, Optional exeResult As Long) As Boolean
 #If Mac Then
           Dim ret As Long
 26        ret = system(SolverPath & pathName & PrintingOptionString & logPath)
-27        If ret = 0 Then OSSolveSync = True
+27        If ret = 0 Then RunExternalCommand = True
 #Else
       'TODO: Optional for Boolean doesn't seem to work IsMissing is always false and value is false?
       ' Returns true if successful completion, false if escape was pressed
-28        OSSolveSync = False
+28        RunExternalCommand = False
 29        userCancelled = False
 30        exeResult = -1
           Dim proc As PROCESS_INFORMATION
@@ -420,7 +420,7 @@ Function OSSolveSync(SolverPath As String, pathName As String, PrintingOptionStr
 36        End If
 37        End With
           ' Start the shelled application:
-38        ret& = CreateProcessA(0&, SolverPath & pathName & PrintingOptionString & logPath, 0&, 0&, 1&, _
+38        ret& = CreateProcessA(0&, CommandString & logPath, 0&, 0&, 1&, _
                                 NORMAL_PRIORITY_CLASS, 0&, 0&, start, proc)
 39        If ret& = 0 Then
 40            pathName = SolverPath & " " & pathName
@@ -451,7 +451,7 @@ Function OSSolveSync(SolverPath As String, pathName As String, PrintingOptionStr
 53        End If
 
 ExitSuccessfully:
-54        OSSolveSync = True
+54        RunExternalCommand = True
           
 ExitSub:
 55        On Error Resume Next
@@ -499,7 +499,7 @@ errorHandler:
           
 77        On Error Resume Next
 78        ret& = CloseHandle(proc.hProcess)
-79        Err.Raise ErrorNumber, "OpenSolver OSSolveSync", ErrorDescription
+79        Err.Raise ErrorNumber, "OpenSolver RunExternalCommand", ErrorDescription
 80        Exit Function
 DLLErrorHandler:
 81        On Error Resume Next

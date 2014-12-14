@@ -19,7 +19,7 @@ Function SolveModelParsed_PuLP(ModelFilePathName As String, m As CModelParsed, s
           Dim ExecutionCompleted As Boolean
           ' Need way of finding "python.exe"
           ' Need to work on implementing this
-7318      ExecutionCompleted = OSSolveSync("C:\Python27\python.exe " & ModelFilePathName, "", "", "", SW_HIDE, True)
+7318      ExecutionCompleted = RunExternalCommand("C:\Python27\python.exe " & ModelFilePathName, "", SW_HIDE, True)
           
 7319      If Not ExecutionCompleted Then
               ' User pressed escape. Dialogs have already been shown. Just finish

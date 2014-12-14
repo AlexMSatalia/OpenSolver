@@ -110,7 +110,7 @@ Function SolverVersion_Gurobi() As String
           
           ' Run Gurobi
           Dim completed As Boolean
-6402      completed = OSSolveSync(ConvertHfsPath(RunPath), "", "", "", SW_HIDE, True)
+6402      completed = RunExternalCommand(ConvertHfsPath(RunPath), "", SW_HIDE, True)
           
           ' Read version info back from output file
           ' Output like 'Gurobi Optimizer version 5.6.3 (win64)'
@@ -153,7 +153,7 @@ Function SolverBitness_Gurobi() As String
           
           ' Run Gurobi
           Dim completed As Boolean
-6426      completed = OSSolveSync(ConvertHfsPath(RunPath), "", "", "", SW_HIDE, True)
+6426      completed = RunExternalCommand(ConvertHfsPath(RunPath), "", SW_HIDE, True)
           
           ' Read bitness info back from output file
           ' Output like 'Gurobi Optimizer version 5.6.3 (win64)'
