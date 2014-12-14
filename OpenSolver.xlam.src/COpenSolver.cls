@@ -1573,14 +1573,11 @@ Sub SolveModel_LinearLocal(ModelFilePathName As String, SolveRelaxation As Boole
          
               Dim logCommand As String, logFileName As String
               Dim mteePath As String
-              Dim position2 As Integer
-              'Truncate the string at the S in \Solvers
-              position2 = InStr(ExternalSolverPathName, "Solver") - 1
-              mteePath = left(ExternalSolverPathName, position2)
-              mteePath = mteePath & "Utils\mtee\mtee.exe"
+              GetExistingFilePathName JoinPaths(JoinPaths(ThisWorkbook.Path, "Utils"), "mtee"), "mtee.exe", mteePath
+              
               'Then append the mte path to the end
 1570          logFileName = "log1.tmp"
-1571          logCommand = " | " & Chr(34) & mteePath & Chr(34) & " " & QuotePath(ConvertHfsPath(GetTempFilePath(logFileName)))
+1571          logCommand = " | " & QuotePath(ConvertHfsPath(mteePath)) & " " & QuotePath(ConvertHfsPath(GetTempFilePath(logFileName)))
          
 1569          ExternalSolverPathName = CreateSolveScript(Solver, SolutionFilePathName, ExtraParametersString, SolveOptions, Me)
       '13120         ElseIf Solver = "cplex.exe" Then
