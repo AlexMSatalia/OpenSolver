@@ -458,7 +458,7 @@ Function CalcObjFnValue(DecisionVariableValues() As Double) As Double
 934       CalcObjFnValue = sum
 End Function
 
-Sub BuildModelFromSolverData(Optional LinearityCheckOffset As Double = 0, Optional MinimiseUserInteraction As Boolean = False)
+Sub BuildModelFromSolverData(Optional LinearityCheckOffset As Double = 0, Optional MinimiseUserInteraction As Boolean = False, Optional SolveRelaxation As Boolean = False)
           ' Build the model; throws an error if it fails
           
 935       SolveStatus = OpenSolverResult.Unsolved
@@ -652,11 +652,9 @@ ModelOptions:
 1042      If GetNameValueIfExists(ActiveWorkbook, sheetName & "solver_neg", s) Then AssumeNonNegativeVars = s = "1"
 
           Dim succeeded As Boolean
-1043      If Solver <> "NOMAD" Then
-1044          On Error GoTo errorHandler
-1045          Call BuildModelOptions(s, succeeded)
-1046          If succeeded = False Then GoTo ExitSub
-1047      End If
+1043      On Error GoTo errorHandler
+1045      Call BuildModelOptions(succeeded, SolveRelaxation)
+1046      If succeeded = False Then GoTo ExitSub
           
           '--------------------------------------------------------------------------
           ' CONSTRAINTS SETUP
@@ -1038,7 +1036,7 @@ Sub UpdateBound(row As Long, VarName As String, bound As Double, rel As Long)
 1262      VariableBounds(row) = True
 End Sub
 
-Sub BuildModelOptions(s As String, succeeded As Boolean)
+Sub BuildModelOptions(succeeded As Boolean, Optional SolveRelaxation As Boolean = False)
 1263      succeeded = False
           Dim errorPrefix As String
 1264      errorPrefix = "OpenSolver Model Build"
@@ -1047,16 +1045,19 @@ Sub BuildModelOptions(s As String, succeeded As Boolean)
           ' MODEL OPTIONS
           '--------------------------------------------------------------------------
           
-          ' If we are in Excel 2010, and the user has set "Solve Relaxtion", then we report an error
-          Dim IngoreIntConstraints As Boolean
-1265      IngoreIntConstraints = False
-1266      If Application.Version = "14.0" And GetNameValueIfExists(ActiveWorkbook, sheetName & "solver_rlx", s) Then
-1267          IngoreIntConstraints = s = "1"
-1268      End If
-1269      If IngoreIntConstraints = True Then
-              'On Error GoTo errorHandler
-1270          Err.Raise Number:=OpenSolver_BuildError, Source:=errorPrefix, Description:="You have the 'ignore integer constraints' option turned on. Please turn this off and start OpenSolver again or choose OpenSolver's solve relaxed model option"
-1271      End If
+          ' Ignore integrality check if the user is solving the relaxation
+          If Not SolveRelaxation Then
+              ' If we are in Excel 2010 or newer, and the user has set "Solve Relaxtion", then we report an error
+              Dim IngoreIntConstraints As Boolean, s As String
+1265          IngoreIntConstraints = False
+1266          If Val(Application.Version) > 14 And GetNameValueIfExists(ActiveWorkbook, sheetName & "solver_rlx", s) Then
+1267              IngoreIntConstraints = (s = "1")
+1268          End If
+1269          If IngoreIntConstraints = True Then
+                  'On Error GoTo errorHandler
+1270              Err.Raise Number:=OpenSolver_BuildError, Source:=errorPrefix, Description:="You have the Solver option 'ignore integer constraints' turned on. Please turn this off and start OpenSolver again or choose OpenSolver's solve relaxed model option"
+1271          End If
+          End If
 
 1272      succeeded = True
 End Sub
@@ -1572,14 +1573,11 @@ Sub SolveModel_LinearLocal(ModelFilePathName As String, SolveRelaxation As Boole
          
               Dim logCommand As String, logFileName As String
               Dim mteePath As String
-              Dim position2 As Integer
-              'Truncate the string at the S in \Solvers
-              position2 = InStr(ExternalSolverPathName, "Solver") - 1
-              mteePath = left(ExternalSolverPathName, position2)
-              mteePath = mteePath & "Utils\mtee\mtee.exe"
+              GetExistingFilePathName JoinPaths(JoinPaths(ThisWorkbook.Path, "Utils"), "mtee"), "mtee.exe", mteePath
+              
               'Then append the mte path to the end
 1570          logFileName = "log1.tmp"
-1571          logCommand = " | " & Chr(34) & mteePath & Chr(34) & " " & QuotePath(ConvertHfsPath(GetTempFilePath(logFileName)))
+1571          logCommand = " | " & QuotePath(ConvertHfsPath(mteePath)) & " " & QuotePath(ConvertHfsPath(GetTempFilePath(logFileName)))
          
 1569          ExternalSolverPathName = CreateSolveScript(Solver, SolutionFilePathName, ExtraParametersString, SolveOptions, Me)
       '13120         ElseIf Solver = "cplex.exe" Then

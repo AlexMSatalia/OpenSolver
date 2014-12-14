@@ -181,7 +181,7 @@ Function RunOpenSolver(Optional SolveRelaxation As Boolean = False, Optional Min
 
 2804      RunOpenSolver = OpenSolverResult.Unsolved
 2805      Set OpenSolver = New COpenSolver
-2806      OpenSolver.BuildModelFromSolverData LinearityCheckOffset, MinimiseUserInteraction
+2806      OpenSolver.BuildModelFromSolverData LinearityCheckOffset, MinimiseUserInteraction, SolveRelaxation
 2807      If UsesParsedModel(OpenSolver.Solver) Then
 2808          GoTo ParsedModel
 2809      End If
