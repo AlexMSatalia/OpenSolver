@@ -423,9 +423,8 @@ Function RunExternalCommand(CommandString As String, Optional logPath As String,
 38        ret& = CreateProcessA(0&, CommandString & logPath, 0&, 0&, 1&, _
                                 NORMAL_PRIORITY_CLASS, 0&, 0&, start, proc)
 39        If ret& = 0 Then
-40            pathName = SolverPath & " " & pathName
 41            Err.Raise Number:=OpenSolver_CBCExecutionError, Source:="OpenSolver", _
-              Description:="Unable to run the external program: " & pathName & ". " & vbCrLf & vbCrLf _
+              Description:="Unable to run the external program: " & CommandString & ". " & vbCrLf & vbCrLf _
               & "Error " & Err.LastDllError & ": " & DLLErrorText(Err.LastDllError)
 42        End If
 43        If Not isMissing(WaitForCompletion) Then
