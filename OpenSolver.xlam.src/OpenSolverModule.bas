@@ -1951,3 +1951,15 @@ Sub ResetErrorCache()
     OpenSolver_ErrDescription = ""
 #End If
 End Sub
+
+Sub MBox(errorMessage As String, Optional linkTarget As String)
+    
+    If isMissing(linkTarget) Then
+        linkTarget = ""
+    End If
+    
+    MessageBox.TextBox1.Text = errorMessage
+    MessageBox.LinkLabel = linkTarget
+    MessageBox.Show
+    
+End Sub
