@@ -1952,14 +1952,59 @@ Sub ResetErrorCache()
 #End If
 End Sub
 
-Sub MBox(errorMessage As String, Optional linkTarget As String)
+Sub MBox(errorMessage As String, Optional linkTarget As String, Optional linkText As String)
+    'This function replaces msgbox for reporting errors, and allows us to do a number of things to improve user feedback when somethign goes wrong.
     
+    'The string "Help_" is used to denote a helpful message that guides the user's actions (an "intentional" error), as opposed to an error report, which we didn't expect to happen.
+    'If this string is present, line numbers and other identification info are are not added to the error message, otherwise they are.
+    
+    'Some line numbers need to be added at the source of the error in order to be stored. So we'll strip the help message of line numbers, which have this form: "(at line XXX)"
+    
+    'The programmer may also wish to provide the user with a help link.
+    'If it is an unintended error, the help link is set to the opensolver help page by default, unless the user has entered another link.
+    'If it is a help message, a link is only displayed when the programmer enters a link.
+    'The linkTarget is stored in the tooltip of the linkLabel attribute of the form. This lets the user see the url before clicking it.
+    'If no linkText is supplied, the linkTarget is used as the hyperlinked text.
+        
+    If InStr(errorMessage, "Help_") Then
+        'This is a help message, so strip the Help_ from it
+        errorMessage = Replace(errorMessage, "Help_", "")
+        
+        'Strip the unneeded line numbers from it too.
+        Dim linNumStartPos As Integer
+        Dim linNumEndPos As Integer
+        
+        'find line number start and end
+        linNumStartPos = InStr(errorMessage, "(at line ")
+        linNumEndPos = InStr(linNumStartPos, errorMessage, ")")
+        'Remove this bit from the string
+        errorMessage = left(errorMessage, linNumStartPos - 1) & right(errorMessage, Len(errorMessage) - linNumEndPos)
+    Else
+        'this is an error message, so add the line number reporting and other info
+        errorMessage = "OpenSolver" & sOpenSolverVersion & " encountered an error:" & vbCrLf & errorMessage & IIf(Erl = 0, "", " (at line " & Erl & ")") & vbCrLf & vbCrLf & "Source = " & Err.Source & ", ErrNumber=" & Err.Number
+        
+        'If no link is provided, add the opensolver help link
+        If isMissing(linkTarget) Then
+            linkTarget = "http://opensolver.org/help/"
+            linkText = "OpenSolver Help Forum"
+        End If
+    End If
+    
+    'Catching errors
+    If isMissing(linkText) Then
+        If Not isMissing(linkTarget) Then 'print the url as the link text
+            linkText = linkTarget
+        Else
+            linkText = ""
+        End If
+    End If
+        
     If isMissing(linkTarget) Then
         linkTarget = ""
     End If
     
     MessageBox.TextBox1.Text = errorMessage
-    MessageBox.LinkLabel = linkTarget
+    MessageBox.LinkLabel.Caption = linkText
+    MessageBox.LinkLabel.ControlTipText = linkTarget
     MessageBox.Show
-    
 End Sub

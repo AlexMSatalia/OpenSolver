@@ -1,10 +1,10 @@
 VERSION 5.00
 Begin {C62A69F0-16DC-11CE-9E98-00AA00574A4F} MessageBox 
    Caption         =   "Message Box:"
-   ClientHeight    =   3180
+   ClientHeight    =   3900
    ClientLeft      =   45
    ClientTop       =   375
-   ClientWidth     =   4710
+   ClientWidth     =   6120
    OleObjectBlob   =   "MessageBox.frx":0000
    StartUpPosition =   1  'CenterOwner
 End
@@ -16,7 +16,7 @@ Attribute VB_Exposed = False
 Option Explicit
 
 Private Sub LinkLabel_Click()
-    Call OpenURL("http://www.google.com")
+    Call OpenURL(MessageBox.LinkLabel.ControlTipText) 'this powers the hyperlink.
 End Sub
 
 Private Sub OKButton_Click()
@@ -34,5 +34,6 @@ End Sub
 
 Private Sub UserForm_Initialize()
     TextBox1.Text = ""
+    LinkLabel.Caption = ""
 End Sub
 
