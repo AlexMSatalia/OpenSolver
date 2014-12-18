@@ -50,6 +50,21 @@ Private ListItem As Long
 Private ConChangedMode As Boolean
 Private DontRepop As Boolean
 
+' MIRENDRA EDIT ******************START*******************
+'Resize
+'Private WithEvents m_objResizer As MSForms.label
+'Private m_sngLeftResizePos As Single
+'Private m_sngTopResizePos As Single
+'Private mouseBool As Single
+
+Private m_clsResizer As CResizer
+Public MinHeight As Long
+
+Private OpenedBefore As Boolean
+Private ContractedBefore As Boolean
+
+' MIRENDRA EDIT *********************END*************
+
 ' Function to map string rels to combobox index positions
 ' Assigning combobox by .value fails a lot on Mac
 Function cboPosition(rel As String) As Integer
@@ -323,6 +338,10 @@ Public Sub ModelReset(f As UserForm)
 
 End Sub
 
+Private Sub lblDesc_Click()
+
+End Sub
+
 Private Sub optMax_Click()
 4284            frmModel.ModelMaxClick Me
 End Sub
@@ -490,6 +509,25 @@ Public Sub ModelActivate(f As UserForm)
 4377      model.LoadFromSheet
 4378      DoEvents
 4379      UpdateFormFromMemory f
+
+            ' MIRENDRA EDIT *******************************START***********
+            'Me.height = FrmHeight
+            'If Me.height < 420 Then
+            '    Me.height = 434
+            'End If
+            'Call MoveItems(Me.height - 434)
+            MinHeight = 434.25
+            If Not OpenedBefore Then
+                Set m_clsResizer = New CResizer
+                m_clsResizer.Add Me
+                f.cmdReset.left = f.cmdReset.left - m_clsResizer.width
+                f.cmdOptions.left = f.cmdOptions.left - m_clsResizer.width
+                f.cmdBuild.left = f.cmdBuild.left - m_clsResizer.width
+                f.cmdCancel.left = f.cmdCancel.left - m_clsResizer.width
+            End If
+            OpenedBefore = True
+            ' MIRENDRA EDIT ******************************END*************
+
 4380      DoEvents
           ' Take focus away from refEdits
 4381      DoEvents
@@ -1136,3 +1174,151 @@ Sub TestStringForConstraint(ByVal TheString As String, _
 4722      End If
           
 End Sub
+
+' MIRENDRA EDIT *******************************START************
+'The following 4 subs allow the user to resize the user form
+'Private Sub m_AddResizer()
+'    Set m_objResizer = Me.Controls.Add("Forms.label.1")
+'    With m_objResizer
+'        With .Font
+'            .Name = "Marlett"
+'            .Size = 10
+'        End With
+'        .AutoSize = True
+'        .Caption = "o"
+'        .MousePointer = fmMousePointerSizeNS
+'        .ForeColor = RGB(150, 150, 150)
+'        .ZOrder
+'        .top = Me.InsideHeight - .height
+'        .left = Me.InsideWidth - .width
+'    End With
+'End Sub
+
+'Private Sub m_objResizer_MouseDown(ByVal Button As Integer, ByVal Shift As Integer, ByVal X As Single, ByVal Y As Single)
+'    If Button = 1 Then
+'        m_sngLeftResizePos = X
+'        m_sngTopResizePos = Y
+'        mouseBool = True
+'    End If
+'End Sub
+'Private Sub m_objResizer_MouseUp(ByVal Button As Integer, ByVal Shift As Integer, ByVal X As Single, ByVal Y As Single)
+'    If mouseBool Then
+'        FrmHeight = Me.height
+'        mouseBool = False
+'    End If
+'End Sub
+'Private Sub m_objResizer_MouseMove(ByVal Button As Integer, ByVal Shift As Integer, ByVal X As Single, ByVal Y As Single)
+'    Dim ChangeY As Single
+'    If Button = 1 Then
+'        ChangeY = Y - m_sngTopResizePos
+'
+'       If Not Me.height + ChangeY < 434 Then
+'
+'            With m_objResizer
+'                .Move .left + X - m_sngLeftResizePos, .top + ChangeY
+'                Me.height = Me.height + ChangeY
+'                .left = Me.InsideWidth - .width
+'                .top = Me.InsideHeight - .height
+'            End With
+'
+'            MoveItems (ChangeY)
+'        End If
+'    End If
+'End Sub
+Public Sub MoveItems(ChangeY As Single)
+    'Know a better way?
+     'Dim HeightDifference As Long
+        
+        'HeightDifference = Me.height - MinHeight
+        
+        chkNameRange.top = chkNameRange.top + ChangeY
+        frameDiv4.top = frameDiv4.top + ChangeY
+        lblDuals.top = lblDuals.top + ChangeY
+        chkGetDuals.top = chkGetDuals.top + ChangeY
+        chkGetDuals2.top = chkGetDuals2.top + ChangeY
+        optUpdate.top = optUpdate.top + ChangeY
+        refDuals.top = refDuals.top + ChangeY
+        optNew.top = optNew.top + ChangeY
+        frameDiv6.top = frameDiv6.top + ChangeY
+        Label5.top = Label5.top + ChangeY
+        lblSolver.top = lblSolver.top + ChangeY
+        cmdChange.top = cmdChange.top + ChangeY
+        Frame3.top = Frame3.top + ChangeY
+        chkShowModel.top = chkShowModel.top + ChangeY
+        cmdReset.top = cmdReset.top + ChangeY
+        cmdOptions.top = cmdOptions.top + ChangeY
+        cmdBuild.top = cmdBuild.top + ChangeY
+        cmdCancel.top = cmdCancel.top + ChangeY
+        
+        If Me.height + ChangeY >= MinHeight Then
+            lstConstraints.height = Me.height - 294
+            lblDesc.Caption = "AutoModel is a feature of OpenSolver that tries to automatically " _
+                            & "determine the problem you are trying to optimise by observing the " _
+                            & "structure of the spreadsheet. It will turn its best guess into a " _
+                            & "Solver model, which you can then edit in this window."
+            lblDesc.height = 24
+            
+            If ContractedBefore Then
+                frameDiv1.top = 57
+                lblStep1.top = 64
+                refObj.top = 64
+                optMax.top = 64
+                Label2.top = 64
+                optMin.top = 64
+                Label3.top = 64
+                optTarget.top = 64
+                Label4.top = 64
+                txtObjTarget.top = 64
+                frameDiv2.top = 85.05
+                lblStep2.top = 94
+                refDecision.top = 94
+                frameDiv3.top = 136
+                lblStep3.top = 142
+                lstConstraints.top = 160
+                Label1.top = 159.95
+                refConLHS.top = 166
+                cboConRel.top = 166
+                refConRHS.top = 189.95
+                cmdAddCon.top = 213.95
+                cmdCancelCon.top = 213.95
+                cmdDelSelCon.top = 244
+                chkNonNeg.top = 268
+                ContractedBefore = False
+            End If
+            
+        Else
+            ContractedBefore = True
+            lblDesc.Caption = ""
+            lblDesc.height = 0
+            frameDiv1.top = frameDiv1.top + ChangeY
+            lblStep1.top = lblStep1.top + ChangeY
+            refObj.top = refObj.top + ChangeY
+            optMax.top = optMax.top + ChangeY
+            Label2.top = Label2.top + ChangeY
+            optMin.top = optMin.top + ChangeY
+            Label3.top = Label3.top + ChangeY
+            optTarget.top = optTarget.top + ChangeY
+            Label4.top = Label4.top + ChangeY
+            txtObjTarget.top = txtObjTarget.top + ChangeY
+            frameDiv2.top = frameDiv2.top + ChangeY
+            lblStep2.top = lblStep2.top + ChangeY
+            refDecision.top = refDecision.top + ChangeY
+            frameDiv3.top = frameDiv3.top + ChangeY
+            lblStep3.top = lblStep3.top + ChangeY
+            lstConstraints.top = lstConstraints.top + ChangeY
+            Label1.top = Label1.top + ChangeY
+            refConLHS.top = refConLHS.top + ChangeY
+            cboConRel.top = cboConRel.top + ChangeY
+            refConRHS.top = refConRHS.top + ChangeY
+            cmdAddCon.top = cmdAddCon.top + ChangeY
+            cmdCancelCon.top = cmdCancelCon.top + ChangeY
+            cmdDelSelCon.top = cmdDelSelCon.top + ChangeY
+            chkNonNeg.top = chkNonNeg.top + ChangeY
+        End If
+
+End Sub
+
+
+' MIRENDRA EDIT *******************************END**********
+
+
