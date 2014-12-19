@@ -3058,29 +3058,29 @@ Function updateVarOS(X As Variant)
 End Function
 
 Function getValuesOS() As Variant
-          Dim y As Variant, i As Long, j As Long, k As Long, conCountB As Long, numCons As Variant
+          Dim X As Variant, i As Long, j As Long, k As Long, conCountB As Long, numCons As Variant
 2465      numCons = getNumConstraintsOS()
-2466      ReDim y(1 To numCons(0), 1 To 1)
+2466      ReDim X(1 To numCons(0), 1 To 1)
           '====NOMAD only does minimise so need to change objective if it is max====
           ' If no objective, just set a constant.
           ' TODO: fix this to set it based on amount of violation to hunt for feasibility
 2467      If ObjRange Is Nothing Then
-2468          y(1, 1) = 0
+2468          X(1, 1) = 0
           ' If objective cell is error, report this directly to NOMAD. Attempting to manipulate it can cause errors
 2469      ElseIf VarType(ObjRange.Value2) = vbError Then
-2470          y(1, 1) = ObjRange.Value2
+2470          X(1, 1) = ObjRange.Value2
           'If objective sense is maximise then multiply by minus 1
 2471      ElseIf ObjectiveSense = MaximiseObjective Then
 2472          If ObjRange.Value2 <> 0 Then
-2473              y(1, 1) = -1 * ObjRange.Value2 'objective value
+2473              X(1, 1) = -1 * ObjRange.Value2 'objective value
 2474          Else
-2475              y(1, 1) = ObjRange.Value2
+2475              X(1, 1) = ObjRange.Value2
 2476          End If
           'Else if objective sense is minimise leave it
 2477      ElseIf ObjectiveSense = MinimiseObjective Then
-2478          y(1, 1) = ObjRange.Value2
+2478          X(1, 1) = ObjRange.Value2
 2479      ElseIf ObjectiveSense = TargetObjective Then
-2480          y(1, 1) = Abs(ObjRange.Value2 - ObjectiveTargetValue)
+2480          X(1, 1) = Abs(ObjRange.Value2 - ObjectiveTargetValue)
 2481      End If
 2482      conCountB = 1 'keep a count of what constraint its up to including bounds
 2483      k = 1 'keep a count of what constraint its up to not including bounds
@@ -3098,11 +3098,11 @@ Function getValuesOS() As Variant
 2490                      For j = 1 To UBound(LHSOriginalValues(constraint), 2)
 2491                          If VariableBounds(conCountB) = False Then
 2492                              If RHSType(constraint) <> SolverInputType.MultiCellRange Then
-2493                                  SetConstraintValue y, k, CurrentRHSValues, CurrentLHSValues(i, j), Relation(conCountB)
+2493                                  SetConstraintValue X, k, CurrentRHSValues, CurrentLHSValues(i, j), Relation(conCountB)
 2494                              ElseIf UBound(LHSOriginalValues(constraint), 1) = UBound(RHSOriginalValues(constraint), 1) Then
-2495                                  SetConstraintValue y, k, CurrentRHSValues(i, j), CurrentLHSValues(i, j), Relation(conCountB)
+2495                                  SetConstraintValue X, k, CurrentRHSValues(i, j), CurrentLHSValues(i, j), Relation(conCountB)
 2496                              Else
-2497                                  SetConstraintValueMismatchedDims y, k, CurrentRHSValues, CurrentLHSValues, Relation(conCountB), i, j
+2497                                  SetConstraintValueMismatchedDims X, k, CurrentRHSValues, CurrentLHSValues, Relation(conCountB), i, j
 2498                              End If
 2499                          End If
 2500                          conCountB = conCountB + 1
@@ -3110,7 +3110,7 @@ Function getValuesOS() As Variant
 2502                  Next i
 2503              Else
 2504                  If VariableBounds(conCountB) = False Then
-2505                      SetConstraintValue y, k, CurrentRHSValues, CurrentLHSValues(1, 1), Relation(conCountB)
+2505                      SetConstraintValue X, k, CurrentRHSValues, CurrentLHSValues(1, 1), Relation(conCountB)
 2506                  End If
 2507                  conCountB = conCountB + 1
 2508              End If
@@ -3118,7 +3118,7 @@ Function getValuesOS() As Variant
 2510      Next constraint
           
           'Get back new objective and difference between LHS and RHS values
-2511      getValuesOS = y
+2511      getValuesOS = X
 End Function
 
 Sub SetConstraintValue(ByRef ConstraintValues As Variant, ByRef k As Long, RHSValue As Variant, LHSValue As Variant, RelationType As Long)

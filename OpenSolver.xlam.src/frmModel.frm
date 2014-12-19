@@ -50,20 +50,11 @@ Private ListItem As Long
 Private ConChangedMode As Boolean
 Private DontRepop As Boolean
 
-' MIRENDRA EDIT ******************START*******************
-'Resize
-'Private WithEvents m_objResizer As MSForms.label
-'Private m_sngLeftResizePos As Single
-'Private m_sngTopResizePos As Single
-'Private mouseBool As Single
-
 Private m_clsResizer As CResizer
 Public MinHeight As Long
 
 Private OpenedBefore As Boolean
 Private ContractedBefore As Boolean
-
-' MIRENDRA EDIT *********************END*************
 
 ' Function to map string rels to combobox index positions
 ' Assigning combobox by .value fails a lot on Mac
@@ -338,10 +329,6 @@ Public Sub ModelReset(f As UserForm)
 
 End Sub
 
-Private Sub lblDesc_Click()
-
-End Sub
-
 Private Sub optMax_Click()
 4284            frmModel.ModelMaxClick Me
 End Sub
@@ -510,23 +497,17 @@ Public Sub ModelActivate(f As UserForm)
 4378      DoEvents
 4379      UpdateFormFromMemory f
 
-            ' MIRENDRA EDIT *******************************START***********
-            'Me.height = FrmHeight
-            'If Me.height < 420 Then
-            '    Me.height = 434
-            'End If
-            'Call MoveItems(Me.height - 434)
-            MinHeight = 434.25
-            If Not OpenedBefore Then
-                Set m_clsResizer = New CResizer
-                m_clsResizer.Add Me
-                f.cmdReset.left = f.cmdReset.left - m_clsResizer.width
-                f.cmdOptions.left = f.cmdOptions.left - m_clsResizer.width
-                f.cmdBuild.left = f.cmdBuild.left - m_clsResizer.width
-                f.cmdCancel.left = f.cmdCancel.left - m_clsResizer.width
-            End If
-            OpenedBefore = True
-            ' MIRENDRA EDIT ******************************END*************
+            
+          MinHeight = 434.25
+          If Not OpenedBefore Then
+              Set m_clsResizer = New CResizer
+              m_clsResizer.Add Me
+              f.cmdReset.left = f.cmdReset.left - m_clsResizer.width
+              f.cmdOptions.left = f.cmdOptions.left - m_clsResizer.width
+              f.cmdBuild.left = f.cmdBuild.left - m_clsResizer.width
+              f.cmdCancel.left = f.cmdCancel.left - m_clsResizer.width
+          End If
+          OpenedBefore = True
 
 4380      DoEvents
           ' Take focus away from refEdits
@@ -1175,62 +1156,7 @@ Sub TestStringForConstraint(ByVal TheString As String, _
           
 End Sub
 
-' MIRENDRA EDIT *******************************START************
-'The following 4 subs allow the user to resize the user form
-'Private Sub m_AddResizer()
-'    Set m_objResizer = Me.Controls.Add("Forms.label.1")
-'    With m_objResizer
-'        With .Font
-'            .Name = "Marlett"
-'            .Size = 10
-'        End With
-'        .AutoSize = True
-'        .Caption = "o"
-'        .MousePointer = fmMousePointerSizeNS
-'        .ForeColor = RGB(150, 150, 150)
-'        .ZOrder
-'        .top = Me.InsideHeight - .height
-'        .left = Me.InsideWidth - .width
-'    End With
-'End Sub
-
-'Private Sub m_objResizer_MouseDown(ByVal Button As Integer, ByVal Shift As Integer, ByVal X As Single, ByVal Y As Single)
-'    If Button = 1 Then
-'        m_sngLeftResizePos = X
-'        m_sngTopResizePos = Y
-'        mouseBool = True
-'    End If
-'End Sub
-'Private Sub m_objResizer_MouseUp(ByVal Button As Integer, ByVal Shift As Integer, ByVal X As Single, ByVal Y As Single)
-'    If mouseBool Then
-'        FrmHeight = Me.height
-'        mouseBool = False
-'    End If
-'End Sub
-'Private Sub m_objResizer_MouseMove(ByVal Button As Integer, ByVal Shift As Integer, ByVal X As Single, ByVal Y As Single)
-'    Dim ChangeY As Single
-'    If Button = 1 Then
-'        ChangeY = Y - m_sngTopResizePos
-'
-'       If Not Me.height + ChangeY < 434 Then
-'
-'            With m_objResizer
-'                .Move .left + X - m_sngLeftResizePos, .top + ChangeY
-'                Me.height = Me.height + ChangeY
-'                .left = Me.InsideWidth - .width
-'                .top = Me.InsideHeight - .height
-'            End With
-'
-'            MoveItems (ChangeY)
-'        End If
-'    End If
-'End Sub
 Public Sub MoveItems(ChangeY As Single)
-    'Know a better way?
-     'Dim HeightDifference As Long
-        
-        'HeightDifference = Me.height - MinHeight
-        
         chkNameRange.top = chkNameRange.top + ChangeY
         frameDiv4.top = frameDiv4.top + ChangeY
         lblDuals.top = lblDuals.top + ChangeY
@@ -1285,7 +1211,6 @@ Public Sub MoveItems(ChangeY As Single)
                 chkNonNeg.top = 268
                 ContractedBefore = False
             End If
-            
         Else
             ContractedBefore = True
             lblDesc.Caption = ""
@@ -1315,10 +1240,6 @@ Public Sub MoveItems(ChangeY As Single)
             cmdDelSelCon.top = cmdDelSelCon.top + ChangeY
             chkNonNeg.top = chkNonNeg.top + ChangeY
         End If
-
 End Sub
-
-
-' MIRENDRA EDIT *******************************END**********
 
 

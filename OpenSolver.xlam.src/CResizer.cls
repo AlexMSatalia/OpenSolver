@@ -7,8 +7,6 @@ Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = False
 Attribute VB_Exposed = False
-'MIRENDRA EDIT ***********START*************
-
 Option Explicit
 Private Const MFrameResizer = "FrameResizeGrab"
 Private Const MResizer = "ResizeGrab"
@@ -121,4 +119,3 @@ Public Function Add(Parent As Object) As MSForms.Frame
         .left = m_objParent.InsideWidth - .width
     End With
 End Function
-'MIRENDRA EDIT ***********END*************
