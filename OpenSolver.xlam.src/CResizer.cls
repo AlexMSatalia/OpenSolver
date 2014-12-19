@@ -15,26 +15,25 @@ Attribute m_objResizer.VB_VarHelpID = -1
 Private m_sngLeftResizePos As Single
 Private m_sngTopResizePos As Single
 Private m_blnResizing As Boolean
+Attribute m_blnResizing.VB_VarHelpID = -1
 Private WithEvents m_frmParent As MSForms.UserForm
 Attribute m_frmParent.VB_VarHelpID = -1
+Private m_strParentName As String
+Attribute m_strParentName.VB_VarHelpID = -1
 Private m_objParent As Object
 Public width As Long
 
 Private Sub Class_Terminate()
-    
     m_objParent.Controls.Remove MResizer
-
 End Sub
 
 Private Sub m_frmParent_Layout()
-
     If Not m_blnResizing Then
         With m_objResizer
             .top = m_objParent.InsideHeight - .height
             .left = m_objParent.InsideWidth - .width
         End With
     End If
-
 End Sub
 
 Private Sub m_objResizer_MouseDown(ByVal Button As Integer, ByVal Shift As Integer, ByVal X As Single, ByVal Y As Single)
@@ -51,22 +50,18 @@ Private Sub m_objResizer_MouseMove(ByVal Button As Integer, ByVal Shift As Integ
     
     Dim ChangeY As Single
     
-    If m_objParent.Name = "frmModel" Then
+    If m_strParentName = "Model" Then
         If Button = 1 Then
-            
             ChangeY = Y - m_sngTopResizePos
             
-            If m_objParent.height + ChangeY > frmModel.MinHeight - 26.25 Then
-            
+            If m_objParent.InsideHeight + ChangeY > frmModel.MinHeight Then
+                Call frmModel.MoveItems(m_frmParent, ChangeY)
+                
                 With m_objResizer
                     .Move .left + X - m_sngLeftResizePos, .top + ChangeY
-                    m_objParent.height = m_objParent.height + Y - m_sngTopResizePos
                     .left = m_objParent.InsideWidth - .width
                     .top = m_objParent.InsideHeight - .height
                 End With
-                
-                Call frmModel.MoveItems(ChangeY)
-                
             End If
             
         End If
@@ -80,10 +75,11 @@ Private Sub m_objResizer_MouseUp(ByVal Button As Integer, ByVal Shift As Integer
     End If
 End Sub
 
-Public Function Add(Parent As Object) As MSForms.Frame
+Public Function Add(Parent As MSForms.UserForm, ParentName As String) As MSForms.Frame
     Dim labTemp As MSForms.label
     
     Set m_frmParent = Parent
+    m_strParentName = ParentName
     Set m_objParent = Parent
     Set m_objResizer = m_objParent.Controls.Add("Forms.Frame.1", MFrameResizer, True)
     Set labTemp = m_objResizer.Add("Forms.label.1", MResizer, True)

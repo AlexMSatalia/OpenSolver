@@ -446,7 +446,7 @@ Private Sub UserForm_Activate()
 4344            frmModel.ModelActivate Me
 End Sub
 
-Public Sub ModelActivate(f As UserForm)
+Public Sub ModelActivate(f As MSForms.UserForm)
           ' Check we can even start
 4345      If Not CheckWorksheetAvailable Then
 4346          Unload Me
@@ -498,14 +498,16 @@ Public Sub ModelActivate(f As UserForm)
 4379      UpdateFormFromMemory f
 
             
-          MinHeight = 434.25
+          MinHeight = 390
           If Not OpenedBefore Then
-              Set m_clsResizer = New CResizer
-              m_clsResizer.Add Me
-              f.cmdReset.left = f.cmdReset.left - m_clsResizer.width
-              f.cmdOptions.left = f.cmdOptions.left - m_clsResizer.width
-              f.cmdBuild.left = f.cmdBuild.left - m_clsResizer.width
-              f.cmdCancel.left = f.cmdCancel.left - m_clsResizer.width
+              #If Win32 Then
+                  Set m_clsResizer = New CResizer
+                  m_clsResizer.Add f, "Model"
+                  f.cmdReset.left = f.cmdReset.left - m_clsResizer.width
+                  f.cmdOptions.left = f.cmdOptions.left - m_clsResizer.width
+                  f.cmdBuild.left = f.cmdBuild.left - m_clsResizer.width
+                  f.cmdCancel.left = f.cmdCancel.left - m_clsResizer.width
+              #End If
           End If
           OpenedBefore = True
 
@@ -1156,89 +1158,91 @@ Sub TestStringForConstraint(ByVal TheString As String, _
           
 End Sub
 
-Public Sub MoveItems(ChangeY As Single)
-        chkNameRange.top = chkNameRange.top + ChangeY
-        frameDiv4.top = frameDiv4.top + ChangeY
-        lblDuals.top = lblDuals.top + ChangeY
-        chkGetDuals.top = chkGetDuals.top + ChangeY
-        chkGetDuals2.top = chkGetDuals2.top + ChangeY
-        optUpdate.top = optUpdate.top + ChangeY
-        refDuals.top = refDuals.top + ChangeY
-        optNew.top = optNew.top + ChangeY
-        frameDiv6.top = frameDiv6.top + ChangeY
-        Label5.top = Label5.top + ChangeY
-        lblSolver.top = lblSolver.top + ChangeY
-        cmdChange.top = cmdChange.top + ChangeY
-        Frame3.top = Frame3.top + ChangeY
-        chkShowModel.top = chkShowModel.top + ChangeY
-        cmdReset.top = cmdReset.top + ChangeY
-        cmdOptions.top = cmdOptions.top + ChangeY
-        cmdBuild.top = cmdBuild.top + ChangeY
-        cmdCancel.top = cmdCancel.top + ChangeY
+Public Sub MoveItems(f As UserForm, ChangeY As Single)
+        Me.height = Me.height + ChangeY
         
-        If Me.height + ChangeY >= MinHeight Then
-            lstConstraints.height = Me.height - 294
-            lblDesc.Caption = "AutoModel is a feature of OpenSolver that tries to automatically " _
-                            & "determine the problem you are trying to optimise by observing the " _
-                            & "structure of the spreadsheet. It will turn its best guess into a " _
-                            & "Solver model, which you can then edit in this window."
-            lblDesc.height = 24
+        f.chkNameRange.top = f.chkNameRange.top + ChangeY
+        f.frameDiv4.top = f.frameDiv4.top + ChangeY
+        f.lblDuals.top = f.lblDuals.top + ChangeY
+        f.chkGetDuals.top = f.chkGetDuals.top + ChangeY
+        f.chkGetDuals2.top = f.chkGetDuals2.top + ChangeY
+        f.optUpdate.top = f.optUpdate.top + ChangeY
+        f.refDuals.top = f.refDuals.top + ChangeY
+        f.optNew.top = f.optNew.top + ChangeY
+        f.frameDiv6.top = f.frameDiv6.top + ChangeY
+        f.Label5.top = f.Label5.top + ChangeY
+        f.lblSolver.top = f.lblSolver.top + ChangeY
+        f.cmdChange.top = f.cmdChange.top + ChangeY
+        f.Frame3.top = f.Frame3.top + ChangeY
+        f.chkShowModel.top = f.chkShowModel.top + ChangeY
+        f.cmdReset.top = f.cmdReset.top + ChangeY
+        f.cmdOptions.top = f.cmdOptions.top + ChangeY
+        f.cmdBuild.top = f.cmdBuild.top + ChangeY
+        f.cmdCancel.top = f.cmdCancel.top + ChangeY
+        
+        If Me.InsideHeight + ChangeY >= MinHeight + 24 Then
+            f.lstConstraints.height = Me.InsideHeight - 282
+            f.lblDesc.Caption = "AutoModel is a feature of OpenSolver that tries to automatically " _
+                              & "determine the problem you are trying to optimise by observing the " _
+                              & "structure of the spreadsheet. It will turn its best guess into a " _
+                              & "Solver model, which you can then edit in this window."
+            f.lblDesc.height = 24
             
             If ContractedBefore Then
-                frameDiv1.top = 57
-                lblStep1.top = 64
-                refObj.top = 64
-                optMax.top = 64
-                Label2.top = 64
-                optMin.top = 64
-                Label3.top = 64
-                optTarget.top = 64
-                Label4.top = 64
-                txtObjTarget.top = 64
-                frameDiv2.top = 85.05
-                lblStep2.top = 94
-                refDecision.top = 94
-                frameDiv3.top = 136
-                lblStep3.top = 142
-                lstConstraints.top = 160
-                Label1.top = 159.95
-                refConLHS.top = 166
-                cboConRel.top = 166
-                refConRHS.top = 189.95
-                cmdAddCon.top = 213.95
-                cmdCancelCon.top = 213.95
-                cmdDelSelCon.top = 244
-                chkNonNeg.top = 268
+                f.frameDiv1.top = 57
+                f.lblStep1.top = 64
+                f.refObj.top = 64
+                f.optMax.top = 64
+                f.Label2.top = 64
+                f.optMin.top = 64
+                f.Label3.top = 64
+                f.optTarget.top = 64
+                f.Label4.top = 64
+                f.txtObjTarget.top = 64
+                f.frameDiv2.top = 85.05
+                f.lblStep2.top = 94
+                f.refDecision.top = 94
+                f.frameDiv3.top = 136
+                f.lblStep3.top = 142
+                f.lstConstraints.top = 160
+                f.Label1.top = 159.95
+                f.refConLHS.top = 166
+                f.cboConRel.top = 166
+                f.refConRHS.top = 189.95
+                f.cmdAddCon.top = 213.95
+                f.cmdCancelCon.top = 213.95
+                f.cmdDelSelCon.top = 244
+                f.chkNonNeg.top = 268
                 ContractedBefore = False
             End If
         Else
             ContractedBefore = True
-            lblDesc.Caption = ""
-            lblDesc.height = 0
-            frameDiv1.top = frameDiv1.top + ChangeY
-            lblStep1.top = lblStep1.top + ChangeY
-            refObj.top = refObj.top + ChangeY
-            optMax.top = optMax.top + ChangeY
-            Label2.top = Label2.top + ChangeY
-            optMin.top = optMin.top + ChangeY
-            Label3.top = Label3.top + ChangeY
-            optTarget.top = optTarget.top + ChangeY
-            Label4.top = Label4.top + ChangeY
-            txtObjTarget.top = txtObjTarget.top + ChangeY
-            frameDiv2.top = frameDiv2.top + ChangeY
-            lblStep2.top = lblStep2.top + ChangeY
-            refDecision.top = refDecision.top + ChangeY
-            frameDiv3.top = frameDiv3.top + ChangeY
-            lblStep3.top = lblStep3.top + ChangeY
-            lstConstraints.top = lstConstraints.top + ChangeY
-            Label1.top = Label1.top + ChangeY
-            refConLHS.top = refConLHS.top + ChangeY
-            cboConRel.top = cboConRel.top + ChangeY
-            refConRHS.top = refConRHS.top + ChangeY
-            cmdAddCon.top = cmdAddCon.top + ChangeY
-            cmdCancelCon.top = cmdCancelCon.top + ChangeY
-            cmdDelSelCon.top = cmdDelSelCon.top + ChangeY
-            chkNonNeg.top = chkNonNeg.top + ChangeY
+            f.lblDesc.Caption = ""
+            f.lblDesc.height = 0
+            f.frameDiv1.top = f.frameDiv1.top + ChangeY
+            f.lblStep1.top = f.lblStep1.top + ChangeY
+            f.refObj.top = f.refObj.top + ChangeY
+            f.optMax.top = f.optMax.top + ChangeY
+            f.Label2.top = f.Label2.top + ChangeY
+            f.optMin.top = f.optMin.top + ChangeY
+            f.Label3.top = f.Label3.top + ChangeY
+            f.optTarget.top = f.optTarget.top + ChangeY
+            f.Label4.top = f.Label4.top + ChangeY
+            f.txtObjTarget.top = f.txtObjTarget.top + ChangeY
+            f.frameDiv2.top = f.frameDiv2.top + ChangeY
+            f.lblStep2.top = f.lblStep2.top + ChangeY
+            f.refDecision.top = f.refDecision.top + ChangeY
+            f.frameDiv3.top = f.frameDiv3.top + ChangeY
+            f.lblStep3.top = f.lblStep3.top + ChangeY
+            f.lstConstraints.top = f.lstConstraints.top + ChangeY
+            f.Label1.top = f.Label1.top + ChangeY
+            f.refConLHS.top = f.refConLHS.top + ChangeY
+            f.cboConRel.top = f.cboConRel.top + ChangeY
+            f.refConRHS.top = f.refConRHS.top + ChangeY
+            f.cmdAddCon.top = f.cmdAddCon.top + ChangeY
+            f.cmdCancelCon.top = f.cmdCancelCon.top + ChangeY
+            f.cmdDelSelCon.top = f.cmdDelSelCon.top + ChangeY
+            f.chkNonNeg.top = f.chkNonNeg.top + ChangeY
         End If
 End Sub
 
