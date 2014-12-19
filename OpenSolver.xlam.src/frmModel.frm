@@ -1243,3 +1243,6 @@ Public Sub MoveItems(ChangeY As Single)
 End Sub
 
 
+Private Sub UserForm_Terminate()
+    Set m_clsResizer = Nothing
+End Sub
