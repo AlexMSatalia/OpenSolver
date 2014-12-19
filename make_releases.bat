@@ -13,9 +13,12 @@ set version=%1
 set start=7z a Release\
 set end=. -xr!.git* -xr!OpenSolver.xlam.src -xr!Release -x!make_releases.* -x!upload_releases.* -xr!*~$*
 
+:: Ignore mtee source files
+set mtee=-xr!Utils\mtee\*.cpp -xr!Utils\mtee\*.h -xr!Utils\mtee\*.ico 
+
 :: All files to exclude in the Windows and Mac Releases
-set windows=-xr!Solvers\osx
-set osx=-xr!Solvers\win32 -xr!Solvers\win64
+set windows=-xr!Solvers\osx %mtee%
+set osx=-xr!Solvers\win32 -xr!Solvers\win64 -xr!Utils
 
 :: All files to be excluded from the linear release
 set linear=-xr!*bonmin* -xr!*couenne* -xr!*libipoptfort* -xr!*NOMAD* -xr!*Nomad*
