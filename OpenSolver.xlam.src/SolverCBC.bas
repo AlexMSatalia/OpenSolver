@@ -386,7 +386,7 @@ Function ReadModel_CBC(SolutionFilePathName As String, errorString As String, s 
 
                   'Write to the sheet containing the decision variables (which may not be the active sheet)
                   'Value assigned to Value2 must be in US locale
-6269              s.AdjustableCells.Worksheet.Range(NameValue).Value2 = ConvertFromCurrentLocale(s.FinalVarValueP(j))
+6269              s.AdjustableCells.Worksheet.Range(NameValue).Value2 = Val(SplitLine(i)) 'ConvertFromCurrentLocale(s.FinalVarValueP(j))
                  
                   'ConvertFullLPFileVarNameToRange(name, AdjCellsSheetIndex).Value2 = Value
 6270              If s.bGetDuals Then
