@@ -407,7 +407,10 @@ Function RunExternalCommand(CommandString As String, Optional logPath As String,
               Dim CommandToRun As String
               ' Applescript escapes double quotes with a backslash
               CommandToRun = Replace(CommandString, """", "\""")
-              ' TODO add tee support here
+              ' Pipe through tee if we are logging
+              If logPath <> "" Then
+                  CommandToRun = CommandToRun & " | tee " & Replace(logPath, """", "\""")
+              End If
           
               ' Applescript for opening a terminal to run our command
               ' 1. Create window if terminal not already open, then activate window
