@@ -399,9 +399,34 @@ Private Const ERROR_BAD_FORMAT = 11&
 ' Modified by A Mason
 Function RunExternalCommand(CommandString As String, Optional logPath As String, Optional WindowStyle As Long, Optional WaitForCompletion As Boolean, Optional userCancelled As Boolean, Optional exeResult As Long) As Boolean
 #If Mac Then
-          Dim ret As Long
-26        ret = system(SolverPath & pathName & PrintingOptionString & logPath)
-27        If ret = 0 Then RunExternalCommand = True
+          If WindowStyle = SW_HIDE Then
+              Dim ret As Long
+26            ret = system(CommandString & IIf(logPath <> "", " > " & logPath, ""))
+27            If ret = 0 Then RunExternalCommand = True
+          Else
+              Dim CommandToRun As String
+              ' Applescript escapes double quotes with a backslash
+              CommandToRun = Replace(CommandString, """", "\""")
+              ' TODO add tee support here
+          
+              ' Applescript for opening a terminal to run our command
+              ' 1. Create window if terminal not already open, then activate window
+              ' 2. Run our shell command in the terminal, saving a reference to the open window
+              ' 3. Loop until the window is no longer busy
+              Dim script As String
+              script = _
+                  "tell application ""Terminal""" & vbNewLine & _
+                  "    if not (exists window 1) then reopen" & vbNewLine & _
+                  "    activate" & vbNewLine & _
+                  "    set w to do script """ & CommandToRun & """ in window 1" & vbNewLine & _
+                  "    repeat" & vbNewLine & _
+                  "        delay 1" & vbNewLine & _
+                  "        if not busy of w then exit repeat" & vbNewLine & _
+                  "    end repeat" & vbNewLine & _
+                  "end tell"
+              MacScript (script)
+          End If
+              
 #Else
       'TODO: Optional for Boolean doesn't seem to work IsMissing is always false and value is false?
       ' Returns true if successful completion, false if escape was pressed
@@ -1976,9 +2001,12 @@ Sub MBox(errorMessage As String, Optional linkTarget As String, Optional linkTex
         
         'find line number start and end
         linNumStartPos = InStr(errorMessage, "(at line ")
-        linNumEndPos = InStr(linNumStartPos, errorMessage, ")")
-        'Remove this bit from the string
-        errorMessage = left(errorMessage, linNumStartPos - 1) & right(errorMessage, Len(errorMessage) - linNumEndPos)
+        ' Sometimes error messages on mac get garbled so this check is needed
+        If linNumStartPos > 0 Then
+            linNumEndPos = InStr(linNumStartPos, errorMessage, ")")
+            'Remove this bit from the string
+            errorMessage = left(errorMessage, linNumStartPos - 1) & right(errorMessage, Len(errorMessage) - linNumEndPos)
+        End If
     Else
         'this is an error message, so add the line number reporting and other info
         errorMessage = "OpenSolver" & sOpenSolverVersion & " encountered an error:" & vbCrLf & errorMessage & IIf(Erl = 0, "", " (at line " & Erl & ")") & vbCrLf & vbCrLf & "Source = " & Err.Source & ", ErrNumber=" & Err.Number
