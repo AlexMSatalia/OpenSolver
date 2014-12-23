@@ -2034,7 +2034,11 @@ Sub MBox(errorMessage As String, Optional linkTarget As String, Optional linkTex
         linkTarget = ""
     End If
     
+    ' We need to unlock the textbox before writing to it on Mac
+    MessageBox.TextBox1.Locked = False
     MessageBox.TextBox1.Text = errorMessage
+    MessageBox.TextBox1.Locked = True
+    
     MessageBox.LinkLabel.Caption = linkText
     MessageBox.LinkLabel.ControlTipText = linkTarget
     MessageBox.Show
