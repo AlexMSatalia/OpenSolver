@@ -58,7 +58,7 @@ Function SolverAvailable_Bonmin(Optional SolverPath As String, Optional errorStr
 
 #If Mac Then
               ' Make sure Bonmin is executable on Mac
-9036          system ("chmod +x " & ConvertHfsPath(SolverPath))
+9036          system ("chmod +x " & MakePathSafe(SolverPath))
 #End If
           
 9037      End If
@@ -80,12 +80,12 @@ Function SolverVersion_Bonmin() As String
           Dim RunPath As String, FileContents As String
 9044      RunPath = ScriptFilePath_Bonmin()
 9045      If FileOrDirExists(RunPath) Then Kill RunPath
-9046      FileContents = QuotePath(ConvertHfsPath(SolverPath)) & " -v" & " > " & QuotePath(ConvertHfsPath(logFile))
+9046      FileContents = MakePathSafe(SolverPath) & " -v"
 9047      CreateScriptFile RunPath, FileContents
           
           ' Run Bonmin
           Dim completed As Boolean
-9048      completed = RunExternalCommand(ConvertHfsPath(RunPath), "", SW_HIDE, True) 'OSSolveSync
+9048      completed = RunExternalCommand(MakePathSafe(RunPath), MakePathSafe(logFile), SW_HIDE, True)
           
           ' Read version info back from output file
           Dim Line As String
@@ -130,14 +130,13 @@ Function CreateSolveScript_Bonmin(ModelFilePathName As String) As String
           ' Create a script to run "/path/to/bonmin.exe /path/to/<ModelFilePathName>"
 
           Dim SolverString As String, CommandLineRunString As String, PrintingOptionString As String
-9072      SolverString = QuotePath(ConvertHfsPath(SolverFilePath_Bonmin()))
+9072      SolverString = MakePathSafe(SolverFilePath_Bonmin())
 
-9073      CommandLineRunString = QuotePath(ConvertHfsPath(ModelFilePathName))
-9074      PrintingOptionString = ""
+9073      CommandLineRunString = MakePathSafe(ModelFilePathName)
           
           Dim scriptFile As String, scriptFileContents As String
 9075      scriptFile = ScriptFilePath_Bonmin()
-9076      scriptFileContents = SolverString & " " & CommandLineRunString & PrintingOptionString
+9076      scriptFileContents = SolverString & " " & CommandLineRunString
 9077      CreateScriptFile scriptFile, scriptFileContents
           
 9078      CreateSolveScript_Bonmin = scriptFile

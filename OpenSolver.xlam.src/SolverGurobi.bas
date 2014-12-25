@@ -105,12 +105,12 @@ Function SolverVersion_Gurobi() As String
           Dim RunPath As String, FileContents As String
 6398      RunPath = ScriptFilePath_Gurobi()
 6399      If FileOrDirExists(RunPath) Then Kill RunPath
-6400      FileContents = QuotePath(ConvertHfsPath(SolverPath)) & " -v" & " > " & QuotePath(ConvertHfsPath(logFile))
+6400      FileContents = MakePathSafe(SolverPath) & " -v"
 6401      CreateScriptFile RunPath, FileContents
           
           ' Run Gurobi
           Dim completed As Boolean
-6402      completed = RunExternalCommand(ConvertHfsPath(RunPath), "", SW_HIDE, True)
+6402      completed = RunExternalCommand(MakePathSafe(RunPath), MakePathSafe(logFile), SW_HIDE, True)
           
           ' Read version info back from output file
           ' Output like 'Gurobi Optimizer version 5.6.3 (win64)'
@@ -148,12 +148,12 @@ Function SolverBitness_Gurobi() As String
           Dim RunPath As String, FileContents As String
 6422      RunPath = ScriptFilePath_Gurobi()
 6423      If FileOrDirExists(RunPath) Then Kill RunPath
-6424      FileContents = QuotePath(ConvertHfsPath(SolverPath)) & " -v" & " > " & QuotePath(ConvertHfsPath(logFile))
+6424      FileContents = MakePathSafe(SolverPath) & " -v"
 6425      CreateScriptFile RunPath, FileContents
           
           ' Run Gurobi
           Dim completed As Boolean
-6426      completed = RunExternalCommand(ConvertHfsPath(RunPath), "", SW_HIDE, True)
+6426      completed = RunExternalCommand(MakePathSafe(RunPath), MakePathSafe(logFile), SW_HIDE, True)
           
           ' Read bitness info back from output file
           ' Output like 'Gurobi Optimizer version 5.6.3 (win64)'
@@ -177,9 +177,9 @@ ErrHandler:
 End Function
 Function CreateSolveScript_Gurobi(SolutionFilePathName As String, ExtraParametersString As String, SolveOptions As SolveOptionsType) As String
           Dim SolverString As String, CommandLineRunString As String, PrintingOptionString As String
-6441      SolverString = QuotePath(ConvertHfsPath(SolverFilePath_Gurobi()))
+6441      SolverString = MakePathSafe(SolverFilePath_Gurobi())
 
-6442      CommandLineRunString = QuotePath(ConvertHfsPath(SolverPythonScriptPath_Gurobi()))
+6442      CommandLineRunString = MakePathSafe(SolverPythonScriptPath_Gurobi())
           '========================================================================================
           'Gurobi can also be run at the command line using gurobi_cl with the following commands
           '

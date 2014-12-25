@@ -159,14 +159,14 @@ Private Function CallNEOS_Mac(message As String, errorString As String)
           
           ' Set up commands for NeosClient
           ' NeosClient call is of the form: NeosClient.py <method> <neosresult.txt> <extra params> >> <logfile>
-6878      ModelFilePathName = QuotePath(ConvertHfsPath(ModelFilePathName))
+6878      ModelFilePathName = MakePathSafe(ModelFilePathName)
           
           Dim SolverPath As String, NeosClientDir As String
 6879      NeosClientDir = JoinPaths(ThisWorkbook.Path, SolverDir)
 6880      NeosClientDir = JoinPaths(NeosClientDir, SolverDirMac)
           
 6881      GetExistingFilePathName NeosClientDir, "NeosClient.py", SolverPath
-6882      SolverPath = QuotePath(ConvertHfsPath(SolverPath))
+6882      SolverPath = MakePathSafe(SolverPath)
 6883      system ("chmod +x " & SolverPath)
           
           Dim SolutionFilePathName As String
@@ -176,7 +176,7 @@ Private Function CallNEOS_Mac(message As String, errorString As String)
           Dim LogFilePathName As String
 6886      LogFilePathName = GetTempFilePath("log1.tmp")
 6887      DeleteFileAndVerify LogFilePathName, errorPrefix, "Unable to delete the log file: " & LogFilePathName
-6888      LogFilePathName = " >> " & QuotePath(ConvertHfsPath(LogFilePathName))
+6888      LogFilePathName = MakePathSafe(LogFilePathName)
 
           ' Mac doesn't support modeless forms
           'CallingNeos.Show False
@@ -185,7 +185,7 @@ Private Function CallNEOS_Mac(message As String, errorString As String)
 
           ' Run NeosClient.py->send
           Dim result As Boolean
-6891      result = RunExternalCommand(SolverPath & " send " & QuotePath(ConvertHfsPath(SolutionFilePathName)) & " " & ModelFilePathName, LogFilePathName)
+6891      result = RunExternalCommand(SolverPath & " send " & MakePathSafe(SolutionFilePathName) & " " & ModelFilePathName, LogFilePathName)
 6892      If Not result Then
 6893          GoTo NEOSError
 6894      End If
@@ -208,7 +208,7 @@ Private Function CallNEOS_Mac(message As String, errorString As String)
 6905      time = 0
 6906      While Done = False
               ' Run NeosClient.py->check
-6907          result = RunExternalCommand(SolverPath & " check " & QuotePath(ConvertHfsPath(SolutionFilePathName)) & " " & jobNumber & " " & Password, LogFilePathName)
+6907          result = RunExternalCommand(SolverPath & " check " & MakePathSafe(SolutionFilePathName) & " " & jobNumber & " " & Password, LogFilePathName)
 6908          If Not result Then
 6909              GoTo NEOSError
 6910          End If
@@ -235,7 +235,7 @@ Private Function CallNEOS_Mac(message As String, errorString As String)
           'CallingNeos.Hide
           
           ' Run NeosClient.py->check
-6928      result = RunExternalCommand(SolverPath & " read " & QuotePath(ConvertHfsPath(SolutionFilePathName)) & " " & jobNumber & " " & Password, LogFilePathName)
+6928      result = RunExternalCommand(SolverPath & " read " & MakePathSafe(SolutionFilePathName) & " " & jobNumber & " " & Password, LogFilePathName)
 6929      If Not result Then
 6930          GoTo NEOSError
 6931      End If

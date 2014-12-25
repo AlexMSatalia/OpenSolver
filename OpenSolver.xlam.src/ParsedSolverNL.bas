@@ -220,10 +220,10 @@ Function SolveModelParsed_NL(ModelFilePathName As String, model As CModelParsed,
                    
           Dim logCommand As String, logFileName As String
 7505      logFileName = "log1.tmp"
-7506      logCommand = " > " & QuotePath(ConvertHfsPath(GetTempFilePath(logFileName)))
+7506      logCommand = MakePathSafe(GetTempFilePath(logFileName))
                         
           Dim ExecutionCompleted As Boolean
-7507      ExternalSolverPathName = QuotePath(ConvertHfsPath(ExternalSolverPathName))
+7507      ExternalSolverPathName = MakePathSafe(ExternalSolverPathName)
                     
           Dim exeResult As Long, userCancelled As Boolean
 7508      ExecutionCompleted = RunExternalCommand(ExternalSolverPathName, logCommand, IIf(s.GetShowIterationResults, SW_SHOWNORMAL, SW_HIDE), True, userCancelled, exeResult) ' Run solver, waiting for completion

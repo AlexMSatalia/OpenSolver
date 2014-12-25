@@ -1848,6 +1848,10 @@ Public Function QuotePath(Path As String) As String
 745       QuotePath = """" & Path & """"
 End Function
 
+Public Function MakePathSafe(Path As String) As String
+    MakePathSafe = QuotePath(ConvertHfsPath(Path))
+End Function
+
 Public Sub CreateScriptFile(ByRef ScriptFilePath As String, FileContents As String, Optional EnableEcho As Boolean)
       ' Create a script file with the specified contents.
 746       On Error GoTo ErrHandler
@@ -1864,7 +1868,7 @@ Public Sub CreateScriptFile(ByRef ScriptFilePath As String, FileContents As Stri
           
           ' Make shell script executable on Mac
 #If Mac Then
-753       system ("chmod +x " & ConvertHfsPath(ScriptFilePath))
+753       system ("chmod +x " & MakePathSafe(ScriptFilePath))
 #End If
 
 754       Exit Sub

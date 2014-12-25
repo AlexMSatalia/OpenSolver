@@ -72,7 +72,7 @@ Function SolverAvailable_CBC(Optional SolverPath As String, Optional errorString
 
 #If Mac Then
               ' Make sure cbc is executable on Mac
-6066          system ("chmod +x " & ConvertHfsPath(SolverPath))
+6066          system ("chmod +x " & MakePathSafe(SolverPath))
 #End If
           
 6067      End If
@@ -94,12 +94,12 @@ Function SolverVersion_CBC() As String
           Dim RunPath As String, FileContents As String
 6074      RunPath = ScriptFilePath_CBC()
 6075      If FileOrDirExists(RunPath) Then Kill RunPath
-6076      FileContents = QuotePath(ConvertHfsPath(SolverPath)) & " -exit" & " > " & QuotePath(ConvertHfsPath(logFile))
+6076      FileContents = MakePathSafe(SolverPath) & " -exit"
 6077      CreateScriptFile RunPath, FileContents
           
           ' Run cbc
           Dim completed As Boolean
-6078      completed = RunExternalCommand(ConvertHfsPath(RunPath), "", SW_HIDE, True) 'OSSolveSync
+6078      completed = RunExternalCommand(MakePathSafe(RunPath), MakePathSafe(logFile), SW_HIDE, True) 'OSSolveSync
           
           ' Read version info back from output file
           Dim Line As String
@@ -167,14 +167,14 @@ End Function
 Function CreateSolveScript_CBC(SolutionFilePathName As String, ExtraParametersString As String, SolveOptions As SolveOptionsType, s As COpenSolver) As String
           Dim CommandLineRunString As String, PrintingOptionString As String
           ' have to split up the command line as excel couldn't have a string longer than 255 characters??
-6119      CommandLineRunString = " -directory " & QuotePath(ConvertHfsPath(left(GetTempFolder, Len(GetTempFolder) - 1))) _
-                               & " -import " & QuotePath(ConvertHfsPath(s.ModelFilePathName)) _
+6119      CommandLineRunString = " -directory " & MakePathSafe(left(GetTempFolder, Len(GetTempFolder) - 1)) _
+                               & " -import " & MakePathSafe(s.ModelFilePathName) _
                                & " -ratioGap " & str(SolveOptions.Tolerance) _
                                & " -seconds " & str(SolveOptions.maxTime) _
                                & ExtraParametersString _
                                & " -solve " _
                                & IIf(s.bGetDuals, " -printingOptions all ", "") _
-                               & " -solution " & QuotePath(ConvertHfsPath(SolutionFilePathName))
+                               & " -solution " & MakePathSafe(SolutionFilePathName)
           '-------------------sensitivity analysis-----------------------------------------------------------
           'extra command line option of -printingOptions rhs -solution rhsranges.txt gives the allowable increase for constraint rhs.
           '-this file has the increase as the third input and allowable decrease as the fifth input
@@ -184,7 +184,7 @@ Function CreateSolveScript_CBC(SolutionFilePathName As String, ExtraParametersSt
                         
           Dim scriptFile As String, scriptFileContents As String
 6121      scriptFile = ScriptFilePath_CBC()
-6122      scriptFileContents = QuotePath(ConvertHfsPath(s.ExternalSolverPathName)) & CommandLineRunString & PrintingOptionString
+6122      scriptFileContents = MakePathSafe(s.ExternalSolverPathName) & CommandLineRunString & PrintingOptionString
 6123      CreateScriptFile scriptFile, scriptFileContents
           
 6124      CreateSolveScript_CBC = scriptFile
@@ -522,12 +522,12 @@ Sub LaunchCommandLine_CBC()
 6363      End If
              
           Dim CBCRunString As String
-6364      CBCRunString = " -directory " & QuotePath(ConvertHfsPath(left(GetTempFolder, Len(GetTempFolder) - 1))) _
-                           & " -import " & QuotePath(ConvertHfsPath(ModelFilePathName)) _
+6364      CBCRunString = " -directory " & MakePathSafe(left(GetTempFolder, Len(GetTempFolder) - 1)) _
+                           & " -import " & MakePathSafe(ModelFilePathName) _
                            & SolveOptionsString _
                            & ExtraParametersString _
                            & " -" ' Force CBC to accept commands from the command line
-6365      RunExternalCommand QuotePath(ConvertHfsPath(SolverPath)) & CBCRunString, "", SW_SHOWNORMAL, False 'OSSolveSync
+6365      RunExternalCommand MakePathSafe(SolverPath) & CBCRunString, "", SW_SHOWNORMAL, False 'OSSolveSync
 
 ExitSub:
 6366      Exit Sub

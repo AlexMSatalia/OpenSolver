@@ -1577,7 +1577,7 @@ Sub SolveModel_LinearLocal(ModelFilePathName As String, SolveRelaxation As Boole
               
               'Then append the mte path to the end
 1570          logFileName = "log1.tmp"
-1571          logCommand = " | " & QuotePath(ConvertHfsPath(mteePath)) & " " & QuotePath(ConvertHfsPath(GetTempFilePath(logFileName)))
+1571          logCommand = MakePathSafe(GetTempFilePath(logFileName))
          
 1569          ExternalSolverPathName = CreateSolveScript(Solver, SolutionFilePathName, ExtraParametersString, SolveOptions, Me)
       '13120         ElseIf Solver = "cplex.exe" Then
@@ -1587,7 +1587,7 @@ Sub SolveModel_LinearLocal(ModelFilePathName As String, SolveRelaxation As Boole
               
               Dim ExecutionCompleted As Boolean
               'ExecutionCompleted = OSSolveSync(CBCRunString, IIf(ShowIterationResults, SW_SHOWNORMAL, SW_SHOWMINIMIZED), True) ' This stops escape being detected properly unless Excel is first 'activated?' with a click
-1572          ExternalSolverPathName = QuotePath(ConvertHfsPath(ExternalSolverPathName)) ' fix error for Gurobi with spaces in path name by quoting path
+1572          ExternalSolverPathName = MakePathSafe(ExternalSolverPathName) ' fix error for Gurobi with spaces in path name by quoting path
               Dim exeResult As Long, userCancelled As Boolean
 1573          ExecutionCompleted = RunExternalCommand(ExternalSolverPathName, logCommand, IIf(SolveOptions.ShowIterationResults And Not MinimiseUserInteraction, SW_SHOWNORMAL, SW_HIDE), True, userCancelled, exeResult) ' Run solver, waiting for completion
 1574          If userCancelled Then

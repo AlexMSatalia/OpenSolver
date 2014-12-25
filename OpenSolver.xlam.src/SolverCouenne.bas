@@ -59,7 +59,7 @@ Function SolverAvailable_Couenne(Optional SolverPath As String, Optional errorSt
 
 #If Mac Then
               ' Make sure couenne is executable on Mac
-8374          system ("chmod +x " & ConvertHfsPath(SolverPath))
+8374          system ("chmod +x " & MakePathSafe(SolverPath))
 #End If
           
 8375      End If
@@ -81,12 +81,12 @@ Function SolverVersion_Couenne() As String
           Dim RunPath As String, FileContents As String
 8382      RunPath = ScriptFilePath_Couenne()
 8383      If FileOrDirExists(RunPath) Then Kill RunPath
-8384      FileContents = QuotePath(ConvertHfsPath(SolverPath)) & " -v" & " > " & QuotePath(ConvertHfsPath(logFile))
+8384      FileContents = MakePathSafe(SolverPath) & " -v"
 8385      CreateScriptFile RunPath, FileContents
           
           ' Run Couenne
           Dim completed As Boolean
-8386      completed = RunExternalCommand(ConvertHfsPath(RunPath), "", SW_HIDE, True)
+8386      completed = RunExternalCommand(MakePathSafe(RunPath), MakePathSafe(logFile), SW_HIDE, True)
           
           ' Read version info back from output file
           Dim Line As String
@@ -131,14 +131,13 @@ Function CreateSolveScript_Couenne(ModelFilePathName As String) As String
           ' Create a script to run "/path/to/couenne.exe /path/to/<ModelFilePathName>"
 
           Dim SolverString As String, CommandLineRunString As String, PrintingOptionString As String
-8410      SolverString = QuotePath(ConvertHfsPath(SolverFilePath_Couenne()))
+8410      SolverString = MakePathSafe(SolverFilePath_Couenne())
 
-8411      CommandLineRunString = QuotePath(ConvertHfsPath(ModelFilePathName))
-8412      PrintingOptionString = ""
+8411      CommandLineRunString = MakePathSafe(ModelFilePathName)
           
           Dim scriptFile As String, scriptFileContents As String
 8413      scriptFile = ScriptFilePath_Couenne()
-8414      scriptFileContents = SolverString & " " & CommandLineRunString & PrintingOptionString
+8414      scriptFileContents = SolverString & " " & CommandLineRunString
 8415      CreateScriptFile scriptFile, scriptFileContents
           
 8416      CreateSolveScript_Couenne = scriptFile
