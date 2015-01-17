@@ -34,7 +34,7 @@ Public Sub CommonLinearityResult(f As UserForm, resultString As String, IsQuickC
     
     Dim MaxHeight As Integer
     #If Mac Then
-       MaxHeight = 300
+       MaxHeight = 350
     #Else
        MaxHeight = 250
     #End If
