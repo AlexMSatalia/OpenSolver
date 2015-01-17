@@ -2365,13 +2365,13 @@ Sub CheckLinearityOfModel()
           'Kathleen Gilbert - added version 1.1
           Dim row As Long, i As Long, RowIsNonLinear() As Boolean
           Dim ValueZero() As CIndexedCoeffs, ValueOne() As CIndexedCoeffs, ValueTen() As CIndexedCoeffs, OriginalSolutionValues() As Variant
-          Dim nonlinearinformation As String
+          Dim NonLinearInformation As String
           Dim ObjectiveCoeffsZero() As Double, ObjectiveCoeffsOne() As Double, ObjectiveCoeffsTen() As Double
           Dim ObjectiveFunctionConstantZero As Double, ObjectiveFunctionConstantOne As Double, ObjectiveFunctionConstantTen As Double
 2049      ReDim SolutionValues(numVars) As Double
 2050      If NumRows > 0 Then ReDim Preserve ValueZero(NumRows) As CIndexedCoeffs
           
-2051      nonlinearinformation = ""
+2051      NonLinearInformation = ""
           
           ' Remember the original decision variable values (in a variant array to handle multiple areas)
 2052      OriginalSolutionValues = GetRangeValues(AdjustableCells)
@@ -2431,7 +2431,7 @@ Sub CheckLinearityOfModel()
 2090                  If Abs(ValueOne(row).Coefficient(i) - ValueZero(row).Coefficient(i)) / (1 + Abs(ValueOne(row).Coefficient(i))) > EPSILON _
                       And Abs(ValueOne(row).Coefficient(i) - ValueTen(row).Coefficient(i)) / (1 + Abs(ValueOne(row).Coefficient(i))) > EPSILON Then
 2091                      GetConstraintFromRow row, constraint, instance
-2092                      If NonLinearityCount <= 10 Then AddNonLinearInfoToString ValueOne(row).index(i), nonlinearinformation, FirstVar, constraint, instance
+2092                      If NonLinearityCount <= 10 Then AddNonLinearInfoToString ValueOne(row).index(i), NonLinearInformation, FirstVar, constraint, instance
 2093                      FirstVar = False
 2094                      RowIsNonLinear(row) = True
 2095                  End If
@@ -2439,7 +2439,7 @@ Sub CheckLinearityOfModel()
 2097                  GetConstraintFromRow row, constraint, instance
                       Dim VariableIndex As Long
 2098                  VariableIndex = GetEntry(ValueZero(row), ValueOne(row), ValueTen(row), i)
-2099                  If NonLinearityCount <= 10 Then AddNonLinearInfoToString VariableIndex, nonlinearinformation, FirstVar, constraint, instance
+2099                  If NonLinearityCount <= 10 Then AddNonLinearInfoToString VariableIndex, NonLinearInformation, FirstVar, constraint, instance
 2100                  FirstVar = False
 2101                  RowIsNonLinear(row) = True
 2102              End If
@@ -2448,7 +2448,7 @@ Sub CheckLinearityOfModel()
 2105      Next row
           
 2106      If NonLinearityCount > 10 Then
-2107          nonlinearinformation = nonlinearinformation & vbNewLine & " and " & CStr(NonLinearityCount - 10) & " other instances."
+2107          NonLinearInformation = NonLinearInformation & vbNewLine & " and " & CStr(NonLinearityCount - 10) & " other instances."
 2108      End If
 
           Dim ObjectiveIsNonLinear As Boolean
@@ -2458,9 +2458,9 @@ Sub CheckLinearityOfModel()
               And Abs(ObjectiveCoeffsOne(i) - ObjectiveCoeffsTen(i)) / (1 + Abs(ObjectiveCoeffsOne(i))) > EPSILON Then
 2112              If Not ObjectiveIsNonLinear Then
 2113                  ObjectiveIsNonLinear = True
-2114                  nonlinearinformation = nonlinearinformation & vbNewLine & vbNewLine & "The objective function is nonlinear in the following variables: " & VarNames(i)
+2114                  NonLinearInformation = NonLinearInformation & vbNewLine & vbNewLine & "The objective function is nonlinear in the following variables: " & VarNames(i)
 2115              Else
-2116                  nonlinearinformation = nonlinearinformation & " , " & VarNames(i)
+2116                  NonLinearInformation = NonLinearInformation & " , " & VarNames(i)
 2117              End If
                    
 2118          End If
@@ -2468,6 +2468,13 @@ Sub CheckLinearityOfModel()
           
           'Put the solution back on the sheet
 2120      SetRangeValues AdjustableCells, OriginalSolutionValues
+
+          NonLinearInformation = TrimBlankLines(NonLinearInformation)
+          If NonLinearInformation = "" Then
+              NonLinearInformation = "There have been no instances of nonlinearity found in this model. Some models can generate warnings of non-linearity " & _
+                                     "because of numerical errors that accumulate in the spreadsheet. OpenSolver's non-linearity check can be disabled under OpenSolver's " & _
+                                     "Options settings."
+          End If
           
           'display dialog to user
 #If Mac Then
@@ -2475,35 +2482,7 @@ Sub CheckLinearityOfModel()
 #Else
           Dim f As New NonlinearForm
 #End If
-2121      f.TextBox2.Caption = TrimBlankLines(nonlinearinformation)
-2122      If nonlinearinformation = "" Then
-2123          f.TextBox2.Caption = "There have been no instances of nonlinearity found in this model. Some models can generate warnings of non-linearity " & _
-                                    "because of numerical errors that accumulate in the spreadsheet. OpenSolver's non-linearity check can be disabled under OpenSolver's " & _
-                                    "Options settings."
-2124      End If
-2125      f.TextBox2.TextAlign = fmTextAlignLeft
-2126      f.TextBox2.AutoSize = False
-2127      f.TextBox2.height = 20
-2128      f.TextBox2.AutoSize = True
-2129      f.TextBox2.AutoSize = False
-2130      If f.TextBox2.height > 250 Then f.TextBox2.height = 250
-2131      f.TextBox2.width = 546
-          ' f.TextBox2.top = 1
-2132      f.width = f.TextBox2.width + 2 * f.TextBox2.left
-          'f.TextBox2.left = f.TextBox2.width * 0.1
-2133      f.FullCheck.Visible = False
-2134      f.HighlightBox.Visible = True
-          'f.ContinueButton.left = Int(f.TextBox2.left + f.TextBox2.width * 0.5 - (f.ContinueButton.width / 2))
-          'f.HighlightBox.left = f.TextBox2.left
-2135      f.HighlightBox.top = f.TextBox2.top + f.TextBox2.height + 5
-          'f.FullCheck.left = f.TextBox2.left
-          ' f.FullCheck.top = f.HighlightBox.top + f.HighlightBox.height + 5
-#If Mac Then
-2136      f.ContinueButton.top = f.HighlightBox.top + 11
-#Else
-2137      f.ContinueButton.top = f.HighlightBox.top + 6 ' Enough space around check box anyway
-#End If
-2138      f.height = f.ContinueButton.top + f.ContinueButton.height + 30
+          f.SetLinearityResult NonLinearInformation, False
 2139      f.Show
           
 2140      If f.HighlightBox.value = True Then
@@ -2535,18 +2514,18 @@ Function GetEntry(ValueZero, ValueOne, ValueTen, i) As Long
 2157      End If
 End Function
 
-Sub AddNonLinearInfoToString(var As Long, nonlinearinformation As String, FirstVar As Boolean, constraint As Long, instance As Long)
+Sub AddNonLinearInfoToString(var As Long, NonLinearInformation As String, FirstVar As Boolean, constraint As Long, instance As Long)
           'This function is used by the linearity checker to write the string storing all the nonlinear information
 2158      If FirstVar = True Then
 2159          If LHSType(constraint) = SolverInputType.SingleCellRange Then
-2160              nonlinearinformation = nonlinearinformation & vbNewLine & "In the constraint: " & ConstraintSummary(constraint) & "," & vbNewLine & "  the model appears to be non-linear in the decision variables: " & VarNames(var)
+2160              NonLinearInformation = NonLinearInformation & vbNewLine & "In the constraint: " & ConstraintSummary(constraint) & "," & vbNewLine & "  the model appears to be non-linear in the decision variables: " & VarNames(var)
 2161          Else
                   ' Dim LHSValue As Double, RHSValue As Double, failedcase As Long, sLHS As String, sRHS As String
                   ' GetExcelConstraintInfoFromRow Constraint, Row, LHSValue, RHSValue, failedcase, sLHS, sRHS
-2162              nonlinearinformation = nonlinearinformation & vbNewLine & "In instance " & instance & " of the constraint: " & ConstraintSummary(constraint) & "," & vbNewLine & "the model appears to be non-linear in the following decision variables: " & VarNames(var)
+2162              NonLinearInformation = NonLinearInformation & vbNewLine & "In instance " & instance & " of the constraint: " & ConstraintSummary(constraint) & "," & vbNewLine & "the model appears to be non-linear in the following decision variables: " & VarNames(var)
 2163          End If
 2164      Else
-2165          nonlinearinformation = nonlinearinformation & ", " & VarNames(var)
+2165          NonLinearInformation = NonLinearInformation & ", " & VarNames(var)
 2166      End If
 End Sub
 
@@ -2684,50 +2663,13 @@ Sub QuickLinearityCheck(fullLinearityCheckWasPerformed As Boolean)
 2241      If NonLinearInfo <> "" Then
 2242          SolveStatus = NotLinear
 2243          If Not MinimiseUserInteraction Then
+                  NonLinearInfo = "WARNING : " & vbNewLine & TrimBlankLines(NonLinearInfo)
 #If Mac Then
                   Dim f As New MacNonlinearForm
 #Else
                   Dim f As New NonlinearForm
 #End If
-
-2244              f.TextBox2.Caption = "WARNING : " & vbNewLine & TrimBlankLines(NonLinearInfo)
-              
-                  'If its only the objective function hide the full check
-                  'If f = True Then
-2245              f.FullCheck.Visible = True
-                  'Else
-                  '    f.FullCheck.Visible = False
-                  '    f.FullCheck.value = False
-                  'End If
-              
-                  'formatting of the user form f.TextBox2.AutoSize = True
-2246              f.TextBox2.AutoSize = False
-2247              f.TextBox2.height = 20
-2248              f.TextBox2.AutoSize = True
-2249              f.TextBox2.AutoSize = False
-2250              If f.TextBox2.height > 250 Then f.TextBox2.height = 250
-2251              f.TextBox2.width = 546
-2252              f.width = f.TextBox2.width + 2 * f.TextBox2.left
-                  'f.TextBox2.left = f.TextBox2.width * 0.1
-2253              f.TextBox2.TextAlign = fmTextAlignLeft
-2254              f.HighlightBox.Visible = True
-2255              f.FullCheck.Caption = "Run a full linearity check. (This will destroy the current solution) "
-2256              f.Caption = "OpenSolver: Linearity check "
-2257              f.HighlightBox.Caption = "Highlight the nonlinearities"
-                  'f.HighlightBox.left = f.TextBox2.left
-                  'f.FullCheck.left = f.TextBox2.left
-2258              f.HighlightBox.top = f.TextBox2.height + f.TextBox2.top + 5
-2259              f.FullCheck.top = f.HighlightBox.top + f.HighlightBox.height + 0 ' Enought space around check box anyway
-                  ' f.ContinueButton.top = f.FullCheck.top + f.FullCheck.height + 3 ' Enough space around check box anyway
-#If Mac Then
-2260              f.ContinueButton.top = f.HighlightBox.top + 11
-#Else
-2261              f.ContinueButton.top = f.HighlightBox.top + 6 ' Enough space around check box anyway
-#End If
-                  'f.ContinueButton.left = f.TextBox2.width * 0.4
-2262              f.height = f.FullCheck.top + f.FullCheck.height + 30
-                  'f.height = (f.TextBox2.top + f.TextBox2.height + f.FullCheck.height _
-                  '        + f.HighlightBox.height + f.ContinueButton.height + f.ContinueButton.top) * 0.8
+                  f.SetLinearityResult NonLinearInfo, True
 2263              f.Show
               
                   'showing the nonlinear constraints
