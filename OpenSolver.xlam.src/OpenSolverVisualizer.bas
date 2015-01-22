@@ -271,7 +271,8 @@ Function HighlightRange(r As Range, label As String, HighlightColor As Long, Opt
 3153        .Characters.Text = label
 3154        .Characters.Font.Color = HighlightColor
 3155        .HorizontalAlignment = xlHAlignLeft ' xlHAlignCenter
-3156        If height < 500 Then
+            ' "=", "<=", & ">=" will be centered
+3156        If ((height < 500) Or (label = "=") Or (label = ChrW(&H2265)) Or (label = ChrW(&H2264))) Then
 3157            .VerticalAlignment = xlVAlignCenter  ' Shape is small enought to have text fit on the screen when centered, so we center text
 3158        Else
 3159            .VerticalAlignment = xlVAlignTop   ' So we can see the name when scrolled to the top
