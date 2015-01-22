@@ -688,7 +688,8 @@ BadObjRef:
           '----------------------------------------------------------------
 BadDecRef:
           ' Couldn't turn the decision variable address into a range
-4461      MsgBox "Error: the cell address for the decision variables is invalid. " + _
+4461      MsgBox "Error: the cell range specified for the Variable Cells is invalid. " + _
+                 "This must be a valid Excel range that does not exceed Excel's internal character count limits. " + _
                   "Please correct this and try again.", vbExclamation + vbOKOnly, "OpenSolver"
 4462      f.refDecision.SetFocus ' Set the focus back to the RefEdit
 4463      DoEvents ' Try to stop RefEdit bugs
