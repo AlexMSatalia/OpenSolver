@@ -447,6 +447,17 @@ Function RunExternalCommand(CommandString As String, Optional logPath As String,
 35            .wShowWindow = WindowStyle
 36        End If
 37        End With
+
+          If logPath <> "" Then
+              If WindowStyle = SW_HIDE Then
+                  logPath = " > " & logPath
+              Else
+                  Dim mteePath As String
+                  GetExistingFilePathName JoinPaths(JoinPaths(ThisWorkbook.Path, "Utils"), "mtee"), "mtee.exe", mteePath
+                  logPath = " | " & MakePathSafe(mteePath) & " " & logPath
+              End If
+          End If
+
           ' Start the shelled application:
 38        ret& = CreateProcessA(0&, CommandString & logPath, 0&, 0&, 1&, _
                                 NORMAL_PRIORITY_CLASS, 0&, 0&, start, proc)
