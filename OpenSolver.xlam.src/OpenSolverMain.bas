@@ -222,8 +222,8 @@ errorHandler:
           If OpenSolver_ErrDescription <> "" Then Err.Description = OpenSolver_ErrDescription
 #End If
 2828      If Err.Number <> OpenSolver_UserCancelledError And Not MinimiseUserInteraction Then
-              MBox "Help_" & Err.Description
-              'MsgBox "OpenSolver" & sOpenSolverVersion & " encountered an error:" & vbCrLf & Err.Description & IIf(Erl = 0, "", " (at line " & Erl & ")") & vbCrLf & vbCrLf & "Source = " & Err.Source & ", ErrNumber=" & Err.Number, , "OpenSolver" & sOpenSolverVersion & " Error"
+              'MBox "Help_" & Err.Description
+              MsgBox "OpenSolver" & sOpenSolverVersion & " encountered an error:" & vbCrLf & Err.Description & IIf(Erl = 0, "", " (at line " & Erl & ")") & vbCrLf & vbCrLf & "Source = " & Err.Source & ", ErrNumber=" & Err.Number, , "OpenSolver" & sOpenSolverVersion & " Error"
 2830      End If
 End Function
 
@@ -243,15 +243,16 @@ errorHandler:
           If OpenSolver_ErrSource <> "" Then Err.Source = OpenSolver_ErrSource
           If OpenSolver_ErrDescription <> "" Then Err.Description = OpenSolver_ErrDescription
 #End If
-2838      MBox Err.Description
-'MsgBox "OpenSolver encountered error " & Err.Number & ":" & vbCrLf & Err.Description & IIf(Erl = 0, "", " (at line " & Erl & ")") & vbCrLf & "Source = " & Err.Source, , "OpenSolver" & sOpenSolverVersion & " Error"
+2838      'MBox Err.Description
+          MsgBox "OpenSolver encountered error " & Err.Number & ":" & vbCrLf & Err.Description & IIf(Erl = 0, "", " (at line " & Erl & ")") & vbCrLf & "Source = " & Err.Source, , "OpenSolver" & sOpenSolverVersion & " Error"
 End Sub
 
 Function RunQuickSolve(Optional MinimiseUserInteraction As Boolean = False) As Long
           ResetErrorCache
 2839      On Error GoTo errorHandler
 2840      If OpenSolver Is Nothing Then
-2841          MBox "Help_Error: There is no model to solve, and so the quick solve cannot be completed. Please select the Initialize Quick Solve command."
+2841          MsgBox "Error: There is no model to solve, and so the quick solve cannot be completed. Please select the Initialize Quick Solve command.", , "OpenSolver" & sOpenSolverVersion & " Error"
+              'MBox "Help_Error: There is no model to solve, and so the quick solve cannot be completed. Please select the Initialize Quick Solve command."
 2842          RunQuickSolve = OpenSolverResult.ErrorOccurred
 2843      ElseIf OpenSolver.CanDoQuickSolveForActiveSheet Then    ' This will report any errors
 2844          RunQuickSolve = OpenSolver.DoQuickSolve(MinimiseUserInteraction)
@@ -265,7 +266,8 @@ errorHandler:
           If OpenSolver_ErrDescription <> "" Then Err.Description = OpenSolver_ErrDescription
 #End If
 2847      If Not MinimiseUserInteraction Then
-2848          MBox Err.Description
+2848          'MBox Err.Description
+              MsgBox "OpenSolver encountered error " & Err.Number & ":" & vbCrLf & Err.Description & IIf(Erl = 0, "", " (at line " & Erl & ")") & vbCrLf & "Source = " & Err.Source, , "OpenSolver" & sOpenSolverVersion & " Error"
 2849      End If
 2850      RunQuickSolve = OpenSolverResult.ErrorOccurred
 End Function
