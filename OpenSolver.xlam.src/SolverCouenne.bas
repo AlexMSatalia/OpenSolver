@@ -160,8 +160,8 @@ Function ReadModel_Couenne(SolutionFilePathName As String, errorString As String
 8427          Open SolutionFilePathName For Input As 1 ' supply path with filename
 8428          Line Input #1, Line ' Skip empty line at start of file
 8429          Line Input #1, Line
-8430          Line = Mid(Line, 10)
-              
+8430          Line = Mid(Line, InStrRev(Line, ":") + 2) ' Get all after the last colon
+
               'Get the returned status code from couenne.
 8431          If Line Like "Optimal*" Then
 8432              s.SolveStatus = OpenSolverResult.Optimal
