@@ -143,6 +143,8 @@ Public Sub ActivateAboutForm(f As UserForm)
 3530      f.txtAbout.Text = f.txtAbout.Text & About_Couenne & vbNewLine & vbNewLine
 3531      f.txtAbout.Text = f.txtAbout.Text & "OpenSolverFile: " & MakeSpacesNonBreaking(ThisWorkbook.FullName)
           
+          f.labelFilePath = "OpenSolverFile: " & MakeSpacesNonBreaking(ThisWorkbook.FullName)
+          
 3532      ReflectOpenSolverStatus f
 3533      EventsEnabled = True
 
