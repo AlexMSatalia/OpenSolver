@@ -775,29 +775,14 @@ Sub ProcessSingleFormula(RHSExpression As String, LHSVariable As String, Relatio
 7811          constraint.Coefficient(VariableIndex(LHSVariable)) = constraint.Coefficient(VariableIndex(LHSVariable)) - 1
 7812      End If
           
-          ' Constant must be positive in the final form of the constraint in the .nl file
-7813      If constant < 0 Then
-              ' Take constant to the LHS to make it positive
-7814          constant = -constant
-              
-              ' Our RHS and LHS have now been swapped compared to the original constraint. We need to swap the LE or GE relation if present
-7815          Select Case Relation
-              Case RelationConsts.RelationGE
-7816              Relation = RelationLE
-7817          Case RelationConsts.RelationLE
-7818              Relation = RelationGE
-7819          End Select
-7820      Else
-              ' Keep constant on RHS and take everything else to LHS.
-              ' Need to flip all sign of elements in this constraint
-              
-              ' Flip all coefficients in linear constraint
-7821          constraint.InvertCoefficients
-              
-              ' Negate non-linear tree
-7822          Set Tree = Tree.Negate
-7823      End If
-          
+          ' Keep constant on RHS and take everything else to LHS.
+          ' Need to flip all sign of elements in this constraint
+
+          ' Flip all coefficients in linear constraint
+7821      constraint.InvertCoefficients
+
+          ' Negate non-linear tree
+7822      Set Tree = Tree.Negate
           
           ' Save results of processing
 7824      NonLinearConstraintTrees.Add Tree

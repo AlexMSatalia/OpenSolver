@@ -143,7 +143,7 @@ Sub WriteAMPLFile_Parsed(ModelFilePathName As String, SolverType As String)
               
               Dim Formula As Variant
 7208          For Each Formula In m.Formulae
-7209              WriteToFile 1, "var " & Formula.strAddress & ";"
+7209              WriteToFile 1, "var " & Formula.strAddress & " := " & CStr(Formula.initialValue) & ";"
 7210          Next Formula
 7211          WriteToFile 1, ""
               
