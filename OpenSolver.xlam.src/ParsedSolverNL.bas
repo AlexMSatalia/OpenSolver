@@ -170,10 +170,10 @@ Function SolveModelParsed_NL(ModelFilePathName As String, model As CModelParsed,
 7480          Print #1, MakeOBlocks()
 7481      End If
           
-          ' Write d block
-7482      If n_con > 0 Then
-7483          Print #1, MakeDBlock()
-7484      End If
+'          ' Write d block
+'7482      If n_con > 0 Then
+'7483          Print #1, MakeDBlock()
+'7484      End If
           
           ' Write x block
 7485      Print #1, MakeXBlock()
@@ -495,7 +495,7 @@ Sub MakeVariableMap()
 7658          DoEvents
               
 7659          If NonLinearVars(i) Then
-7660              If IntegerVars(i) Then
+7660              If IntegerVars(i) Or BinaryVars(i) Then
 7661                  NonLinearInteger.Add i
 7662              Else
 7663                  NonLinearContinuous.Add i
@@ -1060,8 +1060,11 @@ Function MakeBBlock() As String
 7948          Comment = "    " & VariableMapRev(CStr(i - 1))
            
 7949          If VariableIndex <= numActualVars Then
+                  If BinaryVars(VariableIndex) Then
+                    bound = "0 0 1"
+                    Comment = Comment & " IN [0, 1]"
                   ' Real variables, use actual bounds
-7950              If m.AssumeNonNegative Then
+7950              ElseIf m.AssumeNonNegative Then
 7951                  VarName = m.GetAdjCellName(CLng(VariableIndex))
 7952                  If TestKeyExists(m.VarLowerBounds, VarName) And Not BinaryVars(VariableIndex) Then
 7953                      bound = "3"
