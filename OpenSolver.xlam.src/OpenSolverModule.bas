@@ -1825,12 +1825,12 @@ Public Function ConvertHfsPath(Path As String) As String
       ' that HFS-style paths are converted to normal posix paths. On windows this
       ' function does nothing, so it can safely wrap all file system calls on any platform
       ' Input (HFS path):   "Macintosh HD:Users:jack:filename.txt"
-      ' Output (posix path): "/Users/jack/filename.txt"
+      ' Output (posix path): "/Volumes/Macintosh HD/Users/jack/filename.txt"
 #If Mac Then
           ' Check we have an HFS path and not posix
 738       If InStr(Path, ":") > 0 Then
-              ' Remove disk name (everything up to first ':')
-739           ConvertHfsPath = right(Path, Len(Path) - InStr(Path, ":") + 1)
+              ' Prefix disk name with :Volumes:
+739           ConvertHfsPath = ":Volumes:" & Path
               ' Convert path delimiters
 740           ConvertHfsPath = ReplaceDelimitersMac(ConvertHfsPath)
 741       Else
