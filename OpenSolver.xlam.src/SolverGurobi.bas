@@ -54,8 +54,7 @@ Function About_Gurobi() As String
           
           ' Assemble version info
 6380      About_Gurobi = "Gurobi " & SolverBitness_Gurobi & "-bit" & _
-                           " v" & SolverVersion_Gurobi & _
-                           " at " & MakeSpacesNonBreaking(SolverPath)
+                           " v" & SolverVersion_Gurobi & " detected"
 End Function
 
 Function GetGurobiBinFolder() As String
@@ -71,7 +70,8 @@ Function SolverFilePath_Gurobi() As String
           ' On Mac, using the gurobi interactive shell causes errors when there are spaces in the filepath.
           ' The mac gurobi.sh script, unlike windows, doesn't have a check for a gurobi install, thus it doesn't do anything for us here and is safe to skip.
           ' We can just run python by itself. We need to use the default system python (pre-installed on mac) and not any other version (e.g. a version from homebrew)
-6383      SolverFilePath_Gurobi = GetDriveName() & ":usr:bin:python"
+          ' We also need to launch it without going via /Volumes/.../
+6383      SolverFilePath_Gurobi = "/usr/bin/python"
 #Else
 6384      GetExistingFilePathName GetGurobiBinFolder(), Solver_Gurobi, SolverFilePath_Gurobi
 #End If
