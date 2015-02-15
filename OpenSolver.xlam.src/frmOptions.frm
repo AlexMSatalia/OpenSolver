@@ -63,19 +63,16 @@ Public Sub OptionsActivate(f As UserForm)
 4114      SetAnyMissingDefaultExcel2007SolverOptions
 
           Dim nonNeg As Boolean, s As String
-          ' nonNeg = True   ' a sensible default
 4115      If GetNameValueIfExists(ActiveWorkbook, "'" & Replace(ActiveSheet.Name, "'", "''") & "'!solver_neg", s) Then
 4116          nonNeg = s = "1"
 4117      End If
           
           Dim ShowSolverProgress As Boolean
-          ' ShowSolverProgress = False
 4118      If GetNameValueIfExists(ActiveWorkbook, "'" & Replace(ActiveSheet.Name, "'", "''") & "'!solver_sho", s) Then
 4119          ShowSolverProgress = s = "1"
 4120      End If
           
           Dim maxTime As Double
-          ' maxTime = 9999 ' A default value if none is yet defined
 4121      GetNamedNumericValueIfExists ActiveWorkbook, "'" & Replace(ActiveSheet.Name, "'", "''") & "'!solver_tim", maxTime
           
           Dim maxIter As Double
@@ -85,7 +82,6 @@ Public Sub OptionsActivate(f As UserForm)
 4123      GetNamedNumericValueIfExists ActiveWorkbook, "'" & Replace(ActiveSheet.Name, "'", "''") & "'!solver_pre", conPre
 
           Dim tol As Double
-          ' tol = 0.05  ' A default value if none is yet defined
 4124      GetNamedNumericValueIfExists ActiveWorkbook, "'" & Replace(ActiveSheet.Name, "'", "''") & "'!solver_tol", tol
           
           ' We perform a linearity check by default unless the defined name exists with value 2=off
