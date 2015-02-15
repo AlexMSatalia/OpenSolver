@@ -293,6 +293,7 @@ Function SolveModelParsed_NEOS(ModelFilePathName As String, Solver As String, s 
 7300          GoTo NeosReturn
 7301      End If
           
+          s.SolveStatus = OpenSolverResult.Optimal
 7302      s.SolveStatusString = SolveStatusString
 
           ' Display results to sheet
@@ -309,6 +310,7 @@ Function SolveModelParsed_NEOS(ModelFilePathName As String, Solver As String, s 
 7308          Range(c.Address) = Range(c.Address).Value2
 7309      Next
 
+          SolutionWasLoaded = True
 7310      SolveModelParsed_NEOS = True
 7311      Application.Calculation = xlCalculationManual
 7312      Exit Function
