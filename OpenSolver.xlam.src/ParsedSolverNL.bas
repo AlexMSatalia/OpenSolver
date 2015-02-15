@@ -1731,21 +1731,21 @@ Function ReadModel_NL(SolutionFilePathName As String, errorString As String, s A
         Line Input #1, Line ' Get line with status code
 
         'Get the returned status code from solver.
-        If InStr(1, Line, "optimal", vbTextCompare) Then
+        If InStrText(Line, "optimal") Then
             s.SolveStatus = OpenSolverResult.Optimal
             s.SolveStatusString = "Optimal"
-        ElseIf InStr(1, Line, "infeasible", vbTextCompare) Then
+        ElseIf InStrText(Line, "infeasible") Then
             s.SolveStatus = OpenSolverResult.Infeasible
             s.SolveStatusString = "No Feasible Solution"
             solutionExpected = False
-        ElseIf InStr(1, Line, "unbounded", vbTextCompare) Then
+        ElseIf InStrText(Line, "unbounded") Then
             s.SolveStatus = OpenSolverResult.Unbounded
             s.SolveStatusString = "No Solution Found (Unbounded)"
             solutionExpected = False
-        ElseIf InStr(1, Line, "interrupted on limit", vbTextCompare) Then
+        ElseIf InStrText(Line, "interrupted on limit") Then
             s.SolveStatus = OpenSolverResult.TimeLimitedSubOptimal
             s.SolveStatusString = "Stopped on User Limit (Time/Iterations)"
-        ElseIf InStr(Line, "interrupted by user") Then
+        ElseIf InStrText(Line, "interrupted by user") Then
             s.SolveStatus = OpenSolverResult.AbortedThruUserAction
             s.SolveStatusString = "Stopped on Ctrl-C"
         Else
@@ -1830,7 +1830,7 @@ Function TryParseLogs(s As COpenSolverParsed) As Boolean
 8485      Close #3
           
           ' We need to check > 0 explicitly, as the expression doesn't work without it
-8486      If Not InStr(left(message, 7), m.Solver) > 0 Then
+8486      If Not InStrText(left(message, 7), m.Solver) > 0 Then
              ' Not dealing with the correct solver log, abort
 8487          TryParseLogs = False
 8488          Exit Function
@@ -1839,7 +1839,7 @@ Function TryParseLogs(s As COpenSolverParsed) As Boolean
           ' Scan for information
           
           ' 1 - scan for infeasible
-8490      If InStr(1, message, "infeasible", vbTextCompare) Then
+8490      If InStrText(message, "infeasible") Then
 8491          s.SolveStatus = OpenSolverResult.Infeasible
 8492          s.SolveStatusString = "No Feasible Solution"
 8493          TryParseLogs = True

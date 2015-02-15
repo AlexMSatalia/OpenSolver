@@ -2058,3 +2058,8 @@ Sub MBox(errorMessage As String, Optional linkTarget As String, Optional linkTex
     MessageBox.LinkLabel.ControlTipText = linkTarget
     MessageBox.Show
 End Sub
+
+' Case-insensitive InStr helper
+Function InStrText(String1 As String, String2 As String)
+    InStrText = InStr(1, String1, String2, vbTextCompare)
+End Function
