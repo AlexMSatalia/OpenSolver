@@ -13,8 +13,6 @@ Public Const SolverName_Bonmin = "bonmin.exe"
 #End If
 
 Public Const SolverScript_Bonmin = "bonmin" & ScriptExtension
-
-Public Const SolutionFile_Bonmin = "model.sol"
 Public Const OptionsFile_Bonmin = "bonmin.opt"
 
 Public Const UsesPrecision_Bonmin = False
@@ -27,7 +25,7 @@ Function ScriptFilePath_Bonmin() As String
 End Function
 
 Function SolutionFilePath_Bonmin() As String
-9022      SolutionFilePath_Bonmin = GetTempFilePath(SolutionFile_Bonmin)
+9022      SolutionFilePath_Bonmin = GetTempFilePath(NLSolutionFileName)
 End Function
 
 Function OptionsFilePath_Bonmin() As String

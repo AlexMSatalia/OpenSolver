@@ -13,8 +13,6 @@ Public Const SolverName_Couenne = "couenne.exe"
 #End If
 
 Public Const SolverScript_Couenne = "couenne" & ScriptExtension
-
-Public Const SolutionFile_Couenne = "model.sol"
 Public Const OptionsFile_Couenne = "couenne.opt"
 
 Public Const UsesPrecision_Couenne = False
@@ -27,7 +25,7 @@ Function ScriptFilePath_Couenne() As String
 End Function
 
 Function SolutionFilePath_Couenne() As String
-8359      SolutionFilePath_Couenne = GetTempFilePath(SolutionFile_Couenne)
+8359      SolutionFilePath_Couenne = GetTempFilePath(NLSolutionFileName)
 End Function
 
 Function OptionsFilePath_Couenne() As String

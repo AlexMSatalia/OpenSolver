@@ -4,6 +4,7 @@ Option Explicit
 Public Const LPFileName As String = "model.lp"
 Public Const AMPLFileName As String = "model.ampl"
 Public Const NLFileName As String = "model.nl"
+Public Const NLSolutionFileName As String = "model.sol"
 Public Const PuLPFileName As String = "opensolver.py"
 
 Public Const SolverDir As String = "Solvers"
