@@ -1669,6 +1669,14 @@ Sub WriteLPFile(ModelFilePathName As String, SolveRelaxation As Boolean, errorSt
           Dim commentStart As String  'Character for starting comments for chosen solver
 1613      commentStart = "\"
           
+          ' Track which variables we have printed so far - only needed when AssumeNonNegativeVars is true
+          ' This is so we can print all unused variables as FREE for sensitivity analysis
+          ' When AssumeNonNegativeVars is false, we print all vars as FREE anyway, so this isn't needed
+          Dim UsedVariables As Collection, VarName As String
+          If AssumeNonNegativeVars Then
+              Set UsedVariables = New Collection
+          End If
+          
           ' output the model to an LP format text file
           ' See http://lpsolve.sourceforge.net/5.5/CPLEX-format.htm
 
@@ -1687,14 +1695,17 @@ Sub WriteLPFile(ModelFilePathName As String, SolveRelaxation As Boolean, errorSt
 1625      If ObjectiveSense = TargetObjective Then
               ' We want the objective to achieve some target value; we have no objective; nothing is output
 1626          Print #1, ' A new line meaning a blank objective; add a comment to this effect next
-1627          If Solver <> "gurobi.bat" Then
-1628              Print #1, commentStart & " We have no objective function as the objective must achieve a given target value"
-1629          End If
-1630      Else
+1628          Print #1, commentStart & " We have no objective function as the objective must achieve a given target value"
+1629      Else
 1631          For var = 1 To numVars
-1632              If Abs(CostCoeffs(var)) > ZERO Then Print #1, " " & StrEx(CostCoeffs(var)) & " " & ValidLPFileVarName(VarNames(var));
-                  'If Abs(CostCoeffs(var)) > ZERO Then Print #1, " " & IIf(CostCoeffs(var) > 0, "+", "") & CostCoeffs(var) & " " & ValidLPFileVarName(VarNamesCollection(var).AddressLocal(RowAbsolute:=False, ColumnAbsolute:=False));
-1633          Next var
+1632              If Abs(CostCoeffs(var)) > ZERO Then
+                      VarName = ValidLPFileVarName(VarNames(var))
+                      If AssumeNonNegativeVars Then
+                          If Not TestKeyExists(UsedVariables, VarName) Then UsedVariables.Add VarName, VarName
+                      End If
+                      Print #1, " " & StrEx(CostCoeffs(var)) & " " & VarName;
+                  End If
+              Next var
 1634          Print #1,   ' New line
 1635      End If
 1636      Print #1,   ' New line
@@ -1706,7 +1717,11 @@ Sub WriteLPFile(ModelFilePathName As String, SolveRelaxation As Boolean, errorSt
               Dim NonTrivialObjective As Boolean
 1640          For var = 1 To numVars
 1641              If Abs(CostCoeffs(var)) > ZERO Then
-1642                  Print #1, " " & StrEx(CostCoeffs(var)) & " " & ValidLPFileVarName(VarNames(var));
+                      VarName = ValidLPFileVarName(VarNames(var))
+                      If AssumeNonNegativeVars Then
+                          If Not TestKeyExists(UsedVariables, VarName) Then UsedVariables.Add VarName, VarName
+1642                  End If
+                      Print #1, " " & StrEx(CostCoeffs(var)) & " " & VarName;
 1643                  NonTrivialObjective = True
 1644              End If
 1645          Next var
@@ -1741,7 +1756,11 @@ Sub WriteLPFile(ModelFilePathName As String, SolveRelaxation As Boolean, errorSt
 1661              For i = 1 To .Count
 1662                  var = .index(i)
 1663                  coeff = .Coefficient(i)
-1664                  Print #1, " " & StrEx(coeff) & " " & ValidLPFileVarName(VarNames(var));
+                      VarName = ValidLPFileVarName(VarNames(var))
+                      If AssumeNonNegativeVars Then
+                          If Not TestKeyExists(UsedVariables, VarName) Then UsedVariables.Add VarName, VarName
+                      End If
+1664                  Print #1, " " & StrEx(coeff) & " " & VarName;
 1665              Next i
 1666          End With
               
@@ -1768,7 +1787,11 @@ Sub WriteLPFile(ModelFilePathName As String, SolveRelaxation As Boolean, errorSt
 1684      If SolveRelaxation And Not (BinaryCellsRange Is Nothing) Then
 1685          Print #1, commentStart & " (Upper bounds of 1 on the relaxed binary variables)"
 1686          For Each c In BinaryCellsRange
-1687              Print #1, ValidLPFileVarName(c.Address(RowAbsolute:=False, ColumnAbsolute:=False)); " <= 1"
+                  VarName = ValidLPFileVarName(c.Address(RowAbsolute:=False, ColumnAbsolute:=False))
+                  If AssumeNonNegativeVars Then
+                      If Not TestKeyExists(UsedVariables, VarName) Then UsedVariables.Add VarName, VarName
+                  End If
+1687              Print #1, VarName; " <= 1"
 1688          Next c
 1689          Print #1,   ' New line
 1690      End If
@@ -1798,9 +1821,10 @@ Sub WriteLPFile(ModelFilePathName As String, SolveRelaxation As Boolean, errorSt
               ' Get all bounded variables
               Dim BoundedVariables As New Collection
 1707          For Each c In AdjustableCells
-1708              If TestKeyExists(VarLowerBounds, c.Address) Then
-1709                  BoundedVariables.Add c
-1710              End If
+                  VarName = ValidLPFileVarName(c.Address(RowAbsolute:=False, ColumnAbsolute:=False))
+1708              If TestKeyExists(VarLowerBounds, c.Address) Or Not TestKeyExists(UsedVariables, VarName) Then
+                      BoundedVariables.Add c
+                  End If
 1711          Next c
 
               ' We need to mark variables with explicit lower bounds as FREE variables (allowing the possibly negative lower bound to be effective).
