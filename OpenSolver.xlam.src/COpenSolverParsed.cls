@@ -14,6 +14,7 @@ Dim m As CModelParsed
 Public SolveStatus As OpenSolverResult ' See Enum in OpenSolverModule; Optimal,Infeasible, etc
 Public SolveStatusString As String    ' Eg Infeasible, Opimal etc
 Public SolveStatusComment As String ' Eg constraint 1 cannot be satisified
+Public SolutionWasLoaded As Boolean
 
 Dim SolveOptions As SolveOptionsType
     
@@ -24,6 +25,10 @@ End Property
 Public Sub SolveModel(s As COpenSolver)
 7135      Application.Calculation = xlCalculationManual
 7136      Application.ScreenUpdating = False
+
+          SolveStatus = OpenSolverResult.Unsolved
+          SolveStatusString = "Unsolved"
+          SolveStatusComment = ""
           
           Dim errorString As String
           
@@ -57,7 +62,7 @@ Public Sub SolveModel(s As COpenSolver)
           Case "PuLP"
 7154          ExecutionCompleted = SolveModelParsed_PuLP(ModelFilePathName, m, Me)
 7155      Case "Couenne", "Bonmin"
-7156          ExecutionCompleted = SolveModelParsed_NL(ModelFilePathName, m, Me)
+7156          ExecutionCompleted = SolveModelParsed_NL(ModelFilePathName, m, Me, SolveOptions)
 7157      Case "NeosBon", "NeosCou"
 7158          ExecutionCompleted = SolveModelParsed_AMPL(ModelFilePathName, m, Me)
 7159      Case Else
@@ -73,6 +78,7 @@ Public Sub SolveModel(s As COpenSolver)
 7165      s.SolveStatus = SolveStatus
 7166      s.SolveStatusComment = SolveStatusComment
 7167      s.SolveStatusString = SolveStatusString
+          s.LinearSolutionWasLoaded = SolutionWasLoaded
           
 7168      Application.StatusBar = False
 7169      Application.Calculation = xlCalculationAutomatic

@@ -119,7 +119,7 @@ Public Property Get GetVariableNLIndex(index As Long) As Long
 End Property
 
 ' Creates .nl file and solves model
-Function SolveModelParsed_NL(ModelFilePathName As String, model As CModelParsed, s As COpenSolverParsed, Optional ShouldWriteComments As Boolean = True)
+Function SolveModelParsed_NL(ModelFilePathName As String, model As CModelParsed, s As COpenSolverParsed, SolveOptions As SolveOptionsType, Optional ShouldWriteComments As Boolean = True)
 7459      Set m = model
           
 7460      WriteComments = ShouldWriteComments
@@ -216,7 +216,7 @@ Function SolveModelParsed_NL(ModelFilePathName As String, model As CModelParsed,
 7503      DeleteFileAndVerify SolutionFilePathName, errorPrefix, "Unable to delete solution file : " & SolutionFilePathName
           
           Dim ExternalSolverPathName As String
-7504      ExternalSolverPathName = CreateSolveScriptParsed(m.Solver, ModelFilePathName)
+7504      ExternalSolverPathName = CreateSolveScriptParsed(m.Solver, ModelFilePathName, SolveOptions)
                    
           Dim logCommand As String, logFileName As String
 7505      logFileName = "log1.tmp"
@@ -1217,6 +1217,23 @@ Sub OutputRowFile()
 ErrHandler:
 8041      Close #3
 8042      Err.Raise Err.Number, Err.Source, Err.Description & IIf(Erl = 0, "", " (at line " & Erl & ")")
+End Sub
+
+Public Sub OutputOptionsFile(OptionsFilePath As String, SolveOptions As SolveOptionsType)
+    On Error GoTo ErrHandler
+    
+    DeleteFileAndVerify OptionsFilePath, "Writing Options File", "Couldn't delete the .opt file: " & OptionsFilePath
+    
+    Open OptionsFilePath For Output As 4
+    Print #4, "iteration_limit " & SolveOptions.MaxIterations
+    Print #4, "allowable_fraction_gap " & SolveOptions.Tolerance
+    Print #4, "time_limit " & SolveOptions.maxTime
+    Close #4
+    Exit Sub
+    
+ErrHandler:
+    Close #4
+    Err.Raise Err.Number, Err.Source, Err.Description & IIf(Erl = 0, "", " (at line " & Erl & ")")
 End Sub
 
 ' Adds a new line to the current string, appending LineText at position 0 and CommentText at position CommentSpacing

@@ -249,12 +249,12 @@ Function CreateSolveScript(Solver As String, SolutionFilePathName As String, Ext
 6723      End Select
 End Function
 
-Function CreateSolveScriptParsed(Solver As String, SolutionFilePathName As String) As String
+Function CreateSolveScriptParsed(Solver As String, SolutionFilePathName As String, SolveOptions As SolveOptionsType) As String
 6724      Select Case Solver
           Case "Bonmin"
 6725          CreateSolveScriptParsed = CreateSolveScript_Bonmin(SolutionFilePathName)
 6726      Case "Couenne"
-6727          CreateSolveScriptParsed = CreateSolveScript_Couenne(SolutionFilePathName)
+6727          CreateSolveScriptParsed = CreateSolveScript_Couenne(SolutionFilePathName, SolveOptions)
 6728      End Select
 End Function
 

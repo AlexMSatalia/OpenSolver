@@ -15,6 +15,12 @@ Public Const SolverName_Couenne = "couenne.exe"
 Public Const SolverScript_Couenne = "couenne" & ScriptExtension
 
 Public Const SolutionFile_Couenne = "model.sol"
+Public Const OptionsFile_Couenne = "couenne.opt"
+
+Public Const UsesPrecision_Couenne = False
+Public Const UsesIterationLimit_Couenne = True
+Public Const UsesTolerance_Couenne = True
+Public Const UsesTimeLimit_Couenne = True
 
 Function ScriptFilePath_Couenne() As String
 8358      ScriptFilePath_Couenne = GetTempFilePath(SolverScript_Couenne)
@@ -22,6 +28,10 @@ End Function
 
 Function SolutionFilePath_Couenne() As String
 8359      SolutionFilePath_Couenne = GetTempFilePath(SolutionFile_Couenne)
+End Function
+
+Function OptionsFilePath_Couenne() As String
+          OptionsFilePath_Couenne = GetTempFilePath(OptionsFile_Couenne)
 End Function
 
 Sub CleanFiles_Couenne(errorPrefix As String)
@@ -127,9 +137,8 @@ Function SolverBitness_Couenne() As String
 #End If
 End Function
 
-Function CreateSolveScript_Couenne(ModelFilePathName As String) As String
-          ' Create a script to run "/path/to/couenne.exe /path/to/<ModelFilePathName>"
-
+Function CreateSolveScript_Couenne(ModelFilePathName As String, SolveOptions As SolveOptionsType) As String
+          ' Create a script to cd to temp and run "/path/to/couenne.exe /path/to/<ModelFilePathName>"
           Dim SolverString As String, CommandLineRunString As String, PrintingOptionString As String
 8410      SolverString = MakePathSafe(SolverFilePath_Couenne())
 
@@ -137,10 +146,15 @@ Function CreateSolveScript_Couenne(ModelFilePathName As String) As String
           
           Dim scriptFile As String, scriptFileContents As String
 8413      scriptFile = ScriptFilePath_Couenne()
-8414      scriptFileContents = SolverString & " " & CommandLineRunString
+
+8414      scriptFileContents = "cd " & MakePathSafe(GetTempFolder()) & " && " & _
+                               SolverString & " " & CommandLineRunString
 8415      CreateScriptFile scriptFile, scriptFileContents
           
 8416      CreateSolveScript_Couenne = scriptFile
+
+          ' Create the options file in the temp folder
+          OutputOptionsFile OptionsFilePath_Couenne(), SolveOptions
 End Function
 
 Function ReadModel_Couenne(SolutionFilePathName As String, errorString As String, m As CModelParsed, s As COpenSolverParsed) As Boolean
@@ -174,6 +188,12 @@ Function ReadModel_Couenne(SolutionFilePathName As String, errorString As String
 8439              s.SolveStatus = OpenSolverResult.Unbounded
 8440              s.SolveStatusString = "No Solution Found (Unbounded)"
 8441              solutionExpected = False
+              ElseIf Line Like "*interrupted on limit*" Then
+                  s.SolveStatus = OpenSolverResult.TimeLimitedSubOptimal
+                  s.SolveStatusString = "Stopped on User Limit (Time/Iterations)"
+              ElseIf Line Like "*interrupted by user*" Then
+                  s.SolveStatus = OpenSolverResult.AbortedThruUserAction
+                  s.SolveStatusString = "Stopped on Ctrl-C"
 8442          Else
 8443              If Not TryParseLogs(s) Then
 8444                  errorString = "The response from the Couenne solver is not recognised. The response was: " & vbCrLf & _
@@ -218,6 +238,7 @@ Function ReadModel_Couenne(SolutionFilePathName As String, errorString As String
 8464              Range(c.Address).Value2 = ConvertFromCurrentLocale(VariableValues(VariableIndex))
 8465              i = i + 1
 8466          Next c
+              s.SolutionWasLoaded = True
 8467      End If
 
 8468      ReadModel_Couenne = True
