@@ -1745,6 +1745,8 @@ Function ReadModel_NL(SolutionFilePathName As String, errorString As String, s A
         ElseIf InStrText(Line, "interrupted on limit") Then
             s.SolveStatus = OpenSolverResult.TimeLimitedSubOptimal
             s.SolveStatusString = "Stopped on User Limit (Time/Iterations)"
+            ' See if we can find out which limit was hit from the log file
+            TryParseLogs s
         ElseIf InStrText(Line, "interrupted by user") Then
             s.SolveStatus = OpenSolverResult.AbortedThruUserAction
             s.SolveStatusString = "Stopped on Ctrl-C"
@@ -1838,7 +1840,21 @@ Function TryParseLogs(s As COpenSolverParsed) As Boolean
           
           ' Scan for information
           
-          ' 1 - scan for infeasible
+          ' 1 - scan for time limit
+          If InStrText(message, "exiting on maximum time") Then
+              s.SolveStatus = OpenSolverResult.TimeLimitedSubOptimal
+              s.SolveStatusString = "Stopped on Time Limit"
+              TryParseLogs = True
+              Exit Function
+          End If
+          ' 2 - scan for iteration limit
+          If InStrText(message, "exiting on maximum number of iterations") Then
+              s.SolveStatus = OpenSolverResult.TimeLimitedSubOptimal
+              s.SolveStatusString = "Stopped on Iteration Limit"
+              TryParseLogs = True
+              Exit Function
+          End If
+          ' 3 - scan for infeasible
 8490      If InStrText(message, "infeasible") Then
 8491          s.SolveStatus = OpenSolverResult.Infeasible
 8492          s.SolveStatusString = "No Feasible Solution"
