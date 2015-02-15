@@ -137,18 +137,6 @@ Function ReadModel(Solver As String, SolutionFilePathName As String, errorString
 6657      End Select
 End Function
 
-Function ReadModelParsed(Solver As String, SolutionFilePathName As String, errorString As String, m As CModelParsed, s As COpenSolverParsed) As Boolean
-6658      Select Case Solver
-          Case "Bonmin"
-6659          ReadModelParsed = ReadModel_Bonmin(SolutionFilePathName, errorString, m, s)
-6660      Case "Couenne"
-6661          ReadModelParsed = ReadModel_Couenne(SolutionFilePathName, errorString, m, s)
-6662      Case Else
-6663          ReadModelParsed = False
-6664          errorString = "The solver " & Solver & " has not yet been incorporated fully into OpenSolver."
-6665      End Select
-End Function
-
 Function ModelFile(Solver As String) As String
 6666      Select Case Solver
           Case "CBC", "Gurobi"
@@ -255,6 +243,15 @@ Function CreateSolveScriptParsed(Solver As String, SolutionFilePathName As Strin
 6725          CreateSolveScriptParsed = CreateSolveScript_Bonmin(SolutionFilePathName)
 6726      Case "Couenne"
 6727          CreateSolveScriptParsed = CreateSolveScript_Couenne(SolutionFilePathName, SolveOptions)
+6728      End Select
+End Function
+
+Function ScriptFilePath(Solver As String) As String
+6724      Select Case Solver
+          Case "Bonmin"
+6725          ScriptFilePath = ScriptFilePath_Bonmin()
+6726      Case "Couenne"
+6727          ScriptFilePath = ScriptFilePath_Couenne()
 6728      End Select
 End Function
 

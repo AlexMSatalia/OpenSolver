@@ -245,7 +245,7 @@ Function SolveModelParsed_NL(ModelFilePathName As String, model As CModelParsed,
 7518      Application.StatusBar = "OpenSolver: " & errorPrefix
 
           Dim solutionLoaded As Boolean, errorString As String
-7519      solutionLoaded = ReadModelParsed(m.Solver, SolutionFilePathName, errorString, m, s)
+7519      solutionLoaded = ReadModel_NL(SolutionFilePathName, errorString, s)
 7520      On Error GoTo ErrHandler
 7521      If errorString <> "" Then
 7522          Err.Raise Number:=OpenSolver_SolveError, Source:="Solving NL model", Description:=errorString
@@ -1710,4 +1710,144 @@ Sub ConvertConstraintToNL(Relation As RelationConsts, BoundType As Long, Comment
 8356              Comment = " >= "
 8357      End Select
 End Sub
+
+Function ReadModel_NL(SolutionFilePathName As String, errorString As String, s As COpenSolverParsed) As Boolean
+    ReadModel_NL = False
+    
+    Dim Line As String, index As Long
+    On Error GoTo readError
+    Dim solutionExpected As Boolean
+    solutionExpected = True
+    
+    If Not FileOrDirExists(SolutionFilePathName) Then
+        solutionExpected = False
+        If Not TryParseLogs(s) Then
+            errorString = "The solver did not create a solution file. No new solution is available."
+            GoTo exitFunction
+        End If
+    Else
+        Open SolutionFilePathName For Input As 1
+        Line Input #1, Line ' Skip empty line at start of file
+        Line Input #1, Line ' Get line with status code
+
+        'Get the returned status code from solver.
+        If InStr(1, Line, "optimal", vbTextCompare) Then
+            s.SolveStatus = OpenSolverResult.Optimal
+            s.SolveStatusString = "Optimal"
+        ElseIf InStr(1, Line, "infeasible", vbTextCompare) Then
+            s.SolveStatus = OpenSolverResult.Infeasible
+            s.SolveStatusString = "No Feasible Solution"
+            solutionExpected = False
+        ElseIf InStr(1, Line, "unbounded", vbTextCompare) Then
+            s.SolveStatus = OpenSolverResult.Unbounded
+            s.SolveStatusString = "No Solution Found (Unbounded)"
+            solutionExpected = False
+        ElseIf InStr(1, Line, "interrupted on limit", vbTextCompare) Then
+            s.SolveStatus = OpenSolverResult.TimeLimitedSubOptimal
+            s.SolveStatusString = "Stopped on User Limit (Time/Iterations)"
+        ElseIf InStr(Line, "interrupted by user") Then
+            s.SolveStatus = OpenSolverResult.AbortedThruUserAction
+            s.SolveStatusString = "Stopped on Ctrl-C"
+        Else
+            If Not TryParseLogs(s) Then
+                errorString = "The response from the " & m.Solver & " solver is not recognised. The response was: " & vbCrLf & vbCrLf & _
+                              Line & vbCrLf & vbCrLf & _
+                              "The " & m.Solver & " command line can be found at:" & vbCrLf & _
+                              ScriptFilePath(m.Solver)
+                s.SolveStatus = OpenSolverResult.ErrorOccurred
+                GoTo exitFunction
+            End If
+            solutionExpected = False
+        End If
+    End If
+    
+    If solutionExpected Then
+        Application.StatusBar = "OpenSolver: Loading Solution... " & s.SolveStatusString
+        
+        Line Input #1, Line ' Throw away blank line
+        Line Input #1, Line ' Throw away "Options"
+        
+        Dim i As Long
+        For i = 1 To 8
+            Line Input #1, Line ' Skip all options lines
+        Next i
+        
+        ' Note that the variable values are written to file in .nl format
+        ' We need to read in the values and the extract the correct values for the adjustable cells
+        
+        ' Read in all variable values
+        Dim VariableValues As New Collection
+        While Not EOF(1)
+            Line Input #1, Line
+            VariableValues.Add CDbl(Line)
+        Wend
+        
+        ' Loop through variable cells and find the corresponding value from VariableValues
+        i = 1
+        Dim c As Range, VariableIndex As Long
+        For Each c In m.AdjustableCells
+            ' Extract the correct variable value
+            VariableIndex = GetVariableNLIndex(i) + 1
+            
+            ' Need to make sure number is in US locale when Value2 is set
+            Range(c.Address).Value2 = ConvertFromCurrentLocale(VariableValues(VariableIndex))
+            i = i + 1
+        Next c
+        s.SolutionWasLoaded = True
+    End If
+
+    ReadModel_NL = True
+
+exitFunction:
+    Application.StatusBar = False
+    Close #1
+    Close #2
+    Exit Function
+    
+readError:
+    Application.StatusBar = False
+    Close #1
+    Close #2
+    Err.Raise Err.Number, Err.Source, Err.Description & IIf(Erl = 0, "", " (at line " & Erl & ")")
+End Function
+
+Function TryParseLogs(s As COpenSolverParsed) As Boolean
+      ' We examine the log file if it exists to try to find more info about the solve
+          
+          ' Check if log exists
+          Dim logFile As String
+8477      logFile = GetTempFilePath("log1.tmp")
+          
+8478      If Not FileOrDirExists(logFile) Then
+8479          TryParseLogs = False
+8480          Exit Function
+8481      End If
+          
+          Dim message As String
+8482      On Error GoTo ErrHandler
+8483      Open logFile For Input As 3
+8484      message = Input$(LOF(3), 3)
+8485      Close #3
+          
+          ' We need to check > 0 explicitly, as the expression doesn't work without it
+8486      If Not InStr(left(message, 7), m.Solver) > 0 Then
+             ' Not dealing with the correct solver log, abort
+8487          TryParseLogs = False
+8488          Exit Function
+8489      End If
+          
+          ' Scan for information
+          
+          ' 1 - scan for infeasible
+8490      If InStr(1, message, "infeasible", vbTextCompare) Then
+8491          s.SolveStatus = OpenSolverResult.Infeasible
+8492          s.SolveStatusString = "No Feasible Solution"
+8493          TryParseLogs = True
+8494          Exit Function
+8495      End If
+          
+ErrHandler:
+8496      Close #3
+8497      TryParseLogs = False
+End Function
 
