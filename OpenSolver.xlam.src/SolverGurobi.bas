@@ -211,12 +211,22 @@ Function CreateSolveScript_Gurobi(SolutionFilePathName As String, ExtraParameter
 6443      PrintingOptionString = "TimeLimit=" & Trim(str(SolveOptions.MaxTime)) & " " & _
                                  "MIPGap=" & Trim(str(SolveOptions.Tolerance))
           
+          ExtraParametersString = ParametersToString_Gurobi(ExtraParameters)
+          
           Dim scriptFile As String, scriptFileContents As String
 6444      scriptFile = ScriptFilePath_Gurobi()
-6445      scriptFileContents = SolverString & " " & CommandLineRunString & " " & PrintingOptionString
+6445      scriptFileContents = SolverString & " " & CommandLineRunString & " " & PrintingOptionString & " " & ExtraParametersString
 6446      CreateScriptFile scriptFile, scriptFileContents
           
 6447      CreateSolveScript_Gurobi = scriptFile
+End Function
+
+Function ParametersToString_Gurobi(ExtraParameters As Dictionary) As String
+          Dim ParamPair As KeyValuePair
+          For Each ParamPair In ExtraParameters.KeyValuePairs
+              ParametersToString_Gurobi = ParametersToString_Gurobi & ParamPair.Key & "=" & ParamPair.value & " "
+          Next
+          ParametersToString_Gurobi = Trim(ParametersToString_Gurobi)
 End Function
 
 
