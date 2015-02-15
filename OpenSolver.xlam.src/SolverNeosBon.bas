@@ -4,3 +4,7 @@ Public Const SolverDesc_NeosBon = "The NEOS (Network-Enabled Optimization System
 Public Const SolverLink_NeosBon = "https://projects.coin-or.org/Bonmin"
 Public Const SolverType_NeosBon = OpenSolver_SolverType.NonLinear
 
+Public Const UsesPrecision_NeosBon = False
+Public Const UsesIterationLimit_NeosBon = False
+Public Const UsesTolerance_NeosBon = False
+Public Const UsesTimeLimit_NeosBon = False

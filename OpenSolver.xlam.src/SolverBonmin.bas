@@ -16,6 +16,11 @@ Public Const SolverScript_Bonmin = "bonmin" & ScriptExtension
 
 Public Const SolutionFile_Bonmin = "model.sol"
 
+Public Const UsesPrecision_Bonmin = False
+Public Const UsesIterationLimit_Bonmin = True
+Public Const UsesTolerance_Bonmin = True
+Public Const UsesTimeLimit_Bonmin = True
+
 Function ScriptFilePath_Bonmin() As String
 9021      ScriptFilePath_Bonmin = GetTempFilePath(SolverScript_Bonmin)
 End Function

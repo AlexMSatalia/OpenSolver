@@ -7,6 +7,11 @@ Public Const SolverDesc_NOMAD = "Nomad (Nonsmooth Optimization by Mesh Adaptive 
 Public Const SolverLink_NOMAD = "http://www.gerad.ca/nomad/Project/Home.html"
 Public Const SolverType_NOMAD = OpenSolver_SolverType.NonLinear
 
+Public Const UsesPrecision_NOMAD = True
+Public Const UsesIterationLimit_NOMAD = True
+Public Const UsesTolerance_NOMAD = False
+Public Const UsesTimeLimit_NOMAD = True
+
 Public Const NomadDllName = "OpenSolverNomad.dll"
 
 ' Don't forget we need to chdir to the directory containing the DLL before calling any of the functions

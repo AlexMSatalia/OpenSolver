@@ -6,5 +6,8 @@ Public Const SolverDesc_NeosCBC = "The NEOS (Network-Enabled Optimization System
 Public Const SolverLink_NeosCBC = "http://www.neos-server.org/neos/solvers/milp:Cbc/AMPL.html"
 Public Const SolverType_NeosCBC = OpenSolver_SolverType.Linear
 
-
+Public Const UsesPrecision_NeosCBC = False
+Public Const UsesIterationLimit_NeosCBC = False
+Public Const UsesTolerance_NeosCBC = False
+Public Const UsesTimeLimit_NeosCBC = False
 

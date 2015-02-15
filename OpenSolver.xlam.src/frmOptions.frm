@@ -109,16 +109,11 @@ Public Sub OptionsActivate(f As UserForm)
 4138          Call SetNameOnSheet("OpenSolver_ChosenSolver", "=" & Solver)
 4139      End If
 
-4140      If SolverType(Solver) = OpenSolver_SolverType.NonLinear Then
-              ' Disable linearity options
-4141          f.chkPerformLinearityCheck.Enabled = False
-4142          f.txtTol.Enabled = False
-4143      End If
-          
-4144      If Solver <> "NOMAD" Then
-              ' Disable NOMAD only options
-4145          f.txtMaxIter.Enabled = False
-4146          f.txtPre.Enabled = False
-4147      End If
+          f.chkPerformLinearityCheck.Enabled = (SolverType(Solver) = OpenSolver_SolverType.Linear) And _
+                                               Not UsesParsedModel(Solver)
+          f.txtPre.Enabled = UsesPrecision(Solver)
+          f.txtMaxIter.Enabled = UsesIterationLimit(Solver)
+          f.txtTol.Enabled = UsesTolerance(Solver)
+          f.txtMaxTime.Enabled = UsesTimeLimit(Solver)
 End Sub
 

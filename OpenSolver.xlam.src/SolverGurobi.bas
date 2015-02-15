@@ -19,6 +19,11 @@ Public Const Solver_Gurobi = "gurobi" & ScriptExtension
 Public Const SolutionFile_Gurobi = "modelsolution.sol"
 Public Const SensitivityFile_Gurobi = "sensitivityData.sol"
 
+Public Const UsesPrecision_Gurobi = False
+Public Const UsesIterationLimit_Gurobi = False
+Public Const UsesTolerance_Gurobi = False
+Public Const UsesTimeLimit_Gurobi = False
+
 Function SolutionFilePath_Gurobi() As String
 6369      SolutionFilePath_Gurobi = GetTempFilePath(SolutionFile_Gurobi)
 End Function

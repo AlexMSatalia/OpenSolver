@@ -18,6 +18,11 @@ Public Const SolutionFile_CBC = "modelsolution.txt"
 Public Const CostRangesFile_CBC = "costranges.txt"
 Public Const RHSRangesFile_CBC = "rhsranges.txt"
 
+Public Const UsesPrecision_CBC = False
+Public Const UsesIterationLimit_CBC = False
+Public Const UsesTolerance_CBC = True
+Public Const UsesTimeLimit_CBC = True
+
 Function ScriptFilePath_CBC() As String
 6047      ScriptFilePath_CBC = GetTempFilePath(SolverScript_CBC)
 End Function
