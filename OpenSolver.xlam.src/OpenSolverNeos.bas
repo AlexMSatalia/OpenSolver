@@ -16,6 +16,13 @@ Function CallNEOS(ModelFilePathName As String, Solver As String, errorString As 
 #Else
 6811      CallNEOS = CallNEOS_Windows(message, errorString)
 #End If
+          ' Dump the whole NEOS response to log file
+          Dim logPath As String
+          logPath = GetTempFilePath("log1.tmp")
+          Open logPath For Output As #1
+              Print #1, CallNEOS
+          Close #1
+
 6812      Exit Function
           
 ErrHandler:

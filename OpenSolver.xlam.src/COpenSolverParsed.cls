@@ -78,7 +78,7 @@ Public Sub SolveModel(s As COpenSolver)
 7165      s.SolveStatus = SolveStatus
 7166      s.SolveStatusComment = SolveStatusComment
 7167      s.SolveStatusString = SolveStatusString
-          s.LinearSolutionWasLoaded = SolutionWasLoaded
+          s.SolutionWasLoaded = SolutionWasLoaded
           
 7168      Application.StatusBar = False
 7169      Application.Calculation = xlCalculationAutomatic

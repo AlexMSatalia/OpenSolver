@@ -198,89 +198,81 @@ Function CreateSolveScript_CBC(SolutionFilePathName As String, ExtraParametersSt
 End Function
 
 Function ReadModel_CBC(SolutionFilePathName As String, errorString As String, s As COpenSolver) As Boolean
-          Dim LinearSolveStatusString As String
+          Dim Response As String
 6125      ReadModel_CBC = False
 6126      On Error GoTo ErrHandler
 6127      Open SolutionFilePathName For Input As 1 ' supply path with filename
-6128      Line Input #1, LinearSolveStatusString  ' Optimal - objective value              22
+6128      Line Input #1, Response  ' Optimal - objective value              22
           ' Line Input #1, junk ' get rest of line
           Dim solutionExpected As Boolean
 6129      solutionExpected = True
-6130      If LinearSolveStatusString Like "Optimal*" Then
+6130      If Response Like "Optimal*" Then
 6131          s.SolveStatus = OpenSolverResult.Optimal
 6132          s.SolveStatusString = "Optimal"
-6133          s.LinearSolveStatus = LinearSolveResult.Optimal
               '
-6134      ElseIf LinearSolveStatusString Like "Infeasible*" Then
+6134      ElseIf Response Like "Infeasible*" Then
 6135          s.SolveStatus = OpenSolverResult.Infeasible
 6136          s.SolveStatusString = "No Feasible Solution"
-6137          s.LinearSolveStatus = LinearSolveResult.Infeasible
               '
-6138      ElseIf LinearSolveStatusString Like "Integer infeasible*" Then
+6138      ElseIf Response Like "Integer infeasible*" Then
 6139          s.SolveStatus = OpenSolverResult.Infeasible
 6140          s.SolveStatusString = "No Feasible Integer Solution"
-6141          s.LinearSolveStatus = LinearSolveResult.IntegerInfeasible
               '
-6142      ElseIf LinearSolveStatusString Like "Unbounded*" Then
+6142      ElseIf Response Like "Unbounded*" Then
 6143          s.SolveStatus = OpenSolverResult.Unbounded
 6144          s.SolveStatusString = "No Solution Found (Unbounded)"
-6145          s.LinearSolveStatus = LinearSolveResult.Unbounded
 6146          solutionExpected = False
               '
-6147      ElseIf LinearSolveStatusString Like "Stopped on time *" Then ' Stopped on iterations or time
+6147      ElseIf Response Like "Stopped on time *" Then ' Stopped on iterations or time
 6148          s.SolveStatus = OpenSolverResult.TimeLimitedSubOptimal
 6149          s.SolveStatusString = "Stopped on Time Limit"
-6150          If LinearSolveStatusString Like "*(no integer solution - continuous used)*" Then
+6150          If Response Like "*(no integer solution - continuous used)*" Then
 6151              s.SolveStatusString = s.SolveStatusString & ": No integer solution found. Fractional solution returned."
 6152          End If
-6153          s.LinearSolveStatus = LinearSolveResult.SolveStopped
               '
-6154      ElseIf LinearSolveStatusString Like "Stopped on iterations*" Then ' Stopped on iterations or time
+6154      ElseIf Response Like "Stopped on iterations*" Then ' Stopped on iterations or time
 6155          s.SolveStatus = OpenSolverResult.TimeLimitedSubOptimal
 6156          s.SolveStatusString = "Stopped on Iteration Limit"
-6157          If LinearSolveStatusString Like "*(no integer solution - continuous used)*" Then
+6157          If Response Like "*(no integer solution - continuous used)*" Then
 6158              s.SolveStatusString = s.SolveStatusString & ": No integer solution found. Fractional solution returned."
 6159          End If
-6160          s.LinearSolveStatus = LinearSolveResult.SolveStopped
               '
-6161      ElseIf LinearSolveStatusString Like "Stopped on difficulties*" Then ' Stopped on iterations or time
+6161      ElseIf Response Like "Stopped on difficulties*" Then ' Stopped on iterations or time
 6162          s.SolveStatus = OpenSolverResult.TimeLimitedSubOptimal
 6163          s.SolveStatusString = "Stopped on CBC difficulties"
-6164          If LinearSolveStatusString Like "*(no integer solution - continuous used)*" Then
+6164          If Response Like "*(no integer solution - continuous used)*" Then
 6165              s.SolveStatusString = s.SolveStatusString & ": No integer solution found. Fractional solution returned."
 6166          End If
-6167          s.LinearSolveStatus = LinearSolveResult.SolveStopped
               '
-6168      ElseIf LinearSolveStatusString Like "Stopped on ctrl-c*" Then ' Stopped on iterations or time
+6168      ElseIf Response Like "Stopped on ctrl-c*" Then ' Stopped on iterations or time
 6169          s.SolveStatus = OpenSolverResult.TimeLimitedSubOptimal
 6170          s.SolveStatusString = "Stopped on Ctrl-C"
-6171          If LinearSolveStatusString Like "*(no integer solution - continuous used)*" Then
+6171          If Response Like "*(no integer solution - continuous used)*" Then
 6172              s.SolveStatusString = s.SolveStatusString & ": No integer solution found. Fractional solution returned."
 6173          End If
-6174          s.LinearSolveStatus = LinearSolveResult.SolveStopped
               '
-6175      ElseIf LinearSolveStatusString Like "Status unknown*" Then
+6175      ElseIf Response Like "Status unknown*" Then
 6176          errorString = "CBC solver did not solve the problem, suggesting there was an error in the CBC input parameters. The response was: " & vbCrLf _
-               & LinearSolveStatusString _
+               & Response _
                & vbCrLf & "The CBC command line can be found at:" _
                & vbCrLf & ScriptFilePath_CBC()
 6177          GoTo ExitSub
 6178      Else
-6179          errorString = "The response from the CBC solver is not recognised. The response was: " & LinearSolveStatusString
+6179          errorString = "The response from the CBC solver is not recognised. The response was: " & Response
 6180          GoTo ExitSub
 6181      End If
           
-          ' Remove the double spaces from LinearSolveStatusString
-6182      LinearSolveStatusString = Replace(LinearSolveStatusString, "    ", " ")
-6183      LinearSolveStatusString = Replace(LinearSolveStatusString, "   ", " ")
-6184      LinearSolveStatusString = Replace(LinearSolveStatusString, "  ", " ")
-6185      LinearSolveStatusString = Replace(LinearSolveStatusString, "  ", " ")
-6186      LinearSolveStatusString = Replace(LinearSolveStatusString, "  ", " ")
-6187      LinearSolveStatusString = Replace(LinearSolveStatusString, "  ", " ")
+          ' Remove the double spaces from Response
+6182      Response = Replace(Response, "    ", " ")
+6183      Response = Replace(Response, "   ", " ")
+6184      Response = Replace(Response, "  ", " ")
+6185      Response = Replace(Response, "  ", " ")
+6186      Response = Replace(Response, "  ", " ")
+6187      Response = Replace(Response, "  ", " ")
 
 6188      If solutionExpected Then
               ' We read in whatever solution CBC returned
-6189          Application.StatusBar = "OpenSolver: Loading Solution... " & LinearSolveStatusString
+6189          Application.StatusBar = "OpenSolver: Loading Solution... " & Response
               ' Zero the current decision variables
 6190          s.AdjustableCells.Value2 = 0
               ' Faster code; put a zero into first adjustable cell, and copy it to all the adjustable cells
@@ -414,13 +406,12 @@ Function ReadModel_CBC(SolutionFilePathName As String, errorString As String, s 
 6285              End If
 6286              j = j + 1
 6287          Wend
+              s.SolutionWasLoaded = True
 
 6288      End If
 6289      Close #1
 6290      ReadModel_CBC = True
 ExitSub:
-6291      s.LinearSolveStatusString = LinearSolveStatusString
-          
 6292      Exit Function
           
 ErrHandler:

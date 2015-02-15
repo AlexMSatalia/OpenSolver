@@ -26,6 +26,19 @@ Public Const UsesIterationLimit_Gurobi = False
 Public Const UsesTolerance_Gurobi = False
 Public Const UsesTimeLimit_Gurobi = False
 
+'Gurobi return status codes
+Public Enum GurobiResult
+    Optimal = 2
+    Infeasible = 3
+    InfOrUnbound = 4
+    Unbounded = 5
+    SolveStoppedIter = 7
+    SolveStoppedTime = 9
+    SolveStoppedUser = 11
+    Unsolved = 12
+    SubOptimal = 13
+End Enum
+
 Function SolutionFilePath_Gurobi() As String
 6369      SolutionFilePath_Gurobi = GetTempFilePath(SolutionFile_Gurobi)
 End Function
@@ -229,42 +242,33 @@ Function ReadModel_Gurobi(SolutionFilePathName As String, errorString As String,
 6458      If Line = GurobiResult.Optimal Then
 6459          s.SolveStatus = OpenSolverResult.Optimal
 6460          s.SolveStatusString = "Optimal"
-6461          s.LinearSolveStatus = LinearSolveResult.Optimal
 6462      ElseIf Line = GurobiResult.Infeasible Then
 6463          s.SolveStatus = OpenSolverResult.Infeasible
 6464          s.SolveStatusString = "No Feasible Solution"
 6465          solutionExpected = False
-6466          s.LinearSolveStatus = LinearSolveResult.Infeasible
 6467      ElseIf Line = GurobiResult.InfOrUnbound Then
 6468          s.SolveStatus = OpenSolverResult.Unbounded
 6469          s.SolveStatusString = "No Solution Found (Infeasible or Unbounded)"
 6470          solutionExpected = False
-6471          s.LinearSolveStatus = LinearSolveResult.Unbounded
 6472      ElseIf Line = GurobiResult.Unbounded Then
 6473          s.SolveStatus = OpenSolverResult.Unbounded
 6474          s.SolveStatusString = "No Solution Found (Unbounded)"
 6475          solutionExpected = False
-6476          s.LinearSolveStatus = LinearSolveResult.Unbounded
 6477      ElseIf Line = GurobiResult.SolveStoppedTime Then
 6478          s.SolveStatus = OpenSolverResult.TimeLimitedSubOptimal
 6479          s.SolveStatusString = "Stopped on Time Limit"
-6480          s.LinearSolveStatus = LinearSolveResult.SolveStopped
 6481      ElseIf Line = GurobiResult.SolveStoppedIter Then
 6482          s.SolveStatus = OpenSolverResult.TimeLimitedSubOptimal
 6483          s.SolveStatusString = "Stopped on Iteration Limit"
-6484          s.LinearSolveStatus = LinearSolveResult.SolveStopped
 6485      ElseIf Line = GurobiResult.SolveStoppedUser Then
 6486          s.SolveStatus = OpenSolverResult.TimeLimitedSubOptimal
 6487          s.SolveStatusString = "Stopped on Ctrl-C"
-6488          s.LinearSolveStatus = LinearSolveResult.SolveStopped
 6489      ElseIf Line = GurobiResult.Unsolved Then
 6490          s.SolveStatus = OpenSolverResult.TimeLimitedSubOptimal
 6491          s.SolveStatusString = "Stopped on Gurobi Numerical difficulties"
-6492          s.LinearSolveStatus = LinearSolveResult.SolveStopped
 6493      ElseIf Line = GurobiResult.SubOptimal Then
 6494          s.SolveStatus = OpenSolverResult.TimeLimitedSubOptimal
 6495          s.SolveStatusString = "Unable to satisfy optimality tolerances; a sub-optimal solution is available."
-6496          s.LinearSolveStatus = LinearSolveResult.SolveStopped
 6497      Else
 6498          errorString = "The response from the Gurobi solver is not recognised. The response was: " & Line
 6499          GoTo readError

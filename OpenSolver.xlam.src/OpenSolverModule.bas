@@ -90,19 +90,6 @@ Enum OpenSolver_SolverType
     NonLinear = 2
 End Enum
 
-'--------------------------------------------------------------------------------
-' OpenSolver solve results as read directly from CBC, and given by OpenSolver.CBCSolveStatus
-' See also OpenSolver.CBCSolveStatusString for a direct text equivalent
-' and OpenSolver.CBCSolutionWasLoaded, which is true if any CBC result (suboptimal or infeasible) was loaded back into the sheet
-Public Enum LinearSolveResult
-    Unsolved = -1
-    Optimal = 1
-    Infeasible = 2
-    Unbounded = 3
-    SolveStopped = 4
-    IntegerInfeasible = 5
-End Enum
-
 Public Const ModelStatus_Unitialized = 0
 Public Const ModelStatus_Built = 1
 
@@ -117,19 +104,6 @@ Public Const OpenSolver_NoWorksheet = vbObjectError + 1010 ' There is no active 
 Public Const OpenSolver_NoWorkbook = vbObjectError + 1011  ' There is no active worksheet
 
 Public Const OpenSolver_NomadError = vbObjectError + 1012 ' An error occured while running Nomad non-linear solver
-
-'Gurobi return status codes
-Public Enum GurobiResult
-    Optimal = 2
-    Infeasible = 3
-    InfOrUnbound = 4
-    Unbounded = 5
-    SolveStoppedIter = 7
-    SolveStoppedTime = 9
-    SolveStoppedUser = 11
-    Unsolved = 12
-    SubOptimal = 13
-End Enum
 
 ' Solver's different types of constraints
 Public Enum RelationConsts

@@ -193,25 +193,25 @@ Function SolveModel_Nomad(SolveRelaxation As Boolean, s As COpenSolver) As Long
                                      "You can increase the maximum time and iterations under the options in the model dialogue or check whether your model is feasible."
 7044          s.SolveStatus = OpenSolverResult.TimeLimitedSubOptimal
 7045          s.SolveStatusString = "Stopped on Iteration Limit"
-7046          s.LinearSolutionWasLoaded = True
+7046          s.SolutionWasLoaded = True
 7047      ElseIf NomadRetVal = 3 Then
 7048          s.SolveStatusComment = "Nomad reached the maximum time and returned the best feasible solution it found. This solution is not guaranteed to be an optimal solution." & vbCrLf & vbCrLf & _
                                      "You can increase the maximum time and iterations under the options in the model dialogue or check whether your model is feasible."
 7049          s.SolveStatus = OpenSolverResult.TimeLimitedSubOptimal
 7050          s.SolveStatusString = "Stopped on Time Limit"
-7051          s.LinearSolutionWasLoaded = True
+7051          s.SolutionWasLoaded = True
 7052      ElseIf NomadRetVal = 4 Then
 7053          s.SolveStatusComment = "Nomad reached the maximum time or number of iterations without finding a feasible solution. The best infeasible solution has been returned to the sheet." & vbCrLf & vbCrLf & _
                                      "You can increase the maximum time and iterations under the options in the model dialogue or check whether your model is feasible."
 7054          s.SolveStatus = OpenSolverResult.Infeasible
 7055          s.SolveStatusString = "No Feasible Solution"
-7056          s.LinearSolutionWasLoaded = True
+7056          s.SolutionWasLoaded = True
 7057      ElseIf NomadRetVal = 10 Then
 7058          s.SolveStatusComment = "Nomad could not find a feasible solution. The best infeasible solution has been returned to the sheet." & vbCrLf & vbCrLf & _
                                      "Try resolving at a different start point or check whether your model is feasible or relax some of your constraints."
 7059          s.SolveStatus = OpenSolverResult.Infeasible
 7060          s.SolveStatusString = "No Feasible Solution"
-7061          s.LinearSolutionWasLoaded = True
+7061          s.SolutionWasLoaded = True
 7062      ElseIf NomadRetVal = -3 Then
 7063          Err.Raise OpenSolver_UserCancelledError, "Running NOMAD", "Model solve cancelled by user."
 7064      Else

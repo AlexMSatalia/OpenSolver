@@ -138,9 +138,7 @@ Dim MappingRowsToConstraints() As Long
 Public SolveStatus As OpenSolverResult ' See Enum in OpenSolverModule; Optimal,Infeasible, etc
 Public SolveStatusString As String    ' Eg Infeasible, Opimal etc
 Public SolveStatusComment As String ' Eg constraint 1 cannot be satisified
-Public LinearSolveStatus As LinearSolveResult ' Unsolved, etc
-Public LinearSolveStatusString As String ' The string read back from the CBC file
-Public LinearSolutionWasLoaded As Boolean ' True if we loaded a solution into the spreadsheet
+Public SolutionWasLoaded As Boolean ' True if we loaded a solution into the spreadsheet
 
 Public ModelStatus As Long
 
@@ -464,9 +462,7 @@ Sub BuildModelFromSolverData(Optional LinearityCheckOffset As Double = 0, Option
 935       SolveStatus = OpenSolverResult.Unsolved
 936       SolveStatusString = "Unsolved"
 937       SolveStatusComment = ""
-938       LinearSolveStatus = LinearSolveResult.Unsolved
-939       LinearSolveStatusString = "Unsolved"
-940       LinearSolutionWasLoaded = False
+940       SolutionWasLoaded = False
           
 941       ModelStatus = ModelStatus_Unitialized
 
@@ -1317,9 +1313,7 @@ Function SolveModel_Linear(SolveRelaxation As Boolean) As Long
 1407      SolveStatus = OpenSolverResult.Unsolved
 1408      SolveStatusString = "Unsolved"
 1409      SolveStatusComment = ""
-1410      LinearSolveStatus = LinearSolveResult.Unsolved
-1411      LinearSolveStatusString = "Unsolved"
-1412      LinearSolutionWasLoaded = False
+1412      SolutionWasLoaded = False
           
           Dim oldCalculationMode As Long
 1413      oldCalculationMode = Application.Calculation
@@ -1372,7 +1366,6 @@ Function SolveModel_Linear(SolveRelaxation As Boolean) As Long
 1447      Else
 1448          SolveModel_LinearLocal ModelFilePathName, SolveRelaxation, errorString
 1449      End If
-1450      LinearSolutionWasLoaded = True
           
           ' Perform a linearity check unless the user has requested otherwise
           Dim performLinearityCheck As Boolean, s As String
@@ -1380,13 +1373,12 @@ Function SolveModel_Linear(SolveRelaxation As Boolean) As Long
 1452      If GetNameValueIfExists(ActiveWorkbook, "'" & Replace(ActiveSheet.Name, "'", "''") & "'!OpenSolver_LinearityCheck", s) Then
 1453          performLinearityCheck = s = "1"
 1454      End If
-1455      If LinearSolutionWasLoaded And performLinearityCheck Then
+1455      If performLinearityCheck Then
               Dim fullLinearityCheckWasPerformed As Boolean
 1456          QuickLinearityCheck fullLinearityCheckWasPerformed
 1457          If fullLinearityCheckWasPerformed Then
 1458              SolveStatus = OpenSolverResult.AbortedThruUserAction
 1459              SolveStatusString = "No Solution Found "
-1460              LinearSolveStatus = LinearSolveResult.SolveStopped
 1461          End If
 1462      End If
             
@@ -1472,34 +1464,31 @@ Sub SolveModel_LinearNeos(ModelFilePathName As String, SolveRelaxation As Boolea
           Dim openingParen As String, closingParen As String
           ' Extract the solve status
 1511      openingParen = InStr(solution, "solve_result")
-1512      LinearSolveStatusString = right(solution, Len(solution) - openingParen - Len("solve_result"))
+1512      SolveStatusString = Mid(solution, openingParen + Len("solve_result"))
                
           ' Determine Feasibility
-1513      If LinearSolveStatusString Like "*unbounded*" Then
+1513      If SolveStatusString Like "*unbounded*" Then
 1514          SolveStatus = OpenSolverResult.Unbounded
 1515          SolveStatusString = "No Solution Found (Unbounded)"
-1516          LinearSolveStatus = LinearSolveResult.Unbounded
               '
-1517      ElseIf LinearSolveStatusString Like "*infeasible*" Then ' Stopped on iterations or time
+1517      ElseIf SolveStatusString Like "*infeasible*" Then ' Stopped on iterations or time
 1518          SolveStatus = OpenSolverResult.Infeasible
 1519          SolveStatusString = "No Feasible Solution"
-1520          LinearSolveStatus = LinearSolveResult.Infeasible
 1521          GoTo ExitSub
               '
-1522      ElseIf Not LinearSolveStatusString Like "*solved*" Then
+1522      ElseIf Not SolveStatusString Like "*solved*" Then
 1523          openingParen = InStr(solution, ">>>")
 1524          If openingParen = 0 Then
 1525              openingParen = InStr(solution, "processing commands.")
-1526              LinearSolveStatusString = right(solution, Len(solution) - openingParen - Len("processing commands."))
+1526              SolveStatusComment = Mid(solution, openingParen + Len("processing commands."))
 1527          Else
 1528              closingParen = InStr(solution, "<<<")
-1529              LinearSolveStatusString = "Error: " & Mid(solution, openingParen, closingParen - openingParen)
+1529              SolveStatusComment = "Error: " & Mid(solution, openingParen, closingParen - openingParen)
 1530          End If
 1531          GoTo ExitSub
 1532      Else
 1533          SolveStatus = OpenSolverResult.Optimal
 1534          SolveStatusString = "Optimal"
-1535          LinearSolveStatus = LinearSolveResult.Optimal
               '
 1536      End If
           
@@ -1539,14 +1528,6 @@ Sub SolveModel_LinearLocal(ModelFilePathName As String, SolveRelaxation As Boole
 1555              Err.Raise Number:=OpenSolver_SolveError, Source:=errorPrefix, Description:=errorString
 1556          End If
                   
-              ' This is where we solve the problem
-              ' Command line for cbc is: cbc model.lp -solution solution.txt
-              ' Command line for gurobi is: gurobi_cl ResultFile=solution.sol model.lp
-              ' New command line for gurobi is (which runs using our python file and the gurobi interactive shell):
-              '                     gurobi.bat gurobiOSRun.py
-              '         gurobiOSRun.py is a python file that runs and writes the modelsolution.sol file as well as sensitivityData if they want duals
-              
-              
               ' Get the Solver Options, stored in named ranges with values such as "=0.12"
               ' Because these are NAMEs, they are always in English, not the local language, so get their value using Val
               Dim SolveOptions As SolveOptionsType
@@ -1572,18 +1553,11 @@ Sub SolveModel_LinearLocal(ModelFilePathName As String, SolveRelaxation As Boole
 1568          SolutionFilePathName = SolutionFilePath(Solver)
          
               Dim logCommand As String, logFileName As String
-              Dim mteePath As String
-              GetExistingFilePathName JoinPaths(JoinPaths(ThisWorkbook.Path, "Utils"), "mtee"), "mtee.exe", mteePath
-              
-              'Then append the mte path to the end
 1570          logFileName = "log1.tmp"
 1571          logCommand = MakePathSafe(GetTempFilePath(logFileName))
          
 1569          ExternalSolverPathName = CreateSolveScript(Solver, SolutionFilePathName, ExtraParametersString, SolveOptions, Me)
-      '13120         ElseIf Solver = "cplex.exe" Then
-      '13130             CommandLineRunString = """" & GetTempFolder & ModelFilePathName & """" & " write=" & Replace(SolutionFileName, ".txt", ".sol")
-      '13140             PrintingOptionString = ""
-      '13150         End If
+
               
               Dim ExecutionCompleted As Boolean
               'ExecutionCompleted = OSSolveSync(CBCRunString, IIf(ShowIterationResults, SW_SHOWNORMAL, SW_SHOWMINIMIZED), True) ' This stops escape being detected properly unless Excel is first 'activated?' with a click
@@ -1596,26 +1570,10 @@ Sub SolveModel_LinearLocal(ModelFilePathName As String, SolveRelaxation As Boole
 1576              Err.Raise Number:=OpenSolver_UserCancelledError, Source:=errorPrefix, Description:="The solving process was cancelled by the user."
 1577          End If
 1578          If exeResult <> 0 Then
-                  ' User pressed escape. Dialogs have already been shown. Exit with a 'cancelled' error
-1579              On Error GoTo errorHandler
+                  On Error GoTo errorHandler
 1580              Err.Raise Number:=OpenSolver_SolveError, Source:=errorPrefix, Description:="The " & Solver & " solver did not complete, but aborted with the error code " & exeResult & "." & vbCrLf & vbCrLf & "The last log file can be viewed under the OpenSolver menu and may give you more information on what caused this error."
 1581          End If
               
-             ' Application.StatusBar = "OpenSolver: Loading Solution... " & NumVars & " vars, " & NumRows & " rows."
-              
-              ' Read in the solution, status first
-              ' Statuses can be some combination of (based on CBC.exe text strings):
-              '    Optimal
-              '    Stopped on time
-              '    Stopped on iterations
-              '    Stopped on difficulties
-              '    Stopped on ctrl-c
-              '     (no integer solution - continuous used)
-              'Read the solution files and get back answers as well as dual information if it is wanted
-              
-
-
-1582          errorString = ""
               '=============Read solution file==========================
 1583          SolutionFilePathName = SolutionFilePath(Solver)
 1584          If Not FileOrDirExists(SolutionFilePathName) Then
@@ -2113,20 +2071,11 @@ Sub ReportAnySolutionSubOptimality()
 1904      If SolveStatus <> OpenSolverResult.Optimal And SolveStatus <> OpenSolver.NotLinear Then
 1905          If SolveStatus = OpenSolverResult.AbortedThruUserAction Then
                   ' Do nothing; user has already interacted with some dialogs
-1906          ElseIf LinearSolveStatusString = "" Then
-                  ' We found an error without running the solver. LinearSolutionWasLoaded will be false. We expect to have a SolveStatusComment
-1907              MsgBox "OpenSolver could not find an optimal solution, and reported:" _
-                        & vbCrLf & SolveStatusString & vbCrLf & vbCrLf _
-                       & IIf(SolveStatusComment = "", "", SolveStatusComment & vbCrLf & vbCrLf) _
-                       & "No solution was available to load into the spreadsheet." _
-                       , "OpenSolver: " & SolveStatusString
-1908          Else
-1909              MsgBox "OpenSolver could not find an optimal solution, and reported:" & vbCrLf _
-                        & SolveStatusString & vbCrLf & vbCrLf _
-                       & IIf(SolveStatusComment = "", "", SolveStatusComment & vbCrLf & vbCrLf) _
-                       & IIf(LinearSolutionWasLoaded, "The solution generated has been loaded into the spreadsheet.", "No solution was available to load into the spreadsheet.") & vbCrLf & vbCrLf _
-                       & " Solver reported: " & LinearSolveStatusString & "" _
-                      , , "OpenSolver: " & SolveStatusString
+1906          Else
+1909              MsgBox "OpenSolver could not find an optimal solution, and reported:" & vbCrLf & _
+                         SolveStatusString & vbCrLf & vbCrLf & _
+                         IIf(SolveStatusComment = "", "", SolveStatusComment & vbCrLf & vbCrLf) & _
+                         IIf(SolutionWasLoaded, "The solution generated has been loaded into the spreadsheet.", "No solution was available to load into the spreadsheet.")
 1910          End If
 1911      End If
 End Sub
