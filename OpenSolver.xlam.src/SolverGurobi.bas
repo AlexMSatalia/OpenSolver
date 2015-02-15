@@ -6,10 +6,12 @@ Public Const SolverDesc_Gurobi = "Gurobi is a solver for linear programming (LP)
 Public Const SolverLink_Gurobi = "http://www.gurobi.com/resources/documentation"
 Public Const SolverType_Gurobi = OpenSolver_SolverType.Linear
 
+Public Const SolverName_Gurobi = "Gurobi"
+
 #If Mac Then
-Public Const SolverName_Gurobi = "gurobi_cl"
+Public Const SolverExec_Gurobi = "gurobi_cl"
 #Else
-Public Const SolverName_Gurobi = "gurobi_cl.exe"
+Public Const SolverExec_Gurobi = "gurobi_cl.exe"
 #End If
 
 Public Const SolverScript_Gurobi = "gurobi_tmp" & ScriptExtension
@@ -84,7 +86,7 @@ End Function
 
 Function SolverAvailable_Gurobi(Optional SolverPath As String, Optional errorString As String) As Boolean
       ' Returns true if Gurobi is available and sets SolverPath as path to gurobi_cl
-6385      If GetExistingFilePathName(GetGurobiBinFolder, SolverName_Gurobi, SolverPath) And _
+6385      If GetExistingFilePathName(GetGurobiBinFolder, SolverExec_Gurobi, SolverPath) And _
              FileOrDirExists(SolverPythonScriptPath_Gurobi()) Then
 6386          SolverAvailable_Gurobi = True
 6387      Else

@@ -6,10 +6,12 @@ Public Const SolverDesc_CBC = "The COIN Branch and Cut solver (CBC) is the defau
 Public Const SolverLink_CBC = "http://www.coin-or.org/Cbc/cbcuserguide.html"
 Public Const SolverType_CBC = OpenSolver_SolverType.Linear
 
+Public Const SolverName_CBC = "CBC"
+
 #If Mac Then
-Public Const SolverName_CBC = "cbc"
+Public Const SolverExec_CBC = "cbc"
 #Else
-Public Const SolverName_CBC = "cbc.exe"
+Public Const SolverExec_CBC = "cbc.exe"
 #End If
 
 Public Const SolverScript_CBC = "cbc" & ScriptExtension

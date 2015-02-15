@@ -6,10 +6,12 @@ Public Const SolverDesc_Bonmin = "Bonmin (Basic Open-source Nonlinear Mixed INte
 Public Const SolverLink_Bonmin = "https://projects.coin-or.org/Bonmin"
 Public Const SolverType_Bonmin = OpenSolver_SolverType.NonLinear
 
+Public Const SolverName_Bonmin = "Bonmin"
+
 #If Mac Then
-Public Const SolverName_Bonmin = "bonmin"
+Public Const SolverExec_Bonmin = "bonmin"
 #Else
-Public Const SolverName_Bonmin = "bonmin.exe"
+Public Const SolverExec_Bonmin = "bonmin.exe"
 #End If
 
 Public Const SolverScript_Bonmin = "bonmin" & ScriptExtension

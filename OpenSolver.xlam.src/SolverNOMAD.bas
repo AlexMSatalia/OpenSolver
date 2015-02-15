@@ -7,6 +7,8 @@ Public Const SolverDesc_NOMAD = "Nomad (Nonsmooth Optimization by Mesh Adaptive 
 Public Const SolverLink_NOMAD = "http://www.gerad.ca/nomad/Project/Home.html"
 Public Const SolverType_NOMAD = OpenSolver_SolverType.NonLinear
 
+Public Const SolverName_NOMAD = "NOMAD"
+
 Public Const UsesPrecision_NOMAD = True
 Public Const UsesIterationLimit_NOMAD = True
 Public Const UsesTolerance_NOMAD = False

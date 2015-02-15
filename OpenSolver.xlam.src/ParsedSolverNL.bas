@@ -1754,9 +1754,9 @@ Function ReadModel_NL(SolutionFilePathName As String, errorString As String, s A
             s.SolveStatusString = "Stopped on Ctrl-C"
         Else
             If Not TryParseLogs(s) Then
-                errorString = "The response from the " & m.Solver & " solver is not recognised. The response was: " & vbCrLf & vbCrLf & _
+                errorString = "The response from the " & SolverName(m.Solver) & " solver is not recognised. The response was: " & vbCrLf & vbCrLf & _
                               Line & vbCrLf & vbCrLf & _
-                              "The " & m.Solver & " command line can be found at:" & vbCrLf & _
+                              "The " & SolverName(m.Solver) & " command line can be found at:" & vbCrLf & _
                               ScriptFilePath(m.Solver)
                 s.SolveStatus = OpenSolverResult.ErrorOccurred
                 GoTo exitFunction
@@ -1834,7 +1834,7 @@ Function TryParseLogs(s As COpenSolverParsed) As Boolean
 8485      Close #3
           
           ' We need to check > 0 explicitly, as the expression doesn't work without it
-8486      If Not InStrText(left(message, 7), m.Solver) > 0 Then
+8486      If Not InStrText(left(message, 7), SolverName(m.Solver)) > 0 Then
              ' Not dealing with the correct solver log, abort
 8487          TryParseLogs = False
 8488          Exit Function

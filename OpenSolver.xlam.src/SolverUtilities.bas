@@ -44,25 +44,25 @@ Function SolverFilePath_Default(Solver As String, Optional errorString As String
 6589      SearchPath = JoinPaths(ThisWorkbook.Path, SolverDir)
           
 #If Mac Then
-6590      If GetExistingFilePathName(JoinPaths(SearchPath, SolverDirMac), SolverName(Solver), SolverFilePath_Default) Then Exit Function ' Found a mac solver
-6591      errorString = "Unable to find Mac version of " & Solver & " ('" & SolverName(Solver) & "') in the Solvers folder."
+6590      If GetExistingFilePathName(JoinPaths(SearchPath, SolverDirMac), SolverExec(Solver), SolverFilePath_Default) Then Exit Function ' Found a mac solver
+6591      errorString = "Unable to find Mac version of " & SolverName(Solver) & " ('" & SolverExec(Solver) & "') in the Solvers folder."
 6592      SolverFilePath_Default = ""
 6593      Exit Function
 #Else
           ' Look for the 64 bit version
 6594      If SystemIs64Bit Then
-6595          If GetExistingFilePathName(JoinPaths(SearchPath, SolverDirWin64), SolverName(Solver), SolverFilePath_Default) Then Exit Function ' Found a 64 bit solver
+6595          If GetExistingFilePathName(JoinPaths(SearchPath, SolverDirWin64), SolverExec(Solver), SolverFilePath_Default) Then Exit Function ' Found a 64 bit solver
 6596      End If
           ' Look for the 32 bit version
 6597      If GetExistingFilePathName(JoinPaths(SearchPath, SolverDirWin32), SolverName(Solver), SolverFilePath_Default) Then
 6598          If SystemIs64Bit Then
-6599              errorString = "Unable to find 64-bit " & Solver & " in the Solvers folder. A 32-bit version will be used instead."
+6599              errorString = "Unable to find 64-bit " & SolverName(Solver) & " in the Solvers folder. A 32-bit version will be used instead."
 6600          End If
 6601          Exit Function
 6602      End If
           ' Fail
 6603      SolverFilePath_Default = ""
-6604      errorString = "Unable to find " & Solver & " ('" & SolverName(Solver) & "') in the Solvers folder."
+6604      errorString = "Unable to find " & SolverName(Solver) & " ('" & SolverExec(Solver) & "') in the Solvers folder."
 #End If
 End Function
 
@@ -89,18 +89,18 @@ Function SolverType(Solver As String) As String
 6623      End Select
 End Function
 
-Function SolverName(Solver As String) As String
+Function SolverExec(Solver As String) As String
 6624      Select Case Solver
           Case "CBC"
-6625          SolverName = SolverName_CBC
+6625          SolverExec = SolverExec_CBC
 6626      Case "Gurobi"
-6627          SolverName = SolverName_Gurobi
+6627          SolverExec = SolverExec_Gurobi
 6628      Case "Bonmin"
-6629          SolverName = SolverName_Bonmin
+6629          SolverExec = SolverExec_Bonmin
 6630      Case "Couenne"
-6631          SolverName = SolverName_Couenne
+6631          SolverExec = SolverExec_Couenne
 6632      Case Else
-6633          SolverName = ""
+6633          SolverExec = ""
 6634      End Select
 End Function
 
@@ -444,5 +444,26 @@ Function OptionsFilePath(Solver As String) As String
         OptionsFilePath = OptionsFilePath_Bonmin
     Case "Couenne"
         OptionsFilePath = OptionsFilePath_Couenne
+    End Select
+End Function
+
+Function SolverName(Solver As String) As String
+    Select Case Solver
+    Case "CBC"
+        SolverName = SolverName_CBC
+    Case "Gurobi"
+        SolverName = SolverName_Gurobi
+    Case "Bonmin"
+        SolverName = SolverName_Bonmin
+    Case "Couenne"
+        SolverName = SolverName_Couenne
+    Case "NOMAD"
+        SolverName = SolverName_NOMAD
+    Case "NeosCBC"
+        SolverName = SolverName_NeosCBC
+    Case "NeosCou"
+        SolverName = SolverName_NeosCou
+    Case "NeosBon"
+        SolverName = SolverName_NeosBon
     End Select
 End Function

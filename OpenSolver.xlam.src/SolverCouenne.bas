@@ -6,10 +6,12 @@ Public Const SolverDesc_Couenne = "Couenne (Convex Over and Under ENvelopes for 
 Public Const SolverLink_Couenne = "https://projects.coin-or.org/Couenne"
 Public Const SolverType_Couenne = OpenSolver_SolverType.NonLinear
 
+Public Const SolverName_Couenne = "Couenne"
+
 #If Mac Then
-Public Const SolverName_Couenne = "couenne"
+Public Const SolverExec_Couenne = "couenne"
 #Else
-Public Const SolverName_Couenne = "couenne.exe"
+Public Const SolverExec_Couenne = "couenne.exe"
 #End If
 
 Public Const SolverScript_Couenne = "couenne" & ScriptExtension

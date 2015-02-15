@@ -483,9 +483,9 @@ Public Sub ModelActivate(f As MSForms.UserForm)
 4368      f.cboConRel.ListIndex = cboPosition("=")    ' We set an initial value just in case there is no model, and the user goes straight to AddNewConstraint
           
           'Find current solver
-          Dim SolverName As String
-4369      If GetNameValueIfExists(ActiveWorkbook, "'" & Replace(ActiveWorkbook.ActiveSheet.Name, "'", "''") & "'!OpenSolver_ChosenSolver", SolverName) Then
-4370          f.lblSolver.Caption = "Current Solver Engine: " & UCase(left(SolverName, 1)) & Mid(SolverName, 2)
+          Dim Solver As String
+4369      If GetNameValueIfExists(ActiveWorkbook, "'" & Replace(ActiveWorkbook.ActiveSheet.Name, "'", "''") & "'!OpenSolver_ChosenSolver", Solver) Then
+4370          f.lblSolver.Caption = "Current Solver Engine: " & UCase(left(Solver, 1)) & Mid(Solver, 2)
 4371      Else: f.lblSolver.Caption = "Current Solver Engine: CBC"
 4372      End If
           ' Load the model on the sheet into memory
