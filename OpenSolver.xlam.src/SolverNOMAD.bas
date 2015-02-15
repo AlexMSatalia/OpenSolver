@@ -191,13 +191,13 @@ Function SolveModel_Nomad(SolveRelaxation As Boolean, s As COpenSolver) As Long
 7042      ElseIf NomadRetVal = 2 Then
 7043          s.SolveStatusComment = "Nomad reached the maximum number of iterations and returned the best feasible solution it found. This solution is not guaranteed to be an optimal solution." & vbCrLf & vbCrLf & _
                                      "You can increase the maximum time and iterations under the options in the model dialogue or check whether your model is feasible."
-7044          s.SolveStatus = OpenSolverResult.TimeLimitedSubOptimal
+7044          s.SolveStatus = OpenSolverResult.LimitedSubOptimal
 7045          s.SolveStatusString = "Stopped on Iteration Limit"
 7046          s.SolutionWasLoaded = True
 7047      ElseIf NomadRetVal = 3 Then
 7048          s.SolveStatusComment = "Nomad reached the maximum time and returned the best feasible solution it found. This solution is not guaranteed to be an optimal solution." & vbCrLf & vbCrLf & _
                                      "You can increase the maximum time and iterations under the options in the model dialogue or check whether your model is feasible."
-7049          s.SolveStatus = OpenSolverResult.TimeLimitedSubOptimal
+7049          s.SolveStatus = OpenSolverResult.LimitedSubOptimal
 7050          s.SolveStatusString = "Stopped on Time Limit"
 7051          s.SolutionWasLoaded = True
 7052      ElseIf NomadRetVal = 4 Then

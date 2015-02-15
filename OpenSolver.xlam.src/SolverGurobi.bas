@@ -255,19 +255,19 @@ Function ReadModel_Gurobi(SolutionFilePathName As String, errorString As String,
 6474          s.SolveStatusString = "No Solution Found (Unbounded)"
 6475          solutionExpected = False
 6477      ElseIf Line = GurobiResult.SolveStoppedTime Then
-6478          s.SolveStatus = OpenSolverResult.TimeLimitedSubOptimal
+6478          s.SolveStatus = OpenSolverResult.LimitedSubOptimal
 6479          s.SolveStatusString = "Stopped on Time Limit"
 6481      ElseIf Line = GurobiResult.SolveStoppedIter Then
-6482          s.SolveStatus = OpenSolverResult.TimeLimitedSubOptimal
+6482          s.SolveStatus = OpenSolverResult.LimitedSubOptimal
 6483          s.SolveStatusString = "Stopped on Iteration Limit"
 6485      ElseIf Line = GurobiResult.SolveStoppedUser Then
-6486          s.SolveStatus = OpenSolverResult.TimeLimitedSubOptimal
+6486          s.SolveStatus = OpenSolverResult.LimitedSubOptimal
 6487          s.SolveStatusString = "Stopped on Ctrl-C"
 6489      ElseIf Line = GurobiResult.Unsolved Then
-6490          s.SolveStatus = OpenSolverResult.TimeLimitedSubOptimal
+6490          s.SolveStatus = OpenSolverResult.LimitedSubOptimal
 6491          s.SolveStatusString = "Stopped on Gurobi Numerical difficulties"
 6493      ElseIf Line = GurobiResult.SubOptimal Then
-6494          s.SolveStatus = OpenSolverResult.TimeLimitedSubOptimal
+6494          s.SolveStatus = OpenSolverResult.LimitedSubOptimal
 6495          s.SolveStatusString = "Unable to satisfy optimality tolerances; a sub-optimal solution is available."
 6497      Else
 6498          errorString = "The response from the Gurobi solver is not recognised. The response was: " & Line

@@ -224,28 +224,28 @@ Function ReadModel_CBC(SolutionFilePathName As String, errorString As String, s 
 6146          solutionExpected = False
               '
 6147      ElseIf Response Like "Stopped on time *" Then ' Stopped on iterations or time
-6148          s.SolveStatus = OpenSolverResult.TimeLimitedSubOptimal
+6148          s.SolveStatus = OpenSolverResult.LimitedSubOptimal
 6149          s.SolveStatusString = "Stopped on Time Limit"
 6150          If Response Like "*(no integer solution - continuous used)*" Then
 6151              s.SolveStatusString = s.SolveStatusString & ": No integer solution found. Fractional solution returned."
 6152          End If
               '
 6154      ElseIf Response Like "Stopped on iterations*" Then ' Stopped on iterations or time
-6155          s.SolveStatus = OpenSolverResult.TimeLimitedSubOptimal
+6155          s.SolveStatus = OpenSolverResult.LimitedSubOptimal
 6156          s.SolveStatusString = "Stopped on Iteration Limit"
 6157          If Response Like "*(no integer solution - continuous used)*" Then
 6158              s.SolveStatusString = s.SolveStatusString & ": No integer solution found. Fractional solution returned."
 6159          End If
               '
 6161      ElseIf Response Like "Stopped on difficulties*" Then ' Stopped on iterations or time
-6162          s.SolveStatus = OpenSolverResult.TimeLimitedSubOptimal
+6162          s.SolveStatus = OpenSolverResult.LimitedSubOptimal
 6163          s.SolveStatusString = "Stopped on CBC difficulties"
 6164          If Response Like "*(no integer solution - continuous used)*" Then
 6165              s.SolveStatusString = s.SolveStatusString & ": No integer solution found. Fractional solution returned."
 6166          End If
               '
 6168      ElseIf Response Like "Stopped on ctrl-c*" Then ' Stopped on iterations or time
-6169          s.SolveStatus = OpenSolverResult.TimeLimitedSubOptimal
+6169          s.SolveStatus = OpenSolverResult.LimitedSubOptimal
 6170          s.SolveStatusString = "Stopped on Ctrl-C"
 6171          If Response Like "*(no integer solution - continuous used)*" Then
 6172              s.SolveStatusString = s.SolveStatusString & ": No integer solution found. Fractional solution returned."
