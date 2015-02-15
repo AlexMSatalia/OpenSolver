@@ -514,7 +514,7 @@ Sub LaunchCommandLine_CBC()
 6364      CBCRunString = " -directory " & MakePathSafe(left(GetTempFolder, Len(GetTempFolder) - 1)) _
                            & " -import " & MakePathSafe(ModelFilePathName) _
                            & SolveOptionsString _
-                           & ExtraParametersString _
+                           & " " & ExtraParametersString _
                            & " -" ' Force CBC to accept commands from the command line
 6365      RunExternalCommand MakePathSafe(SolverPath) & CBCRunString, "", SW_SHOWNORMAL, False 'OSSolveSync
 
