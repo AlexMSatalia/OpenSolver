@@ -175,7 +175,7 @@ Function CreateSolveScript_CBC(SolutionFilePathName As String, ExtraParametersSt
 6119      CommandLineRunString = " -directory " & MakePathSafe(left(GetTempFolder, Len(GetTempFolder) - 1)) _
                                & " -import " & MakePathSafe(s.ModelFilePathName) _
                                & " -ratioGap " & str(SolveOptions.Tolerance) _
-                               & " -seconds " & str(SolveOptions.maxTime) _
+                               & " -seconds " & str(SolveOptions.MaxTime) _
                                & ExtraParametersString _
                                & " -solve " _
                                & IIf(s.bGetDuals, " -printingOptions all ", "") _
@@ -516,7 +516,7 @@ Sub LaunchCommandLine_CBC()
 6354      If WorksheetAvailable Then
 6355          GetSolveOptions "'" & Replace(ActiveSheet.Name, "'", "''") & "'!", SolveOptions, errorString ' NB: We have to double any ' when we quote the sheet name
 6356          If errorString = "" Then
-6357             SolveOptionsString = " -ratioGap " & CStr(SolveOptions.Tolerance) & " -seconds " & CStr(SolveOptions.maxTime)
+6357             SolveOptionsString = " -ratioGap " & CStr(SolveOptions.Tolerance) & " -seconds " & CStr(SolveOptions.MaxTime)
 6358          End If
 6359      End If
           

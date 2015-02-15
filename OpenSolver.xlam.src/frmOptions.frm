@@ -72,8 +72,8 @@ Public Sub OptionsActivate(f As UserForm)
 4119          ShowSolverProgress = s = "1"
 4120      End If
           
-          Dim maxTime As Double
-4121      GetNamedNumericValueIfExists ActiveWorkbook, "'" & Replace(ActiveSheet.Name, "'", "''") & "'!solver_tim", maxTime
+          Dim MaxTime As Double
+4121      GetNamedNumericValueIfExists ActiveWorkbook, "'" & Replace(ActiveSheet.Name, "'", "''") & "'!solver_tim", MaxTime
           
           Dim maxIter As Double
 4122      GetNamedNumericValueIfExists ActiveWorkbook, "'" & Replace(ActiveSheet.Name, "'", "''") & "'!solver_itr", maxIter
@@ -93,7 +93,7 @@ Public Sub OptionsActivate(f As UserForm)
 
 4129      f.chkNonNeg.value = nonNeg
 4130      f.chkShowSolverProgress.value = ShowSolverProgress
-4131      f.txtMaxTime.Text = CStr(maxTime)
+4131      f.txtMaxTime.Text = CStr(MaxTime)
 4132      f.txtTol.Text = tol * 100
 4133      f.txtMaxIter.Text = CStr(maxIter)
 4134      f.txtPre = CStr(conPre)

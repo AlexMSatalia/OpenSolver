@@ -155,7 +155,7 @@ Public Enum VariableType
 End Enum
 
 Public Type SolveOptionsType
-    maxTime As Double ' "MaxTime"=Max run time in seconds
+    MaxTime As Double ' "MaxTime"=Max run time in seconds
     MaxIterations As Long ' "Iterations" = max number of branch and bound nodes?
     Precision As Double ' ???
     Tolerance As Double ' Tolerance, being allowable percentage gap. NB: Solver shows this as a percentage, but stores it as a value, eg 1% is stored as 0.01
@@ -1208,7 +1208,7 @@ Sub GetSolveOptions(sheetName As String, SolveOptions As SolveOptionsType, error
 415       errorString = ""
 416       SetAnyMissingDefaultExcel2007SolverOptions ' This can happen if they have created the model using an old version of OpenSolver
 417       With SolveOptions
-418           .maxTime = Val(Mid(Names(sheetName & "solver_tim").value, 2)) ' Trim the "="; use Val to get a conversion in English, not the local language
+418           .MaxTime = Val(Mid(Names(sheetName & "solver_tim").value, 2)) ' Trim the "="; use Val to get a conversion in English, not the local language
 419           .MaxIterations = Val(Mid(Names(sheetName & "solver_itr").value, 2))
 420           .Precision = Val(Mid(Names(sheetName & "solver_pre").value, 2))
 421           .Tolerance = Val(Mid(Names(sheetName & "solver_tol").value, 2))  ' Stored as a value between 0 and 1 by Excel's Solver (representing a percentage)

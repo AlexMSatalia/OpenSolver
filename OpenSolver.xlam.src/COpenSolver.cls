@@ -1557,7 +1557,7 @@ Sub SolveModel_LinearLocal(ModelFilePathName As String, SolveRelaxation As Boole
 1561          End If
               
 1562          Application.StatusBar = "OpenSolver: Solving " & IIf(SolveRelaxation, "Relaxed ", "") & "Model... " & numVars & " vars, " & NumIntVars & " int vars " _
-                      & "(" & NumBinVars & " 0/1), " & NumRows & " rows, " & SolveOptions.maxTime & "s time limit, " _
+                      & "(" & NumBinVars & " 0/1), " & NumRows & " rows, " & SolveOptions.MaxTime & "s time limit, " _
                       & SolveOptions.Tolerance * 100 & "% tolerance."
               
               ' We allow user to define extra parameters
@@ -3236,7 +3236,7 @@ Function getOptionDataOS() As Variant
           Dim SolveOptions As SolveOptionsType, errorString As String
 2613      GetSolveOptions sheetName, SolveOptions, errorString
 2614      X(0) = SolveOptions.MaxIterations
-2615      X(1) = SolveOptions.maxTime
+2615      X(1) = SolveOptions.MaxTime
 2616      X(2) = SolveOptions.Precision
 2617      getOptionDataOS = X
 End Function

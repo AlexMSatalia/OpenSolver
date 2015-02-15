@@ -1227,7 +1227,7 @@ Public Sub OutputOptionsFile(OptionsFilePath As String, SolveOptions As SolveOpt
     Open OptionsFilePath For Output As 4
     Print #4, "iteration_limit " & SolveOptions.MaxIterations
     Print #4, "allowable_fraction_gap " & SolveOptions.Tolerance
-    Print #4, "time_limit " & SolveOptions.maxTime
+    Print #4, "time_limit " & SolveOptions.MaxTime
     Close #4
     Exit Sub
     
