@@ -105,8 +105,7 @@ Function SolverVersion_Couenne() As String
 8389          Open logFile For Input As 1
 8390          Line Input #1, Line
 8391          Close #1
-8392          SolverVersion_Couenne = right(Line, Len(Line) - 8)
-8393          SolverVersion_Couenne = left(SolverVersion_Couenne, 5)
+8392          SolverVersion_Couenne = Mid(Line, 9, 5)
 8394      Else
 8395          SolverVersion_Couenne = ""
 8396      End If

@@ -1552,7 +1552,7 @@ Sub AddNegToTree(Tree As ExpressionTree)
           Dim NewTree As ExpressionTree
 8221      Set NewTree = CreateTree("neg", ExpressionTreeOperator)
           
-8222      Tree.NodeText = right(Tree.NodeText, Len(Tree.NodeText) - 1)
+8222      Tree.NodeText = Mid(Tree.NodeText, 2)
 8223      NewTree.SetChild 1, Tree
           
 8224      Set Tree = NewTree

@@ -1498,7 +1498,7 @@ Sub SolveModel_LinearNeos(ModelFilePathName As String, SolveRelaxation As Boolea
           Dim var As Long, result As String
 1538      For var = 1 To numVars
 1539          openingParen = InStr(solution, ValidLPFileVarName(VarNames(var)))
-1540          closingParen = openingParen + InStr(right(solution, Len(solution) - openingParen), "_display")
+1540          closingParen = openingParen + InStr(Mid(solution, openingParen + 1), "_display")
 1541          result = Mid(solution, openingParen + Len(ValidLPFileVarName(VarNames(var))) + 1, Application.Max(closingParen - openingParen - Len(ValidLPFileVarName(VarNames(var))) - 1, 0))
               
               ' Converting result to number

@@ -104,8 +104,7 @@ Function SolverVersion_Bonmin() As String
 9051          Open logFile For Input As 1
 9052          Line Input #1, Line
 9053          Close #1
-9054          SolverVersion_Bonmin = right(Line, Len(Line) - 7)
-9055          SolverVersion_Bonmin = left(SolverVersion_Bonmin, 5)
+9054          SolverVersion_Bonmin = Mid(Line, 8, 5)
 9056      Else
 9057          SolverVersion_Bonmin = ""
 9058      End If

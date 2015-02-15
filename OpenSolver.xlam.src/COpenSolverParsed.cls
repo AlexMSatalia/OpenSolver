@@ -265,7 +265,7 @@ Function SolveModelParsed_NEOS(ModelFilePathName As String, Solver As String, s 
           Dim openingParen As Long, closingParen As Long, SolveStatusString As String, result As String
           ' Extract the solve status
 7276      openingParen = InStr(solution, "solve_result =")
-7277      SolveStatusString = right(solution, Len(solution) - openingParen - Len("solve_result ="))
+7277      SolveStatusString = Mid(solution, openingParen + 1 + Len("solve_result ="))
 
           ' Determine Feasibility
 7278      If SolveStatusString Like "unbounded*" Then
@@ -283,7 +283,7 @@ Function SolveModelParsed_NEOS(ModelFilePathName As String, Solver As String, s 
 7290          openingParen = InStr(solution, ">>>")
 7291          If openingParen = 0 Then
 7292              openingParen = InStr(solution, "processing commands.")
-7293              s.SolveStatusString = right(solution, Len(solution) - openingParen - Len("processing commands."))
+7293              s.SolveStatusString = Mid(solution, openingParen + 1 + Len("processing commands."))
 7294          Else
 7295              closingParen = InStr(solution, "<<<")
 7296              s.SolveStatusString = "Error: " & Mid(solution, openingParen, closingParen - openingParen)
@@ -300,7 +300,7 @@ Function SolveModelParsed_NEOS(ModelFilePathName As String, Solver As String, s 
           Dim c As Range
 7303      For Each c In m.AdjustableCells
 7304          openingParen = InStr(solution, ConvertCellToStandardName(c))
-7305          closingParen = openingParen + InStr(right(solution, Len(solution) - openingParen), "_display")
+7305          closingParen = openingParen + InStr(Mid(solution, openingParen + 1), "_display")
 7306          result = Mid(solution, openingParen + Len(ConvertCellToStandardName(c)) + 1, Application.Max(closingParen - openingParen - Len(ConvertCellToStandardName(c)) - 1, 0))
 
               ' Converting result to number

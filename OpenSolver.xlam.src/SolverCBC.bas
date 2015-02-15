@@ -116,8 +116,7 @@ Function SolverVersion_CBC() As String
 6082          Line Input #1, Line
 6083          Line Input #1, Line
 6084          Close #1
-6085          SolverVersion_CBC = right(Line, Len(Line) - 9)
-6086          SolverVersion_CBC = left(SolverVersion_CBC, Len(SolverVersion_CBC) - 1)
+6085          SolverVersion_CBC = Mid(Line, 10, 5)
 6087      Else
 6088          SolverVersion_CBC = ""
 6089      End If

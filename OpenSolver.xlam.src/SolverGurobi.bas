@@ -140,8 +140,7 @@ Function SolverVersion_Gurobi() As String
 6405          Open logFile For Input As 1
 6406          Line Input #1, Line
 6407          Close #1
-6408          SolverVersion_Gurobi = right(Line, Len(Line) - 25)
-6409          SolverVersion_Gurobi = left(SolverVersion_Gurobi, 5)
+6408          SolverVersion_Gurobi = Mid(Line, 26, 5)
 6410      Else
 6411          SolverVersion_Gurobi = ""
 6412      End If
@@ -287,7 +286,7 @@ Function ReadModel_Gurobi(SolutionFilePathName As String, errorString As String,
 6508              While Not EOF(1)
 6509                  Line Input #1, Line
 6510                  index = InStr(Line, " ")
-6511                  s.FinalVarValueP(i) = Val(right(Line, Len(Line) - index))
+6511                  s.FinalVarValueP(i) = Val(Mid(Line, index + 1))
                       'Get the variable name
 6512                  s.VarCellP(i) = left(Line, index - 1)
 6513                  If left(s.VarCellP(i), 1) = "_" Then

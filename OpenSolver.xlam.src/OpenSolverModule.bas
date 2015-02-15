@@ -1997,7 +1997,7 @@ Sub MBox(errorMessage As String, Optional linkTarget As String, Optional linkTex
         If linNumStartPos > 0 Then
             linNumEndPos = InStr(linNumStartPos, errorMessage, ")")
             'Remove this bit from the string
-            errorMessage = left(errorMessage, linNumStartPos - 1) & right(errorMessage, Len(errorMessage) - linNumEndPos)
+            errorMessage = left(errorMessage, linNumStartPos - 1) & Mid(errorMessage, linNumEndPos)
         End If
     Else
         'this is an error message, so add the line number reporting and other info
