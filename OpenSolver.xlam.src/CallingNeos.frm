@@ -13,12 +13,13 @@ Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = True
 Attribute VB_Exposed = False
+
+
 Private Sub Cancel_Click()
 
           'Unload the userform
-3583      Me.Tag = "Cancelled"
-3584      Me.Hide
+          Me.Hide
+          Me.Tag = "Cancelled"
 
 End Sub
-
 

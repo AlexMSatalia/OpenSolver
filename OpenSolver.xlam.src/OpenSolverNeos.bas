@@ -72,11 +72,14 @@ Private Function CallNEOS_Windows(message As String, errorString As String)
 6833      Done = False
           
 6834      CallingNeos.Show False
+          CallingNeos.Tag = "Running"
           
           ' Loop until job is done
           Dim time As Long
 6835      time = 0
 6836      While Done = False
+              If CallingNeos.Tag = "Cancelled" Then GoTo ExitSub
+              
 6837          DoEvents
               
               ' Reset obj
