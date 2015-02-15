@@ -1722,7 +1722,9 @@ Function ReadModel_NL(SolutionFilePathName As String, errorString As String, s A
     If Not FileOrDirExists(SolutionFilePathName) Then
         solutionExpected = False
         If Not TryParseLogs(s) Then
-            errorString = "The solver did not create a solution file. No new solution is available."
+            errorString = "The solver did not create a solution file. No new solution is available." & vbCrLf & vbCrLf & _
+                          "This can happen when the initial conditions are invalid. " & _
+                          "Check the log file for more information."
             GoTo exitFunction
         End If
     Else
