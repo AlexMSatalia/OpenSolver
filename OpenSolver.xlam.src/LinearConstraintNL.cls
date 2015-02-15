@@ -25,20 +25,20 @@ Public Property Get Count() As Long
 8995      Count = NumVariables
 End Property
 
-Public Property Let VariablePresent(index As Long, Present As Boolean)
-8996      VariablesPresent(index) = Present
+Public Property Let VariablePresent(Index As Long, Present As Boolean)
+8996      VariablesPresent(Index) = Present
 End Property
 
-Public Property Get VariablePresent(index As Long) As Boolean
-8997      VariablePresent = VariablesPresent(index)
+Public Property Get VariablePresent(Index As Long) As Boolean
+8997      VariablePresent = VariablesPresent(Index)
 End Property
 
-Public Property Let Coefficient(index As Long, value As Double)
-8998      Coefficients(index) = value
+Public Property Let Coefficient(Index As Long, value As Double)
+8998      Coefficients(Index) = value
 End Property
 
-Public Property Get Coefficient(index As Long) As Double
-8999      Coefficient = Coefficients(index)
+Public Property Get Coefficient(Index As Long) As Double
+8999      Coefficient = Coefficients(Index)
 End Property
 
 ' The number of variables present in the constraint

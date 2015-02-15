@@ -152,110 +152,110 @@ Dim QuickSolve As CQuickSolve
 ' Functions for accesssing arrays from outside the COpenSolver class e.g. in Solver modules
 ' The public interfaces are defined as <array name>P
 
-Public Property Get CostCoeffsP(index As Long) As String
-790       CostCoeffsP = CostCoeffs(index)
+Public Property Get CostCoeffsP(Index As Long) As String
+790       CostCoeffsP = CostCoeffs(Index)
 End Property
 
-Public Property Let CostCoeffsP(index As Long, strValue As String)
-791       If index > UBound(CostCoeffs) Then ReDim Preserve CostCoeffs(index)
-792       CostCoeffs(index) = strValue
+Public Property Let CostCoeffsP(Index As Long, strValue As String)
+791       If Index > UBound(CostCoeffs) Then ReDim Preserve CostCoeffs(Index)
+792       CostCoeffs(Index) = strValue
 End Property
 
-Public Property Get FinalVarValueP(index As Long) As String
-793       FinalVarValueP = FinalVarValue(index)
+Public Property Get FinalVarValueP(Index As Long) As String
+793       FinalVarValueP = FinalVarValue(Index)
 End Property
 
-Public Property Let FinalVarValueP(index As Long, strValue As String)
-794       If index > UBound(FinalVarValue) Then ReDim Preserve FinalVarValue(index)
-795       FinalVarValue(index) = strValue
+Public Property Let FinalVarValueP(Index As Long, strValue As String)
+794       If Index > UBound(FinalVarValue) Then ReDim Preserve FinalVarValue(Index)
+795       FinalVarValue(Index) = strValue
 End Property
 
-Public Property Get FinalValueP(index As Long) As String
-796       FinalValueP = FinalValue(index)
+Public Property Get FinalValueP(Index As Long) As String
+796       FinalValueP = FinalValue(Index)
 End Property
 
-Public Property Let FinalValueP(index As Long, strValue As String)
-797       If index > UBound(FinalValue) Then ReDim Preserve FinalValue(index)
-798       FinalValue(index) = strValue
+Public Property Let FinalValueP(Index As Long, strValue As String)
+797       If Index > UBound(FinalValue) Then ReDim Preserve FinalValue(Index)
+798       FinalValue(Index) = strValue
 End Property
 
-Public Property Get ShadowPriceP(index As Long) As String
-799       ShadowPriceP = ShadowPrice(index)
+Public Property Get ShadowPriceP(Index As Long) As String
+799       ShadowPriceP = ShadowPrice(Index)
 End Property
 
-Public Property Let ShadowPriceP(index As Long, strValue As String)
-800       If index > UBound(ShadowPrice) Then ReDim Preserve ShadowPrice(index)
-801       ShadowPrice(index) = strValue
+Public Property Let ShadowPriceP(Index As Long, strValue As String)
+800       If Index > UBound(ShadowPrice) Then ReDim Preserve ShadowPrice(Index)
+801       ShadowPrice(Index) = strValue
 End Property
 
-Public Property Get ReducedCostsP(index As Long) As String
-802       ReducedCostsP = ReducedCosts(index)
+Public Property Get ReducedCostsP(Index As Long) As String
+802       ReducedCostsP = ReducedCosts(Index)
 End Property
 
-Public Property Let ReducedCostsP(index As Long, strValue As String)
-803       If index > UBound(ReducedCosts) Then ReDim Preserve ReducedCosts(index)
-804       ReducedCosts(index) = strValue
+Public Property Let ReducedCostsP(Index As Long, strValue As String)
+803       If Index > UBound(ReducedCosts) Then ReDim Preserve ReducedCosts(Index)
+804       ReducedCosts(Index) = strValue
 End Property
 
-Public Property Get VarCellP(index As Long) As String
-805       VarCellP = VarCell(index)
+Public Property Get VarCellP(Index As Long) As String
+805       VarCellP = VarCell(Index)
 End Property
 
-Public Property Let VarCellP(index As Long, strValue As String)
-806       If index > UBound(VarCell) Then ReDim Preserve VarCell(index)
-807       VarCell(index) = strValue
+Public Property Let VarCellP(Index As Long, strValue As String)
+806       If Index > UBound(VarCell) Then ReDim Preserve VarCell(Index)
+807       VarCell(Index) = strValue
 End Property
 
-Public Property Get IncreaseConP(index As Long) As String
-808       IncreaseConP = IncreaseCon(index)
+Public Property Get IncreaseConP(Index As Long) As String
+808       IncreaseConP = IncreaseCon(Index)
 End Property
 
-Public Property Let IncreaseConP(index As Long, strValue As String)
-809       If index > UBound(IncreaseCon) Then ReDim Preserve IncreaseCon(index)
-810       IncreaseCon(index) = strValue
+Public Property Let IncreaseConP(Index As Long, strValue As String)
+809       If Index > UBound(IncreaseCon) Then ReDim Preserve IncreaseCon(Index)
+810       IncreaseCon(Index) = strValue
 End Property
 
-Public Property Get DecreaseConP(index As Long) As String
-811       DecreaseConP = DecreaseCon(index)
+Public Property Get DecreaseConP(Index As Long) As String
+811       DecreaseConP = DecreaseCon(Index)
 End Property
 
-Public Property Let DecreaseConP(index As Long, strValue As String)
-812       If index > UBound(DecreaseCon) Then ReDim Preserve DecreaseCon(index)
-813       DecreaseCon(index) = strValue
+Public Property Let DecreaseConP(Index As Long, strValue As String)
+812       If Index > UBound(DecreaseCon) Then ReDim Preserve DecreaseCon(Index)
+813       DecreaseCon(Index) = strValue
 End Property
 
-Public Property Get IncreaseVarP(index As Long) As String
-814       IncreaseVarP = IncreaseVar(index)
+Public Property Get IncreaseVarP(Index As Long) As String
+814       IncreaseVarP = IncreaseVar(Index)
 End Property
 
-Public Property Let IncreaseVarP(index As Long, strValue As String)
-815       If index > UBound(IncreaseVar) Then ReDim Preserve IncreaseVar(index)
-816       IncreaseVar(index) = strValue
+Public Property Let IncreaseVarP(Index As Long, strValue As String)
+815       If Index > UBound(IncreaseVar) Then ReDim Preserve IncreaseVar(Index)
+816       IncreaseVar(Index) = strValue
 End Property
 
-Public Property Get DecreaseVarP(index As Long) As String
-817       DecreaseVarP = DecreaseVar(index)
+Public Property Get DecreaseVarP(Index As Long) As String
+817       DecreaseVarP = DecreaseVar(Index)
 End Property
 
-Public Property Let DecreaseVarP(index As Long, strValue As String)
-818       If index > UBound(DecreaseVar) Then ReDim Preserve DecreaseVar(index)
-819       DecreaseVar(index) = strValue
+Public Property Let DecreaseVarP(Index As Long, strValue As String)
+818       If Index > UBound(DecreaseVar) Then ReDim Preserve DecreaseVar(Index)
+819       DecreaseVar(Index) = strValue
 End Property
 
-Public Property Get VarNamesP(index As Long) As String
-820       VarNamesP = VarNames(index)
+Public Property Get VarNamesP(Index As Long) As String
+820       VarNamesP = VarNames(Index)
 End Property
 
-Public Property Get LHSTypeP(index As Long) As String
-821       LHSTypeP = LHSType(index)
+Public Property Get LHSTypeP(Index As Long) As String
+821       LHSTypeP = LHSType(Index)
 End Property
 
-Public Property Get RHSTypeP(index As Long) As String
-822       RHSTypeP = RHSType(index)
+Public Property Get RHSTypeP(Index As Long) As String
+822       RHSTypeP = RHSType(Index)
 End Property
 
-Public Property Get RelationP(index As Long) As Long
-823       RelationP = Relation(index)
+Public Property Get RelationP(Index As Long) As Long
+823       RelationP = Relation(Index)
 End Property
 ' End of getters and setters
 '===============================================================================
@@ -282,8 +282,8 @@ Public Function GetNumRows() As Long
 824       GetNumRows = NumRows
 End Function
 
-Public Function GetSparseACount(index As Long) As Long
-825       GetSparseACount = SparseA(index).Count
+Public Function GetSparseACount(Index As Long) As Long
+825       GetSparseACount = SparseA(Index).Count
 End Function
 
 Sub GetConstraintFromRow(row As Long, ByRef constraint As Long, ByRef instance As Long)
@@ -1542,8 +1542,8 @@ Sub SolveModel_LinearLocal(ModelFilePathName As String, SolveRelaxation As Boole
                       & SolveOptions.Tolerance * 100 & "% tolerance."
               
               ' We allow user to define extra parameters
-              Dim ExtraParametersString As String
-1563          ExtraParametersString = GetExtraParameters(Solver, sheet, errorString)
+              Dim ExtraParameters As New Dictionary
+1563          GetExtraParameters Solver, sheet, ExtraParameters, errorString
 1564          If errorString <> "" Then
 1565              On Error GoTo errorHandler
 1566              Err.Raise Number:=OpenSolver_SolveError, Source:=errorPrefix, Description:=errorString
@@ -1556,7 +1556,7 @@ Sub SolveModel_LinearLocal(ModelFilePathName As String, SolveRelaxation As Boole
 1570          logFileName = "log1.tmp"
 1571          logCommand = MakePathSafe(GetTempFilePath(logFileName))
          
-1569          ExternalSolverPathName = CreateSolveScript(Solver, SolutionFilePathName, ExtraParametersString, SolveOptions, Me)
+1569          ExternalSolverPathName = CreateSolveScript(Solver, SolutionFilePathName, ExtraParameters, SolveOptions, Me)
 
               
               Dim ExecutionCompleted As Boolean
@@ -1712,7 +1712,7 @@ Sub WriteLPFile(ModelFilePathName As String, SolveRelaxation As Boolean, errorSt
               'Next var
 1660          With SparseA(row)
 1661              For i = 1 To .Count
-1662                  var = .index(i)
+1662                  var = .Index(i)
 1663                  coeff = .Coefficient(i)
                       VarName = ValidLPFileVarName(VarNames(var))
                       If AssumeNonNegativeVars Then
@@ -1968,7 +1968,7 @@ Sub WriteAMPLFile(ModelFilePathName As String, SolveRelaxation As Boolean, error
                ' Gather variables
 1841           With SparseA(row)
 1842               For i = 1 To .Count
-1843                   var = .index(i)
+1843                   var = .Index(i)
 1844                   coeff = .Coefficient(i)
 1845                   Line = Line & StrEx(coeff) & " * " & ValidLPFileVarName(VarNames(var)) & " "
 1846               Next i
@@ -2188,7 +2188,7 @@ Sub WriteModelToSheet()
               'Next var
 1968      With SparseA(row)
 1969          For i = 1 To .Count
-1970              var = .index(i)
+1970              var = .Index(i)
 1971              coeff = .Coefficient(i)
 1972              Worksheets("Model").Cells(4 + row, 1 + var) = coeff
 1973          Next i
@@ -2279,13 +2279,13 @@ errorHandler:
 End Function
 
 'Iain dunning
-Public Function TestKeyExists(ByRef col As Collection, key As String) As Boolean
+Public Function TestKeyExists(ByRef col As Collection, Key As String) As Boolean
           
           'MsgBox Key
     On Error GoTo doesntExist:
           Dim Item As Variant
           
-2020      Set Item = col(key)
+2020      Set Item = col(Key)
           
 2021      TestKeyExists = True
 2022      Exit Function
@@ -2404,7 +2404,7 @@ Sub CheckLinearityOfModel()
 2090                  If Abs(ValueOne(row).Coefficient(i) - ValueZero(row).Coefficient(i)) / (1 + Abs(ValueOne(row).Coefficient(i))) > EPSILON _
                       And Abs(ValueOne(row).Coefficient(i) - ValueTen(row).Coefficient(i)) / (1 + Abs(ValueOne(row).Coefficient(i))) > EPSILON Then
 2091                      GetConstraintFromRow row, constraint, instance
-2092                      If NonLinearityCount <= 10 Then AddNonLinearInfoToString ValueOne(row).index(i), NonLinearInformation, FirstVar, constraint, instance
+2092                      If NonLinearityCount <= 10 Then AddNonLinearInfoToString ValueOne(row).Index(i), NonLinearInformation, FirstVar, constraint, instance
 2093                      FirstVar = False
 2094                      RowIsNonLinear(row) = True
 2095                  End If
@@ -2466,7 +2466,7 @@ End Sub
 Function TestExistanceOfEntry(ValueZero, ValueOne, ValueTen, i) As Boolean
           'Check if ALL the index exists
 2143      On Error GoTo errorHandler
-2144      If ValueZero.index(i) <> 0 And ValueOne.index(i) <> 0 And ValueTen.index(i) <> 0 Then
+2144      If ValueZero.Index(i) <> 0 And ValueOne.Index(i) <> 0 And ValueTen.Index(i) <> 0 Then
 2145          TestExistanceOfEntry = True
 2146      End If
 errorHandler:
@@ -2479,11 +2479,11 @@ Function GetEntry(ValueZero, ValueOne, ValueTen, i) As Long
           'Return the i'th entry from any one of these arrays; it may not exist in all of them
 2150      On Error Resume Next
 2151      If i <= ValueZero.Count Then
-2152          GetEntry = ValueZero.index(i)
+2152          GetEntry = ValueZero.Index(i)
 2153      ElseIf i <= ValueOne.Count Then
-2154          GetEntry = ValueOne.index(i)
+2154          GetEntry = ValueOne.Index(i)
 2155      ElseIf i <= ValueTen.Count Then
-2156          GetEntry = ValueTen.index(i)
+2156          GetEntry = ValueTen.Index(i)
 2157      End If
 End Function
 

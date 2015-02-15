@@ -154,17 +154,17 @@ Function HighlightRange(r As Range, label As String, HighlightColor As Long, Opt
           
           Const HighlightingOffsetStep = 1
           ' We offset our highlighting so that successive highlights are still visible
-          Dim Offset As Double, key As String
-3069      key = r.Address(RowAbsolute:=False, ColumnAbsolute:=False)
+          Dim Offset As Double, Key As String
+3069      Key = r.Address(RowAbsolute:=False, ColumnAbsolute:=False)
 3070      Offset = 0
 3071      On Error Resume Next
-3072      Offset = colHighlightOffsets(key) ' eg A1
+3072      Offset = colHighlightOffsets(Key) ' eg A1
 3073      If Err.Number <> 0 Then
               ' Item does not exist in collection create it, with an offset of 2 ready to use next time
-3074          colHighlightOffsets.Add HighlightingOffsetStep, key
+3074          colHighlightOffsets.Add HighlightingOffsetStep, Key
 3075      Else
-3076          colHighlightOffsets.Remove key
-3077          colHighlightOffsets.Add Offset + HighlightingOffsetStep, key
+3076          colHighlightOffsets.Remove Key
+3077          colHighlightOffsets.Add Offset + HighlightingOffsetStep, Key
 3078      End If
 3079      On Error GoTo 0
           
@@ -232,7 +232,7 @@ Function HighlightRange(r As Range, label As String, HighlightColor As Long, Opt
 3124        r.Worksheet.Shapes.AddShape(msoShapeRectangle, l + Offset, top2, right - l, height).Name = shapeName
 3125    Else
             'If the box is a bound we name it after the cell that it is in
-3126        shapeName = ShapeNamePrefix & key
+3126        shapeName = ShapeNamePrefix & Key
 3127        On Error Resume Next
             Dim tmpName As String
 3128        tmpName = r.Worksheet.Shapes(shapeName).Name
@@ -296,7 +296,7 @@ endLoop:
 3173    Next i
 3174      Else
 3175    For i = firstShapeIndex To ShapeIndex
-3176        shapeNames(i - firstShapeIndex + 1) = ShapeNamePrefix & key
+3176        shapeNames(i - firstShapeIndex + 1) = ShapeNamePrefix & Key
 3177    Next i
 3178      End If
 3179      Set HighlightRange = r.Worksheet.Shapes.Range(shapeNames)
@@ -815,13 +815,13 @@ errorHandler:
 3456      Resume
 End Function
 'Iain dunning
-Public Function TestKeyExists(ByRef col As Collection, key As String) As Boolean
+Public Function TestKeyExists(ByRef col As Collection, Key As String) As Boolean
           
           'MsgBox Key
     On Error GoTo doesntExist:
           Dim Item As Variant
           
-3457      Set Item = col(key)
+3457      Set Item = col(Key)
           
 3458      TestKeyExists = True
 3459      Exit Function

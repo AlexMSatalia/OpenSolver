@@ -26,17 +26,17 @@ Public Property Get NewEnum() As IUnknown
 5469      Set NewEnum = colTokens.[_NewEnum]
 End Property
 
-Public Sub Add(Token As Token, Optional key As Variant)
-5470      colTokens.Add Token, key
+Public Sub Add(Token As Token, Optional Key As Variant)
+5470      colTokens.Add Token, Key
 5471      Set Token.Parent = Me
 End Sub
 
-Public Sub Remove(index As Variant)
-5472      colTokens.Remove index
+Public Sub Remove(Index As Variant)
+5472      colTokens.Remove Index
 End Sub
 
-Function Item(index As Variant) As Token
-5473      Set Item = colTokens.Item(index)
+Function Item(Index As Variant) As Token
+5473      Set Item = colTokens.Item(Index)
 End Function
 
 Property Get Count() As Long

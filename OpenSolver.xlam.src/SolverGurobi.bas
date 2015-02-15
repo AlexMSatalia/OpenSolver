@@ -223,7 +223,7 @@ End Function
 Function ReadModel_Gurobi(SolutionFilePathName As String, errorString As String, s As COpenSolver) As Boolean
           
 6448      ReadModel_Gurobi = False
-          Dim Line As String, index As Long
+          Dim Line As String, Index As Long
 6449      On Error GoTo readError
           Dim solutionExpected As Boolean
 6450      solutionExpected = True
@@ -279,17 +279,17 @@ Function ReadModel_Gurobi(SolutionFilePathName As String, errorString As String,
               Dim NumVar As Long
 6503          Line Input #1, Line  ' Optimal - objective value              22
 6504          If Line <> "" Then
-6505              index = InStr(Line, "=")
+6505              Index = InStr(Line, "=")
                   Dim ObjectiveValue As Double
-6506              ObjectiveValue = Val(Mid(Line, index + 2))
+6506              ObjectiveValue = Val(Mid(Line, Index + 2))
                   Dim i As Long
 6507              i = 1
 6508              While Not EOF(1)
 6509                  Line Input #1, Line
-6510                  index = InStr(Line, " ")
-6511                  s.FinalVarValueP(i) = Val(Mid(Line, index + 1))
+6510                  Index = InStr(Line, " ")
+6511                  s.FinalVarValueP(i) = Val(Mid(Line, Index + 1))
                       'Get the variable name
-6512                  s.VarCellP(i) = left(Line, index - 1)
+6512                  s.VarCellP(i) = left(Line, Index - 1)
 6513                  If left(s.VarCellP(i), 1) = "_" Then
                           ' Strip any _ character added to make a valid name
 6514                      s.VarCellP(i) = Mid(s.VarCellP(i), 2)

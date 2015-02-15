@@ -114,8 +114,8 @@ Dim NonZeroConstraintCount() As Long ' An array of size n_var counting the numbe
 Dim BinaryVars() As Boolean
 
 ' Public accessor for VariableCollectionIndexToNLIndex
-Public Property Get GetVariableNLIndex(index As Long) As Long
-7458      GetVariableNLIndex = VariableCollectionIndexToNLIndex(index)
+Public Property Get GetVariableNLIndex(Index As Long) As Long
+7458      GetVariableNLIndex = VariableCollectionIndexToNLIndex(Index)
 End Property
 
 ' Creates .nl file and solves model
@@ -518,8 +518,8 @@ Sub MakeVariableMap()
 7677      Set VariableMap = New Collection
 7678      Set VariableMapRev = New Collection
           
-          Dim index As Long, var As Long
-7679      index = 0
+          Dim Index As Long, var As Long
+7679      Index = 0
           
           ' We loop through the variables and arrange them in the required order:
           '     1st - non-linear continuous
@@ -537,7 +537,7 @@ Sub MakeVariableMap()
 7684          DoEvents
               
 7685          var = NonLinearContinuous(i)
-7686          AddVariable CellNames(var), index, var
+7686          AddVariable CellNames(var), Index, var
 7687      Next i
           
           ' Non-linear integer
@@ -548,7 +548,7 @@ Sub MakeVariableMap()
 7692          DoEvents
               
 7693          var = NonLinearInteger(i)
-7694          AddVariable CellNames(var), index, var
+7694          AddVariable CellNames(var), Index, var
 7695      Next i
           
           ' Linear continuous
@@ -559,7 +559,7 @@ Sub MakeVariableMap()
 7700          DoEvents
               
 7701          var = LinearContinuous(i)
-7702          AddVariable CellNames(var), index, var
+7702          AddVariable CellNames(var), Index, var
 7703      Next i
           
           ' Linear binary
@@ -570,7 +570,7 @@ Sub MakeVariableMap()
 7708          DoEvents
               
 7709          var = LinearBinary(i)
-7710          AddVariable CellNames(var), index, var
+7710          AddVariable CellNames(var), Index, var
 7711      Next i
           
           ' Linear integer
@@ -581,7 +581,7 @@ Sub MakeVariableMap()
 7716          DoEvents
               
 7717          var = LinearInteger(i)
-7718          AddVariable CellNames(var), index, var
+7718          AddVariable CellNames(var), Index, var
 7719      Next i
           
           ' ==============================================
@@ -596,12 +596,12 @@ End Sub
 '   variable name:            cellName
 '   .nl variable index:       index
 '   parsed variable index:    i
-Sub AddVariable(cellName As String, index As Long, i As Long)
+Sub AddVariable(cellName As String, Index As Long, i As Long)
           ' Update variable maps
-7723      VariableMap.Add CStr(index), cellName
-7724      VariableMapRev.Add cellName, CStr(index)
-7725      VariableNLIndexToCollectionIndex(index) = i
-7726      VariableCollectionIndexToNLIndex(i) = index
+7723      VariableMap.Add CStr(Index), cellName
+7724      VariableMapRev.Add cellName, CStr(Index)
+7725      VariableNLIndexToCollectionIndex(Index) = i
+7726      VariableCollectionIndexToNLIndex(i) = Index
           
           ' Update max length of variable name
 7727      If Len(cellName) > maxcolnamelen_ Then
@@ -609,7 +609,7 @@ Sub AddVariable(cellName As String, index As Long, i As Long)
 7729      End If
           
           ' Increase index for the next variable
-7730      index = index + 1
+7730      Index = Index + 1
 End Sub
 
 ' Creates maps from constraint name (e.g. c1_Test1_D4) to .nl constraint index (0 to n_con - 1) and vice-versa, and
@@ -620,8 +620,8 @@ Sub MakeConstraintMap()
 7732      Set ConstraintMapRev = New Collection
 7733      ReDim ConstraintIndexToTreeIndex(n_con)
           
-          Dim index As Long, i As Long, cellName As String
-7734      index = 0
+          Dim Index As Long, i As Long, cellName As String
+7734      Index = 0
           
           ' We loop through the constraints and arrange them in the required order:
           '     1st - non-linear
@@ -646,7 +646,7 @@ Sub MakeConstraintMap()
 7745              Else
 7746                  cellName = "seek_obj_" & ConvertCellToStandardName(m.ObjectiveCell)
 7747              End If
-7748              AddConstraint cellName, index, i
+7748              AddConstraint cellName, Index, i
 7749          End If
 7750      Next i
           
@@ -667,7 +667,7 @@ Sub MakeConstraintMap()
 7761              Else
 7762                  cellName = "seek_obj_" & ConvertCellToStandardName(m.ObjectiveCell)
 7763              End If
-7764              AddConstraint cellName, index, i
+7764              AddConstraint cellName, Index, i
 7765          End If
 7766      Next i
 End Sub
@@ -676,11 +676,11 @@ End Sub
 '   constraint name:          cellName
 '   .nl constraint index:     index
 '   parsed constraint index:  i
-Sub AddConstraint(cellName As String, index As Long, i As Long)
+Sub AddConstraint(cellName As String, Index As Long, i As Long)
           ' Update constraint maps
-7767      ConstraintMap.Add index, cellName
-7768      ConstraintMapRev.Add cellName, CStr(index)
-7769      ConstraintIndexToTreeIndex(index) = i
+7767      ConstraintMap.Add Index, cellName
+7768      ConstraintMapRev.Add cellName, CStr(Index)
+7769      ConstraintIndexToTreeIndex(Index) = i
           
           ' Update max length
 7770      If Len(cellName) > maxrownamelen_ Then
@@ -688,7 +688,7 @@ Sub AddConstraint(cellName As String, index As Long, i As Long)
 7772      End If
           
           ' Increase index for next constraint
-7773      index = index + 1
+7773      Index = Index + 1
 End Sub
 
 ' Processes all constraint formulae into the .nl model formats
@@ -1714,7 +1714,7 @@ End Sub
 Function ReadModel_NL(SolutionFilePathName As String, errorString As String, s As COpenSolverParsed) As Boolean
     ReadModel_NL = False
     
-    Dim Line As String, index As Long
+    Dim Line As String, Index As Long
     On Error GoTo readError
     Dim solutionExpected As Boolean
     solutionExpected = True

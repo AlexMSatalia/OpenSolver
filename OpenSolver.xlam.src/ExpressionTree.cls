@@ -36,22 +36,22 @@ Public Enum ExpressionTreeNodeLinearity
 End Enum
 
 ' Getter method for children
-Public Function GetChild(index As Long) As ExpressionTree
+Public Function GetChild(Index As Long) As ExpressionTree
           Dim obj As ExpressionTree
-8510      Set obj = Children(index)
+8510      Set obj = Children(Index)
 8511      Set GetChild = obj
 End Function
 
 ' Setter method for children
-Public Sub SetChild(index As Long, obj As ExpressionTree)
+Public Sub SetChild(Index As Long, obj As ExpressionTree)
 8512      If NumChildren = 0 Then
-8513          ReDim Preserve Children(index)
-8514          NumChildren = index
-8515      ElseIf index > UBound(Children) Then
-8516          ReDim Preserve Children(index)
-8517          NumChildren = index
+8513          ReDim Preserve Children(Index)
+8514          NumChildren = Index
+8515      ElseIf Index > UBound(Children) Then
+8516          ReDim Preserve Children(Index)
+8517          NumChildren = Index
 8518      End If
-8519      Set Children(index) = obj
+8519      Set Children(Index) = obj
 End Sub
 
 Public Property Get GetNumChildren() As Long
@@ -166,10 +166,10 @@ End Function
 ' Extract all variables from the ExpressionTree into a LinearConstraintNL
 Sub ExtractVariables(constraint As LinearConstraintNL)
 8577      If NodeType = ExpressionTreeVariable Then
-              Dim index As Long
-8578          index = VariableIndex(NodeText)
-8579          If Not constraint.VariablePresent(index) Then
-8580              constraint.VariablePresent(index) = True
+              Dim Index As Long
+8578          Index = VariableIndex(NodeText)
+8579          If Not constraint.VariablePresent(Index) Then
+8580              constraint.VariablePresent(Index) = True
 8581          End If
 8582      End If
           
@@ -625,15 +625,15 @@ Public Sub EvaluateConstantOperator()
                   
 8836          Case "alldiff"
                   ' Returns 1 if all arguments are different
-                  Dim Args As New Collection, key As String
+                  Dim Args As New Collection, Key As String
 8837              For i = 1 To NumChildren
                       ' Create key using the var type so we distinguish between 1.23 and "1.23"
-8838                  key = CStr(VarType(Values(i))) & CStr(Values(i))
-8839                  If TestKeyExists(Args, key) Then
+8838                  Key = CStr(VarType(Values(i))) & CStr(Values(i))
+8839                  If TestKeyExists(Args, Key) Then
 8840                      NewValue = 0 ' Duplicate found
 8841                      GoTo FinishNode
 8842                  Else
-8843                      Args.Add 0, key ' Value doesn't matter, we just want to track the key
+8843                      Args.Add 0, Key ' Value doesn't matter, we just want to track the key
 8844                  End If
 8845              Next i
                   
@@ -709,11 +709,11 @@ Public Function PruneLinearTrees(LinearTrees As Collection, Optional NegativeTre
 End Function
 
 ' Sets an ExpressionTree to be one of its children
-Sub SetTreeToChild(index As Long)
+Sub SetTreeToChild(Index As Long)
           ' We can't clear all children of the current tree while referring to one of it's children
           ' We therefore need to make a copy of the child tree before we clear the tree and set it to the child
           Dim NewTree As ExpressionTree
-8886      Set NewTree = Children(index).Clone
+8886      Set NewTree = Children(Index).Clone
 8887      SetExpressionTree NewTree
 End Sub
 

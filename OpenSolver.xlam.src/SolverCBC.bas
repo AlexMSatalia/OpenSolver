@@ -283,7 +283,7 @@ Function ReadModel_CBC(SolutionFilePathName As String, errorString As String, s 
               ' This gives the non-zero? variable values
               ' Lines like:       0 AZ70                  15                      0
               ' ...being? : Index Name Value ReducedCost
-              Dim Line As String, SplitLine() As String, index As Double, NameValue As String, value As Double, CBCConstraintIndex As Long
+              Dim Line As String, SplitLine() As String, Index As Double, NameValue As String, value As Double, CBCConstraintIndex As Long
 6191          If s.bGetDuals Then
                   Dim j As Long, row As Long, i As Long
 6192              CBCConstraintIndex = 0
@@ -368,7 +368,7 @@ Function ReadModel_CBC(SolutionFilePathName As String, errorString As String, s 
 6255                  i = i + 1
 6256              Wend
                   ' Get the index of the variable
-6257              index = Val(SplitLine(i))
+6257              Index = Val(SplitLine(i))
 6258              i = i + 1
 6259              While SplitLine(i) = ""
 6260                  i = i + 1
