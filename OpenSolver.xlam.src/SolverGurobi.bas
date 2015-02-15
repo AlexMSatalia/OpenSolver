@@ -194,8 +194,8 @@ ErrHandler:
 6439      Close #1
 6440      Err.Raise Err.Number, Err.Source, Err.Description & IIf(Erl = 0, "", " (at line " & Erl & ")")
 End Function
-Function CreateSolveScript_Gurobi(SolutionFilePathName As String, ExtraParametersString As String, SolveOptions As SolveOptionsType) As String
-          Dim SolverString As String, CommandLineRunString As String, PrintingOptionString As String
+Function CreateSolveScript_Gurobi(SolutionFilePathName As String, ExtraParameters As Dictionary, SolveOptions As SolveOptionsType) As String
+          Dim SolverString As String, CommandLineRunString As String, PrintingOptionString As String, ExtraParametersString As String
 6441      SolverString = MakePathSafe(SolverFilePath_Gurobi())
 
 6442      CommandLineRunString = MakePathSafe(SolverPythonScriptPath_Gurobi())

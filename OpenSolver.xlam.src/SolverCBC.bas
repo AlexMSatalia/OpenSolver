@@ -147,37 +147,17 @@ Function SolverBitness_CBC() As String
 #End If
 End Function
 
-Function GetExtraParameters_CBC(sheet As Worksheet, errorString As String) As String
-          ' The user can define a set of parameters they want to pass to CBC; this gets them as a string
-          ' Note: The named range MUST be on the current sheet
-          Dim CBCParametersRange As Range, CBCExtraParametersString As String, i As Long
-6103      errorString = ""
-6104      If GetNamedRangeIfExistsOnSheet(sheet, "OpenSolver_CBCParameters", CBCParametersRange) Then
-6105          If CBCParametersRange.Columns.Count <> 2 Then
-6106              errorString = "The range OpenSolver_CBCParameters must be a two-column table."
-6107              Exit Function
-6108          End If
-6109          For i = 1 To CBCParametersRange.Rows.Count
-                  Dim ParamName As String, ParamValue As String
-6110              ParamName = Trim(CBCParametersRange.Cells(i, 1))
-6111              If ParamName <> "" Then
-6112                  If left(ParamName, 1) <> "-" Then ParamName = "-" & ParamName
-6113                  ParamValue = Trim(CBCParametersRange.Cells(i, 2))
-6114                  CBCExtraParametersString = CBCExtraParametersString & " " & ParamName & " " & ConvertFromCurrentLocale(ParamValue)
-6115              End If
-6116          Next i
-6117      End If
-6118      GetExtraParameters_CBC = CBCExtraParametersString
-End Function
-
-Function CreateSolveScript_CBC(SolutionFilePathName As String, ExtraParametersString As String, SolveOptions As SolveOptionsType, s As COpenSolver) As String
-          Dim CommandLineRunString As String, PrintingOptionString As String
+Function CreateSolveScript_CBC(SolutionFilePathName As String, ExtraParameters As Dictionary, SolveOptions As SolveOptionsType, s As COpenSolver) As String
+          Dim CommandLineRunString As String, PrintingOptionString As String, ExtraParametersString As String
+          
+          ExtraParametersString = ParametersToString_CBC(ExtraParameters)
+          
           ' have to split up the command line as excel couldn't have a string longer than 255 characters??
 6119      CommandLineRunString = " -directory " & MakePathSafe(left(GetTempFolder, Len(GetTempFolder) - 1)) _
                                & " -import " & MakePathSafe(s.ModelFilePathName) _
                                & " -ratioGap " & str(SolveOptions.Tolerance) _
                                & " -seconds " & str(SolveOptions.MaxTime) _
-                               & ExtraParametersString _
+                               & " " & ExtraParametersString _
                                & " -solve " _
                                & IIf(s.bGetDuals, " -printingOptions all ", "") _
                                & " -solution " & MakePathSafe(SolutionFilePathName)
@@ -194,6 +174,14 @@ Function CreateSolveScript_CBC(SolutionFilePathName As String, ExtraParametersSt
 6123      CreateScriptFile scriptFile, scriptFileContents
           
 6124      CreateSolveScript_CBC = scriptFile
+End Function
+
+Function ParametersToString_CBC(ExtraParameters As Dictionary) As String
+          Dim ParamPair As KeyValuePair
+          For Each ParamPair In ExtraParameters.KeyValuePairs
+              ParametersToString_CBC = ParametersToString_CBC & IIf(left(ParamPair.Key, 1) <> "-", "-", "") & ParamPair.Key & " " & ParamPair.value & " "
+          Next
+          ParametersToString_CBC = Trim(ParametersToString_CBC)
 End Function
 
 Function ReadModel_CBC(SolutionFilePathName As String, errorString As String, s As COpenSolver) As Boolean
@@ -512,10 +500,14 @@ Sub LaunchCommandLine_CBC()
 6358          End If
 6359      End If
           
-          Dim ExtraParametersString As String
+          Dim ExtraParametersString As String, ExtraParameters As New Dictionary
 6360      If WorksheetAvailable Then
-6361          ExtraParametersString = GetExtraParameters_CBC(ActiveSheet, errorString)
-6362          If errorString <> "" Then ExtraParametersString = ""
+              GetExtraParameters "CBC", ActiveSheet, ExtraParameters, errorString
+              If errorString <> "" Then
+                  ExtraParametersString = ""
+              Else
+6361              ExtraParametersString = ParametersToString_CBC(ExtraParameters)
+6362          End If
 6363      End If
              
           Dim CBCRunString As String

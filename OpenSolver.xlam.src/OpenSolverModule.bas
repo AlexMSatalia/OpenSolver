@@ -2037,3 +2037,24 @@ End Sub
 Function InStrText(String1 As String, String2 As String)
     InStrText = InStr(1, String1, String2, vbTextCompare)
 End Function
+
+Sub GetExtraParameters(Solver As String, sheet As Worksheet, ExtraParameters As Dictionary, errorString As String)
+          ' The user can define a set of parameters they want to pass to the solver; this gets them as a string
+          ' Note: The named range MUST be on the current sheet
+          Dim ParametersRange As Range, ExtraParametersString As String, i As Long
+6103      errorString = ""
+6104      If GetNamedRangeIfExistsOnSheet(sheet, "OpenSolver_" & Solver & "Parameters", ParametersRange) Then
+6105          If ParametersRange.Columns.Count <> 2 Then
+6106              errorString = "The range OpenSolver_CBCParameters must be a two-column table."
+6107              Exit Sub
+6108          End If
+6109          For i = 1 To ParametersRange.Rows.Count
+                  Dim ParamName As String, ParamValue As String
+6110              ParamName = Trim(ParametersRange.Cells(i, 1))
+6111              If ParamName <> "" Then
+6112                  ParamValue = ConvertFromCurrentLocale(Trim(ParametersRange.Cells(i, 2)))
+6114                  ExtraParameters.Add ParamName, ParamValue
+6115              End If
+6116          Next i
+6117      End If
+End Sub

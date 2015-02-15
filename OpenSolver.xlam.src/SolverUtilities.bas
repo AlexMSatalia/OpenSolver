@@ -219,22 +219,12 @@ Function DoBackSubstitution(Solver As String) As Boolean
 6713      DoBackSubstitution = False
 End Function
 
-
-Function GetExtraParameters(Solver As String, sheet As Worksheet, errorString As String) As String
-6714      Select Case Solver
-          Case "CBC"
-6715          GetExtraParameters = GetExtraParameters_CBC(sheet, errorString)
-6716      Case Else
-6717          GetExtraParameters = ""
-6718      End Select
-End Function
-
-Function CreateSolveScript(Solver As String, SolutionFilePathName As String, ExtraParametersString As String, SolveOptions As SolveOptionsType, s As COpenSolver) As String
+Function CreateSolveScript(Solver As String, SolutionFilePathName As String, ExtraParameters As Dictionary, SolveOptions As SolveOptionsType, s As COpenSolver) As String
 6719      Select Case Solver
           Case "CBC"
-6720          CreateSolveScript = CreateSolveScript_CBC(SolutionFilePathName, ExtraParametersString, SolveOptions, s)
+6720          CreateSolveScript = CreateSolveScript_CBC(SolutionFilePathName, ExtraParameters, SolveOptions, s)
 6721      Case "Gurobi"
-6722          CreateSolveScript = CreateSolveScript_Gurobi(SolutionFilePathName, ExtraParametersString, SolveOptions)
+6722          CreateSolveScript = CreateSolveScript_Gurobi(SolutionFilePathName, ExtraParameters, SolveOptions)
 6723      End Select
 End Function
 
