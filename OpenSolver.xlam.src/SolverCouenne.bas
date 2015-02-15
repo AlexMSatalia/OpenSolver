@@ -138,21 +138,5 @@ Function SolverBitness_Couenne() As String
 End Function
 
 Function CreateSolveScript_Couenne(ModelFilePathName As String, SolveOptions As SolveOptionsType) As String
-          ' Create a script to cd to temp and run "/path/to/couenne.exe /path/to/<ModelFilePathName>"
-          Dim SolverString As String, CommandLineRunString As String, PrintingOptionString As String
-8410      SolverString = MakePathSafe(SolverFilePath_Couenne())
-
-8411      CommandLineRunString = MakePathSafe(ModelFilePathName)
-          
-          Dim scriptFile As String, scriptFileContents As String
-8413      scriptFile = ScriptFilePath_Couenne()
-
-8414      scriptFileContents = "cd " & MakePathSafe(GetTempFolder()) & " && " & _
-                               SolverString & " " & CommandLineRunString
-8415      CreateScriptFile scriptFile, scriptFileContents
-          
-8416      CreateSolveScript_Couenne = scriptFile
-
-          ' Create the options file in the temp folder
-          OutputOptionsFile OptionsFilePath_Couenne(), SolveOptions
+    CreateSolveScript_Couenne = CreateSolveScript_NL(ModelFilePathName, SolveOptions)
 End Function

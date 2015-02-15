@@ -15,6 +15,7 @@ Public Const SolverName_Bonmin = "bonmin.exe"
 Public Const SolverScript_Bonmin = "bonmin" & ScriptExtension
 
 Public Const SolutionFile_Bonmin = "model.sol"
+Public Const OptionsFile_Bonmin = "bonmin.opt"
 
 Public Const UsesPrecision_Bonmin = False
 Public Const UsesIterationLimit_Bonmin = True
@@ -27,6 +28,10 @@ End Function
 
 Function SolutionFilePath_Bonmin() As String
 9022      SolutionFilePath_Bonmin = GetTempFilePath(SolutionFile_Bonmin)
+End Function
+
+Function OptionsFilePath_Bonmin() As String
+          OptionsFilePath_Bonmin = GetTempFilePath(OptionsFile_Bonmin)
 End Function
 
 Sub CleanFiles_Bonmin(errorPrefix As String)
@@ -131,18 +136,6 @@ Function SolverBitness_Bonmin() As String
 #End If
 End Function
 
-Function CreateSolveScript_Bonmin(ModelFilePathName As String) As String
-          ' Create a script to run "/path/to/bonmin.exe /path/to/<ModelFilePathName>"
-
-          Dim SolverString As String, CommandLineRunString As String, PrintingOptionString As String
-9072      SolverString = MakePathSafe(SolverFilePath_Bonmin())
-
-9073      CommandLineRunString = MakePathSafe(ModelFilePathName)
-          
-          Dim scriptFile As String, scriptFileContents As String
-9075      scriptFile = ScriptFilePath_Bonmin()
-9076      scriptFileContents = SolverString & " " & CommandLineRunString
-9077      CreateScriptFile scriptFile, scriptFileContents
-          
-9078      CreateSolveScript_Bonmin = scriptFile
+Function CreateSolveScript_Bonmin(ModelFilePathName As String, SolveOptions As SolveOptionsType) As String
+    CreateSolveScript_Bonmin = CreateSolveScript_NL(ModelFilePathName, SolveOptions)
 End Function

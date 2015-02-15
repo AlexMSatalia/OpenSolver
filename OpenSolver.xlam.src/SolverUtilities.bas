@@ -240,7 +240,7 @@ End Function
 Function CreateSolveScriptParsed(Solver As String, SolutionFilePathName As String, SolveOptions As SolveOptionsType) As String
 6724      Select Case Solver
           Case "Bonmin"
-6725          CreateSolveScriptParsed = CreateSolveScript_Bonmin(SolutionFilePathName)
+6725          CreateSolveScriptParsed = CreateSolveScript_Bonmin(SolutionFilePathName, SolveOptions)
 6726      Case "Couenne"
 6727          CreateSolveScriptParsed = CreateSolveScript_Couenne(SolutionFilePathName, SolveOptions)
 6728      End Select
@@ -434,5 +434,14 @@ Function UsesTolerance(Solver As String) As String
         UsesTolerance = UsesTolerance_NeosCou
     Case "NeosBon"
         UsesTolerance = UsesTolerance_NeosBon
+    End Select
+End Function
+
+Function OptionsFilePath(Solver As String) As String
+    Select Case Solver
+    Case "Bonmin"
+        OptionsFilePath = OptionsFilePath_Bonmin
+    Case "Couenne"
+        OptionsFilePath = OptionsFilePath_Couenne
     End Select
 End Function

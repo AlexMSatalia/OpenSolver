@@ -1851,3 +1851,24 @@ ErrHandler:
 8497      TryParseLogs = False
 End Function
 
+Function CreateSolveScript_NL(ModelFilePathName As String, SolveOptions As SolveOptionsType) As String
+    ' Create a script to cd to temp and run "/path/to/couenne.exe /path/to/<ModelFilePathName>"
+    Dim SolverString As String, CommandLineRunString As String, PrintingOptionString As String
+    SolverAvailable m.Solver, SolverString
+    SolverString = MakePathSafe(SolverString)
+    
+    CommandLineRunString = MakePathSafe(ModelFilePathName)
+       
+    Dim scriptFile As String, scriptFileContents As String
+    scriptFile = ScriptFilePath(m.Solver)
+    
+    scriptFileContents = "cd " & MakePathSafe(GetTempFolder()) & " && " & _
+                         SolverString & " " & CommandLineRunString
+    CreateScriptFile scriptFile, scriptFileContents
+       
+    CreateSolveScript_NL = scriptFile
+    
+    ' Create the options file in the temp folder
+    OutputOptionsFile OptionsFilePath(m.Solver), SolveOptions
+End Function
+
