@@ -23,8 +23,8 @@ Public Const SensitivityFile_Gurobi = "sensitivityData.sol"
 
 Public Const UsesPrecision_Gurobi = False
 Public Const UsesIterationLimit_Gurobi = False
-Public Const UsesTolerance_Gurobi = False
-Public Const UsesTimeLimit_Gurobi = False
+Public Const UsesTolerance_Gurobi = True
+Public Const UsesTimeLimit_Gurobi = True
 
 'Gurobi return status codes
 Public Enum GurobiResult
@@ -208,11 +208,12 @@ Function CreateSolveScript_Gurobi(SolutionFilePathName As String, ExtraParameter
           '             & " " & ModelFilePathName
           '
           '========================================================================================
-6443      PrintingOptionString = ""
+6443      PrintingOptionString = "TimeLimit=" & Trim(str(SolveOptions.MaxTime)) & " " & _
+                                 "MIPGap=" & Trim(str(SolveOptions.Tolerance))
           
           Dim scriptFile As String, scriptFileContents As String
 6444      scriptFile = ScriptFilePath_Gurobi()
-6445      scriptFileContents = SolverString & " " & CommandLineRunString & PrintingOptionString
+6445      scriptFileContents = SolverString & " " & CommandLineRunString & " " & PrintingOptionString
 6446      CreateScriptFile scriptFile, scriptFileContents
           
 6447      CreateSolveScript_Gurobi = scriptFile

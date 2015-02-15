@@ -1,7 +1,14 @@
 from gurobipy import *
+import argparse
 import os
 import sys
 import tempfile
+
+parser = argparse.ArgumentParser()
+parser.add_argument("params", help="Additional Gurobi parameters to set", nargs="*")
+
+args = parser.parse_args()
+params_list = args.params
 
 if os.name == 'nt':
     isWindows = True
@@ -17,6 +24,10 @@ if not isWindows:
 m = Model ('myModel')
 m = read(os.path.join(tFile, 'model.lp'))
 path = os.path.join(tFile, 'modelsolution.sol')
+
+for param in params_list:
+    name, value = param.split('=')
+    m.setParam(name, float(value))
 
 # Catch any GurobiError that occurs when solving
 try:
