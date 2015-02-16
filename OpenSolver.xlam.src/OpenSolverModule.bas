@@ -484,20 +484,14 @@ errorHandler:
               ' See http://www.everythingaccess.com/tutorials.asp?ID=Bring-an-external-application-window-to-the-foreground
               '     for an example of finding a given running application's window
 
-              Dim f As UserForm
-#If Mac Then
-62            Set f = New MacUserFormInterrupt
-#Else
-63            Set f = New UserFormInterrupt
-#End If
 64            Application.Cursor = xlDefault
-65            f.Show
+65            UserFormInterrupt.Show
               'If msgbox("You have pressed the Escape key. Do you wish to cancel?", _
                          vbQuestion + vbYesNo + vbDefaultButton1, _
                          "OpenSolver: User Interrupt Occured...") = vbNo Then
               Dim StopSolving As Boolean
-66            StopSolving = f.Tag = vbCancel
-67            Unload f
+66            StopSolving = UserFormInterrupt.Tag = vbCancel
+67            Unload UserFormInterrupt
 68            Application.Cursor = xlWait
 69            If Not StopSolving Then
 70                Resume 'continue on from where error occured
