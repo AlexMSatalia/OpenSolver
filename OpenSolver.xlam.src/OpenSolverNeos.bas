@@ -85,7 +85,11 @@ Private Function CallNEOS_Windows(message As String, errorString As String)
           Dim time As Long
 6835      time = 0
 6836      While Done = False
-              If CallingNeos.Tag = "Cancelled" Then GoTo ExitSub
+              If CallingNeos.Tag = "Cancelled" Then
+                    CallNEOS_Windows = "NEOS solve was aborted"
+                    errorString = "Aborted"
+                    Exit Function
+              End If
               
 6837          DoEvents
               

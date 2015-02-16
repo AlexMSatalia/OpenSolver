@@ -1367,6 +1367,10 @@ Function SolveModel_Linear(SolveRelaxation As Boolean) As Long
 1448          SolveModel_LinearLocal ModelFilePathName, SolveRelaxation, errorString
 1449      End If
           
+          If errorString = "Aborted" Then
+              Err.Raise OpenSolver_UserCancelledError, errorPrefix, "Model solve cancelled by user."
+          End If
+          
           ' Perform a linearity check unless the user has requested otherwise
           Dim performLinearityCheck As Boolean, s As String
 1451      performLinearityCheck = True
@@ -1384,7 +1388,7 @@ Function SolveModel_Linear(SolveRelaxation As Boolean) As Long
             
           '=====================Write Sensitivity Tables=========================================================
 1463      If SolverHasSensitivityAnalysis(Solver) Then
-1464          If bGetDuals And SolveStatusString = "Optimal" Then
+1464          If bGetDuals And SolveStatus = OpenSolverResult.Optimal Then
                   'write the duals on the same sheet if the user has picked this option
 1465              If DualsOnSameSheet Then WriteConstraintListToSheet rConstraintList
                   'If the user wants a new sheet with the sensitivity data then call the functions that write this

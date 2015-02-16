@@ -214,7 +214,11 @@ CleanParsedModel:
 errorHandler:
 2825      Set OpenSolver = Nothing    ' Free any OpenSolver memory used
 2826      Application.Iteration = oldIterationMode
-2827      RunOpenSolver = OpenSolverResult.ErrorOccurred
+          If Err.Number = OpenSolver_UserCancelledError Then
+              RunOpenSolver = AbortedThruUserAction
+          Else
+2827          RunOpenSolver = OpenSolverResult.ErrorOccurred
+          End If
 #If Mac Then
           ' Reload error message from cache if they exist
           If OpenSolver_ErrNumber <> 0 Then Err.Number = OpenSolver_ErrNumber

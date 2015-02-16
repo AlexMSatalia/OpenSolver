@@ -255,7 +255,9 @@ End Function
 Function SolveModelParsed_NEOS(ModelFilePathName As String, Solver As String, s As COpenSolverParsed) As Boolean
           Dim solution As String, errorString As String
 7269      solution = CallNEOS(ModelFilePathName, Solver, errorString)
-7270      If errorString <> "" Then
+7270      If errorString = "Aborted" Then
+              Err.Raise OpenSolver_UserCancelledError, "Solving model on NEOS", "Solve aborted by user"
+          ElseIf errorString <> "" Then
 7271          MsgBox (errorString)
 7272          SolveModelParsed_NEOS = False
 7273          Exit Function
