@@ -41,6 +41,7 @@ Sub AutoLayout()
     Me.width = FormInterruptWidth
     
     With TextBox1
+        .Caption = "You have pressed the Escape key while the optimizer engine is running. Do you wish to stop solving this problem?"
         .Font.Name = FormFontName
         .Font.Size = FormFontSize
         .BackColor = FormBackColor
@@ -53,6 +54,7 @@ Sub AutoLayout()
     End With
     
     With CommandButtonContinue
+        .Caption = "Continue"
         .Font.Name = FormFontName
         .Font.Size = FormFontSize
         .width = FormButtonWidth
@@ -62,6 +64,7 @@ Sub AutoLayout()
     End With
     
     With CommandButtonAbort
+        .Caption = "Abort"
         .Font.Name = FormFontName
         .Font.Size = FormFontSize
         .width = FormButtonWidth
@@ -74,5 +77,8 @@ Sub AutoLayout()
     Me.width = Me.width + FormWindowMargin
     
     Me.BackColor = FormBackColor
+    
+    Me.Caption = "OpenSolver User Interrupt"
+    
     
 End Sub
