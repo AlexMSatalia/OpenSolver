@@ -453,6 +453,7 @@ Function RunExternalCommand(CommandString As String, Optional logPath As String,
               ' ret& = WaitForSingleObject(proc.hProcess, INFINITE)
 48            ret& = WaitForSingleObject(proc.hProcess, 50) ' Wait for up to 50 milliseconds
               ' Application.CheckAbort  ' We don't need this as the escape key already causes any error
+              DoEvents ' Keep Excel responsive
 49        Loop Until ret& <> 258
 
           ' Get the return code for the executable; http://msdn.microsoft.com/en-us/library/windows/desktop/ms683189%28v=vs.85%29.aspx
