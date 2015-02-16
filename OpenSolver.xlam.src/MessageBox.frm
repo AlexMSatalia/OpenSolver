@@ -24,10 +24,6 @@ Private Sub OKButton_Click()
 End Sub
 
 
-Private Sub TextBox1_Change()
-
-End Sub
-
 Private Sub TextBox2_Change()
 
 End Sub
