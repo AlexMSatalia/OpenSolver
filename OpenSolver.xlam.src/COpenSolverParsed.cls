@@ -38,6 +38,8 @@ Public Sub SolveModel(s As COpenSolver)
 7139      If s.ModelStatus <> ModelStatus_Built Then
 7140          Err.Raise Number:=OpenSolver_SolveError, Source:="Solving Parsed Solver Model", Description:="The model cannot be solved as it has not yet been built."
 7141      End If
+
+          Application.Cursor = xlWait
           
           ' Parse spreadsheet and build model
 7142      Set m = New CModelParsed
@@ -80,25 +82,24 @@ Public Sub SolveModel(s As COpenSolver)
 7167      s.SolveStatusString = SolveStatusString
           s.SolutionWasLoaded = SolutionWasLoaded
           
-7168      Application.StatusBar = False
-7169      Application.Calculation = xlCalculationAutomatic
-7170      Application.ScreenUpdating = True
-          
-7171      Exit Sub
+ExitSub:
+          Application.StatusBar = False
+          Application.Calculation = xlCalculationAutomatic
+          Application.ScreenUpdating = True
+          Application.Cursor = xlDefault
+          Exit Sub
 
 ErrHandler:
 7172      Application.StatusBar = False
 7173      Application.Calculation = xlCalculationAutomatic
 7174      Application.ScreenUpdating = True
+          Application.Cursor = xlDefault
 7175      SolveStatus = ErrorOccurred
           UpdateErrorCache Err.Number, Err.Source, Err.Description & IIf(Erl = 0, "", " (at line " & Erl & ")")
 7176      Err.Raise Err.Number, Err.Source, Err.Description & IIf(Erl = 0, "", " (at line " & Erl & ")")
 7177      Exit Sub
 
-ExitSub:
-7178      Application.StatusBar = False
-7179      Application.Calculation = xlCalculationAutomatic
-7180      Application.ScreenUpdating = True
+
 
 End Sub
 
