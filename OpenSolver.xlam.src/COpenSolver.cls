@@ -1938,9 +1938,7 @@ Sub WriteAMPLFile(ModelFilePathName As String, SolveRelaxation As Boolean, error
                    End If
 1818           End If
 1819       Next var
-           If Abs(objValue) > EPSILON Then
-               Line = Line & " " & StrEx(objValue)
-           End If
+           Line = Line & " " & StrEx(objValue)
            
            ' Objective function replaced with constraint if
 1820       If ObjectiveSense = TargetObjective Then
