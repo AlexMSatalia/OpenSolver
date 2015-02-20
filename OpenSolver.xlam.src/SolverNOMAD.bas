@@ -155,6 +155,18 @@ Function SolveModel_Nomad(SolveRelaxation As Boolean, s As COpenSolver) As Long
           
           ' Set OS for the calls back into Excel from NOMAD
 7030      Set OS = s
+
+          ' Check precision is not 0
+          Dim SolveOptions As SolveOptionsType, errorString As String
+          GetSolveOptions OS.sheetName, SolveOptions, errorString
+          If errorString <> "" Then
+              On Error GoTo errorHandler
+              Err.Raise Number:=OpenSolver_SolveError, Source:=errorPrefix, Description:=errorString
+          End If
+          
+          If SolveOptions.Precision <= 0 Then
+              Err.Raise Number:=OpenSolver_NomadError, Source:=errorPrefix, Description:="The current level of precision (" & CStr(SolveOptions.Precision) & ") is invalid. Please set the precision to a small positive (non-zero) value and try again."
+          End If
           
           Dim oldCalculationMode As Long
 7031      oldCalculationMode = Application.Calculation
@@ -182,7 +194,6 @@ Function SolveModel_Nomad(SolveRelaxation As Boolean, s As COpenSolver) As Long
           
           'Catch any errors that occured while Nomad was solving
 7037      If NomadRetVal = 1 Then
-              Dim errorString As String
 7038          errorString = "There was an error while Nomad was solving. No solution has been loaded into the sheet."
               ' Check logs for more info
 7039          CheckNomadLogs errorString

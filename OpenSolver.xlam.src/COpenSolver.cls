@@ -54,7 +54,7 @@ Attribute VB_Exposed = False
 Option Explicit
 Option Base 1
 
-Dim sheetName As String ' Sheetname in quotes as used for prefixing
+Public sheetName As String ' Sheetname in quotes as used for prefixing
 Dim RawSheetName As String ' Just the worksheet name
 Dim RawWorkBookName As String ' Just the workbook name
 Dim book As Workbook, sheet As Worksheet
