@@ -91,6 +91,7 @@ Public ObjRange As Range
 ' Details for the model that we build.
 Public numVars As Long, NumIntVars As Long, NumBinVars As Long, NumConstraints As Long
 Public NumRows As Long
+Public objValue As Double  ' The constant value of the objective
 Public ObjectiveSense As Long
 Public ObjectiveTargetValue As Double  ' Used when the user wants the objective to achieve some stated target value
 Dim VarNames() As String
@@ -607,7 +608,6 @@ Sub BuildModelFromSolverData(Optional LinearityCheckOffset As Double = 0, Option
           Dim isRangeObj As Boolean, valObj As Double, ObjRefersToError As Boolean
           Dim ObjRefersToFormula As Boolean, sRefersToObj As String, objIsMissing As Boolean
 1015      GetNameAsValueOrRange book, sheetName & "solver_opt", objIsMissing, isRangeObj, ObjRange, ObjRefersToFormula, ObjRefersToError, sRefersToObj, valObj
-          Dim objValue As Double
           ' Allow no objective in order to seek a feasible solution
 1016      If objIsMissing Then
 1017          GoTo ModelOptions
@@ -895,7 +895,7 @@ ModelOptions:
 1183              Set SparseA(row) = New CIndexedCoeffs
 1184          Next row
 1185          If NumRows > 0 Then ReDim RHS(NumRows) As Double
-1186          Call BuildConstraintMatrix(objIsMissing, objValue, SparseA, succeeded)
+1186          Call BuildConstraintMatrix(objIsMissing, SparseA, succeeded)
 1187          If succeeded = False Then GoTo ExitSub
 1188      End If
 
@@ -1058,7 +1058,7 @@ Sub BuildModelOptions(succeeded As Boolean, Optional SolveRelaxation As Boolean 
 1272      succeeded = True
 End Sub
 
-Sub BuildConstraintMatrix(objIsMissing As Boolean, objValue As Double, SparseA() As CIndexedCoeffs, succeeded As Boolean)
+Sub BuildConstraintMatrix(objIsMissing As Boolean, SparseA() As CIndexedCoeffs, succeeded As Boolean)
 1273      On Error GoTo constraintErrorHandler
           Dim errorPrefix As String
 1274      errorPrefix = "OpenSolver Model Build"
@@ -1668,6 +1668,9 @@ Sub WriteLPFile(ModelFilePathName As String, SolveRelaxation As Boolean, errorSt
                       Print #1, " " & StrEx(CostCoeffs(var)) & " " & VarName;
                   End If
               Next var
+              'If Abs(objValue) > EPSILON Then
+              '    Print #1, " " & StrEx(objValue);
+              'End If
 1634          Print #1,   ' New line
 1635      End If
 1636      Print #1,   ' New line
@@ -1941,6 +1944,9 @@ Sub WriteAMPLFile(ModelFilePathName As String, SolveRelaxation As Boolean, error
                    End If
 1818           End If
 1819       Next var
+           If Abs(objValue) > EPSILON Then
+               Line = Line & " " & StrEx(objValue)
+           End If
            
            ' Objective function replaced with constraint if
 1820       If ObjectiveSense = TargetObjective Then
