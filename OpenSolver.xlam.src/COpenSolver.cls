@@ -1681,7 +1681,7 @@ Sub WriteLPFile(ModelFilePathName As String, SolveRelaxation As Boolean, errorSt
 1639          Print #1, commentStart & " The objective must achieve a given target value; this constraint enforces this."
               Dim NonTrivialObjective As Boolean
 1640          For var = 1 To numVars
-1641              If Abs(CostCoeffs(var)) > ZERO Then
+1641              If Abs(CostCoeffs(var)) > EPSILON Then
                       VarName = ValidLPFileVarName(VarNames(var))
                       If AssumeNonNegativeVars Then
                           If Not TestKeyExists(UsedVariables, VarName) Then UsedVariables.Add VarName, VarName
@@ -1711,12 +1711,6 @@ Sub WriteLPFile(ModelFilePathName As String, SolveRelaxation As Boolean, errorSt
 1658              Print #1, commentStart & " " & ConstraintSummary(constraint)
 1659          End If
          
-              'For var = 1 To NumVars
-              '    If Abs(a(row, var)) > ZERO Then
-              '        Print #1, " " & IIf(a(row, var) > 0, "+", "") & a(row, var) & " " & ValidLPFileVarName(VarNames(var));
-              '        ValidRow = True
-              '    End If
-              'Next var
 1660          With SparseA(row)
 1661              For i = 1 To .Count
 1662                  var = .Index(i)

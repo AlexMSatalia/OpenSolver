@@ -40,7 +40,6 @@ Option Explicit
 Option Base 1
 
 Public Const EPSILON = 0.000001
-Public Const ZERO = 0.00000001
 
 'Solution results, as reported by Excel Solver
 ' FROM http://msdn.microsoft.com/en-us/library/ff197237.aspx
