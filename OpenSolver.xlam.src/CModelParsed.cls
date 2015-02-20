@@ -1215,7 +1215,11 @@ Function AddNodeIfNew(ByRef objCurNode As CFormula, ByRef c As Range) As String
           ' 3. Create new node
 5403      With objNewNode
 5404          .strFormula = strCFormula
-5405          .initialValue = CDbl(c.Value2)
+              If c.Value2 = "" Then
+                  .initialValue = 0
+              Else
+5405              .initialValue = CDbl(c.Value2)
+              End If
 5406          .lngDepth = objCurNode.lngDepth + 1
 5407          If .lngDepth > lngMaxDepth Then lngMaxDepth = .lngDepth
 5408          .Parents.Add objCurNode.strAddress, objCurNode.strAddress
