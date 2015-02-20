@@ -1660,7 +1660,7 @@ Sub WriteLPFile(ModelFilePathName As String, SolveRelaxation As Boolean, errorSt
 1628          Print #1, commentStart & " We have no objective function as the objective must achieve a given target value"
 1629      Else
 1631          For var = 1 To numVars
-1632              If Abs(CostCoeffs(var)) > ZERO Then
+1632              If Abs(CostCoeffs(var)) > EPSILON Then
                       VarName = ValidLPFileVarName(VarNames(var))
                       If AssumeNonNegativeVars Then
                           If Not TestKeyExists(UsedVariables, VarName) Then UsedVariables.Add VarName, VarName
@@ -1934,9 +1934,11 @@ Sub WriteAMPLFile(ModelFilePathName As String, SolveRelaxation As Boolean, error
 1812       Print #1,   ' New line
 1813       Line = "  "
 1814       For var = 1 To numVars
-1815           Line = Line & ValidLPFileVarName(VarNames(var)) & "*" & StrEx(CostCoeffs(var))
-1816           If var < numVars Then
-1817               Line = Line & " + "
+               If Abs(CostCoeffs(var)) > EPSILON Then
+1815               Line = Line & ValidLPFileVarName(VarNames(var)) & "*" & StrEx(CostCoeffs(var))
+1816               If var < numVars Then
+1817                   Line = Line & " + "
+                   End If
 1818           End If
 1819       Next var
            
