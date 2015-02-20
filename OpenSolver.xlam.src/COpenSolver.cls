@@ -1894,13 +1894,16 @@ Sub WriteAMPLFile(ModelFilePathName As String, SolveRelaxation As Boolean, error
 1787                   VarDic.Add ", integer", ValidLPFileVarName(c.Address(RowAbsolute:=False, ColumnAbsolute:=False))
 1788               Next c
 1789           End If
-                
-1790           If Not BinaryCellsRange Is Nothing Then
-1791               For Each c In BinaryCellsRange
-1792                   VarDic.Remove (ValidLPFileVarName(c.Address(RowAbsolute:=False, ColumnAbsolute:=False)))
+           End If
+           If Not BinaryCellsRange Is Nothing Then
+1791           For Each c In BinaryCellsRange
+                   VarDic.Remove (ValidLPFileVarName(c.Address(RowAbsolute:=False, ColumnAbsolute:=False)))
+1792               If Not SolveRelaxation Then
 1793                   VarDic.Add ", binary", ValidLPFileVarName(c.Address(RowAbsolute:=False, ColumnAbsolute:=False))
-1794               Next c
-1795           End If
+                   Else
+                       VarDic.Add ", <= 1, >= 0", ValidLPFileVarName(c.Address(RowAbsolute:=False, ColumnAbsolute:=False))
+                   End If
+1794           Next c
 1796       End If
            
            Dim constraint As Long

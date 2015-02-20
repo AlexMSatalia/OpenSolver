@@ -119,7 +119,7 @@ Public Property Get GetVariableNLIndex(Index As Long) As Long
 End Property
 
 ' Creates .nl file and solves model
-Function SolveModelParsed_NL(ModelFilePathName As String, model As CModelParsed, s As COpenSolverParsed, SolveOptions As SolveOptionsType, Optional ShouldWriteComments As Boolean = True)
+Function SolveModelParsed_NL(ModelFilePathName As String, model As CModelParsed, s As COpenSolverParsed, SolveOptions As SolveOptionsType, SolveRelaxation As Boolean, Optional ShouldWriteComments As Boolean = True)
 7459      Set m = model
           
 7460      WriteComments = ShouldWriteComments
@@ -144,7 +144,7 @@ Function SolveModelParsed_NL(ModelFilePathName As String, model As CModelParsed,
 7468      ProcessFormulae
 7469      ProcessObjective
           
-7470      MakeVariableMap
+7470      MakeVariableMap SolveRelaxation
 7471      MakeConstraintMap
           
           ' =============================================================
@@ -415,7 +415,7 @@ End Sub
 
 ' Creates maps from variable name (e.g. Test1_D4) to .nl variable index (0 to n_var - 1) and vice-versa, and
 ' maps from parsed variable index to .nl variable index and vice-versa
-Sub MakeVariableMap()
+Sub MakeVariableMap(SolveRelaxation As Boolean)
           ' =============================================
           ' Create index of variable names in parsed variable order
           Dim CellNames As New Collection
@@ -586,10 +586,11 @@ Sub MakeVariableMap()
           
           ' ==============================================
           ' Update model stats
-          
-7720      nbv = LinearBinary.Count
-7721      niv = LinearInteger.Count
-7722      nlvci = NonLinearInteger.Count
+          If Not SolveRelaxation Then
+7720          nbv = LinearBinary.Count
+7721          niv = LinearInteger.Count
+7722          nlvci = NonLinearInteger.Count
+          End If
 End Sub
 
 ' Adds a variable to all the variable maps with:

@@ -22,7 +22,7 @@ Public Property Get GetShowIterationResults() As Boolean
 7134      GetShowIterationResults = SolveOptions.ShowIterationResults
 End Property
 
-Public Sub SolveModel(s As COpenSolver)
+Public Sub SolveModel(s As COpenSolver, SolveRelaxation As Boolean)
 7135      Application.Calculation = xlCalculationManual
 7136      Application.ScreenUpdating = False
 
@@ -64,9 +64,9 @@ Public Sub SolveModel(s As COpenSolver)
           Case "PuLP"
 7154          ExecutionCompleted = SolveModelParsed_PuLP(ModelFilePathName, m, Me)
 7155      Case "Couenne", "Bonmin"
-7156          ExecutionCompleted = SolveModelParsed_NL(ModelFilePathName, m, Me, SolveOptions)
+7156          ExecutionCompleted = SolveModelParsed_NL(ModelFilePathName, m, Me, SolveOptions, SolveRelaxation)
 7157      Case "NeosBon", "NeosCou"
-7158          ExecutionCompleted = SolveModelParsed_AMPL(ModelFilePathName, m, Me)
+7158          ExecutionCompleted = SolveModelParsed_AMPL(ModelFilePathName, m, Me, SolveRelaxation)
 7159      Case Else
 7160          ExecutionCompleted = False
 7161      End Select
@@ -103,8 +103,8 @@ ErrHandler:
 
 End Sub
 
-Function SolveModelParsed_AMPL(ModelFilePathName As String, m As CModelParsed, s As COpenSolverParsed) As Boolean
-7181      WriteAMPLFile_Parsed ModelFilePathName, m.Solver
+Function SolveModelParsed_AMPL(ModelFilePathName As String, m As CModelParsed, s As COpenSolverParsed, SolveRelaxation As Boolean) As Boolean
+7181      WriteAMPLFile_Parsed ModelFilePathName, m.Solver, SolveRelaxation
           
 7182      If RunsOnNeos(m.Solver) Then
 7183          SolveModelParsed_AMPL = SolveModelParsed_NEOS(ModelFilePathName, m.Solver, s)
@@ -113,7 +113,7 @@ Function SolveModelParsed_AMPL(ModelFilePathName As String, m As CModelParsed, s
 7186      End If
 End Function
 
-Sub WriteAMPLFile_Parsed(ModelFilePathName As String, SolverType As String)
+Sub WriteAMPLFile_Parsed(ModelFilePathName As String, SolverType As String, SolveRelaxation As Boolean)
               Dim c As Range
 7187          On Error GoTo FileError
 7188          Open ModelFilePathName For Output As #1
@@ -131,8 +131,21 @@ Sub WriteAMPLFile_Parsed(ModelFilePathName As String, SolverType As String)
               
               ' Vars
               ' Initialise each variable independently
+              Dim VarName As String, curVarType As Long
 7193          For Each c In m.AdjustableCells
-7194              Line = "var " & ConvertCellToStandardName(c) & ConvertVarTypeAMPL(m.VarTypeMap(ConvertCellToStandardName(c)))
+                  VarName = ConvertCellToStandardName(c)
+7194              Line = "var " & VarName
+
+                  ' Output variable types if needed
+                  curVarType = m.VarTypeMap(VarName)
+                  If SolveRelaxation Then
+                      If curVarType = VarBinary Then
+                          Line = Line & " >= 0 <= 1"
+                      End If
+                  Else
+                      Line = Line & ConvertVarTypeAMPL(curVarType)
+                  End If
+                  
 7195              If m.AssumeNonNegative Then
                       ' If no lower bound has been applied then we need to add >= 0
 7196                  If Not TestKeyExists(m.VarLowerBounds, c.Address(RowAbsolute:=False, ColumnAbsolute:=False)) Then
