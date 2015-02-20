@@ -649,7 +649,7 @@ ModelOptions:
 
           Dim succeeded As Boolean
 1043      On Error GoTo errorHandler
-1045      Call BuildModelOptions(succeeded, SolveRelaxation)
+1045      Call BuildModelOptions(succeeded, SolveRelaxation, MinimiseUserInteraction)
 1046      If succeeded = False Then GoTo ExitSub
           
           '--------------------------------------------------------------------------
@@ -1032,7 +1032,7 @@ Sub UpdateBound(row As Long, VarName As String, bound As Double, rel As Long)
 1262      VariableBounds(row) = True
 End Sub
 
-Sub BuildModelOptions(succeeded As Boolean, Optional SolveRelaxation As Boolean = False)
+Sub BuildModelOptions(succeeded As Boolean, Optional SolveRelaxation As Boolean = False, Optional MinimiseUserInteraction As Boolean = False)
 1263      succeeded = False
           Dim errorPrefix As String
 1264      errorPrefix = "OpenSolver Model Build"
@@ -1050,8 +1050,13 @@ Sub BuildModelOptions(succeeded As Boolean, Optional SolveRelaxation As Boolean 
 1267              IngoreIntConstraints = (s = "1")
 1268          End If
 1269          If IngoreIntConstraints = True Then
-                  'On Error GoTo errorHandler
-1270              Err.Raise Number:=OpenSolver_BuildError, Source:=errorPrefix, Description:="You have the Solver option 'ignore integer constraints' turned on. Please turn this off and start OpenSolver again or choose OpenSolver's solve relaxed model option"
+                   If MinimiseUserInteraction Then GoTo RaiseError
+                   If Not MsgBox("You have the 'Ignore integer constraints' option enabled in Solver, so OpenSolver cannot proceed with solving. Would you like OpenSolver to disable this option and proceed?", vbCritical + vbYesNo + vbDefaultButton1, "OpenSolver Warning") = vbNo Then
+                       SetSolverNameOnSheet "rlx", "=2"
+                   Else
+RaiseError:
+                       Err.Raise Number:=OpenSolver_BuildError, Source:=errorPrefix, Description:="You have the Solver option 'ignore integer constraints' turned on. Please turn this off in the Solver (not OpenSolver) options menu and then solve with OpenSolver again or choose OpenSolver's solve relaxed model option"
+                   End If
 1271          End If
           End If
 
