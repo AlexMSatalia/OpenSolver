@@ -323,7 +323,7 @@ Function getValues() As Variant
 End Function
 
 Sub RecalculateValues()
-7129      Sheets(ActiveSheet.Name).Calculate
+7129      If Not ForceCalculate("Warning: The worksheet calculation did not complete, and so the iteration may not be calculated correctly. Would you like to retry?") Then Exit Sub
 End Sub
 
 Function getNumVariables() As Variant
