@@ -43,7 +43,7 @@ End Sub
 Sub OpenSolver_ModelOptions(Optional Control)
 2756      If Not CheckWorksheetAvailable Then Exit Sub
 #If Mac Then
-2757      MacOptions.Show
+2757      frmOptions.Show
 #Else
 2758      frmOptions.Show vbModal
 #End If

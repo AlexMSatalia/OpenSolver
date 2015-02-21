@@ -122,17 +122,11 @@ Sub Disabler(TrueIfEnable As Boolean, f As UserForm)
 4190      f.cmdCancel.Enabled = TrueIfEnable
           f.cmdReset.Enabled = TrueIfEnable
           f.cmdChange.Enabled = TrueIfEnable
-#If Mac Then
-4191      MacOptions.chkPerformLinearityCheck.Enabled = True
-4192      MacOptions.txtTol.Enabled = True
-4193      MacOptions.txtMaxIter.Enabled = True
-4194      MacOptions.txtPre.Enabled = True
-#Else
+
 4195      frmOptions.chkPerformLinearityCheck.Enabled = True
 4196      frmOptions.txtTol.Enabled = True
 4197      frmOptions.txtMaxIter.Enabled = True
 4198      frmOptions.txtPre.Enabled = True
-#End If
         
           Dim Solver As String
 4199      If Not GetNameValueIfExists(ActiveWorkbook, "'" & Replace(ActiveSheet.Name, "'", "''") & "'!OpenSolver_ChosenSolver", Solver) Then
@@ -285,7 +279,7 @@ Public Sub ModelOptionsClick(f As UserForm)
 4267      SetSolverNameOnSheet "neg", IIf(f.chkNonNeg.value, "=1", "=2")
               
 #If Mac Then
-4268      MacOptions.Show
+4268      frmOptions.Show
 #Else
 4269      frmOptions.Show vbModal
 #End If

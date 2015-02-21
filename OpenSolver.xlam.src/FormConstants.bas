@@ -7,14 +7,17 @@ Attribute VB_Name = "FormConstants"
     Public Const FormButtonWidth = 100
     Public Const FormTitleHeight = 20
     Public Const FormWindowMargin = 0
+    Public Const FormMargin = 12
 #Else
     Public Const FormBackColor = &H8000000F
     Public Const FormFontName = "Tahoma"
     Public Const FormFontSize = 8
-    Public Const FormButtonHeight = 19
-    Public Const FormButtonWidth = 84
+    Public Const FormButtonHeight = 18
+    Public Const FormButtonWidth = 66
     Public Const FormTitleHeight = 20
     Public Const FormWindowMargin = 4
+    Public Const FormMargin = 6
 #End If
 
-Public Const FormMargin = 12
+Public Const FormSpacing = 6
+Public Const FormTextBoxColor = &H80000005

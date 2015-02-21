@@ -13,10 +13,12 @@ Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = True
 Attribute VB_Exposed = False
+Option Explicit
+
 #If Mac Then
-    Const FormInterruptWidth = 312
+    Const FormWidthInterrupt = 312
 #Else
-    Const FormInterruptWidth = 240
+    Const FormWidthInterrupt = 240
 #End If
 
 Private Sub CommandButtonAbort_Click()
@@ -38,9 +40,9 @@ Private Sub UserForm_Initialize()
 End Sub
 
 Sub AutoLayout()
-    Me.width = FormInterruptWidth
+    Me.width = FormWidthInterrupt
     
-    With TextBox1
+    With lblMessage
         .Caption = "You have pressed the Escape key while the optimizer engine is running. Do you wish to stop solving this problem?"
         .Font.Name = FormFontName
         .Font.Size = FormFontSize
@@ -51,6 +53,7 @@ Sub AutoLayout()
         .AutoSize = False
         .AutoSize = True
         .AutoSize = False
+        .width = Me.width - 2 * FormMargin
     End With
     
     With CommandButtonContinue
@@ -60,7 +63,7 @@ Sub AutoLayout()
         .width = FormButtonWidth
         .height = FormButtonHeight
         .left = Me.width - FormMargin - .width
-        .top = TextBox1.top + TextBox1.height + FormMargin
+        .top = lblMessage.top + lblMessage.height + FormMargin
     End With
     
     With CommandButtonAbort
@@ -69,7 +72,7 @@ Sub AutoLayout()
         .Font.Size = FormFontSize
         .width = FormButtonWidth
         .height = FormButtonHeight
-        .left = CommandButtonContinue.left - FormMargin - .width
+        .left = CommandButtonContinue.left - FormSpacing - .width
         .top = CommandButtonContinue.top
     End With
     
@@ -77,8 +80,7 @@ Sub AutoLayout()
     Me.width = Me.width + FormWindowMargin
     
     Me.BackColor = FormBackColor
-    
-    Me.Caption = "OpenSolver User Interrupt"
+    Me.Caption = "OpenSolver - User Interrupt"
     
     
 End Sub
