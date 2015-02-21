@@ -42,11 +42,21 @@ End Sub
 Sub AutoLayout()
     Me.width = FormWidthInterrupt
     
+    Dim Cont As Control, ContType As String
+    For Each Cont In Me.Controls
+        ContType = TypeName(Cont)
+        If ContType = "TextBox" Or ContType = "CheckBox" Or ContType = "Label" Or ContType = "CommandButton" Then
+            With Cont
+                .Font.Name = FormFontName
+                .Font.Size = FormFontSize
+                .BackColor = FormBackColor
+                .height = FormButtonHeight
+            End With
+        End If
+    Next
+    
     With lblMessage
         .Caption = "You have pressed the Escape key while the optimizer engine is running. Do you wish to stop solving this problem?"
-        .Font.Name = FormFontName
-        .Font.Size = FormFontSize
-        .BackColor = FormBackColor
         .left = FormMargin
         .top = FormMargin
         .width = Me.width - 2 * FormMargin
@@ -58,20 +68,14 @@ Sub AutoLayout()
     
     With CommandButtonContinue
         .Caption = "Continue"
-        .Font.Name = FormFontName
-        .Font.Size = FormFontSize
         .width = FormButtonWidth
-        .height = FormButtonHeight
         .left = Me.width - FormMargin - .width
-        .top = lblMessage.top + lblMessage.height + FormMargin
+        .top = lblMessage.top + lblMessage.height + FormSpacing
     End With
     
     With CommandButtonAbort
         .Caption = "Abort"
-        .Font.Name = FormFontName
-        .Font.Size = FormFontSize
-        .width = FormButtonWidth
-        .height = FormButtonHeight
+        .width = CommandButtonContinue.width
         .left = CommandButtonContinue.left - FormSpacing - .width
         .top = CommandButtonContinue.top
     End With
@@ -81,6 +85,4 @@ Sub AutoLayout()
     
     Me.BackColor = FormBackColor
     Me.Caption = "OpenSolver - User Interrupt"
-    
-    
 End Sub
