@@ -344,7 +344,7 @@ Function SolverHasSensitivityAnalysis(Solver As String) As Boolean
 6804      End Select
 End Function
 
-Function UsesPrecision(Solver As String) As String
+Function UsesPrecision(Solver As String) As Boolean
     Select Case Solver
     Case "CBC"
         UsesPrecision = UsesPrecision_CBC
@@ -365,7 +365,7 @@ Function UsesPrecision(Solver As String) As String
     End Select
 End Function
 
-Function UsesTimeLimit(Solver As String) As String
+Function UsesTimeLimit(Solver As String) As Boolean
     Select Case Solver
     Case "CBC"
         UsesTimeLimit = UsesTimeLimit_CBC
@@ -386,7 +386,7 @@ Function UsesTimeLimit(Solver As String) As String
     End Select
 End Function
 
-Function UsesIterationLimit(Solver As String) As String
+Function UsesIterationLimit(Solver As String) As Boolean
     Select Case Solver
     Case "CBC"
         UsesIterationLimit = UsesIterationLimit_CBC
@@ -407,7 +407,7 @@ Function UsesIterationLimit(Solver As String) As String
     End Select
 End Function
 
-Function UsesTolerance(Solver As String) As String
+Function UsesTolerance(Solver As String) As Boolean
     Select Case Solver
     Case "CBC"
         UsesTolerance = UsesTolerance_CBC
