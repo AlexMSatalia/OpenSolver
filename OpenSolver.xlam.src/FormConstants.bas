@@ -8,6 +8,7 @@ Option Explicit
     Public Const FormHeadingSize = 18
     Public Const FormButtonHeight = 22
     Public Const FormButtonWidth = 100
+    Public Const FormCheckBoxHeight = 22
     Public Const FormTitleHeight = 20
     Public Const FormWindowMargin = 0
     Public Const FormMargin = 12
@@ -19,6 +20,7 @@ Option Explicit
     Public Const FormHeadingSize = 16
     Public Const FormButtonHeight = 20
     Public Const FormButtonWidth = 66
+    Public Const FormCheckBoxHeight = 16
     Public Const FormTitleHeight = 20
     Public Const FormWindowMargin = 4
     Public Const FormMargin = 6
@@ -48,6 +50,8 @@ Public Sub AutoFormat(ByRef Controls As Controls)
                 
                 If ContType = "CommandButton" Then
                     .height = FormButtonHeight
+                ElseIf ContType = "CheckBox" Then
+                    .height = FormCheckBoxHeight
                 Else
                     .height = FormTextHeight
                 End If

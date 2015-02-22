@@ -210,7 +210,7 @@ Sub AutoLayout()
         .top = lblFootnote.top + lblFootnote.height + FormSpacing
     End With
     
-    With cmdOK
+    With cmdOk
         .Caption = "OK"
         .width = txtMaxTime.width
         .left = cmdCancel.left - FormSpacing - .width

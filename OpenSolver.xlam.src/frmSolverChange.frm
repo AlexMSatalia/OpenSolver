@@ -39,9 +39,9 @@ Private Sub cboSolver_Change()
                 
                 Dim errorString As String
 4727            If SolverAvailable(ChosenSolver, errorString:=errorString) Then
-4728                cmdOK.Enabled = True
+4728                cmdOk.Enabled = True
 4729            Else
-4730                cmdOK.Enabled = False
+4730                cmdOk.Enabled = False
 4731            End If
 4732            lblError.Caption = errorString ' empty if no errors found
 End Sub
@@ -152,7 +152,7 @@ Sub AutoLayout()
         .left = Me.width - FormMargin - .width
     End With
     
-    With cmdOK
+    With cmdOk
         .Caption = "OK"
         .width = FormButtonWidth
         .top = cmdCancel.top

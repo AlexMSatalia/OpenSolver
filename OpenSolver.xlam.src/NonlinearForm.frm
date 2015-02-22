@@ -13,45 +13,83 @@ Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = True
 Attribute VB_Exposed = False
+Option Explicit
+
+#If Mac Then
+    Const FormWidthNonLinear = 570
+    Const MaxHeight = 350
+#Else
+    Const FormWidthNonLinear = 570
+    Const MaxHeight = 250
+#End If
+
 Private Sub cmdContinue_Click()
 3585      Me.Hide
 End Sub
 
 Public Sub SetLinearityResult(resultString As String, IsQuickCheck As Boolean)
-    NonlinearForm.CommonLinearityResult Me, resultString, IsQuickCheck
-    Me.height = chkFullCheck.top + chkFullCheck.height + 30
-    Caption = "OpenSolver: Linearity check "
+    txtNonLinearInfo.Caption = resultString
+    chkFullCheck.Visible = IsQuickCheck
+    Me.AutoLayout
 End Sub
 
-Public Sub CommonLinearityResult(f As UserForm, resultString As String, IsQuickCheck As Boolean)
-    f.txtNonLinearInfo.Caption = resultString
+Sub AutoLayout()
+    AutoFormat Me.Controls
     
-    'formatting of the user form f.TextBox2.AutoSize = True
-    f.txtNonLinearInfo.AutoSize = False
-    f.txtNonLinearInfo.height = 20
-    f.txtNonLinearInfo.AutoSize = True
-    f.txtNonLinearInfo.AutoSize = False
+    Me.width = FormWidthNonLinear
     
-    Dim MaxHeight As Integer
-    #If Mac Then
-       MaxHeight = 350
-    #Else
-       MaxHeight = 250
-    #End If
-    If f.txtNonLinearInfo.height > MaxHeight Then f.txtNonLinearInfo.height = MaxHeight
+    With txtNonLinearInfo
+        .left = FormMargin
+        .top = FormMargin
+        .width = Me.width - 2 * FormMargin
+        .height = 20
+        .AutoSize = False
+        .AutoSize = True
+        .AutoSize = False
+        If .height > MaxHeight Then .height = MaxHeight
+    End With
     
-    f.chkFullCheck.Caption = "Run a full linearity check. (This will destroy the current solution) "
-    f.chkHighlight.Caption = "Highlight the nonlinearities"
+    With cmdContinue
+        .left = txtNonLinearInfo.left
+        .top = txtNonLinearInfo.height + txtNonLinearInfo.top + FormSpacing
+        If chkFullCheck.Visible Then .top = .top + chkHighlight.height - .height / 2
+        .width = FormButtonWidth
+        .Caption = "Continue"
+    End With
     
-    f.chkHighlight.top = f.txtNonLinearInfo.height + f.txtNonLinearInfo.top + 5
-    f.chkFullCheck.top = f.chkHighlight.top + f.chkHighlight.height
+    With chkHighlight
+        .left = cmdContinue.left + cmdContinue.width + FormSpacing
+        .top = txtNonLinearInfo.height + txtNonLinearInfo.top + FormSpacing
+        .width = Me.width - .left - FormMargin
+        .Caption = "Highlight the nonlinearities"
+        .AutoSize = False
+        .AutoSize = True
+        .AutoSize = False
+    End With
     
-#If Mac Then
-    f.cmdContinue.top = f.chkHighlight.top + 11
-#Else
-    f.cmdContinue.top = f.chkHighlight.top + 6 ' Enough space around check box anyway
-#End If
-
-    f.chkFullCheck.Visible = IsQuickCheck
+    With chkFullCheck
+        .left = chkHighlight.left
+        .top = chkHighlight.height + chkHighlight.top
+        .width = Me.width - .left - FormMargin
+        .Caption = "Run a full linearity check. (This will destroy the current solution)"
+        .AutoSize = False
+        .AutoSize = True
+        .AutoSize = False
+    End With
+    
+    ' Adjust width to rightmost element
+    Me.width = chkFullCheck.left + chkFullCheck.width
+    If Me.width < txtNonLinearInfo.width + FormMargin Then Me.width = txtNonLinearInfo.width + FormMargin
+    Me.width = Me.width + FormMargin + FormWindowMargin
+    
+    ' Adjust heights based on visible elements
+    If chkFullCheck.Visible Then
+        Me.height = chkFullCheck.top + chkFullCheck.height
+    Else
+        Me.height = cmdContinue.top + cmdContinue.height
+    End If
+    Me.height = Me.height + FormMargin + FormTitleHeight
+    
+    Me.BackColor = FormBackColor
+    Me.Caption = "OpenSolver - Linearity Check"
 End Sub
-
