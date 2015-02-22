@@ -58,6 +58,27 @@ Private Sub Workbook_BeforeSave(ByVal SaveAsUI As Boolean, Cancel As Boolean)
 15            ExportVBACode
 16        End If
 
+          If MsgBox("Close all VB windows? Do this before release!", vbYesNo, "Before you go") = vbYes Then
+              CloseAllVBEWindows
+          End If
+End Sub
+
+Sub CloseAllVBEWindows()
+    Dim i As Long
+    With Application.VBE.Windows
+        For i = .Count To 1 Step -1
+            ' Window types:
+            '   0 - Code
+            '   1 - Form
+            '   2 - Object Browser
+            '   3 - Watches
+            '   4 - Locals
+            '   5 - Immediates
+            '   6 - Project Explorer
+            '   7 - Properties
+            If .Item(i).Type < 2 Then .Item(i).Close
+        Next i
+    End With
 End Sub
 
 Public Sub ExportVBACode()
