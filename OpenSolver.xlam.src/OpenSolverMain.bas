@@ -141,11 +141,7 @@ Sub OpenSolver_OnlineHelp(Optional Control)
 End Sub
 
 Sub OpenSolver_AboutClickHandler(Optional Control)
-#If Mac Then
-2797      MacUserFormAbout.Show
-#Else
 2798      UserFormAbout.Show
-#End If
 End Sub
 
 Sub OpenSolver_AboutCoinOR(Optional Control)

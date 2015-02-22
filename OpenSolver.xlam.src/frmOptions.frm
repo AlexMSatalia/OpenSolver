@@ -25,7 +25,7 @@ Private Sub cmdCancel_Click()
 4089      Unload Me
 End Sub
 
-Private Sub cmdOK_Click()
+Private Sub cmdOk_Click()
 4092      If chkNonNeg.value = True Then
 4093          SetSolverNameOnSheet "neg", "=1"
 4094      Else
@@ -210,7 +210,7 @@ Sub AutoLayout()
         .top = lblFootnote.top + lblFootnote.height + FormSpacing
     End With
     
-    With cmdOK
+    With cmdOk
         .Caption = "OK"
         .width = txtMaxTime.width
         .left = cmdCancel.left - FormSpacing - .width

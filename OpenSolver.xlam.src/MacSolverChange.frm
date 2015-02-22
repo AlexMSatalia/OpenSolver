@@ -27,7 +27,7 @@ Private Sub UserForm_Activate()
 9183      frmSolverChange.ActivateSolverChange Me
 End Sub
 
-Private Sub cmdOK_Click()
+Private Sub cmdOk_Click()
 9184      frmSolverChange.SolverChangeConfirm Me
 9185      Unload Me
 End Sub

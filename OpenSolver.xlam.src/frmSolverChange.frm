@@ -29,9 +29,9 @@ Public Sub ChangeSolver(f As UserForm)
                 
                 Dim errorString As String
 4727            If SolverAvailable(ChosenSolver, errorString:=errorString) Then
-4728                f.cmdOK.Enabled = True
+4728                f.cmdOk.Enabled = True
 4729            Else
-4730                f.cmdOK.Enabled = False
+4730                f.cmdOk.Enabled = False
 4731            End If
 4732            f.lblError.Caption = errorString ' empty if no errors found
 End Sub
@@ -76,7 +76,7 @@ setDefault:
 4755      End If
 End Sub
 
-Private Sub cmdOK_Click()
+Private Sub cmdOk_Click()
 4756      SolverChangeConfirm Me
 4757      Unload Me
 End Sub

@@ -5,24 +5,30 @@ Option Explicit
     Public Const FormBackColor = &HE3E3E3
     Public Const FormFontName = "Lucida Grande"
     Public Const FormFontSize = 11
+    Public Const FormHeadingSize = 18
     Public Const FormButtonHeight = 22
     Public Const FormButtonWidth = 100
     Public Const FormTitleHeight = 20
     Public Const FormWindowMargin = 0
     Public Const FormMargin = 12
+    Public Const FormTextHeight = 18
 #Else
     Public Const FormBackColor = &H8000000F
     Public Const FormFontName = "Tahoma"
     Public Const FormFontSize = 8
-    Public Const FormButtonHeight = 18
+    Public Const FormHeadingSize = 16
+    Public Const FormButtonHeight = 20
     Public Const FormButtonWidth = 66
     Public Const FormTitleHeight = 20
     Public Const FormWindowMargin = 4
     Public Const FormMargin = 6
+    Public Const FormTextHeight = 16
 #End If
 
 Public Const FormSpacing = 6
 Public Const FormTextBoxColor = &H80000005
+Public Const FormLinkColor = &HFF0000
+Public Const FormHeadingHeight = 24
 
 Public Sub AutoFormat(ByRef Controls As Controls)
 ' Sets default appearances for Form controls
@@ -39,7 +45,12 @@ Public Sub AutoFormat(ByRef Controls As Controls)
                 Else
                     .BackColor = FormBackColor
                 End If
-                .height = FormButtonHeight
+                
+                If ContType = "CommandButton" Then
+                    .height = FormButtonHeight
+                Else
+                    .height = FormTextHeight
+                End If
             End With
         End If
     Next

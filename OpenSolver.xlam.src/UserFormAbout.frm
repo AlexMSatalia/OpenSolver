@@ -15,6 +15,12 @@ Attribute VB_PredeclaredId = True
 Attribute VB_Exposed = False
 Option Explicit
 
+#If Mac Then
+    Const FormWidthAbout = 600
+#Else
+    Const FormWidthAbout = 450
+#End If
+
 Public EventsEnabled As Boolean
 
 Private Function GetAddInIfExists(AddIn As Variant, title As String) As Boolean
@@ -26,11 +32,11 @@ Private Function GetAddInIfExists(AddIn As Variant, title As String) As Boolean
 3477      GetAddInIfExists = Err = 0
 End Function
 
-Private Sub buttonOK_Click()
+Private Sub cmdOk_Click()
 3478      Me.Hide
 End Sub
 
-Public Sub ReflectOpenSolverStatus(f As UserForm)
+Public Sub ReflectOpenSolverStatus()
           ' Update buttons to reflect install status of OpenSolver
 3479      On Error GoTo errorHandler
           Dim InstalledAndActive As Boolean
@@ -50,21 +56,21 @@ Public Sub ReflectOpenSolverStatus(f As UserForm)
 3487      End If
 errorHandler:
 3488      EventsEnabled = False
-3489      f.chkAutoLoad.value = InstalledAndActive
-3490      f.chkAutoLoad.Enabled = Not InstalledAndActive
+3489      chkAutoLoad.value = InstalledAndActive
+3490      chkAutoLoad.Enabled = Not InstalledAndActive
 3491      EventsEnabled = True
 End Sub
 
-Private Sub buttonUninstall_Click()
-3492      ChangeAutoloadStatus False, Me
+Private Sub cmdCancelLoad_Click()
+3492      ChangeAutoloadStatus False
 End Sub
 
 Private Sub chkAutoLoad_Change()
 3493      If Not EventsEnabled Then Exit Sub
-3494      ChangeAutoloadStatus chkAutoLoad.value, Me
+3494      ChangeAutoloadStatus chkAutoLoad.value
 End Sub
 
-Public Sub ChangeAutoloadStatus(loadAtStartup As Boolean, f As UserForm)
+Public Sub ChangeAutoloadStatus(loadAtStartup As Boolean)
           ' See http://www.jkp-ads.com/articles/AddinsAndSetupFactory.asp
           ' HKEY_CURRENT_USER\Software\Microsoft\Office\11.0\Excel\Add-in Manager
           ' HKEY_CURRENT_USER\Software\Microsoft\Office\10.0\Excel\Add-in Manager
@@ -95,25 +101,21 @@ Public Sub ChangeAutoloadStatus(loadAtStartup As Boolean, f As UserForm)
 3509          AddIn.Installed = loadAtStartup ' OpenSolver will quit immediately when this is set to false
 3510      End If
 ExitSub:
-3511      ReflectOpenSolverStatus f
+3511      ReflectOpenSolverStatus
 End Sub
 
 
-Private Sub labelOpenSolverOrg_Click()
+Private Sub lblUrl_Click()
 3512      Call OpenURL("http://www.opensolver.org")
 End Sub
 
 Private Sub UserForm_Activate()
-3513      ActivateAboutForm Me
-End Sub
-
-Public Sub ActivateAboutForm(f As UserForm)
 3514      Application.StatusBar = "OpenSolver: Fetching solver information..."
 3515      Application.Cursor = xlWait
 
-          f.txtFilePath.Locked = False
-          f.txtFilePath = "OpenSolver file: " & MakeSpacesNonBreaking(ThisWorkbook.FullName)
-          f.txtFilePath.Locked = True
+          txtFilePath.Locked = False
+          txtFilePath = "OpenSolver file: " & MakeSpacesNonBreaking(ThisWorkbook.FullName)
+          txtFilePath.Locked = True
 
           Dim VBAversion As String
 3516      VBAversion = "VBA"
@@ -136,22 +138,23 @@ Public Sub ActivateAboutForm(f As UserForm)
 3522      OS = "Windows"
 #End If
 
-3523      f.labelVersion.Caption = "Version " & sOpenSolverVersion & " (" & sOpenSolverDate & ") running on " & IIf(SystemIs64Bit, "64", "32") & "-bit " & OS & " with " & VBAversion & " in " & ExcelBitness & "-bit Excel " & Application.Version
+3523      lblVersion.Caption = "Version " & sOpenSolverVersion & " (" & sOpenSolverDate & ")" & _
+                               " running on " & IIf(SystemIs64Bit, "64", "32") & "-bit " & OS & _
+                               " with " & VBAversion & " in " & ExcelBitness & "-bit Excel " & Application.Version
           
-3524      f.txtAbout.Locked = False
-3525      f.txtAbout.Text = About_OpenSolver
-3526      f.txtAbout.Text = f.txtAbout.Text & About_CBC & vbNewLine & vbNewLine
-3527      f.txtAbout.Text = f.txtAbout.Text & About_Gurobi & vbNewLine & vbNewLine
-3528      f.txtAbout.Text = f.txtAbout.Text & About_NOMAD & vbNewLine & vbNewLine
-3529      f.txtAbout.Text = f.txtAbout.Text & About_Bonmin & vbNewLine & vbNewLine
-3530      f.txtAbout.Text = f.txtAbout.Text & About_Couenne & vbNewLine & vbNewLine
-         
-3532      ReflectOpenSolverStatus f
-3533      EventsEnabled = True
-
-3534      f.txtAbout.Locked = True
-3535      f.txtAbout.SetFocus
-3536      f.txtAbout.SelStart = 0
+          ReflectOpenSolverStatus
+          EventsEnabled = True
+          
+3524      txtAbout.Locked = False
+3525      txtAbout.Text = About_OpenSolver & _
+                          About_CBC & vbNewLine & vbNewLine & _
+                          About_Gurobi & vbNewLine & vbNewLine & _
+                          About_NOMAD & vbNewLine & vbNewLine & _
+                          About_Bonmin & vbNewLine & vbNewLine & _
+                          About_Couenne
+3534      txtAbout.Locked = True
+3535      txtAbout.SetFocus
+3536      txtAbout.SelStart = 0
           
 3537      Application.StatusBar = False
 3538      Application.Cursor = xlDefault
@@ -178,3 +181,95 @@ Public Function About_OpenSolver() As String
       vbNewLine
 
 End Function
+
+Sub AutoLayout()
+    AutoFormat Me.Controls
+    
+    Me.width = FormWidthAbout
+    
+    With lblHeading
+        .Font.Size = FormHeadingSize
+        .width = Me.width - 2 * FormMargin
+        .Caption = "OpenSolver"
+        .left = FormMargin
+        .top = FormMargin
+        .height = FormHeadingHeight
+    End With
+    
+    With lblVersion
+        .Caption = "OpenSolver version information"
+        .width = lblHeading.width
+        .left = lblHeading.left
+        .top = lblHeading.top + lblHeading.height
+    End With
+    
+    With lblUrl
+        .Caption = "http://www.OpenSolver.org"
+        .ForeColor = FormLinkColor
+        .left = lblHeading.left
+        .top = lblVersion.top + lblVersion.height
+        ' Shrink to width of link so click target isn't too big
+        .width = Me.width
+        .AutoSize = False
+        .AutoSize = True
+        .AutoSize = False
+    End With
+    
+    With txtAbout
+        .Locked = False
+        .Text = "Loading OpenSolver info..."
+        .Locked = True
+        .left = lblHeading.left
+        .top = lblUrl.top + lblUrl.height + FormSpacing
+        .BackColor = FormBackColor
+        .SpecialEffect = fmSpecialEffectEtched
+        .height = 250
+        .width = lblHeading.width
+    End With
+    
+    With txtFilePath
+        .Locked = False
+        .Text = "OpenSolver file:"
+        .Locked = True
+        .left = lblHeading.left
+        .top = txtAbout.top + txtAbout.height + FormSpacing
+        .height = 2 * FormTextHeight + 2 ' Stop the text becoming smaller
+        .width = lblHeading.width
+        .BackColor = FormBackColor
+        .MultiLine = True
+    End With
+    
+    With chkAutoLoad
+        .Caption = "Load OpenSolver when Excel starts"
+        .width = Me.width
+        .AutoSize = False
+        .AutoSize = True
+        .AutoSize = False
+        .left = lblHeading.left
+        .top = txtFilePath.top + txtFilePath.height
+    End With
+    
+    With cmdCancelLoad
+        .Caption = "Cancel loading at startup..."
+        .width = FormButtonWidth * 2
+        .left = chkAutoLoad.left + chkAutoLoad.width + FormSpacing
+        .top = chkAutoLoad.top
+    End With
+    
+    With cmdOk
+        .Caption = "OK"
+        .width = FormButtonWidth
+        .left = Me.width - .width - FormMargin
+        .top = chkAutoLoad.top
+    End With
+    
+    Me.height = cmdOk.top + cmdOk.height + FormMargin + FormTitleHeight
+    Me.width = Me.width + FormWindowMargin
+    
+    Me.BackColor = FormBackColor
+    Me.Caption = "OpenSolver - About"
+End Sub
+
+Private Sub UserForm_Initialize()
+    Me.AutoLayout
+End Sub

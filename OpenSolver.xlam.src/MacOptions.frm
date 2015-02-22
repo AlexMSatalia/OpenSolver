@@ -20,7 +20,7 @@ Private Sub cmdCancel_Click()
 9217      Unload Me
 End Sub
 
-Private Sub cmdOK_Click()
+Private Sub cmdOk_Click()
 9218            frmOptions.OptionsOK Me
 9219            Unload Me
 End Sub
