@@ -111,7 +111,9 @@ Public Sub ActivateAboutForm(f As UserForm)
 3514      Application.StatusBar = "OpenSolver: Fetching solver information..."
 3515      Application.Cursor = xlWait
 
-          f.labelFilePath = "OpenSolverFile: " & MakeSpacesNonBreaking(ThisWorkbook.FullName)
+          f.txtFilePath.Locked = False
+          f.txtFilePath = "OpenSolver file: " & MakeSpacesNonBreaking(ThisWorkbook.FullName)
+          f.txtFilePath.Locked = True
 
           Dim VBAversion As String
 3516      VBAversion = "VBA"
@@ -143,8 +145,7 @@ Public Sub ActivateAboutForm(f As UserForm)
 3528      f.txtAbout.Text = f.txtAbout.Text & About_NOMAD & vbNewLine & vbNewLine
 3529      f.txtAbout.Text = f.txtAbout.Text & About_Bonmin & vbNewLine & vbNewLine
 3530      f.txtAbout.Text = f.txtAbout.Text & About_Couenne & vbNewLine & vbNewLine
-3531      f.txtAbout.Text = f.txtAbout.Text & "OpenSolverFile: " & MakeSpacesNonBreaking(ThisWorkbook.FullName)
-          
+         
 3532      ReflectOpenSolverStatus f
 3533      EventsEnabled = True
 
