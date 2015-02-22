@@ -16,7 +16,7 @@ Attribute VB_Exposed = False
 Option Explicit
 
 #If Mac Then
-    Const FormWidthCallingNeos = 312
+    Const FormWidthCallingNeos = 350
 #Else
     Const FormWidthCallingNeos = 240
 #End If
@@ -31,29 +31,13 @@ Private Sub UserForm_Initialize()
 End Sub
 
 Sub AutoLayout()
-    Dim Cont As Control, ContType As String
-    For Each Cont In Me.Controls
-        ContType = TypeName(Cont)
-        If ContType = "TextBox" Or ContType = "CheckBox" Or ContType = "Label" Or ContType = "CommandButton" Then
-            With Cont
-                .Font.Name = FormFontName
-                .Font.Size = FormFontSize
-                If ContType = "TextBox" Then
-                    .BackColor = FormTextBoxColor
-                Else
-                    .BackColor = FormBackColor
-                End If
-                .height = FormButtonHeight
-            End With
-        End If
-    Next
-    
-    Me.width = FormWidthCallingNeos
+    AutoFormat Me.Controls
     
     With lblMessage
         .Caption = "OpenSolver is busy running your optimisation model..."
         .left = FormMargin
         .top = FormMargin
+        .width = FormWidthCallingNeos
         .AutoSize = False
         .AutoSize = True
         .AutoSize = False

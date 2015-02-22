@@ -1,4 +1,6 @@
 Attribute VB_Name = "FormConstants"
+Option Explicit
+
 #If Mac Then
     Public Const FormBackColor = &HE3E3E3
     Public Const FormFontName = "Lucida Grande"
@@ -21,3 +23,22 @@ Attribute VB_Name = "FormConstants"
 
 Public Const FormSpacing = 6
 Public Const FormTextBoxColor = &H80000005
+
+Public Sub AutoFormat(ByRef Controls As Controls)
+    Dim Cont As Control, ContType As String
+    For Each Cont In Controls
+        ContType = TypeName(Cont)
+        If ContType = "TextBox" Or ContType = "CheckBox" Or ContType = "Label" Or ContType = "CommandButton" Then
+            With Cont
+                .Font.Name = FormFontName
+                .Font.Size = FormFontSize
+                If ContType = "TextBox" Then
+                    .BackColor = FormTextBoxColor
+                Else
+                    .BackColor = FormBackColor
+                End If
+                .height = FormButtonHeight
+            End With
+        End If
+    Next
+End Sub

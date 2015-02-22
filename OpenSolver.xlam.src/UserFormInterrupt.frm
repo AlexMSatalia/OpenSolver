@@ -40,24 +40,9 @@ Private Sub UserForm_Initialize()
 End Sub
 
 Sub AutoLayout()
+    AutoFormat Me.Controls
+
     Me.width = FormWidthInterrupt
-    
-    Dim Cont As Control, ContType As String
-    For Each Cont In Me.Controls
-        ContType = TypeName(Cont)
-        If ContType = "TextBox" Or ContType = "CheckBox" Or ContType = "Label" Or ContType = "CommandButton" Then
-            With Cont
-                .Font.Name = FormFontName
-                .Font.Size = FormFontSize
-                If ContType = "TextBox" Then
-                    .BackColor = FormTextBoxColor
-                Else
-                    .BackColor = FormBackColor
-                End If
-                .height = FormButtonHeight
-            End With
-        End If
-    Next
     
     With lblMessage
         .Caption = "You have pressed the Escape key while the optimizer engine is running. Do you wish to stop solving this problem?"
