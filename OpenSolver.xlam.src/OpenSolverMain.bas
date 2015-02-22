@@ -51,11 +51,7 @@ End Sub
 
 Sub OpenSolver_SolverOptions(Optional Control)
 2759      If Not CheckWorksheetAvailable Then Exit Sub
-#If Mac Then
-2760      MacSolverChange.Show
-#Else
 2761      frmSolverChange.Show
-#End If
 End Sub
 
 Sub OpenSolver_SolveRelaxationClickHandler(Optional Control)

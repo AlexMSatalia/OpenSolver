@@ -228,12 +228,8 @@ End Sub
 
 
 Private Sub cmdChange_Click()
-4263            frmModel.ModelSolverClick Me
-End Sub
-
-Public Sub ModelSolverClick(f As UserForm)
 #If Mac Then
-4264      MacSolverChange.Show
+4264      frmSolverChange.Show
 #Else
 4265      frmSolverChange.Show vbModal
 #End If

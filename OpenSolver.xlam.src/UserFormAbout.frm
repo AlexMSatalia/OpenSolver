@@ -256,14 +256,14 @@ Sub AutoLayout()
         .top = chkAutoLoad.top
     End With
     
-    With cmdOk
+    With cmdOK
         .Caption = "OK"
         .width = FormButtonWidth
         .left = Me.width - .width - FormMargin
         .top = chkAutoLoad.top
     End With
     
-    Me.height = cmdOk.top + cmdOk.height + FormMargin + FormTitleHeight
+    Me.height = cmdOK.top + cmdOK.height + FormMargin + FormTitleHeight
     Me.width = Me.width + FormWindowMargin
     
     Me.BackColor = FormBackColor

@@ -15,25 +15,35 @@ Attribute VB_PredeclaredId = True
 Attribute VB_Exposed = False
 Option Explicit
 
+#If Mac Then
+    Const FormWidthSolverChange = 330
+#Else
+    Const FormWidthSolverChange = 255
+#End If
+
 Public ChosenSolver As String
 Dim Solvers As Collection
 
 Private Sub cboSolver_Change()
-4723      ChangeSolver Me
-End Sub
+4724            ChosenSolver = ReverseSolverTitle(cboSolver.Text)
+4725            lblDesc.Caption = SolverDesc(ChosenSolver)
 
-Public Sub ChangeSolver(f As UserForm)
-4724            ChosenSolver = ReverseSolverTitle(f.cboSolver.Text)
-4725            f.lblDescription.Caption = SolverDesc(ChosenSolver)
-4726            f.lblHyperlink = SolverLink(ChosenSolver)
+                With lblHyperlink
+                    .Caption = SolverLink(ChosenSolver)
+                    .width = Me.width
+                    ' Reduce width to minimise size of link target
+                    .AutoSize = False
+                    .AutoSize = True
+                    .AutoSize = False
+                End With
                 
                 Dim errorString As String
 4727            If SolverAvailable(ChosenSolver, errorString:=errorString) Then
-4728                f.cmdOk.Enabled = True
+4728                cmdOK.Enabled = True
 4729            Else
-4730                f.cmdOk.Enabled = False
+4730                cmdOK.Enabled = False
 4731            End If
-4732            f.lblError.Caption = errorString ' empty if no errors found
+4732            lblError.Caption = errorString ' empty if no errors found
 End Sub
 
 Private Sub lblHyperlink_Click()
@@ -41,10 +51,6 @@ Private Sub lblHyperlink_Click()
 End Sub
 
 Private Sub UserForm_Activate()
-4734      ActivateSolverChange Me
-End Sub
-
-Public Sub ActivateSolverChange(f As UserForm)
 4735      Set Solvers = New Collection
 4736      Solvers.Add "CBC"
 4737      Solvers.Add "Gurobi"
@@ -57,44 +63,105 @@ Public Sub ActivateSolverChange(f As UserForm)
 4743      Solvers.Add "NeosCou"
           'Solvers.Add "PuLP"
           
-4744      f.cboSolver.Clear
-4745      f.cboSolver.MatchRequired = True
-4746      f.cboSolver.Style = fmStyleDropDownList
+4744      cboSolver.Clear
+4745      cboSolver.MatchRequired = True
+4746      cboSolver.Style = fmStyleDropDownList
           
           Dim Solver As Variant
 4747      For Each Solver In Solvers
-4748          f.cboSolver.AddItem SolverTitle(CStr(Solver))
+4748          cboSolver.AddItem SolverTitle(CStr(Solver))
 4749      Next Solver
 
           Dim value As String
 4750      If GetNameValueIfExists(ActiveWorkbook, "'" & Replace(ActiveWorkbook.ActiveSheet.Name, "'", "''") & "'!OpenSolver_ChosenSolver", value) Then
 4751          On Error GoTo setDefault
-4752          f.cboSolver.Text = SolverTitle(value)
+4752          cboSolver.Text = SolverTitle(value)
 4753      Else
 setDefault:
-4754          f.cboSolver.Text = SolverTitle("CBC")
+4754          cboSolver.Text = SolverTitle("CBC")
 4755      End If
 End Sub
 
 Private Sub cmdOk_Click()
-4756      SolverChangeConfirm Me
-4757      Unload Me
-End Sub
-
-Public Sub SolverChangeConfirm(f As UserForm)
-          'Add the chosen solver as a hidden name in the workbook
+         'Add the chosen solver as a hidden name in the workbook
 4758      Call SetNameOnSheet("OpenSolver_ChosenSolver", "=" & ChosenSolver)
-#If Mac Then
-4759      MacModel.lblSolver.Caption = "Current Solver Engine: " & UCase(left(ChosenSolver, 1)) & Mid(ChosenSolver, 2)
-4760      frmModel.Disabler True, MacModel
-#Else
 4761      frmModel.lblSolver.Caption = "Current Solver Engine: " & UCase(left(ChosenSolver, 1)) & Mid(ChosenSolver, 2)
 4762      frmModel.Disabler True, frmModel
-#End If
-
 4763      Unload Me
 End Sub
 
 Private Sub cmdCancel_Click()
 4764      Unload Me
+End Sub
+
+Private Sub UserForm_Initialize()
+    Me.AutoLayout
+End Sub
+
+Sub AutoLayout()
+    AutoFormat Me.Controls
+    
+    Me.width = FormWidthSolverChange
+    
+    With lblChoose
+        .left = FormMargin
+        .top = FormMargin
+        .width = Me.width - FormMargin * 2
+        .Caption = "Choose a solver from the list below:"
+    End With
+    
+    With cboSolver
+        .left = lblChoose.left
+        .top = lblChoose.top + lblChoose.height
+        .width = lblChoose.width
+        .height = FormTextHeight
+    End With
+    
+    With lblDesc
+        .left = lblChoose.left
+        .top = cboSolver.top + cboSolver.height + FormSpacing
+        .width = lblChoose.width
+        #If Mac Then
+            .height = 150
+        #Else
+            .height = 100
+        #End If
+    End With
+    
+    With lblHyperlink
+        .left = lblChoose.left
+        .top = lblDesc.top + lblDesc.height + FormSpacing
+        .width = lblChoose.width
+        ' Reduce width to minimise size of link target
+        .AutoSize = False
+        .AutoSize = True
+        .AutoSize = False
+    End With
+    
+    With lblError
+        .left = lblChoose.left
+        .top = lblHyperlink.top + lblHyperlink.height + FormSpacing
+        .width = lblChoose.width
+        .height = 1.5 * FormTextHeight
+    End With
+    
+    With cmdCancel
+        .Caption = "Cancel"
+        .width = FormButtonWidth
+        .top = lblError.top + lblError.height + FormSpacing
+        .left = Me.width - FormMargin - .width
+    End With
+    
+    With cmdOK
+        .Caption = "OK"
+        .width = FormButtonWidth
+        .top = cmdCancel.top
+        .left = cmdCancel.left - FormSpacing - .width
+    End With
+    
+    Me.height = cmdCancel.top + cmdCancel.height + FormMargin + FormTitleHeight
+    Me.width = Me.width + FormWindowMargin
+    
+    Me.BackColor = FormBackColor
+    Me.Caption = "OpenSolver - Choose Solver"
 End Sub
