@@ -33,6 +33,7 @@ End Sub
 Sub AutoLayout()
     AutoFormat Me.Controls
     
+    ' Make the label wide enough so that the message is on one line, then use autosize to shrink the width.
     With lblMessage
         .Caption = "OpenSolver is busy running your optimisation model..."
         .left = FormMargin

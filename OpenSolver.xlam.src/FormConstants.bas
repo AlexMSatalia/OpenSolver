@@ -25,6 +25,8 @@ Public Const FormSpacing = 6
 Public Const FormTextBoxColor = &H80000005
 
 Public Sub AutoFormat(ByRef Controls As Controls)
+' Sets default appearances for Form controls
+' Hopefully we don't run into late binding issues this way
     Dim Cont As Control, ContType As String
     For Each Cont In Controls
         ContType = TypeName(Cont)
