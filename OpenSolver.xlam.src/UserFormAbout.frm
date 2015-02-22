@@ -111,6 +111,8 @@ Public Sub ActivateAboutForm(f As UserForm)
 3514      Application.StatusBar = "OpenSolver: Fetching solver information..."
 3515      Application.Cursor = xlWait
 
+          f.labelFilePath = "OpenSolverFile: " & MakeSpacesNonBreaking(ThisWorkbook.FullName)
+
           Dim VBAversion As String
 3516      VBAversion = "VBA"
 #If VBA7 Then
@@ -132,7 +134,7 @@ Public Sub ActivateAboutForm(f As UserForm)
 3522      OS = "Windows"
 #End If
 
-3523      f.labelVersion.Caption = "Version " & sOpenSolverVersion & " (" & sOpenSolverDate & ") running on " & IIf(SystemIs64Bit, "64", "32") & " bit " & OS & " in " & VBAversion & " in " & ExcelBitness & " bit Excel " & Application.Version
+3523      f.labelVersion.Caption = "Version " & sOpenSolverVersion & " (" & sOpenSolverDate & ") running on " & IIf(SystemIs64Bit, "64", "32") & "-bit " & OS & " with " & VBAversion & " in " & ExcelBitness & "-bit Excel " & Application.Version
           
 3524      f.txtAbout.Locked = False
 3525      f.txtAbout.Text = About_OpenSolver
@@ -142,8 +144,6 @@ Public Sub ActivateAboutForm(f As UserForm)
 3529      f.txtAbout.Text = f.txtAbout.Text & About_Bonmin & vbNewLine & vbNewLine
 3530      f.txtAbout.Text = f.txtAbout.Text & About_Couenne & vbNewLine & vbNewLine
 3531      f.txtAbout.Text = f.txtAbout.Text & "OpenSolverFile: " & MakeSpacesNonBreaking(ThisWorkbook.FullName)
-          
-          f.labelFilePath = "OpenSolverFile: " & MakeSpacesNonBreaking(ThisWorkbook.FullName)
           
 3532      ReflectOpenSolverStatus f
 3533      EventsEnabled = True
