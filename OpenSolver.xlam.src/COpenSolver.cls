@@ -2658,10 +2658,10 @@ Sub QuickLinearityCheck(fullLinearityCheckWasPerformed As Boolean)
 2263              f.Show
               
                   'showing the nonlinear constraints
-2264              If f.HighlightBox.value = True Then
+2264              If f.chkHighlight.value = True Then
 2265                  HighlightNonLinearities RowIsNonLinear, ObjectiveIsNonLinear
 2266              End If
-2267              If f.FullCheck.value = True Then
+2267              If f.chkFullCheck.value = True Then
                       'Full linearity check run
 2268                  CheckLinearityOfModel
 2269                  fullLinearityCheckWasPerformed = True

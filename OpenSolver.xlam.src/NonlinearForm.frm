@@ -13,24 +13,24 @@ Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = True
 Attribute VB_Exposed = False
-Private Sub ContinueButton_Click()
+Private Sub cmdContinue_Click()
 3585      Me.Hide
 End Sub
 
 Public Sub SetLinearityResult(resultString As String, IsQuickCheck As Boolean)
     NonlinearForm.CommonLinearityResult Me, resultString, IsQuickCheck
-    Me.height = FullCheck.top + FullCheck.height + 30
+    Me.height = chkFullCheck.top + chkFullCheck.height + 30
     Caption = "OpenSolver: Linearity check "
 End Sub
 
 Public Sub CommonLinearityResult(f As UserForm, resultString As String, IsQuickCheck As Boolean)
-    f.TextBox2.Caption = resultString
+    f.txtNonLinearInfo.Caption = resultString
     
     'formatting of the user form f.TextBox2.AutoSize = True
-    f.TextBox2.AutoSize = False
-    f.TextBox2.height = 20
-    f.TextBox2.AutoSize = True
-    f.TextBox2.AutoSize = False
+    f.txtNonLinearInfo.AutoSize = False
+    f.txtNonLinearInfo.height = 20
+    f.txtNonLinearInfo.AutoSize = True
+    f.txtNonLinearInfo.AutoSize = False
     
     Dim MaxHeight As Integer
     #If Mac Then
@@ -38,20 +38,20 @@ Public Sub CommonLinearityResult(f As UserForm, resultString As String, IsQuickC
     #Else
        MaxHeight = 250
     #End If
-    If f.TextBox2.height > MaxHeight Then f.TextBox2.height = MaxHeight
+    If f.txtNonLinearInfo.height > MaxHeight Then f.txtNonLinearInfo.height = MaxHeight
     
-    f.FullCheck.Caption = "Run a full linearity check. (This will destroy the current solution) "
-    f.HighlightBox.Caption = "Highlight the nonlinearities"
+    f.chkFullCheck.Caption = "Run a full linearity check. (This will destroy the current solution) "
+    f.chkHighlight.Caption = "Highlight the nonlinearities"
     
-    f.HighlightBox.top = f.TextBox2.height + f.TextBox2.top + 5
-    f.FullCheck.top = f.HighlightBox.top + f.HighlightBox.height
+    f.chkHighlight.top = f.txtNonLinearInfo.height + f.txtNonLinearInfo.top + 5
+    f.chkFullCheck.top = f.chkHighlight.top + f.chkHighlight.height
     
 #If Mac Then
-    f.ContinueButton.top = f.HighlightBox.top + 11
+    f.cmdContinue.top = f.chkHighlight.top + 11
 #Else
-    f.ContinueButton.top = f.HighlightBox.top + 6 ' Enough space around check box anyway
+    f.cmdContinue.top = f.chkHighlight.top + 6 ' Enough space around check box anyway
 #End If
 
-    f.FullCheck.Visible = IsQuickCheck
+    f.chkFullCheck.Visible = IsQuickCheck
 End Sub
 

@@ -21,12 +21,12 @@ Option Explicit
     Const FormWidthInterrupt = 240
 #End If
 
-Private Sub CommandButtonAbort_Click()
+Private Sub cmdAbort_Click()
 3540      Me.Tag = vbCancel
 3541      Me.Hide
 End Sub
 
-Private Sub CommandButtonContinue_Click()
+Private Sub cmdContinue_Click()
 3542      Me.Tag = vbOK
 3543      Me.Hide
 End Sub
