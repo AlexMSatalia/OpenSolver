@@ -1529,22 +1529,23 @@ End Sub
 
 Function TrimBlankLines(s As String) As String
           ' Remove any blank lines at the beginning or end of s
-          Dim Done As Boolean
+          Dim Done As Boolean, NewLineSize As Integer
+          NewLineSize = Len(vbNewLine)
 611       While Not Done
-612           If Len(s) < Len(vbNewLine) Then
+612           If Len(s) < NewLineSize Then
 613               Done = True
-614           ElseIf left(s, Len(vbNewLine)) = vbNewLine Then
-615              s = Mid(s, 3)
+614           ElseIf left(s, NewLineSize) = vbNewLine Then
+615              s = Mid(s, NewLineSize + 1)
 616           Else
 617               Done = True
 618           End If
 619       Wend
 620       Done = False
 621       While Not Done
-622           If Len(s) < Len(vbNewLine) Then
+622           If Len(s) < NewLineSize Then
 623               Done = True
-624           ElseIf right(s, Len(vbNewLine)) = vbNewLine Then
-625              s = left(s, Len(s) - 2)
+624           ElseIf right(s, NewLineSize) = vbNewLine Then
+625              s = left(s, Len(s) - NewLineSize)
 626           Else
 627               Done = True
 628           End If
