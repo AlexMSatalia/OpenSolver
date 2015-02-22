@@ -49,7 +49,11 @@ Sub AutoLayout()
             With Cont
                 .Font.Name = FormFontName
                 .Font.Size = FormFontSize
-                .BackColor = FormBackColor
+                If ContType = "TextBox" Then
+                    .BackColor = FormTextBoxColor
+                Else
+                    .BackColor = FormBackColor
+                End If
                 .height = FormButtonHeight
             End With
         End If

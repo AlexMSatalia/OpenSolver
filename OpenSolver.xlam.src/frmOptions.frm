@@ -124,7 +124,11 @@ Sub AutoLayout()
             With Cont
                 .Font.Name = FormFontName
                 .Font.Size = FormFontSize
-                .BackColor = FormBackColor
+                If ContType = "TextBox" Then
+                    .BackColor = FormTextBoxColor
+                Else
+                    .BackColor = FormBackColor
+                End If
                 .height = FormButtonHeight
             End With
         End If
@@ -152,7 +156,6 @@ Sub AutoLayout()
     End With
     
     With txtMaxTime
-        .BackColor = FormTextBoxColor
         .width = FormButtonWidth
         .left = Me.width - .width - FormMargin
         .top = chkShowSolverProgress.top + chkShowSolverProgress.height + FormSpacing
@@ -166,7 +169,6 @@ Sub AutoLayout()
     End With
     
     With txtTol
-        .BackColor = FormTextBoxColor
         .width = txtMaxTime.width
         .left = txtMaxTime.left
         .top = txtMaxTime.top + txtMaxTime.height + FormSpacing
@@ -180,7 +182,6 @@ Sub AutoLayout()
     End With
     
     With txtMaxIter
-        .BackColor = FormTextBoxColor
         .width = txtMaxTime.width
         .left = txtMaxTime.left
         .top = txtTol.top + txtTol.height + FormSpacing
@@ -194,7 +195,6 @@ Sub AutoLayout()
     End With
     
     With txtPre
-        .BackColor = FormTextBoxColor
         .width = txtMaxTime.width
         .left = txtMaxTime.left
         .top = txtMaxIter.top + txtMaxIter.height + FormSpacing
