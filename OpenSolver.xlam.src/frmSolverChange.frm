@@ -16,7 +16,7 @@ Attribute VB_Exposed = False
 Option Explicit
 
 #If Mac Then
-    Const FormWidthSolverChange = 355
+    Const FormWidthSolverChange = 365
 #Else
     Const FormWidthSolverChange = 255
 #End If
@@ -95,10 +95,10 @@ Private Sub cmdCancel_Click()
 End Sub
 
 Private Sub UserForm_Initialize()
-    Me.AutoLayout
+    AutoLayout
 End Sub
 
-Sub AutoLayout()
+Private Sub AutoLayout()
     AutoFormat Me.Controls
     
     Me.width = FormWidthSolverChange
@@ -121,7 +121,7 @@ Sub AutoLayout()
         .top = cboSolver.top + cboSolver.height + FormSpacing
         .width = lblChoose.width
         #If Mac Then
-            .height = 140
+            .height = 130
         #Else
             .height = 100
         #End If

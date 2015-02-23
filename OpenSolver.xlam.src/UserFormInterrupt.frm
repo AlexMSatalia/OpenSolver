@@ -36,10 +36,10 @@ Private Sub UserForm_QueryClose(Cancel As Integer, CloseMode As Integer)
 End Sub
 
 Private Sub UserForm_Initialize()
-   Me.AutoLayout
+   AutoLayout
 End Sub
 
-Sub AutoLayout()
+Private Sub AutoLayout()
     AutoFormat Me.Controls
 
     Me.width = FormWidthInterrupt

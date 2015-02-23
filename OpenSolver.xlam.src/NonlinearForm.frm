@@ -30,10 +30,10 @@ End Sub
 Public Sub SetLinearityResult(resultString As String, IsQuickCheck As Boolean)
     txtNonLinearInfo.Caption = resultString
     chkFullCheck.Visible = IsQuickCheck
-    Me.AutoLayout
+    AutoLayout
 End Sub
 
-Sub AutoLayout()
+Private Sub AutoLayout()
     AutoFormat Me.Controls
     
     Me.width = FormWidthNonLinear

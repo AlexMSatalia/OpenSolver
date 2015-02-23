@@ -111,10 +111,10 @@ Private Sub UserForm_Activate()
 End Sub
 
 Private Sub UserForm_Initialize()
-    Me.AutoLayout
+    AutoLayout
 End Sub
 
-Sub AutoLayout()
+Private Sub AutoLayout()
     AutoFormat Me.Controls
 
     Me.width = FormWidthOptions

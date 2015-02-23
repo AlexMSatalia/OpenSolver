@@ -182,7 +182,7 @@ Public Function About_OpenSolver() As String
 
 End Function
 
-Sub AutoLayout()
+Private Sub AutoLayout()
     AutoFormat Me.Controls
     
     Me.width = FormWidthAbout
@@ -271,5 +271,5 @@ Sub AutoLayout()
 End Sub
 
 Private Sub UserForm_Initialize()
-    Me.AutoLayout
+    AutoLayout
 End Sub
