@@ -16,7 +16,7 @@ Attribute VB_Exposed = False
 Option Explicit
 
 #If Mac Then
-    Const FormWidthSolverChange = 330
+    Const FormWidthSolverChange = 355
 #Else
     Const FormWidthSolverChange = 255
 #End If
@@ -114,7 +114,6 @@ Sub AutoLayout()
         .left = lblChoose.left
         .top = lblChoose.top + lblChoose.height
         .width = lblChoose.width
-        .height = FormTextHeight + 1
     End With
     
     With lblDesc
@@ -122,7 +121,7 @@ Sub AutoLayout()
         .top = cboSolver.top + cboSolver.height + FormSpacing
         .width = lblChoose.width
         #If Mac Then
-            .height = 150
+            .height = 140
         #Else
             .height = 100
         #End If
