@@ -270,11 +270,7 @@ End Function
 
 Sub OpenSolver_ModelClick(Optional Control)
 2851      If Not CheckWorksheetAvailable Then Exit Sub
-#If Mac Then
-2852      MacModel.Show
-#Else
 2853      frmModel.Show
-#End If
 2854      DoEvents
 
 If Not NameExistsInWorkbook(ActiveWorkbook, ActiveSheet.Name & "!" & "solver_rlx") Then

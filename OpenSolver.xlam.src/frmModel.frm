@@ -15,6 +15,12 @@ Attribute VB_PredeclaredId = True
 Attribute VB_Exposed = False
 Option Explicit
 
+#If Mac Then
+    Const FormWidthModel = 720
+#Else
+    Const FormWidthModel = 500
+#End If
+
 Private model As CModel
 
 Private ListItem As Long
@@ -46,58 +52,53 @@ Function cboPosition(rel As String) As Integer
 4160      End Select
 End Function
 
-Sub Disabler(TrueIfEnable As Boolean, f As UserForm)
+Sub Disabler(TrueIfEnable As Boolean)
 
-4161      f.lblDescHeader.Enabled = TrueIfEnable
-4162      f.lblDesc.Enabled = TrueIfEnable
-4163      f.cmdRunAutoModel.Enabled = TrueIfEnable
+4161      lblDescHeader.Enabled = TrueIfEnable
+4162      lblDesc.Enabled = TrueIfEnable
+4163      cmdRunAutoModel.Enabled = TrueIfEnable
 
-4164      f.lblDiv1.Enabled = False
+4164      lblDiv1.Enabled = False
 
-4165      f.lblStep1.Enabled = TrueIfEnable
-4166      f.refObj.Enabled = TrueIfEnable
-4167      f.optMax.Enabled = TrueIfEnable
-4168      f.optMin.Enabled = TrueIfEnable
-4169      f.optTarget.Enabled = TrueIfEnable
-4170      f.txtObjTarget.Enabled = TrueIfEnable And f.optTarget.value
+4165      lblStep1.Enabled = TrueIfEnable
+4166      refObj.Enabled = TrueIfEnable
+4167      optMax.Enabled = TrueIfEnable
+4168      optMin.Enabled = TrueIfEnable
+4169      optTarget.Enabled = TrueIfEnable
+4170      txtObjTarget.Enabled = TrueIfEnable And optTarget.value
 
-4171      f.lblDiv2.Enabled = False
+4171      lblDiv2.Enabled = False
 
-4172      f.lblStep2.Enabled = TrueIfEnable
-4173      f.refDecision.Enabled = TrueIfEnable
+4172      lblStep2.Enabled = TrueIfEnable
+4173      refDecision.Enabled = TrueIfEnable
 
-4174      f.lblDiv3.Enabled = False
+4174      lblDiv3.Enabled = False
 
-4175      f.chkNonNeg.Enabled = TrueIfEnable
-4176      f.cmdCancelCon.Enabled = Not TrueIfEnable
-4177      f.cmdDelSelCon.Enabled = TrueIfEnable
-          f.chkNameRange.Enabled = TrueIfEnable
+4175      chkNonNeg.Enabled = TrueIfEnable
+4176      cmdCancelCon.Enabled = Not TrueIfEnable
+4177      cmdDelSelCon.Enabled = TrueIfEnable
+          chkNameRange.Enabled = TrueIfEnable
 
-4178      f.lblDiv4.Enabled = False
+4178      lblDiv4.Enabled = False
 
-4179      f.lblStep4.Enabled = TrueIfEnable
+4179      lblStep4.Enabled = TrueIfEnable
 
-4180      f.chkGetDuals.Enabled = TrueIfEnable
-4181      f.chkGetDuals2.Enabled = TrueIfEnable
-4182      f.optUpdate.Enabled = f.chkGetDuals2.value
-4183      f.optNew.Enabled = f.chkGetDuals2.value
+4180      chkGetDuals.Enabled = TrueIfEnable
+4181      chkGetDuals2.Enabled = TrueIfEnable
+4182      optUpdate.Enabled = chkGetDuals2.value And TrueIfEnable
+4183      optNew.Enabled = chkGetDuals2.value And TrueIfEnable
 
-4184      f.refDuals.Enabled = TrueIfEnable And f.chkGetDuals.value And f.chkGetDuals.Enabled
+4184      refDuals.Enabled = TrueIfEnable And chkGetDuals.value And chkGetDuals.Enabled
 
-4185      f.lblDiv5.Enabled = False
-4186      f.lblDiv6.Enabled = False
+4185      lblDiv5.Enabled = False
+4186      lblDiv6.Enabled = False
 
-4187      f.chkShowModel.Enabled = TrueIfEnable
-4188      f.cmdOptions.Enabled = TrueIfEnable
-4189      f.cmdBuild.Enabled = TrueIfEnable
-4190      f.cmdCancel.Enabled = TrueIfEnable
-          f.cmdReset.Enabled = TrueIfEnable
-          f.cmdChange.Enabled = TrueIfEnable
-
-4195      frmOptions.chkPerformLinearityCheck.Enabled = True
-4196      frmOptions.txtTol.Enabled = True
-4197      frmOptions.txtMaxIter.Enabled = True
-4198      frmOptions.txtPre.Enabled = True
+4187      chkShowModel.Enabled = TrueIfEnable
+4188      cmdOptions.Enabled = TrueIfEnable
+4189      cmdBuild.Enabled = TrueIfEnable
+4190      cmdCancel.Enabled = TrueIfEnable
+          cmdReset.Enabled = TrueIfEnable
+          cmdChange.Enabled = TrueIfEnable
 
           Dim Solver As String
 4199      If Not GetNameValueIfExists(ActiveWorkbook, "'" & Replace(ActiveSheet.Name, "'", "''") & "'!OpenSolver_ChosenSolver", Solver) Then
@@ -105,13 +106,12 @@ Sub Disabler(TrueIfEnable As Boolean, f As UserForm)
 4201          Call SetNameOnSheet("OpenSolver_ChosenSolver", "=" & Solver)
 4202      End If
 
-
 4203      If Not SolverHasSensitivityAnalysis(Solver) Then
               ' Disable dual options
-4204          f.chkGetDuals2.Enabled = False
-4205          f.chkGetDuals.Enabled = False
-4206          f.optUpdate.Enabled = False
-4207          f.optNew.Enabled = False
+4204          chkGetDuals2.Enabled = False
+4205          chkGetDuals.Enabled = False
+4206          optUpdate.Enabled = False
+4207          optNew.Enabled = False
 4208      End If
 
           '============================================================================================
@@ -120,42 +120,34 @@ Sub Disabler(TrueIfEnable As Boolean, f As UserForm)
           '============================================================================================
 End Sub
 
-'--------------------------------------------------------------------
-' UpdateFormFromMemory
-' Populates the UserForm using the internal model.
-'
-' Written by:       IRD
-'--------------------------------------------------------------------
-Sub UpdateFormFromMemory(f As UserForm)
-4209      If model.ObjectiveSense = MaximiseObjective Then f.optMax.value = True
-4210      If model.ObjectiveSense = MinimiseObjective Then f.optMin.value = True
-4211      If model.ObjectiveSense = TargetObjective Then f.optTarget.value = True   ' AJM 20110907
-4212      f.txtObjTarget.Text = CStr(model.ObjectiveTarget)   ' AJM 20110907 Always show the target (which may just be 0)
+Sub UpdateFormFromMemory()
+4209      If model.ObjectiveSense = MaximiseObjective Then optMax.value = True
+4210      If model.ObjectiveSense = MinimiseObjective Then optMin.value = True
+4211      If model.ObjectiveSense = TargetObjective Then optTarget.value = True
+4212      txtObjTarget.Text = CStr(model.ObjectiveTarget)   ' Always show the target (which may just be 0)
 
-4213      f.chkNonNeg.value = model.NonNegativityAssumption
+4213      chkNonNeg.value = model.NonNegativityAssumption
 
-4214      If Not model.ObjectiveFunctionCell Is Nothing Then f.refObj.Text = GetDisplayAddress(model.ObjectiveFunctionCell, False)
+4214      If Not model.ObjectiveFunctionCell Is Nothing Then refObj.Text = GetDisplayAddress(model.ObjectiveFunctionCell, False)
 
-4215      If Not model.DecisionVariables Is Nothing Then f.refDecision.Text = GetDisplayAddressInCurrentLocale(model.DecisionVariables)
+4215      If Not model.DecisionVariables Is Nothing Then refDecision.Text = GetDisplayAddressInCurrentLocale(model.DecisionVariables)
 
-4216      f.chkGetDuals.value = Not model.Duals Is Nothing
+4216      chkGetDuals.value = Not model.Duals Is Nothing
 4217      If model.Duals Is Nothing Then
-4218          f.refDuals.Text = ""
+4218          refDuals.Text = ""
 4219      Else
-4220          f.refDuals.Text = GetDisplayAddress(model.Duals, False)
+4220          refDuals.Text = GetDisplayAddress(model.Duals, False)
 4221      End If
 
-4222      model.PopulateConstraintListBox f.lstConstraints
-4223      ModelLstConstraintsChange f
+4222      model.PopulateConstraintListBox lstConstraints
+4223      lstConstraints_Change
 
-      '          On Error GoTo nameUndefined
-      '          f.chkGetDuals2.Value = Mid(Names("'" & Replace(ActiveWorkbook.ActiveSheet.Name, "'", "''") & "'!OpenSolver_DualsNewSheet").Value, 2)
           Dim sheetName As String, value As String, ResetDualsNewSheet As Boolean
 4224      sheetName = "'" & Replace(ActiveWorkbook.ActiveSheet.Name, "'", "''") & "'!"
 4225      If GetNameValueIfExists(ActiveWorkbook, sheetName & "OpenSolver_DualsNewSheet", value) Then
-4226          f.chkGetDuals2.value = value
+4226          chkGetDuals2.value = value
               ' If checkbox is null, then the stored value was not 'True' or 'False'. We should reset to false
-4227          If IsNull(f.chkGetDuals2.value) Then
+4227          If IsNull(chkGetDuals2.value) Then
 4228              ResetDualsNewSheet = True
 4229          End If
 4230      Else
@@ -164,66 +156,43 @@ Sub UpdateFormFromMemory(f As UserForm)
 
 4233      If ResetDualsNewSheet Then
 4234          Call SetNameOnSheet("OpenSolver_DualsNewSheet", "=FALSE")
-4235          f.chkGetDuals2.value = False
+4235          chkGetDuals2.value = False
 4236      End If
 
-4237      f.optUpdate.Enabled = f.chkGetDuals2.value
-4238      f.optNew.Enabled = f.chkGetDuals2.value
+4237      optUpdate.Enabled = chkGetDuals2.value
+4238      optNew.Enabled = chkGetDuals2.value
 4239      If GetNameValueIfExists(ActiveWorkbook, sheetName & "OpenSolver_UpdateSensitivity", value) Then
 4240          If value = "TRUE" Then
-4241            f.optUpdate.value = value
+4241            optUpdate.value = value
 4242          Else
-4243            f.optNew.value = True
+4243            optNew.value = True
 4244          End If
 4245      Else
 4246          Call SetNameOnSheet("OpenSolver_UpdateSensitivity", "=TRUE")
-4247          f.optUpdate.value = True
+4247          optUpdate.value = True
 4248      End If
-      '          Exit Sub
-
-      'nameUndefined:
-      '          Call SetNameOnSheet("OpenSolver_DualsNewSheet", "=FALSE")
-      '          chkGetDuals2.Value = False 'Mid(Names("'" & Replace(ActiveWorkbook.ActiveSheet.name, "'", "''") & "'!OpenSolver_DualsNewSheet").Value, 2)
-
 End Sub
 
 Private Sub chkGetDuals_Click()
-4249            frmModel.UpdateGetDuals Me
-End Sub
-
-Public Sub UpdateGetDuals(f As UserForm)
-4250      f.refDuals.Enabled = f.chkGetDuals.value
+4250      refDuals.Enabled = chkGetDuals.value
 End Sub
 
 Private Sub chkGetDuals2_Click()
-4251            frmModel.UpdateGetDuals2 Me
-End Sub
-
-Public Sub UpdateGetDuals2(f As UserForm)
-4252      Call SetNameOnSheet("OpenSolver_DualsNewSheet", "=" & f.chkGetDuals2.value)
-4253      f.optUpdate.Enabled = f.chkGetDuals2.value
-4254      f.optNew.Enabled = f.chkGetDuals2.value
+4252      Call SetNameOnSheet("OpenSolver_DualsNewSheet", "=" & chkGetDuals2.value)
+4253      optUpdate.Enabled = chkGetDuals2.value
+4254      optNew.Enabled = chkGetDuals2.value
 End Sub
 
 Private Sub chkNameRange_Click()
-4255            frmModel.UpdateNameRange Me
-End Sub
-
-Public Sub UpdateNameRange(f As UserForm)
-          'Call UpdateFormFromMemory
-4256      model.PopulateConstraintListBox f.lstConstraints
-4257      ModelLstConstraintsChange f
+4256      model.PopulateConstraintListBox lstConstraints
+4257      lstConstraints_Change
 End Sub
 
 Private Sub cmdCancelCon_Click()
-4258            frmModel.ModelCancel Me
-End Sub
-
-Public Sub ModelCancel(f As UserForm)
-4259      frmModel.Disabler True, f
-4260      f.cmdAddCon.Enabled = False
+4259      Disabler True
+4260      cmdAddCon.Enabled = False
 4261      ConChangedMode = False
-4262      ModelLstConstraintsChange f
+4262      lstConstraints_Change
 End Sub
 
 
@@ -236,14 +205,10 @@ Private Sub cmdChange_Click()
 End Sub
 
 Private Sub cmdOptions_Click()
-4266            frmModel.ModelOptionsClick Me
-End Sub
-
-Public Sub ModelOptionsClick(f As UserForm)
           ' Save the current "Assume Non Negative" option so this is shown in the options dialog.
           ' The saved value gets updated on OK, which we then reflect in our Model dialog
           Dim s As String
-4267      SetSolverNameOnSheet "neg", IIf(f.chkNonNeg.value, "=1", "=2")
+4267      SetSolverNameOnSheet "neg", IIf(chkNonNeg.value, "=1", "=2")
 
 #If Mac Then
 4268      frmOptions.Show
@@ -251,7 +216,7 @@ Public Sub ModelOptionsClick(f As UserForm)
 4269      frmOptions.Show vbModal
 #End If
 4270      If GetNameValueIfExists(ActiveWorkbook, "'" & Replace(ActiveSheet.Name, "'", "''") & "'!solver_neg", s) Then    ' This should always be true
-4271          f.chkNonNeg.value = s = "1"
+4271          chkNonNeg.value = s = "1"
 4272      End If
 End Sub
 
@@ -261,10 +226,6 @@ End Sub
 '---------------------------------------------------------------------------------------
 
 Private Sub cmdReset_Click()
-4273            frmModel.ModelReset Me
-End Sub
-
-Public Sub ModelReset(f As UserForm)
           Dim NumConstraints As Single, i As Long
 
           'Check the user wants to reset the model
@@ -274,8 +235,8 @@ Public Sub ModelReset(f As UserForm)
 4276      End If
 
           'Reset the objective function and the decision variables
-4277      f.refObj.Text = ""
-4278      f.refDecision.Text = ""
+4277      refObj.Text = ""
+4278      refDecision.Text = ""
 
           'Find the number of constraints in model
 4279      NumConstraints = model.Constraints.Count
@@ -286,87 +247,59 @@ Public Sub ModelReset(f As UserForm)
 4282      Next i
 
           ' Update constraints form
-4283      model.PopulateConstraintListBox f.lstConstraints
+4283      model.PopulateConstraintListBox lstConstraints
 
 End Sub
 
 Private Sub optMax_Click()
-4284            frmModel.ModelMaxClick Me
-End Sub
-
-Public Sub ModelMaxClick(f As UserForm)
-4285      f.txtObjTarget.Enabled = f.optTarget.value
+4285      txtObjTarget.Enabled = optTarget.value
 End Sub
 
 Private Sub optMin_Click()
-4286            frmModel.ModelMinClick Me
-End Sub
-
-Public Sub ModelMinClick(f As UserForm)
-4287      txtObjTarget.Enabled = f.optTarget.value
+4287      txtObjTarget.Enabled = optTarget.value
 End Sub
 
 Private Sub optNew_Click()
-4288            frmModel.ModelNewClick Me
-End Sub
-
-Public Sub ModelNewClick(f As UserForm)
-4289      Call SetNameOnSheet("OpenSolver_UpdateSensitivity", "=" & f.optUpdate.value)
+4289      Call SetNameOnSheet("OpenSolver_UpdateSensitivity", "=" & optUpdate.value)
 End Sub
 
 Private Sub optTarget_Click()
-4290            frmModel.ModelTargetClick Me
-End Sub
-
-Public Sub ModelTargetClick(f As UserForm)
-4291      f.txtObjTarget.Enabled = f.optTarget.value
+4291      txtObjTarget.Enabled = optTarget.value
 End Sub
 
 Private Sub optUpdate_Click()
-4292            frmModel.ModelUpdateClick Me
-End Sub
-
-Public Sub ModelUpdateClick(f As UserForm)
-4293      Call SetNameOnSheet("OpenSolver_UpdateSensitivity", "=" & f.optUpdate.value)
+4293      Call SetNameOnSheet("OpenSolver_UpdateSensitivity", "=" & optUpdate.value)
 End Sub
 
 Private Sub refConLHS_Change()
-4294            frmModel.ModelChangeLHS Me
-End Sub
-
-Public Sub ModelChangeLHS(f As UserForm)
           ' Compare to expected value
 4295      If ListItem >= 1 And Not model.Constraints Is Nothing Then
               Dim origLHS As String
 
 4296          origLHS = model.Constraints(ListItem).LHS.Address
-4297          If f.refConLHS.Text <> origLHS Then
-4298              Disabler False, f
-4299              f.cmdAddCon.Enabled = True
+4297          If refConLHS.Text <> origLHS Then
+4298              Disabler False
+4299              cmdAddCon.Enabled = True
 4300              ConChangedMode = True
 4301          Else
-4302              Disabler True, f
-4303              f.cmdAddCon.Enabled = False
+4302              Disabler True
+4303              cmdAddCon.Enabled = False
 4304              ConChangedMode = False
 4305          End If
 4306      ElseIf ListItem = 0 Then
-4307          If f.refConLHS.Text <> "" Then
-4308              Disabler False, f
-4309              f.cmdAddCon.Enabled = True
+4307          If refConLHS.Text <> "" Then
+4308              Disabler False
+4309              cmdAddCon.Enabled = True
 4310              ConChangedMode = True
 4311          Else
-4312              Disabler True, f
-4313              f.cmdAddCon.Enabled = False
+4312              Disabler True
+4313              cmdAddCon.Enabled = False
 4314              ConChangedMode = False
 4315          End If
 4316      End If
 End Sub
 
 Private Sub refConRHS_Change()
-4317            frmModel.ModelChangeRHS Me
-End Sub
-
-Public Sub ModelChangeRHS(f As UserForm)
           ' Compare to expected value
 4318      If ListItem >= 1 And Not model.Constraints Is Nothing Then
               Dim origRHS As String
@@ -375,39 +308,29 @@ Public Sub ModelChangeRHS(f As UserForm)
 4321          Else
 4322              origRHS = model.Constraints(ListItem).RHS.Address
 4323          End If
-4324          If f.refConRHS.Text <> origRHS Then
-4325              Disabler False, f
-4326              f.cmdAddCon.Enabled = True
+4324          If refConRHS.Text <> origRHS Then
+4325              Disabler False
+4326              cmdAddCon.Enabled = True
 4327              ConChangedMode = True
 4328          Else
-4329              Disabler True, f
-4330              f.cmdAddCon.Enabled = False
+4329              Disabler True
+4330              cmdAddCon.Enabled = False
 4331              ConChangedMode = False
 4332          End If
 4333      ElseIf ListItem = 0 Then
-4334          If f.refConLHS.Text <> "" Then
-4335              Disabler False, f
-4336              f.cmdAddCon.Enabled = True
+4334          If refConLHS.Text <> "" Then
+4335              Disabler False
+4336              cmdAddCon.Enabled = True
 4337              ConChangedMode = True
 4338          Else
-4339              Disabler True, f
-4340              f.cmdAddCon.Enabled = False
+4339              Disabler True
+4340              cmdAddCon.Enabled = False
 4341              ConChangedMode = False
 4342          End If
 4343      End If
 End Sub
 
-'--------------------------------------------------------------------
-' UserForm_Activate [event]
-' Called when the form is shown.
-'
-' Written by:       IRD
-'--------------------------------------------------------------------
 Private Sub UserForm_Activate()
-4344            frmModel.ModelActivate Me
-End Sub
-
-Public Sub ModelActivate(f As MSForms.UserForm)
           ' Check we can even start
 4345      If Not CheckWorksheetAvailable Then
 4346          Unload Me
@@ -427,49 +350,50 @@ Public Sub ModelActivate(f As MSForms.UserForm)
           ' screen. This works around an apparent bug (?) in Excel 2007.
 4353      Application.CutCopyMode = False
           ' Clear the form
-4354      f.optMax.value = False
-4355      f.optMin.value = False
-4356      f.refObj.Text = ""
-4357      f.refDecision.Text = ""
-4358      f.refConLHS.Text = ""
-4359      f.refConRHS.Text = ""
-4360      f.lstConstraints.Clear
-4361      f.cboConRel.Clear
-4362      f.cboConRel.AddItem "="
-4363      f.cboConRel.AddItem "<="
-4364      f.cboConRel.AddItem ">="
-4365      f.cboConRel.AddItem "int"
-4366      f.cboConRel.AddItem "bin"
-4367      f.cboConRel.AddItem "alldiff"
-4368      f.cboConRel.ListIndex = cboPosition("=")    ' We set an initial value just in case there is no model, and the user goes straight to AddNewConstraint
+4354      optMax.value = False
+4355      optMin.value = False
+4356      refObj.Text = ""
+4357      refDecision.Text = ""
+4358      refConLHS.Text = ""
+4359      refConRHS.Text = ""
+4360      lstConstraints.Clear
+4361      cboConRel.Clear
+4362      cboConRel.AddItem "="
+4363      cboConRel.AddItem "<="
+4364      cboConRel.AddItem ">="
+4365      cboConRel.AddItem "int"
+4366      cboConRel.AddItem "bin"
+4367      cboConRel.AddItem "alldiff"
+4368      cboConRel.ListIndex = cboPosition("=")    ' We set an initial value just in case there is no model, and the user goes straight to AddNewConstraint
 
           'Find current solver
           Dim Solver As String
 4369      If GetNameValueIfExists(ActiveWorkbook, "'" & Replace(ActiveWorkbook.ActiveSheet.Name, "'", "''") & "'!OpenSolver_ChosenSolver", Solver) Then
-4370          f.lblSolver.Caption = "Current Solver Engine: " & UCase(left(Solver, 1)) & Mid(Solver, 2)
-4371      Else: f.lblSolver.Caption = "Current Solver Engine: CBC"
+4370          lblSolver.Caption = "Current Solver Engine: " & UCase(left(Solver, 1)) & Mid(Solver, 2)
+4371      Else
+              lblSolver.Caption = "Current Solver Engine: CBC"
 4372      End If
           ' Load the model on the sheet into memory
 4373      ListItem = -1
 4374      ConChangedMode = False
 4375      DontRepop = False
-4376      Disabler True, f
+4376      Disabler True
 4377      model.LoadFromSheet
 4378      DoEvents
-4379      UpdateFormFromMemory f
+4379      UpdateFormFromMemory
 
 
           MinHeight = 390
-          If Not OpenedBefore Then
-              #If Win32 Then
-                  Set m_clsResizer = New CResizer
-                  m_clsResizer.Add f, "Model"
-                  f.cmdReset.left = f.cmdReset.left - m_clsResizer.width
-                  f.cmdOptions.left = f.cmdOptions.left - m_clsResizer.width
-                  f.cmdBuild.left = f.cmdBuild.left - m_clsResizer.width
-                  f.cmdCancel.left = f.cmdCancel.left - m_clsResizer.width
-              #End If
-          End If
+'          If Not OpenedBefore Then
+'              #If Win32 Then
+'                  Set m_clsResizer = New CResizer
+'                  m_clsResizer.Add "Model"
+'                  cmdReset.left = cmdReset.left - m_clsResizer.width
+'                  cmdOptions.left = cmdOptions.left - m_clsResizer.width
+'                  cmdBuild.left = cmdBuild.left - m_clsResizer.width
+'                  cmdCancel.left = cmdCancel.left - m_clsResizer.width
+'              #End If
+'          End If
           OpenedBefore = True
 
 4380      DoEvents
@@ -477,37 +401,22 @@ Public Sub ModelActivate(f As MSForms.UserForm)
 4381      DoEvents
           'cmdCancel.SetFocus
           'DoEvents
-4382      f.Repaint
+4382      Repaint
           'cmdCancel.SetFocus
 4383      DoEvents
 End Sub
 
 
 Private Sub cmdCancel_Click()
-4384            frmModel.ModelCancelClick Me
-4385            Me.Hide
-End Sub
-
-Public Sub ModelCancelClick(f As UserForm)
 4386      DoEvents
 4387      On Error Resume Next ' Just to be safe on our select
 4388      Application.CutCopyMode = False
 4389      ActiveCell.Select ' Just select one cell, choosing a cell that should be visible to avoid scrolling
 4390      Application.ScreenUpdating = True
+          Me.Hide
 End Sub
 
-
-'--------------------------------------------------------------------
-' cmdBuild_Click [event]
-' Turn the model into a Solver model
-'
-' Written by:       IRD
-'--------------------------------------------------------------------
 Private Sub cmdRunAutoModel_Click()
-4391            frmModel.ModelRunAutoModel Me
-End Sub
-
-Public Sub ModelRunAutoModel(f As UserForm)
           ' Try and guess the objective
           Dim status As String
 4392      status = model.FindObjective(ActiveSheet)
@@ -535,24 +444,12 @@ Public Sub ModelRunAutoModel(f As UserForm)
           ' Force the automatically created model to be AssumeNonNegative
 4402      model.NonNegativityAssumption = True
 
-4403      UpdateFormFromMemory f
+4403      UpdateFormFromMemory
 4404      DoEvents
 4405      Application.StatusBar = False
 End Sub
 
-
-'--------------------------------------------------------------------
-' cmdBuild_Click [event]
-' Turn the model into a Solver model
-'
-' Written by:       IRD
-'--------------------------------------------------------------------
 Private Sub cmdBuild_Click()
-4406           frmModel.ModelBuild Me
-4407           Me.Hide
-End Sub
-
-Public Sub ModelBuild(f As UserForm)
 4408      DoEvents
 4409      On Error Resume Next
 4410      Application.CutCopyMode = False
@@ -560,30 +457,22 @@ Public Sub ModelBuild(f As UserForm)
 4412      Application.ScreenUpdating = True
 4413      On Error GoTo 0
 
-      '          If (model.DecisionVariables Is Nothing) Or (model.ObjectiveFunctionCell Is Nothing) _
-      '                    Or model.Constraints.Count = 0 Then
-      '              Me.Hide
-      '              Exit Sub
-      '          End If
-          '----------------------------------------------------------------
           ' Pull possibly update objective info into model
 4414      On Error GoTo BadObjRef
-      'On Error Resume Next
-
-4415      If Trim(f.refObj.Text) = "" Then
+4415      If Trim(refObj.Text) = "" Then
 4416          Set model.ObjectiveFunctionCell = Nothing
 4417      Else
-4418          Set model.ObjectiveFunctionCell = Range(f.refObj.Text)
+4418          Set model.ObjectiveFunctionCell = Range(refObj.Text)
 4419      End If
 4420      On Error GoTo errorHandler
 
           ' Get the objective sense
-4421      If f.optMax.value = True Then model.ObjectiveSense = MaximiseObjective
-4422      If f.optMin.value = True Then model.ObjectiveSense = MinimiseObjective
-4423      If f.optTarget.value = True Then
+4421      If optMax.value = True Then model.ObjectiveSense = MaximiseObjective
+4422      If optMin.value = True Then model.ObjectiveSense = MinimiseObjective
+4423      If optTarget.value = True Then
 4424          model.ObjectiveSense = TargetObjective
 4425          On Error GoTo BadObjectiveTarget
-4426          model.ObjectiveTarget = CDbl(f.txtObjTarget.Text)
+4426          model.ObjectiveTarget = CDbl(txtObjTarget.Text)
 4427          On Error GoTo errorHandler
 4428      End If
 4429      If model.ObjectiveSense = UnknownObjectiveSense Then
@@ -596,10 +485,10 @@ Public Sub ModelBuild(f As UserForm)
           ' We allow multiple=area ranges here, which requires
 4433      On Error GoTo BadDecRef
       'On Error Resume Next
-4434      If Trim(f.refDecision.Text) = "" Then
+4434      If Trim(refDecision.Text) = "" Then
 4435          Set model.DecisionVariables = Nothing
 4436      Else
-4437          Set model.DecisionVariables = Range(ConvertFromCurrentLocale(f.refDecision.Text))
+4437          Set model.DecisionVariables = Range(ConvertFromCurrentLocale(refDecision.Text))
 4438      End If
 4439      On Error GoTo errorHandler
 
@@ -607,28 +496,29 @@ Public Sub ModelBuild(f As UserForm)
           ' Pull possibly updated dual storage cells
 4440      On Error GoTo BadDualsRef
 
-4441      If f.chkGetDuals.value = False Or Trim(f.refDuals.Text) = "" Then
+4441      If chkGetDuals.value = False Or Trim(refDuals.Text) = "" Then
 4442          Set model.Duals = Nothing
 4443      Else
-4444          Set model.Duals = Range(f.refDuals.Text)
+4444          Set model.Duals = Range(refDuals.Text)
 4445      End If
 4446      On Error GoTo errorHandler
 
           '----------------------------------------------------------------
           ' Do it
-4447      model.NonNegativityAssumption = f.chkNonNeg.value
+4447      model.NonNegativityAssumption = chkNonNeg.value
 
 4448      model.BuildModel
 
 
           '----------------------------------------------------------------
           ' Display on screen
-4449      If f.chkShowModel.value = True Then OpenSolverVisualizer.ShowSolverModel
+4449      If chkShowModel.value = True Then OpenSolverVisualizer.ShowSolverModel
 4450      On Error GoTo CalculateFailed
 4451      Application.Calculate
 4452      On Error GoTo errorHandler
           '----------------------------------------------------------------
           ' Finish
+          Me.Hide
 4453      Exit Sub
 
           '----------------------------------------------------------------
@@ -643,7 +533,7 @@ BadObjRef:
           ' Couldn't turn the objective cell address into a range
 4457      MsgBox "Error: the cell address for the objective is invalid. " + _
                   "Please correct this and try again.", vbExclamation + vbOKOnly, "OpenSolver"
-4458      f.refObj.SetFocus ' Set the focus back to the RefEdit
+4458      refObj.SetFocus ' Set the focus back to the RefEdit
 4459      DoEvents ' Try to stop RefEdit bugs
 4460      Exit Sub
           '----------------------------------------------------------------
@@ -652,21 +542,21 @@ BadDecRef:
 4461      MsgBox "Error: the cell range specified for the Variable Cells is invalid. " + _
                  "This must be a valid Excel range that does not exceed Excel's internal character count limits. " + _
                   "Please correct this and try again.", vbExclamation + vbOKOnly, "OpenSolver"
-4462      f.refDecision.SetFocus ' Set the focus back to the RefEdit
+4462      refDecision.SetFocus ' Set the focus back to the RefEdit
 4463      DoEvents ' Try to stop RefEdit bugs
 4464      Exit Sub
 BadObjectiveTarget:
           ' Couldn't turn the objective target into a value
 4465      MsgBox "Error: the target value for the objective cell is invalid. " + _
                   "Please correct this and try again.", vbExclamation + vbOKOnly, "OpenSolver"
-4466      f.txtObjTarget.SetFocus ' Set the focus back to the target text box
+4466      txtObjTarget.SetFocus ' Set the focus back to the target text box
 4467      DoEvents ' Try to stop RefEdit bugs
 4468      Exit Sub
 BadDualsRef:
           ' Couldn't turn the dual cell into a range
 4469      MsgBox "Error: the cell for storing the shadow prices is invalid. " + _
                   "Please correct this and try again.", vbExclamation + vbOKOnly, "OpenSolver"
-4470      f.refDuals.SetFocus ' Set the focus back to the target text box
+4470      refDuals.SetFocus ' Set the focus back to the target text box
 4471      DoEvents ' Try to stop RefEdit bugs
 4472      Exit Sub
 errorHandler:
@@ -675,55 +565,30 @@ errorHandler:
 4475      Exit Sub
 End Sub
 
-
-'--------------------------------------------------------------------
-' cboConRel_Change [event]
-' Called whenever the constraint type changes
-'
-' Written by:       IRD
-'--------------------------------------------------------------------
 Private Sub cboConRel_Change()
-4476            frmModel.ModelChangeConRel Me
-End Sub
-
-Public Sub ModelChangeConRel(f As UserForm)
-4477      If f.cboConRel.Text = "=" Then f.refConRHS.Enabled = True
-4478      If f.cboConRel.Text = "<=" Then f.refConRHS.Enabled = True
-4479      If f.cboConRel.Text = ">=" Then f.refConRHS.Enabled = True
-4480      If f.cboConRel.Text = "int" Or f.cboConRel.Text = "bin" Or f.cboConRel.Text = "alldiff" Then
-4481          f.refConRHS.Enabled = False
-              'f.refConRHS.Text = ""
+4477      If cboConRel.Text = "=" Then refConRHS.Enabled = True
+4478      If cboConRel.Text = "<=" Then refConRHS.Enabled = True
+4479      If cboConRel.Text = ">=" Then refConRHS.Enabled = True
+4480      If cboConRel.Text = "int" Or cboConRel.Text = "bin" Or cboConRel.Text = "alldiff" Then
+4481          refConRHS.Enabled = False
 4482      End If
 
 4483      If ListItem >= 1 And Not model.Constraints Is Nothing Then
               Dim origREL As String
-
 4484          origREL = model.Constraints(ListItem).ConstraintType
-4485          If f.cboConRel.Text <> origREL Then
-4486              Disabler False, f
-4487              f.cmdAddCon.Enabled = True
+4485          If cboConRel.Text <> origREL Then
+4486              Disabler False
+4487              cmdAddCon.Enabled = True
 4488              ConChangedMode = True
 4489          Else
-4490              Disabler True, f
-4491              f.cmdAddCon.Enabled = False
+4490              Disabler True
+4491              cmdAddCon.Enabled = False
 4492              ConChangedMode = False
 4493          End If
 4494      End If
 End Sub
 
-
-'--------------------------------------------------------------------
-' cmdAddCon_Click [event]
-' Add a constraint, assuming it validates
-' OR
-' Update an existing constraint, again assuming validation
-'
-' Written by:       IRD
-'--------------------------------------------------------------------
 Private Sub cmdAddCon_Click()
-4495            frmModel.ModelAddConstraint Me
-End Sub
-Public Sub ModelAddConstraint(f As UserForm)
 4496      On Error GoTo errorHandler
 
           Dim rngLHS As Range, rngRHS As Range
@@ -747,37 +612,37 @@ Public Sub ModelAddConstraint(f As UserForm)
           '
           ' LEFT HAND SIDE
           Dim LHSisRange As Boolean, LHSisFormula As Boolean, LHSIsValueWithEqual As Boolean, LHSIsValueWithoutEqual As Boolean
-4497      TestStringForConstraint f.refConLHS.Text, LHSisRange, LHSisFormula, LHSIsValueWithEqual, LHSIsValueWithoutEqual
+4497      TestStringForConstraint refConLHS.Text, LHSisRange, LHSisFormula, LHSIsValueWithEqual, LHSIsValueWithoutEqual
 
 4498      If LHSisRange = False Then
               ' The string in the LHS refedit does not describe a range
 4499          MsgBox "Left-hand-side of constraint must be a range."
 4500          Exit Sub
 4501      End If
-4502      If Range(Trim(f.refConLHS.Text)).Areas.Count > 1 Then
+4502      If Range(Trim(refConLHS.Text)).Areas.Count > 1 Then
               ' The LHS is multiple areas - not allowed
 4503          MsgBox "Left-hand-side of constraint must have only one area."
 4504          Exit Sub
 4505      End If
-4506      Set rngLHS = Range(Trim(f.refConLHS.Text))
+4506      Set rngLHS = Range(Trim(refConLHS.Text))
 
           '----------------------------------------------------------------
           ' RIGHT HAND SIDE
           Dim RHSisRange As Boolean, RHSisFormula As Boolean, RHSIsValueWithEqual As Boolean, RHSIsValueWithoutEqual As Boolean
           Dim strRel As String
-4507      strRel = f.cboConRel.Text
-4508      If strRel = "" Then ' Should not happen as of 20/9/2011 (AJM)
+4507      strRel = cboConRel.Text
+4508      If strRel = "" Then ' Should not happen
 4509          MsgBox "Please select a relation such as = or <="
 4510          Exit Sub
 4511      End If
 4512      IsRestrict = Not ((strRel = "=") Or (strRel = "<=") Or (strRel = ">="))
 4513      If Not IsRestrict Then
-4514          If Trim(f.refConRHS.Text) = "" Then
+4514          If Trim(refConRHS.Text) = "" Then
 4515              MsgBox "Please enter a right-hand-side!"
 4516              Exit Sub
 4517          End If
 
-4518          TestStringForConstraint f.refConRHS.Text, RHSisRange, RHSisFormula, RHSIsValueWithEqual, RHSIsValueWithoutEqual
+4518          TestStringForConstraint refConRHS.Text, RHSisRange, RHSisFormula, RHSIsValueWithEqual, RHSIsValueWithoutEqual
 
 4519          If Not RHSisRange And Not RHSisFormula _
               And Not RHSIsValueWithEqual And Not RHSIsValueWithoutEqual Then
@@ -792,7 +657,7 @@ Public Sub ModelAddConstraint(f As UserForm)
 4523          If RHSisRange Then
                   ' If it is single cell, thats OK
                   ' If it is multi cell, it must match cell count for LHS
-4524              Set rngRHS = Range(Trim(f.refConRHS.Text))
+4524              Set rngRHS = Range(Trim(refConRHS.Text))
 4525              If rngRHS.Count > 1 Then
 4526                  If rngRHS.Count <> rngLHS.Count Then
                           ' Mismatch!
@@ -802,18 +667,18 @@ Public Sub ModelAddConstraint(f As UserForm)
 4530              End If
 4531          End If
 
-              ' If not a range then evaluate to see if its legit
+              ' If not a range then evaluate to see if it's legit
               ' Evaluate is not locale-friendly
               ' So we put it in a cell on the internal sheet, then get it back
-              ' AJM 20/9/2011: We need to prefix the formula with an "=" otherwise formula such as 'sheet name'!A1 get entered as a string constant (becaused of the leading ')
+              ' We need to prefix the formula with an "=" otherwise formula such as 'sheet name'!A1 get entered as a string constant (becaused of the leading ')
               Dim internalRHS As String
-4532          internalRHS = Trim(f.refConRHS.Text)
+4532          internalRHS = Trim(refConRHS.Text)
 
               ' Turn off dialog display; we do not want try to open a workbook with a name of the worksheet! This happens if the formula comes from a worksheet
               ' whose name contains a space
 4533          Application.DisplayAlerts = False
 4534          On Error GoTo ErrorHandler_CannotInterpretRHS
-4535          OpenSolverSheet.Range("A1").FormulaLocal = IIf(left(internalRHS, 1) = "=", "", "=") & f.refConRHS.Text
+4535          OpenSolverSheet.Range("A1").FormulaLocal = IIf(left(internalRHS, 1) = "=", "", "=") & refConRHS.Text
 4536          internalRHS = OpenSolverSheet.Range("A1").Formula
 4537          OpenSolverSheet.Range("A1").Clear ' This must be blank to ensure no risk of dialogs being shown trying to locate a sheet
 4538          Application.DisplayAlerts = True
@@ -824,7 +689,7 @@ Public Sub ModelAddConstraint(f As UserForm)
 4540              varReturn = ActiveSheet.Evaluate(internalRHS) ' Must be worksheet.evaluate to get references to names local to the sheet
 4541              If VBA.VarType(varReturn) = vbError Then
 4542                  MsgBox "The formula or value for the RHS is not valid. Please check and try again."
-4543                  f.refConRHS.SetFocus
+4543                  refConRHS.SetFocus
 4544                  DoEvents
 4545                  Exit Sub
 4546              End If
@@ -843,19 +708,19 @@ Public Sub ModelAddConstraint(f As UserForm)
                   ' Always comes back with a = at the start
                   ' Unfortunately, return value will have wrong locale...
                   ' But not much can be done with that?
-4555              f.refConRHS.Text = Mid(varReturn, 2, Len(varReturn))
+4555              refConRHS.Text = Mid(varReturn, 2, Len(varReturn))
 4556          End If
 
 
 4557      End If
 
-4558      Disabler True, f
-4559      f.cmdAddCon.Enabled = False
+4558      Disabler True
+4559      cmdAddCon.Enabled = False
 4560      ConChangedMode = False
 
           '================================================================
           ' Update constraint?
-4561      If f.cmdAddCon.Caption <> "Add constraint" Then
+4561      If cmdAddCon.Caption <> "Add constraint" Then
 
               'With model.Constraints(f.lstConstraints.ListIndex)
 4562          With model.Constraints(ListItem)
@@ -872,15 +737,15 @@ Public Sub ModelAddConstraint(f As UserForm)
 4573                  Else
 4574                      Set .RHS = Nothing
 4575                      If left(.RHSstring, 1) <> "=" Then
-4576                          .RHSstring = "=" + f.refConRHS.Text
+4576                          .RHSstring = "=" + refConRHS.Text
 4577                      Else
-4578                          .RHSstring = f.refConRHS.Text
+4578                          .RHSstring = refConRHS.Text
 4579                      End If
 4580                  End If
 4581              End If
 4582          End With
 
-4583          If Not DontRepop Then model.PopulateConstraintListBox f.lstConstraints
+4583          If Not DontRepop Then model.PopulateConstraintListBox lstConstraints
 4584          Exit Sub
 4585      Else
           '================================================================
@@ -900,16 +765,16 @@ Public Sub ModelAddConstraint(f As UserForm)
 4597                  Else
 4598                      Set .RHS = Nothing
 4599                      If left(.RHSstring, 1) <> "=" Then
-4600                          .RHSstring = "=" + f.refConRHS.Text ' This has been converted above into a US-locale formula, value or reference
+4600                          .RHSstring = "=" + refConRHS.Text ' This has been converted above into a US-locale formula, value or reference
 4601                      Else
-4602                          .RHSstring = f.refConRHS.Text ' This has been converted above into a US-locale formula, value or reference
+4602                          .RHSstring = refConRHS.Text ' This has been converted above into a US-locale formula, value or reference
 4603                      End If
 4604                  End If
 4605              End If
 4606          End With
 
 4607          model.Constraints.Add NewConstraint ', NewConstraint.GetKey
-4608          If Not DontRepop Then model.PopulateConstraintListBox f.lstConstraints
+4608          If Not DontRepop Then model.PopulateConstraintListBox lstConstraints
 4609          Exit Sub
 4610      End If
 
@@ -922,7 +787,7 @@ ErrorHandler_CannotInterpretRHS:
 4615      OpenSolverSheet.Range("A1").Clear ' This must be blank to ensure no risk of dialogs being shown trying to locate a sheet
           ' Couldn't turn the RHS into a formula
 4616      MsgBox "The formula or value for the RHS is not valid. Please check and try again."
-4617      f.refConRHS.SetFocus
+4617      refConRHS.SetFocus
 4618      DoEvents ' Try to stop RefEdit bugs
 4619      Exit Sub
 errorHandler:
@@ -934,108 +799,76 @@ errorHandler:
 
 End Sub
 
-
-'--------------------------------------------------------------------
-' cmdDelSelCon_Click [event]
-' Delete selected constraint
-'
-' Written by:       IRD
-'--------------------------------------------------------------------
 Private Sub cmdDelSelCon_Click()
-4625           frmModel.ModelDeleteConstraint Me
-End Sub
-Public Sub ModelDeleteConstraint(f As UserForm)
-
-4626      If f.lstConstraints.ListIndex = -1 Then
+4626      If lstConstraints.ListIndex = -1 Then
 4627          MsgBox "Please select a constraint!", vbOKOnly, "AutoModel"
 4628          Exit Sub
 4629      End If
 
           ' Remove it
-4630      model.Constraints.Remove f.lstConstraints.ListIndex
+4630      model.Constraints.Remove lstConstraints.ListIndex
 
           ' Update form
-4631      model.PopulateConstraintListBox f.lstConstraints
+4631      model.PopulateConstraintListBox lstConstraints
 End Sub
 
-
-'--------------------------------------------------------------------
-' lstConstraints_Change [event]
-' Selection in constraints box changes
-'
-' Written by:       IRD
-'--------------------------------------------------------------------
 Private Sub lstConstraints_Change()
-4632      frmModel.ModelLstConstraintsChange Me
-End Sub
-
-Public Sub ModelLstConstraintsChange(f As UserForm)
-
 4633      If ConChangedMode = True Then
-4634          If f.cmdAddCon.Caption = "Update constraint" Then
+4634          If cmdAddCon.Caption = "Update constraint" Then
 4635              If MsgBox("You have made changes to the current constraint." _
                       + vbNewLine + "Do you want to save these changes?", vbYesNo) = vbYes Then
 
-                      'Debug.Print "Doing cmdAddCon_Click"
 4636                  DontRepop = True
-4637                  f.cmdAddCon_Click
+4637                  cmdAddCon_Click
 4638                  DontRepop = False
-                      ''Debug.Print "Done."
 4639              End If
 4640          Else
 4641              If MsgBox("You have entered a constraint." _
                       + vbNewLine + "Do you want to save this as a new constraint?", vbYesNo) = vbYes Then
 
-                      ''Debug.Print "Doing cmdAddCon_Click"
 4642                  DontRepop = True
-4643                  f.cmdAddCon_Click
+4643                  cmdAddCon_Click
 4644                  DontRepop = False
-                      ''Debug.Print "Done."
 4645              End If
 4646          End If
 
-4647          Disabler True, f
-4648          f.cmdAddCon.Enabled = False
+4647          Disabler True
+4648          cmdAddCon.Enabled = False
 4649          ConChangedMode = False
-              'ListItem = f.lstConstraints.ListIndex
-4650          model.PopulateConstraintListBox f.lstConstraints
-              'f.lstConstraints.ListIndex = ListItem
+4650          model.PopulateConstraintListBox lstConstraints
 4651      End If
 
-4652      ListItem = f.lstConstraints.ListIndex
+4652      ListItem = lstConstraints.ListIndex
 
-4653      If f.lstConstraints.ListIndex = -1 Then
+4653      If lstConstraints.ListIndex = -1 Then
 4654          Exit Sub
 4655      End If
-4656      If f.lstConstraints.ListIndex = 0 Then
+4656      If lstConstraints.ListIndex = 0 Then
               'Add constraint
-4657          f.refConLHS.Enabled = True
+4657          refConLHS.Enabled = True
 4658          DoEvents
-4659          f.refConLHS.Text = ""
+4659          refConLHS.Text = ""
 4660          DoEvents
-              'refConRHS.Enabled = True
-              'DoEvents
-4661          f.refConRHS.Text = ""
+              refConRHS.Text = ""
 4662          DoEvents
-4663          ModelChangeConRel f ' AJM: Force the RHS to be active only if the current relation is =, < or >, which is set based on the last constraint
-4664          f.cmdAddCon.Enabled = True
-4665          f.cmdAddCon.Caption = "Add constraint"
-4666          f.cmdDelSelCon.Enabled = False
+4663          cboConRel_Change ' Set the RHS to be active based on the last constraint
+4664          cmdAddCon.Enabled = True
+4665          cmdAddCon.Caption = "Add constraint"
+4666          cmdDelSelCon.Enabled = False
 4667          DoEvents
 4668          Application.CutCopyMode = False
 4669          ActiveCell.Select ' Just select one cell, choosing a cell that should be visible to avoid scrolling
 4670          Application.ScreenUpdating = True
-              'refConLHS.select
 4671          Exit Sub
 4672      Else
               ' Update constraint
-4673          f.refConLHS.Enabled = True
+4673          refConLHS.Enabled = True
 4674          DoEvents
-4675          f.refConRHS.Enabled = True
+4675          refConRHS.Enabled = True
 4676          DoEvents
-4677          f.cmdAddCon.Enabled = False
-4678          f.cmdAddCon.Caption = "Update constraint"
-4679          f.cmdDelSelCon.Enabled = True
+4677          cmdAddCon.Enabled = False
+4678          cmdAddCon.Caption = "Update constraint"
+4679          cmdDelSelCon.Enabled = True
 4680          DoEvents
 
               ' Set text and marching ants; the select/copy operations can throw errors if on different sheets
@@ -1043,23 +876,23 @@ Public Sub ModelLstConstraintsChange(f As UserForm)
 4682          ActiveCell.Select   ' We may fail in the next steps, se we cancel any old highlighting
 4683          Application.CutCopyMode = False
               Dim copyRange As Range
-4684          With model.Constraints(f.lstConstraints.ListIndex)
-4685              f.refConLHS.Text = GetDisplayAddress(.LHS, False)
+4684          With model.Constraints(lstConstraints.ListIndex)
+4685              refConLHS.Text = GetDisplayAddress(.LHS, False)
 4686              Set copyRange = .LHS
-4687              f.cboConRel.ListIndex = cboPosition(.ConstraintType)
-4688              f.refConRHS.Text = ""
+4687              cboConRel.ListIndex = cboPosition(.ConstraintType)
+4688              refConRHS.Text = ""
 4689              If Not .RHS Is Nothing Then
-4690                  f.refConRHS.Text = GetDisplayAddress(.RHS, False)
+4690                  refConRHS.Text = GetDisplayAddress(.RHS, False)
 4691                  Set copyRange = ProperUnion(copyRange, .RHS)
 4692              ElseIf .RHS Is Nothing And .RHSstring <> "" Then
 4693                  If Mid(.RHSstring, 1, 1) = "=" Then
-4694                      f.refConRHS.Text = RemoveActiveSheetNameFromString(Mid(.RHSstring, 2, Len(.RHSstring)))
+4694                      refConRHS.Text = RemoveActiveSheetNameFromString(Mid(.RHSstring, 2, Len(.RHSstring)))
 4695                  Else
-4696                      f.refConRHS.Text = RemoveActiveSheetNameFromString(.RHSstring)
+4696                      refConRHS.Text = RemoveActiveSheetNameFromString(.RHSstring)
 4697                  End If
 4698              End If
 4699          End With
-4700          ModelChangeConRel f
+4700          cboConRel_Change
 
               ' Will fail if LHS and RHS are different shape
               ' Silently fail, nothing that can be done about it
@@ -1077,22 +910,12 @@ Private Sub lstConstraints_Exit(ByVal Cancel As MSForms.ReturnBoolean)
 4706      ActiveCell.Select
 End Sub
 
-
-'--------------------------------------------------------------------
-' TestStringForConstraint
-' Based on GetNameAsValueOrRange
-' Returns information on the kind of value string is, and whether
-' it is suitable for a constraint
-'
-' Written by:       IRD
-'--------------------------------------------------------------------
 Sub TestStringForConstraint(ByVal TheString As String, _
                             RefersToRange As Boolean, _
                             RefersToFormula As Boolean, _
                             RefersToValueWithEqual As Boolean, _
                             RefersToValueWithoutEqual As Boolean)
-4707      TheString = Trim(TheString) ' AJM: Remove any leading/trailing spaces
-
+4707      TheString = Trim(TheString)
 4708      If Len(TheString) = 0 Then Exit Sub
 
           ' Test for RANGE
@@ -1120,91 +943,439 @@ Sub TestStringForConstraint(ByVal TheString As String, _
 
 End Sub
 
-Public Sub MoveItems(f As UserForm, ChangeY As Single)
+Public Sub MoveItems(ChangeY As Single)
         Me.height = Me.height + ChangeY
 
-        f.chkNameRange.top = f.chkNameRange.top + ChangeY
-        f.lblDiv4.top = f.lblDiv4.top + ChangeY
-        f.lblStep4.top = f.lblStep4.top + ChangeY
-        f.chkGetDuals.top = f.chkGetDuals.top + ChangeY
-        f.chkGetDuals2.top = f.chkGetDuals2.top + ChangeY
-        f.optUpdate.top = f.optUpdate.top + ChangeY
-        f.refDuals.top = f.refDuals.top + ChangeY
-        f.optNew.top = f.optNew.top + ChangeY
-        f.lblDiv6.top = f.lblDiv6.top + ChangeY
-        f.lblStep5.top = f.lblStep5.top + ChangeY
-        f.lblSolver.top = f.lblSolver.top + ChangeY
-        f.cmdChange.top = f.cmdChange.top + ChangeY
-        f.lblDiv5.top = f.lblDiv5.top + ChangeY
-        f.chkShowModel.top = f.chkShowModel.top + ChangeY
-        f.cmdReset.top = f.cmdReset.top + ChangeY
-        f.cmdOptions.top = f.cmdOptions.top + ChangeY
-        f.cmdBuild.top = f.cmdBuild.top + ChangeY
-        f.cmdCancel.top = f.cmdCancel.top + ChangeY
+        chkNameRange.top = chkNameRange.top + ChangeY
+        lblDiv4.top = lblDiv4.top + ChangeY
+        lblStep4.top = lblStep4.top + ChangeY
+        chkGetDuals.top = chkGetDuals.top + ChangeY
+        chkGetDuals2.top = chkGetDuals2.top + ChangeY
+        optUpdate.top = optUpdate.top + ChangeY
+        refDuals.top = refDuals.top + ChangeY
+        optNew.top = optNew.top + ChangeY
+        lblDiv6.top = lblDiv6.top + ChangeY
+        lblStep5.top = lblStep5.top + ChangeY
+        lblSolver.top = lblSolver.top + ChangeY
+        cmdChange.top = cmdChange.top + ChangeY
+        lblDiv5.top = lblDiv5.top + ChangeY
+        chkShowModel.top = chkShowModel.top + ChangeY
+        cmdReset.top = cmdReset.top + ChangeY
+        cmdOptions.top = cmdOptions.top + ChangeY
+        cmdBuild.top = cmdBuild.top + ChangeY
+        cmdCancel.top = cmdCancel.top + ChangeY
 
         If Me.InsideHeight + ChangeY >= MinHeight + 24 Then
-            f.lstConstraints.height = Me.InsideHeight - 282
-            f.lblDesc.Caption = "AutoModel is a feature of OpenSolver that tries to automatically " _
-                              & "determine the problem you are trying to optimise by observing the " _
-                              & "structure of the spreadsheet. It will turn its best guess into a " _
-                              & "Solver model, which you can then edit in this window."
-            f.lblDesc.height = 24
+            lstConstraints.height = Me.InsideHeight - 282
+            lblDesc.Caption = "AutoModel is a feature of OpenSolver that tries to automatically " _
+                            & "determine the problem you are trying to optimise by observing the " _
+                            & "structure of the spreadsheet. It will turn its best guess into a " _
+                            & "Solver model, which you can then edit in this window."
+            lblDesc.height = 24
 
             If ContractedBefore Then
-                f.lblDiv1.top = 57
-                f.lblStep1.top = 64
-                f.refObj.top = 64
-                f.optMax.top = 64
-                f.optMin.top = 64
-                f.optTarget.top = 64
-                f.txtObjTarget.top = 64
-                f.lblDiv2.top = 85.05
-                f.lblStep2.top = 94
-                f.refDecision.top = 94
-                f.lblDiv3.top = 136
-                f.lblStep3.top = 142
-                f.lstConstraints.top = 160
-                f.lblConstraintGroup.top = 159.95
-                f.refConLHS.top = 166
-                f.cboConRel.top = 166
-                f.refConRHS.top = 189.95
-                f.cmdAddCon.top = 213.95
-                f.cmdCancelCon.top = 213.95
-                f.cmdDelSelCon.top = 244
-                f.chkNonNeg.top = 268
+                lblDiv1.top = 57
+                lblStep1.top = 64
+                refObj.top = 64
+                optMax.top = 64
+                optMin.top = 64
+                optTarget.top = 64
+                txtObjTarget.top = 64
+                lblDiv2.top = 85.05
+                lblStep2.top = 94
+                refDecision.top = 94
+                lblDiv3.top = 136
+                lblStep3.top = 142
+                lstConstraints.top = 160
+                lblConstraintGroup.top = 159.95
+                refConLHS.top = 166
+                cboConRel.top = 166
+                refConRHS.top = 189.95
+                cmdAddCon.top = 213.95
+                cmdCancelCon.top = 213.95
+                cmdDelSelCon.top = 244
+                chkNonNeg.top = 268
                 ContractedBefore = False
             End If
         Else
             ContractedBefore = True
-            f.lblDesc.Caption = ""
-            f.lblDesc.height = 0
-            f.lblDiv1.top = f.lblDiv1.top + ChangeY
-            f.lblStep1.top = f.lblStep1.top + ChangeY
-            f.refObj.top = f.refObj.top + ChangeY
-            f.optMax.top = f.optMax.top + ChangeY
-            f.optMin.top = f.optMin.top + ChangeY
-            f.optTarget.top = f.optTarget.top + ChangeY
-            f.txtObjTarget.top = f.txtObjTarget.top + ChangeY
-            f.lblDiv2.top = f.lblDiv2.top + ChangeY
-            f.lblStep2.top = f.lblStep2.top + ChangeY
-            f.refDecision.top = f.refDecision.top + ChangeY
-            f.lblDiv3.top = f.lblDiv3.top + ChangeY
-            f.lblStep3.top = f.lblStep3.top + ChangeY
-            f.lstConstraints.top = f.lstConstraints.top + ChangeY
-            f.lblConstraintGroup.top = f.lblConstraintGroup.top + ChangeY
-            f.refConLHS.top = f.refConLHS.top + ChangeY
-            f.cboConRel.top = f.cboConRel.top + ChangeY
-            f.refConRHS.top = f.refConRHS.top + ChangeY
-            f.cmdAddCon.top = f.cmdAddCon.top + ChangeY
-            f.cmdCancelCon.top = f.cmdCancelCon.top + ChangeY
-            f.cmdDelSelCon.top = f.cmdDelSelCon.top + ChangeY
-            f.chkNonNeg.top = f.chkNonNeg.top + ChangeY
+            lblDesc.Caption = ""
+            lblDesc.height = 0
+            lblDiv1.top = lblDiv1.top + ChangeY
+            lblStep1.top = lblStep1.top + ChangeY
+            refObj.top = refObj.top + ChangeY
+            optMax.top = optMax.top + ChangeY
+            optMin.top = optMin.top + ChangeY
+            optTarget.top = optTarget.top + ChangeY
+            txtObjTarget.top = txtObjTarget.top + ChangeY
+            lblDiv2.top = lblDiv2.top + ChangeY
+            lblStep2.top = lblStep2.top + ChangeY
+            refDecision.top = refDecision.top + ChangeY
+            lblDiv3.top = lblDiv3.top + ChangeY
+            lblStep3.top = lblStep3.top + ChangeY
+            lstConstraints.top = lstConstraints.top + ChangeY
+            lblConstraintGroup.top = lblConstraintGroup.top + ChangeY
+            refConLHS.top = refConLHS.top + ChangeY
+            cboConRel.top = cboConRel.top + ChangeY
+            refConRHS.top = refConRHS.top + ChangeY
+            cmdAddCon.top = cmdAddCon.top + ChangeY
+            cmdCancelCon.top = cmdCancelCon.top + ChangeY
+            cmdDelSelCon.top = cmdDelSelCon.top + ChangeY
+            chkNonNeg.top = chkNonNeg.top + ChangeY
         End If
 End Sub
-
 
 Private Sub UserForm_Terminate()
     Set m_clsResizer = Nothing
 End Sub
 
 
+Private Sub UserForm_Initialize()
+    AutoLayout
+End Sub
+
+Private Sub AutoLayout()
+    AutoFormat Me.Controls
+    
+    Me.width = FormWidthModel
+    
+    With cmdRunAutoModel
+        .Caption = "AutoModel"
+        .width = FormButtonWidth * 1.3
+        .top = FormMargin
+        .left = Me.width - FormMargin - .width
+    End With
+    
+    With lblDescHeader
+        .left = FormMargin
+        .top = cmdRunAutoModel.top + FormSpacing
+        .Caption = "What is AutoModel?"
+    End With
+    
+    With lblDesc
+        .left = lblDescHeader.left
+        .top = cmdRunAutoModel.top + cmdRunAutoModel.height + FormSpacing
+        .Caption = "AutoModel is a feature of OpenSolver that tries to automatically determine " & _
+                   "the problem you are trying to optimise by observing the structure of the " & _
+                   "spreadsheet. It will turn its best guess into a Solver model, which you can " & _
+                   "then edit in this window."
+        .width = Me.width - 2 * FormMargin
+        .AutoSize = False
+        .AutoSize = True
+        .AutoSize = False
+        .width = Me.width - 2 * FormMargin
+    End With
+    
+    With lblDiv1
+        .left = lblDescHeader.left
+        .top = lblDesc.top + lblDesc.height + FormSpacing
+        .width = lblDesc.width
+        .height = FormDivHeight
+        .BackColor = FormDivBackColor
+    End With
+    
+    With lblStep1
+        .Caption = "Objective Cell:"
+        .left = lblDescHeader.left
+        .top = lblDiv1.top + lblDiv1.height + FormSpacing
+        .width = Me.width
+        .AutoSize = False
+        .AutoSize = True
+        .AutoSize = False
+    End With
+    
+    With txtObjTarget
+        .width = cmdRunAutoModel.width
+        .top = lblStep1.top
+        .left = Me.width - FormMargin - .width
+    End With
+    
+    With optTarget
+        .Caption = "target value:"
+        .width = Me.width
+        .AutoSize = False
+        .AutoSize = True
+        .AutoSize = False
+        .top = lblStep1.top
+        .left = txtObjTarget.left - FormSpacing - .width
+    End With
+    
+    With optMin
+        .Caption = "minimise"
+        .width = Me.width
+        .AutoSize = False
+        .AutoSize = True
+        .AutoSize = False
+        .top = lblStep1.top
+        .left = optTarget.left - FormSpacing - .width
+    End With
+    
+    With optMax
+        .Caption = "maximise"
+        .width = Me.width
+        .AutoSize = False
+        .AutoSize = True
+        .AutoSize = False
+        .top = lblStep1.top
+        .left = optMin.left - FormSpacing - .width
+    End With
+    
+    With refObj
+        .left = lblStep1.left + lblStep1.width + FormSpacing
+        .top = lblStep1.top
+        .width = optMax.left - FormSpacing - .left
+        .height = FormTextBoxHeight
+    End With
+    
+    With lblDiv2
+        .left = lblDescHeader.left
+        .top = optMax.top + optMax.height + FormSpacing
+        .width = lblDesc.width
+        .height = FormDivHeight
+        .BackColor = FormDivBackColor
+    End With
+    
+    With lblStep2
+        .Caption = "Variable Cells:"
+        .left = lblDescHeader.left
+        .top = lblDiv2.top + lblDiv2.height + FormSpacing
+        .width = Me.width
+        .AutoSize = False
+        .AutoSize = True
+        .AutoSize = False
+    End With
+    
+    With refDecision
+        .height = 2 * FormTextHeight
+        .left = refObj.left
+        .top = lblStep2.top
+        .width = Me.width - FormMargin - .left
+    End With
+    
+    With lblDiv3
+        .left = lblDescHeader.left
+        .top = refDecision.top + refDecision.height + FormSpacing
+        .width = lblDesc.width
+        .height = FormDivHeight
+        .BackColor = FormDivBackColor
+    End With
+    
+    With lblStep3
+        .Caption = "Constraints:"
+        .left = lblDescHeader.left
+        .top = lblDiv3.top + lblDiv3.height + FormSpacing
+        .width = lblDesc.width
+    End With
+    
+    lblConstraintGroup.top = lblStep3.top + lblStep3.height
+    
+    With cboConRel
+        .width = cmdRunAutoModel.width / 2
+        .height = refObj.height
+        .top = lblConstraintGroup.top + FormSpacing
+        .left = Me.width - FormMargin - FormSpacing - .width
+    End With
+    
+    With refConLHS
+        .width = cboConRel.width * 3
+        .height = refObj.height
+        .top = cboConRel.top
+        .left = cboConRel.left - FormSpacing - .width
+    End With
+    
+    With refConRHS
+        .width = refConLHS.width
+        .left = refConLHS.left
+        .height = refObj.height
+        .top = refConLHS.top + refConLHS.height + FormSpacing
+    End With
+    
+    With cmdAddCon
+        .Caption = "Add constraint"
+        .left = refConLHS.left
+        .top = refConRHS.top + refConLHS.height + FormSpacing
+        .width = cboConRel.width * 2
+    End With
+    
+    With cmdCancelCon
+        .Caption = "Cancel"
+        .left = cmdAddCon.left + cmdAddCon.width + FormSpacing
+        .top = cmdAddCon.top
+        .width = cmdAddCon.width
+    End With
+    
+    With lblConstraintGroup
+        .left = refConLHS.left - FormSpacing
+        .width = FormSpacing * 3 + cmdAddCon.width + cmdCancelCon.width
+        .height = FormSpacing * 4 + refConLHS.height + refConRHS.height + cmdAddCon.height
+    End With
+    
+    With cmdDelSelCon
+        .Caption = "Delete selected constraint"
+        .left = lblConstraintGroup.left
+        .top = lblConstraintGroup.top + lblConstraintGroup.height + FormSpacing
+        .width = lblConstraintGroup.width
+    End With
+    
+    With chkNonNeg
+        .Caption = "Make unconstrainted variable cells non-negative"
+        .left = lblConstraintGroup.left
+        .top = cmdDelSelCon.top + cmdDelSelCon.height + FormSpacing
+        .width = lblConstraintGroup.width
+    End With
+    
+    With lstConstraints
+        .left = lblDescHeader.left
+        .top = lblConstraintGroup.top
+        .height = 140
+        .width = lblConstraintGroup.left - .left - FormSpacing
+    End With
+    
+    With chkNameRange
+        .left = lblDescHeader.left
+        .top = lstConstraints.top + lstConstraints.height + FormSpacing
+        .width = lstConstraints.width
+        .Caption = "Show named ranges"
+    End With
+    
+    With lblDiv4
+        .left = lblDescHeader.left
+        .top = chkNameRange.top + chkNameRange.height + FormSpacing
+        .width = lblDesc.width
+        .height = FormDivHeight
+        .BackColor = FormDivBackColor
+    End With
+    
+    With lblStep4
+        .Caption = "Sensitivity Analysis"
+        .left = lblDescHeader.left
+        .top = lblDiv4.top + lblDiv4.height + FormSpacing
+        .width = Me.width
+        .AutoSize = False
+        .AutoSize = True
+        .AutoSize = False
+    End With
+    
+    With chkGetDuals
+        .Caption = "List sensitivity analysis on the same sheet with top left cell:"
+        .left = lblStep4.left + lblStep4.width + FormSpacing
+        .top = lblStep4.top
+        .width = Me.width
+        .AutoSize = False
+        .AutoSize = True
+        .AutoSize = False
+    End With
+    
+    With refDuals
+        .left = chkGetDuals.left + chkGetDuals.width + FormSpacing
+        .width = Me.width - FormMargin - .left
+        .height = refObj.height
+        .top = lblStep4.top
+    End With
+    
+    With chkGetDuals2
+        .Caption = "Output sensitivity analysis:"
+        .left = chkGetDuals.left
+        .top = chkGetDuals.top + chkGetDuals.height
+        .width = Me.width
+        .AutoSize = False
+        .AutoSize = True
+        .AutoSize = False
+    End With
+    
+    With optUpdate
+        .Caption = "updating any previous output sheet"
+        .left = chkGetDuals2.left + chkGetDuals2.width + FormSpacing
+        .top = chkGetDuals2.top
+        .width = Me.width
+        .AutoSize = False
+        .AutoSize = True
+        .AutoSize = False
+    End With
+    
+    With optNew
+        .Caption = "on a new sheet"
+        .left = optUpdate.left + optUpdate.width + FormSpacing
+        .top = chkGetDuals2.top
+        .width = Me.width
+        .AutoSize = False
+        .AutoSize = True
+        .AutoSize = False
+    End With
+    
+    With lblDiv5
+        .left = lblDescHeader.left
+        .top = optNew.top + optNew.height
+        .width = lblDesc.width
+        .height = FormDivHeight
+        .BackColor = FormDivBackColor
+    End With
+    
+    With lblStep5
+        .left = lblDescHeader.left
+        .Caption = "Solver Engine:"
+        .top = lblDiv5.top + lblDiv5.height + FormSpacing
+    End With
+    
+    With cmdChange
+        .top = lblStep5.top
+        .width = cmdRunAutoModel.width
+        .left = Me.width - FormMargin - .width
+        .Caption = "Solver Engine..."
+    End With
+    
+    With lblSolver
+        .top = lblStep5.top + FormButtonHeight - FormTextHeight
+        .width = cmdChange.left - FormSpacing - .left
+    End With
+    
+    With lblDiv6
+        .left = lblDescHeader.left
+        .top = cmdChange.top + cmdChange.height + FormSpacing
+        .width = lblDesc.width
+        .height = FormDivHeight
+        .BackColor = FormDivBackColor
+    End With
+        
+    With chkShowModel
+        .left = lblDescHeader.left
+        .top = lblDiv6.top + lblDiv6.height + FormSpacing
+        .AutoSize = False
+        .AutoSize = True
+        .AutoSize = False
+    End With
+    
+    With cmdCancel
+        .width = cmdRunAutoModel.width
+        .Caption = "Cancel"
+        .left = Me.width - FormMargin - .width
+        .top = chkShowModel.top
+    End With
+    
+    With cmdBuild
+        .width = cmdRunAutoModel.width
+        .Caption = "Save Model"
+        .left = cmdCancel.left - FormSpacing - .width
+        .top = chkShowModel.top
+    End With
+    
+    With cmdOptions
+        .width = cmdRunAutoModel.width
+        .Caption = "Options..."
+        .left = cmdBuild.left - FormSpacing - .width
+        .top = chkShowModel.top
+    End With
+    
+    With cmdReset
+        .width = cmdRunAutoModel.width
+        .Caption = "Clear Model"
+        .left = cmdOptions.left - FormSpacing - .width
+        .top = chkShowModel.top
+    End With
+    
+    Me.height = cmdCancel.top + cmdCancel.height + FormMargin + FormTitleHeight
+    Me.width = Me.width + FormWindowMargin
+    
+    Me.BackColor = FormBackColor
+    Me.Caption = "OpenSolver - Model"
+End Sub

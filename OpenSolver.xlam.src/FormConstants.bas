@@ -9,6 +9,7 @@ Option Explicit
     Public Const FormButtonHeight = 22
     Public Const FormButtonWidth = 100
     Public Const FormCheckBoxHeight = 22
+    Public Const FormTextBoxHeight = 22
     Public Const FormTitleHeight = 20
     Public Const FormWindowMargin = 0
     Public Const FormMargin = 12
@@ -21,6 +22,7 @@ Option Explicit
     Public Const FormButtonHeight = 20
     Public Const FormButtonWidth = 66
     Public Const FormCheckBoxHeight = 16
+    Public Const FormTextBoxHeight = 18
     Public Const FormTitleHeight = 20
     Public Const FormWindowMargin = 4
     Public Const FormMargin = 6
@@ -40,11 +42,13 @@ Public Sub AutoFormat(ByRef Controls As Controls)
     Dim Cont As Control, ContType As String
     For Each Cont In Controls
         ContType = TypeName(Cont)
-        If ContType = "TextBox" Or ContType = "CheckBox" Or ContType = "Label" Or ContType = "CommandButton" Or ContType = "OptionButton" Then
+        If ContType = "TextBox" Or ContType = "CheckBox" Or ContType = "Label" Or _
+          ContType = "CommandButton" Or ContType = "OptionButton" Or _
+          ContType = "RefEdit" Or ContType = "ListBox" Or ContType = "ComboBox" Then
             With Cont
                 .Font.Name = FormFontName
                 .Font.Size = FormFontSize
-                If ContType = "TextBox" Then
+                If ContType = "TextBox" Or ContType = "RefEdit" Or ContType = "ListBox" Or ContType = "ComboBox" Then
                     .BackColor = FormTextBoxColor
                 Else
                     .BackColor = FormBackColor
@@ -54,6 +58,8 @@ Public Sub AutoFormat(ByRef Controls As Controls)
                     .height = FormButtonHeight
                 ElseIf ContType = "CheckBox" Or ContType = "OptionButton" Then
                     .height = FormCheckBoxHeight
+                ElseIf ContType = "TextBox" Or ContType = "RefEdit" Or ContType = "ComboBox" Then
+                    .height = FormTextBoxHeight
                 Else
                     .height = FormTextHeight
                 End If

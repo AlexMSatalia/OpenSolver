@@ -86,7 +86,7 @@ Private Sub cmdOk_Click()
          'Add the chosen solver as a hidden name in the workbook
 4758      Call SetNameOnSheet("OpenSolver_ChosenSolver", "=" & ChosenSolver)
 4761      frmModel.lblSolver.Caption = "Current Solver Engine: " & UCase(left(ChosenSolver, 1)) & Mid(ChosenSolver, 2)
-4762      frmModel.Disabler True, frmModel
+4762      frmModel.Disabler True
 4763      Unload Me
 End Sub
 
@@ -114,7 +114,7 @@ Sub AutoLayout()
         .left = lblChoose.left
         .top = lblChoose.top + lblChoose.height
         .width = lblChoose.width
-        .height = FormTextHeight
+        .height = FormTextHeight + 1
     End With
     
     With lblDesc
