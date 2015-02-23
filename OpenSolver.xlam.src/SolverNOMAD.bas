@@ -36,7 +36,8 @@ Function About_NOMAD() As String
 6971      End If
           ' Assemble version info
 6972      About_NOMAD = "NOMAD " & SolverBitness_NOMAD & "-bit v" & SolverVersion_NOMAD() & _
-                        " using OpenSolverNomadDLL v" & DllVersion_NOMAD() & " at " & MakeSpacesNonBreaking(DllPath_NOMAD())
+                        " using OpenSolverNomadDLL v" & DllVersion_NOMAD() & _
+                        " at " & MakeSpacesNonBreaking(ConvertHfsPath(DllPath_NOMAD()))
 End Function
 
 Function NomadDir() As String

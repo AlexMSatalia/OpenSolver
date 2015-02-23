@@ -70,11 +70,10 @@ Function About_Gurobi() As String
 6377          Exit Function
 6378      End If
           
-6379      SolverPath = SolverFilePath_Gurobi()
-          
           ' Assemble version info
 6380      About_Gurobi = "Gurobi " & SolverBitness_Gurobi & "-bit" & _
-                           " v" & SolverVersion_Gurobi & " detected"
+                           " v" & SolverVersion_Gurobi & _
+                           " detected at " & MakeSpacesNonBreaking(ConvertHfsPath(SolverPath))
 End Function
 
 Function GetGurobiBinFolder() As String
