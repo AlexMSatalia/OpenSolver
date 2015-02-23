@@ -26,6 +26,18 @@ Private Sub cmdCancel_Click()
     Me.Tag = "Cancelled"
 End Sub
 
+Private Sub UserForm_Activate()
+    Dim message As String, errorString As String, result As String
+    message = OpenSolverNeos.OutgoingMessage
+    errorString = ""
+
+    result = SolveOnNeos(message, errorString)
+
+    OpenSolverNeos.NeosResult = result
+    Me.Tag = errorString
+    Me.Hide
+End Sub
+
 Private Sub UserForm_Initialize()
    AutoLayout
 End Sub

@@ -188,7 +188,7 @@ ParsedModel:
           Dim OpenSolverParsed As New COpenSolverParsed
           
           ' Solve model and extract result
-2816      OpenSolverParsed.SolveModel OpenSolver, SolveRelaxation
+2816      OpenSolverParsed.SolveModel OpenSolver, SolveRelaxation, MinimiseUserInteraction
 2817      RunOpenSolver = OpenSolver.SolveStatus
 2818      If Not MinimiseUserInteraction Then OpenSolver.ReportAnySolutionSubOptimality
           

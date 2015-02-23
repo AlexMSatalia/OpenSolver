@@ -15,6 +15,7 @@ Public SolveStatus As OpenSolverResult ' See Enum in OpenSolverModule; Optimal,I
 Public SolveStatusString As String    ' Eg Infeasible, Opimal etc
 Public SolveStatusComment As String ' Eg constraint 1 cannot be satisified
 Public SolutionWasLoaded As Boolean
+Public MinimiseUserInteraction As Boolean
 
 Dim SolveOptions As SolveOptionsType
     
@@ -22,13 +23,14 @@ Public Property Get GetShowIterationResults() As Boolean
 7134      GetShowIterationResults = SolveOptions.ShowIterationResults
 End Property
 
-Public Sub SolveModel(s As COpenSolver, SolveRelaxation As Boolean)
+Public Sub SolveModel(s As COpenSolver, Optional SolveRelaxation As Boolean = False, Optional ShouldMinimiseUserInteraction As Boolean = False)
 7135      Application.Calculation = xlCalculationManual
 7136      Application.ScreenUpdating = False
 
           SolveStatus = OpenSolverResult.Unsolved
           SolveStatusString = "Unsolved"
           SolveStatusComment = ""
+          MinimiseUserInteraction = ShouldMinimiseUserInteraction
           
           Dim errorString As String
           
@@ -267,7 +269,7 @@ End Function
 ' Returns true if a solve status is loaded
 Function SolveModelParsed_NEOS(ModelFilePathName As String, Solver As String, s As COpenSolverParsed) As Boolean
           Dim solution As String, errorString As String
-7269      solution = CallNEOS(ModelFilePathName, Solver, errorString)
+7269      solution = CallNEOS(ModelFilePathName, Solver, errorString, s.MinimiseUserInteraction)
 7270      If errorString = "Aborted" Then
               Err.Raise OpenSolver_UserCancelledError, "Solving model on NEOS", "Solve aborted by user"
           ElseIf errorString <> "" Then

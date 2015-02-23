@@ -1,21 +1,26 @@
 Attribute VB_Name = "OpenSolverNeos"
 Option Explicit
-Function CallNEOS(ModelFilePathName As String, Solver As String, errorString As String) As String
+Public OutgoingMessage As String
+Public NeosResult As String
+
+Function CallNEOS(ModelFilePathName As String, Solver As String, errorString As String, Optional MinimiseUserInteraction As Boolean = False) As String
           ' Import file as continuous string
-          Dim message As String
 6805      On Error GoTo ErrHandler
 6806      Open ModelFilePathName For Input As #1
-6807          message = Input$(LOF(1), 1)
+6807          OutgoingMessage = Input$(LOF(1), 1)
 6808      Close #1
            
           ' Wrap in XML for AMPL on NEOS
-6809      WrapAMPLForNEOS message, Solver
+6809      WrapAMPLForNEOS OutgoingMessage, Solver
            
-#If Mac Then
-6810      CallNEOS = CallNEOS_Mac(message, errorString)
-#Else
-6811      CallNEOS = CallNEOS_Windows(message, errorString)
-#End If
+          If MinimiseUserInteraction Then
+              CallNEOS = SolveOnNeos(OutgoingMessage, errorString)
+          Else
+              CallingNeos.Show
+              CallNEOS = NeosResult
+              errorString = CallingNeos.Tag
+          End If
+   
           ' Dump the whole NEOS response to log file
           Dim logPath As String
           logPath = GetTempFilePath("log1.tmp")
@@ -31,7 +36,15 @@ ErrHandler:
            
 End Function
 
-Private Function CallNEOS_Windows(message As String, errorString As String)
+Public Function SolveOnNeos(message As String, errorString As String) As String
+#If Mac Then
+6810      SolveOnNeos = SolveOnNeos_Mac(message, errorString)
+#Else
+6811      SolveOnNeos = SolveOnNeos_Windows(message, errorString)
+#End If
+End Function
+
+Private Function SolveOnNeos_Windows(message As String, errorString As String) As String
           ' Server name
           Dim txtURL As String
 6815      txtURL = "http://www.neos-server.org:3332"
@@ -78,7 +91,6 @@ Private Function CallNEOS_Windows(message As String, errorString As String)
              "</string></value></param></params></methodCall>"
 6833      Done = False
           
-6834      CallingNeos.Show False
           CallingNeos.Tag = "Running"
           
           ' Loop until job is done
@@ -86,7 +98,7 @@ Private Function CallNEOS_Windows(message As String, errorString As String)
 6835      time = 0
 6836      While Done = False
               If CallingNeos.Tag = "Cancelled" Then
-                    CallNEOS_Windows = "NEOS solve was aborted"
+                    SolveOnNeos_Windows = "NEOS solve was aborted"
                     errorString = "Aborted"
                     Exit Function
               End If
@@ -118,8 +130,6 @@ Private Function CallNEOS_Windows(message As String, errorString As String)
 6853          End If
 6854      Wend
           
-6855      CallingNeos.Hide
-          
           ' Set up final message for XML
 6856      message = "<methodCall><methodName>getFinalResults</methodName><params><param><value><int>" & _
                     jobNumber & "</int></value></param><param><value><string>" & Password & _
@@ -136,7 +146,7 @@ Private Function CallNEOS_Windows(message As String, errorString As String)
 6861      result = Mid(objSvrHTTP.responseText, openingParen + 8, closingParen - openingParen - 8)
           
           ' The message is returned from NEOS in base 64
-6862      CallNEOS_Windows = DecodeBase64(result)
+6862      SolveOnNeos_Windows = DecodeBase64(result)
           
 6863      Exit Function
                 
@@ -148,7 +158,7 @@ errorHandler:
 
 End Function
 
-Private Function CallNEOS_Mac(message As String, errorString As String)
+Private Function SolveOnNeos_Mac(message As String, errorString As String) As String
           ' Mac doesn't have ActiveX so can't use MSXML.
           ' It does have python by default, so we can use python's xmlrpclib to contact NEOS instead.
           ' We delegate all interaction to the NeosClient.py script file.
@@ -192,8 +202,6 @@ Private Function CallNEOS_Mac(message As String, errorString As String)
 6887      DeleteFileAndVerify LogFilePathName, errorPrefix, "Unable to delete the log file: " & LogFilePathName
 6888      LogFilePathName = MakePathSafe(LogFilePathName)
 
-          ' Mac doesn't support modeless forms
-          'CallingNeos.Show False
 6889      Application.ScreenUpdating = True
 6890      Application.Cursor = xlWait ' doesn't seem to work on mac
 
@@ -221,6 +229,12 @@ Private Function CallNEOS_Mac(message As String, errorString As String)
 6904      Done = False
 6905      time = 0
 6906      While Done = False
+              If CallingNeos.Tag = "Cancelled" Then
+                    SolveOnNeos_Mac = "NEOS solve was aborted"
+                    errorString = "Aborted"
+                    Exit Function
+              End If
+              
               ' Run NeosClient.py->check
 6907          result = RunExternalCommand(SolverPath & " check " & MakePathSafe(SolutionFilePathName) & " " & jobNumber & " " & Password, LogFilePathName)
 6908          If Not result Then
@@ -246,7 +260,6 @@ Private Function CallNEOS_Mac(message As String, errorString As String)
           
 6926      Application.Cursor = xlDefault
 6927      Application.ScreenUpdating = False
-          'CallingNeos.Hide
           
           ' Run NeosClient.py->check
 6928      result = RunExternalCommand(SolverPath & " read " & MakePathSafe(SolutionFilePathName) & " " & jobNumber & " " & Password, LogFilePathName)
@@ -264,19 +277,19 @@ Private Function CallNEOS_Mac(message As String, errorString As String)
 6937      If left(message, 6) = "Error:" Then
 6938          GoTo NEOSError
 6939      End If
-6940      CallNEOS_Mac = message
+6940      SolveOnNeos_Mac = message
 6941      Exit Function
           
 ErrHandler:
 6942      Close #1
 6943      errorString = Err.Description
-6944      CallNEOS_Mac = ""
+6944      SolveOnNeos_Mac = ""
 6945      Exit Function
           
 NEOSError:
 6946      Close #1
 6947      errorString = "Error contacting NEOS."
-6948      CallNEOS_Mac = ""
+6948      SolveOnNeos_Mac = ""
 6949      MsgBox "An error occured when sending file to NEOS. Neos returned: " & message
 End Function
 
