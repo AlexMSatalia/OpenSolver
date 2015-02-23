@@ -55,21 +55,21 @@ Sub AutoLayout()
         .width = Me.width - 2 * FormMargin
     End With
     
-    With CommandButtonContinue
+    With cmdContinue
         .Caption = "Continue"
         .width = FormButtonWidth
         .left = Me.width - FormMargin - .width
         .top = lblMessage.top + lblMessage.height + FormSpacing
     End With
     
-    With CommandButtonAbort
+    With cmdAbort
         .Caption = "Abort"
-        .width = CommandButtonContinue.width
-        .left = CommandButtonContinue.left - FormSpacing - .width
-        .top = CommandButtonContinue.top
+        .width = cmdContinue.width
+        .left = cmdContinue.left - FormSpacing - .width
+        .top = cmdContinue.top
     End With
     
-    Me.height = CommandButtonAbort.top + CommandButtonAbort.height + FormMargin + FormTitleHeight
+    Me.height = cmdAbort.top + cmdAbort.height + FormMargin + FormTitleHeight
     Me.width = Me.width + FormWindowMargin
     
     Me.BackColor = FormBackColor
