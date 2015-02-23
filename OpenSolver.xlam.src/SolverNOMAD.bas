@@ -299,9 +299,14 @@ Sub CheckNomadLogs(errorString As String)
 7108      If Not message Like "*NOMAD*" Then
 7109         Exit Sub
 7110      End If
-          
-7111      If message Like "*invalid parameter*" Then
-7112          errorString = "One of the parameters supplied to Nomad was invalid. This usually happens if the precision is too large. Try adjusting the values in the Solve Options dialog box."
+
+          If InStrText(message, "invalid parameter: DIMENSION") Then
+              Dim MaxSize As Long, Position As Long
+              Position = InStrRev(message, " ")
+              MaxSize = CInt(Mid(message, Position + 1, InStrRev(message, ")") - Position - 1))
+              errorString = "This model contains too many variables for NOMAD to solve. NOMAD is only capable of solving models with up to " & MaxSize & " variables."
+          ElseIf message Like "*invalid parameter*" Then
+7112          errorString = "One of the parameters supplied to NOMAD was invalid. This usually happens if the precision is too large. Try adjusting the values in the Solve Options dialog box."
 7113      End If
           
 ErrHandler:
