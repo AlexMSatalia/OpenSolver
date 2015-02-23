@@ -180,19 +180,16 @@ Function SolverUsesUpperBounds(Solver As String) As Boolean
 6690      End Select
 End Function
 
-Sub GetNeosValues(Solver As String, Category As String, SolverType As String)
+Function GetNeosSolverType(Solver As String) As String
 6691      Select Case Solver
           Case "NeosCBC"
-6692          Category = "milp"
-6693          SolverType = "cbc"
+6693          GetNeosSolverType = "cbc"
 6694      Case "NeosBon"
-6695          Category = "minco"
-6696          SolverType = "Bonmin"
+6696          GetNeosSolverType = "Bonmin"
 6697      Case "NeosCou"
-6698          Category = "minco"
-6699          SolverType = "Couenne"
+6699          GetNeosSolverType = "Couenne"
 6700      End Select
-End Sub
+End Function
 
 Function GetAmplSolverValues(Solver As String) As String
 6701      Select Case Solver
