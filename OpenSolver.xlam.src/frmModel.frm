@@ -20,6 +20,7 @@ Option Explicit
 #Else
     Const FormWidthModel = 500
 #End If
+Const MinHeight = 140
 
 Private model As CModel
 
@@ -27,11 +28,8 @@ Private ListItem As Long
 Private ConChangedMode As Boolean
 Private DontRepop As Boolean
 
-Private m_clsResizer As CResizer
-Public MinHeight As Long
-
-Private OpenedBefore As Boolean
-Private ContractedBefore As Boolean
+Private IsResizing As Boolean
+Private ResizeStartY As Double
 
 ' Function to map string rels to combobox index positions
 ' Assigning combobox by .value fails a lot on Mac
@@ -381,21 +379,6 @@ Private Sub UserForm_Activate()
 4377      model.LoadFromSheet
 4378      DoEvents
 4379      UpdateFormFromMemory
-
-
-          MinHeight = 390
-'          If Not OpenedBefore Then
-'              #If Win32 Then
-'                  Set m_clsResizer = New CResizer
-'                  m_clsResizer.Add "Model"
-'                  cmdReset.left = cmdReset.left - m_clsResizer.width
-'                  cmdOptions.left = cmdOptions.left - m_clsResizer.width
-'                  cmdBuild.left = cmdBuild.left - m_clsResizer.width
-'                  cmdCancel.left = cmdCancel.left - m_clsResizer.width
-'              #End If
-'          End If
-          OpenedBefore = True
-
 4380      DoEvents
           ' Take focus away from refEdits
 4381      DoEvents
@@ -943,93 +926,6 @@ Sub TestStringForConstraint(ByVal TheString As String, _
 
 End Sub
 
-Public Sub MoveItems(ChangeY As Single)
-        Me.height = Me.height + ChangeY
-
-        chkNameRange.top = chkNameRange.top + ChangeY
-        lblDiv4.top = lblDiv4.top + ChangeY
-        lblStep4.top = lblStep4.top + ChangeY
-        chkGetDuals.top = chkGetDuals.top + ChangeY
-        chkGetDuals2.top = chkGetDuals2.top + ChangeY
-        optUpdate.top = optUpdate.top + ChangeY
-        refDuals.top = refDuals.top + ChangeY
-        optNew.top = optNew.top + ChangeY
-        lblDiv6.top = lblDiv6.top + ChangeY
-        lblStep5.top = lblStep5.top + ChangeY
-        lblSolver.top = lblSolver.top + ChangeY
-        cmdChange.top = cmdChange.top + ChangeY
-        lblDiv5.top = lblDiv5.top + ChangeY
-        chkShowModel.top = chkShowModel.top + ChangeY
-        cmdReset.top = cmdReset.top + ChangeY
-        cmdOptions.top = cmdOptions.top + ChangeY
-        cmdBuild.top = cmdBuild.top + ChangeY
-        cmdCancel.top = cmdCancel.top + ChangeY
-
-        If Me.InsideHeight + ChangeY >= MinHeight + 24 Then
-            lstConstraints.height = Me.InsideHeight - 282
-            lblDesc.Caption = "AutoModel is a feature of OpenSolver that tries to automatically " _
-                            & "determine the problem you are trying to optimise by observing the " _
-                            & "structure of the spreadsheet. It will turn its best guess into a " _
-                            & "Solver model, which you can then edit in this window."
-            lblDesc.height = 24
-
-            If ContractedBefore Then
-                lblDiv1.top = 57
-                lblStep1.top = 64
-                refObj.top = 64
-                optMax.top = 64
-                optMin.top = 64
-                optTarget.top = 64
-                txtObjTarget.top = 64
-                lblDiv2.top = 85.05
-                lblStep2.top = 94
-                refDecision.top = 94
-                lblDiv3.top = 136
-                lblStep3.top = 142
-                lstConstraints.top = 160
-                lblConstraintGroup.top = 159.95
-                refConLHS.top = 166
-                cboConRel.top = 166
-                refConRHS.top = 189.95
-                cmdAddCon.top = 213.95
-                cmdCancelCon.top = 213.95
-                cmdDelSelCon.top = 244
-                chkNonNeg.top = 268
-                ContractedBefore = False
-            End If
-        Else
-            ContractedBefore = True
-            lblDesc.Caption = ""
-            lblDesc.height = 0
-            lblDiv1.top = lblDiv1.top + ChangeY
-            lblStep1.top = lblStep1.top + ChangeY
-            refObj.top = refObj.top + ChangeY
-            optMax.top = optMax.top + ChangeY
-            optMin.top = optMin.top + ChangeY
-            optTarget.top = optTarget.top + ChangeY
-            txtObjTarget.top = txtObjTarget.top + ChangeY
-            lblDiv2.top = lblDiv2.top + ChangeY
-            lblStep2.top = lblStep2.top + ChangeY
-            refDecision.top = refDecision.top + ChangeY
-            lblDiv3.top = lblDiv3.top + ChangeY
-            lblStep3.top = lblStep3.top + ChangeY
-            lstConstraints.top = lstConstraints.top + ChangeY
-            lblConstraintGroup.top = lblConstraintGroup.top + ChangeY
-            refConLHS.top = refConLHS.top + ChangeY
-            cboConRel.top = cboConRel.top + ChangeY
-            refConRHS.top = refConRHS.top + ChangeY
-            cmdAddCon.top = cmdAddCon.top + ChangeY
-            cmdCancelCon.top = cmdCancelCon.top + ChangeY
-            cmdDelSelCon.top = cmdDelSelCon.top + ChangeY
-            chkNonNeg.top = chkNonNeg.top + ChangeY
-        End If
-End Sub
-
-Private Sub UserForm_Terminate()
-    Set m_clsResizer = Nothing
-End Sub
-
-
 Private Sub UserForm_Initialize()
     AutoLayout
 End Sub
@@ -1227,20 +1123,18 @@ Private Sub AutoLayout()
     With lstConstraints
         .left = lblDescHeader.left
         .top = lblConstraintGroup.top
-        .height = 140
+        .height = MinHeight
         .width = lblConstraintGroup.left - .left - FormSpacing
     End With
     
     With chkNameRange
         .left = lblDescHeader.left
-        .top = lstConstraints.top + lstConstraints.height + FormSpacing
         .width = lstConstraints.width
         .Caption = "Show named ranges"
     End With
     
     With lblDiv4
         .left = lblDescHeader.left
-        .top = chkNameRange.top + chkNameRange.height + FormSpacing
         .width = lblDesc.width
         .height = FormDivHeight
         .BackColor = FormDivBackColor
@@ -1249,7 +1143,6 @@ Private Sub AutoLayout()
     With lblStep4
         .Caption = "Sensitivity Analysis"
         .left = lblDescHeader.left
-        .top = lblDiv4.top + lblDiv4.height + FormSpacing
         .width = Me.width
         .AutoSize = False
         .AutoSize = True
@@ -1259,7 +1152,6 @@ Private Sub AutoLayout()
     With chkGetDuals
         .Caption = "List sensitivity analysis on the same sheet with top left cell:"
         .left = lblStep4.left + lblStep4.width + FormSpacing
-        .top = lblStep4.top
         .width = Me.width
         .AutoSize = False
         .AutoSize = True
@@ -1270,13 +1162,11 @@ Private Sub AutoLayout()
         .left = chkGetDuals.left + chkGetDuals.width + FormSpacing
         .width = Me.width - FormMargin - .left
         .height = refObj.height
-        .top = lblStep4.top
     End With
     
     With chkGetDuals2
         .Caption = "Output sensitivity analysis:"
         .left = chkGetDuals.left
-        .top = chkGetDuals.top + chkGetDuals.height
         .width = Me.width
         .AutoSize = False
         .AutoSize = True
@@ -1286,7 +1176,6 @@ Private Sub AutoLayout()
     With optUpdate
         .Caption = "updating any previous output sheet"
         .left = chkGetDuals2.left + chkGetDuals2.width + FormSpacing
-        .top = chkGetDuals2.top
         .width = Me.width
         .AutoSize = False
         .AutoSize = True
@@ -1296,7 +1185,6 @@ Private Sub AutoLayout()
     With optNew
         .Caption = "on a new sheet"
         .left = optUpdate.left + optUpdate.width + FormSpacing
-        .top = chkGetDuals2.top
         .width = Me.width
         .AutoSize = False
         .AutoSize = True
@@ -1305,7 +1193,6 @@ Private Sub AutoLayout()
     
     With lblDiv5
         .left = lblDescHeader.left
-        .top = optNew.top + optNew.height
         .width = lblDesc.width
         .height = FormDivHeight
         .BackColor = FormDivBackColor
@@ -1314,24 +1201,20 @@ Private Sub AutoLayout()
     With lblStep5
         .left = lblDescHeader.left
         .Caption = "Solver Engine:"
-        .top = lblDiv5.top + lblDiv5.height + FormSpacing
     End With
     
     With cmdChange
-        .top = lblStep5.top
         .width = cmdRunAutoModel.width
         .left = Me.width - FormMargin - .width
         .Caption = "Solver Engine..."
     End With
     
     With lblSolver
-        .top = lblStep5.top + FormButtonHeight - FormTextHeight
         .width = cmdChange.left - FormSpacing - .left
     End With
     
     With lblDiv6
         .left = lblDescHeader.left
-        .top = cmdChange.top + cmdChange.height + FormSpacing
         .width = lblDesc.width
         .height = FormDivHeight
         .BackColor = FormDivBackColor
@@ -1339,7 +1222,6 @@ Private Sub AutoLayout()
         
     With chkShowModel
         .left = lblDescHeader.left
-        .top = lblDiv6.top + lblDiv6.height + FormSpacing
         .AutoSize = False
         .AutoSize = True
         .AutoSize = False
@@ -1349,33 +1231,98 @@ Private Sub AutoLayout()
         .width = cmdRunAutoModel.width
         .Caption = "Cancel"
         .left = Me.width - FormMargin - .width
-        .top = chkShowModel.top
     End With
     
     With cmdBuild
         .width = cmdRunAutoModel.width
         .Caption = "Save Model"
         .left = cmdCancel.left - FormSpacing - .width
-        .top = chkShowModel.top
     End With
     
     With cmdOptions
         .width = cmdRunAutoModel.width
         .Caption = "Options..."
         .left = cmdBuild.left - FormSpacing - .width
-        .top = chkShowModel.top
     End With
     
     With cmdReset
         .width = cmdRunAutoModel.width
         .Caption = "Clear Model"
         .left = cmdOptions.left - FormSpacing - .width
-        .top = chkShowModel.top
     End With
     
-    Me.height = cmdCancel.top + cmdCancel.height + FormMargin + FormTitleHeight
+    ' Add resizer
+    With lblResizer
+        #If Mac Then
+            ' Mac labels don't fire MouseMove events correctly
+            .Visible = False
+        #End If
+        .Caption = "o"
+        With .Font
+            .Name = "Marlett"
+            .Charset = 2
+            .Size = 10
+        End With
+        .AutoSize = True
+        .left = Me.width - .width
+        .MousePointer = fmMousePointerSizeNWSE
+        .BackStyle = fmBackStyleTransparent
+    End With
+    IsResizing = False
+    
+    ' Set the vertical positions of the lower half of the form
+    UpdateLayout
+    
     Me.width = Me.width + FormWindowMargin
     
     Me.BackColor = FormBackColor
     Me.Caption = "OpenSolver - Model"
+End Sub
+
+Private Sub UpdateLayout(Optional ChangeY As Double = 0)
+' Do the layout of the lower half of the form, changing the height of the list box by ChangeY
+    Dim NewHeight As Double
+    NewHeight = lstConstraints.height + ChangeY
+    If NewHeight < MinHeight Then NewHeight = MinHeight
+    
+    lstConstraints.height = NewHeight
+        
+    ' Cascade the updated height
+    chkNameRange.top = lstConstraints.top + lstConstraints.height + FormSpacing
+    lblDiv4.top = chkNameRange.top + chkNameRange.height + FormSpacing
+    lblStep4.top = lblDiv4.top + lblDiv4.height + FormSpacing
+    chkGetDuals.top = lblStep4.top
+    refDuals.top = lblStep4.top
+    chkGetDuals2.top = chkGetDuals.top + chkGetDuals.height
+    optUpdate.top = chkGetDuals2.top
+    optNew.top = chkGetDuals2.top
+    lblDiv5.top = optNew.top + optNew.height
+    lblStep5.top = lblDiv5.top + lblDiv5.height + FormSpacing
+    cmdChange.top = lblStep5.top
+    lblSolver.top = lblStep5.top + FormButtonHeight - FormTextHeight
+    lblDiv6.top = cmdChange.top + cmdChange.height + FormSpacing
+    chkShowModel.top = lblDiv6.top + lblDiv6.height + FormSpacing
+    cmdCancel.top = chkShowModel.top
+    cmdBuild.top = chkShowModel.top
+    cmdOptions.top = chkShowModel.top
+    cmdReset.top = chkShowModel.top
+    Me.height = cmdCancel.top + cmdCancel.height + FormMargin + FormTitleHeight
+    lblResizer.top = Me.InsideHeight - lblResizer.height
+End Sub
+
+Private Sub lblResizer_MouseDown(ByVal Button As Integer, ByVal Shift As Integer, ByVal X As Single, ByVal Y As Single)
+    If Button = 1 Then
+        ResizeStartY = Y
+    End If
+End Sub
+
+Private Sub lblResizer_MouseMove(ByVal Button As Integer, ByVal Shift As Integer, ByVal X As Single, ByVal Y As Single)
+    If Button = 1 Then
+        #If Mac Then
+            ' Mac reports delta already
+            UpdateLayout Y
+        #Else
+            UpdateLayout (Y - ResizeStartY)
+        #End If
+    End If
 End Sub
