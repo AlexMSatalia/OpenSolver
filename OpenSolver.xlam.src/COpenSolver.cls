@@ -2502,7 +2502,7 @@ Sub AddNonLinearInfoToString(var As Long, NonLinearInformation As String, FirstV
 2161          Else
                   ' Dim LHSValue As Double, RHSValue As Double, failedcase As Long, sLHS As String, sRHS As String
                   ' GetExcelConstraintInfoFromRow Constraint, Row, LHSValue, RHSValue, failedcase, sLHS, sRHS
-2162              NonLinearInformation = NonLinearInformation & vbNewLine & "In instance " & instance & " of the constraint: " & ConstraintSummary(constraint) & "," & vbNewLine & "the model appears to be non-linear in the following decision variables: " & VarNames(var)
+2162              NonLinearInformation = NonLinearInformation & vbNewLine & "In instance " & instance & " of the constraint: " & ConstraintSummary(constraint) & "," & vbNewLine & "  the model appears to be non-linear in the following decision variables: " & VarNames(var)
 2163          End If
 2164      Else
 2165          NonLinearInformation = NonLinearInformation & ", " & VarNames(var)
