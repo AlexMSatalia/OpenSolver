@@ -13,60 +13,26 @@ Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = True
 Attribute VB_Exposed = False
-'--------------------------------------------------------------------
-' OpenSolver
-' http://www.opensolver.org
-' This software is distributed under the terms of the GNU General Public License
-'
-' OpenSolver is free software: you can redistribute it and/or modify
-' it under the terms of the GNU General Public License as published by
-' the Free Software Foundation, either version 3 of the License, or
-' (at your option) any later version.
-'
-' OpenSolver is distributed in the hope that it will be useful,
-' but WITHOUT ANY WARRANTY; without even the implied warranty of
-' MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-' GNU General Public License for more details.
-'
-' You should have received a copy of the GNU General Public License
-' along with OpenSolver.  If not, see <http://www.gnu.org/licenses/>.
-'
-'--------------------------------------------------------------------
-' FILE DESCRIPTION
-' frmAutoModel2
-' Userform around the functionality in CModel
-' Allows user to manually guide the auto-model process, and explains
-' how it works.
-'
-' Created by:       IRD
-'--------------------------------------------------------------------
-
 Option Explicit
 
-' The handle to the AutoModel instance
+#If Mac Then
+    Const FormWidthAutoModel = 450
+#Else
+    Const FormWidthAutoModel = 340
+#End If
+
 Public model As CModel
 Public GuessObjStatus As String
 
 
 Private Sub cmdCancel_Click()
 4045      DoEvents
-4046      Unload frmAutoModel
 4047      Unload Me
 End Sub
 
-'--------------------------------------------------------------------
-' UserForm_Activate [event]
-' Called when the form is shown.
-'
-' Written by:       IRD
-'--------------------------------------------------------------------
 Private Sub UserForm_Activate()
-4048      frmAutoModel.AutoModelActivate Me
-End Sub
-
-Public Sub AutoModelActivate(f As UserForm)
           ' Reset enabled flags
-4049      ResetEverything f
+4049      ResetEverything
           ' Make sure sheet is up to date
 4050      On Error Resume Next
 4051      Application.Calculate
@@ -79,74 +45,42 @@ Public Sub AutoModelActivate(f As UserForm)
           ' Get ready to process
 4054      DoEvents
           ' Show results of finding objective
-4055      GuessObj f
+4055      GuessObj
 End Sub
 
-'--------------------------------------------------------------------
-' ResetEverything
-' Resets everything to a fresh state
-'
-' Written by:       IRD
-'--------------------------------------------------------------------
-Public Sub ResetEverything(f As UserForm)
-
-4056      f.optMax.value = False
-4057      f.optMin.value = False
-4058      f.refObj.Text = ""
-
+Private Sub ResetEverything()
+4056      optMax.value = False
+4057      optMin.value = False
+4058      refObj.Text = ""
 End Sub
 
-
-'--------------------------------------------------------------------
-' GuessObj
-' Called after showing the window, attempts to find objective
-'
-' Written by:       IRD
-'--------------------------------------------------------------------
-Private Sub GuessObj(f As UserForm)
-              
+Private Sub GuessObj()
 4059      Select Case GuessObjStatus
               Case "NoSense"
                   ' Didn't find anything
-4060              f.lblStatus.Caption = _
-                  "AutoModel was unable to guess anything." + vbNewLine + _
-                  "Please enter the objective sense and the objective function cell."
-                  'lblStatus.ForeColor = vbRed
+4060              lblStatus.Caption = "AutoModel was unable to guess anything." & vbNewLine & _
+                                      "Please enter the objective sense and the objective function cell."
 4061          Case "SenseNoCell"
-4062              If model.ObjectiveSense = MaximiseObjective Then f.optMax.value = True
-4063              If model.ObjectiveSense = MinimiseObjective Then f.optMin.value = True
-                  'lblStatus.ForeColor = vbBlue
-4064              f.lblStatus.Caption = _
-                  "AutoModel found the objective sense, but couldn't find the objective cell." + vbNewLine + _
-                  "Please check the objective sense and enter the objective function cell."
+4062              If model.ObjectiveSense = MaximiseObjective Then optMax.value = True
+4063              If model.ObjectiveSense = MinimiseObjective Then optMin.value = True
+                  lblStatus.Caption = "AutoModel found the objective sense, but couldn't find the objective cell." & vbNewLine & _
+                                      "Please check the objective sense and enter the objective function cell."
 4065      End Select
           
-4066      f.Repaint
+4066      Me.Repaint
 4067      DoEvents
 End Sub
 
-
-'--------------------------------------------------------------------
-' cmdFinish_Click [event]
-' Validate form input, update model, and continue to next step
-'
-' Written by:       IRD
-'--------------------------------------------------------------------
 Private Sub cmdFinish_Click()
-4068           frmAutoModel.AutoModelFinish Me
-End Sub
-
-Public Sub AutoModelFinish(f As UserForm)
           ' Check if user changed objective cell
 4069      On Error GoTo BadObjRef
-4070      Set model.ObjectiveFunctionCell = ActiveSheet.Range(f.refObj.Text)
+4070      Set model.ObjectiveFunctionCell = ActiveSheet.Range(refObj.Text)
           
           ' Get the objective sense
-4071      If f.optMax.value = True Then model.ObjectiveSense = MaximiseObjective
-4072      If f.optMin.value = True Then model.ObjectiveSense = MinimiseObjective
+4071      If optMax.value = True Then model.ObjectiveSense = MaximiseObjective
+4072      If optMin.value = True Then model.ObjectiveSense = MinimiseObjective
 4073      If model.ObjectiveSense = UnknownObjectiveSense Then
 4074          MsgBox "Error: Please select an objective sense (minimise or maximise)!", vbExclamation + vbOKOnly, "AutoModel"
-              'frmModel.Show
 4075          Exit Sub
 4076      End If
           
@@ -159,17 +93,159 @@ Public Sub AutoModelFinish(f As UserForm)
 4079          MsgBox "An unknown error occurred while trying to find the model.", vbOKOnly
 4080      End If
           
-          'frmModel.Show
 4081      Unload Me
-4082      Unload f
 4083      DoEvents
 4084      Exit Sub
           
 BadObjRef:
           ' Couldn't turn the objective cell address into a range
-4085      MsgBox "Error: the cell address for the objective is invalid. Please correct " + _
+4085      MsgBox "Error: the cell address for the objective is invalid. Please correct " & _
                   "and click 'Finish AutoModel' again.", vbExclamation + vbOKOnly, "AutoModel"
-4086      f.refObj.SetFocus ' Set the focus back to the RefEdit
+4086      refObj.SetFocus ' Set the focus back to the RefEdit
 4087      DoEvents ' Try to stop RefEdit bugs
 4088      Exit Sub
+End Sub
+
+
+Private Sub UserForm_Initialize()
+    AutoLayout
+End Sub
+
+Private Sub AutoLayout()
+    AutoFormat Me.Controls
+    
+    Me.width = FormWidthAutoModel
+    
+    With lblStep1
+        .Caption = "Determining the objective"
+        .left = FormMargin
+        .top = FormMargin
+        ' Shrink width
+        .width = Me.width
+        .AutoSize = False
+        .AutoSize = True
+        .AutoSize = False
+    End With
+    
+    With lblStep1Explanation
+        .left = lblStep1.left + lblStep1.width + FormSpacing
+        .top = lblStep1.top
+        .width = Me.width - FormMargin - .left
+        .Caption = "(the objective is what you want to optimise)"
+    End With
+    
+    With lblStep1How
+        .Caption = "AutoModel has tried to guess the ""sense"" you want to optimise by looking for " & _
+                   """min"", ""max"", ""minimise"", etc. on the active spreadsheet. If it found it, " & _
+                   "it looked in the area for something that might be the objective function cell, " & _
+                   "e.g. a cell with a SUMPRODUCT() formula in it. If it cannot find anything, or " & _
+                   "gets it wrong, you must enter the objective function cell so AutoModel can proceed."
+        .left = lblStep1.left
+        .top = lblStep1.top + lblStep1.height + FormSpacing
+        .width = Me.width - FormMargin * 2
+        .AutoSize = False
+        .AutoSize = True
+        .AutoSize = False
+        .width = Me.width - FormMargin * 2
+    End With
+    
+    With lblDiv1
+        .left = lblStep1.left
+        .top = lblStep1How.top + lblStep1How.height + FormSpacing
+        .height = FormDivHeight
+        .width = lblStep1How.width
+        .BackColor = FormDivBackColor
+    End With
+    
+    With lblStatus
+        .Caption = "AutoModel was unable to guess anything." & vbNewLine & _
+                   "Please enter the objective sense and objective function cell manually."
+        .left = lblStep1.left
+        .top = lblDiv1.top + lblDiv1.height + FormSpacing
+        .AutoSize = False
+        .AutoSize = True
+        .AutoSize = False
+        .height = .height + FormSpacing
+        .width = lblStep1How.width
+    End With
+    
+    With lblOpt1
+        .Caption = "The objective is to:"
+        .left = lblStep1.left
+        .top = lblStatus.top + lblStatus.height + FormSpacing * 1.5 + optMax.height - .height / 2
+        .AutoSize = False
+        .AutoSize = True
+        .AutoSize = False
+    End With
+    
+    With optMax
+        .Caption = "maximise"
+        .left = lblOpt1.left + lblOpt1.width + FormSpacing
+        .top = lblStatus.top + lblStatus.height + FormSpacing
+        .AutoSize = False
+        .AutoSize = True
+        .AutoSize = False
+    End With
+    
+    With optMin
+        .Caption = "minimise"
+        .left = optMax.left
+        .top = optMax.top + optMax.height
+        .AutoSize = False
+        .AutoSize = True
+        .AutoSize = False
+    End With
+    
+    With lblOpt2
+        .Caption = "the value of the cell:"
+        .left = optMax.left + optMax.width + FormSpacing
+        .top = lblOpt1.top
+        .AutoSize = False
+        .AutoSize = True
+        .AutoSize = False
+    End With
+    
+    With refObj
+        .top = lblOpt2.top
+        .left = lblOpt2.left + lblOpt2.width + FormSpacing
+        .width = Me.width - FormMargin - .left
+        .height = FormTextHeight
+    End With
+    
+    With lblStep2How
+        .top = optMin.top + optMin.height + FormSpacing
+        .left = lblStep1.left
+        .width = lblStep1How.width
+        .AutoSize = False
+        .AutoSize = True
+        .AutoSize = False
+    End With
+    
+    With lblDiv2
+        .left = lblStep1.left
+        .top = lblStep2How.top + lblStep2How.height + FormSpacing
+        .height = FormDivHeight
+        .width = lblStep1How.width
+        .BackColor = FormDivBackColor
+    End With
+    
+    With cmdCancel
+        .width = FormButtonWidth * 1.2
+        .left = Me.width - FormMargin - .width
+        .top = lblDiv2.top + lblDiv2.height + FormSpacing
+        .Caption = "Cancel"
+    End With
+    
+    With cmdFinish
+        .width = cmdCancel.width
+        .left = cmdCancel.left - FormSpacing - .width
+        .top = cmdCancel.top
+        .Caption = "Finish AutoModel"
+    End With
+    
+    Me.height = cmdCancel.top + cmdCancel.height + FormMargin + FormTitleHeight
+    Me.width = Me.width + FormWindowMargin
+    
+    Me.BackColor = FormBackColor
+    Me.Caption = "OpenSolver - AutoModel"
 End Sub

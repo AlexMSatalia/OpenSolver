@@ -269,8 +269,6 @@ errorHandler:
 End Function
 
 Sub OpenSolver_ModelClick(Optional Control)
-          'frmAutoModel.Show
-          'frmAutoModel2.Show
 2851      If Not CheckWorksheetAvailable Then Exit Sub
 #If Mac Then
 2852      MacModel.Show

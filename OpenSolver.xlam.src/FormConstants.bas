@@ -31,6 +31,8 @@ Public Const FormSpacing = 6
 Public Const FormTextBoxColor = &H80000005
 Public Const FormLinkColor = &HFF0000
 Public Const FormHeadingHeight = 24
+Public Const FormDivHeight = 2
+Public Const FormDivBackColor = &HC1C1C1
 
 Public Sub AutoFormat(ByRef Controls As Controls)
 ' Sets default appearances for Form controls
@@ -38,7 +40,7 @@ Public Sub AutoFormat(ByRef Controls As Controls)
     Dim Cont As Control, ContType As String
     For Each Cont In Controls
         ContType = TypeName(Cont)
-        If ContType = "TextBox" Or ContType = "CheckBox" Or ContType = "Label" Or ContType = "CommandButton" Then
+        If ContType = "TextBox" Or ContType = "CheckBox" Or ContType = "Label" Or ContType = "CommandButton" Or ContType = "OptionButton" Then
             With Cont
                 .Font.Name = FormFontName
                 .Font.Size = FormFontSize
@@ -50,7 +52,7 @@ Public Sub AutoFormat(ByRef Controls As Controls)
                 
                 If ContType = "CommandButton" Then
                     .height = FormButtonHeight
-                ElseIf ContType = "CheckBox" Then
+                ElseIf ContType = "CheckBox" Or ContType = "OptionButton" Then
                     .height = FormCheckBoxHeight
                 Else
                     .height = FormTextHeight
