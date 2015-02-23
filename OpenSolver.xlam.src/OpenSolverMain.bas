@@ -137,7 +137,7 @@ Sub OpenSolver_OnlineHelp(Optional Control)
 End Sub
 
 Sub OpenSolver_AboutClickHandler(Optional Control)
-2798      UserFormAbout.Show
+2798      frmAbout.Show
 End Sub
 
 Sub OpenSolver_AboutCoinOR(Optional Control)

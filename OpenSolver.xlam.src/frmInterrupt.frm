@@ -1,14 +1,14 @@
 VERSION 5.00
-Begin {C62A69F0-16DC-11CE-9E98-00AA00574A4F} UserFormInterrupt 
+Begin {C62A69F0-16DC-11CE-9E98-00AA00574A4F} frmInterrupt 
    Caption         =   "OpenSolver User Interrupt"
    ClientHeight    =   1740
    ClientLeft      =   45
    ClientTop       =   345
    ClientWidth     =   4710
-   OleObjectBlob   =   "UserFormInterrupt.frx":0000
+   OleObjectBlob   =   "frmInterrupt.frx":0000
    StartUpPosition =   1  'CenterOwner
 End
-Attribute VB_Name = "UserFormInterrupt"
+Attribute VB_Name = "frmInterrupt"
 Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = True

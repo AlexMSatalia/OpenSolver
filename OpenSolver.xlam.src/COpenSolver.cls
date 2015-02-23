@@ -2462,10 +2462,10 @@ Sub CheckLinearityOfModel()
           End If
           
           'display dialog to user
-          NonlinearForm.SetLinearityResult NonLinearInformation, False
-2139      NonlinearForm.Show
+          frmNonLinear.SetLinearityResult NonLinearInformation, False
+2139      frmNonLinear.Show
           
-2140      If NonlinearForm.chkHighlight.value = True Then
+2140      If frmNonLinear.chkHighlight.value = True Then
 2141          HighlightNonLinearities RowIsNonLinear, ObjectiveIsNonLinear
 2142      End If
 End Sub
@@ -2644,14 +2644,14 @@ Sub QuickLinearityCheck(fullLinearityCheckWasPerformed As Boolean)
 2242          SolveStatus = NotLinear
 2243          If Not MinimiseUserInteraction Then
                   NonLinearInfo = "WARNING : " & vbNewLine & TrimBlankLines(NonLinearInfo)
-                  NonlinearForm.SetLinearityResult NonLinearInfo, True
-2263              NonlinearForm.Show
+                  frmNonLinear.SetLinearityResult NonLinearInfo, True
+2263              frmNonLinear.Show
               
                   'showing the nonlinear constraints
-2264              If NonlinearForm.chkHighlight.value = True Then
+2264              If frmNonLinear.chkHighlight.value = True Then
 2265                  HighlightNonLinearities RowIsNonLinear, ObjectiveIsNonLinear
 2266              End If
-2267              If NonlinearForm.chkFullCheck.value = True Then
+2267              If frmNonLinear.chkFullCheck.value = True Then
                       'Full linearity check run
 2268                  CheckLinearityOfModel
 2269                  fullLinearityCheckWasPerformed = True

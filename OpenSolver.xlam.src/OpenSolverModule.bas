@@ -485,13 +485,13 @@ errorHandler:
               '     for an example of finding a given running application's window
 
 64            Application.Cursor = xlDefault
-65            UserFormInterrupt.Show
+65            frmInterrupt.Show
               'If msgbox("You have pressed the Escape key. Do you wish to cancel?", _
                          vbQuestion + vbYesNo + vbDefaultButton1, _
                          "OpenSolver: User Interrupt Occured...") = vbNo Then
               Dim StopSolving As Boolean
-66            StopSolving = UserFormInterrupt.Tag = vbCancel
-67            Unload UserFormInterrupt
+66            StopSolving = frmInterrupt.Tag = vbCancel
+67            Unload frmInterrupt
 68            Application.Cursor = xlWait
 69            If Not StopSolving Then
 70                Resume 'continue on from where error occured

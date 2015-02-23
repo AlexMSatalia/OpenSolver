@@ -16,9 +16,9 @@ Function CallNEOS(ModelFilePathName As String, Solver As String, errorString As 
           If MinimiseUserInteraction Then
               CallNEOS = SolveOnNeos(OutgoingMessage, errorString)
           Else
-              CallingNeos.Show
+              frmCallingNeos.Show
               CallNEOS = NeosResult
-              errorString = CallingNeos.Tag
+              errorString = frmCallingNeos.Tag
           End If
    
           ' Dump the whole NEOS response to log file
@@ -91,13 +91,13 @@ Private Function SolveOnNeos_Windows(message As String, errorString As String) A
              "</string></value></param></params></methodCall>"
 6833      Done = False
           
-          CallingNeos.Tag = "Running"
+          frmCallingNeos.Tag = "Running"
           
           ' Loop until job is done
           Dim time As Long
 6835      time = 0
 6836      While Done = False
-              If CallingNeos.Tag = "Cancelled" Then
+              If frmCallingNeos.Tag = "Cancelled" Then
                     SolveOnNeos_Windows = "NEOS solve was aborted"
                     errorString = "Aborted"
                     Exit Function
@@ -229,7 +229,7 @@ Private Function SolveOnNeos_Mac(message As String, errorString As String) As St
 6904      Done = False
 6905      time = 0
 6906      While Done = False
-              If CallingNeos.Tag = "Cancelled" Then
+              If frmCallingNeos.Tag = "Cancelled" Then
                     SolveOnNeos_Mac = "NEOS solve was aborted"
                     errorString = "Aborted"
                     Exit Function
