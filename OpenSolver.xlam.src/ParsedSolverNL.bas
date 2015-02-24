@@ -10,9 +10,9 @@ Dim m As CModelParsed
 
 Dim problem_name As String
 
-Public WriteComments As Boolean     ' Whether .nl file should include comments
-Public CommentIndent As Long     ' Tracks the level of indenting in comments on nl output
-Public Const CommentSpacing = 24    ' The column number at which nl comments begin
+Dim WriteComments As Boolean    ' Whether .nl file should include comments
+Const CommentIndent = 4         ' Tracks the level of indenting in comments on nl output
+Const CommentSpacing = 24       ' The column number at which nl comments begin
 
 Dim errorPrefix As String
 
@@ -290,7 +290,7 @@ ErrorExit:
 7546      Err.Raise ErrorNumber, ErrorSource, ErrorDescription
 End Function
 
-Sub InitialiseModelStats()
+Private Sub InitialiseModelStats()
           ' Number of actual variables is the number of adjustable cells in the Solver model
 7547      numActualVars = m.AdjustableCells.Count
           ' Number of fake variables is the number of formulae equations we have created
@@ -374,7 +374,7 @@ Sub InitialiseModelStats()
 End Sub
 
 ' Creates map from variable name (e.g. Test1_D4) to parsed variable index (1 to n_var)
-Sub CreateVariableIndex()
+Private Sub CreateVariableIndex()
 7596      Set VariableIndex = New Collection
 7597      Set InitialVariableValues = New Collection
           Dim c As Range, cellName As String, i As Long
@@ -415,7 +415,7 @@ End Sub
 
 ' Creates maps from variable name (e.g. Test1_D4) to .nl variable index (0 to n_var - 1) and vice-versa, and
 ' maps from parsed variable index to .nl variable index and vice-versa
-Sub MakeVariableMap(SolveRelaxation As Boolean)
+Private Sub MakeVariableMap(SolveRelaxation As Boolean)
           ' =============================================
           ' Create index of variable names in parsed variable order
           Dim CellNames As New Collection
@@ -597,7 +597,7 @@ End Sub
 '   variable name:            cellName
 '   .nl variable index:       index
 '   parsed variable index:    i
-Sub AddVariable(cellName As String, Index As Long, i As Long)
+Private Sub AddVariable(cellName As String, Index As Long, i As Long)
           ' Update variable maps
 7723      VariableMap.Add CStr(Index), cellName
 7724      VariableMapRev.Add cellName, CStr(Index)
@@ -615,7 +615,7 @@ End Sub
 
 ' Creates maps from constraint name (e.g. c1_Test1_D4) to .nl constraint index (0 to n_con - 1) and vice-versa, and
 ' map from .nl constraint index to parsed constraint index
-Sub MakeConstraintMap()
+Private Sub MakeConstraintMap()
           
 7731      Set ConstraintMap = New Collection
 7732      Set ConstraintMapRev = New Collection
@@ -677,7 +677,7 @@ End Sub
 '   constraint name:          cellName
 '   .nl constraint index:     index
 '   parsed constraint index:  i
-Sub AddConstraint(cellName As String, Index As Long, i As Long)
+Private Sub AddConstraint(cellName As String, Index As Long, i As Long)
           ' Update constraint maps
 7767      ConstraintMap.Add Index, cellName
 7768      ConstraintMapRev.Add cellName, CStr(Index)
@@ -693,7 +693,7 @@ Sub AddConstraint(cellName As String, Index As Long, i As Long)
 End Sub
 
 ' Processes all constraint formulae into the .nl model formats
-Sub ProcessFormulae()
+Private Sub ProcessFormulae()
           
 7774      Set NonLinearConstraintTrees = New Collection
 7775      Set LinearConstraints = New Collection
@@ -732,7 +732,7 @@ End Sub
 '     - a linear LinearConstraintNL for the linear parts of the equation
 '     - a constant Double for the constant part of the equation
 ' We also use the results of processing to update some of the model statistics
-Sub ProcessSingleFormula(RHSExpression As String, LHSVariable As String, Relation As RelationConsts)
+Private Sub ProcessSingleFormula(RHSExpression As String, LHSVariable As String, Relation As RelationConsts)
           ' Convert the string formula into an ExpressionTree object
           Dim Tree As ExpressionTree
 7796      Set Tree = ConvertFormulaToExpressionTree(RHSExpression)
@@ -838,7 +838,7 @@ End Sub
 '     - a non-linear ExpressionTree for all non-linear parts of the equation
 '     - a linear LinearConstraintNL for the linear parts of the equation
 '     - a constant Double for the constant part of the equation
-Sub ProcessObjective()
+Private Sub ProcessObjective()
 7852      Set NonLinearObjectiveTrees = New Collection
 7853      Set ObjectiveSenses = New Collection
 7854      Set ObjectiveCells = New Collection
@@ -880,7 +880,7 @@ Sub ProcessObjective()
 End Sub
 
 ' Writes header block for .nl file. This contains the model statistics
-Function MakeHeader() As String
+Private Function MakeHeader() As String
           Dim Header As String
 7872      Header = ""
           
@@ -909,7 +909,7 @@ Function MakeHeader() As String
 End Function
 
 ' Writes C blocks for .nl file. These describe the non-linear parts of each constraint.
-Function MakeCBlocks() As String
+Private Function MakeCBlocks() As String
           Dim Block As String
 7884      Block = ""
           
@@ -924,15 +924,14 @@ Function MakeCBlocks() As String
 7890          AddNewLine Block, "C" & i - 1, "CONSTRAINT NON-LINEAR SECTION " + ConstraintMapRev(CStr(i - 1))
               
               ' Add expression tree
-7891          CommentIndent = 4
-7892          Block = Block + NonLinearConstraintTrees(ConstraintIndexToTreeIndex(i - 1)).ConvertToNL
+7892          Block = Block + NonLinearConstraintTrees(ConstraintIndexToTreeIndex(i - 1)).ConvertToNL(CommentIndent)
 7893      Next i
           
 7894      MakeCBlocks = StripTrailingNewline(Block)
 End Function
 
 ' Writes O blocks for .nl file. These describe the non-linear parts of each objective.
-Function MakeOBlocks() As String
+Private Function MakeOBlocks() As String
           Dim Block As String
 7895      Block = ""
           
@@ -942,8 +941,7 @@ Function MakeOBlocks() As String
 7897          AddNewLine Block, "O" & i - 1 & " " & ConvertObjectiveSenseToNL(ObjectiveSenses(i)), "OBJECTIVE NON-LINEAR SECTION " & ObjectiveCells(i)
               
               ' Add expression tree
-7898          CommentIndent = 4
-7899          Block = Block + NonLinearObjectiveTrees(i).ConvertToNL
+7899          Block = Block + NonLinearObjectiveTrees(i).ConvertToNL(CommentIndent)
 7900      Next i
           
 7901      MakeOBlocks = StripTrailingNewline(Block)
@@ -951,7 +949,7 @@ End Function
 
 ' Writes D block for .nl file. This contains the initial guess for dual variables.
 ' We don't use this, so just set them all to zero
-Function MakeDBlock() As String
+Private Function MakeDBlock() As String
           Dim Block As String
 7902      Block = ""
           
@@ -973,7 +971,7 @@ Function MakeDBlock() As String
 End Function
 
 ' Writes X block for .nl file. This contains the initial guess for primal variables
-Function MakeXBlock() As String
+Private Function MakeXBlock() As String
           Dim Block As String
 7912      Block = ""
           
@@ -1005,7 +1003,7 @@ Function MakeXBlock() As String
 End Function
 
 ' Writes R block for .nl file. This contains the constant values for each constraint and the relation type
-Function MakeRBlock() As String
+Private Function MakeRBlock() As String
           Dim Block As String
 7928      Block = ""
            ' Add block header
@@ -1028,7 +1026,7 @@ Function MakeRBlock() As String
 End Function
 
 ' Writes B block for .nl file. This contains the variable bounds
-Function MakeBBlock() As String
+Private Function MakeBBlock() As String
           Dim Block As String
 7940      Block = ""
           
@@ -1075,7 +1073,7 @@ Function MakeBBlock() As String
 End Function
 
 ' Writes K block for .nl file. This contains the cumulative count of non-zero jacobian entries for the first n-1 variables
-Function MakeKBlock() As String
+Private Function MakeKBlock() As String
           Dim Block As String
 7970      Block = ""
 
@@ -1099,7 +1097,7 @@ Function MakeKBlock() As String
 End Function
 
 ' Writes J blocks for .nl file. These contain the linear part of each constraint
-Function MakeJBlocks() As String
+Private Function MakeJBlocks() As String
           Dim Block As String
 7982      Block = ""
           
@@ -1145,7 +1143,7 @@ Function MakeJBlocks() As String
 End Function
 
 ' Writes the G blocks for .nl file. These contain the linear parts of each objective
-Function MakeGBlocks() As String
+Private Function MakeGBlocks() As String
           Dim Block As String
 8006      Block = ""
           
@@ -1169,7 +1167,7 @@ Function MakeGBlocks() As String
 End Function
 
 ' Writes the .col summary file. This contains the variable names listed in .nl order
-Sub OutputColFile()
+Private Sub OutputColFile()
           Dim ColFilePathName As String
 8017      ColFilePathName = GetTempFilePath("model.col")
           
@@ -1195,7 +1193,7 @@ ErrHandler:
 End Sub
 
 ' Writes the .row summary file. This contains the constraint names listed in .nl order
-Sub OutputRowFile()
+Private Sub OutputRowFile()
           Dim RowFilePathName As String
 8030      RowFilePathName = GetTempFilePath("model.row")
           
@@ -1220,7 +1218,7 @@ ErrHandler:
 8042      Err.Raise Err.Number, Err.Source, Err.Description & IIf(Erl = 0, "", " (at line " & Erl & ")")
 End Sub
 
-Public Sub OutputOptionsFile(OptionsFilePath As String, SolveOptions As SolveOptionsType)
+Private Sub OutputOptionsFile(OptionsFilePath As String, SolveOptions As SolveOptionsType)
     On Error GoTo ErrHandler
     
     DeleteFileAndVerify OptionsFilePath, "Writing Options File", "Couldn't delete the .opt file: " & OptionsFilePath
@@ -1255,7 +1253,7 @@ Sub AddNewLine(CurText As String, LineText As String, Optional CommentText As St
 End Sub
 
 ' Removes a "\n" character from the end of a string
-Function StripTrailingNewline(Block As String) As String
+Private Function StripTrailingNewline(Block As String) As String
 8051      If Len(Block) > 1 Then
 8052          StripTrailingNewline = left(Block, Len(Block) - 2)
 8053      Else
@@ -1263,7 +1261,7 @@ Function StripTrailingNewline(Block As String) As String
 8055      End If
 End Function
 
-Function ConvertFormulaToExpressionTree(strFormula As String) As ExpressionTree
+Private Function ConvertFormulaToExpressionTree(strFormula As String) As ExpressionTree
       ' Converts a string formula to a complete expression tree
       ' Uses the Shunting Yard algorithm (adapted to produce an expression tree) which takes O(n) time
       ' https://en.wikipedia.org/wiki/Shunting-yard_algorithm
@@ -1410,7 +1408,7 @@ Function IsNAry(FunctionName As String) As Boolean
 End Function
 
 ' Determines the number of operands expected by a .nl operator
-Function NumberOfOperands(FunctionName As String, Optional ArgCount As Long = 0) As Long
+Private Function NumberOfOperands(FunctionName As String, Optional ArgCount As Long = 0) As Long
 8129      Select Case FunctionName
           Case "floor", "ceil", "abs", "neg", "not", "tanh", "tan", "sqrt", "sinh", "sin", "log10", "log", "exp", "cosh", "cos", "atanh", "atan", "asinh", "asin", "acosh", "acos"
 8130          NumberOfOperands = 1
@@ -1427,7 +1425,7 @@ Function NumberOfOperands(FunctionName As String, Optional ArgCount As Long = 0)
 End Function
 
 ' Converts common Excel functinos to .nl operators
-Function ConvertExcelFunctionToNL(FunctionName As String) As String
+Private Function ConvertExcelFunctionToNL(FunctionName As String) As String
 8140      FunctionName = LCase(FunctionName)
 8141      Select Case FunctionName
           Case "ln"
@@ -1470,7 +1468,7 @@ Function ConvertExcelFunctionToNL(FunctionName As String) As String
 End Function
 
 ' Determines the precedence of arithmetic operators
-Function Precedence(tkn As String) As Long
+Private Function Precedence(tkn As String) As Long
 8177      Select Case tkn
           Case "eq", "ne", "gt", "ge", "lt", "le"
               Precedence = 1
@@ -1488,7 +1486,7 @@ Function Precedence(tkn As String) As Long
 End Function
 
 ' Checks the precedence of two operators to determine if the current operator on the stack should be popped
-Function CheckPrecedence(tkn1 As String, tkn2 As String) As Boolean
+Private Function CheckPrecedence(tkn1 As String, tkn2 As String) As Boolean
           ' Either tkn1 is left-associative and its precedence is less than or equal to that of tkn2
 8188      If OperatorIsLeftAssociative(tkn1) Then
 8189          If Precedence(tkn1) <= Precedence(tkn2) Then
@@ -1507,7 +1505,7 @@ Function CheckPrecedence(tkn1 As String, tkn2 As String) As Boolean
 End Function
 
 ' Determines the left-associativity of arithmetic operators
-Function OperatorIsLeftAssociative(tkn As String) As Boolean
+Private Function OperatorIsLeftAssociative(tkn As String) As Boolean
 8201      Select Case tkn
           Case "plus", "minus", "mult", "div", "eq", "ne", "gt", "ge", "lt", "le"
 8202          OperatorIsLeftAssociative = True
@@ -1519,7 +1517,7 @@ Function OperatorIsLeftAssociative(tkn As String) As Boolean
 End Function
 
 ' Pops an operator from the operator stack along with the corresponding number of operands.
-Sub PopOperator(Operators As StringStack, Operands As ExpressionTreeStack, Optional ArgCount As Long = 0)
+Private Sub PopOperator(Operators As StringStack, Operands As ExpressionTreeStack, Optional ArgCount As Long = 0)
           ' Pop the operator and create a new ExpressionTree
           Dim Operator As String
 8208      Operator = Operators.Pop()
@@ -1539,7 +1537,7 @@ Sub PopOperator(Operators As StringStack, Operands As ExpressionTreeStack, Optio
 End Sub
 
 ' Check whether a token on the operator stack is a function operator (vs. an arithmetic operator)
-Function IsFunctionOperator(tkn As String) As Boolean
+Private Function IsFunctionOperator(tkn As String) As Boolean
 8216      Select Case tkn
           Case "plus", "minus", "mult", "div", "pow", "neg", "("
 8217          IsFunctionOperator = False
@@ -1549,7 +1547,7 @@ Function IsFunctionOperator(tkn As String) As Boolean
 End Function
 
 ' Negates a tree by adding a 'neg' node to the root
-Sub AddNegToTree(Tree As ExpressionTree)
+Private Sub AddNegToTree(Tree As ExpressionTree)
           Dim NewTree As ExpressionTree
 8221      Set NewTree = CreateTree("neg", ExpressionTreeOperator)
           
@@ -1572,7 +1570,7 @@ Function FormatNL(NodeText As String, NodeType As ExpressionTreeNodeType) As Str
 End Function
 
 ' Converts an operator string to .nl code
-Function ConvertOperatorToNLCode(FunctionName As String) As Long
+Private Function ConvertOperatorToNLCode(FunctionName As String) As Long
 8232      Select Case FunctionName
           Case "plus"
 8233          ConvertOperatorToNLCode = 0
@@ -1686,7 +1684,7 @@ Function ConvertOperatorToNLCode(FunctionName As String) As Long
 End Function
 
 ' Converts an objective sense to .nl code
-Function ConvertObjectiveSenseToNL(ObjectiveSense As ObjectiveSenseType) As Long
+Private Function ConvertObjectiveSenseToNL(ObjectiveSense As ObjectiveSenseType) As Long
 8341      Select Case ObjectiveSense
           Case ObjectiveSenseType.MaximiseObjective
 8342          ConvertObjectiveSenseToNL = 1
@@ -1698,7 +1696,7 @@ Function ConvertObjectiveSenseToNL(ObjectiveSense As ObjectiveSenseType) As Long
 End Function
 
 ' Converts RelationConsts enum to .nl code.
-Sub ConvertConstraintToNL(Relation As RelationConsts, BoundType As Long, Comment As String)
+Private Sub ConvertConstraintToNL(Relation As RelationConsts, BoundType As Long, Comment As String)
 8348      Select Case Relation
               Case RelationConsts.RelationLE ' Upper Bound on LHS
 8349              BoundType = 1
@@ -1816,7 +1814,7 @@ readError:
     Err.Raise Err.Number, Err.Source, Err.Description & IIf(Erl = 0, "", " (at line " & Erl & ")")
 End Function
 
-Function TryParseLogs(s As COpenSolverParsed) As Boolean
+Private Function TryParseLogs(s As COpenSolverParsed) As Boolean
       ' We examine the log file if it exists to try to find more info about the solve
           
           ' Check if log exists

@@ -130,7 +130,7 @@ Function DisplayLinearity() As String
 End Function
 
 ' Converts the tree to .nl expression tree format
-Public Function ConvertToNL() As String
+Public Function ConvertToNL(Optional CommentIndent As Integer = 0) As String
           ' Construct comment
           Dim Comment As String, i As Long
 8557      For i = 1 To CommentIndent
@@ -144,21 +144,17 @@ Public Function ConvertToNL() As String
           
           ' If n-ary operator, we need the number of operators on a newline
 8562      If IsNAry(NodeText) Then
-8563          CommentIndent = CommentIndent + 2
 8564          Comment = ""
-8565          For i = 1 To CommentIndent
+8565          For i = 1 To CommentIndent + 2
 8566              Comment = Comment + " "
 8567          Next i
 8568          AddNewLine output, CStr(NumChildren), Comment & NumChildren & " arguments"
-8569          CommentIndent = CommentIndent - 2
 8570      End If
           
           ' Add children nodes to output
-8571      CommentIndent = CommentIndent + 4
 8572      For i = 1 To NumChildren
-8573          output = output + Children(i).ConvertToNL
+8573          output = output + Children(i).ConvertToNL(CommentIndent + 4)
 8574      Next i
-8575      CommentIndent = CommentIndent - 4
           
 8576      ConvertToNL = output
 End Function
