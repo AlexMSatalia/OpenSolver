@@ -16,7 +16,7 @@ Attribute VB_Exposed = False
 Option Explicit
 
 #If Mac Then
-    Const FormWidthAbout = 600
+    Const FormWidthAbout = 620
 #Else
     Const FormWidthAbout = 450
 #End If
@@ -31,6 +31,10 @@ Private Function GetAddInIfExists(AddIn As Variant, title As String) As Boolean
 3476      Set AddIn = Application.AddIns.Item(title)
 3477      GetAddInIfExists = Err = 0
 End Function
+
+Private Sub chkUpdate_Change()
+    SaveUpdateSetting chkUpdate.value
+End Sub
 
 Private Sub cmdOk_Click()
 3478      Me.Hide
@@ -105,6 +109,11 @@ ExitSub:
 End Sub
 
 
+Private Sub cmdUpdate_Click()
+    CheckForUpdate
+    chkUpdate.value = GetUpdateSetting()
+End Sub
+
 Private Sub lblUrl_Click()
 3512      Call OpenURL("http://www.opensolver.org")
 End Sub
@@ -116,6 +125,8 @@ Private Sub UserForm_Activate()
           txtFilePath.Locked = False
           txtFilePath = "OpenSolver file: " & MakeSpacesNonBreaking(ConvertHfsPath(ThisWorkbook.FullName))
           txtFilePath.Locked = True
+          
+          chkUpdate.value = GetUpdateSetting()
 
           Dim VBAversion As String
 3516      VBAversion = "VBA"
@@ -261,6 +272,23 @@ Private Sub AutoLayout()
         .width = FormButtonWidth
         .left = Me.width - .width - FormMargin
         .top = chkAutoLoad.top
+    End With
+    
+    With cmdUpdate
+        .Caption = "Check for updates"
+        .width = FormButtonWidth * 1.4
+        .left = Me.width - .width - FormMargin
+        .top = lblHeading.top
+    End With
+    
+    With chkUpdate
+        .Caption = "Check for updates automatically"
+        .left = cmdUpdate.left
+        .top = cmdUpdate.top + cmdUpdate.height
+        .width = cmdUpdate.width
+        .AutoSize = False
+        .AutoSize = True
+        .AutoSize = False
     End With
     
     Me.height = cmdOk.top + cmdOk.height + FormMargin + FormTitleHeight

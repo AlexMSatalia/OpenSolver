@@ -174,29 +174,28 @@ Function RunOpenSolver(Optional SolveRelaxation As Boolean = False, Optional Min
 2804      RunOpenSolver = OpenSolverResult.Unsolved
 2805      Set OpenSolver = New COpenSolver
 2806      OpenSolver.BuildModelFromSolverData LinearityCheckOffset, MinimiseUserInteraction, SolveRelaxation
+
+          ' Run appropriate solve routine
 2807      If UsesParsedModel(OpenSolver.Solver) Then
-2808          GoTo ParsedModel
-2809      End If
-2810      RunOpenSolver = OpenSolver.SolveModel(SolveRelaxation, MinimiseUserInteraction)
-2811      If Not MinimiseUserInteraction Then OpenSolver.ReportAnySolutionSubOptimality
+              On Error GoTo CleanParsedModel
+              
+              ' Solve model and extract result
+              Dim OpenSolverParsed As New COpenSolverParsed
+              OpenSolverParsed.SolveModel OpenSolver, SolveRelaxation, MinimiseUserInteraction
+              RunOpenSolver = OpenSolver.SolveStatus
+              Set OpenSolverParsed = Nothing
+2809      Else
+2810          RunOpenSolver = OpenSolver.SolveModel(SolveRelaxation, MinimiseUserInteraction)
+2811      End If
+
+          If Not MinimiseUserInteraction Then OpenSolver.ReportAnySolutionSubOptimality
 2812      Set OpenSolver = Nothing    ' Free any OpenSolver memory used
 2813      Application.Iteration = oldIterationMode
-2814      Exit Function
 
-ParsedModel:
-2815      On Error GoTo CleanParsedModel
-          Dim OpenSolverParsed As New COpenSolverParsed
-          
-          ' Solve model and extract result
-2816      OpenSolverParsed.SolveModel OpenSolver, SolveRelaxation, MinimiseUserInteraction
-2817      RunOpenSolver = OpenSolver.SolveStatus
-2818      If Not MinimiseUserInteraction Then OpenSolver.ReportAnySolutionSubOptimality
-          
-          ' Clean up
-2819      Set OpenSolver = Nothing
-2820      Set OpenSolverParsed = Nothing
-2821      Application.Iteration = oldIterationMode
-2822      Exit Function
+          ' Run a check for updates if needed
+          If Not MinimiseUserInteraction Then AutoUpdateCheck
+
+2814      Exit Function
           
 CleanParsedModel:
           ' Clear OpenSolverParsed before moving on to main error handler

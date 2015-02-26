@@ -37,3 +37,5 @@ set linear=-xr!*bonmin* -xr!*couenne* -xr!*libipoptfort* -xr!*NOMAD* -xr!*Nomad*
 :: Mac Linear
 %start%OpenSolver%version%_AdvancedMac.zip %end% %osx%
 
+:: Add readme.txt with the current version
+>> Release\readme.txt echo Please download the latest version listed here (%version%). For more information, visit http://OpenSolver.org

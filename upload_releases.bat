@@ -8,3 +8,5 @@ set end=%user%@frs.sourceforge.net:/home/frs/project/opensolver
 
 :: Upload each zip file in releases
 for /R %%G in (*.zip) do %start% "%%G" %end%
+
+echo Upload complete! Remember to enable 'exclude stats' for readme.txt in the web interface. 
