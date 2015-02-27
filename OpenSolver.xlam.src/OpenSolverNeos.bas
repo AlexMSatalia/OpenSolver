@@ -342,7 +342,7 @@ Sub WrapAMPLForNEOS(AmplString As String, Solver As String)
       ' Wraps AMPL in the required XML to send to NEOS
            Dim Category As String, SolverType As String
 6966       SolverType = GetNeosSolverType(Solver)
-           Category = GetNeosSolverCategory(Solver)
+           Category = GetNeosSolverCategory(SolverType)
            
 6967       AmplString = _
               "<document>" & _
@@ -359,8 +359,8 @@ Sub WrapAMPLForNEOS(AmplString As String, Solver As String)
               "</document>"
 End Sub
 
-Function GetNeosSolverCategory(Solver As String)
-    Select Case Solver
+Function GetNeosSolverCategory(SolverType As String)
+    Select Case SolverType
     Case "cbc"
         GetNeosSolverCategory = "milp"
     Case "Bonmin", "Couenne"
