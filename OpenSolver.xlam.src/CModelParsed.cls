@@ -1034,7 +1034,7 @@ Sub CleanFormulae(ByVal lngFStart As Long, ByVal lngFEnd As Long, Optional Const
 5307      For lngIndex = lngFEnd To lngFStart Step -1
 5308          If lngIndex Mod 100 = 1 Then
 5309              Application.StatusBar = "OpenSolver: Constraint progress: " & ConstraintNumber & "/" & ConstraintCount & ". " & _
-                                          "Removing uneccessary formulae: " & lngIndex & "/" & Formulae.Count & ". "
+                                          "Removing unnecessary formulae: " & lngIndex & "/" & Formulae.Count & ". "
 5310          End If
 5311          DoEvents
           

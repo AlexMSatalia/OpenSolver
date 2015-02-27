@@ -633,7 +633,7 @@ Private Sub MakeConstraintMap()
           ' Non-linear constraints
 7735      For i = 1 To n_con
 7736          If i Mod 100 = 1 Then
-7737              Application.StatusBar = "OpenSolver: Creating .nl file. Outputting non-linear constraints" & i & "/" & n_con
+7737              Application.StatusBar = "OpenSolver: Creating .nl file. Outputting non-linear constraints " & i & "/" & n_con
 7738          End If
 7739          DoEvents
               
@@ -654,7 +654,7 @@ Private Sub MakeConstraintMap()
           ' Linear constraints
 7751      For i = 1 To n_con
 7752          If i Mod 100 = 1 Then
-7753              Application.StatusBar = "OpenSolver: Creating .nl file. Outputting linear constraints" & i & "/" & n_con
+7753              Application.StatusBar = "OpenSolver: Creating .nl file. Outputting linear constraints " & i & "/" & n_con
 7754          End If
 7755          DoEvents
               
