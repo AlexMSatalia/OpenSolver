@@ -192,9 +192,6 @@ Function RunOpenSolver(Optional SolveRelaxation As Boolean = False, Optional Min
 2812      Set OpenSolver = Nothing    ' Free any OpenSolver memory used
 2813      Application.Iteration = oldIterationMode
 
-          ' Run a check for updates if needed
-          If Not MinimiseUserInteraction Then AutoUpdateCheck
-
 2814      Exit Function
           
 CleanParsedModel:
