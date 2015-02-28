@@ -234,8 +234,7 @@ Function ReadModel_Gurobi(SolutionFilePathName As String, errorString As String,
 6448      ReadModel_Gurobi = False
           Dim Line As String, Index As Long
 6449      On Error GoTo readError
-          Dim solutionExpected As Boolean
-6450      solutionExpected = True
+6450      s.SolutionWasLoaded = True
           
 6451      Open SolutionFilePathName For Input As 1 ' supply path with filename
 6452      Line Input #1, Line
@@ -254,15 +253,15 @@ Function ReadModel_Gurobi(SolutionFilePathName As String, errorString As String,
 6462      ElseIf Line = GurobiResult.Infeasible Then
 6463          s.SolveStatus = OpenSolverResult.Infeasible
 6464          s.SolveStatusString = "No Feasible Solution"
-6465          solutionExpected = False
+6465          s.SolutionWasLoaded = False
 6467      ElseIf Line = GurobiResult.InfOrUnbound Then
 6468          s.SolveStatus = OpenSolverResult.Unbounded
 6469          s.SolveStatusString = "No Solution Found (Infeasible or Unbounded)"
-6470          solutionExpected = False
+6470          s.SolutionWasLoaded = False
 6472      ElseIf Line = GurobiResult.Unbounded Then
 6473          s.SolveStatus = OpenSolverResult.Unbounded
 6474          s.SolveStatusString = "No Solution Found (Unbounded)"
-6475          solutionExpected = False
+6475          s.SolutionWasLoaded = False
 6477      ElseIf Line = GurobiResult.SolveStoppedTime Then
 6478          s.SolveStatus = OpenSolverResult.LimitedSubOptimal
 6479          s.SolveStatusString = "Stopped on Time Limit"
@@ -283,74 +282,50 @@ Function ReadModel_Gurobi(SolutionFilePathName As String, errorString As String,
 6499          GoTo readError
 6500      End If
           
-6501      If solutionExpected Then
+6501      If s.SolutionWasLoaded Then
 6502          Application.StatusBar = "OpenSolver: Loading Solution... " & s.SolveStatusString
-              Dim NumVar As Long
+              Dim NumVar As Long, SplitLine() As String
 6503          Line Input #1, Line  ' Optimal - objective value              22
 6504          If Line <> "" Then
 6505              Index = InStr(Line, "=")
                   Dim ObjectiveValue As Double
-6506              ObjectiveValue = Val(Mid(Line, Index + 2))
+6506              ObjectiveValue = ConvertToCurrentLocale(Mid(Line, Index + 2))
                   Dim i As Long
 6507              i = 1
 6508              While Not EOF(1)
 6509                  Line Input #1, Line
-6510                  Index = InStr(Line, " ")
-6511                  s.FinalVarValueP(i) = Val(Mid(Line, Index + 1))
-                      'Get the variable name
-6512                  s.VarCellP(i) = left(Line, Index - 1)
-6513                  If left(s.VarCellP(i), 1) = "_" Then
+6510                  SplitLine = SplitWithoutRepeats(Line, " ")
+6511                  s.FinalVarValue(i) = ConvertToCurrentLocale(SplitLine(1))
+                      s.VarCell(i) = SplitLine(0)
+6513                  If left(s.VarCell(i), 1) = "_" Then
                           ' Strip any _ character added to make a valid name
-6514                      s.VarCellP(i) = Mid(s.VarCellP(i), 2)
+6514                      s.VarCell(i) = Mid(s.VarCell(i), 2)
 6515                  End If
                       ' Save number of vars read
 6516                  NumVar = i
 6517                  i = i + 1
 6518              Wend
 6519          End If
-6520          s.AdjustableCells.Value2 = 0
-              Dim j As Long
-6521          For i = 1 To NumVar
-                  ' Need to make sure number is in US locale when Value2 is set
-6522              s.AdjustableCells.Worksheet.Range(s.VarCellP(i)).Value2 = ConvertFromCurrentLocale(s.FinalVarValueP(i))
-6523          Next i
               
 6524          If s.bGetDuals Then
 6525              Open Replace(SolutionFilePathName, "modelsolution", "sensitivityData") For Input As 2
-                  Dim index2 As Long
-                  Dim Stuff() As String
-6526              ReDim Stuff(3)
 6527              For i = 1 To NumVar
 6528                  Line Input #2, Line
-6529                  For j = 1 To 3
-6530                      index2 = InStr(Line, ",")
-6531                      If index2 <> 0 Then
-6532                          Stuff(j) = left(Line, index2 - 1)
-6533                      Else
-6534                          Stuff(j) = Line
-6535                      End If
-6536                      Line = Mid(Line, index2 + 1)
-6537                  Next j
-6538                  s.ReducedCostsP(i) = Stuff(1)
-6539                  s.IncreaseVarP(i) = Stuff(3) - s.CostCoeffsP(i)
-6540                  s.DecreaseVarP(i) = s.CostCoeffsP(i) - Stuff(2)
+6529                  SplitLine = SplitWithoutRepeats(Line, ",")
+6538                  s.ReducedCosts(i) = ConvertToCurrentLocale(SplitLine(0))
+6540                  s.DecreaseVar(i) = s.CostCoeffs(i) - ConvertToCurrentLocale(SplitLine(1))
+6539                  s.IncreaseVar(i) = ConvertToCurrentLocale(SplitLine(2)) - s.CostCoeffs(i)
 6541              Next i
-6542              ReDim Stuff(5)
+
 6543              For i = 1 To s.NumRows
 6544                  Line Input #2, Line
-6545                  For j = 1 To 5
-6546                      index2 = InStr(Line, ",")
-6547                      If index2 <> 0 Then
-6548                          Stuff(j) = left(Line, index2 - 1)
-6549                      Else
-6550                          Stuff(j) = Line
-6551                      End If
-6552                      Line = Mid(Line, index2 + 1)
-6553                  Next j
-6554                  s.ShadowPriceP(i) = Stuff(1)
-6555                  s.IncreaseConP(i) = Stuff(5) - Stuff(2)
-6556                  s.DecreaseConP(i) = Stuff(2) - Stuff(4)
-6557                  s.FinalValueP(i) = Stuff(2) - Stuff(3)
+6545                  SplitLine = SplitWithoutRepeats(Line, ",")
+6554                  s.ShadowPrice(i) = ConvertToCurrentLocale(SplitLine(0))
+                      Dim RHSValue As Double
+                      RHSValue = ConvertToCurrentLocale(SplitLine(1))
+6555                  s.IncreaseCon(i) = ConvertToCurrentLocale(SplitLine(4)) - RHSValue
+6556                  s.DecreaseCon(i) = RHSValue - ConvertToCurrentLocale(SplitLine(3))
+6557                  s.FinalValue(i) = RHSValue - ConvertToCurrentLocale(SplitLine(2))
 6558              Next i
 6559          End If
 6560          ReadModel_Gurobi = True

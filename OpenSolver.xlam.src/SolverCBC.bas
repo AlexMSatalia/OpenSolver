@@ -190,9 +190,8 @@ Function ReadModel_CBC(SolutionFilePathName As String, errorString As String, s 
 6126      On Error GoTo ErrHandler
 6127      Open SolutionFilePathName For Input As 1 ' supply path with filename
 6128      Line Input #1, Response  ' Optimal - objective value              22
-          ' Line Input #1, junk ' get rest of line
-          Dim solutionExpected As Boolean
-6129      solutionExpected = True
+
+6129      s.SolutionWasLoaded = True
 6130      If Response Like "Optimal*" Then
 6131          s.SolveStatus = OpenSolverResult.Optimal
 6132          s.SolveStatusString = "Optimal"
@@ -208,7 +207,7 @@ Function ReadModel_CBC(SolutionFilePathName As String, errorString As String, s 
 6142      ElseIf Response Like "Unbounded*" Then
 6143          s.SolveStatus = OpenSolverResult.Unbounded
 6144          s.SolveStatusString = "No Solution Found (Unbounded)"
-6146          solutionExpected = False
+6146          s.SolutionWasLoaded = False
               '
 6147      ElseIf Response Like "Stopped on time *" Then ' Stopped on iterations or time
 6148          s.SolveStatus = OpenSolverResult.LimitedSubOptimal
@@ -257,22 +256,15 @@ Function ReadModel_CBC(SolutionFilePathName As String, errorString As String, s 
 6186      Response = Replace(Response, "  ", " ")
 6187      Response = Replace(Response, "  ", " ")
 
-6188      If solutionExpected Then
+6188      If s.SolutionWasLoaded Then
               ' We read in whatever solution CBC returned
 6189          Application.StatusBar = "OpenSolver: Loading Solution... " & Response
-              ' Zero the current decision variables
-6190          s.AdjustableCells.Value2 = 0
-              ' Faster code; put a zero into first adjustable cell, and copy it to all the adjustable cells
-              ' AdjustableCells.Cells(0, 0).Value = 0
-              ' AdjustableCells.Cells(0, 0).Copy
-              ' AdjustableCells.PasteSpecial xlPasteValues
           
-              ' Read in the Solution File
-              ' This gives the non-zero? variable values
-              ' Lines like:       0 AZ70                  15                      0
-              ' ...being? : Index Name Value ReducedCost
-              Dim Line As String, SplitLine() As String, Index As Double, NameValue As String, value As Double, CBCConstraintIndex As Long
+              Dim Line As String, SplitLine() As String, Index As Double, NameValue As String, value As Double, CBCConstraintIndex As Long, StartOffset As Long
 6191          If s.bGetDuals Then
+                  ' Read in the Solution File
+                  ' Line format: Index ConstraintName Value ShadowPrice
+                  
                   Dim j As Long, row As Long, i As Long
 6192              CBCConstraintIndex = 0
                   
@@ -289,50 +281,23 @@ Function ReadModel_CBC(SolutionFilePathName As String, errorString As String, s 
 6200                      s.rConstraintList.Cells(row, 2).ClearContents
 6201                  Else
 6202                      Line Input #1, Line
-6203                      SplitLine = Split(Line, " ")    ' 0 indexed; item 0 is the variable index
-                          ' Skip over the blank items in the split (multiple delimiters give multiple items), getting the real items
-6204                      i = 0
-6205                      While SplitLine(i) = ""
-6206                          i = i + 1
-6207                      Wend
+6203                      SplitLine = SplitWithoutRepeats(Line, " ")
+
                           ' In the case of LpStatusInfeasible, we can get lines that start **. We strip the **
-6208                      If SplitLine(i) = "**" Then i = i + 1
-6209                      While SplitLine(i) = ""
-6210                          i = i + 1
-6211                      Wend
-                          ' Get and check the index of the row
-6212                      If Val(SplitLine(i)) <> CBCConstraintIndex Then
+                          StartOffset = 0
+                          If SplitLine(StartOffset) = "**" Then StartOffset = 1
+
+                          ' Check the index of the row
+6212                      If CInt(SplitLine(StartOffset)) <> CBCConstraintIndex Then
 6213                          errorString = "While reading the CBC solution file, OpenSolver found an unexpected constraint row."
 6214                          GoTo ExitSub
 6215                      End If
-6216                      i = i + 1
-6217                      While SplitLine(i) = ""
-6218                          i = i + 1
-6219                      Wend
-                          ' Get the constraint name; we don't use this
-6220                      NameValue = SplitLine(i)
-6221                      i = i + 1
-6222                      While SplitLine(i) = ""
-6223                          i = i + 1
-6224                      Wend
-6225                      s.FinalValueP(j) = SplitLine(i)
-                          ' Skip the constraint LHS value - we don't need this
-6226                      i = i + 1
-6227                      While SplitLine(i) = ""
-6228                          i = i + 1
-6229                      Wend
-                          ' Get the dual value
-6230                      If s.ObjectiveSense = MaximiseObjective Then
-6231                          value = -1 * Val(SplitLine(i))
-                              'rConstraintList.Cells(row, 2).Value2 = Value
-6232                      Else
-6233                          value = Val(SplitLine(i))
-                              'rConstraintList.Cells(row, 2).Value2 = Value
-6234                      End If
-6235                      s.ShadowPriceP(j) = value
-6236                      If InStr(s.ShadowPriceP(j), "E-16") Then
-6237                          s.ShadowPriceP(j) = "0"
-6238                      End If
+6216
+6220                      NameValue = SplitLine(StartOffset + 1)
+6225                      s.FinalValue(j) = ConvertToCurrentLocale(SplitLine(StartOffset + 2))
+                          value = ConvertToCurrentLocale(SplitLine(StartOffset + 3))
+6230                      If s.ObjectiveSense = MaximiseObjective Then value = -value
+6235                      s.ShadowPrice(j) = value
 6239                      CBCConstraintIndex = CBCConstraintIndex + 1
 6240                      j = j + 1
 6241                  End If
@@ -341,55 +306,26 @@ Function ReadModel_CBC(SolutionFilePathName As String, errorString As String, s 
 6244          End If
             
               ' Now we read in the decision variable values
+              ' Line format: Index VariableName Value ReducedCost
 6245          j = 1
 6246          While Not EOF(1)
 6247              Line Input #1, Line
-6248              SplitLine = Split(Line, " ")    ' 0 indexed; item 0 is the variable index
-                  ' Skip over the blank items in the split (multiple delimiters give multiple items), getting the real items
-6249              i = 0
-6250              While SplitLine(i) = ""
-6251                  i = i + 1
-6252              Wend
-                  ' In the case of LpStatusInfeasible, we can get lines that start **. We strip the **
-6253              If SplitLine(i) = "**" Then i = i + 1
-6254              While SplitLine(i) = ""
-6255                  i = i + 1
-6256              Wend
-                  ' Get the index of the variable
-6257              Index = Val(SplitLine(i))
-6258              i = i + 1
-6259              While SplitLine(i) = ""
-6260                  i = i + 1
-6261              Wend
-                  ' Get the variable name, stripping any leading "_"
-6262              NameValue = SplitLine(i)
-6263              If left(NameValue, 1) = "_" Then NameValue = Mid(NameValue, 2) ' Strip any _ character added to make a valid name
-6264              i = i + 1
-6265              While SplitLine(i) = ""
-6266                  i = i + 1
-6267              Wend
-6268              s.FinalVarValueP(j) = Val(SplitLine(i))
+6248              SplitLine = SplitWithoutRepeats(Line, " ")
 
-                  'Write to the sheet containing the decision variables (which may not be the active sheet)
-                  'Value assigned to Value2 must be in US locale
-6269              s.AdjustableCells.Worksheet.Range(NameValue).Value2 = Val(SplitLine(i)) 'ConvertFromCurrentLocale(s.FinalVarValueP(j))
+                  ' In the case of LpStatusInfeasible, we can get lines that start **. We strip the **
+6253              StartOffset = 0
+                  If SplitLine(StartOffset) = "**" Then StartOffset = 1
+                  
+6257              Index = CInt(SplitLine(StartOffset))
+6258              NameValue = SplitLine(StartOffset + 1)
+6263              If left(NameValue, 1) = "_" Then NameValue = Mid(NameValue, 2) ' Strip any _ character added to make a valid name
+                  s.VarCell(j) = NameValue
+6268              s.FinalVarValue(j) = ConvertToCurrentLocale(SplitLine(StartOffset + 2))
                  
-                  'ConvertFullLPFileVarNameToRange(name, AdjCellsSheetIndex).Value2 = Value
-6270              If s.bGetDuals Then
-6271                  i = i + 1
-6272                  While SplitLine(i) = ""
-6273                      i = i + 1
-6274                  Wend
-6275                  If s.ObjectiveSense = MaximiseObjective Then
-6276                      value = -1 * Val(SplitLine(i))
-6277                  Else
-6278                      value = Val(SplitLine(i))
-6279                  End If
-6280                  s.ReducedCostsP(j) = str(value)
-6281                  If InStr(s.ReducedCostsP(j), "E-16") Then
-6282                      s.ReducedCostsP(j) = "0"
-6283                  End If
-6284                  s.VarCellP(j) = NameValue
+                  If s.bGetDuals Then
+6271                  value = ConvertToCurrentLocale(SplitLine(StartOffset + 3))
+6275                  If s.ObjectiveSense = MaximiseObjective Then value = -value
+6280                  s.ReducedCosts(j) = value
 6285              End If
 6286              j = j + 1
 6287          Wend
@@ -409,7 +345,7 @@ End Function
 Sub ReadSensitivityData_CBC(SolutionFilePathName As String, s As COpenSolver)
           'Reads the two files with the limits on the bounds of shadow prices and reduced costs
 
-          Dim RangeFilePathName As String, Stuff(5) As String, index2 As Long
+          Dim RangeFilePathName As String, LineData() As String, index2 As Long
           Dim Line As String, row As Long, j As Long, i As Long
           
           'Find the ranges on the constraints
@@ -420,18 +356,9 @@ Sub ReadSensitivityData_CBC(SolutionFilePathName As String, s As COpenSolver)
 6299      j = 1
 6300      While Not EOF(2)
 6301          Line Input #2, Line
-6302          For i = 1 To 5
-6303              index2 = InStr(Line, ",")
-6304              Stuff(i) = left(Line, index2 - 1)
-6305              If Stuff(i) = "1e-007" Then
-6306                  Stuff(i) = "0"
-6307              ElseIf InStr(Stuff(i), "E-16") Then
-6308                  Stuff(i) = "0"
-6309              End If
-6310              Line = Mid(Line, index2 + 1)
-6311          Next i
-6312          s.IncreaseConP(j) = Stuff(3)
-6313          s.DecreaseConP(j) = Stuff(5)
+6302          LineData() = Split(Line, ",")
+6312          s.IncreaseCon(j) = ConvertToCurrentLocale(LineData(2))
+6313          s.DecreaseCon(j) = ConvertToCurrentLocale(LineData(4))
 6314          j = j + 1
 6315      Wend
 6316      Close 2
@@ -444,22 +371,13 @@ Sub ReadSensitivityData_CBC(SolutionFilePathName As String, s As COpenSolver)
 6321      row = s.NumRows + 2
 6322      While Not EOF(2)
 6323          Line Input #2, Line
-6324          For i = 1 To 5
-6325              index2 = InStr(Line, ",")
-6326              Stuff(i) = left(Line, index2 - 1)
-6327              If Stuff(i) = "1e-007" Then
-6328                  Stuff(i) = "0"
-6329              ElseIf InStr(Stuff(i), "E-16") Then
-6330                  Stuff(i) = "0"
-6331              End If
-6332              Line = Mid(Line, index2 + 1)
-6333          Next i
+              LineData() = Split(Line, ",")
 6334          If s.ObjectiveSense = MaximiseObjective Then
-6335              s.IncreaseVarP(j) = Stuff(5)
-6336              s.DecreaseVarP(j) = Stuff(3)
+6335              s.IncreaseVar(j) = ConvertToCurrentLocale(LineData(4))
+6336              s.DecreaseVar(j) = ConvertToCurrentLocale(LineData(2))
 6337          Else
-6338              s.IncreaseVarP(j) = Stuff(3)
-6339              s.DecreaseVarP(j) = Stuff(5)
+6338              s.IncreaseVar(j) = ConvertToCurrentLocale(LineData(2))
+6339              s.DecreaseVar(j) = ConvertToCurrentLocale(LineData(4))
 6340          End If
 6341          j = j + 1
 6342      Wend
@@ -489,9 +407,6 @@ Sub LaunchCommandLine_CBC()
           Dim ModelFilePathName As String
 6353      ModelFilePathName = ModelFilePath("CBC")
           
-          ' Get all the options that we pass to CBC when we solve the problem and pass them here as well
-          ' Get the Solver Options, stored in named ranges with values such as "=0.12"
-          ' Because these are NAMEs, they are always in English, not the local language, so get their value using Val
           Dim SolveOptions As SolveOptionsType, SolveOptionsString As String
 6354      If WorksheetAvailable Then
 6355          GetSolveOptions "'" & Replace(ActiveSheet.Name, "'", "''") & "'!", SolveOptions, errorString ' NB: We have to double any ' when we quote the sheet name

@@ -365,7 +365,7 @@ Private Const ERROR_BAD_FORMAT = 11&
     Private Declare Function fread Lib "libc.dylib" (ByVal outStr As String, ByVal Size As Long, ByVal Items As Long, ByVal stream As Long) As Long
     Private Declare Function feof Lib "libc.dylib" (ByVal file As Long) As Long
 #End If
-
+    
 Function execShell(command As String, Optional ByRef ExitCode As Long) As String
     Dim file As Long
     file = popen(command, "r")
@@ -2093,4 +2093,25 @@ End Function
 
 Function StrEx_NL(d As Double) As String
     StrEx_NL = StrEx(d, False)
+End Function
+
+' As split function, but treats consecutive delimiters as one
+Function SplitWithoutRepeats(StringToSplit As String, Delimiter As String) As String()
+    Dim SplitValues() As String
+    SplitValues = Split(StringToSplit, Delimiter)
+    ' Remove empty splits caused by consecutive delimiters
+    Dim LastNonEmpty As Long, i As Long
+    LastNonEmpty = -1
+    For i = 0 To UBound(SplitValues)
+        If SplitValues(i) <> "" Then
+            LastNonEmpty = LastNonEmpty + 1
+            SplitValues(LastNonEmpty) = SplitValues(i)
+        End If
+    Next
+    ReDim Preserve SplitValues(0 To LastNonEmpty)
+    SplitWithoutRepeats = SplitValues
+End Function
+
+Function ZeroIfSmall(value As Double) As Double
+    ZeroIfSmall = IIf(Abs(value) > EPSILON, value, 0)
 End Function
