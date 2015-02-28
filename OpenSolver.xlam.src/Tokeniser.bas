@@ -113,18 +113,18 @@ Public Function ParseFormula(strFormula As String) As Tokens
 5490      Set objTokens = New Tokens
 5491      Set objTokenStack = New TokenStack
 
-5492      strDecimalSeparator = Application.International(xlDecimalSeparator)
-5493      strListSeparator = Application.International(xlListSeparator)
-5494      strArrayRowSeparator = Application.International(xlRowSeparator)
-5495      If Application.International(xlColumnSeparator) = Application.International(xlDecimalSeparator) Then
-5496          strArrayColumnSeparator = Application.International(xlAlternateArraySeparator)
-5497      Else
-5498          strArrayColumnSeparator = Application.International(xlColumnSeparator)
-5499      End If
-5500      strLeftBrace = Application.International(xlLeftBrace)
-5501      strRightBrace = Application.International(xlRightBrace)
-5502      strLeftBracket = Application.International(xlLeftBracket)       'todo: implement ' check if this applies to tableopen and tableclose symbols
-5503      strRightBracket = Application.International(xlRightBracket)     'todo: implement
+5492      strDecimalSeparator = "." ' Application.International(xlDecimalSeparator)
+5493      strListSeparator = "," ' Application.International(xlListSeparator)
+5494      strArrayRowSeparator = ";" ' Application.International(xlRowSeparator)
+'5495      If Application.International(xlColumnSeparator) = Application.International(xlDecimalSeparator) Then
+'5496          strArrayColumnSeparator = Application.International(xlAlternateArraySeparator)
+'5497      Else
+5498          strArrayColumnSeparator = "," ' Application.International(xlColumnSeparator)
+'5499      End If
+5500      strLeftBrace = "{" ' Application.International(xlLeftBrace)
+5501      strRightBrace = "}" ' Application.International(xlRightBrace)
+5502      strLeftBracket = "[" ' Application.International(xlLeftBracket)       'todo: implement ' check if this applies to tableopen and tableclose symbols
+5503      strRightBracket = "]" ' Application.International(xlRightBracket)     'todo: implement
 5504      strLeftRoundBracket = "("
 5505      strRightRoundBracket = ")"
 5506      strBooleanTrue = "TRUE"

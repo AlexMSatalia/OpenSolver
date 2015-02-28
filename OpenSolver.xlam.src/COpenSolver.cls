@@ -2092,15 +2092,6 @@ Sub ReportAnySolutionSubOptimality()
 1911      End If
 End Sub
 
-Function StrEx(d As Double) As String
-      ' Convert a double to a string, always with a + or -. Also ensure we have "0.", not just "." for values between -1 and 1
-              Dim s As String, prependedZero As String, sign As String
-1912          s = Mid(str(d), 2)  ' remove the initial space (reserved by VB for the sign)
-1913          prependedZero = IIf(left(s, 1) = ".", "0", "")  ' ensure we have "0.", not just "."
-1914          sign = IIf(d >= 0, "+", "-")
-1915          StrEx = sign + prependedZero + s
-End Function
-
 Sub WriteConstraintListToSheet(r As Range)
           ' Write a list of all the constraints in a column at cell r
           ' TODO: This will not correctly handle constraints on another sheet

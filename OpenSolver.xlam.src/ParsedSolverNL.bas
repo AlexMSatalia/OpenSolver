@@ -979,7 +979,7 @@ Private Function MakeXBlock() As String
 7913      AddNewLine Block, "x" & n_var, "INITIAL PRIMAL GUESS"
 
           ' Loop through the variables in .nl variable order
-          Dim i As Long, initial As String, VariableIndex As Long
+          Dim i As Long, initial As Double, VariableIndex As Long
 7914      For i = 1 To n_var
 7915          If i Mod 100 = 1 Then
 7916              Application.StatusBar = "OpenSolver: Creating .nl file. Writing initial values " & i & "/" & n_var
@@ -996,7 +996,7 @@ Private Function MakeXBlock() As String
                   ' Formulae variables - use the initial value saved in the CFormula instance
 7923              initial = CDbl(m.Formulae(VariableIndex - numActualVars).initialValue)
 7924          End If
-7925          AddNewLine Block, i - 1 & " " & initial, "    " & VariableMapRev(CStr(i - 1)) & " = " & initial
+7925          AddNewLine Block, i - 1 & " " & StrEx_NL(initial), "    " & VariableMapRev(CStr(i - 1)) & " = " & initial
 7926      Next i
           
 7927      MakeXBlock = StripTrailingNewline(Block)
@@ -1019,7 +1019,7 @@ Private Function MakeRBlock() As String
               
 7935          bound = LinearConstants(ConstraintIndexToTreeIndex(i - 1))
 7936          ConvertConstraintToNL ConstraintRelations(ConstraintIndexToTreeIndex(i - 1)), BoundType, Comment
-7937          AddNewLine Block, BoundType & " " & bound, "    " & ConstraintMapRev(CStr(i - 1)) & Comment & bound
+7937          AddNewLine Block, BoundType & " " & StrEx_NL(bound), "    " & ConstraintMapRev(CStr(i - 1)) & Comment & bound
 7938      Next i
           
 7939      MakeRBlock = StripTrailingNewline(Block)
@@ -1125,7 +1125,7 @@ Private Function MakeJBlocks() As String
 7992          For j = 1 To LinearConstraints(TreeIndex).Count
 7993              If LinearConstraints(TreeIndex).VariablePresent(j) Then
 7994                  VariableIndex = VariableCollectionIndexToNLIndex(j)
-7995                  ConstraintElements(VariableIndex) = VariableIndex & " " & LinearConstraints(TreeIndex).Coefficient(j)
+7995                  ConstraintElements(VariableIndex) = VariableIndex & " " & StrEx_NL(LinearConstraints(TreeIndex).Coefficient(j))
 7996                  CommentElements(VariableIndex) = "    + " & LinearConstraints(TreeIndex).Coefficient(j) & " * " & VariableMapRev(CStr(VariableIndex))
 7997              End If
 7998          Next j
@@ -1158,7 +1158,7 @@ Private Function MakeGBlocks() As String
 8009          For j = 1 To LinearObjectives(i).Count
 8010              If LinearObjectives(i).VariablePresent(j) Then
 8011                  VariableIndex = VariableCollectionIndexToNLIndex(j)
-8012                  AddNewLine Block, VariableIndex & " " & LinearObjectives(i).Coefficient(j), "    + " & LinearObjectives(i).Coefficient(j) & " * " & VariableMapRev(CStr(VariableIndex))
+8012                  AddNewLine Block, VariableIndex & " " & StrEx_NL(LinearObjectives(i).Coefficient(j)), "    + " & LinearObjectives(i).Coefficient(j) & " * " & VariableMapRev(CStr(VariableIndex))
 8013              End If
 8014          Next j
 8015      Next i
@@ -1224,9 +1224,9 @@ Private Sub OutputOptionsFile(OptionsFilePath As String, SolveOptions As SolveOp
     DeleteFileAndVerify OptionsFilePath, "Writing Options File", "Couldn't delete the .opt file: " & OptionsFilePath
     
     Open OptionsFilePath For Output As 4
-    Print #4, "iteration_limit " & SolveOptions.MaxIterations
-    Print #4, "allowable_fraction_gap " & SolveOptions.Tolerance
-    Print #4, "time_limit " & SolveOptions.MaxTime
+    Print #4, "iteration_limit " & str(SolveOptions.MaxIterations)
+    Print #4, "allowable_fraction_gap " & StrEx_NL(SolveOptions.Tolerance)
+    Print #4, "time_limit " & str(SolveOptions.MaxTime)
     Close #4
     Exit Sub
     
@@ -1563,7 +1563,7 @@ Function FormatNL(NodeText As String, NodeType As ExpressionTreeNodeType) As Str
           Case ExpressionTreeVariable
 8226          FormatNL = "v" & VariableMap(NodeText)
 8227      Case ExpressionTreeNumber
-8228          FormatNL = "n" & NodeText
+8228          FormatNL = "n" & StrEx_NL(Val(NodeText))
 8229      Case ExpressionTreeOperator
 8230          FormatNL = "o" & CStr(ConvertOperatorToNLCode(NodeText))
 8231      End Select
@@ -1782,7 +1782,7 @@ Function ReadModel_NL(SolutionFilePathName As String, errorString As String, s A
         Dim VariableValues As New Collection
         While Not EOF(1)
             Line Input #1, Line
-            VariableValues.Add CDbl(Line)
+            VariableValues.Add Val(Line)
         Wend
         
         ' Loop through variable cells and find the corresponding value from VariableValues

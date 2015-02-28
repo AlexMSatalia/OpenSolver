@@ -157,7 +157,7 @@ Sub WriteAMPLFile_Parsed(ModelFilePathName As String, SolverType As String, Solv
 7200              If VarType(c) = vbEmpty Then
 7201                  Line = Line & " := 0"
 7202              Else
-7203                  Line = Line & " := " & c
+7203                  Line = Line & " := " & StrEx_NL(CDbl(c))
 7204              End If
 7205              WriteToFile 1, Line & ";"
 7206          Next
@@ -165,7 +165,7 @@ Sub WriteAMPLFile_Parsed(ModelFilePathName As String, SolverType As String, Solv
               
               Dim Formula As Variant
 7208          For Each Formula In m.Formulae
-7209              WriteToFile 1, "var " & Formula.strAddress & " := " & CStr(Formula.initialValue) & ";"
+7209              WriteToFile 1, "var " & Formula.strAddress & " := " & StrEx_NL(Formula.initialValue) & ";"
 7210          Next Formula
 7211          WriteToFile 1, ""
               

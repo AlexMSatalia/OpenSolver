@@ -297,7 +297,7 @@ Public Sub EvaluateConstantOperator()
           HasString = False
 8642      For i = 1 To NumChildren
               If Children(i).NodeType = ExpressionTreeNumber Then
-8643              Values.Add CDbl(Children(i).NodeText)
+8643              Values.Add Val(Children(i).NodeText)
               Else
                   Values.Add Children(i).NodeText
                   HasString = True
@@ -642,7 +642,7 @@ Public Sub EvaluateConstantOperator()
 FinishNode:
           ' Replace subtree with a constant node
 8850      NodeType = ExpressionTreeNumber
-8851      NodeText = NewValue
+8851      NodeText = StrEx_NL(NewValue)
 8852      ClearChildren
 End Sub
 
@@ -770,7 +770,7 @@ Sub CollateLinearTerms()
 8911          Select Case NodeType
               ' Constant expression on a number node - we read the number
               Case ExpressionTreeNumber
-8912              LinearValue = CDbl(NodeText)
+8912              LinearValue = Val(NodeText)
               
               ' Constant expression under operator - we can evaluate it and discard all children
 8913          Case ExpressionTreeOperator

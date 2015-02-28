@@ -80,11 +80,14 @@ Public Function ProcessSolverModel(s As COpenSolver) As Boolean
 4789      For i = 1 To AdjustableCellCount
 4790          AdjCellNames(i) = s.VarNamesP(i)
 4791      Next i
-          
+
           ' Get variable lower bounds
 4792      Set VarLowerBounds = New Collection
           Dim c As Range
 4793      For Each c In AdjustableCells
+              ' Try and catch any protected cells so we don't waste time parsing
+              c.Value2 = c.Value2
+              
 4794          If TestKeyExists(s.VarLowerBounds, c.Address) Then
 4795              VarLowerBounds.Add s.VarLowerBounds(c.Address), c.Address(RowAbsolute:=False, ColumnAbsolute:=False)
 4796          End If
@@ -400,13 +403,14 @@ Function CellIsConstant(cell As Range) As Boolean
               On Error Resume Next
               Set CellPrecedents = cell.Precedents
               If Err.Number = 1004 Then
-                  If Err.Description Like "No cells were found*" Then
+                  ' Can't do a plain text error message check in non-english locales
+                  'If Err.Description Like "No cells were found*" Then
                       CellIsConstant = True
                       Exit Function
-                  Else
-                      On Error GoTo 0
-                      Err.Raise Err.Number, Err.Source, Err.Description
-                  End If
+                  'Else
+                      'On Error GoTo 0
+                      'Err.Raise Err.Number, Err.Source, Err.Description
+                  'End If
               End If
               On Error GoTo 0
               
@@ -684,7 +688,7 @@ Function ExpandFormula(ByVal strFormula As String, _
                               
 5110                  Case TokenType.Number
                           ' TODO: Scientific notation for small/large numbers?
-5111                      strParsed = strParsed + tkn.Text
+5111                      strParsed = strParsed + StrEx_NL(Val(tkn.Text))
                           
 5112                  Case TokenType.Bool
 5113                      strParsed = strParsed + IIf(tkn.Text = "TRUE", "True", "False")
@@ -1181,13 +1185,13 @@ Function AddNodeIfNew(ByRef objCurNode As CFormula, ByRef c As Range) As String
 5383              If (VBA.VarType(varReturn) = vbError) Then
                       ' Fall back to calculating the cell
 5384                  c.Calculate
-5385                  AddNodeIfNew = CStr(c.value)
+5385                  AddNodeIfNew = StrEx_NL(c.value)
 5386                  GoTo finishedNode
                   ElseIf IsArray(varReturn) Then
-                      AddNodeIfNew = varReturn(1)
+                      AddNodeIfNew = StrEx_NL(CDbl(varReturn(1)))
                       GoTo finishedNode
 5387              Else
-5388                  AddNodeIfNew = varReturn
+5388                  AddNodeIfNew = StrEx_NL(CDbl(varReturn))
 5389                  GoTo finishedNode
 5390              End If
 5391          End If
@@ -1203,10 +1207,10 @@ Function AddNodeIfNew(ByRef objCurNode As CFormula, ByRef c As Range) As String
 5394              If (VBA.VarType(varReturn) = vbError) Then
                       ' Fall back to calculating the cell
 5395                  c.Calculate
-5396                  AddNodeIfNew = CStr(c.value)
+5396                  AddNodeIfNew = StrEx_NL(c.value)
 5397                  GoTo finishedNode
 5398              Else
-5399                  AddNodeIfNew = varReturn
+5399                  AddNodeIfNew = StrEx_NL(CDbl(varReturn))
 5400                  GoTo finishedNode
 5401              End If
 5402      End If

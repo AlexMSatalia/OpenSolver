@@ -2081,3 +2081,16 @@ Sub GetExtraParameters(Solver As String, sheet As Worksheet, ExtraParameters As 
 6116          Next i
 6117      End If
 End Sub
+
+Function StrEx(d As Double, Optional AddSign As Boolean = True) As String
+      ' Convert a double to a string, always with a + or -. Also ensure we have "0.", not just "." for values between -1 and 1
+              Dim s As String, prependedZero As String, sign As String
+1912          s = Mid(str(d), 2)  ' remove the initial space (reserved by VB for the sign)
+1913          prependedZero = IIf(left(s, 1) = ".", "0", "")  ' ensure we have "0.", not just "."
+1915          StrEx = prependedZero + s
+              If AddSign Or d < 0 Then StrEx = IIf(d >= 0, "+", "-") & StrEx
+End Function
+
+Function StrEx_NL(d As Double) As String
+    StrEx_NL = StrEx(d, False)
+End Function
