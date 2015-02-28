@@ -1,32 +1,9 @@
 Attribute VB_Name = "OpenSolverVisualizer"
-' OpenSolver
-' Copyright Andrew Mason 2010
-' http://www.OpenSolver.org
-' This software is distributed under the terms of the GNU General Public License
-''
-' This file is part of OpenSolver.
-'
-' OpenSolver is free software: you can redistribute it and/or modify
-' it under the terms of the GNU General Public License as published by
-' the Free Software Foundation, either version 3 of the License, or
-' (at your option) any later version.
-'
-' OpenSolver is distributed in the hope that it will be useful,
-' but WITHOUT ANY WARRANTY; without even the implied warranty of
-' MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-' GNU General Public License for more details.
-'
-' You should have received a copy of the GNU General Public License
-' along with OpenSolver.  If not, see <http://www.gnu.org/licenses/>.
-'
-
 Option Explicit
 
 Private ShapeIndex As Long
 Private HighlightColorIndex As Long   ' Used to rotate thru colours on different constraints
 Private colHighlightOffsets As Collection
-
-Private ShowDataItemsInColour As Boolean ' For OpenSolverStudio
 
 Function NextHighlightColor() As Long
 3013      HighlightColorIndex = HighlightColorIndex + 1
@@ -57,50 +34,14 @@ Function InitialiseHighlighting()
 3030      HighlightColorIndex = 0 ' Used to rotate thru colours on different constraints
 End Function
 
-'Function SheetHasOpenSolverModelHighlighting(w As Worksheet)
-'    ' If we have a shape called OpenSolver1 then we are displaying a highlighted model
-'    If w.Shapes.Count = 0 Then GoTo NoHighlighting
-'    Dim s As Shape
-'    SheetHasOpenSolverModelHighlighting = True
-'    On Error Resume Next
-'    Set s = w.Shapes("OpenSolver1")
-'    If Err.Number = 0 Then Exit Function ' Yes, we have highlighting
-'    ' Because the highlighting may be on another sheet, we also check a few shapes
-'    For Each s In w.Shapes
-'        If s.name Like "OpenSolver*" Then Exit Function
-'    Next s
-'NoHighlighting:
-'    SheetHasOpenSolverModelHighlighting = False
-'    Return
-'End Function
-
-'Function SheetHasOpenSolverStudioDataHighlighting(w As Worksheet)
-'    ' If we have a shape called OpenSolverStudio1 then we are displaying highlighted data
-'    If w.Shapes.Count = 0 Then GoTo NoHighlighting
-'    Dim s As Shape
-'    SheetHasOpenSolverStudioDataHighlighting = True
-'    On Error Resume Next
-'    Set s = w.Shapes("OpenSolverStudio1")
-'    If Err.Number = 0 Then Exit Function ' Yes, we have highlighting
-'    ' Because the highlighting may be on another sheet, we also check a few shapes
-'    For Each s In w.Shapes
-'        If s.name Like "OpenSolverStudio*" Then Exit Function
-'    Next s
-'NoHighlighting:
-'    SheetHasOpenSolverStudioDataHighlighting = False
-'    Return
-'End Function
-
 Function SheetHasOpenSolverHighlighting(w As Worksheet)
-          ' If we have a shape called OpenSolverStudio1 then we are displaying highlighted data
+          ' If we have a shape called OpenSolver1 then we are displaying highlighted data
 3031      If w.Shapes.Count = 0 Then GoTo NoHighlighting
           Dim s As Shape
 3032      SheetHasOpenSolverHighlighting = True
 3033      On Error Resume Next
 3034      Set s = w.Shapes("OpenSolver1")
 3035      If Err.Number = 0 Then Exit Function ' Yes, we have highlighting
-3036      Set s = w.Shapes("OpenSolverStudio1")
-3037      If Err.Number = 0 Then Exit Function ' Yes, we have highlighting
           ' Because the highlighting may be on another sheet, we also check all the shapes on this sheet
 3038      For Each s In w.Shapes
 3039          If s.Name Like "OpenSolver*" Then Exit Function
@@ -144,7 +85,6 @@ End Function
 
 Function AddLabelToShape(w As Worksheet, s As Shape, voffset As Long, height As Long, label As String, HighlightColor As Long)
 3067      Set AddLabelToShape = CreateLabelShape(w, s.left - 1, s.top + voffset, s.width, height, label, HighlightColor)
-          'Set s1 = w.Shapes.AddShape(msoShapeRectangle, s.left - 1, s.Top - height / 2, s.width, height)
 End Function
 
 Function HighlightRange(r As Range, label As String, HighlightColor As Long, Optional ShowFill As Boolean = False, Optional ShapeNamePrefix As String = "OpenSolver", Optional Bounds As Boolean = False) As ShapeRange
@@ -202,7 +142,7 @@ Function HighlightRange(r As Range, label As String, HighlightColor As Long, Opt
 3107      End If
           
           
-       ' Use doubles here for more accuracy as we are summing terms, and so accummulating errors
+          ' Use doubles here for more accuracy as we are summing terms, and so accummulating errors
           Dim left2 As Double, top2 As Double, right2 As Double, bottom2 As Double, height As Double, width As Double
 3108      left2 = l + Offset
 3109      top2 = t + Offset
@@ -213,139 +153,98 @@ Function HighlightRange(r As Range, label As String, HighlightColor As Long, Opt
           Dim firstShapeIndex As Long
 3111      firstShapeIndex = ShapeIndex + 1
 3112      Do
-        ' The height cannot exceed 169056.0; we allow some tolerance
-3113    height = bottom - top2
-3114    If height > 160000# Then
-3115        height = 150000  ' This difference ensures we never end up with very small rectangle
-3116    End If
-3117    If isFirstShape And height > 9500 Then
-3118        height = 9000   ' The first shape we create has a height of 9000 to ensure we can rotate the text and have it show
+          ' The height cannot exceed 169056.0; we allow some tolerance
+3113      height = bottom - top2
+3114      If height > 160000# Then
+3115          height = 150000  ' This difference ensures we never end up with very small rectangle
+3116      End If
+3117      If isFirstShape And height > 9500 Then
+3118          height = 9000   ' The first shape we create has a height of 9000 to ensure we can rotate the text and have it show
                             ' correctly; this works around and Excel 2007 bug
-3119    End If
-3120    isFirstShape = False
+3119      End If
+3120      isFirstShape = False
         
-        Dim shapeName As String, s1 As Shape
-3121    ShapeIndex = ShapeIndex + 1
-        'If the constraint is not a bound then make a box for it
-3122    If Not Bounds Then
-3123        shapeName = ShapeNamePrefix & ShapeIndex
-3124        r.Worksheet.Shapes.AddShape(msoShapeRectangle, l + Offset, top2, right - l, height).Name = shapeName
-3125    Else
-            'If the box is a bound we name it after the cell that it is in
-3126        shapeName = ShapeNamePrefix & Key
-3127        On Error Resume Next
-            Dim tmpName As String
-3128        tmpName = r.Worksheet.Shapes(shapeName).Name
-            'If there hasn't been a bound on that cell then make a new cell
-3129        If tmpName = "" Then
-3130            r.Worksheet.Shapes.AddShape(msoShapeRectangle, l + Offset, top2, right - l, height).Name = shapeName
-3131        Else
-                'If there has already been a bound then just add new text to it rather then making a new box
-3132            Set s1 = r.Worksheet.Shapes(shapeName)
-3133            s1.TextFrame.Characters.Text = s1.TextFrame.Characters.Text & "," & label
-3134            GoTo endLoop
-3135        End If
-3136    End If
+          Dim shapeName As String, s1 As Shape
+3121      ShapeIndex = ShapeIndex + 1
+          'If the constraint is not a bound then make a box for it
+3122      If Not Bounds Then
+3123          shapeName = ShapeNamePrefix & ShapeIndex
+3124          r.Worksheet.Shapes.AddShape(msoShapeRectangle, l + Offset, top2, right - l, height).Name = shapeName
+3125      Else
+              'If the box is a bound we name it after the cell that it is in
+3126          shapeName = ShapeNamePrefix & Key
+3127          On Error Resume Next
+              Dim tmpName As String
+3128          tmpName = r.Worksheet.Shapes(shapeName).Name
+              'If there hasn't been a bound on that cell then make a new cell
+3129          If tmpName = "" Then
+3130              r.Worksheet.Shapes.AddShape(msoShapeRectangle, l + Offset, top2, right - l, height).Name = shapeName
+3131          Else
+                  'If there has already been a bound then just add new text to it rather then making a new box
+3132              Set s1 = r.Worksheet.Shapes(shapeName)
+3133              s1.TextFrame.Characters.Text = s1.TextFrame.Characters.Text & "," & label
+3134              GoTo endLoop
+3135          End If
+3136      End If
         
-3137    Set s1 = r.Worksheet.Shapes(shapeName)
-        'Set s1 = r.Worksheet.Shapes.AddShape(msoShapeRectangle, l + Offset, top2, right - l, height)
+3137      Set s1 = r.Worksheet.Shapes(shapeName)
               
-        Dim ShowOutline As Boolean
-3138    ShowOutline = Not ShowFill
+          Dim ShowOutline As Boolean
+3138      ShowOutline = Not ShowFill
         
-3139    If ShowOutline Then
-3140        s1.Fill.Visible = False
-3141        With s1.Line
-3142            .Weight = 2
-3143            .ForeColor.RGB = HighlightColor
-3144        End With
-3145    Else
-3146        s1.Line.Visible = False
-3147        s1.Fill.Solid
-3148        s1.Fill.Transparency = 0.6
-3149        s1.Fill.ForeColor.RGB = HighlightColor
-3150    End If
-3151    s1.Shadow.Visible = msoFalse
+3139      If ShowOutline Then
+3140          s1.Fill.Visible = False
+3141          With s1.Line
+3142              .Weight = 2
+3143              .ForeColor.RGB = HighlightColor
+3144          End With
+3145      Else
+3146          s1.Line.Visible = False
+3147          s1.Fill.Solid
+3148          s1.Fill.Transparency = 0.6
+3149          s1.Fill.ForeColor.RGB = HighlightColor
+3150      End If
+3151      s1.Shadow.Visible = msoFalse
         
-3152    With s1.TextFrame
-3153        .Characters.Text = label
-3154        .Characters.Font.Color = HighlightColor
-3155        .HorizontalAlignment = xlHAlignLeft ' xlHAlignCenter
-            ' "=", "<=", & ">=" will be centered
-3156        If ((height < 500) Or (label = "=") Or (label = ChrW(&H2265)) Or (label = ChrW(&H2264))) Then
-3157            .VerticalAlignment = xlVAlignCenter  ' Shape is small enought to have text fit on the screen when centered, so we center text
-3158        Else
-3159            .VerticalAlignment = xlVAlignTop   ' So we can see the name when scrolled to the top
-3160        End If
-3161        .MarginBottom = 0
-3162        .MarginLeft = 2
-3163        .MarginRight = 0
-3164        .MarginTop = 2
-3165        .Characters.Font.Bold = True
-3166    End With
+3152      With s1.TextFrame
+3153          .Characters.Text = label
+3154          .Characters.Font.Color = HighlightColor
+3155          .HorizontalAlignment = xlHAlignLeft ' xlHAlignCenter
+              ' "=", "<=", & ">=" will be centered
+3156          If ((height < 500) Or (label = "=") Or (label = ChrW(&H2265)) Or (label = ChrW(&H2264))) Then
+3157              .VerticalAlignment = xlVAlignCenter  ' Shape is small enought to have text fit on the screen when centered, so we center text
+3158          Else
+3159              .VerticalAlignment = xlVAlignTop   ' So we can see the name when scrolled to the top
+3160          End If
+3161          .MarginBottom = 0
+3162          .MarginLeft = 2
+3163          .MarginRight = 0
+3164          .MarginTop = 2
+3165          .Characters.Font.Bold = True
+3166      End With
 endLoop:
-3167    top2 = top2 + height
+3167      top2 = top2 + height
 3168      Loop While bottom - top2 > 0.01  ' handle float rounding
           
           ' Create & return the shapeRange containing all the shapes we added
           Dim shapeNames(), i As Long
 3169      ReDim shapeNames(ShapeIndex - firstShapeIndex + 1)
 3170      If Not Bounds Then
-3171    For i = firstShapeIndex To ShapeIndex
-3172        shapeNames(i - firstShapeIndex + 1) = ShapeNamePrefix & i
-3173    Next i
+3171          For i = firstShapeIndex To ShapeIndex
+3172              shapeNames(i - firstShapeIndex + 1) = ShapeNamePrefix & i
+3173          Next i
 3174      Else
-3175    For i = firstShapeIndex To ShapeIndex
-3176        shapeNames(i - firstShapeIndex + 1) = ShapeNamePrefix & Key
-3177    Next i
+3175          For i = firstShapeIndex To ShapeIndex
+3176              shapeNames(i - firstShapeIndex + 1) = ShapeNamePrefix & Key
+3177          Next i
 3178      End If
 3179      Set HighlightRange = r.Worksheet.Shapes.Range(shapeNames)
-          
-          
-      ' Dim s1 As Shape
-      '21800     Set s1 = r.Worksheet.Shapes.AddShape(msoShapeRectangle, l + Offset, t + Offset, right - l, bottom - t)
-      '
-      '          Dim ShowOutline As Boolean
-      '21810     ShowOutline = Not ShowFill
-      '
-      '21820     If ShowOutline Then
-      '21830         s1.Fill.Visible = False
-      '21840         With s1.Line
-      '21850             .Weight = 2
-      '21860             .ForeColor.RGB = HighlightColor
-      '21870         End With
-      '21880     Else
-      '21890         s1.Line.Visible = False
-      '21900         s1.Fill.Transparency = 0.6
-      '21910         s1.Fill.ForeColor.RGB = HighlightColor
-      '21920     End If
-      '
-      '21930     With s1.TextFrame
-      '21940         .Characters.Text = label
-      '21950         .Characters.Font.Color = HighlightColor
-      '21960         .Characters.Font.Size = 11
-      '21970         .HorizontalAlignment = xlHAlignLeft ' xlHAlignCenter
-      '21980         .VerticalAlignment = xlVAlignCenter
-      '21990         .MarginBottom = 0
-      '22000         .MarginLeft = 2
-      '22010         .MarginRight = 0
-      '22020         .MarginTop = 0
-      '22030         .Characters.Font.Bold = True
-      '22040     End With
-      '
-      '22050     ShapeIndex = ShapeIndex + 1
-      '22060     s1.name = ShapeNamePrefix & ShapeIndex
-      '
-      '22070     Set HighlightRange = s1
 End Function
 
 Function AddLabelledConnector(w As Worksheet, s1 As Shape, s2 As Shape, label As String)
           Dim t As Shapes, c As Shape
-          
-          'Set myDocument = Worksheets(1)
+
 3180      Set t = w.Shapes
-          'Set firstRect = t.AddShape(msoShapeRectangle, 100, 50, 200, 100)
-          'Set secondRect = t.AddShape(msoShapeRectangle, 300, 300, 200, 100)
 3181      Set c = t.AddConnector(msoConnectorStraight, 0, 0, 0, 0) ' msoConnectorCurve
 3182      With c.ConnectorFormat
 3183          .BeginConnect ConnectedShape:=s1, ConnectionSite:=1
@@ -443,7 +342,6 @@ Sub HighlightConstraint(myDocument As Worksheet, LHSRange As Range, _
 3244          End If
 3245      Else 'this was added if there is only a lhs that needs highlighting in linearity
 3246          Set s1 = HighlightRange(LHSRange, "", Color)
-              ' AddLabelledConnector myDocument, s1, s2, ""
 3247      End If
 End Sub
 
@@ -458,18 +356,14 @@ End Sub
 
 Function HideSolverModel() As Boolean
 
-3253      HideSolverModel = False ' assume we fail
+3253      HideSolverModel = False
           
 3254      If Application.Workbooks.Count = 0 Then
 3255          MsgBox "Error: No active workbook available", , "OpenSolver" & sOpenSolverVersion & " Error"
 3256          Exit Function
 3257      End If
           
-          ' We trap the Escape key which does an "on error"
-          'xlDisabled = 0 'totally disables Esc / Ctrl-Break / Command-Period
-          'xlInterrupt = 1 'go to debug
-          'xlErrorHandler = 2 'go to error handler
-          'Trappable error is #18
+          ' Trap the Escape key
 3258      Application.EnableCancelKey = xlErrorHandler
 3259      On Error GoTo errorHandler
           
@@ -509,10 +403,10 @@ NextConstraint:
 3280      Next i
 3281      On Error GoTo errorHandler
           
-3282      HideSolverModel = True  ' Successful completion
+3282      HideSolverModel = True
 
 ExitSub:
-3283      Application.StatusBar = False ' Resume normal status bar behaviour
+3283      Application.StatusBar = False
 3284      Application.ScreenUpdating = True
           
 3285      Exit Function
@@ -522,7 +416,7 @@ errorHandler:
 3287          If MsgBox("You have pressed the Escape key. Do you wish to cancel?", _
                          vbCritical + vbYesNo + vbDefaultButton1, _
                          "OpenSolver: User Interrupt Occured...") = vbNo Then
-3288              Resume 'continue on from where error occured
+3288              Resume
 3289          Else
 3290              Resume ExitSub
 3291          End If
@@ -534,18 +428,14 @@ End Function
 
 Function ShowSolverModel() As Boolean
           
-3295      ShowSolverModel = False ' Assume we fail
+3295      ShowSolverModel = False
           
 3296      If Application.Workbooks.Count = 0 Then
 3297          MsgBox "Error: No active workbook available", , "OpenSolver" & sOpenSolverVersion & " Error"
 3298          Exit Function
 3299      End If
 
-          ' We trap the Escape key which does an onerror
-          'xlDisabled = 0 'totally disables Esc / Ctrl-Break / Command-Period
-          'xlInterrupt = 1 'go to debug
-          'xlErrorHandler = 2 'go to error handler
-          'Trappable error is #18
+          ' Trap the Escape key
 3300      Application.EnableCancelKey = xlErrorHandler
 3301      On Error GoTo errorHandler
           
@@ -571,10 +461,6 @@ Function ShowSolverModel() As Boolean
           Dim n As Name
 3313      On Error Resume Next
 3314      Set n = Names(sheetName & "solver_adj")
-      '23410     If Err.Number <> 0 Then
-      ''23420         MsgBox "Error: No Solver model was found on sheet " & ActiveWorkbook.ActiveSheet.name, , "OpenSolver Error"
-      ''23430         GoTo ExitSub
-      ''23440     End If
 3315      On Error Resume Next
 3316      Set AdjustableCells = RemoveRangeOverlap(Range(sheetName & "solver_adj"))   ' Remove any overlap in the range defining the decision variables
 3317      If Err.Number <> 0 Then
@@ -597,13 +483,6 @@ Function ShowSolverModel() As Boolean
 3326          If GetNamedIntegerIfExists(book, sheetName & "solver_typ", temp) Then ObjType = temp
 3327          If ObjType = TargetObjective Then GetNamedNumericValueIfExists book, sheetName & "solver_val", ObjectiveTargetValue
 3328          AddObjectiveHighlighting ObjRange, ObjType, ObjectiveTargetValue
-3329      Else
-      '              Dim ObjFunctErr As VbMsgBoxResult
-      '              ObjFunctErr = MsgBox("Warning: No objective cell has been set. Do you still want to save the model?", vbYesNo, "OpenSolver")
-      '              If ObjFunctErr = vbNo Then
-      '                  Exit Function
-      '              End If
-      '23600         Errors = Errors & "Warning: No objective cell has been set." & vbCrLf
 3330      End If
           
           ' Count the correct number of constraints, and form the constraint
@@ -613,24 +492,12 @@ Function ShowSolverModel() As Boolean
 3332      Application.StatusBar = "OpenSolver: Displaying Problem... " & AdjustableCells.Count & " vars, " & NumConstraints & " Solver constraints"
                   
           ' Process the decision variables as we need to compute their types (bin or int; a variable can be declared as both!)
-          'Dim NumVars As Long
-          Dim numVars As Double
+          Dim numVars As Long
 3333      numVars = AdjustableCells.Count
-          'Dim VarNames() As String, VarTypes() As Range
-          'Dim VarNamesCollection As New Collection
-          'Dim VarTypesCollection As New Collection
-          'Dim VarAreasCollection As New Collection
-          'ReDim VarNames(NumVars), VarTypes(NumVars)
           Dim BinaryCellsRange As Range
           Dim IntegerCellsRange As Range
           ' Get names for all the variables so we can track their types
           Dim c As Range
-          'i = 0
-          'For Each c In AdjustableCells
-              'i = i + 1
-          '    VarNamesCollection.Add c, c.Address(RowAbsolute:=False, ColumnAbsolute:=False)
-              'VarNames(i) = c.AddressLocal(RowAbsolute:=False, ColumnAbsolute:=False) ' eg A1
-          'Next c
                   
           ' Count the correct number of constraints, and form the constraint
           Dim constraint As Long
@@ -658,26 +525,7 @@ Function ShowSolverModel() As Boolean
 3347          Count = LHSCount
               Dim AllDecisionVariables As Boolean
 3348          AllDecisionVariables = False
-      '        If rel = RelationInt Or rel = RelationBin Then
-      '            ' Make the LHS variables integer or binary
-      '            If isRangeLHS Then  ' It should always be a range
-      '                For Each c In rLHS
-      '                    Dim found As Boolean
-      '                    found = False
-      '                    For i = 1 To NumVars
-      '                        If c.AddressLocal(RowAbsolute:=False, ColumnAbsolute:=False) = VarNames(i) Then
-      '                            found = True
-      '                            'If Not TestKeyExists(VarTypesCollection, VarNames(i).Address) Then
-      '                                'VarTypesCollection.Add VarNames(i).Formula, VarNames(i).Address
-      '                            'End If
-      '                            ' We allow for a variable to be specified as both int and binary, in which case it becomes binary
-      '                            ' Note: RelationInt = 4, RelationBin = 5. Default of 0 means continuous
-      '                            'VarTypes(i) = Max(VarTypes(i), rel)
-      '
-      '                            Exit For
-      '                        End If
-      '
-      '                    Next i
+
 3349          If rel = RelationINT Or rel = RelationBIN Then
               ' Make the LHS variables integer or binary
                   Dim intersection As Range
@@ -814,40 +662,8 @@ errorHandler:
 3455      Resume ExitSub
 3456      Resume
 End Function
-'Iain dunning
-Public Function TestKeyExists(ByRef col As Collection, Key As String) As Boolean
-          
-          'MsgBox Key
-    On Error GoTo doesntExist:
-          Dim Item As Variant
-          
-3457      Set Item = col(Key)
-          
-3458      TestKeyExists = True
-3459      Exit Function
-          
-doesntExist:
-3460      If Err.Number = 5 Then
-3461          TestKeyExists = False
-3462      Else
-3463          TestKeyExists = True
-3464      End If
-          
-End Function
-'---------------------------------------------------------------------------------------------------------------
-' Refactored code added 21st July
-'---------------------------------------------------------------------------------------------------------------
 
 Sub AddObjectiveHighlighting(ObjectiveRange As Range, ObjectiveType As ObjectiveSenseType, ObjectiveTargetValue As Double)
-          ' AddObjectiveHighlighting
-          ' Highlight the cell that is to be optimised, and add a label
-          ' depending on the objective type
-          ' Inputs:
-          '   ObjectiveRange          Range that contains the cell to optimise
-          '   ObjectiveType           Enum type that says what kind of objective we have
-          ' Outputs:
-          '   None
-          
           ' Highlight the cell
           Dim CellHighlight As ShapeRange
 3465      Set CellHighlight = HighlightRange(ObjectiveRange, "", RGB(255, 0, 255)) ' Magenta highlight
@@ -863,14 +679,6 @@ End Sub
 
 
 Sub AddDecisionVariableHighlighting(DecisionVariableRange As Range)
-          ' AddDecisionVariableHighlighting
-          ' Highlight decision variables. Note that this works even if decision
-          ' variables are disjoint
-          ' Inputs:
-          '   DecisionVariableRange
-          ' Outputs:
-          '   None
-          
           Dim area As Range
 3471      For Each area In DecisionVariableRange.Areas
 3472          HighlightRange area, "", RGB(255, 0, 255), True ' Magenta highlight
