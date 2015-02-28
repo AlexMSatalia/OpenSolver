@@ -2291,27 +2291,6 @@ errorHandler:
           Err.Raise Err.Number, Err.Source, Err.Description
 End Function
 
-'Iain dunning
-Public Function TestKeyExists(ByRef col As Collection, Key As String) As Boolean
-          
-          'MsgBox Key
-    On Error GoTo doesntExist:
-          Dim Item As Variant
-          
-2020      Set Item = col(Key)
-          
-2021      TestKeyExists = True
-2022      Exit Function
-          
-doesntExist:
-2023      If Err.Number = 5 Then
-2024          TestKeyExists = False
-2025      Else
-2026          TestKeyExists = True
-2027      End If
-          
-End Function
-
 Sub HighlightNonLinearities(RowIsNonLinear() As Boolean, ObjectiveIsNonLinear As Boolean)
           ' Highlight all constraints (and the objective) that are non-linear using our standard model highlighting, but showing only individual cells, not ranges
           Dim constraint As Long, row As Long, instance As Long

@@ -2115,3 +2115,19 @@ End Function
 Function ZeroIfSmall(value As Double) As Double
     ZeroIfSmall = IIf(Abs(value) > EPSILON, value, 0)
 End Function
+
+Public Function TestKeyExists(ByRef col As Collection, Key As String) As Boolean
+          On Error GoTo doesntExist:
+          Dim Item As Variant
+2020      Set Item = col(Key)
+2021      TestKeyExists = True
+2022      Exit Function
+          
+doesntExist:
+2023      If Err.Number = 5 Then
+2024          TestKeyExists = False
+2025      Else
+2026          TestKeyExists = True
+2027      End If
+          
+End Function
