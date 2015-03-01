@@ -157,12 +157,6 @@ Sub OpenSolver_VisitCoinOROrg(Optional Control)
 2801      Call OpenURL("http://www.coin-or.org")
 End Sub
 
-Sub AutoOpenSolver()
-    'If Not solver.Solver1.AutoOpened Then
-    'solver.Solver2.Auto_Open
-    'End If
-End Sub
-
 Function RunOpenSolver(Optional SolveRelaxation As Boolean = False, Optional MinimiseUserInteraction As Boolean = False, Optional LinearityCheckOffset As Double = 0) As OpenSolverResult
           ResetErrorCache
 2802      On Error GoTo errorHandler
@@ -214,8 +208,9 @@ errorHandler:
           If OpenSolver_ErrDescription <> "" Then Err.Description = OpenSolver_ErrDescription
 #End If
 2828      If Err.Number <> OpenSolver_UserCancelledError And Not MinimiseUserInteraction Then
-              'MBox "Help_" & Err.Description
-              MsgBox "OpenSolver" & sOpenSolverVersion & " encountered an error:" & vbCrLf & Err.Description & IIf(Erl = 0, "", " (at line " & Erl & ")") & vbCrLf & vbCrLf & "Source = " & Err.Source & ", ErrNumber=" & Err.Number, , "OpenSolver" & sOpenSolverVersion & " Error"
+              ' If Err.Number is negative, that means it came from OpenSolver, and so is "intentional"
+              MBox IIf(Err.Number < 0, "Help_", "") & Err.Description
+              ' MsgBox "OpenSolver" & sOpenSolverVersion & " encountered an error:" & vbCrLf & Err.Description & IIf(Erl = 0, "", " (at line " & Erl & ")") & vbCrLf & vbCrLf & "Source = " & Err.Source & ", ErrNumber=" & Err.Number, , "OpenSolver" & sOpenSolverVersion & " Error"
 2830      End If
 End Function
 
