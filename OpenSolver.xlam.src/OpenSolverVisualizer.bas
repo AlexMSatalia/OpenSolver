@@ -383,7 +383,7 @@ Function HideSolverModel() As Boolean
           Dim i As Long
           Dim NumOfConstraints As Long
           Dim sheetName As String
-3269      sheetName = "'" & Replace(ActiveWorkbook.ActiveSheet.Name, "'", "''") & "'!" ' NB: We have to double any ' when we quote the sheet name
+3269      sheetName = EscapeSheetName(ActiveWorkbook.ActiveSheet)
 3270      On Error Resume Next ' There may not be a model on the sheet
 3271      NumOfConstraints = Mid(Names(sheetName & "solver_num"), 2)
 3272      On Error GoTo errorHandler
@@ -445,7 +445,7 @@ Function ShowSolverModel() As Boolean
           Dim NumConstraints  As Long
 
 3303      On Error Resume Next
-3304      sheetName = "'" & Replace(ActiveWorkbook.ActiveSheet.Name, "'", "''") & "'!" ' NB: We have to double any ' when we quote the sheet name
+3304      sheetName = EscapeSheetName(ActiveWorkbook.ActiveSheet)
 3305      If Err.Number <> 0 Then
 3306          MsgBox "Error: Unable to access the active sheet", , "OpenSolver" & sOpenSolverVersion & " Error"
 3307          Exit Function

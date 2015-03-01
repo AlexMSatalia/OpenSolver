@@ -567,7 +567,7 @@ Public Sub LoadFromSheet()
 4009      Set Constraints = New Collection
 
           Dim sheetName As String
-4010      sheetName = "'" & Replace(ActiveWorkbook.ActiveSheet.Name, "'", "''") & "'!"   ' Must include quotes to handle sheet names with spaces
+4010      sheetName = EscapeSheetName(ActiveWorkbook.ActiveSheet)
 
 4011      Set DecisionVariables = Range(sheetName & "solver_adj")
           

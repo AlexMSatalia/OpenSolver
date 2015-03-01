@@ -73,7 +73,7 @@ Private Sub UserForm_Activate()
 4749      Next Solver
 
           Dim value As String
-4750      If GetNameValueIfExists(ActiveWorkbook, "'" & Replace(ActiveWorkbook.ActiveSheet.Name, "'", "''") & "'!OpenSolver_ChosenSolver", value) Then
+4750      If GetNameValueIfExists(ActiveWorkbook, EscapeSheetName(ActiveWorkbook.ActiveSheet) & "OpenSolver_ChosenSolver", value) Then
 4751          On Error GoTo setDefault
 4752          cboSolver.Text = SolverTitle(value)
 4753      Else

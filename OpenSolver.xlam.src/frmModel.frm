@@ -100,7 +100,7 @@ Sub Disabler(TrueIfEnable As Boolean)
           cmdChange.Enabled = TrueIfEnable
 
           Dim Solver As String
-4199      If Not GetNameValueIfExists(ActiveWorkbook, "'" & Replace(ActiveSheet.Name, "'", "''") & "'!OpenSolver_ChosenSolver", Solver) Then
+4199      If Not GetNameValueIfExists(ActiveWorkbook, EscapeSheetName(ActiveSheet) & "OpenSolver_ChosenSolver", Solver) Then
 4200          Solver = "CBC"
 4201          Call SetNameOnSheet("OpenSolver_ChosenSolver", "=" & Solver)
 4202      End If
@@ -126,23 +126,17 @@ Sub UpdateFormFromMemory()
 4212      txtObjTarget.Text = CStr(model.ObjectiveTarget)   ' Always show the target (which may just be 0)
 
 4213      chkNonNeg.value = model.NonNegativityAssumption
-
-4214      If Not model.ObjectiveFunctionCell Is Nothing Then refObj.Text = GetDisplayAddress(model.ObjectiveFunctionCell, False)
-
-4215      If Not model.DecisionVariables Is Nothing Then refDecision.Text = GetDisplayAddressInCurrentLocale(model.DecisionVariables)
-
 4216      chkGetDuals.value = Not model.Duals Is Nothing
-4217      If model.Duals Is Nothing Then
-4218          refDuals.Text = ""
-4219      Else
-4220          refDuals.Text = GetDisplayAddress(model.Duals, False)
-4221      End If
+
+4214      refObj.Text = GetDisplayAddress(model.ObjectiveFunctionCell, False)
+4215      refDecision.Text = GetDisplayAddressInCurrentLocale(model.DecisionVariables)
+4218      refDuals.Text = GetDisplayAddress(model.Duals, False)
 
 4222      model.PopulateConstraintListBox lstConstraints
 4223      lstConstraints_Change
 
           Dim sheetName As String, value As String, ResetDualsNewSheet As Boolean
-4224      sheetName = "'" & Replace(ActiveWorkbook.ActiveSheet.Name, "'", "''") & "'!"
+          sheetName = EscapeSheetName(ActiveWorkbook.ActiveSheet)
 4225      If GetNameValueIfExists(ActiveWorkbook, sheetName & "OpenSolver_DualsNewSheet", value) Then
 4226          chkGetDuals2.value = value
               ' If checkbox is null, then the stored value was not 'True' or 'False'. We should reset to false
@@ -214,7 +208,7 @@ Private Sub cmdOptions_Click()
 #Else
 4269      frmOptions.Show vbModal
 #End If
-4270      If GetNameValueIfExists(ActiveWorkbook, "'" & Replace(ActiveSheet.Name, "'", "''") & "'!solver_neg", s) Then    ' This should always be true
+4270      If GetNameValueIfExists(ActiveWorkbook, EscapeSheetName(ActiveSheet) & "solver_neg", s) Then    ' This should always be true
 4271          chkNonNeg.value = s = "1"
 4272      End If
 End Sub
@@ -365,7 +359,7 @@ Private Sub UserForm_Activate()
 
           'Find current solver
           Dim Solver As String
-4369      If GetNameValueIfExists(ActiveWorkbook, "'" & Replace(ActiveWorkbook.ActiveSheet.Name, "'", "''") & "'!OpenSolver_ChosenSolver", Solver) Then
+4369      If GetNameValueIfExists(ActiveWorkbook, EscapeSheetName(ActiveWorkbook.ActiveSheet) & "OpenSolver_ChosenSolver", Solver) Then
 4370          lblSolver.Caption = "Current Solver Engine: " & UCase(left(Solver, 1)) & Mid(Solver, 2)
 4371      Else
               lblSolver.Caption = "Current Solver Engine: CBC"

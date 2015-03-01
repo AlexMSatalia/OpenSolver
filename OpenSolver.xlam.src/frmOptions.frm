@@ -59,32 +59,35 @@ End Sub
 Private Sub UserForm_Activate()
 4114      SetAnyMissingDefaultExcel2007SolverOptions
 
+          Dim sheetName As String
+          sheetName = EscapeSheetName(ActiveSheet)
+
           Dim nonNeg As Boolean, s As String
-4115      If GetNameValueIfExists(ActiveWorkbook, "'" & Replace(ActiveSheet.Name, "'", "''") & "'!solver_neg", s) Then
+4115      If GetNameValueIfExists(ActiveWorkbook, sheetName & "solver_neg", s) Then
 4116          nonNeg = s = "1"
 4117      End If
           
           Dim ShowSolverProgress As Boolean
-4118      If GetNameValueIfExists(ActiveWorkbook, "'" & Replace(ActiveSheet.Name, "'", "''") & "'!solver_sho", s) Then
+4118      If GetNameValueIfExists(ActiveWorkbook, sheetName & "solver_sho", s) Then
 4119          ShowSolverProgress = s = "1"
 4120      End If
           
           Dim MaxTime As Double
-4121      GetNamedNumericValueIfExists ActiveWorkbook, "'" & Replace(ActiveSheet.Name, "'", "''") & "'!solver_tim", MaxTime
+4121      GetNamedNumericValueIfExists ActiveWorkbook, sheetName & "solver_tim", MaxTime
           
           Dim maxIter As Double
-4122      GetNamedNumericValueIfExists ActiveWorkbook, "'" & Replace(ActiveSheet.Name, "'", "''") & "'!solver_itr", maxIter
+4122      GetNamedNumericValueIfExists ActiveWorkbook, sheetName & "solver_itr", maxIter
 
           Dim conPre As Double
-4123      GetNamedNumericValueIfExists ActiveWorkbook, "'" & Replace(ActiveSheet.Name, "'", "''") & "'!solver_pre", conPre
+4123      GetNamedNumericValueIfExists ActiveWorkbook, sheetName & "solver_pre", conPre
 
           Dim tol As Double
-4124      GetNamedNumericValueIfExists ActiveWorkbook, "'" & Replace(ActiveSheet.Name, "'", "''") & "'!solver_tol", tol
+4124      GetNamedNumericValueIfExists ActiveWorkbook, sheetName & "solver_tol", tol
           
           ' We perform a linearity check by default unless the defined name exists with value 2=off
           Dim performLinearityCheck As Boolean
 4125      performLinearityCheck = True
-4126      If GetNameValueIfExists(ActiveWorkbook, "'" & Replace(ActiveSheet.Name, "'", "''") & "'!OpenSolver_LinearityCheck", s) Then
+4126      If GetNameValueIfExists(ActiveWorkbook, sheetName & "OpenSolver_LinearityCheck", s) Then
 4127          performLinearityCheck = s = "1"
 4128      End If
 
@@ -97,7 +100,7 @@ Private Sub UserForm_Activate()
 4135      chkPerformLinearityCheck.value = performLinearityCheck
 
           Dim Solver As String
-4136      If Not GetNameValueIfExists(ActiveWorkbook, "'" & Replace(ActiveSheet.Name, "'", "''") & "'!OpenSolver_ChosenSolver", Solver) Then
+4136      If Not GetNameValueIfExists(ActiveWorkbook, sheetName & "OpenSolver_ChosenSolver", Solver) Then
 4137          Solver = "CBC"
 4138          Call SetNameOnSheet("OpenSolver_ChosenSolver", "=" & Solver)
 4139      End If

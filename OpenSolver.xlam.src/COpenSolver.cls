@@ -1340,7 +1340,7 @@ Function SolveModel_Linear(SolveRelaxation As Boolean) As Long
           ' If the user has a defined name OpenSolver_ConstraintList, then we need to request duals from the solver
 1422      DualsOnSameSheet = GetNamedRangeIfExistsOnSheet(ActiveSheet, "OpenSolver_Duals", rConstraintList)
 1423      On Error Resume Next
-1424      DualsOnNewSheet = Mid(Names("'" & Replace(ActiveWorkbook.ActiveSheet.Name, "'", "''") & "'!OpenSolver_DualsNewSheet").value, 2) 'frmModel.chkGetDuals2.Value
+1424      DualsOnNewSheet = Mid(Names(EscapeSheetName(ActiveWorkbook.ActiveSheet) & "OpenSolver_DualsNewSheet").value, 2) 'frmModel.chkGetDuals2.Value
 1425      If Err.Number <> 0 Then
 1426          Call SetNameOnSheet("OpenSolver_DualsNewSheet", "=FALSE")
 1427          DualsOnNewSheet = False
@@ -1387,7 +1387,7 @@ Function SolveModel_Linear(SolveRelaxation As Boolean) As Long
           ' Perform a linearity check unless the user has requested otherwise
           Dim performLinearityCheck As Boolean, s As String
 1451      performLinearityCheck = True
-1452      If GetNameValueIfExists(ActiveWorkbook, "'" & Replace(ActiveSheet.Name, "'", "''") & "'!OpenSolver_LinearityCheck", s) Then
+1452      If GetNameValueIfExists(ActiveWorkbook, EscapeSheetName(ActiveSheet) & "OpenSolver_LinearityCheck", s) Then
 1453          performLinearityCheck = s = "1"
 1454      End If
 1455      If performLinearityCheck Then

@@ -140,7 +140,7 @@ Function SolveModel_Nomad(SolveRelaxation As Boolean, s As COpenSolver) As Long
           Dim ScreenStatus As Boolean
 7017      ScreenStatus = Application.ScreenUpdating
           Dim Show As String
-7018      If GetNameValueIfExists(ActiveWorkbook, "'" & Replace(ActiveSheet.Name, "'", "''") & "'!solver_sho", Show) Then
+7018      If GetNameValueIfExists(ActiveWorkbook, EscapeSheetName(ActiveSheet) & "solver_sho", Show) Then
 7019          If Show <> 1 Then Application.ScreenUpdating = False
 7020      End If
 

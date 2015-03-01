@@ -826,6 +826,10 @@ Sub GetNameAsValueOrRange(book As Workbook, theName As String, isMissing As Bool
 End Sub
 
 Function GetDisplayAddress(r As Range, Optional showRangeName As Boolean = False) As String
+              If r Is Nothing Then
+                  GetDisplayAddress = ""
+                  Exit Function
+              End If
              ' Get a name to display for this range which includes a sheet name if this range is not on the active sheet
               Dim s As String
               Dim R2 As Range
@@ -905,6 +909,11 @@ Try2:
 End Function
 
 Function GetDisplayAddressInCurrentLocale(r As Range) As String
+          If r Is Nothing Then
+              GetDisplayAddressInCurrentLocale = ""
+              Exit Function
+          End If
+       
       ' Get a name to display for this range which includes a sheet name if this range is not on the active sheet
           Dim s As String, R2 As Range
 256       If r.Worksheet.Name = ActiveSheet.Name Then
@@ -940,7 +949,7 @@ End Function
 Function RemoveActiveSheetNameFromString(s As String) As String
           ' Try the active sheet name in quotes first
           Dim sheetName As String
-280       sheetName = "'" & Replace(ActiveSheet.Name, "'", "''") & "'!" ' We double any single quotes when we quote the name
+280       sheetName = EscapeSheetName(ActiveSheet)
 281       If InStr(s, sheetName) Then
 282           RemoveActiveSheetNameFromString = Replace(s, sheetName, "")
 283           Exit Function
@@ -1131,7 +1140,7 @@ Function UserSetQuickSolveParameterRange() As Boolean
 
           Dim sheetName As String
 367       On Error Resume Next
-368       sheetName = "'" & Replace(ActiveWorkbook.ActiveSheet.Name, "'", "''") & "'!" ' NB: We have to double any ' when we quote the name
+368       sheetName = EscapeSheetName(ActiveWorkbook.ActiveSheet)
 369       If Err.Number <> 0 Then
 370           MsgBox "Error: Unable to access the active sheet", , "OpenSolver" & sOpenSolverVersion & " Error"
 371           Exit Function
@@ -1178,7 +1187,7 @@ Function CheckModelHasParameterRange()
 
           Dim sheetName As String
 399       On Error Resume Next
-400       sheetName = "'" & Replace(ActiveWorkbook.ActiveSheet.Name, "'", "''") & "'!" ' NB: We have to double any ' when we quote the name
+400       sheetName = EscapeSheetName(ActiveWorkbook.ActiveSheet)
 401       If Err.Number <> 0 Then
 402           MsgBox "Error: Unable to access the active sheet", , "OpenSolver" & sOpenSolverVersion & " Error"
 403           Exit Function
@@ -1222,21 +1231,20 @@ Sub SetAnyMissingDefaultExcel2007SolverOptions()
           ' We set all the default values, as per Solver in Excel 2007, but with some changes. This ensures Solver does not delete the few values we actually use
 426       If ActiveWorkbook Is Nothing Then Exit Sub
 427       If ActiveSheet Is Nothing Then Exit Sub
-          Dim s As String
-428       If Not GetNameValueIfExists(ActiveWorkbook, "'" & Replace(ActiveSheet.Name, "'", "''") & "'!solver_drv", s) Then SetSolverNameOnSheet "drv", "=1"
-429       If Not GetNameValueIfExists(ActiveWorkbook, "'" & Replace(ActiveSheet.Name, "'", "''") & "'!solver_est", s) Then SetSolverNameOnSheet "est", "=1"
-430       If Not GetNameValueIfExists(ActiveWorkbook, "'" & Replace(ActiveSheet.Name, "'", "''") & "'!solver_itr", s) Then SetSolverNameOnSheet "itr", "=100" ' OpenSolver ignores this
-431       If Not GetNameValueIfExists(ActiveWorkbook, "'" & Replace(ActiveSheet.Name, "'", "''") & "'!solver_neg", s) Then SetSolverNameOnSheet "neg", "=1"  ' Not "=2" as we want >=0 constraints
-432       If Not GetNameValueIfExists(ActiveWorkbook, "'" & Replace(ActiveSheet.Name, "'", "''") & "'!solver_num", s) Then SetSolverNameOnSheet "num", "=0"
-433       If Not GetNameValueIfExists(ActiveWorkbook, "'" & Replace(ActiveSheet.Name, "'", "''") & "'!solver_nwt", s) Then SetSolverNameOnSheet "nwt", "=1"
-434       If Not GetNameValueIfExists(ActiveWorkbook, "'" & Replace(ActiveSheet.Name, "'", "''") & "'!solver_pre", s) Then SetSolverNameOnSheet "pre", "=0.000001"
-435       If Not GetNameValueIfExists(ActiveWorkbook, "'" & Replace(ActiveSheet.Name, "'", "''") & "'!solver_scl", s) Then SetSolverNameOnSheet "scl", "=2"
-436       If Not GetNameValueIfExists(ActiveWorkbook, "'" & Replace(ActiveSheet.Name, "'", "''") & "'!solver_sho", s) Then SetSolverNameOnSheet "sho", "=2"
-437       If Not GetNameValueIfExists(ActiveWorkbook, "'" & Replace(ActiveSheet.Name, "'", "''") & "'!solver_tim", s) Then SetSolverNameOnSheet "tim", "=9999999999"  ' not "=100" as we want longer runs; Solver will force this to be no more than 9999
-438       If Not GetNameValueIfExists(ActiveWorkbook, "'" & Replace(ActiveSheet.Name, "'", "''") & "'!solver_tol", s) Then SetSolverNameOnSheet "tol", "=0.05"
-439       If Not GetNameValueIfExists(ActiveWorkbook, "'" & Replace(ActiveSheet.Name, "'", "''") & "'!solver_typ", s) Then SetSolverNameOnSheet "typ", "=1"
-440       If Not GetNameValueIfExists(ActiveWorkbook, "'" & Replace(ActiveSheet.Name, "'", "''") & "'!solver_val", s) Then SetSolverNameOnSheet "val", "=0"
-441       If Not GetNameValueIfExists(ActiveWorkbook, "'" & Replace(ActiveSheet.Name, "'", "''") & "'!solver_cvg", s) Then SetSolverNameOnSheet "cvg", "=0.0001"  ' probably not needed, but set it to be safe
+
+          Dim SolverOptions() As Variant, SolverDefaults() As Variant
+          SolverOptions = Array("drv", "est", "itr", "neg", "num", "nwt", "pre", "scl", "sho", "tim", "tol", "typ", "val", "cvg")
+          SolverDefaults = Array("1", "1", "100", "1", "0", "1", "0.000001", "2", "2", "9999999999", "0.05", "1", "0", "0.0001")
+          
+          Dim s As String, sheetName As String
+          sheetName = EscapeSheetName(ActiveSheet)
+          
+          Dim i As Long
+          For i = LBound(SolverOptions) To UBound(SolverOptions)
+              If Not GetNameValueIfExists(ActiveWorkbook, sheetName & "solver_" & SolverOptions(i), s) Then
+                  SetSolverNameOnSheet CStr(SolverOptions(i)), "=" & SolverDefaults(i)
+              End If
+          Next i
 End Sub
 
 'Code Courtesy of
@@ -1495,38 +1503,21 @@ End Function
 ' If a key doesn't exist we have to add it, otherwise we just set it
 ' Note: Numeric values should be passed as strings in English (not the local language)
 Sub SetSolverNameOnSheet(Name As String, value As String)
-589       Name = "'" & Replace(ActiveWorkbook.ActiveSheet.Name, "'", "''") & "'!solver_" + Name ' NB: We have to double any ' when we quote the name
-    On Error GoTo doesntExist:
-590       Names(Name).value = value
-591       Exit Sub
-doesntExist:
-592       Names.Add Name, value, False
+    SetNameOnSheet "solver_" & Name, value
 End Sub
 
-' NB: This is a different functiom to SetSolverNameOnSheet as we want to pass a range (on an arbitrary sheet)
-'     If we use a variant,it fails as passing a range may simply pass its cell value
-' If a key doesn't exist we have to add it, otherwise we just set it
-' Solver stores names like Sheet1!$A$1; the sheet name is always given
 Sub SetSolverNamedRangeOnSheet(Name As String, value As Range)
-593       Name = "'" & Replace(ActiveWorkbook.ActiveSheet.Name, "'", "''") & "'!solver_" + Name ' NB: We have to double any ' when we quote the name
-    On Error GoTo doesntExist:
-594       Names(Name).value = "=" & GetDisplayAddress(value, False) ' Cannot simply assign Names(name).Value=Value as this assigns the value in a single cell, not its address
-595       Exit Sub
-doesntExist:
-596       Names.Add Name, "=" & GetDisplayAddress(value, False), False ' GetDisplayAddress(value), False
+    SetNamedRangeOnSheet "solver_" & Name, value
 End Sub
 
 Sub DeleteSolverNameOnSheet(Name As String)
-597       Name = "'" & Replace(ActiveWorkbook.ActiveSheet.Name, "'", "''") & "'!solver_" + Name ' NB: We have to double any ' when we quote the name
-598       On Error Resume Next
-599       Names(Name).Delete
-doesntExist:
+    DeleteNameOnSheet "solver_" & Name
 End Sub
 
 ' If a key doesn't exist we have to add it, otherwise we just set it
 ' Note: Numeric values should be passed as strings in English (not the local language)
 Sub SetNameOnSheet(Name As String, value As String)
-600       Name = "'" & Replace(ActiveWorkbook.ActiveSheet.Name, "'", "''") & "'!" + Name ' NB: We have to double any ' when we quote the name
+600       Name = EscapeSheetName(ActiveWorkbook.ActiveSheet) & Name
     On Error GoTo doesntExist:
 601       Names(Name).value = value
 602       Exit Sub
@@ -1538,18 +1529,18 @@ End Sub
 ' If a key doesn't exist we have to add it, otherwise we just set it
 ' Note: Numeric values should be passed as strings in English (not the local language)
 Sub SetNamedRangeOnSheet(Name As String, value As Range)
-604       Name = "'" & Replace(ActiveWorkbook.ActiveSheet.Name, "'", "''") & "'!" + Name ' NB: We have to double any ' when we quote the name
+604       Name = EscapeSheetName(ActiveWorkbook.ActiveSheet) & Name
     On Error GoTo doesntExist:
-605       Names(Name).value = "=" & GetDisplayAddress(value, False) ' "=" & GetDisplayAddress(Value)
+605       Names(Name).value = "=" & GetDisplayAddress(value, False) ' Cannot simply assign Names(name).Value=Value as this assigns the value in a single cell, not its address
 606       Exit Sub
 doesntExist:
-607       Names.Add Name, "=" & GetDisplayAddress(value, False), False ' "=" & GetDisplayAddress(Value, False), False
+607       Names.Add Name, "=" & GetDisplayAddress(value, False), False
 End Sub
 
 ' If a key doesn't exist we have to add it, otherwise we just set it
 ' Note: Numeric values should be passed as strings in English (not the local language)
 Sub DeleteNameOnSheet(Name As String)
-608       Name = "'" & Replace(ActiveWorkbook.ActiveSheet.Name, "'", "''") & "'!" + Name '  ' NB: We have to double any ' when we quote the name
+608       Name = EscapeSheetName(ActiveWorkbook.ActiveSheet) & Name
 609       On Error Resume Next
 610       Names(Name).Delete
 doesntExist:
@@ -2142,4 +2133,8 @@ Function RelationEnumToString(rel As RelationConsts) As String
     Case RelationAllDiff
         RelationEnumToString = "alldiff"
     End Select
+End Function
+
+Function EscapeSheetName(sheet As Worksheet) As String
+    EscapeSheetName = "'" & Replace(sheet.Name, "'", "''") & "'!"
 End Function
