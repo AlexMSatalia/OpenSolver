@@ -85,7 +85,7 @@ End Sub
 Private Sub cmdOk_Click()
          'Add the chosen solver as a hidden name in the workbook
 4758      Call SetNameOnSheet("OpenSolver_ChosenSolver", "=" & ChosenSolver)
-4761      frmModel.lblSolver.Caption = "Current Solver Engine: " & UCase(left(ChosenSolver, 1)) & Mid(ChosenSolver, 2)
+4761      frmModel.FormatCurrentSolver ChosenSolver
 4762      frmModel.Disabler True
 4763      Unload Me
 End Sub

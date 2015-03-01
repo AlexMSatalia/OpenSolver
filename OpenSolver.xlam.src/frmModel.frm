@@ -197,6 +197,10 @@ Private Sub cmdChange_Click()
 #End If
 End Sub
 
+Sub FormatCurrentSolver(Solver As String)
+    lblSolver.Caption = "Current Solver Engine: " & UCase(left(Solver, 1)) & Mid(Solver, 2)
+End Sub
+
 Private Sub cmdOptions_Click()
           ' Save the current "Assume Non Negative" option so this is shown in the options dialog.
           ' The saved value gets updated on OK, which we then reflect in our Model dialog
@@ -276,17 +280,9 @@ Private Sub refConLHS_Change()
           ' Compare to expected value
           Dim DoDisable As Boolean
 4295      If ListItem >= 1 And Not model.Constraints Is Nothing Then
-4297          If refConLHS.Text <> model.Constraints(ListItem).LHS.Address Then
-4298              DoDisable = False
-4301          Else
-4302              DoDisable = True
-4305          End If
+4297          DoDisable = (refConLHS.Text = model.Constraints(ListItem).LHS.Address)
 4306      ElseIf ListItem = 0 Then
-4307          If refConLHS.Text <> "" Then
-4308              DoDisable = False
-4311          Else
-                  DoDisable = True
-4315          End If
+4307          DoDisable = (refConLHS.Text = "")
 4316      End If
           AlterConstraints DoDisable
 End Sub
@@ -303,17 +299,9 @@ Private Sub refConRHS_Change()
 4321          Else
 4322              origRHS = model.Constraints(ListItem).RHS.Address
 4323          End If
-4324          If refConRHS.Text <> origRHS Then
-4325              DoDisable = False
-4328          Else
-4329              DoDisable = True
-4332          End If
+4324          DoDisable = (refConRHS.Text = origRHS)
 4333      ElseIf ListItem = 0 Then
-4334          If refConLHS.Text <> "" Then
-4335              DoDisable = False
-4338          Else
-4339              DoDisable = True
-4342          End If
+4334          DoDisable = (refConLHS.Text = "")
 4343      End If
           AlterConstraints DoDisable
 End Sub
@@ -340,6 +328,7 @@ Private Sub UserForm_Activate()
           ' our cell selection. The ants are also left behind on the
           ' screen. This works around an apparent bug (?) in Excel 2007.
 4353      Application.CutCopyMode = False
+          
           ' Clear the form
 4354      optMax.value = False
 4355      optMin.value = False
@@ -360,9 +349,9 @@ Private Sub UserForm_Activate()
           'Find current solver
           Dim Solver As String
 4369      If GetNameValueIfExists(ActiveWorkbook, EscapeSheetName(ActiveWorkbook.ActiveSheet) & "OpenSolver_ChosenSolver", Solver) Then
-4370          lblSolver.Caption = "Current Solver Engine: " & UCase(left(Solver, 1)) & Mid(Solver, 2)
+4370          FormatCurrentSolver Solver
 4371      Else
-              lblSolver.Caption = "Current Solver Engine: CBC"
+              FormatCurrentSolver "CBC"
 4372      End If
           ' Load the model on the sheet into memory
 4373      ListItem = -1
@@ -456,8 +445,6 @@ Private Sub cmdBuild_Click()
 4431          Exit Sub
 4432      End If
 
-          '----------------------------------------------------------------
-          ' Pull possibly updated decision variable info into model
           ' We allow multiple area ranges here, which requires ConvertFromCurrentLocale as delimiter can vary
 4433      On Error GoTo BadDecRef
 4434      If Trim(refDecision.Text) = "" Then
@@ -467,10 +454,7 @@ Private Sub cmdBuild_Click()
 4438      End If
 4439      On Error GoTo errorHandler
 
-          '----------------------------------------------------------------
-          ' Pull possibly updated dual storage cells
 4440      On Error GoTo BadDualsRef
-
 4441      If chkGetDuals.value = False Or Trim(refDuals.Text) = "" Then
 4442          Set model.Duals = Nothing
 4443      Else
@@ -478,37 +462,30 @@ Private Sub cmdBuild_Click()
 4445      End If
 4446      On Error GoTo errorHandler
 
-          '----------------------------------------------------------------
-          ' Do it
 4447      model.NonNegativityAssumption = chkNonNeg.value
 
 4448      model.BuildModel
 
-
-          '----------------------------------------------------------------
           ' Display on screen
 4449      If chkShowModel.value = True Then OpenSolverVisualizer.ShowSolverModel
 4450      On Error GoTo CalculateFailed
 4451      Application.Calculate
 4452      On Error GoTo errorHandler
-          '----------------------------------------------------------------
-          ' Finish
+          
           Application.Calculation = oldCalculationMode
           Me.Hide
 4453      Exit Sub
 
-          '----------------------------------------------------------------
 CalculateFailed:
           ' Application.Calculate failed. Ignore error and try again
 4454      On Error GoTo errorHandler
 4455      Application.Calculate
 4456      Resume Next
 
-          '----------------------------------------------------------------
 BadObjRef:
           ' Couldn't turn the objective cell address into a range
 4457      MsgBox "Error: the cell address for the objective is invalid. " + _
-                  "Please correct this and try again.", vbExclamation + vbOKOnly, "OpenSolver"
+                 "Please correct this and try again.", vbExclamation + vbOKOnly, "OpenSolver"
 4458      refObj.SetFocus ' Set the focus back to the RefEdit
           GoTo cleanUp
           '----------------------------------------------------------------
@@ -516,19 +493,19 @@ BadDecRef:
           ' Couldn't turn the decision variable address into a range
 4461      MsgBox "Error: the cell range specified for the Variable Cells is invalid. " + _
                  "This must be a valid Excel range that does not exceed Excel's internal character count limits. " + _
-                  "Please correct this and try again.", vbExclamation + vbOKOnly, "OpenSolver"
+                 "Please correct this and try again.", vbExclamation + vbOKOnly, "OpenSolver"
 4462      refDecision.SetFocus ' Set the focus back to the RefEdit
           GoTo cleanUp
 BadObjectiveTarget:
           ' Couldn't turn the objective target into a value
 4465      MsgBox "Error: the target value for the objective cell is invalid. " + _
-                  "Please correct this and try again.", vbExclamation + vbOKOnly, "OpenSolver"
+                 "Please correct this and try again.", vbExclamation + vbOKOnly, "OpenSolver"
 4466      txtObjTarget.SetFocus ' Set the focus back to the target text box
           GoTo cleanUp
 BadDualsRef:
           ' Couldn't turn the dual cell into a range
 4469      MsgBox "Error: the cell for storing the shadow prices is invalid. " + _
-                  "Please correct this and try again.", vbExclamation + vbOKOnly, "OpenSolver"
+                 "Please correct this and try again.", vbExclamation + vbOKOnly, "OpenSolver"
 4470      refDuals.SetFocus ' Set the focus back to the target text box
           GoTo cleanUp
 errorHandler:
@@ -541,12 +518,12 @@ cleanUp:
 End Sub
 
 Private Sub cboConRel_Change()
-4477      If cboConRel.Text = "=" Then refConRHS.Enabled = True
-4478      If cboConRel.Text = "<=" Then refConRHS.Enabled = True
-4479      If cboConRel.Text = ">=" Then refConRHS.Enabled = True
-4480      If cboConRel.Text = "int" Or cboConRel.Text = "bin" Or cboConRel.Text = "alldiff" Then
+4477      Select Case cboConRel.Text
+          Case "=", "<=", ">="
+              refConRHS.Enabled = True
+4480      Case Else
 4481          refConRHS.Enabled = False
-4482      End If
+4482      End Select
 
 4483      If ListItem >= 1 And Not model.Constraints Is Nothing Then
 4485          AlterConstraints (cboConRel.Text = model.Constraints(ListItem).ConstraintType)
@@ -559,39 +536,22 @@ Private Sub cmdAddCon_Click()
           Dim rngLHS As Range, rngRHS As Range
           Dim IsRestrict As Boolean
 
-          '================================================================
-          ' Validation
-          ' Solver enforces the following requirements.
-          ' The LHS mut be a range with one or more cells (one area!)
-          ' The RHS can be either:
-          '   A single-cell range (=A4)
-          '   A multi-cell range of the same size as the LHS (=A4:B5)
-          '   A single constant value (eg =2)
-          '   A formula returning a single value (eg =sin(A4))
-          '----------------------------------------------------------------
-          '
-          'TODO: This needs tidying up to handle locales prooperly. Need to check that it converts values/formaulae to the current local when it shows them, and
-          '      back again when it saves them
-          '      We currently do this by putting the RHS into a cell and using .formula and .formulalocal to make this conversion. This won't always be needed
-          '      This code also distinguishes a leading '='; this should not be needed
-          '
+          'TODO: This needs tidying up to handle locales properly.
+          
           ' LEFT HAND SIDE
           Dim LHSisRange As Boolean, LHSisFormula As Boolean, LHSIsValueWithEqual As Boolean, LHSIsValueWithoutEqual As Boolean
 4497      TestStringForConstraint refConLHS.Text, LHSisRange, LHSisFormula, LHSIsValueWithEqual, LHSIsValueWithoutEqual
 
 4498      If LHSisRange = False Then
-              ' The string in the LHS refedit does not describe a range
 4499          MsgBox "Left-hand-side of constraint must be a range."
 4500          Exit Sub
 4501      End If
 4502      If Range(Trim(refConLHS.Text)).Areas.Count > 1 Then
-              ' The LHS is multiple areas - not allowed
 4503          MsgBox "Left-hand-side of constraint must have only one area."
 4504          Exit Sub
 4505      End If
 4506      Set rngLHS = Range(Trim(refConLHS.Text))
 
-          '----------------------------------------------------------------
           ' RIGHT HAND SIDE
           Dim RHSisRange As Boolean, RHSisFormula As Boolean, RHSIsValueWithEqual As Boolean, RHSIsValueWithoutEqual As Boolean
           Dim strRel As String
@@ -600,7 +560,14 @@ Private Sub cmdAddCon_Click()
 4509          MsgBox "Please select a relation such as = or <="
 4510          Exit Sub
 4511      End If
-4512      IsRestrict = Not ((strRel = "=") Or (strRel = "<=") Or (strRel = ">="))
+
+4512      Select Case strRel
+          Case "=", "<=", ">="
+              IsRestrict = False
+          Case Else
+              IsRestrict = True
+          End Select
+          
 4513      If Not IsRestrict Then
 4514          If Trim(refConRHS.Text) = "" Then
 4515              MsgBox "Please enter a right-hand-side!"
@@ -612,20 +579,18 @@ Private Sub cmdAddCon_Click()
 4519          If Not RHSisRange And Not RHSisFormula _
               And Not RHSIsValueWithEqual And Not RHSIsValueWithoutEqual Then
 4520              MsgBox "The right-hand-side of a constraint can be either:" + vbNewLine + _
-                          "A single-cell range (e.g. =A4)" + vbNewLine + _
-                          "A multi-cell range of the same size as the LHS (e.g. =A4:B5)" + vbNewLine + _
-                          "A single constant value (e.g. =2)" + vbNewLine + _
-                          "A formula returning a single value (eg =sin(A4)"
+                         "A single-cell range (e.g. =A4)" + vbNewLine + _
+                         "A multi-cell range of the same size as the LHS (e.g. =A4:B5)" + vbNewLine + _
+                         "A single constant value (e.g. =2)" + vbNewLine + _
+                         "A formula returning a single value (eg =sin(A4)"
 4521              Exit Sub
 4522          End If
 
 4523          If RHSisRange Then
-                  ' If it is single cell, thats OK
-                  ' If it is multi cell, it must match cell count for LHS
 4524              Set rngRHS = Range(Trim(refConRHS.Text))
+                  ' If it is multi cell, it must match cell count for LHS
 4525              If rngRHS.Count > 1 Then
 4526                  If rngRHS.Count <> rngLHS.Count Then
-                          ' Mismatch!
 4527                      MsgBox "Right-hand-side of constraint has more than one cell, and does not match the number of cells on the left-hand-side."
 4528                      Exit Sub
 4529                  End If
@@ -681,69 +646,40 @@ Private Sub cmdAddCon_Click()
 
 4558      AlterConstraints True
 
-          '================================================================
-          ' Update constraint?
+          Dim curCon As CConstraint
 4561      If cmdAddCon.Caption <> "Add constraint" Then
-
-              'With model.Constraints(f.lstConstraints.ListIndex)
-4562          With model.Constraints(ListItem)
-4563              Set .LHS = rngLHS
-4564              Set .Relation = Nothing
-4565              .ConstraintType = strRel
-4566              If IsRestrict Then
-4567                  Set .RHS = Nothing
-4568                  .RHSstring = ""
-4569              Else
-4570                  If RHSisRange Then
-4571                      Set .RHS = rngRHS
-4572                      .RHSstring = ""
-4573                  Else
-4574                      Set .RHS = Nothing
-4575                      If left(.RHSstring, 1) <> "=" Then
-4576                          .RHSstring = "=" + refConRHS.Text
-4577                      Else
-4578                          .RHSstring = refConRHS.Text
-4579                      End If
-4580                  End If
-4581              End If
-4582          End With
-
-4583          If Not DontRepop Then model.PopulateConstraintListBox lstConstraints
-4584          Exit Sub
+              ' Update constraint
+4562          Set curCon = model.Constraints(ListIndex)
 4585      Else
-          '================================================================
-          ' Add constraint
-              Dim NewConstraint As New CConstraint
-4586          With NewConstraint
-4587              Set .LHS = rngLHS
-4588              Set .Relation = Nothing
-4589              .ConstraintType = strRel
-4590              If IsRestrict Then
-4591                  Set .RHS = Nothing
-4592                  .RHSstring = ""
-4593              Else
-4594                  If RHSisRange Then
-4595                      Set .RHS = rngRHS
-4596                      .RHSstring = ""
-4597                  Else
-4598                      Set .RHS = Nothing
-4599                      If left(.RHSstring, 1) <> "=" Then
-4600                          .RHSstring = "=" + refConRHS.Text ' This has been converted above into a US-locale formula, value or reference
-4601                      Else
-4602                          .RHSstring = refConRHS.Text ' This has been converted above into a US-locale formula, value or reference
-4603                      End If
-4604                  End If
-4605              End If
-4606          End With
+              ' Add constraint
+              Set curCon = New CConstraint
+4607          model.Constraints.Add curCon
+          End If
+          
+4586      With curCon
+4587          Set .LHS = rngLHS
+4588          Set .Relation = Nothing
+4589          .ConstraintType = strRel
+4590          If IsRestrict Then
+4591              Set .RHS = Nothing
+4592              .RHSstring = ""
+4593          Else
+4594              If RHSisRange Then
+4595                  Set .RHS = rngRHS
+4596                  .RHSstring = ""
+4597              Else
+4598                  Set .RHS = Nothing
+4599                  If left(.RHSstring, 1) <> "=" Then
+4600                      .RHSstring = "=" + refConRHS.Text ' This has been converted above into a US-locale formula, value or reference
+4601                  Else
+4602                      .RHSstring = refConRHS.Text ' This has been converted above into a US-locale formula, value or reference
+4603                  End If
+4604              End If
+4605          End If
+4606      End With
 
-4607          model.Constraints.Add NewConstraint ', NewConstraint.GetKey
-4608          If Not DontRepop Then model.PopulateConstraintListBox lstConstraints
-4609          Exit Sub
-4610      End If
-
-4611      Application.DisplayAlerts = True
-4612      OpenSolverSheet.Range("A1").Clear ' This must be blank to ensure no risk of dialogs being shown trying to locate a sheet
-4613      Exit Sub
+4608      If Not DontRepop Then model.PopulateConstraintListBox lstConstraints
+4609      Exit Sub
 
 ErrorHandler_CannotInterpretRHS:
 4614      Application.DisplayAlerts = True
