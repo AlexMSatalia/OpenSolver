@@ -71,8 +71,10 @@ Private Function GetLatestOpenSolverVersion() As String
     End If
 End Function
 
-Sub CheckForUpdate()
+Sub CheckForUpdate(Optional ByVal SilentFail As Boolean = False)
     Application.Cursor = xlWait
+    Application.StatusBar = "Checking for updates to OpenSolver..."
+    
     HasCheckedForUpdate = True
     
     Dim LatestVersion As String
@@ -91,9 +93,12 @@ Sub CheckForUpdate()
         End If
     Next
     Application.Cursor = xlDefault
+    Application.StatusBar = False
     
     If UpdateAvailable Then
         frmUpdate.ShowUpdate LatestVersion
+    ElseIf Not SilentFail Then
+        MsgBox "No updates for OpenSolver are available at this time.", vbOKOnly, "OpenSolver - Update Check"
     End If
 End Sub
 
@@ -101,7 +106,7 @@ Sub AutoUpdateCheck()
     ' Don't check the saved setting if we have already run the checker
     If Not HasCheckedForUpdate Then
         If GetUpdateSetting() Then
-            CheckForUpdate
+            CheckForUpdate True
         End If
     End If
 End Sub
