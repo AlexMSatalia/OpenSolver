@@ -7,48 +7,16 @@ Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = False
 Attribute VB_Exposed = False
-' OpenSolver
-' Copyright Andrew Mason 2010
-' http://www.OpenSolver.org
-' This software is distributed under the terms of the GNU General Public License
-'
-' This file is part of OpenSolver.
-'
-' OpenSolver is free software: you can redistribute it and/or modify
-' it under the terms of the GNU General Public License as published by
-' the Free Software Foundation, either version 3 of the License, or
-' (at your option) any later version.
-'
-' OpenSolver is distributed in the hope that it will be useful,
-' but WITHOUT ANY WARRANTY; without even the implied warranty of
-' MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-' GNU General Public License for more details.
-'
-' You should have received a copy of the GNU General Public License
-' along with OpenSolver.  If not, see <http://www.gnu.org/licenses/>.
-'
-' v0.97: Removed a bug in handling of multi-area ranges; code now uses:
-'   for each c in range
-' and does not index cells within the range directly
-
-' v1.0 - updated to handle all constraints as ranges to increase speed. Kathleen Gilbert 01.2011
 Option Explicit
-
-' THis class defines how we update a model when the values inside a parameter range are altered.
-' Specifically, it records how the RHS of a model built from Solver data vary as the values
-' in a range of 'parameter' cells vary
-
-' 20110928 AJM: Converted from a() to SparseA() to handle larger problems
 
 Private NumRows As Long
 Private NumParams As Long
 Private OriginalParamValues() As Double
 Private OriginalRHS() As Double
-' Private a() As Double
+
 Private SparseA() As CIndexedCoeffs
 
 Private CurrentParameterRange As Range
-
 
 Function AnalyseParameters(OpenSolver As COpenSolver, sheetName As String, _
                 NumConstraints As Long, ByRef RHS() As Double, _
@@ -137,7 +105,7 @@ Function AnalyseParameters(OpenSolver As COpenSolver, sheetName As String, _
 2658              MsgBox "QuickSolve Initialisation Failed: An error (" & Err.Number & " " & Err.Description & IIf(Erl = 0, "", " at line " & Erl) & ") occurred while changing the value in parameter cell " & c.AddressLocal(RowAbsolute:=False, ColumnAbsolute:=False) & ".", , "OpenSolver" & sOpenSolverVersion & " Error"
 2659              GoTo ExitSub
 2660          End If
-              ' Change the parameter value, and see hopw the RHS's change
+              ' Change the parameter value, and see how the RHS's change
 2661          On Error GoTo errorHandler
 2662          c.Value2 = OriginalParamValues(param) + 1
 2663          Application.Calculate
@@ -155,30 +123,19 @@ Function AnalyseParameters(OpenSolver As COpenSolver, sheetName As String, _
                       'TODO Put in better error trapping for errors that occur on the s/sheet
 2670                  For i = 1 To UBound(OriginalLHSValues, 1) ' number of rows
 2671                      For j = 1 To UBound(OriginalLHSValues, 2) ' number of columns
-2672                          If RHSType(constraint) = SolverInputType.MultiCellRange Then
-2673                              coeff = -(CurrentLHSValues(i, j) - OriginalLHSValues(i, j)) + (CurrentRHSValues(i, j) - OriginalRHSValues(i, j))
-                                  'a(Row, param)  = coeff
-2674                              If coeff <> 0 Then
-2675                                  SparseA(row).Add param, coeff
-2676                                  NonZeros = NonZeros + 1
-2677                              End If
+2672                          coeff = -(CurrentLHSValues(i, j) - OriginalLHSValues(i, j))
+                              If RHSType(constraint) = SolverInputType.MultiCellRange Then
+2673                              coeff = coeff + (CurrentRHSValues(i, j) - OriginalRHSValues(i, j))
 2678                          ElseIf RHSType(constraint) = SolverInputType.SingleCellRange Or RHSType(constraint) = SolverInputType.Formula Then
-2679                              coeff = -(CurrentLHSValues(i, j) - OriginalLHSValues(i, j)) + (CurrentRHSValues - OriginalRHSValues)
-2680                              If coeff <> 0 Then
-2681                                  SparseA(row).Add param, coeff
-2682                                  NonZeros = NonZeros + 1
-2683                              End If
-2684                          Else 'the rhs of this constraint is a constant
-2685                              coeff = -(CurrentLHSValues(i, j) - OriginalLHSValues(i, j))
-2686                              If coeff <> 0 Then
-2687                                  SparseA(row).Add param, coeff
-2688                                  NonZeros = NonZeros + 1
-2689                              End If
-2690                          End If
+2679                              coeff = coeff + (CurrentRHSValues - OriginalRHSValues)
+2680                          End If
+2685                          If Not IsZero(coeff) Then
+2687                              SparseA(row).Add param, coeff
+2688                              NonZeros = NonZeros + 1
+2689                          End If
 2691                          row = row + 1
 2692                      Next j
 2693                  Next i
-                      ' End If
 2694              End If
 2695          Next constraint
 2696          c.Formula = OldFormula
@@ -190,10 +147,9 @@ Function AnalyseParameters(OpenSolver As COpenSolver, sheetName As String, _
 2701      End If
           
 2702      Set CurrentParameterRange = ParamRange
-2703      AnalyseParameters = True    ' success
+2703      AnalyseParameters = True
           
 ExitSub:
-          ' On Error GoTo 0
 2704      Application.StatusBar = False ' Resume normal status bar behaviour
 2705      Application.ScreenUpdating = True
 2706      Application.Calculation = oldCalculationMode
@@ -251,11 +207,7 @@ Public Function UpdateModelRHS(sheetName As String, ByRef RHS() As Double) As Bo
           Dim row As Long, value As Double, i As Long, coeff As Double
 2742      For row = 1 To NumRows
 2743          value = OriginalRHS(row)
-              'For param = 1 To NumParams
-              '    If a(Row, param) <> 0 Then
-              '        Value = Value + a(Row, param) * ParamChanges(param)
-              '    End If
-              'Next param
+
 2744          With SparseA(row)
 2745              For i = 1 To .Count
 2746                  param = .Index(i)
@@ -266,6 +218,6 @@ Public Function UpdateModelRHS(sheetName As String, ByRef RHS() As Double) As Bo
 2751          RHS(row) = value
 2752      Next row
           
-2753      UpdateModelRHS = True    ' success
+2753      UpdateModelRHS = True
 
 End Function

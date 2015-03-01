@@ -42,10 +42,9 @@ End Function
 
 Public Function Evaluate(DecisionVariableValues() As Double) As Double
           ' Evaluate the equation's value for the given variable values
-          Dim i As Long, v As Double, vMax As Double
+          Dim i As Long, v As Double
 3563      For i = 1 To NumEntries
 3564          v = v + Coefficient(i) * DecisionVariableValues(Index(i))
-3565          If Abs(v) > vMax Then vMax = Abs(v)
 3566      Next i
 3567      Evaluate = v
 End Function
