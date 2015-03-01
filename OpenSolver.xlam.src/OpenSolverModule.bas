@@ -2131,3 +2131,37 @@ doesntExist:
 2027      End If
           
 End Function
+
+Function RelationStringToEnum(rel As String) As RelationConsts
+    Select Case rel
+    Case "<", "<="
+        RelationStringToEnum = RelationLE
+    Case "=", "'="
+        RelationStringToEnum = RelationEQ
+    Case ">", ">="
+        RelationStringToEnum = RelationGE
+    Case "int"
+        RelationStringToEnum = RelationINT
+    Case "bin"
+        RelationStringToEnum = RelationBIN
+    Case "alldiff"
+        RelationStringToEnum = RelationAllDiff
+    End Select
+End Function
+
+Function RelationEnumToString(rel As RelationConsts) As String
+    Select Case rel
+    Case RelationLE
+        RelationEnumToString = "<="
+    Case RelationEQ
+        RelationEnumToString = "="
+    Case RelationGE
+        RelationEnumToString = ">="
+    Case RelationINT
+        RelationEnumToString = "int"
+    Case RelationBIN
+        RelationEnumToString = "bin"
+    Case RelationAllDiff
+        RelationEnumToString = "alldiff"
+    End Select
+End Function
