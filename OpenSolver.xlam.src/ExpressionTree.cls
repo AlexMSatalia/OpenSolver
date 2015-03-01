@@ -648,7 +648,7 @@ End Sub
 
 ' Traverses the tree and prunes all linear or constant parts from the tree
 Public Function PruneLinearTrees(LinearTrees As Collection, Optional NegativeTree As Boolean = False) As Boolean
-          Dim CanPrune As Boolean, i As Long, NewTree As ExpressionTree
+          Dim CanPrune As Boolean, NewTree As ExpressionTree
 8853      CanPrune = False
           ' If the root node is linear or constant we can prune
 8854      If NodeLinearity <> ExpressionTreeNonLinear Then

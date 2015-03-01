@@ -2064,7 +2064,7 @@ End Function
 Sub GetExtraParameters(Solver As String, sheet As Worksheet, ExtraParameters As Dictionary, errorString As String)
           ' The user can define a set of parameters they want to pass to the solver; this gets them as a string
           ' Note: The named range MUST be on the current sheet
-          Dim ParametersRange As Range, ExtraParametersString As String, i As Long
+          Dim ParametersRange As Range, i As Long
 6103      errorString = ""
 6104      If GetNamedRangeIfExistsOnSheet(sheet, "OpenSolver_" & Solver & "Parameters", ParametersRange) Then
 6105          If ParametersRange.Columns.Count <> 2 Then
@@ -2084,7 +2084,7 @@ End Sub
 
 Function StrEx(d As Double, Optional AddSign As Boolean = True) As String
       ' Convert a double to a string, always with a + or -. Also ensure we have "0.", not just "." for values between -1 and 1
-              Dim s As String, prependedZero As String, sign As String
+              Dim s As String, prependedZero As String
 1912          s = Mid(str(d), 2)  ' remove the initial space (reserved by VB for the sign)
 1913          prependedZero = IIf(left(s, 1) = ".", "0", "")  ' ensure we have "0.", not just "."
 1915          StrEx = prependedZero + s

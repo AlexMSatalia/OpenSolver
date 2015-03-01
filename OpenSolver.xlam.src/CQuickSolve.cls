@@ -85,7 +85,7 @@ Function AnalyseParameters(OpenSolver As COpenSolver, sheetName As String, _
           Dim CurrentLHSValues  As Variant, CurrentRHSValues As Variant
 2643      param = 0
           
-2644      If NumRows > 0 And NumParams > 0 Then ReDim SparseA(NumRows) ' ReDim a(NumRows, NumParams) As Double
+2644      If NumRows > 0 And NumParams > 0 Then ReDim SparseA(NumRows)
 2645      For row = 1 To NumRows
 2646          Set SparseA(row) = New CIndexedCoeffs
 2647      Next row

@@ -165,7 +165,7 @@ NextArea:
 
           ' Constraint precedents
 3718      On Error Resume Next
-          Dim curConstraint As CConstraint, RC As Long
+          Dim curConstraint As CConstraint
 3719      For Each curConstraint In Constraints
 3720          On Error Resume Next
 3721          Set PrecedentCells = Nothing
@@ -460,7 +460,7 @@ Sub BuildModel()
           
           ' Constraints
 3936      SetSolverNameOnSheet "num", "=" + CStr(Constraints.Count)
-          Dim RHSstring As String, RHS As Range, rel As RelationConsts, constraintNum As String
+          Dim RHSstring As String, rel As RelationConsts, constraintNum As String
 3937      For c = 1 To Constraints.Count
               constraintNum = CStr(c)
 3939          SetSolverNamedRangeOnSheet "lhs" & constraintNum, Constraints(c).LHS
@@ -620,4 +620,3 @@ SkipCon:
           
 ExitSub:
 End Sub
-
