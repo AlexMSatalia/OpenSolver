@@ -269,36 +269,34 @@ Private Sub optUpdate_Click()
 4293      Call SetNameOnSheet("OpenSolver_UpdateSensitivity", "=" & optUpdate.value)
 End Sub
 
+Private Sub AlterConstraints(DoDisable As Boolean)
+          Disabler DoDisable
+          cmdAddCon.Enabled = Not DoDisable
+          ConChangedMode = Not DoDisable
+End Sub
+
 Private Sub refConLHS_Change()
           ' Compare to expected value
+          Dim DoDisable As Boolean
 4295      If ListItem >= 1 And Not model.Constraints Is Nothing Then
-              Dim origLHS As String
-
-4296          origLHS = model.Constraints(ListItem).LHS.Address
-4297          If refConLHS.Text <> origLHS Then
-4298              Disabler False
-4299              cmdAddCon.Enabled = True
-4300              ConChangedMode = True
+4297          If refConLHS.Text <> model.Constraints(ListItem).LHS.Address Then
+4298              DoDisable = False
 4301          Else
-4302              Disabler True
-4303              cmdAddCon.Enabled = False
-4304              ConChangedMode = False
+4302              DoDisable = True
 4305          End If
 4306      ElseIf ListItem = 0 Then
 4307          If refConLHS.Text <> "" Then
-4308              Disabler False
-4309              cmdAddCon.Enabled = True
-4310              ConChangedMode = True
+4308              DoDisable = False
 4311          Else
-4312              Disabler True
-4313              cmdAddCon.Enabled = False
-4314              ConChangedMode = False
+                  DoDisable = True
 4315          End If
 4316      End If
+          AlterConstraints DoDisable
 End Sub
 
 Private Sub refConRHS_Change()
           ' Compare to expected value
+          Dim DoDisable As Boolean
 4318      If ListItem >= 1 And Not model.Constraints Is Nothing Then
               Dim origRHS As String
 4319          If model.Constraints(ListItem).RHS Is Nothing Then
@@ -307,25 +305,18 @@ Private Sub refConRHS_Change()
 4322              origRHS = model.Constraints(ListItem).RHS.Address
 4323          End If
 4324          If refConRHS.Text <> origRHS Then
-4325              Disabler False
-4326              cmdAddCon.Enabled = True
-4327              ConChangedMode = True
+4325              DoDisable = False
 4328          Else
-4329              Disabler True
-4330              cmdAddCon.Enabled = False
-4331              ConChangedMode = False
+4329              DoDisable = True
 4332          End If
 4333      ElseIf ListItem = 0 Then
 4334          If refConLHS.Text <> "" Then
-4335              Disabler False
-4336              cmdAddCon.Enabled = True
-4337              ConChangedMode = True
+4335              DoDisable = False
 4338          Else
-4339              Disabler True
-4340              cmdAddCon.Enabled = False
-4341              ConChangedMode = False
+4339              DoDisable = True
 4342          End If
 4343      End If
+          AlterConstraints DoDisable
 End Sub
 
 Private Sub UserForm_Activate()
@@ -334,11 +325,10 @@ Private Sub UserForm_Activate()
 4346          Unload Me
 4347          Exit Sub
 4348      End If
-          ' Set any default solver options if none have been set yet
+
 4349      SetAnyMissingDefaultExcel2007SolverOptions
-          ' Create a new model object
 4350      Set model = New CModel
-          ' Hides the current model, if its showing
+
 4351      If SheetHasOpenSolverHighlighting(ActiveSheet) Then HideSolverModel
           ' Make sure sheet is up to date
 4352      Application.Calculate
@@ -382,10 +372,7 @@ Private Sub UserForm_Activate()
 4380      DoEvents
           ' Take focus away from refEdits
 4381      DoEvents
-          'cmdCancel.SetFocus
-          'DoEvents
 4382      Repaint
-          'cmdCancel.SetFocus
 4383      DoEvents
 End Sub
 
@@ -557,17 +544,7 @@ Private Sub cboConRel_Change()
 4482      End If
 
 4483      If ListItem >= 1 And Not model.Constraints Is Nothing Then
-              Dim origREL As String
-4484          origREL = model.Constraints(ListItem).ConstraintType
-4485          If cboConRel.Text <> origREL Then
-4486              Disabler False
-4487              cmdAddCon.Enabled = True
-4488              ConChangedMode = True
-4489          Else
-4490              Disabler True
-4491              cmdAddCon.Enabled = False
-4492              ConChangedMode = False
-4493          End If
+4485          AlterConstraints (cboConRel.Text = model.Constraints(ListItem).ConstraintType)
 4494      End If
 End Sub
 
@@ -697,9 +674,7 @@ Private Sub cmdAddCon_Click()
 
 4557      End If
 
-4558      Disabler True
-4559      cmdAddCon.Enabled = False
-4560      ConChangedMode = False
+4558      AlterConstraints True
 
           '================================================================
           ' Update constraint?
@@ -797,27 +772,20 @@ End Sub
 
 Private Sub lstConstraints_Change()
 4633      If ConChangedMode = True Then
+              Dim SaveChanges As Boolean
 4634          If cmdAddCon.Caption = "Update constraint" Then
-4635              If MsgBox("You have made changes to the current constraint." _
-                      + vbNewLine + "Do you want to save these changes?", vbYesNo) = vbYes Then
-
-4636                  DontRepop = True
-4637                  cmdAddCon_Click
-4638                  DontRepop = False
-4639              End If
+4635              SaveChanges = (MsgBox("You have made changes to the current constraint." & vbNewLine & _
+                                        "Do you want to save these changes?", vbYesNo) = vbYes)
 4640          Else
-4641              If MsgBox("You have entered a constraint." _
-                      + vbNewLine + "Do you want to save this as a new constraint?", vbYesNo) = vbYes Then
-
-4642                  DontRepop = True
-4643                  cmdAddCon_Click
-4644                  DontRepop = False
-4645              End If
+4641              SaveChanges = (MsgBox("You have entered a constraint." & vbNewLine & _
+                                        "Do you want to save this as a new constraint?", vbYesNo) = vbYes)
 4646          End If
-
-4647          Disabler True
-4648          cmdAddCon.Enabled = False
-4649          ConChangedMode = False
+              If SaveChanges Then
+                  DontRepop = True
+4643              cmdAddCon_Click
+4644              DontRepop = False
+              End If
+4647          AlterConstraints True
 4650          model.PopulateConstraintListBox lstConstraints
 4651      End If
 
