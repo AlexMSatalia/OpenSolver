@@ -27,6 +27,7 @@ Private model As CModel
 Private ListItem As Long
 Private ConChangedMode As Boolean
 Private DontRepop As Boolean
+Private IsLoadingModel As Boolean
 
 Private IsResizing As Boolean
 Private ResizeStartY As Double
@@ -276,6 +277,8 @@ Private Sub AlterConstraints(DoDisable As Boolean)
 End Sub
 
 Private Sub refConLHS_Change()
+          If IsLoadingModel Then Exit Sub
+          
           ' Compare to expected value
           Dim DoDisable As Boolean
 4295      If ListItem >= 1 And Not model.Constraints Is Nothing Then
@@ -295,6 +298,8 @@ Private Sub refConLHS_Change()
 End Sub
 
 Private Sub refConRHS_Change()
+          If IsLoadingModel Then Exit Sub
+          
           ' Compare to expected value
           Dim DoDisable As Boolean
 4318      If ListItem >= 1 And Not model.Constraints Is Nothing Then
@@ -326,8 +331,12 @@ Private Sub UserForm_Activate()
 4347          Exit Sub
 4348      End If
 
+          cmdCancel.SetFocus
+
 4349      SetAnyMissingDefaultExcel2007SolverOptions
 4350      Set model = New CModel
+
+          IsLoadingModel = True
 
 4351      If SheetHasOpenSolverHighlighting(ActiveSheet) Then HideSolverModel
           ' Make sure sheet is up to date
@@ -363,9 +372,8 @@ Private Sub UserForm_Activate()
 4372      End If
           ' Load the model on the sheet into memory
 4373      ListItem = -1
-4374      ConChangedMode = False
-4375      DontRepop = False
-4376      Disabler True
+4374      AlterConstraints True
+          IsLoadingModel = False
 4377      model.LoadFromSheet
 4378      DoEvents
 4379      UpdateFormFromMemory
@@ -774,7 +782,7 @@ Private Sub cmdDelSelCon_Click()
 End Sub
 
 Private Sub lstConstraints_Change()
-4633      If ConChangedMode = True Then
+4633      If ConChangedMode = True And Not IsLoadingModel Then
               Dim SaveChanges As Boolean
 4634          If cmdAddCon.Caption = "Update constraint" Then
 4635              SaveChanges = (MsgBox("You have made changes to the current constraint." & vbNewLine & _
