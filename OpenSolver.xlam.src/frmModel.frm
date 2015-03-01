@@ -427,6 +427,10 @@ Private Sub cmdBuild_Click()
 4412      Application.ScreenUpdating = True
 4413      On Error GoTo 0
 
+          Dim oldCalculationMode As Long
+          oldCalculationMode = Application.Calculation
+          Application.Calculation = xlCalculationManual
+
           ' Pull possibly update objective info into model
 4414      On Error GoTo BadObjRef
 4415      If Trim(refObj.Text) = "" Then
@@ -451,10 +455,9 @@ Private Sub cmdBuild_Click()
 4432      End If
 
           '----------------------------------------------------------------
-          ' Pull possibly updated decision variable info into model ConvertFromCurrentLocale
-          ' We allow multiple=area ranges here, which requires
+          ' Pull possibly updated decision variable info into model
+          ' We allow multiple area ranges here, which requires ConvertFromCurrentLocale as delimiter can vary
 4433      On Error GoTo BadDecRef
-      'On Error Resume Next
 4434      If Trim(refDecision.Text) = "" Then
 4435          Set model.DecisionVariables = Nothing
 4436      Else
@@ -488,6 +491,7 @@ Private Sub cmdBuild_Click()
 4452      On Error GoTo errorHandler
           '----------------------------------------------------------------
           ' Finish
+          Application.Calculation = oldCalculationMode
           Me.Hide
 4453      Exit Sub
 
@@ -504,8 +508,7 @@ BadObjRef:
 4457      MsgBox "Error: the cell address for the objective is invalid. " + _
                   "Please correct this and try again.", vbExclamation + vbOKOnly, "OpenSolver"
 4458      refObj.SetFocus ' Set the focus back to the RefEdit
-4459      DoEvents ' Try to stop RefEdit bugs
-4460      Exit Sub
+          GoTo cleanUp
           '----------------------------------------------------------------
 BadDecRef:
           ' Couldn't turn the decision variable address into a range
@@ -513,24 +516,24 @@ BadDecRef:
                  "This must be a valid Excel range that does not exceed Excel's internal character count limits. " + _
                   "Please correct this and try again.", vbExclamation + vbOKOnly, "OpenSolver"
 4462      refDecision.SetFocus ' Set the focus back to the RefEdit
-4463      DoEvents ' Try to stop RefEdit bugs
-4464      Exit Sub
+          GoTo cleanUp
 BadObjectiveTarget:
           ' Couldn't turn the objective target into a value
 4465      MsgBox "Error: the target value for the objective cell is invalid. " + _
                   "Please correct this and try again.", vbExclamation + vbOKOnly, "OpenSolver"
 4466      txtObjTarget.SetFocus ' Set the focus back to the target text box
-4467      DoEvents ' Try to stop RefEdit bugs
-4468      Exit Sub
+          GoTo cleanUp
 BadDualsRef:
           ' Couldn't turn the dual cell into a range
 4469      MsgBox "Error: the cell for storing the shadow prices is invalid. " + _
                   "Please correct this and try again.", vbExclamation + vbOKOnly, "OpenSolver"
 4470      refDuals.SetFocus ' Set the focus back to the target text box
-4471      DoEvents ' Try to stop RefEdit bugs
-4472      Exit Sub
+          GoTo cleanUp
 errorHandler:
 4473      MsgBox "While constructing the model, OpenSolver encountered error " & Err.Number & ":" & vbCrLf & Err.Description & IIf(Erl = 0, "", " (at line " & Erl & ")") & vbCrLf & "Source = " & Err.Source & " (frmModel::cmdBuild_Click)", , "OpenSolver Code Error"
+          GoTo cleanUp
+cleanUp:
+          Application.Calculation = oldCalculationMode
 4474      DoEvents ' Try to stop RefEdit bugs
 4475      Exit Sub
 End Sub
