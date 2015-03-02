@@ -280,7 +280,7 @@ Private Sub refConLHS_Change()
           ' Compare to expected value
           Dim DoDisable As Boolean
 4295      If ListItem >= 1 And Not model.Constraints Is Nothing Then
-4297          DoDisable = (refConLHS.Text = model.Constraints(ListItem).LHS.Address)
+4297          DoDisable = (RemoveActiveSheetNameFromString(refConLHS.Text) = model.Constraints(ListItem).LHS.Address)
 4306      ElseIf ListItem = 0 Then
 4307          DoDisable = (refConLHS.Text = "")
 4316      End If
@@ -299,7 +299,7 @@ Private Sub refConRHS_Change()
 4321          Else
 4322              origRHS = model.Constraints(ListItem).RHS.Address
 4323          End If
-4324          DoDisable = (refConRHS.Text = origRHS)
+4324          DoDisable = (RemoveActiveSheetNameFromString(refConRHS.Text) = origRHS)
 4333      ElseIf ListItem = 0 Then
 4334          DoDisable = (refConLHS.Text = "")
 4343      End If
@@ -649,7 +649,7 @@ Private Sub cmdAddCon_Click()
           Dim curCon As CConstraint
 4561      If cmdAddCon.Caption <> "Add constraint" Then
               ' Update constraint
-4562          Set curCon = model.Constraints(ListIndex)
+4562          Set curCon = model.Constraints(ListItem)
 4585      Else
               ' Add constraint
               Set curCon = New CConstraint
