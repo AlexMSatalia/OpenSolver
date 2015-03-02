@@ -848,62 +848,30 @@ Function GetDisplayAddress(r As Range, Optional showRangeName As Boolean = False
 208               Exit Function
 209           End If
 
-              ' We first attempt converting without quoting the worksheet name
-210           On Error GoTo Try2
-211           Set R2 = r.Areas(1)
-212           s = R2.Worksheet.Name & "!" & R2.Address
-213           If showRangeName Then
-214               Set Rname = SearchRangeInVisibleNames(R2)
-215               If Not Rname Is Nothing Then
-216                   s = R2.Worksheet.Name & "!" & StripWorksheetNameAndDollars(Rname.Name, R2.Worksheet)
-217               End If
-218           End If
-
-              Dim pre As String
-              ' Conversion must also work with multiple areas, eg: A1,B5 converts to Sheet1!A1,Sheet1!B5
-219           For i = 2 To r.Areas.Count
-220               Set R2 = r.Areas(i)
-221               pre = R2.Worksheet.Name & "!" & R2.Address
-222               If showRangeName Then
-223                   Set Rname = SearchRangeInVisibleNames(R2)
-224                   If Not Rname Is Nothing Then
-225                       pre = R2.Worksheet.Name & "!" & StripWorksheetNameAndDollars(Rname.Name, R2.Worksheet)
-226                   End If
-227               End If
-228               s = s & "," & pre
-229           Next i
-230           Set R2 = Range(s) ' Check it has worked!
-231           GetDisplayAddress = s
-232           Exit Function
-
-Try2:
-              ' We now try with quotes around the worksheet name
-              ' TODO: This can probably be done more efficiently!
-              ' Note that we need to double any single quotes in the name to double quotes in the process (2012.10.29)
-233           On Error GoTo 0 ' Turn back on error handling; a failure now shoudl throw an error
 234           Set R2 = r.Areas(1)
-235           s = "'" & Replace(R2.Worksheet.Name, "'", "''") & "'!" & R2.Address
+              Dim sheetName As String
+              sheetName = EscapeSheetName(R2.Worksheet)
+235           s = sheetName & R2.Address
 236           If showRangeName Then
 237               Set Rname = SearchRangeInVisibleNames(R2)
 238               If Not Rname Is Nothing Then
-239                   s = "'" & Replace(R2.Worksheet.Name, "'", "''") & "'!" & StripWorksheetNameAndDollars(Rname.Name, R2.Worksheet)
+239                   s = sheetName & StripWorksheetNameAndDollars(Rname.Name, R2.Worksheet)
 240               End If
 241           End If
+              Dim pre As String
               ' Conversion must also work with multiple areas, eg: A1,B5 converts to Sheet1!A1,Sheet1!B5
 242           For i = 2 To r.Areas.Count
 243               Set R2 = r.Areas(i)
-244               pre = "'" & Replace(R2.Worksheet.Name, "'", "''") & "'!" & R2.Address
+244               pre = sheetName & R2.Address
 245               If showRangeName Then
 246                   Set Rname = SearchRangeInVisibleNames(R2)
 247                   If Not Rname Is Nothing Then
-248                       pre = "'" & Replace(R2.Worksheet.Name, "'", "''") & "'!" & StripWorksheetNameAndDollars(Rname.Name, R2.Worksheet)
+248                       pre = sheetName & StripWorksheetNameAndDollars(Rname.Name, R2.Worksheet)
 249                   End If
 250               End If
 251               s = s & "," & pre
 252           Next i
 253           Set R2 = Range(s) ' Check it has worked!
-              'Show the proper sheet name without the doubled quotes
-              's = Replace(s, "''", "'")
 254           GetDisplayAddress = s
 255           Exit Function
 End Function
@@ -920,46 +888,42 @@ Function GetDisplayAddressInCurrentLocale(r As Range) As String
 257           GetDisplayAddressInCurrentLocale = r.AddressLocal
 258           Exit Function
 259       End If
-260       On Error GoTo Try2
-          Dim i As Long
+          Dim i As Long, sheetName As String
 261       Set R2 = r.Areas(1)
-262       s = R2.Worksheet.Name & "!" & R2.AddressLocal
+          sheetName = EscapeSheetName(R2.Worksheet)
+262       s = sheetName & R2.AddressLocal
           ' Conversion must also work with multiple areas, eg: A1,B5 converts to Sheet1!A1,Sheet1!B5
 263       For i = 2 To r.Areas.Count
 264          Set R2 = r.Areas(i)
-265          s = s & Application.International(xlListSeparator) & R2.Worksheet.Name & "!" & R2.AddressLocal
+265          s = s & Application.International(xlListSeparator) & sheetName & R2.AddressLocal
 266       Next i
 267       Set R2 = Range(ConvertFromCurrentLocale(s)) ' Check it has worked!
 268       GetDisplayAddressInCurrentLocale = s
-269       Exit Function
-Try2:
-270       On Error GoTo 0 ' Turn back on error handling; a failure now should throw an error
-271       Set R2 = r.Areas(1)
-272       s = "'" & Replace(R2.Worksheet.Name, "'", "''") & "'!" & R2.Address ' NB: We jhave to double any single quotes when we quote the name
-          ' Conversion must also work with multiple areas, eg: A1,B5 converts to Sheet1!A1,Sheet1!B5
-273       For i = 2 To r.Areas.Count
-274          Set R2 = r.Areas(i)
-275          s = s & Application.International(xlListSeparator) & "'" & Replace(R2.Worksheet.Name, "'", "''") & "'!" & R2.AddressLocal
-276       Next i
-277       Set R2 = Range(ConvertFromCurrentLocale(s)) ' Check it has worked!
-278       GetDisplayAddressInCurrentLocale = s
-279       Exit Function
+End Function
+
+Function RemoveSheetNameFromString(s As String, sheet As Worksheet) As String
+          ' Try the active sheet name in quotes first
+          Dim sheetName As String
+280       sheetName = EscapeSheetName(sheet)
+281       If InStr(s, sheetName) Then
+282           RemoveSheetNameFromString = Replace(s, sheetName, "")
+283           Exit Function
+284       End If
+285       sheetName = sheet.Name & "!"
+286       If InStr(s, sheetName) Then
+287           RemoveSheetNameFromString = Replace(s, sheetName, "")
+288           Exit Function
+289       End If
+          sheetName = "'[" & ActiveWorkbook.Name & "]" & Mid(EscapeSheetName(sheet), 2)
+          If InStr(s, sheetName) Then
+              RemoveSheetNameFromString = Replace(s, sheetName, "")
+              Exit Function
+          End If
+290       RemoveSheetNameFromString = s
 End Function
 
 Function RemoveActiveSheetNameFromString(s As String) As String
-          ' Try the active sheet name in quotes first
-          Dim sheetName As String
-280       sheetName = EscapeSheetName(ActiveSheet)
-281       If InStr(s, sheetName) Then
-282           RemoveActiveSheetNameFromString = Replace(s, sheetName, "")
-283           Exit Function
-284       End If
-285       sheetName = ActiveSheet.Name & "!"
-286       If InStr(s, sheetName) Then
-287           RemoveActiveSheetNameFromString = Replace(s, sheetName, "")
-288           Exit Function
-289       End If
-290       RemoveActiveSheetNameFromString = s
+    RemoveActiveSheetNameFromString = RemoveSheetNameFromString(s, ActiveSheet)
 End Function
 
 Function ConvertFromCurrentLocale(ByVal s As String) As String
@@ -1494,9 +1458,7 @@ End Function
 
 Function StripWorksheetNameAndDollars(s As String, currentSheet As Worksheet) As String
           ' Remove the current worksheet name from a formula, along with any $
-          ' Shorten the formula (eg Test4!$M$11/4+Test4!$A$3) by removing the current sheet name and all $
-586       StripWorksheetNameAndDollars = Replace(s, currentSheet.Name & "!", "")   ' Remove names like Test4!
-587       StripWorksheetNameAndDollars = Replace(StripWorksheetNameAndDollars, "'" & Replace(currentSheet.Name, "'", "''") & "'!", "") ' Remove names with spaces that are quoted, like 'Test 4'!; we have to double any ' when we quote the name
+586       StripWorksheetNameAndDollars = RemoveSheetNameFromString(s, currentSheet)
 588       StripWorksheetNameAndDollars = Replace(StripWorksheetNameAndDollars, "$", "")
 End Function
 

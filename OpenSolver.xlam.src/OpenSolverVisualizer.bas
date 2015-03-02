@@ -573,10 +573,7 @@ Function ShowSolverModel() As Boolean
 3388              End If
                   
 3389              If RefersToFormula Then
-                      ' Shorten the formula (eg Test4!$M$11/4+Test4!$A$3) by removing the current sheet name and all $
-3390                  sRefersToRHS = Replace(sRefersToRHS, currentSheet.Name & "!", "")   ' Remove names like Test4!
-3391                  sRefersToRHS = Replace(sRefersToRHS, "'" & Replace(currentSheet.Name, "'", "''") & "'!", "") ' Remove names with spaces that are quoted, like 'Test 4'!, and 'Andrew''s'! (with escaped ')
-3392                  sRefersToRHS = Replace(sRefersToRHS, "$", "")
+3390                  sRefersToRHS = ConvertToCurrentLocale(StripWorksheetNameAndDollars(sRefersToRHS, currentSheet))
 3393              End If
 3394              HighlightConstraint currentSheet, rLHS, isRangeRHS, rRHS, sRefersToRHS, rel, 0  ' Show either a value or a formula from sRefersToRHS
 

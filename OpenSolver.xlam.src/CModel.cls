@@ -544,11 +544,10 @@ Public Sub PopulateConstraintListBox(ByRef lst As Object)
                       ' This is not a type restriction, so it has a RHS
 3992                  CS = CS + " " + GetDisplayAddress(.RHS, showNameRange)
 3993              ElseIf .RHSstring <> "" Then
-3994                  If left(.RHSstring, 1) = "=" Then
-3995                      CS = CS + " " + RemoveActiveSheetNameFromString(Mid(.RHSstring, 2))
-3996                  Else
-3997                      CS = CS + " " + RemoveActiveSheetNameFromString(.RHSstring)
-3998                  End If
+                      Dim DisplayString As String
+                      DisplayString = ConvertToCurrentLocale(.RHSstring)
+3994                  If left(DisplayString, 1) = "=" Then DisplayString = Mid(DisplayString, 2)
+3995                  CS = CS + " " + RemoveActiveSheetNameFromString(DisplayString)
 3999              End If
 4000          End With
 4001          lst.AddItem CS

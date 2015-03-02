@@ -500,7 +500,7 @@ Sub BuildModelFromSolverData(Optional LinearityCheckOffset As Double = 0, Option
 954       End If
 955       On Error GoTo errorHandler
 956       RawSheetName = sheet.Name
-957       sheetName = "'" & Replace(RawSheetName, "'", "''") & "'!"   ' Must include quotes to handle sheet names with spaces, & double any ' when we quote the name
+957       sheetName = EscapeSheetName(sheet)
           
 958       Set book = ActiveWorkbook
 959       RawWorkBookName = book.Name
@@ -2124,8 +2124,7 @@ Sub WriteConstraintListToSheet(r As Range)
 1925          If Not RHSCellRange Is Nothing Then
 1926              RHSstring = RHSCellRange.AddressLocal(RowAbsolute:=False, ColumnAbsolute:=False)
 1927          Else
-1928              RHSstring = RemoveActiveSheetNameFromString(RHSstring)  ' Make this formula or value prettier
-1929              RHSstring = Replace(RHSstring, "$", "")
+1928              RHSstring = ConvertToCurrentLocale(StripWorksheetNameAndDollars(RHSstring, ActiveSheet))
 1930          End If
               
               Dim s As String
@@ -2720,8 +2719,7 @@ Sub WriteConstraintSensitivityTable(nameSheet As String, Solver As String)
 2314          If Not RHSCellRange Is Nothing Then
 2315              RHSstring = RHSCellRange.AddressLocal(RowAbsolute:=False, ColumnAbsolute:=False)
 2316          Else
-2317              RHSstring = RemoveActiveSheetNameFromString(RHSstring)  ' Make this formula or value prettier
-2318              RHSstring = Replace(RHSstring, "$", "")
+2317              RHSstring = ConvertToCurrentLocale(StripWorksheetNameAndDollars(RHSstring, ActiveSheet))
 2319          End If
               Dim s As String
 2320          s = IIf(UnusedConstraint, "", "") & LHSCellRange.AddressLocal(RowAbsolute:=False, ColumnAbsolute:=False) & _

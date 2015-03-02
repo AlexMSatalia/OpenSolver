@@ -586,6 +586,7 @@ Private Sub cmdAddCon_Click()
 4521              Exit Sub
 4522          End If
 
+              Dim internalRHS As String
 4523          If RHSisRange Then
 4524              Set rngRHS = Range(Trim(refConRHS.Text))
                   ' If it is multi cell, it must match cell count for LHS
@@ -595,25 +596,10 @@ Private Sub cmdAddCon_Click()
 4528                      Exit Sub
 4529                  End If
 4530              End If
-4531          End If
+4531          Else
+                  ' Try to convert it to a US locale string internally
+4532              internalRHS = ConvertFromCurrentLocale(Trim(refConRHS.Text))
 
-              ' If not a range then evaluate to see if it's legit
-              ' Evaluate is not locale-friendly
-              ' So we put it in a cell on the internal sheet, then get it back
-              ' We need to prefix the formula with an "=" otherwise formula such as 'sheet name'!A1 get entered as a string constant (becaused of the leading ')
-              Dim internalRHS As String
-4532          internalRHS = Trim(refConRHS.Text)
-
-              ' Turn off dialog display; we do not want try to open a workbook with a name of the worksheet! This happens if the formula comes from a worksheet
-              ' whose name contains a space
-4533          Application.DisplayAlerts = False
-4534          On Error GoTo ErrorHandler_CannotInterpretRHS
-4535          OpenSolverSheet.Range("A1").FormulaLocal = IIf(left(internalRHS, 1) = "=", "", "=") & refConRHS.Text
-4536          internalRHS = OpenSolverSheet.Range("A1").Formula
-4537          OpenSolverSheet.Range("A1").Clear ' This must be blank to ensure no risk of dialogs being shown trying to locate a sheet
-4538          Application.DisplayAlerts = True
-
-4539          If Not RHSisRange Then
                   ' Can we evaluate this function or constant?
                   Dim varReturn As Variant
 4540              varReturn = ActiveSheet.Evaluate(internalRHS) ' Must be worksheet.evaluate to get references to names local to the sheet
@@ -623,25 +609,21 @@ Private Sub cmdAddCon_Click()
 4544                  DoEvents
 4545                  Exit Sub
 4546              End If
-4547          End If
 
-              ' If it isn't a range, lets convert any cell references to absolute
-              ' Will fail if refConRHS has a non-English locale number
-4548          If left(internalRHS, 1) <> "=" Then
-4549              varReturn = Application.ConvertFormula("=" + internalRHS, FromReferenceStyle:=xlA1, ToReferenceStyle:=xlA1, ToAbsolute:=xlAbsolute)
-4550          Else
-4551              varReturn = Application.ConvertFormula(internalRHS, FromReferenceStyle:=xlA1, ToReferenceStyle:=xlA1, ToAbsolute:=xlAbsolute)
-4552          End If
-4553          If (VBA.VarType(varReturn) = vbError) Then
-                  ' Its valid, but couldn't convert to standard form, probably because not A1... just leave it
-4554          Else
-                  ' Always comes back with a = at the start
-                  ' Unfortunately, return value will have wrong locale...
-                  ' But not much can be done with that?
-4555              refConRHS.Text = Mid(varReturn, 2, Len(varReturn))
-4556          End If
+                  ' If it isn't a range, lets convert any cell references to absolute
+                  ' Will fail if refConRHS has a non-English locale number
+4548              If left(internalRHS, 1) <> "=" Then internalRHS = "=" & internalRHS
+                  varReturn = Application.ConvertFormula(internalRHS, FromReferenceStyle:=xlA1, ToReferenceStyle:=xlA1, ToAbsolute:=xlAbsolute)
 
-
+4553              If (VBA.VarType(varReturn) = vbError) Then
+                      ' Its valid, but couldn't convert to standard form, probably because not A1... just leave it
+4554              Else
+                      ' Always comes back with a = at the start
+                      ' Unfortunately, return value will have wrong locale...
+                      ' But not much can be done with that?
+4555                  internalRHS = Mid(varReturn, 2, Len(varReturn))
+4556              End If
+              End If
 4557      End If
 
 4558      AlterConstraints True
@@ -669,11 +651,7 @@ Private Sub cmdAddCon_Click()
 4596                  .RHSstring = ""
 4597              Else
 4598                  Set .RHS = Nothing
-4599                  If left(.RHSstring, 1) <> "=" Then
-4600                      .RHSstring = "=" + refConRHS.Text ' This has been converted above into a US-locale formula, value or reference
-4601                  Else
-4602                      .RHSstring = refConRHS.Text ' This has been converted above into a US-locale formula, value or reference
-4603                  End If
+4599                  .RHSstring = internalRHS ' This has been converted above into a US-locale formula, value or reference
 4604              End If
 4605          End If
 4606      End With
@@ -777,11 +755,10 @@ Private Sub lstConstraints_Change()
 4690                  refConRHS.Text = GetDisplayAddress(.RHS, False)
 4691                  Set copyRange = ProperUnion(copyRange, .RHS)
 4692              ElseIf .RHS Is Nothing And .RHSstring <> "" Then
-4693                  If Mid(.RHSstring, 1, 1) = "=" Then
-4694                      refConRHS.Text = RemoveActiveSheetNameFromString(Mid(.RHSstring, 2, Len(.RHSstring)))
-4695                  Else
-4696                      refConRHS.Text = RemoveActiveSheetNameFromString(.RHSstring)
-4697                  End If
+4693                  Dim newRHS As String
+                      newRHS = ConvertToCurrentLocale(.RHSstring)
+                      If Mid(newRHS, 1) = "=" Then newRHS = Mid(newRHS, 2)
+                      refConRHS.Text = RemoveActiveSheetNameFromString(newRHS)
 4698              End If
 4699          End With
 4700          cboConRel_Change
