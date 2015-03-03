@@ -16,23 +16,21 @@ Attribute VB_Exposed = False
 Option Explicit
 
 #If Mac Then
-    Const FormWidthAutoModel = 450
+    Const FormWidthAutoModel = 500
 #Else
     Const FormWidthAutoModel = 340
 #End If
 
-Public model As CModel
-Public GuessObjStatus As String
-
+Public ObjectiveCell As Range
+Public ObjectiveSense As ObjectiveSenseType
 
 Private Sub cmdCancel_Click()
 4045      DoEvents
-4047      Unload Me
+          Me.Tag = "Cancelled"
+4047      Me.Hide
 End Sub
 
 Private Sub UserForm_Activate()
-          ' Reset enabled flags
-4049      ResetEverything
           ' Make sure sheet is up to date
 4050      On Error Resume Next
 4051      Application.Calculate
@@ -45,27 +43,29 @@ Private Sub UserForm_Activate()
           ' Get ready to process
 4054      DoEvents
           ' Show results of finding objective
-4055      GuessObj
+4055      SetValues
+          Me.Tag = ""
 End Sub
 
 Private Sub ResetEverything()
-4056      optMax.value = False
-4057      optMin.value = False
-4058      refObj.Text = ""
+4056      Set ObjectiveCell = Nothing
+          refObj.Text = ""
+4057      ObjectiveSense = UnknownObjectiveSense
+          optMax.value = False
+          optMin.value = False
 End Sub
 
-Private Sub GuessObj()
-4059      Select Case GuessObjStatus
-              Case "NoSense"
-                  ' Didn't find anything
-4060              lblStatus.Caption = "AutoModel was unable to guess anything." & vbNewLine & _
-                                      "Please enter the objective sense and the objective function cell."
-4061          Case "SenseNoCell"
-4062              If model.ObjectiveSense = MaximiseObjective Then optMax.value = True
-4063              If model.ObjectiveSense = MinimiseObjective Then optMin.value = True
-                  lblStatus.Caption = "AutoModel found the objective sense, but couldn't find the objective cell." & vbNewLine & _
-                                      "Please check the objective sense and enter the objective function cell."
-4065      End Select
+Private Sub SetValues()
+4059      If ObjectiveSense = UnknownObjectiveSense Then
+              ' Didn't find anything
+4060          lblStatus.Caption = "AutoModel was unable to guess anything." & vbNewLine & _
+                                  "Please enter the objective sense and the objective function cell."
+4061      Else
+4062          If ObjectiveSense = MaximiseObjective Then optMax.value = True
+4063          If ObjectiveSense = MinimiseObjective Then optMin.value = True
+              lblStatus.Caption = "AutoModel found the objective sense, but couldn't find the objective cell." & vbNewLine & _
+                                  "Please check the objective sense and enter the objective function cell."
+4065      End If
           
 4066      Me.Repaint
 4067      DoEvents
@@ -74,33 +74,24 @@ End Sub
 Private Sub cmdFinish_Click()
           ' Check if user changed objective cell
 4069      On Error GoTo BadObjRef
-4070      Set model.ObjectiveFunctionCell = ActiveSheet.Range(refObj.Text)
+4070      Set ObjectiveCell = ActiveSheet.Range(refObj.Text)
           
           ' Get the objective sense
-4071      If optMax.value = True Then model.ObjectiveSense = MaximiseObjective
-4072      If optMin.value = True Then model.ObjectiveSense = MinimiseObjective
-4073      If model.ObjectiveSense = UnknownObjectiveSense Then
+4071      If optMax.value = True Then ObjectiveSense = MaximiseObjective
+4072      If optMin.value = True Then ObjectiveSense = MinimiseObjective
+4073      If ObjectiveSense = UnknownObjectiveSense Then
 4074          MsgBox "Error: Please select an objective sense (minimise or maximise)!", vbExclamation + vbOKOnly, "AutoModel"
 4075          Exit Sub
 4076      End If
           
-          ' Find the vars, cons
-          Dim result As Boolean
-4077      result = model.FindVarsAndCons(IsFirstTime:=True)
-
-4078      If result = False Then
-              ' Didn't work/error
-4079          MsgBox "An unknown error occurred while trying to find the model.", vbOKOnly
-4080      End If
-          
-4081      Unload Me
+4081      Me.Hide
 4083      DoEvents
 4084      Exit Sub
           
 BadObjRef:
           ' Couldn't turn the objective cell address into a range
 4085      MsgBox "Error: the cell address for the objective is invalid. Please correct " & _
-                  "and click 'Finish AutoModel' again.", vbExclamation + vbOKOnly, "AutoModel"
+                 "and click 'Finish AutoModel' again.", vbExclamation + vbOKOnly, "AutoModel"
 4086      refObj.SetFocus ' Set the focus back to the RefEdit
 4087      DoEvents ' Try to stop RefEdit bugs
 4088      Exit Sub
@@ -109,6 +100,7 @@ End Sub
 
 Private Sub UserForm_Initialize()
     AutoLayout
+    ResetEverything
 End Sub
 
 Private Sub AutoLayout()
@@ -206,10 +198,9 @@ Private Sub AutoLayout()
     End With
     
     With refObj
-        .top = lblOpt2.top
+        .top = lblOpt2.top - (.height - lblOpt2.height) / 2
         .left = lblOpt2.left + lblOpt2.width + FormSpacing
         .width = Me.width - FormMargin - .left
-        .height = FormTextHeight
     End With
     
     With lblStep2How
@@ -241,6 +232,14 @@ Private Sub AutoLayout()
         .left = cmdCancel.left - FormSpacing - .width
         .top = cmdCancel.top
         .Caption = "Finish AutoModel"
+    End With
+    
+    With chkShow
+        .left = lblStep1.left
+        .top = cmdCancel.top
+        .width = cmdFinish.left - .left
+        .Caption = "Show model on sheet when finished"
+        .value = True
     End With
     
     Me.height = cmdCancel.top + cmdCancel.height + FormMargin + FormTitleHeight

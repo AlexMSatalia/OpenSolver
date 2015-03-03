@@ -1,7 +1,7 @@
 VERSION 5.00
 Begin {C62A69F0-16DC-11CE-9E98-00AA00574A4F} frmModel 
    Caption         =   "OpenSolver - Model"
-   ClientHeight    =   8280
+   ClientHeight    =   8281
    ClientLeft      =   45
    ClientTop       =   390
    ClientWidth     =   9840
@@ -28,6 +28,7 @@ Private ListItem As Long
 Private ConChangedMode As Boolean
 Private DontRepop As Boolean
 Private IsLoadingModel As Boolean
+Private PreserveModel As Boolean  ' For Mac, to persist model when re-showing form
 
 Private IsResizing As Boolean
 Private ResizeStartY As Double
@@ -316,7 +317,14 @@ Private Sub UserForm_Activate()
           cmdCancel.SetFocus
 
 4349      SetAnyMissingDefaultExcel2007SolverOptions
-4350      Set model = New CModel
+
+          ' Check if we have indicated to keep the model from the last time form was shown
+4350      If PreserveModel Then
+              PreserveModel = False
+          Else
+              Set model = New CModel
+              model.LoadFromSheet
+          End If
 
           IsLoadingModel = True
 
@@ -357,7 +365,6 @@ Private Sub UserForm_Activate()
 4373      ListItem = -1
 4374      AlterConstraints True
           IsLoadingModel = False
-4377      model.LoadFromSheet
 4378      DoEvents
 4379      UpdateFormFromMemory
 4380      DoEvents
@@ -378,36 +385,23 @@ Private Sub cmdCancel_Click()
 End Sub
 
 Private Sub cmdRunAutoModel_Click()
-          ' Try and guess the objective
-          Dim status As String
-4392      status = model.FindObjective(ActiveSheet)
-
-          ' Get it in memory
-4393      Load frmAutoModel
-          ' Pass it the model reference
-4394      Set frmAutoModel.model = model
-4395      frmAutoModel.GuessObjStatus = status
-
-4396      Select Case status
-              Case "NoSense", "SenseNoCell"
 #If Mac Then
-                  'MacAutoModel.Show
-                  ' Mac can't use a RefEdit properly when multiple forms are open since it doesn't support modeless forms properly
-                  ' Trying to fix this using DoEvents and hiding forms seems to be hard. Random RefEdits take focus in places, so diasabling for now
-4397              MsgBox ("Couldn't find objective cell, and couldn't finish as a result.")
-#Else
-4398              frmAutoModel.Show vbModal
+    ' Refedits on Mac don't work if more than one form is shown, so we need to hide it
+    Me.Hide
 #End If
-4399          Case Else ' Found objective
-4400              model.FindVarsAndCons IsFirstTime:=True
-4401      End Select
 
-          ' Force the automatically created model to be AssumeNonNegative
-4402      model.NonNegativityAssumption = True
-
-4403      UpdateFormFromMemory
-4404      DoEvents
-4405      Application.StatusBar = False
+    Dim NewModel As CModel
+    Set NewModel = New CModel
+    If RunAutoModel(False, NewModel) Then Set model = NewModel
+    
+#If Mac Then
+    PreserveModel = True
+    Me.Show
+#Else
+    UpdateFormFromMemory
+    DoEvents
+#End If
+    
 End Sub
 
 Private Sub cmdBuild_Click()
@@ -906,7 +900,6 @@ Private Sub AutoLayout()
         .left = lblStep1.left + lblStep1.width + FormSpacing
         .top = lblStep1.top
         .width = optMax.left - FormSpacing - .left
-        .height = FormTextBoxHeight
     End With
     
     With lblDiv2
@@ -928,7 +921,7 @@ Private Sub AutoLayout()
     End With
     
     With refDecision
-        .height = 2 * FormTextHeight
+        .height = 2 * refObj.height
         .left = refObj.left
         .top = lblStep2.top
         .width = Me.width - FormMargin - .left

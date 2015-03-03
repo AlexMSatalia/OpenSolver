@@ -271,57 +271,12 @@ End If
 End Sub
 
 Sub OpenSolver_QuickAutoModelClick(Optional Control)
-2855      If Not CheckWorksheetAvailable Then Exit Sub
-          Dim model As New CModel
-2856      If Not CheckWorksheetAvailable Then Exit Sub
-2857      If Not model.FindObjective(ActiveSheet) = "OK" Then
-2858          MsgBox "Couldn't find objective, and couldn't finish as a result."
-2859          Exit Sub
-2860      End If
-2861      If Not model.FindVarsAndCons(True) Then
-2862          MsgBox "Error while looking for variables and constraints"
-2863          Exit Sub
-2864      End If
-2865      model.NonNegativityAssumption = True
-2866      model.BuildModel
-2867      If MsgBox("Done! Show model?", vbYesNo, "Quick AutoModel") = vbYes Then
-2868          OpenSolverVisualizer.ShowSolverModel
-2869      Else
-2870          OpenSolverVisualizer.HideSolverModel
-2871      End If
+2855      RunAutoModel False
 End Sub
 
 Sub OpenSolver_AutoModelAndSolveClick(Optional Control)
-2872      If Not CheckWorksheetAvailable Then Exit Sub
-          Dim model As New CModel
-          Dim status As String
-          
-2873      status = model.FindObjective(ActiveSheet)
-                
-          ' Pass it the model reference
-2874      Set frmAutoModel.model = model
-2875      frmAutoModel.GuessObjStatus = status
-
-      '--------------No Longer requires an objective to solve------------------------------
-      '    If Not model.FindObjective(ActiveSheet) = "OK" Then
-      ''        frmAutoModel.Show vbModal
-      '         MsgBox "Couldn't find objective, and couldn't finish as a result. Check you have used the key words 'min', 'max' or 'target'."
-      '         Exit Sub
-      '    End If
-      '-------------------------------------------------------------------------------------
-          
-2876      If Not model.FindVarsAndCons(True) Then
-2877          MsgBox "Error while looking for variables and constraints"
-2878          GoTo Viewer
-2879      End If
-2880      model.NonNegativityAssumption = True
-2881      model.BuildModel
-          
+          If Not RunAutoModel(False) Then Exit Sub
 2882      RunOpenSolver False
-         
-Viewer:
-2883      OpenSolverVisualizer.ShowSolverModel
-
 End Sub
 '====================================================================
 ' Excel 2003 Menu Code

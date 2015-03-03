@@ -21,7 +21,7 @@ Public Duals As Range   ' The range where we store the duals; specific to OpenSo
 
 Public NonNegativityAssumption As Boolean
 
-Public Function FindObjective(ByRef s As Worksheet) As String
+Public Sub FindObjective(ByRef s As Worksheet)
 ' Tries to find the objective function cell and sense by searching for likely keywords,
 ' then searching the area for appropriate calculations.
           Dim ObjSenseCell As Range
@@ -45,7 +45,6 @@ Public Function FindObjective(ByRef s As Worksheet) As String
 
 3614      If ObjectiveSense = UnknownObjectiveSense Then
               ' Didn't find anything, give up here and report failure
-3615          FindObjective = "NoSense"
               GoTo ExitSub
 3620      End If
           
@@ -60,25 +59,16 @@ Public Function FindObjective(ByRef s As Worksheet) As String
               For i = 0 To UBound(RowOffsets)
                   If ObjSenseCell.row + i > 0 Then
                       FindObjCell s, ObjSenseCell.row + i, SearchFormula, ObjectiveFunctionCell
-                      If Not (ObjectiveFunctionCell Is Nothing) Then GoTo FoundObjCell
+                      If Not (ObjectiveFunctionCell Is Nothing) Then GoTo ExitSub
                   End If
               Next
           Next
-         
-FoundObjCell:
-3640      If ObjectiveFunctionCell Is Nothing Then
-              ' Couldn't find it
-3641          FindObjective = "SenseNoCell"
-              GoTo ExitSub
-3646      End If
-              
-3647      FindObjective = "OK"
 
 ExitSub:
 3648      Application.Cursor = xlDefault
 3649      Application.StatusBar = False
           
-End Function
+End Sub
 
 Private Sub FindObjSense(ByRef s As Worksheet, ByVal searchStr As String, ByRef result As Range)
 ' Run the right kind of search to find the objective sense (search values, don't match case)
