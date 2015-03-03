@@ -101,7 +101,7 @@ Function SolverVersion_Bonmin() As String
           Dim Line As String
 9049      If FileOrDirExists(logFile) Then
 9050          On Error GoTo ErrHandler
-9051          Open logFile For Input As 1
+9051          Open logFile For Input As #1
 9052          Line Input #1, Line
 9053          Close #1
 9054          SolverVersion_Bonmin = Mid(Line, 8, 5)

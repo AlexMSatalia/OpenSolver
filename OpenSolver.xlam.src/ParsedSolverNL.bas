@@ -1223,7 +1223,7 @@ Private Sub OutputOptionsFile(OptionsFilePath As String, SolveOptions As SolveOp
     
     DeleteFileAndVerify OptionsFilePath, "Writing Options File", "Couldn't delete the .opt file: " & OptionsFilePath
     
-    Open OptionsFilePath For Output As 4
+    Open OptionsFilePath For Output As #4
     Print #4, "iteration_limit " & str(SolveOptions.MaxIterations)
     Print #4, "allowable_fraction_gap " & StrEx_NL(SolveOptions.Tolerance)
     Print #4, "time_limit " & str(SolveOptions.MaxTime)
@@ -1727,7 +1727,7 @@ Function ReadModel_NL(SolutionFilePathName As String, errorString As String, s A
             GoTo exitFunction
         End If
     Else
-        Open SolutionFilePathName For Input As 1
+        Open SolutionFilePathName For Input As #1
         Line Input #1, Line ' Skip empty line at start of file
         Line Input #1, Line ' Get line with status code
 
@@ -1828,7 +1828,7 @@ Private Function TryParseLogs(s As COpenSolverParsed) As Boolean
           
           Dim message As String
 8482      On Error GoTo ErrHandler
-8483      Open logFile For Input As 3
+8483      Open logFile For Input As #3
 8484      message = Input$(LOF(3), 3)
 8485      Close #3
           

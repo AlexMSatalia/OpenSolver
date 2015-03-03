@@ -1658,7 +1658,7 @@ Sub WriteLPFile(ModelFilePathName As String, SolveRelaxation As Boolean, errorSt
           ' See http://lpsolve.sourceforge.net/5.5/CPLEX-format.htm
 
 1614      On Error GoTo errorHandler
-1615      Open ModelFilePathName For Output As 1 ' supply path with filename
+1615      Open ModelFilePathName For Output As #1 ' supply path with filename
 1616      Print #1, commentStart & " Model solved using the solver '" & Solver & "'"
 1617      Print #1, commentStart & " Model for sheet " & left(sheetName, Len(sheetName) - 1) ' remove trailing !
           ' Warning: TimeTakenToBuildModel may be negative if we cross midnight! This is unlikely for short build times
@@ -1864,7 +1864,7 @@ Sub WriteLPFile(ModelFilePathName As String, SolveRelaxation As Boolean, errorSt
           
 1765      Print #1, "END"
           
-1766      Close 1
+1766      Close #1
 
 1767      Exit Sub
           
@@ -1890,7 +1890,7 @@ Sub WriteAMPLFile(ModelFilePathName As String, SolveRelaxation As Boolean, error
 1775       commentStart = "#"
 
 1776       On Error GoTo errorHandler
-1777       Open ModelFilePathName For Output As 1 ' supply path with filename
+1777       Open ModelFilePathName For Output As #1 ' supply path with filename
                 
            ' Model File - Replace with Data File
 1778       Print #1, "# Define our sets, parameters and variables (with names matching those"

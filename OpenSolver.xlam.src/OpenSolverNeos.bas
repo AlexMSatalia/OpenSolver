@@ -241,9 +241,11 @@ Private Function SolveOnNeos_Mac(message As String, errorString As String) As St
 6908          If Not result Then
 6909              GoTo NEOSError
 6910          End If
+              On Error GoTo ErrHandler
 6911          Open SolutionFilePathName For Input As #1
 6912              Line Input #1, message
 6913          Close #1
+              On Error GoTo 0
 6914          DeleteFileAndVerify SolutionFilePathName, errorPrefix, "Unable to delete the solution file: " & SolutionFilePathName
 
               ' Evaluate result

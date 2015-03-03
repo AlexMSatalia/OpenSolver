@@ -112,7 +112,7 @@ Function SolverVersion_CBC() As String
           Dim Line As String
 6079      If FileOrDirExists(logFile) Then
 6080          On Error GoTo ErrHandler
-6081          Open logFile For Input As 1
+6081          Open logFile For Input As #1
 6082          Line Input #1, Line
 6083          Line Input #1, Line
 6084          Close #1
@@ -188,7 +188,7 @@ Function ReadModel_CBC(SolutionFilePathName As String, errorString As String, s 
           Dim Response As String
 6125      ReadModel_CBC = False
 6126      On Error GoTo ErrHandler
-6127      Open SolutionFilePathName For Input As 1 ' supply path with filename
+6127      Open SolutionFilePathName For Input As #1 ' supply path with filename
 6128      Line Input #1, Response  ' Optimal - objective value              22
 
 6129      s.SolutionWasLoaded = True
@@ -351,7 +351,7 @@ Sub ReadSensitivityData_CBC(SolutionFilePathName As String, s As COpenSolver)
           'Find the ranges on the constraints
 6295      RangeFilePathName = left(SolutionFilePathName, InStrRev(SolutionFilePathName, Application.PathSeparator)) & RHSRangesFile_CBC
 6296      On Error GoTo ErrHandler
-6297      Open RangeFilePathName For Input As 2 ' supply path with filename
+6297      Open RangeFilePathName For Input As #2 ' supply path with filename
 6298      Line Input #2, Line 'Dont want first line
 6299      j = 1
 6300      While Not EOF(2)
@@ -366,7 +366,7 @@ Sub ReadSensitivityData_CBC(SolutionFilePathName As String, s As COpenSolver)
 6317      j = 1
           'Find the ranges on the variables
 6318      RangeFilePathName = left(SolutionFilePathName, InStrRev(SolutionFilePathName, Application.PathSeparator)) & CostRangesFile_CBC
-6319      Open RangeFilePathName For Input As 2 ' supply path with filename
+6319      Open RangeFilePathName For Input As #2 ' supply path with filename
 6320      Line Input #2, Line 'Dont want first line
 6321      row = s.NumRows + 2
 6322      While Not EOF(2)
@@ -381,7 +381,7 @@ Sub ReadSensitivityData_CBC(SolutionFilePathName As String, s As COpenSolver)
 6340          End If
 6341          j = j + 1
 6342      Wend
-6343      Close 2
+6343      Close #2
 6344      Exit Sub
           
 ErrHandler:

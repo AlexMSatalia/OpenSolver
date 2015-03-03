@@ -136,7 +136,7 @@ Function SolverVersion_Gurobi() As String
           Dim Line As String
 6403      If FileOrDirExists(logFile) Then
 6404          On Error GoTo ErrHandler
-6405          Open logFile For Input As 1
+6405          Open logFile For Input As #1
 6406          Line Input #1, Line
 6407          Close #1
 6408          SolverVersion_Gurobi = Mid(Line, 26, 5)
@@ -178,7 +178,7 @@ Function SolverBitness_Gurobi() As String
           Dim Line As String
 6427      If FileOrDirExists(logFile) Then
 6428          On Error GoTo ErrHandler
-6429          Open logFile For Input As 1
+6429          Open logFile For Input As #1
 6430          Line Input #1, Line
 6431          Close #1
 6432          If right(Line, 3) = "64)" Then
@@ -236,7 +236,7 @@ Function ReadModel_Gurobi(SolutionFilePathName As String, errorString As String,
 6449      On Error GoTo readError
 6450      s.SolutionWasLoaded = True
           
-6451      Open SolutionFilePathName For Input As 1 ' supply path with filename
+6451      Open SolutionFilePathName For Input As #1 ' supply path with filename
 6452      Line Input #1, Line
           ' Check for python exception while running Gurobi
           Dim GurobiError As String ' The string that identifies a gurobi error in the model file

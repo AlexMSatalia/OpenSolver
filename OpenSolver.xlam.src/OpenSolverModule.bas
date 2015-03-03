@@ -1818,7 +1818,7 @@ End Function
 Public Sub CreateScriptFile(ByRef ScriptFilePath As String, FileContents As String, Optional EnableEcho As Boolean)
       ' Create a script file with the specified contents.
 746       On Error GoTo ErrHandler
-747       Open ScriptFilePath For Output As 1
+747       Open ScriptFilePath For Output As #1
           
 #If Win32 Then
           ' Add echo off for windows

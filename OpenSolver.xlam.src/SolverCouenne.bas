@@ -102,7 +102,7 @@ Function SolverVersion_Couenne() As String
           Dim Line As String
 8387      If FileOrDirExists(logFile) Then
 8388          On Error GoTo ErrHandler
-8389          Open logFile For Input As 1
+8389          Open logFile For Input As #1
 8390          Line Input #1, Line
 8391          Close #1
 8392          SolverVersion_Couenne = Mid(Line, 9, 5)

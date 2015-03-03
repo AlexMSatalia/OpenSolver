@@ -292,7 +292,7 @@ Sub CheckNomadLogs(errorString As String)
           
           Dim message As String
 7104      On Error GoTo ErrHandler
-7105      Open logFile For Input As 3
+7105      Open logFile For Input As #3
 7106      message = Input$(LOF(3), 3)
 7107      Close #3
           
