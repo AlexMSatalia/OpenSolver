@@ -97,7 +97,11 @@ Public Function FindVarsAndCons(IsFirstTime As Boolean) As Boolean
           
           ' Find all the "relation operator" cells on the sheet that the objective function is on.
           Dim FoundLEQ As Range, FoundGEQ As Range, FoundEQ As Range, SearchSheet As Worksheet
-          Set SearchSheet = IIf(Not ObjectiveFunctionCell Is Nothing, ObjectiveFunctionCell.Parent, ActiveSheet)
+          If Not ObjectiveFunctionCell Is Nothing Then
+              Set SearchSheet = ObjectiveFunctionCell.Parent
+          Else
+              Set SearchSheet = ActiveSheet
+          End If
 
           FindAllCells "<=", FoundLEQ, SearchSheet
           FindAllCells ">=", FoundGEQ, SearchSheet
@@ -148,10 +152,12 @@ NextArea:
           Dim DecRefCount As New Dictionary, PrecedentCells As Range
           
           ' Objective function precedents
-3703      On Error Resume Next
-3704      Set PrecedentCells = Nothing
-3705      Set PrecedentCells = ObjectiveFunctionCell.Precedents
-3706      UpdatePrecedentCount DecRefCount, PrecedentCells
+          If Not ObjectiveFunctionCell Is Nothing Then
+3703          On Error Resume Next
+3704          Set PrecedentCells = Nothing
+3705          Set PrecedentCells = ObjectiveFunctionCell.Precedents
+3706          UpdatePrecedentCount DecRefCount, PrecedentCells
+          End If
 
           ' Constraint precedents
 3718      On Error Resume Next
@@ -486,7 +492,11 @@ End Sub
 
 Sub SetNamedRangeIfExists(ByVal Name As String, ByRef RangeToSet As Range, Optional IsSolverName As Boolean = False)
     If RangeToSet Is Nothing Then
-        DeleteNameOnSheet Name
+        If IsSolverName Then
+            DeleteSolverNameOnSheet Name
+        Else
+            DeleteNameOnSheet Name
+        End If
     Else
         If IsSolverName Then
             SetSolverNamedRangeOnSheet Name, RangeToSet

@@ -72,28 +72,38 @@ Private Sub SetValues()
 End Sub
 
 Private Sub cmdFinish_Click()
+          ' Get the objective sense
+4071      If optMax.value = True Then ObjectiveSense = MaximiseObjective
+4072      If optMin.value = True Then ObjectiveSense = MinimiseObjective
+          
           ' Check if user changed objective cell
 4069      On Error GoTo BadObjRef
 4070      Set ObjectiveCell = ActiveSheet.Range(refObj.Text)
           
-          ' Get the objective sense
-4071      If optMax.value = True Then ObjectiveSense = MaximiseObjective
-4072      If optMin.value = True Then ObjectiveSense = MinimiseObjective
+          
 4073      If ObjectiveSense = UnknownObjectiveSense Then
 4074          MsgBox "Error: Please select an objective sense (minimise or maximise)!", vbExclamation + vbOKOnly, "AutoModel"
 4075          Exit Sub
 4076      End If
           
+ExitSub:
 4081      Me.Hide
 4083      DoEvents
 4084      Exit Sub
           
 BadObjRef:
           ' Couldn't turn the objective cell address into a range
-4085      MsgBox "Error: the cell address for the objective is invalid. Please correct " & _
-                 "and click 'Finish AutoModel' again.", vbExclamation + vbOKOnly, "AutoModel"
-4086      refObj.SetFocus ' Set the focus back to the RefEdit
-4087      DoEvents ' Try to stop RefEdit bugs
+          ' If no objective sense is specified, show an error. We allow a blank objective if no sense is set.
+4085      If ObjectiveSense <> UnknownObjectiveSense Then
+              MsgBox "Error: the cell address for the objective is invalid. Please correct " & _
+                     "and click 'Finish AutoModel' again.", vbExclamation + vbOKOnly, "AutoModel"
+4086          refObj.SetFocus ' Set the focus back to the RefEdit
+4087          DoEvents ' Try to stop RefEdit bugs
+          Else
+              ' Set a valid sense
+              ObjectiveSense = MinimiseObjective
+              Resume ExitSub
+          End If
 4088      Exit Sub
 End Sub
 
@@ -131,7 +141,9 @@ Private Sub AutoLayout()
                    """min"", ""max"", ""minimise"", etc. on the active spreadsheet. If it found it, " & _
                    "it looked in the area for something that might be the objective function cell, " & _
                    "e.g. a cell with a SUMPRODUCT() formula in it. If it cannot find anything, or " & _
-                   "gets it wrong, you must enter the objective function cell so AutoModel can proceed."
+                   "gets it wrong, you must enter the objective function cell so AutoModel can proceed. " & _
+                   "You can also leave both the objective sense and the objective cell blank. " & _
+                   "In this case, OpenSolver will just find a feasible solution to the problem."
         .left = lblStep1.left
         .top = lblStep1.top + lblStep1.height + FormSpacing
         .width = Me.width - FormMargin * 2
