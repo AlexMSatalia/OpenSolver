@@ -29,10 +29,6 @@ Private Sub lblLink_Click()
     Call OpenURL(lblLink.ControlTipText)
 End Sub
 
-Private Sub txtMessage_Change()
-
-End Sub
-
 Private Sub UserForm_Activate()
     AutoLayout
 End Sub

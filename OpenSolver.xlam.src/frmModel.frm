@@ -1165,7 +1165,7 @@ Private Sub AutoLayout()
     Me.Caption = "OpenSolver - Model"
 End Sub
 
-Private Sub UpdateLayout(Optional ChangeY As Double = 0)
+Private Sub UpdateLayout(Optional ChangeY As Single = 0)
 ' Do the layout of the lower half of the form, changing the height of the list box by ChangeY
     Dim NewHeight As Double
     NewHeight = lstConstraints.height + ChangeY

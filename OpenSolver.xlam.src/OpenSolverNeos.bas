@@ -158,6 +158,7 @@ errorHandler:
 
 End Function
 
+#If Mac Then
 Private Function SolveOnNeos_Mac(message As String, errorString As String) As String
           ' Mac doesn't have ActiveX so can't use MSXML.
           ' It does have python by default, so we can use python's xmlrpclib to contact NEOS instead.
@@ -292,6 +293,7 @@ NEOSError:
 6948      SolveOnNeos_Mac = ""
 6949      MsgBox "An error occured when sending file to NEOS. Neos returned: " & message
 End Function
+#End If
 
 ' Code by Tim Hastings
 Private Function DecodeBase64(ByVal strData As String) As String

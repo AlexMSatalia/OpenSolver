@@ -366,27 +366,29 @@ Private Const ERROR_BAD_FORMAT = 11&
     Private Declare Function feof Lib "libc.dylib" (ByVal file As Long) As Long
 #End If
     
-Function execShell(command As String, Optional ByRef ExitCode As Long) As String
-    Dim file As Long
-    file = popen(command, "r")
-
-    If file = 0 Then
-        Exit Function
-    End If
-
-    While feof(file) = 0
-        Dim chunk As String
-        Dim read As Long
-        chunk = Space(50)
-        read = fread(chunk, 1, Len(chunk) - 1, file)
-        If read > 0 Then
-            chunk = left$(chunk, read)
-            execShell = execShell & chunk
+#If Mac Then
+    Function execShell(command As String, Optional ByRef ExitCode As Long) As String
+        Dim file As Long
+        file = popen(command, "r")
+    
+        If file = 0 Then
+            Exit Function
         End If
-    Wend
-
-    ExitCode = pclose(file)
-End Function
+    
+        While feof(file) = 0
+            Dim chunk As String
+            Dim read As Long
+            chunk = Space(50)
+            read = fread(chunk, 1, Len(chunk) - 1, file)
+            If read > 0 Then
+                chunk = left$(chunk, read)
+                execShell = execShell & chunk
+            End If
+        Wend
+    
+        ExitCode = pclose(file)
+    End Function
+#End If
 
 '***************** Code Start ******************
 'This code was originally written by Terry Kreft.

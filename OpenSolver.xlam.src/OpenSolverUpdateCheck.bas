@@ -30,6 +30,7 @@ Private Function GetFilesPageText_Windows() As String
 End Function
 
 ' On Mac, we use `cURL` via command line which is included by default
+#If Mac Then
 Private Function GetFilesPageText_Mac() As String
     GetFilesPageText_Mac = ""
     
@@ -45,6 +46,7 @@ Private Function GetFilesPageText_Mac() As String
         GetFilesPageText_Mac = result
     End If
 End Function
+#End If
 
 ' Gets version number of current release from Sourceforge.
 ' The release script updates readme.txt on Sourceforge with the current version.
