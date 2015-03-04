@@ -287,7 +287,7 @@ ErrorExit:
           ' Exit, raising an error; none of the following change the Err.Number etc, but we saved them above just in case...
 7544      Application.StatusBar = False
 7545      Close #1
-7546      Err.Raise ErrorNumber, ErrorSource, ErrorDescription
+7546      Err.Raise ErrorNumber, ErrorSource, ErrorDescription & IIf(Erl = 0, "", " (at line " & Erl & ")")
 End Function
 
 Private Sub InitialiseModelStats()
@@ -1512,7 +1512,7 @@ Private Function OperatorIsLeftAssociative(tkn As String) As Boolean
 8203      Case "pow"
 8204          OperatorIsLeftAssociative = False
 8205      Case Else
-8206          MsgBox "unknown associativity: " & tkn
+8206          Err.Raise OpenSolver_BuildError, "Parsing cleaned formula", "Unknown associativity: " & tkn & vbNewLine & "Please let us know about this at opensolver.org so we can fix it."
 8207      End Select
 End Function
 
