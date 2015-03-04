@@ -496,6 +496,7 @@ Function ShowSolverModel() As Boolean
 3333      numVars = AdjustableCells.Count
           Dim BinaryCellsRange As Range
           Dim IntegerCellsRange As Range
+          Dim NonAdjustableCellsRange As Range
           ' Get names for all the variables so we can track their types
           Dim c As Range
                   
@@ -528,30 +529,13 @@ Function ShowSolverModel() As Boolean
 
 3349          If rel = RelationINT Or rel = RelationBIN Then
               ' Make the LHS variables integer or binary
-                  Dim intersection As Range
-3350              Set intersection = Intersect(AdjustableCells, rLHS)
-3351              If intersection Is Nothing Then
-3352                  Errors = Errors & "Error: A cell specified as bin or int could not be found in the decision variable cells." & vbCrLf
-3353                  GoTo NextConstraint
-3354              End If
-3355              If intersection.Count = rLHS.Count Then
-3356                  If rel = RelationINT Then
-3357                      If IntegerCellsRange Is Nothing Then
-3358                          Set IntegerCellsRange = rLHS
-3359                      Else
-3360                          Set IntegerCellsRange = Union(IntegerCellsRange, rLHS)
-3361                      End If
-3362                  Else
-3363                      If BinaryCellsRange Is Nothing Then
-3364                          Set BinaryCellsRange = rLHS
-3365                      Else
-3366                          Set BinaryCellsRange = Union(BinaryCellsRange, rLHS)
-3367                      End If
-3368                  End If
-3369              Else
-3370                  Errors = Errors & "Error: A cell specified as bin or int could not be found in the decision variable cells." & vbCrLf
-3371                  GoTo NextConstraint
-3372              End If
+3356              If rel = RelationINT Then
+3357                  Set IntegerCellsRange = ProperUnion(IntegerCellsRange, rLHS)
+3362              Else
+3363                  Set BinaryCellsRange = ProperUnion(BinaryCellsRange, rLHS)
+3368              End If
+                  ' Keep track of all non-adjustable cells that are int/bin
+                  Set NonAdjustableCellsRange = ProperUnion(NonAdjustableCellsRange, SetDifference(rLHS, AdjustableCells))
 3373          Else
                   ' Constraint is a full equation with a RHS
                   Dim isRangeRHS As Boolean, valRHS As Double, rRHS As Range, sNameRHS As String, sRefersToRHS As String, isMissingRHS As Boolean
@@ -630,6 +614,12 @@ NextConstraint:
 3436              Next c
 3437          End If
 3438      End If
+
+          If Not NonAdjustableCellsRange Is Nothing Then
+              For Each selectedArea In NonAdjustableCellsRange.Areas
+                  HighlightRange selectedArea, "", RGB(255, 255, 0), True  ' Yellow highlight
+              Next selectedArea
+          End If
           
 3439      If Errors <> "" Then
 3440          MsgBox Errors, , "OpenSolver Warning"

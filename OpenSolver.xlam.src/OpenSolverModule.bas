@@ -2102,3 +2102,27 @@ End Function
 Function EscapeSheetName(sheet As Worksheet) As String
     EscapeSheetName = "'" & Replace(sheet.Name, "'", "''") & "'!"
 End Function
+
+Function SetDifference(Rng1 As Range, Rng2 As Range) As Range
+' https://stackoverflow.com/a/16099185/4492726
+    On Error Resume Next
+    
+    If Intersect(Rng1, Rng2) Is Nothing Then
+        Set SetDifference = Rng1
+        Exit Function
+    End If
+    
+    On Error GoTo 0
+    Dim aCell As Range
+    For Each aCell In Rng1
+        Dim result As Range
+        If Application.Intersect(aCell, Rng2) Is Nothing Then
+            If result Is Nothing Then
+                Set result = aCell
+            Else
+                Set result = Union(result, aCell)
+            End If
+        End If
+    Next aCell
+    Set SetDifference = result
+End Function
