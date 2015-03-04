@@ -1252,10 +1252,10 @@ Sub ViewSparseA()
 End Sub
 
 Function SolveModel(SolveRelaxation As Boolean, ShouldMinimiseUserInteraction As Boolean) As Long
-
           Dim errorPrefix As String
 1374      errorPrefix = "OpenSolver Model Solving"
-
+          On Error GoTo errorHandler
+          
           ' Track whether to show messages
 1375      MinimiseUserInteraction = ShouldMinimiseUserInteraction
 
