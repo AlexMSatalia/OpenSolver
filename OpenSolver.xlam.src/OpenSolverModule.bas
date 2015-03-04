@@ -1843,12 +1843,16 @@ End Sub
 
 Public Sub DeleteFileAndVerify(FilePath As String, errorPrefix As String, errorDesc As String)
       ' Deletes file and raises error if not successful
-          On Error Resume Next
+          On Error GoTo DeleteError
 757       If FileOrDirExists(FilePath) Then Kill FilePath
           On Error GoTo 0
 758       If FileOrDirExists(FilePath) Then
-759           Err.Raise Number:=OpenSolver_SolveError, Source:=errorPrefix, Description:=errorDesc
+759           Err.Raise Number:=Err.Number, Source:=errorPrefix, Description:=errorDesc
 760       End If
+          Exit Sub
+          
+DeleteError:
+    Err.Raise Number:=Err.Number, Source:=errorPrefix, Description:=errorDesc & vbNewLine & vbNewLine & Err.Description
 End Sub
 
 Public Sub OpenFile(FilePath As String, notFoundMessage As String)
