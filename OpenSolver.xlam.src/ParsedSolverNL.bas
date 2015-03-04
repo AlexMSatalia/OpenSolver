@@ -470,8 +470,6 @@ Private Sub MakeVariableMap(SolveRelaxation As Boolean)
                   
 7649              cellName = ConvertCellToStandardName(c)
 7650              BinaryVars(VariableIndex(cellName)) = True
-                  ' Reset integer state for this variable - binary trumps integer
-7651              IntegerVars(VariableIndex(cellName)) = False
 7652          Next c
 7653      End If
           

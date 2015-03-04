@@ -433,15 +433,8 @@ Function BuildModel() As Boolean
           Dim c As Long, intersection As Range, ShowWarning As Boolean
           ShowWarning = False
 3924      For c = 1 To Constraints.Count
-3925          If Constraints(c).ConstraintType = "bin" _
-              Or Constraints(c).ConstraintType = "int" Then
-3926              Set intersection = Intersect(Constraints(c).LHS, DecisionVariables)
-3927              If intersection Is Nothing Then
-3928                  ShowWarning = True
-3929              ElseIf intersection.Count <> Constraints(c).LHS.Count Then
-3931                  ShowWarning = True
-3933              End If
-                  If ShowWarning Then
+3925          If Constraints(c).ConstraintType = "bin" Or Constraints(c).ConstraintType = "int" Then
+3927              If Not SetDifference(Constraints(c).LHS, DecisionVariables) Is Nothing Then
                       If MsgBox("This model has specified that a non-decision cell must take an integer/binary value. " & _
                                 "This is a valid model, but not one that OpenSolver can solve. " & _
                                 "Do you wish to continue with saving this model?", _

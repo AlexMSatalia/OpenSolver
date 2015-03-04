@@ -880,6 +880,10 @@ ModelOptions:
 1174              End If
 1175          End If
 1176      Next constraint
+
+          ' Binary trumps integer, so remove all overlap
+          Set IntegerCellsRange = SetDifference(IntegerCellsRange, BinaryCellsRange)
+
 1177      If NumRows > 0 Then
 1178          ReDim Preserve VariableBounds(NumRows)
 1179      End If
@@ -1777,81 +1781,44 @@ Sub WriteLPFile(ModelFilePathName As String, SolveRelaxation As Boolean, errorSt
               ' We need to make all variables FREE variables (i.e. no lower bounds), except for the Binary variables
 1692          Print #1, "BOUNDS"
 1693          Print #1, commentStart & "'Assume Non Negative' is FALSE, so default lower bounds of zero are removed from all non-binary variables."
-1694          If BinaryCellsRange Is Nothing Then
-1695              For Each c In AdjustableCells
-1696                  Print #1, " " & ValidLPFileVarName(c.Address(RowAbsolute:=False, ColumnAbsolute:=False)) & " FREE"
-1697              Next c
-1698          Else
-1699              For Each c In AdjustableCells
-1700                  If Intersect(BinaryCellsRange, c) Is Nothing Then
-1701                      Print #1, " " & ValidLPFileVarName(c.Address(RowAbsolute:=False, ColumnAbsolute:=False)) & " FREE"
-1702                  End If
-1703              Next c
-1704          End If
+1695          For Each c In SetDifference(AdjustableCells, BinaryCellsRange)
+1696              Print #1, " " & ValidLPFileVarName(c.Address(RowAbsolute:=False, ColumnAbsolute:=False)) & " FREE"
+1697          Next c
 1705          Print #1,   ' New line
 1706      Else
               ' If AssumeNonNegative, then we need to apply lower bounds to any variables without explicit lower bounds.
               
               ' Get all bounded variables
-              Dim BoundedVariables As New Collection
+              Dim BoundedVariables As Range
+              Set BoundedVariables = Nothing
 1707          For Each c In AdjustableCells
                   VarName = ValidLPFileVarName(c.Address(RowAbsolute:=False, ColumnAbsolute:=False))
 1708              If TestKeyExists(VarLowerBounds, c.Address) Or Not TestKeyExists(UsedVariables, VarName) Then
-                      BoundedVariables.Add c
+                      Set BoundedVariables = ProperUnion(BoundedVariables, c)
                   End If
 1711          Next c
 
               ' We need to mark variables with explicit lower bounds as FREE variables (allowing the possibly negative lower bound to be effective).
               ' However, we don't make Binary variables free
-1712          If BoundedVariables.Count <> 0 Then
+1712          If Not BoundedVariables Is Nothing Then
 1713              Print #1, "BOUNDS"
 1714              Print #1, commentStart & "'Assume Non Negative' is TRUE, so default lower bounds of zero are removed only from non-binary variables already given explicit lower bounds."
-1715              If BinaryCellsRange Is Nothing Then
-1716                  For Each c In BoundedVariables
-1717                      Print #1, " " & ValidLPFileVarName(c.Address(RowAbsolute:=False, ColumnAbsolute:=False)) & " FREE"
-1718                  Next c
-1719              Else
-1720                  For Each c In BoundedVariables
-1721                      If Intersect(BinaryCellsRange, c) Is Nothing Then
-1722                          Print #1, " " & ValidLPFileVarName(c.Address(RowAbsolute:=False, ColumnAbsolute:=False)) & " FREE"
-1723                      End If
-1724                  Next c
-1725              End If
+1716              For Each c In SetDifference(BoundedVariables, BinaryCellsRange)
+1717                  Print #1, " " & ValidLPFileVarName(c.Address(RowAbsolute:=False, ColumnAbsolute:=False)) & " FREE"
+1718              Next c
 1726              Print #1,   ' New line
 1727          End If
 1728      End If
           
-          ' Output any integer variables. If the binary and integer variables overlap, then we check each integer variable to ensure it is not binary
+          ' Output any integer variables
 1729      If Not SolveRelaxation And Not (IntegerCellsRange Is Nothing) Then
-1730          If Not BinaryCellsRange Is Nothing Then
-1731              On Error Resume Next
-1732              If Not Intersect(BinaryCellsRange, IntegerCellsRange).Count = IntegerCellsRange.Count Then
-1733                  If Err.Number = 91 Then
-                          'If there is no intersect Excel throw an error
-1734                      Print #1, "GENERAL"
-1735                      For Each c In IntegerCellsRange
-1736                              Print #1, " " & ValidLPFileVarName(c.Address(RowAbsolute:=False, ColumnAbsolute:=False));
-1737                      Next c
-1738                      On Error GoTo errorHandler
-1739                  Else    'if there is an intersect between the binary cell ranges and integer cell ranges
-1740                      On Error GoTo errorHandler
-1741                      Print #1, "GENERAL"
-1742                      For Each c In IntegerCellsRange
-1743                          If Intersect(c, BinaryCellsRange) Is Nothing Then
-1744                              Print #1, " " & ValidLPFileVarName(c.Address(RowAbsolute:=False, ColumnAbsolute:=False));
-1745                          End If
-1746                      Next c
-1747                  End If
-1748              End If
-1749           Else   'if there no binary cell range
-1750              Print #1, "GENERAL"
-1751              For Each c In IntegerCellsRange
-1752                      Print #1, " " & ValidLPFileVarName(c.Address(RowAbsolute:=False, ColumnAbsolute:=False));
-1753              Next c
-1754          End If
-1755          Print #1, ' New line
-1756      End If
-          
+1750          Print #1, "GENERAL"
+1751          For Each c In IntegerCellsRange
+1752              Print #1, " " & ValidLPFileVarName(c.Address(RowAbsolute:=False, ColumnAbsolute:=False));
+1753          Next c
+1754      End If
+1755      Print #1, ' New line
+
           ' Output binary variables
 1757      If Not SolveRelaxation And Not (BinaryCellsRange Is Nothing) Then
 1758          Print #1, "BINARY"
@@ -1912,7 +1879,6 @@ Sub WriteAMPLFile(ModelFilePathName As String, SolveRelaxation As Boolean, error
            End If
            If Not BinaryCellsRange Is Nothing Then
 1791           For Each c In BinaryCellsRange
-                   VarDic.Remove (ValidLPFileVarName(c.Address(RowAbsolute:=False, ColumnAbsolute:=False)))
 1792               If Not SolveRelaxation Then
 1793                   VarDic.Add ", binary", ValidLPFileVarName(c.Address(RowAbsolute:=False, ColumnAbsolute:=False))
                    Else
