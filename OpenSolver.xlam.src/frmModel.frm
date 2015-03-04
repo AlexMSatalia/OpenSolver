@@ -457,8 +457,9 @@ Private Sub cmdBuild_Click()
 4446      On Error GoTo errorHandler
 
 4447      model.NonNegativityAssumption = chkNonNeg.value
-
-4448      model.BuildModel
+          
+          ' BuildModel fails if build is aborted by the user
+4448      If Not model.BuildModel Then GoTo cleanUp
 
           ' Display on screen
 4449      If chkShowModel.value = True Then OpenSolverVisualizer.ShowSolverModel

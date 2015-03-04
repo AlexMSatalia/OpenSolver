@@ -428,7 +428,34 @@ Public Sub RationaliseConstraints()
 3905      Set Constraints = NewConstraints
 End Sub
 
-Sub BuildModel()
+Function BuildModel() As Boolean
+          ' Check int/bin constraints not set on non-decision variables before we start saving things
+          Dim c As Long, intersection As Range, ShowWarning As Boolean
+          ShowWarning = False
+3924      For c = 1 To Constraints.Count
+3925          If Constraints(c).ConstraintType = "bin" _
+              Or Constraints(c).ConstraintType = "int" Then
+3926              Set intersection = Intersect(Constraints(c).LHS, DecisionVariables)
+3927              If intersection Is Nothing Then
+3928                  ShowWarning = True
+3929              ElseIf intersection.Count <> Constraints(c).LHS.Count Then
+3931                  ShowWarning = True
+3933              End If
+                  If ShowWarning Then
+                      If MsgBox("This model has specified that a non-decision cell must take an integer/binary value. " & _
+                                "This is a valid model, but not one that OpenSolver can solve. " & _
+                                "Do you wish to continue with saving this model?", _
+                                vbQuestion + vbYesNo, "OpenSolver - Warning") = vbYes Then
+                          GoTo ContinueSaving
+                      Else
+                          BuildModel = False
+                          Exit Function
+                      End If
+                  End If
+3934          End If
+3935      Next c
+
+ContinueSaving:
 3906      SetSolverNamedRangeIfExists "adj", DecisionVariables
 3911      SetSolverNamedRangeIfExists "opt", ObjectiveFunctionCell
           
@@ -437,22 +464,6 @@ Sub BuildModel()
 3918      If ObjectiveSense = TargetObjective Then
 3922          SetSolverNameOnSheet "val", "=" + Trim(str(ObjectiveTarget)) ' AJM Changed from CStr to Str as we must store this using US numbers, and we must strip any leading space
 3923      End If
-          
-          ' Check int/bin constraints not set on non-decision variables
-          Dim c As Long, intersection As Range
-3924      For c = 1 To Constraints.Count
-3925          If Constraints(c).ConstraintType = "bin" _
-              Or Constraints(c).ConstraintType = "int" Then
-3926              Set intersection = Intersect(Constraints(c).LHS, DecisionVariables)
-3927              If intersection Is Nothing Then
-3928                  MsgBox "Warning: an int/bin constraint has been set on cells that are not decision variables. OpenSolver does not support this yet. An error message will appear if you have selected to show the Model."
-3929              Else
-3930                  If intersection.Count <> Constraints(c).LHS.Count Then
-3931                      MsgBox "Warning: an int/bin constraint has been set on cells that are not decision variables. OpenSolver does not support this yet. An error message will appear if you have selected to show the Model."
-3932                  End If
-3933              End If
-3934          End If
-3935      Next c
           
           ' Constraints
 3936      SetSolverNameOnSheet "num", "=" + CStr(Constraints.Count)
@@ -488,7 +499,9 @@ Sub BuildModel()
 3969      SetNamedRangeIfExists "OpenSolver_Duals", Duals
           
 3974      SetSolverNameOnSheet "neg", IIf(NonNegativityAssumption, "=1", "=2")
-End Sub
+
+          BuildModel = True
+End Function
 
 Sub SetNamedRangeIfExists(ByVal Name As String, ByRef RangeToSet As Range, Optional IsSolverName As Boolean = False)
     If RangeToSet Is Nothing Then
