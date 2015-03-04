@@ -261,7 +261,7 @@ Function AddLabelledConnector(w As Worksheet, s1 As Shape, s2 As Shape, label As
 3193      c.Shadow.Visible = msoFalse
               
 3194      ShapeIndex = ShapeIndex + 1
-3195      c.Name = "OpenSolver " & ShapeIndex
+3195      c.Name = "OpenSolver" & ShapeIndex
           
           Dim s3 As Shape
 3196      Set s3 = t.AddShape(msoShapeRectangle, c.left + c.width / 2# - 30 / 2, c.top + c.height / 2# - 20 / 2, 30, 20)
@@ -284,7 +284,7 @@ Function AddLabelledConnector(w As Worksheet, s1 As Shape, s2 As Shape, label As
 3212      End If
 
 3213      ShapeIndex = ShapeIndex + 1
-3214      s3.Name = "OpenSolver " & ShapeIndex
+3214      s3.Name = "OpenSolver" & ShapeIndex
 
 End Function
 
