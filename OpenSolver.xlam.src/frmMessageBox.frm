@@ -58,6 +58,7 @@ Private Sub AutoLayout()
             .AutoSize = True
             .AutoSize = False
             .left = (Me.width - .width) / 2
+            .Font.Underline = True
         End If
         .top = txtMessage.top + txtMessage.height + FormSpacing
     End With
