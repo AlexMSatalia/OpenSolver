@@ -441,7 +441,7 @@ Function ShowSolverModel() As Boolean
           
 3302      Application.ScreenUpdating = False
           
-          Dim i As Double, sheetName As String, book As Workbook, AdjustableCells As Range
+          Dim sheetName As String, book As Workbook, AdjustableCells As Range
           Dim NumConstraints  As Long
 
 3303      On Error Resume Next
@@ -491,14 +491,11 @@ Function ShowSolverModel() As Boolean
           
 3332      Application.StatusBar = "OpenSolver: Displaying Problem... " & AdjustableCells.Count & " vars, " & NumConstraints & " Solver constraints"
                   
-          ' Process the decision variables as we need to compute their types (bin or int; a variable can be declared as both!)
           Dim numVars As Long
 3333      numVars = AdjustableCells.Count
           Dim BinaryCellsRange As Range
           Dim IntegerCellsRange As Range
           Dim NonAdjustableCellsRange As Range
-          ' Get names for all the variables so we can track their types
-          Dim c As Range
                   
           ' Count the correct number of constraints, and form the constraint
           Dim constraint As Long
@@ -528,7 +525,7 @@ Function ShowSolverModel() As Boolean
 3348          AllDecisionVariables = False
 
 3349          If rel = RelationINT Or rel = RelationBIN Then
-              ' Make the LHS variables integer or binary
+                  ' Track all variables that are integer or binary
 3356              If rel = RelationINT Then
 3357                  Set IntegerCellsRange = ProperUnion(IntegerCellsRange, rLHS)
 3362              Else
@@ -565,56 +562,19 @@ Function ShowSolverModel() As Boolean
 NextConstraint:
 3396      Next constraint
 
+          Set IntegerCellsRange = SetDifference(IntegerCellsRange, BinaryCellsRange)
 
-          ' We now go thru and mark integer and binary variables
-          Dim HighlightColor As Long
-          Dim CellHighlight As ShapeRange
-3397      HighlightColor = RGB(0, 0, 0)
-3398      i = 0
-
+          ' Mark integer and binary variables
           Dim selectedArea As Range
 3399      If numVars > 200 Then
-3400          If Not BinaryCellsRange Is Nothing Then
-3401              For Each selectedArea In BinaryCellsRange.Areas
-3402                  Set CellHighlight = HighlightRange(selectedArea, "", RGB(255, 0, 255)) ' Magenta highlight
-3403                  AddLabelToShape ActiveSheet, CellHighlight(1), -6, 10, "Binary", RGB(0, 0, 0) ' Black text
-3404              Next selectedArea
-3405          End If
-3406          If Not IntegerCellsRange Is Nothing Then
-3407              If Not BinaryCellsRange Is Nothing Then
-3408                  If Not BinaryCellsRange.Count = IntegerCellsRange.Count Then
-3409                      For Each selectedArea In IntegerCellsRange.Areas
-3410                          Set CellHighlight = HighlightRange(selectedArea, "", RGB(255, 0, 255)) ' Magenta highlight
-3411                          AddLabelToShape ActiveSheet, CellHighlight(1), -6, 10, "integer", RGB(0, 0, 0) ' Black text
-3412                      Next selectedArea
-3413                  End If
-3414              Else
-3415                   For Each selectedArea In IntegerCellsRange.Areas
-3416                      Set CellHighlight = HighlightRange(selectedArea, "", RGB(255, 0, 255)) ' Magenta highlight
-3417                      AddLabelToShape ActiveSheet, CellHighlight(1), -6, 10, "integer", RGB(0, 0, 0) ' Black text
-3418                  Next selectedArea
-                      
-3419               End If
-3420          End If
+3400          AddBinaryIntegerBlockLabels BinaryCellsRange, "binary"
+3406          AddBinaryIntegerBlockLabels IntegerCellsRange, "integer"
 3421      Else
-3422          If Not BinaryCellsRange Is Nothing Then
-3423              For Each c In BinaryCellsRange
-3424                   AddLabelToRange ActiveSheet, c, 1, 9, "b", HighlightColor
-3425              Next c
-3426          End If
-3427          If Not IntegerCellsRange Is Nothing Then
-3428              For Each c In IntegerCellsRange
-3429                  If Not BinaryCellsRange Is Nothing Then
-3430                      If Intersect(c, BinaryCellsRange) Is Nothing Then
-3431                          AddLabelToRange ActiveSheet, c, 1, 9, "i", HighlightColor
-3432                      End If
-3433                  Else
-3434                       AddLabelToRange ActiveSheet, c, 1, 9, "i", HighlightColor
-3435                  End If
-3436              Next c
-3437          End If
+3422          AddBinaryIntegerIndividualLabels BinaryCellsRange, "b"
+              AddBinaryIntegerIndividualLabels IntegerCellsRange, "i"
 3438      End If
 
+          ' Mark non-decision variables with int or bin constraints
           If Not NonAdjustableCellsRange Is Nothing Then
               For Each selectedArea In NonAdjustableCellsRange.Areas
                   HighlightRange selectedArea, "", RGB(255, 255, 0), True  ' Yellow highlight
@@ -673,3 +633,21 @@ Sub AddDecisionVariableHighlighting(DecisionVariableRange As Range)
           
 End Sub
 
+Sub AddBinaryIntegerIndividualLabels(CellsRange As Range, label As String)
+    Dim c As Range
+    If Not CellsRange Is Nothing Then
+        For Each c In CellsRange
+            AddLabelToRange ActiveSheet, c, 1, 9, label, RGB(0, 0, 0)
+        Next c
+    End If
+End Sub
+
+Sub AddBinaryIntegerBlockLabels(CellsRange As Range, label As String)
+    Dim selectedArea As Range, CellHighlight As ShapeRange
+    If Not CellsRange Is Nothing Then
+        For Each selectedArea In CellsRange.Areas
+            Set CellHighlight = HighlightRange(selectedArea, "", RGB(255, 0, 255)) ' Magenta highlight
+            AddLabelToShape ActiveSheet, CellHighlight(1), -6, 10, label, RGB(0, 0, 0) ' Black text
+        Next selectedArea
+    End If
+End Sub
