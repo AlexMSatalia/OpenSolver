@@ -1375,9 +1375,9 @@ Function ProperUnion(R1 As Range, R2 As Range) As Range
 535           Set ProperUnion = R2
 536       ElseIf R2 Is Nothing Then
 537           Set ProperUnion = R1
-538       ElseIf R1 Is Nothing And R2 Is Nothing Then
-539           Set ProperUnion = Nothing
-540       Else
+540       ElseIf Not R1.Worksheet Is R2.Worksheet Then
+              Set ProperUnion = Nothing
+          Else
 541           Set ProperUnion = Union(R1, R2)
 542       End If
 End Function
@@ -2109,26 +2109,58 @@ Function EscapeSheetName(sheet As Worksheet) As String
     EscapeSheetName = "'" & Replace(sheet.Name, "'", "''") & "'!"
 End Function
 
-Function SetDifference(Rng1 As Range, Rng2 As Range) As Range
-' https://stackoverflow.com/a/16099185/4492726
-    On Error Resume Next
-    
-    If Intersect(Rng1, Rng2) Is Nothing Then
-        Set SetDifference = Rng1
-        Exit Function
-    End If
-    
-    On Error GoTo 0
-    Dim aCell As Range
-    For Each aCell In Rng1
-        Dim result As Range
-        If Application.Intersect(aCell, Rng2) Is Nothing Then
-            If result Is Nothing Then
-                Set result = aCell
-            Else
-                Set result = Union(result, aCell)
+Function SetDifference(ByRef rng1 As Range, ByRef rng2 As Range) As Range
+' Returns rng1 \ rng2 (set minus) i.e. all elements in rng1 that are not in rng2
+' https://stackoverflow.com/a/17510237/4492726
+    Dim rngResult As Range
+    Dim rngResultCopy As Range
+    Dim rngIntersection As Range
+    Dim rngArea1 As Range
+    Dim rngArea2 As Range
+    Dim lngTop As Long
+    Dim lngLeft As Long
+    Dim lngRight As Long
+    Dim lngBottom As Long
+
+    If rng1 Is Nothing Then
+        Set rngResult = Nothing
+    ElseIf rng2 Is Nothing Then
+        Set rngResult = rng1
+    ElseIf Not rng1.Worksheet Is rng2.Worksheet Then
+        Set rngResult = rng1
+    Else
+        Set rngResult = rng1
+        For Each rngArea2 In rng2.Areas
+            If rngResult Is Nothing Then
+                Exit For
             End If
-        End If
-    Next aCell
-    Set SetDifference = result
+            Set rngResultCopy = rngResult
+            Set rngResult = Nothing
+            For Each rngArea1 In rngResultCopy.Areas
+                Set rngIntersection = Intersect(rngArea1, rngArea2)
+                If rngIntersection Is Nothing Then
+                    Set rngResult = ProperUnion(rngResult, rngArea1)
+                Else
+                    lngTop = rngIntersection.row - rngArea1.row
+                    lngLeft = rngIntersection.Column - rngArea1.Column
+                    lngRight = rngArea1.Column + rngArea1.Columns.Count - rngIntersection.Column - rngIntersection.Columns.Count
+                    lngBottom = rngArea1.row + rngArea1.Rows.Count - rngIntersection.row - rngIntersection.Rows.Count
+                    If lngTop > 0 Then
+                        Set rngResult = ProperUnion(rngResult, rngArea1.Resize(lngTop, rngArea1.Columns.Count))
+                    End If
+                    If lngLeft > 0 Then
+                        Set rngResult = ProperUnion(rngResult, rngArea1.Resize(rngArea1.Rows.Count - lngTop - lngBottom, lngLeft).Offset(lngTop, 0))
+                    End If
+                    If lngRight > 0 Then
+                        Set rngResult = ProperUnion(rngResult, rngArea1.Resize(rngArea1.Rows.Count - lngTop - lngBottom, lngRight).Offset(lngTop, rngArea1.Columns.Count - lngRight))
+                    End If
+                    If lngBottom > 0 Then
+                        Set rngResult = ProperUnion(rngResult, rngArea1.Resize(lngBottom, rngArea1.Columns.Count).Offset(rngArea1.Rows.Count - lngBottom, 0))
+                    End If
+                End If
+            Next rngArea1
+        Next rngArea2
+    End If
+    Set SetDifference = rngResult
 End Function
+
