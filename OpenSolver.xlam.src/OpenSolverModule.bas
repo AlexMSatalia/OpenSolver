@@ -1843,7 +1843,9 @@ End Sub
 
 Public Sub DeleteFileAndVerify(FilePath As String, errorPrefix As String, errorDesc As String)
       ' Deletes file and raises error if not successful
+          On Error Resume Next
 757       If FileOrDirExists(FilePath) Then Kill FilePath
+          On Error GoTo 0
 758       If FileOrDirExists(FilePath) Then
 759           Err.Raise Number:=OpenSolver_SolveError, Source:=errorPrefix, Description:=errorDesc
 760       End If
