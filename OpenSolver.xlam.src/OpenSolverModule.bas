@@ -1953,7 +1953,7 @@ Sub ResetErrorCache()
 #End If
 End Sub
 
-Sub MBox(errorMessage As String, Optional linkTarget As String, Optional linkText As String)
+Public Sub MsgBoxEx(errorMessage As String, Optional linkTarget As String, Optional linkText As String)
     'This function replaces msgbox for reporting errors, and allows us to do a number of things to improve user feedback when something goes wrong.
     
     ' A message with "Help_" denotes an "intentional" error, as opposed to an error expect to happen.
@@ -1984,15 +1984,15 @@ Sub MBox(errorMessage As String, Optional linkTarget As String, Optional linkTex
     If linkText = "" Then linkText = linkTarget
     
     ' We need to unlock the textbox before writing to it on Mac
-    frmMessageBox.txtMessage.Locked = False
-    frmMessageBox.txtMessage.Text = errorMessage
-    frmMessageBox.txtMessage.Locked = True
+    frmMsgBoxEx.txtMessage.Locked = False
+    frmMsgBoxEx.txtMessage.Text = errorMessage
+    frmMsgBoxEx.txtMessage.Locked = True
     
-    frmMessageBox.lblLink.Caption = linkText
-    frmMessageBox.lblLink.ControlTipText = linkTarget
+    frmMsgBoxEx.lblLink.Caption = linkText
+    frmMsgBoxEx.lblLink.ControlTipText = linkTarget
     
-    frmMessageBox.Caption = "OpenSolver - Error"
-    frmMessageBox.Show
+    frmMsgBoxEx.Caption = "OpenSolver - Error"
+    frmMsgBoxEx.Show
 End Sub
 
 ' Case-insensitive InStr helper
