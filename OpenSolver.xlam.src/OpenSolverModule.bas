@@ -1953,47 +1953,134 @@ Sub ResetErrorCache()
 #End If
 End Sub
 
-Public Sub MsgBoxEx(errorMessage As String, Optional linkTarget As String, Optional linkText As String)
-    'This function replaces msgbox for reporting errors, and allows us to do a number of things to improve user feedback when something goes wrong.
+Public Function MsgBoxEx(ByVal prompt As String, _
+                Optional ByVal Options As VbMsgBoxStyle = 0&, _
+                Optional ByVal title As String = "Message", _
+                Optional ByVal HelpFile As String, _
+                Optional ByVal Context As Long, _
+                Optional ByVal LinkTarget As String, _
+                Optional ByVal LinkText As String, _
+                Optional ByVal MoreDetailsButton As Boolean, _
+                Optional ByVal ReportIssueButton As Boolean) _
+        As VbMsgBoxResult
+
+    ' Extends MsgBox with extra options:
+    ' - First five args are the same as MsgBox, so any MsgBox calls can be swapped to MsgBoxEx
+    ' - LinkTarget: a hyperlink will be included above the button if this is set
+    ' - LinkText: the display text for the hyperlink. Defaults to the URL if not set
+    ' - MoreDetailsButton: Shows a button that opens the error log
+    ' - EmailReportButton: Shows a button that prepares an error report email
     
+    ' TODO: move this logic into central error handler
     ' A message with "Help_" denotes an "intentional" error, as opposed to an error expect to happen.
     ' For these messages, line numbers and other debug info are are not shown with the error message.
-    If left(errorMessage, 5) = "Help_" Then
+    If left(prompt, 5) = "Help_" Then
         ' This is intentional error, so strip the Help_
-        errorMessage = Replace(errorMessage, "Help_", "")
+        prompt = Replace(prompt, "Help_", "")
         
         ' Strip the line numbers too.
         Dim linNumStartPos As Integer
         Dim linNumEndPos As Integer
-        linNumStartPos = InStr(errorMessage, "(at line ")
+        linNumStartPos = InStr(prompt, "(at line ")
         ' Make sure we have a line number present
         If linNumStartPos > 0 Then
-            linNumEndPos = InStr(linNumStartPos, errorMessage, ")")
-            errorMessage = left(errorMessage, linNumStartPos - 1) & Mid(errorMessage, linNumEndPos + 1)
+            linNumEndPos = InStr(linNumStartPos, prompt, ")")
+            prompt = left(prompt, linNumStartPos - 1) & Mid(prompt, linNumEndPos + 1)
         End If
     Else
         ' This is an actual error message, so add the line number reporting and other info
-        errorMessage = "OpenSolver" & sOpenSolverVersion & " encountered an error:" & vbNewLine & _
-                       errorMessage & IIf(Erl = 0, "", " (at line " & Erl & ")") & vbNewLine & vbNewLine & _
-                       "Source = " & Err.Source & ", ErrNumber=" & Err.Number & vbNewLine & vbNewLine & _
-                       "Please visit the OpenSolver website for assistance:"
+        prompt = "OpenSolver" & sOpenSolverVersion & " encountered an error:" & vbNewLine & _
+                 prompt & IIf(Erl = 0, "", " (at line " & Erl & ")") & vbNewLine & vbNewLine & _
+                 "Source = " & Err.Source & ", ErrNumber=" & Err.Number & vbNewLine & vbNewLine & _
+                 "Please visit the OpenSolver website for assistance:"
         ' If no link is provided, add the OpenSolver help link
-        If linkTarget = "" Then linkTarget = "http://opensolver.org/help/"
+        If LinkTarget = "" Then LinkTarget = "http://opensolver.org/help/"
     End If
     
-    If linkText = "" Then linkText = linkTarget
+    If LinkText = "" Then LinkText = LinkTarget
     
-    ' We need to unlock the textbox before writing to it on Mac
-    frmMsgBoxEx.txtMessage.Locked = False
-    frmMsgBoxEx.txtMessage.Text = errorMessage
-    frmMsgBoxEx.txtMessage.Locked = True
+    Dim Button1 As String, Button2 As String, Button3 As String
+    Dim Value1 As VbMsgBoxResult, Value2 As VbMsgBoxResult, Value3 As VbMsgBoxResult
     
-    frmMsgBoxEx.lblLink.Caption = linkText
-    frmMsgBoxEx.lblLink.ControlTipText = linkTarget
+    ' Get button types
+    Select Case Options Mod 8
+    Case vbOKOnly
+        Button1 = "OK"
+        Value1 = vbOK
+    Case vbOKCancel
+        Button1 = "OK"
+        Value1 = vbOK
+        Button2 = "Cancel"
+        Value2 = vbCancel
+    Case vbAbortRetryIgnore
+        Button1 = "Abort"
+        Value1 = vbAbort
+        Button2 = "Retry"
+        Value2 = vbRetry
+        Button3 = "Ignore"
+        Value3 = vbIgnore
+    Case vbYesNoCancel
+        Button1 = "Yes"
+        Value1 = vbYes
+        Button2 = "No"
+        Value2 = vbNo
+        Button3 = "Cancel"
+        Value3 = vbCancel
+    Case vbYesNo
+        Button1 = "Yes"
+        Value1 = vbYes
+        Button2 = "No"
+        Value2 = vbNo
+    Case vbRetryCancel
+        Button1 = "Retry"
+        Value1 = vbRetry
+        Button2 = "Cancel"
+        Value2 = vbCancel
+    End Select
     
-    frmMsgBoxEx.Caption = "OpenSolver - Error"
-    frmMsgBoxEx.Show
-End Sub
+    With New frmMsgBoxEx
+        .cmdMoreDetails.Visible = MoreDetailsButton
+        .cmdReportIssue.Visible = ReportIssueButton
+    
+        ' Set up buttons
+        .cmdButton1.Caption = Button1
+        .cmdButton2.Caption = Button2
+        .cmdButton3.Caption = Button3
+        .cmdButton1.Tag = Value1
+        .cmdButton2.Tag = Value2
+        .cmdButton3.Tag = Value3
+        
+        ' Get default button
+        Select Case (Options / 256) Mod 4
+        Case vbDefaultButton1 / 256
+            .cmdButton1.SetFocus
+        Case vbDefaultButton2 / 256
+            .cmdButton2.SetFocus
+        Case vbDefaultButton3 / 256
+            .cmdButton3.SetFocus
+        End Select
+        ' Adjust default button if specified default is going to be hidden
+        If .ActiveControl.Tag = "0" Then .cmdButton1.SetFocus
+    
+        ' We need to unlock the textbox before writing to it on Mac
+        .txtMessage.Locked = False
+        .txtMessage.Text = prompt
+        .txtMessage.Locked = True
+    
+        .lblLink.Caption = LinkText
+        .lblLink.ControlTipText = LinkTarget
+    
+        .Caption = title
+        
+        .Show
+     
+        ' If form was closed using [X], then it was also unloaded, so we set the default to vbCancel
+        MsgBoxEx = vbCancel
+        On Error Resume Next
+        MsgBoxEx = CInt(.Tag)
+        On Error GoTo 0
+    End With
+End Function
 
 ' Case-insensitive InStr helper
 Function InStrText(String1 As String, String2 As String)
@@ -2163,4 +2250,3 @@ Function SetDifference(ByRef rng1 As Range, ByRef rng2 As Range) As Range
     End If
     Set SetDifference = rngResult
 End Function
-
