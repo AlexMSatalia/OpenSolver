@@ -40,30 +40,43 @@ Function SolverAvailable(Solver As String, Optional SolverPath As String, Option
 End Function
 
 Function SolverFilePath_Default(Solver As String, Optional errorString As String) As String
+          Dim RaiseError As Boolean
+          RaiseError = False
+          On Error GoTo ErrorHandler
+
           Dim SearchPath As String
 6589      SearchPath = JoinPaths(ThisWorkbook.Path, SolverDir)
           
 #If Mac Then
-6590      If GetExistingFilePathName(JoinPaths(SearchPath, SolverDirMac), SolverExec(Solver), SolverFilePath_Default) Then Exit Function ' Found a mac solver
+6590      If GetExistingFilePathName(JoinPaths(SearchPath, SolverDirMac), SolverExec(Solver), SolverFilePath_Default) Then GoTo ExitFunction ' Found a mac solver
 6591      errorString = "Unable to find Mac version of " & SolverName(Solver) & " ('" & SolverExec(Solver) & "') in the Solvers folder."
 6592      SolverFilePath_Default = ""
 6593      Exit Function
 #Else
           ' Look for the 64 bit version
 6594      If SystemIs64Bit Then
-6595          If GetExistingFilePathName(JoinPaths(SearchPath, SolverDirWin64), SolverExec(Solver), SolverFilePath_Default) Then Exit Function ' Found a 64 bit solver
+6595          If GetExistingFilePathName(JoinPaths(SearchPath, SolverDirWin64), SolverExec(Solver), SolverFilePath_Default) Then GoTo ExitFunction ' Found a 64 bit solver
 6596      End If
           ' Look for the 32 bit version
 6597      If GetExistingFilePathName(JoinPaths(SearchPath, SolverDirWin32), SolverName(Solver), SolverFilePath_Default) Then
 6598          If SystemIs64Bit Then
 6599              errorString = "Unable to find 64-bit " & SolverName(Solver) & " in the Solvers folder. A 32-bit version will be used instead."
 6600          End If
-6601          Exit Function
+6601          GoTo ExitFunction
 6602      End If
           ' Fail
 6603      SolverFilePath_Default = ""
 6604      errorString = "Unable to find " & SolverName(Solver) & " ('" & SolverExec(Solver) & "') in the Solvers folder."
 #End If
+
+ExitFunction:
+          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          Exit Function
+
+ErrorHandler:
+          If Not ReportError("SolverUtilities", "SolverFilePath_Default") Then Resume
+          RaiseError = True
+          GoTo ExitFunction
 End Function
 
 Function SolverType(Solver As String) As String
@@ -121,21 +134,49 @@ Function SolutionFilePath(Solver As String) As String
 6647      End Select
 End Function
 
-Sub CleanFiles(errorPrefix)
-6648      CleanFiles_CBC (errorPrefix)
-6649      CleanFiles_Gurobi (errorPrefix)
+Sub CleanFiles()
+          Dim RaiseError As Boolean
+          RaiseError = False
+          On Error GoTo ErrorHandler
+
+          CleanFiles_Bonmin
+6648      CleanFiles_CBC
+          CleanFiles_Couenne
+6649      CleanFiles_Gurobi
+
+ExitSub:
+          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          Exit Sub
+
+ErrorHandler:
+          If Not ReportError("SolverUtilities", "CleanFiles") Then Resume
+          RaiseError = True
+          GoTo ExitSub
 End Sub
 
-Function ReadModel(Solver As String, SolutionFilePathName As String, errorString As String, s As COpenSolver) As Boolean
+Function ReadModel(Solver As String, SolutionFilePathName As String, s As COpenSolver) As Boolean
+          Dim RaiseError As Boolean
+          RaiseError = False
+          On Error GoTo ErrorHandler
+
 6650      Select Case Solver
           Case "CBC"
-6651          ReadModel = ReadModel_CBC(SolutionFilePathName, errorString, s)
+6651          ReadModel = ReadModel_CBC(SolutionFilePathName, s)
 6652      Case "Gurobi"
-6653          ReadModel = ReadModel_Gurobi(SolutionFilePathName, errorString, s)
+6653          ReadModel = ReadModel_Gurobi(SolutionFilePathName, s)
 6654      Case Else
 6655          ReadModel = False
-6656          errorString = "The solver " & Solver & " has not yet been incorporated fully into OpenSolver."
+6656          Err.Raise OpenSolver_SolveError, Description:="The solver " & Solver & " has not yet been incorporated fully into OpenSolver."
 6657      End Select
+
+ExitFunction:
+          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          Exit Function
+
+ErrorHandler:
+          If Not ReportError("SolverUtilities", "ReadModel") Then Resume
+          RaiseError = True
+          GoTo ExitFunction
 End Function
 
 Function ModelFile(Solver As String) As String
@@ -158,17 +199,11 @@ End Function
 Function ModelFilePath(Solver As String) As String
 6677      ModelFilePath = ModelFile(Solver)
           ' If model file is empty, then don't return anything
-6678      If ModelFilePath <> "" Then
-6679          ModelFilePath = GetTempFilePath(ModelFilePath)
-6680      End If
+6678      If ModelFilePath <> "" Then ModelFilePath = GetTempFilePath(ModelFilePath)
 End Function
 
 Function RunsOnNeos(Solver As String) As Boolean
-6681      If Solver Like "Neos*" Then
-6682          RunsOnNeos = True
-6683      Else
-6684          RunsOnNeos = False
-6685      End If
+6681      RunsOnNeos = (Solver Like "Neos*")
 End Function
 
 Function SolverUsesUpperBounds(Solver As String) As Boolean

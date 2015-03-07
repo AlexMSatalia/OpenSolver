@@ -55,11 +55,9 @@ Function SensitivityFilePath_Gurobi() As String
 6372      SensitivityFilePath_Gurobi = GetTempFilePath(SensitivityFile_Gurobi)
 End Function
 
-Sub CleanFiles_Gurobi(errorPrefix As String)
-          ' Solution file
-6373      DeleteFileAndVerify SolutionFilePath_Gurobi(), errorPrefix, "Unable to delete the Gurobi solver solution file: " & SolutionFilePath_Gurobi()
-          ' Cost Range file
-6374      DeleteFileAndVerify SensitivityFilePath_Gurobi(), errorPrefix, "Unable to delete the Gurobi solver sensitivity data file: " & SensitivityFilePath_Gurobi()
+Sub CleanFiles_Gurobi()
+6373      DeleteFileAndVerify SolutionFilePath_Gurobi()
+6374      DeleteFileAndVerify SensitivityFilePath_Gurobi()
 End Sub
 
 Function About_Gurobi() As String
@@ -97,7 +95,11 @@ Function SolverFilePath_Gurobi() As String
 End Function
 
 Function SolverAvailable_Gurobi(Optional SolverPath As String, Optional errorString As String) As Boolean
-      ' Returns true if Gurobi is available and sets SolverPath as path to gurobi_cl
+' Returns true if Gurobi is available and sets SolverPath as path to gurobi_cl
+          Dim RaiseError As Boolean
+          RaiseError = False
+          On Error GoTo ErrorHandler
+
 6385      If GetExistingFilePathName(GetGurobiBinFolder, SolverExec_Gurobi, SolverPath) And _
              FileOrDirExists(SolverPythonScriptPath_Gurobi()) Then
 6386          SolverAvailable_Gurobi = True
@@ -106,14 +108,27 @@ Function SolverAvailable_Gurobi(Optional SolverPath As String, Optional errorStr
 6389          errorString = "No Gurobi installation was detected."
 6390          SolverAvailable_Gurobi = False
 6391      End If
+
+ExitFunction:
+          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          Exit Function
+
+ErrorHandler:
+          If Not ReportError("SolverGurobi", "SolverAvailable_Gurobi") Then Resume
+          RaiseError = True
+          GoTo ExitFunction
 End Function
 
 Function SolverVersion_Gurobi() As String
-      ' Get Gurobi version by running 'gurobi_cl -v' at command line
+' Get Gurobi version by running 'gurobi_cl -v' at command line
+          Dim RaiseError As Boolean
+          RaiseError = False
+          On Error GoTo ErrorHandler
+
           Dim SolverPath As String
 6392      If Not SolverAvailable_Gurobi(SolverPath) Then
 6393          SolverVersion_Gurobi = ""
-6394          Exit Function
+6394          GoTo ExitFunction
 6395      End If
           
           ' Set up Gurobi to write version info to text file
@@ -135,7 +150,6 @@ Function SolverVersion_Gurobi() As String
           ' Output like 'Gurobi Optimizer version 5.6.3 (win64)'
           Dim Line As String
 6403      If FileOrDirExists(logFile) Then
-6404          On Error GoTo ErrHandler
 6405          Open logFile For Input As #1
 6406          Line Input #1, Line
 6407          Close #1
@@ -143,19 +157,28 @@ Function SolverVersion_Gurobi() As String
 6410      Else
 6411          SolverVersion_Gurobi = ""
 6412      End If
-6413      Exit Function
-          
-ErrHandler:
-6414      Close #1
-6415      Err.Raise Err.Number, Err.Source, Err.Description & IIf(Erl = 0, "", " (at line " & Erl & ")")
+
+ExitFunction:
+          Close #1
+          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          Exit Function
+
+ErrorHandler:
+          If Not ReportError("SolverGurobi", "SolverVersion_Gurobi") Then Resume
+          RaiseError = True
+          GoTo ExitFunction
 End Function
 
 Function SolverBitness_Gurobi() As String
-      ' Get Gurobi bitness by running 'gurobi_cl -v' at command line
+' Get Gurobi bitness by running 'gurobi_cl -v' at command line
+          Dim RaiseError As Boolean
+          RaiseError = False
+          On Error GoTo ErrorHandler
+
           Dim SolverPath As String
 6416      If Not SolverAvailable_Gurobi(SolverPath) Then
 6417          SolverBitness_Gurobi = ""
-6418          Exit Function
+6418          GoTo ExitFunction
 6419      End If
           
           ' Set up Gurobi to write version info to text file
@@ -177,7 +200,6 @@ Function SolverBitness_Gurobi() As String
           ' Output like 'Gurobi Optimizer version 5.6.3 (win64)'
           Dim Line As String
 6427      If FileOrDirExists(logFile) Then
-6428          On Error GoTo ErrHandler
 6429          Open logFile For Input As #1
 6430          Line Input #1, Line
 6431          Close #1
@@ -187,26 +209,27 @@ Function SolverBitness_Gurobi() As String
 6435              SolverBitness_Gurobi = "32"
 6436          End If
 6437      End If
-6438      Exit Function
-          
-ErrHandler:
-6439      Close #1
-6440      Err.Raise Err.Number, Err.Source, Err.Description & IIf(Erl = 0, "", " (at line " & Erl & ")")
+    
+ExitFunction:
+          Close #1
+          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          Exit Function
+
+ErrorHandler:
+          If Not ReportError("SolverGurobi", "SolverBitness_Gurobi") Then Resume
+          RaiseError = True
+          GoTo ExitFunction
 End Function
 Function CreateSolveScript_Gurobi(SolutionFilePathName As String, ExtraParameters As Dictionary, SolveOptions As SolveOptionsType) As String
+          Dim RaiseError As Boolean
+          RaiseError = False
+          On Error GoTo ErrorHandler
+
           Dim SolverString As String, CommandLineRunString As String, PrintingOptionString As String, ExtraParametersString As String
 6441      SolverString = MakePathSafe(SolverFilePath_Gurobi())
 
 6442      CommandLineRunString = MakePathSafe(SolverPythonScriptPath_Gurobi())
-          '========================================================================================
-          'Gurobi can also be run at the command line using gurobi_cl with the following commands
-          '
-          'Solver="gurobi_cl.exe"
-          'CommandLineRunString = " Threads=1" & " TimeLimit=" & Replace(Str(SolveOptions.maxTime), " ", "") & " ResultFile="
-          '             & GetTempFolder & Replace(SolutionFileName, ".txt", ".sol") _
-          '             & " " & ModelFilePathName
-          '
-          '========================================================================================
+
 6443      PrintingOptionString = "TimeLimit=" & Trim(str(SolveOptions.MaxTime)) & " " & _
                                  "MIPGap=" & Trim(str(SolveOptions.Tolerance))
           
@@ -218,22 +241,48 @@ Function CreateSolveScript_Gurobi(SolutionFilePathName As String, ExtraParameter
 6446      CreateScriptFile scriptFile, scriptFileContents
           
 6447      CreateSolveScript_Gurobi = scriptFile
+
+ExitFunction:
+          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          Exit Function
+
+ErrorHandler:
+          If Not ReportError("SolverGurobi", "CreateSolveScript_Gurobi") Then Resume
+          RaiseError = True
+          GoTo ExitFunction
 End Function
 
 Function ParametersToString_Gurobi(ExtraParameters As Dictionary) As String
+          Dim RaiseError As Boolean
+          RaiseError = False
+          On Error GoTo ErrorHandler
+
           Dim ParamPair As KeyValuePair
           For Each ParamPair In ExtraParameters.KeyValuePairs
               ParametersToString_Gurobi = ParametersToString_Gurobi & ParamPair.Key & "=" & ParamPair.value & " "
           Next
           ParametersToString_Gurobi = Trim(ParametersToString_Gurobi)
+
+ExitFunction:
+          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          Exit Function
+
+ErrorHandler:
+          If Not ReportError("SolverGurobi", "ParametersToString_Gurobi") Then Resume
+          RaiseError = True
+          GoTo ExitFunction
 End Function
 
 
-Function ReadModel_Gurobi(SolutionFilePathName As String, errorString As String, s As COpenSolver) As Boolean
+Function ReadModel_Gurobi(SolutionFilePathName As String, s As COpenSolver) As Boolean
           
+          Dim RaiseError As Boolean
+          RaiseError = False
+          On Error GoTo ErrorHandler
+
 6448      ReadModel_Gurobi = False
           Dim Line As String, Index As Long
-6449      On Error GoTo readError
+          
 6450      s.SolutionWasLoaded = True
           
 6451      Open SolutionFilePathName For Input As #1 ' supply path with filename
@@ -242,8 +291,7 @@ Function ReadModel_Gurobi(SolutionFilePathName As String, errorString As String,
           Dim GurobiError As String ' The string that identifies a gurobi error in the model file
 6453      GurobiError = "Gurobi Error: "
 6454      If left(Line, Len(GurobiError)) = GurobiError Then
-6455          errorString = Line
-6456          GoTo exitFunction
+6455          Err.Raise OpenSolver_GurobiError, Description:=Line
 6457      End If
           'Get the returned status code from gurobi.
           'List of return codes can be seen at - http://www.gurobi.com/documentation/5.1/reference-manual/node865#sec:StatusCodes
@@ -278,8 +326,7 @@ Function ReadModel_Gurobi(SolutionFilePathName As String, errorString As String,
 6494          s.SolveStatus = OpenSolverResult.LimitedSubOptimal
 6495          s.SolveStatusString = "Unable to satisfy optimality tolerances; a sub-optimal solution is available."
 6497      Else
-6498          errorString = "The response from the Gurobi solver is not recognised. The response was: " & Line
-6499          GoTo readError
+6498          Err.Raise OpenSolver_GurobiError = "The response from the Gurobi solver is not recognised. The response was: " & Line
 6500      End If
           
 6501      If s.SolutionWasLoaded Then
@@ -331,15 +378,15 @@ Function ReadModel_Gurobi(SolutionFilePathName As String, errorString As String,
 6560          ReadModel_Gurobi = True
 6561      End If
 
-exitFunction:
+ExitFunction:
 6562      Application.StatusBar = False
 6563      Close #1
 6564      Close #2
-6565      Exit Function
-          
-readError:
-6566      Application.StatusBar = False
-6567      Close #1
-6568      Close #2
-6569      Err.Raise Err.Number, Err.Source, Err.Description & IIf(Erl = 0, "", " (at line " & Erl & ")")
+          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          Exit Function
+
+ErrorHandler:
+          If Not ReportError("SolverGurobi", "ReadModel_Gurobi") Then Resume
+          RaiseError = True
+          GoTo ExitFunction
 End Function

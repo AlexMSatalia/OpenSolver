@@ -37,13 +37,30 @@ End Enum
 
 ' Getter method for children
 Public Function GetChild(Index As Long) As ExpressionTree
+          Dim RaiseError As Boolean
+          RaiseError = False
+          On Error GoTo ErrorHandler
+
           Dim obj As ExpressionTree
 8510      Set obj = Children(Index)
 8511      Set GetChild = obj
+
+ExitFunction:
+          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          Exit Function
+
+ErrorHandler:
+          If Not ReportError("ExpressionTree", "GetChild") Then Resume
+          RaiseError = True
+          GoTo ExitFunction
 End Function
 
 ' Setter method for children
 Public Sub SetChild(Index As Long, obj As ExpressionTree)
+          Dim RaiseError As Boolean
+          RaiseError = False
+          On Error GoTo ErrorHandler
+
 8512      If NumChildren = 0 Then
 8513          ReDim Preserve Children(Index)
 8514          NumChildren = Index
@@ -52,6 +69,15 @@ Public Sub SetChild(Index As Long, obj As ExpressionTree)
 8517          NumChildren = Index
 8518      End If
 8519      Set Children(Index) = obj
+
+ExitSub:
+          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          Exit Sub
+
+ErrorHandler:
+          If Not ReportError("ExpressionTree", "SetChild") Then Resume
+          RaiseError = True
+          GoTo ExitSub
 End Sub
 
 Public Property Get GetNumChildren() As Long
@@ -79,6 +105,10 @@ End Function
 
 ' Negate the tree
 Public Function Negate() As ExpressionTree
+          Dim RaiseError As Boolean
+          RaiseError = False
+          On Error GoTo ErrorHandler
+
 8527      If NodeText <> "0" Then
               Dim NewTree As ExpressionTree
 8528          Set NewTree = CreateTree("neg", ExpressionTreeOperator)
@@ -90,6 +120,15 @@ Public Function Negate() As ExpressionTree
 8532      Else
 8533          Set Negate = Me
 8534      End If
+
+ExitFunction:
+          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          Exit Function
+
+ErrorHandler:
+          If Not ReportError("ExpressionTree", "Negate") Then Resume
+          RaiseError = True
+          GoTo ExitFunction
 End Function
 
 ' Display the entire tree as a string for debugging
@@ -131,12 +170,13 @@ End Function
 
 ' Converts the tree to .nl expression tree format
 Public Function ConvertToNL(Optional CommentIndent As Integer = 0) As String
+          Dim RaiseError As Boolean
+          RaiseError = False
+          On Error GoTo ErrorHandler
+
           ' Construct comment
           Dim Comment As String, i As Long
-8557      For i = 1 To CommentIndent
-8558          Comment = Comment + " "
-8559      Next i
-8560      Comment = Comment + NodeText + " " + DisplayLinearity()
+8560      Comment = Space(CommentIndent) + NodeText + " " + DisplayLinearity()
           
           ' Add current node to output
           Dim output As String
@@ -144,11 +184,7 @@ Public Function ConvertToNL(Optional CommentIndent As Integer = 0) As String
           
           ' If n-ary operator, we need the number of operators on a newline
 8562      If IsNAry(NodeText) Then
-8564          Comment = ""
-8565          For i = 1 To CommentIndent + 2
-8566              Comment = Comment + " "
-8567          Next i
-8568          AddNewLine output, CStr(NumChildren), Comment & NumChildren & " arguments"
+8568          AddNewLine output, CStr(NumChildren), Space(CommentIndent + 2) & NumChildren & " arguments"
 8570      End If
           
           ' Add children nodes to output
@@ -157,10 +193,23 @@ Public Function ConvertToNL(Optional CommentIndent As Integer = 0) As String
 8574      Next i
           
 8576      ConvertToNL = output
+
+ExitFunction:
+          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          Exit Function
+
+ErrorHandler:
+          If Not ReportError("ExpressionTree", "ConvertToNL") Then Resume
+          RaiseError = True
+          GoTo ExitFunction
 End Function
 
 ' Extract all variables from the ExpressionTree into a LinearConstraintNL
 Sub ExtractVariables(constraint As LinearConstraintNL)
+          Dim RaiseError As Boolean
+          RaiseError = False
+          On Error GoTo ErrorHandler
+
 8577      If NodeType = ExpressionTreeVariable Then
               Dim Index As Long
 8578          Index = VariableIndex(NodeText)
@@ -174,10 +223,22 @@ Sub ExtractVariables(constraint As LinearConstraintNL)
 8584          Children(i).ExtractVariables constraint
 8585      Next i
 
+ExitSub:
+          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          Exit Sub
+
+ErrorHandler:
+          If Not ReportError("ExpressionTree", "ExtractVariables") Then Resume
+          RaiseError = True
+          GoTo ExitSub
 End Sub
 
 ' Traverse the tree and mark all nodes as Constant, Linear or Non-linear
 Sub MarkLinearity()
+          Dim RaiseError As Boolean
+          RaiseError = False
+          On Error GoTo ErrorHandler
+
           ' First process all children
           Dim i As Long
 8586      For i = 1 To NumChildren
@@ -270,16 +331,29 @@ Sub MarkLinearity()
 8627              For i = 1 To NumChildren
 8628                  If Not Children(i).NodeLinearity = ExpressionTreeConstant Then
 8629                      NodeLinearity = ExpressionTreeNonLinear
-8630                      Exit Sub
+8630                      GoTo ExitSub
 8631                  End If
 8632              Next i
 8633              NodeLinearity = ExpressionTreeConstant
                   
 8634          End Select
 8635      End Select
+
+ExitSub:
+          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          Exit Sub
+
+ErrorHandler:
+          If Not ReportError("ExpressionTree", "MarkLinearity") Then Resume
+          RaiseError = True
+          GoTo ExitSub
 End Sub
 
 Public Sub PullUpConstants()
+          Dim RaiseError As Boolean
+          RaiseError = False
+          On Error GoTo ErrorHandler
+
           ' First pull all constants in children
           Dim i As Long
 8636      For i = 1 To NumChildren
@@ -289,10 +363,23 @@ Public Sub PullUpConstants()
 8639      If NodeLinearity = ExpressionTreeConstant And NodeType = ExpressionTreeOperator Then
 8640          EvaluateConstantOperator
 8641      End If
+
+ExitSub:
+          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          Exit Sub
+
+ErrorHandler:
+          If Not ReportError("ExpressionTree", "PullUpConstants") Then Resume
+          RaiseError = True
+          GoTo ExitSub
 End Sub
 
 ' Evaluates a constant operator node and replaces node and all children with a numeric constant
 Public Sub EvaluateConstantOperator()
+          Dim RaiseError As Boolean
+          RaiseError = False
+          On Error GoTo ErrorHandler
+
           Dim i As Long, Values As New Collection, HasString As Boolean
           HasString = False
 8642      For i = 1 To NumChildren
@@ -644,10 +731,23 @@ FinishNode:
 8850      NodeType = ExpressionTreeNumber
 8851      NodeText = StrEx_NL(NewValue)
 8852      ClearChildren
+
+ExitSub:
+          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          Exit Sub
+
+ErrorHandler:
+          If Not ReportError("ExpressionTree", "EvaluateConstantOperator") Then Resume
+          RaiseError = True
+          GoTo ExitSub
 End Sub
 
 ' Traverses the tree and prunes all linear or constant parts from the tree
 Public Function PruneLinearTrees(LinearTrees As Collection, Optional NegativeTree As Boolean = False) As Boolean
+          Dim RaiseError As Boolean
+          RaiseError = False
+          On Error GoTo ErrorHandler
+
           Dim CanPrune As Boolean, NewTree As ExpressionTree
 8853      CanPrune = False
           ' If the root node is linear or constant we can prune
@@ -701,20 +801,45 @@ Public Function PruneLinearTrees(LinearTrees As Collection, Optional NegativeTre
 8883      Else
 8884          PruneLinearTrees = False
 8885      End If
-              
+
+ExitFunction:
+          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          Exit Function
+
+ErrorHandler:
+          If Not ReportError("ExpressionTree", "PruneLinearTrees") Then Resume
+          RaiseError = True
+          GoTo ExitFunction
 End Function
 
 ' Sets an ExpressionTree to be one of its children
 Sub SetTreeToChild(Index As Long)
+          Dim RaiseError As Boolean
+          RaiseError = False
+          On Error GoTo ErrorHandler
+
           ' We can't clear all children of the current tree while referring to one of it's children
           ' We therefore need to make a copy of the child tree before we clear the tree and set it to the child
           Dim NewTree As ExpressionTree
 8886      Set NewTree = Children(Index).Clone
 8887      SetExpressionTree NewTree
+
+ExitSub:
+          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          Exit Sub
+
+ErrorHandler:
+          If Not ReportError("ExpressionTree", "SetTreeToChild") Then Resume
+          RaiseError = True
+          GoTo ExitSub
 End Sub
 
 ' Creates a copy of an ExpressionTree
 Public Function Clone() As ExpressionTree
+          Dim RaiseError As Boolean
+          RaiseError = False
+          On Error GoTo ErrorHandler
+
           Dim NewTree As ExpressionTree
 8888      Set NewTree = CreateTree(NodeText, NodeType)
 8889      NewTree.NodeLinearity = NodeLinearity
@@ -727,10 +852,23 @@ Public Function Clone() As ExpressionTree
 8894      Next i
           
 8895      Set Clone = NewTree
+
+ExitFunction:
+          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          Exit Function
+
+ErrorHandler:
+          If Not ReportError("ExpressionTree", "Clone") Then Resume
+          RaiseError = True
+          GoTo ExitFunction
 End Function
 
 ' Sets the current ExpressionTree to be the same as another
 Sub SetExpressionTree(NewTree As ExpressionTree)
+          Dim RaiseError As Boolean
+          RaiseError = False
+          On Error GoTo ErrorHandler
+
 8896      NodeText = NewTree.NodeText
 8897      NodeType = NewTree.NodeType
 8898      NodeLinearity = NewTree.NodeLinearity
@@ -743,20 +881,45 @@ Sub SetExpressionTree(NewTree As ExpressionTree)
 8902      For i = 1 To NewTree.GetNumChildren
 8903          SetChild i, NewTree.GetChild(i)
 8904      Next i
+
+ExitSub:
+          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          Exit Sub
+
+ErrorHandler:
+          If Not ReportError("ExpressionTree", "SetExpressionTree") Then Resume
+          RaiseError = True
+          GoTo ExitSub
 End Sub
 
 ' Converts a linear tree into a LinearConstraintNL and Double
 Public Sub ConvertLinearTreeToConstraint(constraint As LinearConstraintNL, constant As Double)
+          Dim RaiseError As Boolean
+          RaiseError = False
+          On Error GoTo ErrorHandler
+
           ' Remove everything but "plus", variables, and constants
 8905      CollateLinearTerms
-          
+    
           ' Add linear terms into constraint/constant
 8906      AddLinearTreeToConstraint constraint, constant
+
+ExitSub:
+          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          Exit Sub
+
+ErrorHandler:
+          If Not ReportError("ExpressionTree", "ConvertLinearTreeToConstraint") Then Resume
+          RaiseError = True
+          GoTo ExitSub
 End Sub
 
 ' Traverses a linear tree and replaces all operators other than "plus"
 ' We want a tree with constants, variables, and "plus" nodes only
 Sub CollateLinearTerms()
+          Dim RaiseError As Boolean
+          RaiseError = False
+          On Error GoTo ErrorHandler
 
           ' First collate all children
           Dim i As Long
@@ -829,13 +992,23 @@ Sub CollateLinearTerms()
 8945              End Select
 8946          End Select
 8947      End Select
-          
-8948      Exit Sub
-          
+
+ExitSub:
+          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          Exit Sub
+
+ErrorHandler:
+          If Not ReportError("ExpressionTree", "CollateLinearTerms") Then Resume
+          RaiseError = True
+          GoTo ExitSub
 End Sub
 
 ' Multiplies all nodes in the linear tree by a constant
 Public Sub MultiplyByConstant(constant As Double)
+          Dim RaiseError As Boolean
+          RaiseError = False
+          On Error GoTo ErrorHandler
+
 8949      Select Case NodeType
           Case ExpressionTreeConstant
 8950          LinearValue = LinearValue * constant
@@ -849,10 +1022,23 @@ Public Sub MultiplyByConstant(constant As Double)
 8956          Children(2).MultiplyByConstant constant
               
 8957      End Select
+
+ExitSub:
+          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          Exit Sub
+
+ErrorHandler:
+          If Not ReportError("ExpressionTree", "MultiplyByConstant") Then Resume
+          RaiseError = True
+          GoTo ExitSub
 End Sub
 
 ' Flips the sign on variable or constant
 Public Sub CollateLinearNegative()
+          Dim RaiseError As Boolean
+          RaiseError = False
+          On Error GoTo ErrorHandler
+
 8958      If NodeType = ExpressionTreeVariable Then
 8959          LinearCoefficient = -LinearCoefficient
 8960      Else ' NodeType = ExpressionTreeNumber
@@ -861,14 +1047,26 @@ Public Sub CollateLinearNegative()
 8963              NodeText = LinearValue
 8964          End If
 8965      End If
+
+ExitSub:
+          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          Exit Sub
+
+ErrorHandler:
+          If Not ReportError("ExpressionTree", "CollateLinearNegative") Then Resume
+          RaiseError = True
+          GoTo ExitSub
 End Sub
 
 ' Convert a collated linear tree into a LinearConstraintNL and Double constant
 Sub AddLinearTreeToConstraint(constraint As LinearConstraintNL, constant As Double)
+          Dim RaiseError As Boolean
+          RaiseError = False
+          On Error GoTo ErrorHandler
+
           ' By this point, only "plus", variables and constants remain in the tree.
           ' We traverse the tree and add each variable we find to the constraint,
           ' and each constant value to the constant total
-          
 8966      Select Case NodeType
           ' Add variable coefficient to constraint
           Case ExpressionTreeVariable
@@ -891,4 +1089,13 @@ Sub AddLinearTreeToConstraint(constraint As LinearConstraintNL, constant As Doub
 8977              Err.Raise OpenSolver_BuildError, "Collating linear terms", "Operator that isn't plus at the last stage of the linear tree pruning: " & NodeText & vbCrLf & "Please let us know about this at opensolver.org so we can fix it."
 8978          End If
 8979      End Select
+
+ExitSub:
+          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          Exit Sub
+
+ErrorHandler:
+          If Not ReportError("ExpressionTree", "AddLinearTreeToConstraint") Then Resume
+          RaiseError = True
+          GoTo ExitSub
 End Sub

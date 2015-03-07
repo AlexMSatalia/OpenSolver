@@ -15,6 +15,10 @@ Private Values() As Double
 Private NumEntries As Long
 
 Public Sub Add(Index As Long, value As Double)
+          Dim RaiseError As Boolean
+          RaiseError = False
+          On Error GoTo ErrorHandler
+
 3550      If NumEntries = 0 Then
 3551          ReDim Indices(10) As Long
 3552          ReDim Values(10) As Double
@@ -26,6 +30,15 @@ Public Sub Add(Index As Long, value As Double)
 3557      NumEntries = NumEntries + 1
 3558      Indices(NumEntries) = Index
 3559      Values(NumEntries) = value
+
+ExitSub:
+          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          Exit Sub
+
+ErrorHandler:
+          If Not ReportError("CIndexedCoeffs", "Add") Then Resume
+          RaiseError = True
+          GoTo ExitSub
 End Sub
 
 Public Function Index(i As Long) As Long
@@ -41,15 +54,32 @@ Public Function Count() As Long
 End Function
 
 Public Function Evaluate(DecisionVariableValues() As Double) As Double
+          Dim RaiseError As Boolean
+          RaiseError = False
+          On Error GoTo ErrorHandler
+
           ' Evaluate the equation's value for the given variable values
           Dim i As Long, v As Double
 3563      For i = 1 To NumEntries
 3564          v = v + Coefficient(i) * DecisionVariableValues(Index(i))
 3566      Next i
 3567      Evaluate = v
+
+ExitFunction:
+          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          Exit Function
+
+ErrorHandler:
+          If Not ReportError("CIndexedCoeffs", "Evaluate") Then Resume
+          RaiseError = True
+          GoTo ExitFunction
 End Function
 
 Public Function Evaluate_RecordPrecision(DecisionVariableValues() As Double, vMax As Double) As Double
+          Dim RaiseError As Boolean
+          RaiseError = False
+          On Error GoTo ErrorHandler
+
           ' Evaluate the equation's value for the given variable values
           Dim i As Long, v As Double, value As Double, coeff As Double
 3568      vMax = 0
@@ -62,9 +92,22 @@ Public Function Evaluate_RecordPrecision(DecisionVariableValues() As Double, vMa
 3575          If Abs(value) > vMax Then vMax = Abs(value)
 3576      Next i
 3577      Evaluate_RecordPrecision = v
+
+ExitFunction:
+          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          Exit Function
+
+ErrorHandler:
+          If Not ReportError("CIndexedCoeffs", "Evaluate_RecordPrecision") Then Resume
+          RaiseError = True
+          GoTo ExitFunction
 End Function
 
 Public Function Clone() As CIndexedCoeffs
+          Dim RaiseError As Boolean
+          RaiseError = False
+          On Error GoTo ErrorHandler
+
           ' Return a copy of this class
           Dim v As CIndexedCoeffs, i As Long
 3578      Set v = New CIndexedCoeffs
@@ -74,4 +117,13 @@ Public Function Clone() As CIndexedCoeffs
 3580          v.Add Index(i), Coefficient(i)
 3581      Next i
 3582      Set Clone = v
+
+ExitFunction:
+          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          Exit Function
+
+ErrorHandler:
+          If Not ReportError("CIndexedCoeffs", "Clone") Then Resume
+          RaiseError = True
+          GoTo ExitFunction
 End Function

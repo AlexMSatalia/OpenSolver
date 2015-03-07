@@ -14,8 +14,6 @@ Dim WriteComments As Boolean    ' Whether .nl file should include comments
 Const CommentIndent = 4         ' Tracks the level of indenting in comments on nl output
 Const CommentSpacing = 24       ' The column number at which nl comments begin
 
-Dim errorPrefix As String
-
 ' ==========================================================================
 ' ASL variables
 ' These are variables used in the .NL file that are also used by the AMPL Solver Library
@@ -120,11 +118,14 @@ End Property
 
 ' Creates .nl file and solves model
 Function SolveModelParsed_NL(ModelFilePathName As String, model As CModelParsed, s As COpenSolverParsed, SolveOptions As SolveOptionsType, SolveRelaxation As Boolean, Optional ShouldWriteComments As Boolean = True)
+          Dim RaiseError As Boolean
+          RaiseError = False
+          On Error GoTo ErrorHandler
+          Application.EnableCancelKey = xlErrorHandler
+
 7459      Set m = model
           
 7460      WriteComments = ShouldWriteComments
-          
-7461      errorPrefix = "Constructing .nl file"
           
           ' =============================================================
           ' Process model for .nl output
@@ -134,9 +135,8 @@ Function SolveModelParsed_NL(ModelFilePathName As String, model As CModelParsed,
           
 7462      InitialiseModelStats
           
-7463      On Error GoTo ErrHandler
 7464      If n_obj = 0 And n_con = 0 Then
-7465          Err.Raise OpenSolver_BuildError, errorPrefix, "The model has no constraints that depend on the adjustable cells, and has no objective. There is nothing for the solver to do."
+7465          Err.Raise OpenSolver_BuildError, "The model has no constraints that depend on the adjustable cells, and has no objective. There is nothing for the solver to do."
 7466      End If
           
 7467      CreateVariableIndex
@@ -207,14 +207,13 @@ Function SolveModelParsed_NL(ModelFilePathName As String, model As CModelParsed,
           ' Solve model using chosen solver
           ' =============================================================
           
-7500      errorPrefix = "Solving .nl model file"
-7501      Application.StatusBar = "OpenSolver: " & errorPrefix
+7501      Application.StatusBar = "OpenSolver: Solving .nl model file"
           
           Dim SolutionFilePathName As String
 7502      SolutionFilePathName = SolutionFilePath(m.Solver)
           
-7503      DeleteFileAndVerify SolutionFilePathName, errorPrefix, "Unable to delete solution file : " & SolutionFilePathName
-          
+7503      DeleteFileAndVerify SolutionFilePathName
+
           Dim ExternalSolverPathName As String
 7504      ExternalSolverPathName = CreateSolveScriptParsed(m.Solver, ModelFilePathName, SolveOptions)
                    
@@ -225,72 +224,45 @@ Function SolveModelParsed_NL(ModelFilePathName As String, model As CModelParsed,
           Dim ExecutionCompleted As Boolean
 7507      ExternalSolverPathName = MakePathSafe(ExternalSolverPathName)
                     
-          Dim exeResult As Long, userCancelled As Boolean
-7508      ExecutionCompleted = RunExternalCommand(ExternalSolverPathName, logCommand, IIf(s.GetShowIterationResults, SW_SHOWNORMAL, SW_HIDE), True, userCancelled, exeResult) ' Run solver, waiting for completion
-7509      If userCancelled Then
-              ' User pressed escape. Dialogs have already been shown. Exit with a 'cancelled' error
-7510          On Error GoTo ErrHandler
-7511          Err.Raise Number:=OpenSolver_UserCancelledError, Source:="Solving NL model", Description:="The solving process was cancelled by the user."
-7512      End If
+          Dim exeResult As Long
+7508      ExecutionCompleted = RunExternalCommand(ExternalSolverPathName, logCommand, IIf(s.GetShowIterationResults, SW_SHOWNORMAL, SW_HIDE), True, exeResult) ' Run solver, waiting for completion
 7513      If exeResult <> 0 Then
-              ' User pressed escape. Dialogs have already been shown. Exit with a 'cancelled' error
-7514          On Error GoTo ErrHandler
-7515          Err.Raise Number:=OpenSolver_SolveError, Source:="Solving NL model", Description:="The " & m.Solver & " solver did not complete, but aborted with the error code " & exeResult & "." & vbCrLf & vbCrLf & "The last log file can be viewed under the OpenSolver menu and may give you more information on what caused this error."
+7515          Err.Raise Number:=OpenSolver_SolveError, Description:="The " & m.Solver & " solver did not complete, but aborted with the error code " & exeResult & "." & vbCrLf & vbCrLf & "The last log file can be viewed under the OpenSolver menu and may give you more information on what caused this error."
 7516      End If
           
           ' =============================================================
           ' Read results from solution file
           ' =============================================================
-7517      errorPrefix = "Reading .nl solution"
-7518      Application.StatusBar = "OpenSolver: " & errorPrefix
+7518      Application.StatusBar = "OpenSolver: Reading .nl solution"
 
           Dim solutionLoaded As Boolean, errorString As String
 7519      solutionLoaded = ReadModel_NL(SolutionFilePathName, errorString, s)
-7520      On Error GoTo ErrHandler
 7521      If errorString <> "" Then
-7522          Err.Raise Number:=OpenSolver_SolveError, Source:="Solving NL model", Description:=errorString
+7522          Err.Raise Number:=OpenSolver_SolveError, Description:=errorString
 7523      ElseIf Not solutionLoaded Then 'read error
 7524          SolveModelParsed_NL = False
-7525          Exit Function
+7525          GoTo ExitFunction
 7526      End If
 
 7527      SolveModelParsed_NL = True
-7528      Exit Function
           
-exitFunction:
+ExitFunction:
 7529      Application.StatusBar = False
 7530      Close #1
-7531      Exit Function
-              
-ErrHandler:
-          ' We only trap Escape (Err.Number=18) here; all other errors are passed back to the caller.
-          ' Save error message
-          Dim ErrorNumber As Long, ErrorDescription As String, ErrorSource As String
-7532      ErrorNumber = Err.Number
-7533      ErrorDescription = Err.Description & IIf(Erl = 0, "", " (at line " & Erl & ")")
-7534      ErrorSource = Err.Source
+          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          Exit Function
 
-7535      If Err.Number = 18 Then
-7536          If MsgBox("You have pressed the Escape key. Do you wish to cancel?", _
-                         vbCritical + vbYesNo + vbDefaultButton1, _
-                         "OpenSolver: User Interrupt Occured...") = vbNo Then
-7537              Resume 'continue on from where error occured
-7538          Else
-                  ' Raise a "user cancelled" error. We cannot use Raise, as that exits immediately without going thru our code below
-7539              ErrorNumber = OpenSolver_UserCancelledError
-7540              ErrorSource = "Parsing formulae"
-7541              ErrorDescription = "Model building cancelled by user."
-7542          End If
-7543      End If
-          
-ErrorExit:
-          ' Exit, raising an error; none of the following change the Err.Number etc, but we saved them above just in case...
-7544      Application.StatusBar = False
-7545      Close #1
-7546      Err.Raise ErrorNumber, ErrorSource, ErrorDescription & IIf(Erl = 0, "", " (at line " & Erl & ")")
+ErrorHandler:
+          If Not ReportError("ParsedSolverNL", "SolveModelParsed_NL") Then Resume
+          RaiseError = True
+          GoTo ExitFunction
 End Function
 
 Private Sub InitialiseModelStats()
+          Dim RaiseError As Boolean
+          RaiseError = False
+          On Error GoTo ErrorHandler
+
           ' Number of actual variables is the number of adjustable cells in the Solver model
 7547      numActualVars = m.AdjustableCells.Count
           ' Number of fake variables is the number of formulae equations we have created
@@ -371,14 +343,26 @@ Private Sub InitialiseModelStats()
 7593      como = 0
 7594      comc1 = 0
 7595      como1 = 0
+
+ExitSub:
+          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          Exit Sub
+
+ErrorHandler:
+          If Not ReportError("ParsedSolverNL", "InitialiseModelStats") Then Resume
+          RaiseError = True
+          GoTo ExitSub
 End Sub
 
 ' Creates map from variable name (e.g. Test1_D4) to parsed variable index (1 to n_var)
 Private Sub CreateVariableIndex()
+          Dim RaiseError As Boolean
+          RaiseError = False
+          On Error GoTo ErrorHandler
+
 7596      Set VariableIndex = New Collection
 7597      Set InitialVariableValues = New Collection
           Dim c As Range, cellName As String, i As Long
-          
           
           ' First read in actual vars
 7598      i = 1
@@ -411,12 +395,24 @@ Private Sub CreateVariableIndex()
               ' Update variable maps
 7615          VariableIndex.Add i + numActualVars, cellName
 7616      Next i
+
+ExitSub:
+          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          Exit Sub
+
+ErrorHandler:
+          If Not ReportError("ParsedSolverNL", "CreateVariableIndex") Then Resume
+          RaiseError = True
+          GoTo ExitSub
 End Sub
 
 ' Creates maps from variable name (e.g. Test1_D4) to .nl variable index (0 to n_var - 1) and vice-versa, and
 ' maps from parsed variable index to .nl variable index and vice-versa
 Private Sub MakeVariableMap(SolveRelaxation As Boolean)
-          ' =============================================
+          Dim RaiseError As Boolean
+          RaiseError = False
+          On Error GoTo ErrorHandler
+          
           ' Create index of variable names in parsed variable order
           Dim CellNames As New Collection
           
@@ -589,6 +585,15 @@ Private Sub MakeVariableMap(SolveRelaxation As Boolean)
 7721          niv = LinearInteger.Count
 7722          nlvci = NonLinearInteger.Count
           End If
+
+ExitSub:
+          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          Exit Sub
+
+ErrorHandler:
+          If Not ReportError("ParsedSolverNL", "MakeVariableMap") Then Resume
+          RaiseError = True
+          GoTo ExitSub
 End Sub
 
 ' Adds a variable to all the variable maps with:
@@ -596,6 +601,10 @@ End Sub
 '   .nl variable index:       index
 '   parsed variable index:    i
 Private Sub AddVariable(cellName As String, Index As Long, i As Long)
+          Dim RaiseError As Boolean
+          RaiseError = False
+          On Error GoTo ErrorHandler
+
           ' Update variable maps
 7723      VariableMap.Add CStr(Index), cellName
 7724      VariableMapRev.Add cellName, CStr(Index)
@@ -609,12 +618,24 @@ Private Sub AddVariable(cellName As String, Index As Long, i As Long)
           
           ' Increase index for the next variable
 7730      Index = Index + 1
+
+ExitSub:
+          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          Exit Sub
+
+ErrorHandler:
+          If Not ReportError("ParsedSolverNL", "AddVariable") Then Resume
+          RaiseError = True
+          GoTo ExitSub
 End Sub
 
 ' Creates maps from constraint name (e.g. c1_Test1_D4) to .nl constraint index (0 to n_con - 1) and vice-versa, and
 ' map from .nl constraint index to parsed constraint index
 Private Sub MakeConstraintMap()
-          
+          Dim RaiseError As Boolean
+          RaiseError = False
+          On Error GoTo ErrorHandler
+
 7731      Set ConstraintMap = New Collection
 7732      Set ConstraintMapRev = New Collection
 7733      ReDim ConstraintIndexToTreeIndex(n_con)
@@ -669,6 +690,15 @@ Private Sub MakeConstraintMap()
 7764              AddConstraint cellName, Index, i
 7765          End If
 7766      Next i
+
+ExitSub:
+          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          Exit Sub
+
+ErrorHandler:
+          If Not ReportError("ParsedSolverNL", "MakeConstraintMap") Then Resume
+          RaiseError = True
+          GoTo ExitSub
 End Sub
 
 ' Adds a constraint to all the constraint maps with:
@@ -676,6 +706,10 @@ End Sub
 '   .nl constraint index:     index
 '   parsed constraint index:  i
 Private Sub AddConstraint(cellName As String, Index As Long, i As Long)
+          Dim RaiseError As Boolean
+          RaiseError = False
+          On Error GoTo ErrorHandler
+
           ' Update constraint maps
 7767      ConstraintMap.Add Index, cellName
 7768      ConstraintMapRev.Add cellName, CStr(Index)
@@ -688,11 +722,23 @@ Private Sub AddConstraint(cellName As String, Index As Long, i As Long)
           
           ' Increase index for next constraint
 7773      Index = Index + 1
+
+ExitSub:
+          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          Exit Sub
+
+ErrorHandler:
+          If Not ReportError("ParsedSolverNL", "AddConstraint") Then Resume
+          RaiseError = True
+          GoTo ExitSub
 End Sub
 
 ' Processes all constraint formulae into the .nl model formats
 Private Sub ProcessFormulae()
-          
+          Dim RaiseError As Boolean
+          RaiseError = False
+          On Error GoTo ErrorHandler
+
 7774      Set NonLinearConstraintTrees = New Collection
 7775      Set LinearConstraints = New Collection
 7776      Set LinearConstants = New Collection
@@ -722,7 +768,15 @@ Private Sub ProcessFormulae()
 7793          ProcessSingleFormula m.Formulae(i).strFormulaParsed, m.Formulae(i).strAddress, RelationConsts.RelationEQ
 7794      Next i
           
+ExitSub:
 7795      Application.StatusBar = False
+          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          Exit Sub
+
+ErrorHandler:
+          If Not ReportError("ParsedSolverNL", "ProcessFormulae") Then Resume
+          RaiseError = True
+          GoTo ExitSub
 End Sub
 
 ' Processes a single constraint into .nl format. We require:
@@ -731,6 +785,10 @@ End Sub
 '     - a constant Double for the constant part of the equation
 ' We also use the results of processing to update some of the model statistics
 Private Sub ProcessSingleFormula(RHSExpression As String, LHSVariable As String, Relation As RelationConsts)
+          Dim RaiseError As Boolean
+          RaiseError = False
+          On Error GoTo ErrorHandler
+
           ' Convert the string formula into an ExpressionTree object
           Dim Tree As ExpressionTree
 7796      Set Tree = ConvertFormulaToExpressionTree(RHSExpression)
@@ -830,6 +888,15 @@ Private Sub ProcessSingleFormula(RHSExpression As String, LHSVariable As String,
 7849              nzc = nzc + 1
 7850          End If
 7851      Next j
+
+ExitSub:
+          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          Exit Sub
+
+ErrorHandler:
+          If Not ReportError("ParsedSolverNL", "ProcessSingleFormula") Then Resume
+          RaiseError = True
+          GoTo ExitSub
 End Sub
 
 ' Process objective function into .nl format. We require the same as for constraints:
@@ -837,6 +904,10 @@ End Sub
 '     - a linear LinearConstraintNL for the linear parts of the equation
 '     - a constant Double for the constant part of the equation
 Private Sub ProcessObjective()
+          Dim RaiseError As Boolean
+          RaiseError = False
+          On Error GoTo ErrorHandler
+
 7852      Set NonLinearObjectiveTrees = New Collection
 7853      Set ObjectiveSenses = New Collection
 7854      Set ObjectiveCells = New Collection
@@ -875,39 +946,55 @@ Private Sub ProcessObjective()
               ' Adjust objective count
 7870          n_obj = n_obj + 1
 7871      End If
+
+ExitSub:
+          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          Exit Sub
+
+ErrorHandler:
+          If Not ReportError("ParsedSolverNL", "ProcessObjective") Then Resume
+          RaiseError = True
+          GoTo ExitSub
 End Sub
 
 ' Writes header block for .nl file. This contains the model statistics
 Private Function MakeHeader() As String
+          Dim RaiseError As Boolean
+          RaiseError = False
+          On Error GoTo ErrorHandler
+
           Dim Header As String
 7872      Header = ""
           
-          'Line #1
 7873      AddNewLine Header, "g3 1 1 0", "problem " & problem_name
-          'Line #2
 7874      AddNewLine Header, " " & n_var & " " & n_con & " " & n_obj & " " & nranges & " " & n_eqn_ & " " & n_lcon, "vars, constraints, objectives, ranges, eqns"
-          'Line #3
 7875      AddNewLine Header, " " & nlc & " " & nlo, "nonlinear constraints, objectives"
-          'Line #4
 7876      AddNewLine Header, " " & nlnc & " " & lnc, "network constraints: nonlinear, linear"
-          'Line #5
 7877      AddNewLine Header, " " & nlvc & " " & nlvo & " " & nlvb, "nonlinear vars in constraints, objectives, both"
-          'Line #6
 7878      AddNewLine Header, " " & nwv_ & " " & nfunc_ & " " & arith & " " & flags, "linear network variables; functions; arith, flags"
-          'Line #7
 7879      AddNewLine Header, " " & nbv & " " & niv & " " & nlvbi & " " & nlvci & " " & nlvoi, "discrete variables: binary, integer, nonlinear (b,c,o)"
-          'Line #8
 7880      AddNewLine Header, " " & nzc & " " & nzo, "nonzeros in Jacobian, gradients"
-          'Line #9
 7881      AddNewLine Header, " " & maxrownamelen_ & " " & maxcolnamelen_, "max name lengths: constraints, variables"
-          'Line #10
 7882      AddNewLine Header, " " & comb & " " & comc & " " & como & " " & comc1 & " " & como1, "common exprs: b,c,o,c1,o1"
           
 7883      MakeHeader = StripTrailingNewline(Header)
+
+ExitFunction:
+          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          Exit Function
+
+ErrorHandler:
+          If Not ReportError("ParsedSolverNL", "MakeHeader") Then Resume
+          RaiseError = True
+          GoTo ExitFunction
 End Function
 
 ' Writes C blocks for .nl file. These describe the non-linear parts of each constraint.
 Private Function MakeCBlocks() As String
+          Dim RaiseError As Boolean
+          RaiseError = False
+          On Error GoTo ErrorHandler
+
           Dim Block As String
 7884      Block = ""
           
@@ -926,10 +1013,23 @@ Private Function MakeCBlocks() As String
 7893      Next i
           
 7894      MakeCBlocks = StripTrailingNewline(Block)
+
+ExitFunction:
+          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          Exit Function
+
+ErrorHandler:
+          If Not ReportError("ParsedSolverNL", "MakeCBlocks") Then Resume
+          RaiseError = True
+          GoTo ExitFunction
 End Function
 
 ' Writes O blocks for .nl file. These describe the non-linear parts of each objective.
 Private Function MakeOBlocks() As String
+          Dim RaiseError As Boolean
+          RaiseError = False
+          On Error GoTo ErrorHandler
+
           Dim Block As String
 7895      Block = ""
           
@@ -943,11 +1043,24 @@ Private Function MakeOBlocks() As String
 7900      Next i
           
 7901      MakeOBlocks = StripTrailingNewline(Block)
+
+ExitFunction:
+          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          Exit Function
+
+ErrorHandler:
+          If Not ReportError("ParsedSolverNL", "MakeOBlocks") Then Resume
+          RaiseError = True
+          GoTo ExitFunction
 End Function
 
 ' Writes D block for .nl file. This contains the initial guess for dual variables.
 ' We don't use this, so just set them all to zero
 Private Function MakeDBlock() As String
+          Dim RaiseError As Boolean
+          RaiseError = False
+          On Error GoTo ErrorHandler
+
           Dim Block As String
 7902      Block = ""
           
@@ -966,10 +1079,23 @@ Private Function MakeDBlock() As String
 7910      Next i
           
 7911      MakeDBlock = StripTrailingNewline(Block)
+
+ExitFunction:
+          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          Exit Function
+
+ErrorHandler:
+          If Not ReportError("ParsedSolverNL", "MakeDBlock") Then Resume
+          RaiseError = True
+          GoTo ExitFunction
 End Function
 
 ' Writes X block for .nl file. This contains the initial guess for primal variables
 Private Function MakeXBlock() As String
+          Dim RaiseError As Boolean
+          RaiseError = False
+          On Error GoTo ErrorHandler
+
           Dim Block As String
 7912      Block = ""
           
@@ -998,10 +1124,23 @@ Private Function MakeXBlock() As String
 7926      Next i
           
 7927      MakeXBlock = StripTrailingNewline(Block)
+
+ExitFunction:
+          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          Exit Function
+
+ErrorHandler:
+          If Not ReportError("ParsedSolverNL", "MakeXBlock") Then Resume
+          RaiseError = True
+          GoTo ExitFunction
 End Function
 
 ' Writes R block for .nl file. This contains the constant values for each constraint and the relation type
 Private Function MakeRBlock() As String
+          Dim RaiseError As Boolean
+          RaiseError = False
+          On Error GoTo ErrorHandler
+
           Dim Block As String
 7928      Block = ""
            ' Add block header
@@ -1021,10 +1160,23 @@ Private Function MakeRBlock() As String
 7938      Next i
           
 7939      MakeRBlock = StripTrailingNewline(Block)
+
+ExitFunction:
+          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          Exit Function
+
+ErrorHandler:
+          If Not ReportError("ParsedSolverNL", "MakeRBlock") Then Resume
+          RaiseError = True
+          GoTo ExitFunction
 End Function
 
 ' Writes B block for .nl file. This contains the variable bounds
 Private Function MakeBBlock() As String
+          Dim RaiseError As Boolean
+          RaiseError = False
+          On Error GoTo ErrorHandler
+
           Dim Block As String
 7940      Block = ""
           
@@ -1047,7 +1199,7 @@ Private Function MakeBBlock() As String
                     Comment = Comment & " IN [0, 1]"
                   ' Real variables, use actual bounds
 7950              ElseIf m.AssumeNonNegative Then
-7951                  VarName = m.GetAdjCellName(CLng(VariableIndex))
+7951                  VarName = m.AdjCellNames(CLng(VariableIndex))
 7952                  If TestKeyExists(m.VarLowerBounds, VarName) And Not BinaryVars(VariableIndex) Then
 7953                      bound = "3"
 7954                      Comment = Comment & " FREE"
@@ -1068,10 +1220,23 @@ Private Function MakeBBlock() As String
 7968      Next i
           
 7969      MakeBBlock = StripTrailingNewline(Block)
+
+ExitFunction:
+          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          Exit Function
+
+ErrorHandler:
+          If Not ReportError("ParsedSolverNL", "MakeBBlock") Then Resume
+          RaiseError = True
+          GoTo ExitFunction
 End Function
 
 ' Writes K block for .nl file. This contains the cumulative count of non-zero jacobian entries for the first n-1 variables
 Private Function MakeKBlock() As String
+          Dim RaiseError As Boolean
+          RaiseError = False
+          On Error GoTo ErrorHandler
+
           Dim Block As String
 7970      Block = ""
 
@@ -1092,11 +1257,24 @@ Private Function MakeKBlock() As String
 7980      Next i
           
 7981      MakeKBlock = StripTrailingNewline(Block)
+
+ExitFunction:
+          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          Exit Function
+
+ErrorHandler:
+          If Not ReportError("ParsedSolverNL", "MakeKBlock") Then Resume
+          RaiseError = True
+          GoTo ExitFunction
 End Function
 
 ' Writes J blocks for .nl file. These contain the linear part of each constraint
 Private Function MakeJBlocks() As String
           Dim Block As String
+          Dim RaiseError As Boolean
+          RaiseError = False
+          On Error GoTo ErrorHandler
+
 7982      Block = ""
           
           Dim ConstraintElements() As String
@@ -1138,10 +1316,23 @@ Private Function MakeJBlocks() As String
 8004      Next i
           
 8005      MakeJBlocks = StripTrailingNewline(Block)
+
+ExitFunction:
+          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          Exit Function
+
+ErrorHandler:
+          If Not ReportError("ParsedSolverNL", "MakeJBlocks") Then Resume
+          RaiseError = True
+          GoTo ExitFunction
 End Function
 
 ' Writes the G blocks for .nl file. These contain the linear parts of each objective
 Private Function MakeGBlocks() As String
+          Dim RaiseError As Boolean
+          RaiseError = False
+          On Error GoTo ErrorHandler
+
           Dim Block As String
 8006      Block = ""
           
@@ -1162,79 +1353,108 @@ Private Function MakeGBlocks() As String
 8015      Next i
           
 8016      MakeGBlocks = StripTrailingNewline(Block)
+
+ExitFunction:
+          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          Exit Function
+
+ErrorHandler:
+          If Not ReportError("ParsedSolverNL", "MakeGBlocks") Then Resume
+          RaiseError = True
+          GoTo ExitFunction
 End Function
 
 ' Writes the .col summary file. This contains the variable names listed in .nl order
 Private Sub OutputColFile()
+          Dim RaiseError As Boolean
+          RaiseError = False
+          On Error GoTo ErrorHandler
+
           Dim ColFilePathName As String
 8017      ColFilePathName = GetTempFilePath("model.col")
           
-8018      DeleteFileAndVerify ColFilePathName, "Writing Col File", "Couldn't delete the .col file: " & ColFilePathName
-          
-8019      On Error GoTo ErrHandler
+8018      DeleteFileAndVerify ColFilePathName
+
 8020      Open ColFilePathName For Output As #2
           
           Dim var As Variant
 8021      For Each var In VariableMap
 8022          Application.StatusBar = "OpenSolver: Creating .nl file. Writing col file"
 8023          DoEvents
-              
 8024          WriteToFile 2, VariableMapRev(var)
 8025      Next var
           
+ExitSub:
 8026      Close #2
-8027      Exit Sub
-          
-ErrHandler:
-8028      Close #2
-8029      Err.Raise Err.Number, Err.Source, Err.Description & IIf(Erl = 0, "", " (at line " & Erl & ")")
+          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          Exit Sub
+
+ErrorHandler:
+          If Not ReportError("ParsedSolverNL", "OutputColFile") Then Resume
+          RaiseError = True
+          GoTo ExitSub
 End Sub
 
 ' Writes the .row summary file. This contains the constraint names listed in .nl order
 Private Sub OutputRowFile()
+          Dim RaiseError As Boolean
+          RaiseError = False
+          On Error GoTo ErrorHandler
+
           Dim RowFilePathName As String
 8030      RowFilePathName = GetTempFilePath("model.row")
           
-8031      DeleteFileAndVerify RowFilePathName, "Writing Row File", "Couldn't delete the .row file: " & RowFilePathName
-          
-8032      On Error GoTo ErrHandler
+8031      DeleteFileAndVerify RowFilePathName
+
 8033      Open RowFilePathName For Output As #3
           
           Dim con As Variant
 8034      For Each con In ConstraintMap
 8035          Application.StatusBar = "OpenSolver: Creating .nl file. Writing con file"
 8036          DoEvents
-              
 8037          WriteToFile 3, ConstraintMapRev(CStr(con))
 8038      Next con
-          
-8039      Close #3
-8040      Exit Sub
-          
-ErrHandler:
-8041      Close #3
-8042      Err.Raise Err.Number, Err.Source, Err.Description & IIf(Erl = 0, "", " (at line " & Erl & ")")
+
+ExitSub:
+          Close #3
+          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          Exit Sub
+
+ErrorHandler:
+          If Not ReportError("ParsedSolverNL", "OutputRowFile") Then Resume
+          RaiseError = True
+          GoTo ExitSub
 End Sub
 
 Private Sub OutputOptionsFile(OptionsFilePath As String, SolveOptions As SolveOptionsType)
-    On Error GoTo ErrHandler
-    
-    DeleteFileAndVerify OptionsFilePath, "Writing Options File", "Couldn't delete the .opt file: " & OptionsFilePath
-    
-    Open OptionsFilePath For Output As #4
-    Print #4, "iteration_limit " & str(SolveOptions.MaxIterations)
-    Print #4, "allowable_fraction_gap " & StrEx_NL(SolveOptions.Tolerance)
-    Print #4, "time_limit " & str(SolveOptions.MaxTime)
-    Close #4
-    Exit Sub
-    
-ErrHandler:
-    Close #4
-    Err.Raise Err.Number, Err.Source, Err.Description & IIf(Erl = 0, "", " (at line " & Erl & ")")
+          Dim RaiseError As Boolean
+          RaiseError = False
+          On Error GoTo ErrorHandler
+
+          DeleteFileAndVerify OptionsFilePath
+          
+          Open OptionsFilePath For Output As #4
+          Print #4, "iteration_limit " & str(SolveOptions.MaxIterations)
+          Print #4, "allowable_fraction_gap " & StrEx_NL(SolveOptions.Tolerance)
+          Print #4, "time_limit " & str(SolveOptions.MaxTime)
+
+ExitSub:
+          Close #4
+          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          Exit Sub
+
+ErrorHandler:
+          If Not ReportError("ParsedSolverNL", "OutputOptionsFile") Then Resume
+          RaiseError = True
+          GoTo ExitSub
 End Sub
 
 ' Adds a new line to the current string, appending LineText at position 0 and CommentText at position CommentSpacing
 Sub AddNewLine(CurText As String, LineText As String, Optional CommentText As String = "")
+          Dim RaiseError As Boolean
+          RaiseError = False
+          On Error GoTo ErrorHandler
+
           Dim Comment As String
 8043      Comment = ""
           
@@ -1248,23 +1468,50 @@ Sub AddNewLine(CurText As String, LineText As String, Optional CommentText As St
 8049      End If
           
 8050      CurText = CurText & LineText & Comment & vbNewLine
+
+ExitSub:
+          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          Exit Sub
+
+ErrorHandler:
+          If Not ReportError("ParsedSolverNL", "AddNewLine") Then Resume
+          RaiseError = True
+          GoTo ExitSub
 End Sub
 
 ' Removes a "\n" character from the end of a string
 Private Function StripTrailingNewline(Block As String) As String
+          Dim RaiseError As Boolean
+          RaiseError = False
+          On Error GoTo ErrorHandler
+
 8051      If Len(Block) > 1 Then
 8052          StripTrailingNewline = left(Block, Len(Block) - 2)
 8053      Else
 8054          StripTrailingNewline = Block
 8055      End If
+
+ExitFunction:
+          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          Exit Function
+
+ErrorHandler:
+          If Not ReportError("ParsedSolverNL", "StripTrailingNewline") Then Resume
+          RaiseError = True
+          GoTo ExitFunction
 End Function
 
 Private Function ConvertFormulaToExpressionTree(strFormula As String) As ExpressionTree
-      ' Converts a string formula to a complete expression tree
-      ' Uses the Shunting Yard algorithm (adapted to produce an expression tree) which takes O(n) time
-      ' https://en.wikipedia.org/wiki/Shunting-yard_algorithm
-      ' For details on modifications to algorithm
-      ' http://wcipeg.com/wiki/Shunting_yard_algorithm#Conversion_into_syntax_tree
+          ' Converts a string formula to a complete expression tree
+          ' Uses the Shunting Yard algorithm (adapted to produce an expression tree) which takes O(n) time
+          ' https://en.wikipedia.org/wiki/Shunting-yard_algorithm
+          ' For details on modifications to algorithm
+          ' http://wcipeg.com/wiki/Shunting_yard_algorithm#Conversion_into_syntax_tree
+
+          Dim RaiseError As Boolean
+          RaiseError = False
+          On Error GoTo ErrorHandler
+          
           Dim tksFormula As Tokens
 8056      Set tksFormula = ParseFormula("=" + strFormula)
           
@@ -1312,7 +1559,7 @@ Private Function ConvertFormulaToExpressionTree(strFormula As String) As Express
                       
                       ' If the operator stack runs out without finding a left parenthesis, then there are mismatched parentheses
 8074                  If Operators.Count = 0 Then
-8075                      GoTo Mismatch
+8075                      Err.Raise OpenSolver_BuildError, "Mismatched parentheses"
 8076                  End If
 8077              Loop
                   ' Increase arg count for the new parameter
@@ -1352,7 +1599,7 @@ Private Function ConvertFormulaToExpressionTree(strFormula As String) As Express
 8098                  PopOperator Operators, Operands
                       ' If the operator stack runs out without finding a left parenthesis, then there are mismatched parentheses
 8099                  If Operators.Count = 0 Then
-8100                      GoTo Mismatch
+8100                      Err.Raise OpenSolver_BuildError, "Mismatched parentheses"
 8101                  End If
 8102              Loop
                   ' Pop the left parenthesis from the operator stack, but not onto the operand stack
@@ -1370,7 +1617,7 @@ Private Function ConvertFormulaToExpressionTree(strFormula As String) As Express
 8111      Do While Operators.Count > 0
               ' If the token on the top of the operator stack is a parenthesis, then there are mismatched parentheses
 8112          If Operators.Peek = "(" Then
-8113              GoTo Mismatch
+8113              Err.Raise OpenSolver_BuildError, "Mismatched parentheses"
 8114          End If
               ' Pop the operator onto the operand stack as a new tree
 8115          PopOperator Operators, Operands
@@ -1378,10 +1625,15 @@ Private Function ConvertFormulaToExpressionTree(strFormula As String) As Express
           
           ' We are left with a single tree in the operand stack - this is the complete expression tree
 8117      Set ConvertFormulaToExpressionTree = Operands.Pop
-8118      Exit Function
-          
-Mismatch:
-8119      MsgBox "Mismatched parentheses"
+
+ExitFunction:
+          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          Exit Function
+
+ErrorHandler:
+          If Not ReportError("ParsedSolverNL", "ConvertFormulaToExpressionTree") Then Resume
+          RaiseError = True
+          GoTo ExitFunction
           
 End Function
 
@@ -1389,24 +1641,54 @@ End Function
 Public Function CreateTree(NodeText As String, NodeType As Long) As ExpressionTree
           Dim obj As ExpressionTree
 
+          Dim RaiseError As Boolean
+          RaiseError = False
+          On Error GoTo ErrorHandler
+
 8120      Set obj = New ExpressionTree
 8121      obj.NodeText = NodeText
 8122      obj.NodeType = NodeType
 
 8123      Set CreateTree = obj
+
+ExitFunction:
+          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          Exit Function
+
+ErrorHandler:
+          If Not ReportError("ParsedSolverNL", "CreateTree") Then Resume
+          RaiseError = True
+          GoTo ExitFunction
 End Function
 
 Function IsNAry(FunctionName As String) As Boolean
+          Dim RaiseError As Boolean
+          RaiseError = False
+          On Error GoTo ErrorHandler
+
 8124      Select Case FunctionName
           Case "min", "max", "sum", "count", "numberof", "numberofs", "and_n", "or_n", "alldiff"
 8125          IsNAry = True
 8126      Case Else
 8127          IsNAry = False
 8128      End Select
+
+ExitFunction:
+          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          Exit Function
+
+ErrorHandler:
+          If Not ReportError("ParsedSolverNL", "IsNAry") Then Resume
+          RaiseError = True
+          GoTo ExitFunction
 End Function
 
 ' Determines the number of operands expected by a .nl operator
 Private Function NumberOfOperands(FunctionName As String, Optional ArgCount As Long = 0) As Long
+          Dim RaiseError As Boolean
+          RaiseError = False
+          On Error GoTo ErrorHandler
+
 8129      Select Case FunctionName
           Case "floor", "ceil", "abs", "neg", "not", "tanh", "tan", "sqrt", "sinh", "sin", "log10", "log", "exp", "cosh", "cos", "atanh", "atan", "asinh", "asin", "acosh", "acos"
 8130          NumberOfOperands = 1
@@ -1420,10 +1702,23 @@ Private Function NumberOfOperands(FunctionName As String, Optional ArgCount As L
 8137      Case Else
 8138          Err.Raise OpenSolver_BuildError, "Building expression tree", "Unknown function " & FunctionName & vbCrLf & "Please let us know about this at opensolver.org so we can fix it."
 8139      End Select
+
+ExitFunction:
+          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          Exit Function
+
+ErrorHandler:
+          If Not ReportError("ParsedSolverNL", "NumberOfOperands") Then Resume
+          RaiseError = True
+          GoTo ExitFunction
 End Function
 
 ' Converts common Excel functinos to .nl operators
 Private Function ConvertExcelFunctionToNL(FunctionName As String) As String
+          Dim RaiseError As Boolean
+          RaiseError = False
+          On Error GoTo ErrorHandler
+
 8140      FunctionName = LCase(FunctionName)
 8141      Select Case FunctionName
           Case "ln"
@@ -1463,10 +1758,23 @@ Private Function ConvertExcelFunctionToNL(FunctionName As String) As String
 8174          Err.Raise OpenSolver_BuildError, "Building expression tree", "Not implemented yet: " & FunctionName & vbCrLf & "Please let us know about this at opensolver.org so we can fix it."
 8175      End Select
 8176      ConvertExcelFunctionToNL = FunctionName
+
+ExitFunction:
+          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          Exit Function
+
+ErrorHandler:
+          If Not ReportError("ParsedSolverNL", "ConvertExcelFunctionToNL") Then Resume
+          RaiseError = True
+          GoTo ExitFunction
 End Function
 
 ' Determines the precedence of arithmetic operators
 Private Function Precedence(tkn As String) As Long
+          Dim RaiseError As Boolean
+          RaiseError = False
+          On Error GoTo ErrorHandler
+
 8177      Select Case tkn
           Case "eq", "ne", "gt", "ge", "lt", "le"
               Precedence = 1
@@ -1481,11 +1789,24 @@ Private Function Precedence(tkn As String) As Long
 8185      Case Else
 8186          Precedence = -1
 8187      End Select
+
+ExitFunction:
+          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          Exit Function
+
+ErrorHandler:
+          If Not ReportError("ParsedSolverNL", "Precedence") Then Resume
+          RaiseError = True
+          GoTo ExitFunction
 End Function
 
 ' Checks the precedence of two operators to determine if the current operator on the stack should be popped
 Private Function CheckPrecedence(tkn1 As String, tkn2 As String) As Boolean
           ' Either tkn1 is left-associative and its precedence is less than or equal to that of tkn2
+          Dim RaiseError As Boolean
+          RaiseError = False
+          On Error GoTo ErrorHandler
+
 8188      If OperatorIsLeftAssociative(tkn1) Then
 8189          If Precedence(tkn1) <= Precedence(tkn2) Then
 8190              CheckPrecedence = True
@@ -1500,10 +1821,23 @@ Private Function CheckPrecedence(tkn1 As String, tkn2 As String) As Boolean
 8198              CheckPrecedence = False
 8199          End If
 8200      End If
+
+ExitFunction:
+          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          Exit Function
+
+ErrorHandler:
+          If Not ReportError("ParsedSolverNL", "CheckPrecedence") Then Resume
+          RaiseError = True
+          GoTo ExitFunction
 End Function
 
 ' Determines the left-associativity of arithmetic operators
 Private Function OperatorIsLeftAssociative(tkn As String) As Boolean
+          Dim RaiseError As Boolean
+          RaiseError = False
+          On Error GoTo ErrorHandler
+
 8201      Select Case tkn
           Case "plus", "minus", "mult", "div", "eq", "ne", "gt", "ge", "lt", "le"
 8202          OperatorIsLeftAssociative = True
@@ -1512,12 +1846,25 @@ Private Function OperatorIsLeftAssociative(tkn As String) As Boolean
 8205      Case Else
 8206          Err.Raise OpenSolver_BuildError, "Parsing cleaned formula", "Unknown associativity: " & tkn & vbNewLine & "Please let us know about this at opensolver.org so we can fix it."
 8207      End Select
+
+ExitFunction:
+          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          Exit Function
+
+ErrorHandler:
+          If Not ReportError("ParsedSolverNL", "OperatorIsLeftAssociative") Then Resume
+          RaiseError = True
+          GoTo ExitFunction
 End Function
 
 ' Pops an operator from the operator stack along with the corresponding number of operands.
 Private Sub PopOperator(Operators As StringStack, Operands As ExpressionTreeStack, Optional ArgCount As Long = 0)
           ' Pop the operator and create a new ExpressionTree
           Dim Operator As String
+          Dim RaiseError As Boolean
+          RaiseError = False
+          On Error GoTo ErrorHandler
+
 8208      Operator = Operators.Pop()
           Dim NewTree As ExpressionTree
 8209      Set NewTree = CreateTree(Operator, ExpressionTreeOperator)
@@ -1532,31 +1879,70 @@ Private Sub PopOperator(Operators As StringStack, Operands As ExpressionTreeStac
           
           ' Add the new tree to the operands stack
 8215      Operands.Push NewTree
+
+ExitSub:
+          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          Exit Sub
+
+ErrorHandler:
+          If Not ReportError("ParsedSolverNL", "PopOperator") Then Resume
+          RaiseError = True
+          GoTo ExitSub
 End Sub
 
 ' Check whether a token on the operator stack is a function operator (vs. an arithmetic operator)
 Private Function IsFunctionOperator(tkn As String) As Boolean
+          Dim RaiseError As Boolean
+          RaiseError = False
+          On Error GoTo ErrorHandler
+
 8216      Select Case tkn
           Case "plus", "minus", "mult", "div", "pow", "neg", "("
 8217          IsFunctionOperator = False
 8218      Case Else
 8219          IsFunctionOperator = True
 8220      End Select
+
+ExitFunction:
+          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          Exit Function
+
+ErrorHandler:
+          If Not ReportError("ParsedSolverNL", "IsFunctionOperator") Then Resume
+          RaiseError = True
+          GoTo ExitFunction
 End Function
 
 ' Negates a tree by adding a 'neg' node to the root
 Private Sub AddNegToTree(Tree As ExpressionTree)
           Dim NewTree As ExpressionTree
+          Dim RaiseError As Boolean
+          RaiseError = False
+          On Error GoTo ErrorHandler
+
 8221      Set NewTree = CreateTree("neg", ExpressionTreeOperator)
           
 8222      Tree.NodeText = Mid(Tree.NodeText, 2)
 8223      NewTree.SetChild 1, Tree
           
 8224      Set Tree = NewTree
+
+ExitSub:
+          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          Exit Sub
+
+ErrorHandler:
+          If Not ReportError("ParsedSolverNL", "AddNegToTree") Then Resume
+          RaiseError = True
+          GoTo ExitSub
 End Sub
 
 ' Formats an expression tree node's text as .nl output
 Function FormatNL(NodeText As String, NodeType As ExpressionTreeNodeType) As String
+          Dim RaiseError As Boolean
+          RaiseError = False
+          On Error GoTo ErrorHandler
+
 8225      Select Case NodeType
           Case ExpressionTreeVariable
 8226          FormatNL = "v" & VariableMap(NodeText)
@@ -1565,10 +1951,23 @@ Function FormatNL(NodeText As String, NodeType As ExpressionTreeNodeType) As Str
 8229      Case ExpressionTreeOperator
 8230          FormatNL = "o" & CStr(ConvertOperatorToNLCode(NodeText))
 8231      End Select
+
+ExitFunction:
+          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          Exit Function
+
+ErrorHandler:
+          If Not ReportError("ParsedSolverNL", "FormatNL") Then Resume
+          RaiseError = True
+          GoTo ExitFunction
 End Function
 
 ' Converts an operator string to .nl code
 Private Function ConvertOperatorToNLCode(FunctionName As String) As Long
+          Dim RaiseError As Boolean
+          RaiseError = False
+          On Error GoTo ErrorHandler
+
 8232      Select Case FunctionName
           Case "plus"
 8233          ConvertOperatorToNLCode = 0
@@ -1679,22 +2078,48 @@ Private Function ConvertOperatorToNLCode(FunctionName As String) As Long
 8338      Case "alldiff"
 8339          ConvertOperatorToNLCode = 74
 8340      End Select
+
+ExitFunction:
+          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          Exit Function
+
+ErrorHandler:
+          If Not ReportError("ParsedSolverNL", "ConvertOperatorToNLCode") Then Resume
+          RaiseError = True
+          GoTo ExitFunction
 End Function
 
 ' Converts an objective sense to .nl code
 Private Function ConvertObjectiveSenseToNL(ObjectiveSense As ObjectiveSenseType) As Long
+          Dim RaiseError As Boolean
+          RaiseError = False
+          On Error GoTo ErrorHandler
+
 8341      Select Case ObjectiveSense
           Case ObjectiveSenseType.MaximiseObjective
 8342          ConvertObjectiveSenseToNL = 1
 8343      Case ObjectiveSenseType.MinimiseObjective
 8344          ConvertObjectiveSenseToNL = 0
 8345      Case Else
-8346          MsgBox "Objective sense not supported: " & ObjectiveSense
+8346          Err.Raise OpenSolver_SolveError, Description:="Objective sense not supported: " & ObjectiveSense
 8347      End Select
+
+ExitFunction:
+          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          Exit Function
+
+ErrorHandler:
+          If Not ReportError("ParsedSolverNL", "ConvertObjectiveSenseToNL") Then Resume
+          RaiseError = True
+          GoTo ExitFunction
 End Function
 
 ' Converts RelationConsts enum to .nl code.
 Private Sub ConvertConstraintToNL(Relation As RelationConsts, BoundType As Long, Comment As String)
+          Dim RaiseError As Boolean
+          RaiseError = False
+          On Error GoTo ErrorHandler
+
 8348      Select Case Relation
               Case RelationConsts.RelationLE ' Upper Bound on LHS
 8349              BoundType = 1
@@ -1706,13 +2131,25 @@ Private Sub ConvertConstraintToNL(Relation As RelationConsts, BoundType As Long,
 8355              BoundType = 2
 8356              Comment = " >= "
 8357      End Select
+
+ExitSub:
+          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          Exit Sub
+
+ErrorHandler:
+          If Not ReportError("ParsedSolverNL", "ConvertConstraintToNL") Then Resume
+          RaiseError = True
+          GoTo ExitSub
 End Sub
 
 Function ReadModel_NL(SolutionFilePathName As String, errorString As String, s As COpenSolverParsed) As Boolean
+    Dim RaiseError As Boolean
+    RaiseError = False
+    On Error GoTo ErrorHandler
+
     ReadModel_NL = False
     
     Dim Line As String, Index As Long
-    On Error GoTo readError
     Dim solutionExpected As Boolean
     solutionExpected = True
     
@@ -1722,7 +2159,7 @@ Function ReadModel_NL(SolutionFilePathName As String, errorString As String, s A
             errorString = "The solver did not create a solution file. No new solution is available." & vbCrLf & vbCrLf & _
                           "This can happen when the initial conditions are invalid. " & _
                           "Check the log file for more information."
-            GoTo exitFunction
+            GoTo ExitFunction
         End If
     Else
         Open SolutionFilePathName For Input As #1
@@ -1756,7 +2193,7 @@ Function ReadModel_NL(SolutionFilePathName As String, errorString As String, s A
                               "The " & SolverName(m.Solver) & " command line can be found at:" & vbCrLf & _
                               ScriptFilePath(m.Solver)
                 s.SolveStatus = OpenSolverResult.ErrorOccurred
-                GoTo exitFunction
+                GoTo ExitFunction
             End If
             solutionExpected = False
         End If
@@ -1799,17 +2236,17 @@ Function ReadModel_NL(SolutionFilePathName As String, errorString As String, s A
 
     ReadModel_NL = True
 
-exitFunction:
+ExitFunction:
     Application.StatusBar = False
     Close #1
     Close #2
+    If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
     Exit Function
-    
-readError:
-    Application.StatusBar = False
-    Close #1
-    Close #2
-    Err.Raise Err.Number, Err.Source, Err.Description & IIf(Erl = 0, "", " (at line " & Erl & ")")
+
+ErrorHandler:
+    If Not ReportError("ParsedSolverNL", "ReadModel_NL") Then Resume
+    RaiseError = True
+    GoTo ExitFunction
 End Function
 
 Private Function TryParseLogs(s As COpenSolverParsed) As Boolean
@@ -1819,13 +2256,13 @@ Private Function TryParseLogs(s As COpenSolverParsed) As Boolean
           Dim logFile As String
 8477      logFile = GetTempFilePath("log1.tmp")
           
+          On Error GoTo ErrorHandler
 8478      If Not FileOrDirExists(logFile) Then
 8479          TryParseLogs = False
-8480          Exit Function
+8480          GoTo ExitFunction
 8481      End If
           
           Dim message As String
-8482      On Error GoTo ErrHandler
 8483      Open logFile For Input As #3
 8484      message = Input$(LOF(3), 3)
 8485      Close #3
@@ -1834,7 +2271,7 @@ Private Function TryParseLogs(s As COpenSolverParsed) As Boolean
 8486      If Not InStrText(left(message, 7), SolverName(m.Solver)) > 0 Then
              ' Not dealing with the correct solver log, abort
 8487          TryParseLogs = False
-8488          Exit Function
+8488          GoTo ExitFunction
 8489      End If
           
           ' Scan for information
@@ -1844,30 +2281,40 @@ Private Function TryParseLogs(s As COpenSolverParsed) As Boolean
               s.SolveStatus = OpenSolverResult.LimitedSubOptimal
               s.SolveStatusString = "Stopped on Time Limit"
               TryParseLogs = True
-              Exit Function
+              GoTo ExitFunction
           End If
           ' 2 - scan for iteration limit
           If InStrText(message, "exiting on maximum number of iterations") Then
               s.SolveStatus = OpenSolverResult.LimitedSubOptimal
               s.SolveStatusString = "Stopped on Iteration Limit"
               TryParseLogs = True
-              Exit Function
+              GoTo ExitFunction
           End If
           ' 3 - scan for infeasible
 8490      If InStrText(message, "infeasible") Then
 8491          s.SolveStatus = OpenSolverResult.Infeasible
 8492          s.SolveStatusString = "No Feasible Solution"
 8493          TryParseLogs = True
-8494          Exit Function
+8494          GoTo ExitFunction
 8495      End If
-          
-ErrHandler:
+
+ExitFunction:
 8496      Close #3
-8497      TryParseLogs = False
+          Exit Function
+
+ErrorHandler:
+          If Not ReportError("ParsedSolverNL", "TryParseLogs") Then Resume
+          TryParseLogs = False  ' Mark read as fail
+          GoTo ExitFunction
 End Function
 
 Function CreateSolveScript_NL(ModelFilePathName As String, SolveOptions As SolveOptionsType) As String
-    ' Create a script to cd to temp and run "/path/to/couenne.exe /path/to/<ModelFilePathName>"
+    ' Create a script to cd to temp and run "/path/to/solver /path/to/<ModelFilePathName>"
+    
+    Dim RaiseError As Boolean
+    RaiseError = False
+    On Error GoTo ErrorHandler
+
     Dim SolverString As String, CommandLineRunString As String, PrintingOptionString As String
     SolverAvailable m.Solver, SolverString
     SolverString = MakePathSafe(SolverString)
@@ -1885,5 +2332,14 @@ Function CreateSolveScript_NL(ModelFilePathName As String, SolveOptions As Solve
     
     ' Create the options file in the temp folder
     OutputOptionsFile OptionsFilePath(m.Solver), SolveOptions
+
+ExitFunction:
+    If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+    Exit Function
+
+ErrorHandler:
+    If Not ReportError("ParsedSolverNL", "CreateSolveScript_NL") Then Resume
+    RaiseError = True
+    GoTo ExitFunction
 End Function
 

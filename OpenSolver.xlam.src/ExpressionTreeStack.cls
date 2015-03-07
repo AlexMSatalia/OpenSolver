@@ -23,16 +23,42 @@ Public Sub Push(Tree As ExpressionTree)
 End Sub
 
 Public Function Pop() As ExpressionTree
+          Dim RaiseError As Boolean
+          RaiseError = False
+          On Error GoTo ErrorHandler
+
           Dim obj As ExpressionTree
 8500      Set obj = colTreeStack(colTreeStack.Count)
 8501      colTreeStack.Remove (colTreeStack.Count)
 8502      Set Pop = obj
+
+ExitFunction:
+          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          Exit Function
+
+ErrorHandler:
+          If Not ReportError("ExpressionTreeStack", "Pop") Then Resume
+          RaiseError = True
+          GoTo ExitFunction
 End Function
 
 Public Function Peek() As ExpressionTree
+          Dim RaiseError As Boolean
+          RaiseError = False
+          On Error GoTo ErrorHandler
+
           Dim obj As ExpressionTree
 8503      Set obj = colTreeStack(colTreeStack.Count)
 8504      Set Peek = obj
+
+ExitFunction:
+          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          Exit Function
+
+ErrorHandler:
+          If Not ReportError("ExpressionTreeStack", "Peek") Then Resume
+          RaiseError = True
+          GoTo ExitFunction
 End Function
 
 Property Get Count() As Long

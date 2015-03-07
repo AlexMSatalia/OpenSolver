@@ -12,6 +12,10 @@ Public SheetNameMapReverse As Collection   ' Stores a map from cleaned name to s
 ' the sheet name at the front, thus giving nice unique names for Python and
 ' VBA collections to use.
 Function ConvertCellToStandardName(rngCell As Range, Optional strParentName As String = "") As String
+          Dim RaiseError As Boolean
+          RaiseError = False
+          On Error GoTo ErrorHandler
+
           Dim strCleanAddress As String
 7438      strCleanAddress = rngCell.Address
 7441      strCleanAddress = Replace(strCleanAddress, "$", "")
@@ -42,16 +46,38 @@ Function ConvertCellToStandardName(rngCell As Range, Optional strParentName As S
           End If
 
 7444      ConvertCellToStandardName = strCleanParentName + "_" + strCleanAddress
+
+ExitFunction:
+          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          Exit Function
+
+ErrorHandler:
+          If Not ReportError("OpenSolverParser", "ConvertCellToStandardName") Then Resume
+          RaiseError = True
+          GoTo ExitFunction
 End Function
 '==============================================================================
 
 ' Looks up node in collection and returns .strFormulaParsed. If node doesn't exist, returns the supplied default value
 Function GetFormulaWithDefault(Formulae As Collection, NodeName As String, Default As String) As String
+          Dim RaiseError As Boolean
+          RaiseError = False
+          On Error GoTo ErrorHandler
+
 7445      If TestKeyExists(Formulae, NodeName) Then
 7446          GetFormulaWithDefault = Formulae(NodeName).strFormulaParsed
 7447      Else
 7448          GetFormulaWithDefault = Default
 7449      End If
+
+ExitFunction:
+          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          Exit Function
+
+ErrorHandler:
+          If Not ReportError("OpenSolverParser", "GetFormulaWithDefault") Then Resume
+          RaiseError = True
+          GoTo ExitFunction
 End Function
 
 ' Shows .strFormulaParsed for all nodes in the Collection

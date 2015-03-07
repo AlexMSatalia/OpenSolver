@@ -10,8 +10,8 @@ End Function
 Function SolveModelParsed_PuLP(ModelFilePathName As String, m As CModelParsed, s As COpenSolverParsed) As Boolean
           Dim SolutionFilePathName As String
 7315      SolutionFilePathName = SolutionFilePath_PuLP
-7316      DeleteFileAndVerify SolutionFilePathName, "Writing PuLP file", "Unable to delete the solution file: " & SolutionFilePathName
-          
+7316      DeleteFileAndVerify SolutionFilePathName
+
           ' Write PuLP file
 7317      WritePuLPFile_Parsed m, ModelFilePathName, SolutionFilePathName
           
@@ -56,7 +56,7 @@ ErrHandler:
 End Function
 
 Sub WritePuLPFile_Parsed(m As CModelParsed, ModelFilePathName As String, SolutionFilePathName As String)
-7341      On Error GoTo errorHandler
+7341      On Error GoTo ErrorHandler
 7342      Open ModelFilePathName For Output As #1
           
           ' Import required libraries
@@ -169,7 +169,7 @@ Sub WritePuLPFile_Parsed(m As CModelParsed, ModelFilePathName As String, Solutio
 7414      Close #1
 7415      Exit Sub
 
-errorHandler:
+ErrorHandler:
 7416      Close #1
 7417      Err.Raise Err.Number, Err.Source, Err.Description & IIf(Erl = 0, "", " (at line " & Erl & ")")
 End Sub
@@ -203,7 +203,7 @@ Function ConvertFormula_PuLP(tokenText As String) As String
 7434      End Select
 7435      Exit Function
 
-errorHandler:
+ErrorHandler:
 7436      MsgBox tokenText + "not implemented for PuLP yet"
 7437      ConvertFormula_PuLP = tokenText + "("
 End Function

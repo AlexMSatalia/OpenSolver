@@ -27,6 +27,16 @@ Public Const NomadDllName = "OpenSolverNomad.dll"
     Private Declare Function NomadDllVersion Lib "OpenSolverNomad.dll" Alias "NomadDLLVersion" () As String
 #End If
 
+'NOMAD return status codes
+Public Enum NomadResult
+    UserCancelled = -3
+    Optimal = 0
+    ErrorOccured = 1
+    SolveStoppedIter = 2
+    SolveStoppedTime = 3
+    Infeasible = 4
+    SolveStoppedNoSolution = 10
+End Enum
 
 Function About_NOMAD() As String
           Dim errorString As String
@@ -138,35 +148,29 @@ End Function
 
 Function SolveModel_Nomad(SolveRelaxation As Boolean, s As COpenSolver) As Long
           Dim ScreenStatus As Boolean
+          Dim RaiseError As Boolean
+          RaiseError = False
+          On Error GoTo ErrorHandler
+
 7017      ScreenStatus = Application.ScreenUpdating
           Dim Show As String
 7018      If GetNameValueIfExists(ActiveWorkbook, EscapeSheetName(ActiveSheet) & "solver_sho", Show) Then
 7019          If Show <> 1 Then Application.ScreenUpdating = False
 7020      End If
 
-          ' Trap Escape key
-7021      Application.EnableCancelKey = xlErrorHandler
-          
-7022      On Error GoTo errorHandler
-          Dim errorPrefix As String
-7023      errorPrefix = "OpenSolver Nomad Model Solving"
 7024      If s.ModelStatus <> ModelStatus_Built Then
-7025          Err.Raise Number:=OpenSolver_NomadError, Source:=errorPrefix, Description:="The model cannot be solved as it has not yet been built."
+7025          Err.Raise Number:=OpenSolver_NomadError, Description:="The model cannot be solved as it has not yet been built."
 7026      End If
           
           ' Set OS for the calls back into Excel from NOMAD
 7030      Set OS = s
 
           ' Check precision is not 0
-          Dim SolveOptions As SolveOptionsType, errorString As String
-          GetSolveOptions OS.sheetName, SolveOptions, errorString
-          If errorString <> "" Then
-              On Error GoTo errorHandler
-              Err.Raise Number:=OpenSolver_SolveError, Source:=errorPrefix, Description:=errorString
-          End If
+          Dim SolveOptions As SolveOptionsType
+          GetSolveOptions OS.sheetName, SolveOptions
           
           If SolveOptions.Precision <= 0 Then
-              Err.Raise Number:=OpenSolver_NomadError, Source:=errorPrefix, Description:="The current level of precision (" & CStr(SolveOptions.Precision) & ") is invalid. Please set the precision to a small positive (non-zero) value and try again."
+              Err.Raise Number:=OpenSolver_NomadError, Description:="The current level of precision (" & CStr(SolveOptions.Precision) & ") is invalid. Please set the precision to a small positive (non-zero) value and try again."
           End If
           
           Dim oldCalculationMode As Long
@@ -194,123 +198,102 @@ Function SolveModel_Nomad(SolveRelaxation As Boolean, s As COpenSolver) As Long
 7036      NomadRetVal = NomadMain(SolveRelaxation)
           
           'Catch any errors that occured while Nomad was solving
-7037      If NomadRetVal = 1 Then
-7038          errorString = "There was an error while Nomad was solving. No solution has been loaded into the sheet."
-              ' Check logs for more info
-7039          CheckNomadLogs errorString
-              
-7040          Err.Raise Number:=OpenSolver_NomadError, Source:=errorPrefix, Description:=errorString
+7037      Select Case NomadRetVal
+          Case NomadResult.ErrorOccured
 7041          s.SolveStatus = OpenSolverResult.ErrorOccurred
-7042      ElseIf NomadRetVal = 2 Then
+
+              ' Check logs for more info
+7039          CheckNomadLogs
+              
+7040          Err.Raise Number:=OpenSolver_NomadError, Description:="There was an error while Nomad was solving. No solution has been loaded into the sheet."
+7042      Case NomadResult.SolveStoppedIter
 7043          s.SolveStatusComment = "Nomad reached the maximum number of iterations and returned the best feasible solution it found. This solution is not guaranteed to be an optimal solution." & vbCrLf & vbCrLf & _
                                      "You can increase the maximum time and iterations under the options in the model dialogue or check whether your model is feasible."
 7044          s.SolveStatus = OpenSolverResult.LimitedSubOptimal
 7045          s.SolveStatusString = "Stopped on Iteration Limit"
 7046          s.SolutionWasLoaded = True
-7047      ElseIf NomadRetVal = 3 Then
+7047      Case NomadResult.SolveStoppedTime
 7048          s.SolveStatusComment = "Nomad reached the maximum time and returned the best feasible solution it found. This solution is not guaranteed to be an optimal solution." & vbCrLf & vbCrLf & _
                                      "You can increase the maximum time and iterations under the options in the model dialogue or check whether your model is feasible."
 7049          s.SolveStatus = OpenSolverResult.LimitedSubOptimal
 7050          s.SolveStatusString = "Stopped on Time Limit"
 7051          s.SolutionWasLoaded = True
-7052      ElseIf NomadRetVal = 4 Then
+7052      Case NomadResult.Infeasible
 7053          s.SolveStatusComment = "Nomad reached the maximum time or number of iterations without finding a feasible solution. The best infeasible solution has been returned to the sheet." & vbCrLf & vbCrLf & _
                                      "You can increase the maximum time and iterations under the options in the model dialogue or check whether your model is feasible."
 7054          s.SolveStatus = OpenSolverResult.Infeasible
 7055          s.SolveStatusString = "No Feasible Solution"
 7056          s.SolutionWasLoaded = True
-7057      ElseIf NomadRetVal = 10 Then
+7057      Case NomadResult.SolveStoppedNoSolution
 7058          s.SolveStatusComment = "Nomad could not find a feasible solution. The best infeasible solution has been returned to the sheet." & vbCrLf & vbCrLf & _
                                      "Try resolving at a different start point or check whether your model is feasible or relax some of your constraints."
 7059          s.SolveStatus = OpenSolverResult.Infeasible
 7060          s.SolveStatusString = "No Feasible Solution"
 7061          s.SolutionWasLoaded = True
-7062      ElseIf NomadRetVal = -3 Then
+7062      Case NomadResult.UserCancelled
 7063          Err.Raise OpenSolver_UserCancelledError, "Running NOMAD", "Model solve cancelled by user."
-7064      Else
-7065          s.SolveStatus = NomadRetVal 'optimal
+7064      Case NomadResult.Optimal
+7065          s.SolveStatus = OpenSolverResult.Optimal
 7066          s.SolveStatusString = "Optimal"
-7067      End If
-          
-ExitSub:
-          ' We can fall thru to here
-7068      SetCurrentDirectory currentDir
-7069      Application.Cursor = xlDefault
-7070      Application.StatusBar = False ' Resume normal status bar behaviour
-7071      Application.ScreenUpdating = True
-7072      Application.Calculation = oldCalculationMode
-7073      Application.Calculate
-7074      Application.ScreenUpdating = ScreenStatus
-7075      Close #1 ' Close any open file; this does not seem to ever give errors
-7076      SolveModel_Nomad = s.SolveStatus    ' Return the main result
-7077      Set OS = Nothing
-7078      Exit Function
-          
-errorHandler:
-          ' We only trap Escape (Err.Number=18) here; all other errors are passed back to the caller.
-          ' Save error message
-          Dim ErrorNumber As Long, ErrorDescription As String, ErrorSource As String
-7079      ErrorNumber = Err.Number
-7080      ErrorDescription = Err.Description & IIf(Erl = 0, "", " (at line " & Erl & ")")
-7081      ErrorSource = Err.Source
-7082      If Err.Number = 18 Then
-7083          If MsgBox("You have pressed the Escape key. Do you wish to cancel?", _
-                         vbCritical + vbYesNo + vbDefaultButton1, _
-                         "OpenSolver: User Interrupt Occured...") = vbNo Then
-7084              Resume 'continue on from where error occured
-7085          Else
-                  ' Raise a "user cancelled" error. We cannot use Raise, as that exits immediately without going thru our code below
-7086              ErrorNumber = OpenSolver_UserCancelledError
-7087              ErrorSource = errorPrefix
-7088              ErrorDescription = "Model solve cancelled by user."
-7089          End If
-7090      End If
+7067      End Select
 
-ErrorExit:
-          ' Exit, raising an error. None of the following actions change the Err.Number etc, but we saved them above just in case...
+          SolveModel_Nomad = s.SolveStatus
+          
+ExitFunction:
 7091      SetCurrentDirectory currentDir
-          'Application.DefaultFilePath = currentExcelDir
 7092      Application.Cursor = xlDefault
-7093      Application.StatusBar = False ' Resume normal status bar behaviour
-7094      Application.ScreenUpdating = True
+7093      Application.StatusBar = False
+7094      Application.ScreenUpdating = ScreenStatus
 7095      Application.Calculation = oldCalculationMode
 7096      Application.Calculate
-7097      Close #1 ' Close any open file; this does not seem to ever give errors
+7097      Close #1
 7098      Set OS = Nothing
-7099      Err.Raise ErrorNumber, ErrorSource, ErrorDescription
+          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          Exit Function
+
+ErrorHandler:
+          If Not ReportError("SolverNOMAD", "SolveModel_Nomad") Then Resume
+          RaiseError = True
+          GoTo ExitFunction
 
 End Function
 
-Sub CheckNomadLogs(errorString As String)
-      ' If NOMAD encounters an error, we dump the exception to the log file. We can use this to deduce what went wrong
+Sub CheckNomadLogs()
+' If NOMAD encounters an error, we dump the exception to the log file. We can use this to deduce what went wrong
+          Dim RaiseError As Boolean
+          RaiseError = False
+          On Error GoTo ErrorHandler
+
           Dim logFile As String
 7100      logFile = GetTempFilePath("log1.tmp")
-          
-7101      If Not FileOrDirExists(logFile) Then
-7102          Exit Sub
-7103      End If
+7101      If Not FileOrDirExists(logFile) Then GoTo ExitSub
+
           
           Dim message As String
-7104      On Error GoTo ErrHandler
 7105      Open logFile For Input As #3
 7106      message = Input$(LOF(3), 3)
 7107      Close #3
           
-7108      If Not message Like "*NOMAD*" Then
-7109         Exit Sub
-7110      End If
+7108      If Not message Like "*NOMAD*" Then GoTo ExitSub
 
           If InStrText(message, "invalid parameter: DIMENSION") Then
               Dim MaxSize As Long, Position As Long
               Position = InStrRev(message, " ")
               MaxSize = CInt(Mid(message, Position + 1, InStrRev(message, ")") - Position - 1))
-              errorString = "This model contains too many variables for NOMAD to solve. NOMAD is only capable of solving models with up to " & MaxSize & " variables."
+              Err.Raise OpenSolver_NomadError, Description:="This model contains too many variables for NOMAD to solve. NOMAD is only capable of solving models with up to " & MaxSize & " variables."
           ElseIf message Like "*invalid parameter*" Then
-7112          errorString = "One of the parameters supplied to NOMAD was invalid. This usually happens if the precision is too large. Try adjusting the values in the Solve Options dialog box."
+7112          Err.Raise OpenSolver_NomadError, Description:="One of the parameters supplied to NOMAD was invalid. This usually happens if the precision is too large. Try adjusting the values in the Solve Options dialog box."
 7113      End If
-          
-ErrHandler:
-7114      Close #3
+
+ExitSub:
+          Close #3
+          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          Exit Sub
+
+ErrorHandler:
+          If Not ReportError("SolverNOMAD", "CheckNomadLogs") Then Resume
+          RaiseError = True
+          GoTo ExitSub
 End Sub
 
 Function updateVar(X As Variant, Optional BestSolution As Variant = Nothing, Optional Infeasible As Boolean = False)

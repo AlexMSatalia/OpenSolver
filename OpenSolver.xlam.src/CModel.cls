@@ -21,9 +21,13 @@ Public Duals As Range   ' The range where we store the duals; specific to OpenSo
 
 Public NonNegativityAssumption As Boolean
 
-Public Sub FindObjective(ByRef s As Worksheet)
 ' Tries to find the objective function cell and sense by searching for likely keywords,
 ' then searching the area for appropriate calculations.
+Public Sub FindObjective(ByRef s As Worksheet)
+          Dim RaiseError As Boolean
+          RaiseError = False
+          On Error GoTo ErrorHandler
+
           Dim ObjSenseCell As Range
 3586      Set ObjSenseCell = Nothing
 3587      ObjectiveSense = UnknownObjectiveSense
@@ -67,23 +71,59 @@ Public Sub FindObjective(ByRef s As Worksheet)
 ExitSub:
 3648      Application.Cursor = xlDefault
 3649      Application.StatusBar = False
+          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          Exit Sub
+
+ErrorHandler:
+          If Not ReportError("CModel", "FindObjective") Then Resume
+          RaiseError = True
+          GoTo ExitSub
           
 End Sub
 
-Private Sub FindObjSense(ByRef s As Worksheet, ByVal searchStr As String, ByRef result As Range)
 ' Run the right kind of search to find the objective sense (search values, don't match case)
+Private Sub FindObjSense(ByRef s As Worksheet, ByVal searchStr As String, ByRef result As Range)
+          Dim RaiseError As Boolean
+          RaiseError = False
+          On Error GoTo ErrorHandler
+
 3650      Set result = s.Cells.Find(What:=searchStr, After:=[a1], LookIn:=xlValues, _
                                     SearchOrder:=xlByRows, SearchDirection:=xlPrevious, MatchCase:=False)
+
+ExitSub:
+          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          Exit Sub
+
+ErrorHandler:
+          If Not ReportError("CModel", "FindObjSense") Then Resume
+          RaiseError = True
+          GoTo ExitSub
 End Sub
 
-Private Sub FindObjCell(ByRef s As Worksheet, ByVal rowNum As Long, ByVal searchStr As String, ByRef result As Range)
 ' Run the right kind of search to find objective cell (look in specified row, search formulas, don't match case)
+Private Sub FindObjCell(ByRef s As Worksheet, ByVal rowNum As Long, ByVal searchStr As String, ByRef result As Range)
+          Dim RaiseError As Boolean
+          RaiseError = False
+          On Error GoTo ErrorHandler
+
 3651      Set result = s.Rows(rowNum).Find(What:=searchStr, LookIn:=xlFormulas, lookat:=xlPart, _
                                            SearchOrder:=xlByRows, SearchDirection:=xlNext, MatchCase:=False)
+
+ExitSub:
+          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          Exit Sub
+
+ErrorHandler:
+          If Not ReportError("CModel", "FindObjCell") Then Resume
+          RaiseError = True
+          GoTo ExitSub
 End Sub
 
-Public Function FindVarsAndCons(IsFirstTime As Boolean) As Boolean
 ' We have objective, now find all constraints.
+Public Function FindVarsAndCons(IsFirstTime As Boolean) As Boolean
+          Dim RaiseError As Boolean
+          RaiseError = False
+          On Error GoTo ErrorHandler
           
           ' Clear existing solution, if requested
 3653      If IsFirstTime Then
@@ -174,6 +214,7 @@ NextArea:
 3740          UpdatePrecedentCount DecRefCount, PrecedentCells
 3752      Next
           
+          On Error GoTo ErrorHandler
 3753      Application.StatusBar = "OpenSolver: Selecting most likely decision variables"
           ' If a cell has only been referenced once, we can't be sure it is a decision variable
           ' as constants are also referenced once, so take anything that is seen two or more times
@@ -215,7 +256,16 @@ NextArea:
           
           ' Finished!
 3783      FindVarsAndCons = True
-3784      GoTo ExitSub
+
+ExitFunction:
+          Application.StatusBar = False
+          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          Exit Function
+
+ErrorHandler:
+          If Not ReportError("CModel", "FindVarsAndCons") Then Resume
+          RaiseError = True
+          GoTo ExitFunction
           
 DecisionErr:
           ' Error occurred while trying to find decision variables
@@ -224,7 +274,7 @@ DecisionErr:
                  "Error description: " + Err.Description & IIf(Erl = 0, "", " (at line " & Erl & ")"), _
                  vbExclamation Or vbOKOnly, "AutoModel"
 3787      FindVarsAndCons = False
-3788      GoTo ExitSub
+3788      GoTo ExitFunction
           
 ConstraintErr:
           ' Error occurred while trying to find constraints
@@ -233,14 +283,15 @@ ConstraintErr:
                  "Error description: " + Err.Description & IIf(Erl = 0, "", " (at line " & Erl & ")"), _
                  vbExclamation Or vbOKOnly, "AutoModel"
 3791      FindVarsAndCons = False
-3792      GoTo ExitSub
-
-ExitSub:
-          Application.StatusBar = False
+3792      GoTo ExitFunction
 End Function
 
-Sub UpdatePrecedentCount(ByRef PrecedentCount As Dictionary, ByRef ChildCell As Range)
 ' Increase precedent count by 1 for each precedent in the child cell
+Sub UpdatePrecedentCount(ByRef PrecedentCount As Dictionary, ByRef ChildCell As Range)
+    Dim RaiseError As Boolean
+    RaiseError = False
+    On Error GoTo ErrorHandler
+
     Dim CurPrecedent As Range
     If Not ChildCell Is Nothing Then
         For Each CurPrecedent In ChildCell.Cells
@@ -253,11 +304,23 @@ Sub UpdatePrecedentCount(ByRef PrecedentCount As Dictionary, ByRef ChildCell As 
             End If
         Next
     End If
+
+ExitSub:
+    If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+    Exit Sub
+
+ErrorHandler:
+    If Not ReportError("CModel", "UpdatePrecedentCount") Then Resume
+    RaiseError = True
+    GoTo ExitSub
 End Sub
 
-Private Sub FindAllCells(ByVal searchStr As String, ByRef FoundCells As Range, ByRef sheet As Worksheet)
 ' Look for all cells in the sheet containing the search string (only in the value)
 ' Returns a range of these cells (may contain multiple areas)
+Private Sub FindAllCells(ByVal searchStr As String, ByRef FoundCells As Range, ByRef sheet As Worksheet)
+          Dim RaiseError As Boolean
+          RaiseError = False
+          On Error GoTo ErrorHandler
 
           Dim LastCell As Range, FirstCell As Range
 3794      Set FoundCells = Nothing
@@ -268,7 +331,7 @@ Private Sub FindAllCells(ByVal searchStr As String, ByRef FoundCells As Range, B
                                            lookat:=XlLookAt.xlWhole, _
                                            SearchDirection:=XlSearchDirection.xlNext)
 3796      Set LastCell = FirstCell
-3797      If LastCell Is Nothing Then Exit Sub ' If not even one, stop immediately
+3797      If LastCell Is Nothing Then GoTo ExitSub ' If not even one, stop immediately
           
 3798      Do
 3799          If FoundCells Is Nothing Then
@@ -280,10 +343,19 @@ Private Sub FindAllCells(ByVal searchStr As String, ByRef FoundCells As Range, B
 3804          Set LastCell = sheet.Cells.FindNext(LastCell)
               ' Loop until no more cells or we get back to the initial cell
 3805      Loop While (Not LastCell Is Nothing) And (FirstCell.Address <> LastCell.Address)
+
+ExitSub:
+          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          Exit Sub
+
+ErrorHandler:
+          If Not ReportError("CModel", "FindAllCells") Then Resume
+          RaiseError = True
+          GoTo ExitSub
 End Sub
 
-Function CheckPrecedentCells(ByRef LHSs As Range, ByRef RHSs As Range) As Boolean
 ' Determine if any of the LHS or RHS have a precedent
+Function CheckPrecedentCells(ByRef LHSs As Range, ByRef RHSs As Range) As Boolean
           Dim CurCell As Range, PrecCells As Range
           Dim BothSides As Range
 3806      Set BothSides = Union(LHSs, RHSs)
@@ -303,6 +375,10 @@ End Function
 
 Sub AddRangeToConstraints(ByRef LHSs As Range, ByRef RelRange As Range, ByRef RHSs As Range, _
                           IsVertical As Boolean, ByRef Constraints As Collection)
+          Dim RaiseError As Boolean
+          RaiseError = False
+          On Error GoTo ErrorHandler
+
           Dim CellCount As Long
 3817      CellCount = LHSs.Count
           
@@ -333,13 +409,25 @@ Sub AddRangeToConstraints(ByRef LHSs As Range, ByRef RelRange As Range, ByRef RH
 3836              Constraints.Add NewConstraint
 3838          End If
 3839      Next i
+
+ExitSub:
+          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          Exit Sub
+
+ErrorHandler:
+          If Not ReportError("CModel", "AddRangeToConstraints") Then Resume
+          RaiseError = True
+          GoTo ExitSub
 End Sub
 
-Public Sub RationaliseConstraints()
 ' Group multiple individual constraints into 1 constraint if:
 '   - They are next to each other
 '   - They are of the same type
-3840      On Error GoTo 0
+Public Sub RationaliseConstraints()
+          Dim RaiseError As Boolean
+          RaiseError = False
+          On Error GoTo ErrorHandler
+
           Dim Relations() As Variant, AddressedByLHS() As Variant
 3841      Relations = Array("=", "<=", ">=", "int", "bin")
           AddressedByLHS = Array(False, False, False, True, True)  ' True for relations that only have a LHS
@@ -426,9 +514,22 @@ Public Sub RationaliseConstraints()
           
           ' Update old constraints
 3905      Set Constraints = NewConstraints
+
+ExitSub:
+          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          Exit Sub
+
+ErrorHandler:
+          If Not ReportError("CModel", "RationaliseConstraints") Then Resume
+          RaiseError = True
+          GoTo ExitSub
 End Sub
 
 Function BuildModel() As Boolean
+          Dim RaiseError As Boolean
+          RaiseError = False
+          On Error GoTo ErrorHandler
+
           ' Check int/bin constraints not set on non-decision variables before we start saving things
           Dim c As Long, intersection As Range, ShowWarning As Boolean
           ShowWarning = False
@@ -442,7 +543,7 @@ Function BuildModel() As Boolean
                           GoTo ContinueSaving
                       Else
                           BuildModel = False
-                          Exit Function
+                          GoTo ExitFunction
                       End If
                   End If
 3934          End If
@@ -494,9 +595,22 @@ ContinueSaving:
 3974      SetSolverNameOnSheet "neg", IIf(NonNegativityAssumption, "=1", "=2")
 
           BuildModel = True
+
+ExitFunction:
+          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          Exit Function
+
+ErrorHandler:
+          If Not ReportError("CModel", "BuildModel") Then Resume
+          RaiseError = True
+          GoTo ExitFunction
 End Function
 
 Sub SetNamedRangeIfExists(ByVal Name As String, ByRef RangeToSet As Range, Optional IsSolverName As Boolean = False)
+    Dim RaiseError As Boolean
+    RaiseError = False
+    On Error GoTo ErrorHandler
+
     If RangeToSet Is Nothing Then
         If IsSolverName Then
             DeleteSolverNameOnSheet Name
@@ -510,16 +624,41 @@ Sub SetNamedRangeIfExists(ByVal Name As String, ByRef RangeToSet As Range, Optio
             SetNamedRangeOnSheet Name, RangeToSet
         End If
     End If
+
+ExitSub:
+    If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+    Exit Sub
+
+ErrorHandler:
+    If Not ReportError("CModel", "SetNamedRangeIfExists") Then Resume
+    RaiseError = True
+    GoTo ExitSub
 End Sub
 
 Sub SetSolverNamedRangeIfExists(ByVal Name As String, ByRef RangeToSet As Range)
+    Dim RaiseError As Boolean
+    RaiseError = False
+    On Error GoTo ErrorHandler
+
     SetNamedRangeIfExists Name, RangeToSet, True
+
+ExitSub:
+    If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+    Exit Sub
+
+ErrorHandler:
+    If Not ReportError("CModel", "SetSolverNamedRangeIfExists") Then Resume
+    RaiseError = True
+    GoTo ExitSub
 End Sub
 
-Public Sub AddConstraint(newLHS As Range, newRHS As Range, newRHSstring As String, newType As String)
 ' Adds a single constraint, rather than a block
+Public Sub AddConstraint(newLHS As Range, newRHS As Range, newRHSstring As String, newType As String)
+          Dim RaiseError As Boolean
+          RaiseError = False
+          On Error GoTo ErrorHandler
+
           Dim NewConstraint As New CConstraint
-          
 3975      With NewConstraint
 3976          Set .LHS = newLHS
 3977          Set .Relation = Nothing
@@ -529,10 +668,23 @@ Public Sub AddConstraint(newLHS As Range, newRHS As Range, newRHSstring As Strin
 3981      End With
           
 3982      Constraints.Add NewConstraint
+
+ExitSub:
+          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          Exit Sub
+
+ErrorHandler:
+          If Not ReportError("CModel", "AddConstraint") Then Resume
+          RaiseError = True
+          GoTo ExitSub
           
 End Sub
 
 Public Sub PopulateConstraintListBox(ByRef lst As Object)
+          Dim RaiseError As Boolean
+          RaiseError = False
+          On Error GoTo ErrorHandler
+
           Dim CS As String, c As Long
           Dim oldLI As Long
           
@@ -563,18 +715,29 @@ Public Sub PopulateConstraintListBox(ByRef lst As Object)
 4005      Else
 4006          lst.ListIndex = lst.ListCount - 1
 4007      End If
+
+ExitSub:
+          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          Exit Sub
+
+ErrorHandler:
+          If Not ReportError("CModel", "PopulateConstraintListBox") Then Resume
+          RaiseError = True
+          GoTo ExitSub
 End Sub
 
 Public Sub LoadFromSheet()
 ' TODO: Merge with BuildModelFromSolverData
+          Dim RaiseError As Boolean
+          RaiseError = False
+          On Error GoTo ErrorHandler
 
-4008      On Error Resume Next ' TODO: This should not run under a blanket RESUME NEXT
 4009      Set Constraints = New Collection
 
           Dim sheetName As String
-4010      sheetName = EscapeSheetName(ActiveWorkbook.ActiveSheet)
+4010      sheetName = ActiveWorkbook.ActiveSheet.Name & "!"
 
-4011      Set DecisionVariables = Range(sheetName & "solver_adj")
+          GetNamedRangeIfExistsOnSheet ActiveWorkbook.ActiveSheet, "solver_adj", DecisionVariables
           
           Dim s As String
 4012      NonNegativityAssumption = False
@@ -586,8 +749,7 @@ Public Sub LoadFromSheet()
 4016      ObjectiveTarget = 0
 4017      GetNamedNumericValueIfExists ActiveWorkbook, sheetName & "solver_val", ObjectiveTarget
           
-4018      Set ObjectiveFunctionCell = Nothing
-4019      Set ObjectiveFunctionCell = ActiveWorkbook.Names(sheetName & "solver_opt").RefersToRange
+4018      GetNamedRangeIfExistsOnSheet ActiveWorkbook.ActiveSheet, "solver_opt", ObjectiveFunctionCell
           
           Dim constraint As Long, NumConstraints As Long
 4020      NumConstraints = Val(Mid(Names(sheetName & "solver_num"), 2))
@@ -621,7 +783,14 @@ Public Sub LoadFromSheet()
 SkipCon:
 4043      Next constraint
           
-4044      Set Duals = Range(sheetName & "OpenSolver_Duals")
+          GetNamedRangeIfExistsOnSheet ActiveSheet, "OpenSolver_Duals", Duals
           
 ExitSub:
+          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          Exit Sub
+
+ErrorHandler:
+          If Not ReportError("CModel", "LoadFromSheet") Then Resume
+          RaiseError = True
+          GoTo ExitSub
 End Sub

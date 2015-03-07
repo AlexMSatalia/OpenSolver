@@ -308,6 +308,8 @@ Private Sub refConRHS_Change()
 End Sub
 
 Private Sub UserForm_Activate()
+          On Error GoTo ErrorHandler
+
           ' Check we can even start
 4345      If Not CheckWorksheetAvailable Then
 4346          Unload Me
@@ -372,6 +374,14 @@ Private Sub UserForm_Activate()
 4381      DoEvents
 4382      Repaint
 4383      DoEvents
+
+ExitSub:
+          Exit Sub
+
+ErrorHandler:
+          Me.Hide
+          ReportError "frmModel", "UserForm_Activate", True
+          GoTo ExitSub
 End Sub
 
 
@@ -405,12 +415,14 @@ Private Sub cmdRunAutoModel_Click()
 End Sub
 
 Private Sub cmdBuild_Click()
+          On Error GoTo ErrorHandler
+
 4408      DoEvents
 4409      On Error Resume Next
 4410      Application.CutCopyMode = False
 4411      ActiveCell.Select ' Just select one cell, choosing a cell that should be visible to avoid scrolling
 4412      Application.ScreenUpdating = True
-4413      On Error GoTo 0
+4413      On Error GoTo ErrorHandler
 
           Dim oldCalculationMode As Long
           oldCalculationMode = Application.Calculation
@@ -423,7 +435,7 @@ Private Sub cmdBuild_Click()
 4417      Else
 4418          Set model.ObjectiveFunctionCell = Range(refObj.Text)
 4419      End If
-4420      On Error GoTo errorHandler
+4420      On Error GoTo ErrorHandler
 
           ' Get the objective sense
 4421      If optMax.value = True Then model.ObjectiveSense = MaximiseObjective
@@ -432,11 +444,11 @@ Private Sub cmdBuild_Click()
 4424          model.ObjectiveSense = TargetObjective
 4425          On Error GoTo BadObjectiveTarget
 4426          model.ObjectiveTarget = CDbl(txtObjTarget.Text)
-4427          On Error GoTo errorHandler
+4427          On Error GoTo ErrorHandler
 4428      End If
 4429      If model.ObjectiveSense = UnknownObjectiveSense Then
-4430          MsgBox "Error: Please select an objective sense (minimise, maximise or target).", vbExclamation + vbOKOnly, "OpenSolver"
-4431          Exit Sub
+4430          Err.Raise OpenSolver_ModelError, Description:="Please select an objective sense (minimise, maximise or target)."
+4431          GoTo ExitSub
 4432      End If
 
           ' We allow multiple area ranges here, which requires ConvertFromCurrentLocale as delimiter can vary
@@ -446,7 +458,7 @@ Private Sub cmdBuild_Click()
 4436      Else
 4437          Set model.DecisionVariables = Range(ConvertFromCurrentLocale(refDecision.Text))
 4438      End If
-4439      On Error GoTo errorHandler
+4439      On Error GoTo ErrorHandler
 
 4440      On Error GoTo BadDualsRef
 4441      If chkGetDuals.value = False Or Trim(refDuals.Text) = "" Then
@@ -454,26 +466,25 @@ Private Sub cmdBuild_Click()
 4443      Else
 4444          Set model.Duals = Range(refDuals.Text)
 4445      End If
-4446      On Error GoTo errorHandler
+4446      On Error GoTo ErrorHandler
 
 4447      model.NonNegativityAssumption = chkNonNeg.value
           
           ' BuildModel fails if build is aborted by the user
-4448      If Not model.BuildModel Then GoTo cleanUp
+4448      If Not model.BuildModel Then GoTo ExitSub
 
           ' Display on screen
 4449      If chkShowModel.value = True Then OpenSolverVisualizer.ShowSolverModel
 4450      On Error GoTo CalculateFailed
 4451      Application.Calculate
-4452      On Error GoTo errorHandler
+4452      On Error GoTo ErrorHandler
           
-          Application.Calculation = oldCalculationMode
           Me.Hide
-4453      Exit Sub
+4453      GoTo ExitSub
 
 CalculateFailed:
           ' Application.Calculate failed. Ignore error and try again
-4454      On Error GoTo errorHandler
+4454      On Error GoTo ErrorHandler
 4455      Application.Calculate
 4456      Resume Next
 
@@ -482,7 +493,7 @@ BadObjRef:
 4457      MsgBox "Error: the cell address for the objective is invalid. " + _
                  "Please correct this and try again.", vbExclamation + vbOKOnly, "OpenSolver"
 4458      refObj.SetFocus ' Set the focus back to the RefEdit
-          GoTo cleanUp
+          GoTo ExitSub
           '----------------------------------------------------------------
 BadDecRef:
           ' Couldn't turn the decision variable address into a range
@@ -490,26 +501,28 @@ BadDecRef:
                  "This must be a valid Excel range that does not exceed Excel's internal character count limits. " + _
                  "Please correct this and try again.", vbExclamation + vbOKOnly, "OpenSolver"
 4462      refDecision.SetFocus ' Set the focus back to the RefEdit
-          GoTo cleanUp
+          GoTo ExitSub
 BadObjectiveTarget:
           ' Couldn't turn the objective target into a value
 4465      MsgBox "Error: the target value for the objective cell is invalid. " + _
                  "Please correct this and try again.", vbExclamation + vbOKOnly, "OpenSolver"
 4466      txtObjTarget.SetFocus ' Set the focus back to the target text box
-          GoTo cleanUp
+          GoTo ExitSub
 BadDualsRef:
           ' Couldn't turn the dual cell into a range
 4469      MsgBox "Error: the cell for storing the shadow prices is invalid. " + _
                  "Please correct this and try again.", vbExclamation + vbOKOnly, "OpenSolver"
 4470      refDuals.SetFocus ' Set the focus back to the target text box
-          GoTo cleanUp
-errorHandler:
-4473      MsgBox "While constructing the model, OpenSolver encountered error " & Err.Number & ":" & vbCrLf & Err.Description & IIf(Erl = 0, "", " (at line " & Erl & ")") & vbCrLf & "Source = " & Err.Source & " (frmModel::cmdBuild_Click)", , "OpenSolver Code Error"
-          GoTo cleanUp
-cleanUp:
+          GoTo ExitSub
+
+ExitSub:
           Application.Calculation = oldCalculationMode
 4474      DoEvents ' Try to stop RefEdit bugs
-4475      Exit Sub
+          Exit Sub
+
+ErrorHandler:
+          ReportError "frmModel", "cmdBuild_Click", True
+          GoTo ExitSub
 End Sub
 
 Private Sub cboConRel_Change()
@@ -526,7 +539,7 @@ Private Sub cboConRel_Change()
 End Sub
 
 Private Sub cmdAddCon_Click()
-4496      On Error GoTo errorHandler
+4496      On Error GoTo ErrorHandler
 
           Dim rngLHS As Range, rngRHS As Range
           Dim IsRestrict As Boolean
@@ -662,7 +675,7 @@ ErrorHandler_CannotInterpretRHS:
 4617      refConRHS.SetFocus
 4618      DoEvents ' Try to stop RefEdit bugs
 4619      Exit Sub
-errorHandler:
+ErrorHandler:
 4620      Application.DisplayAlerts = True
 4621      OpenSolverSheet.Range("A1").FormulaLocal = "" ' This must be blank to ensure no risk of dialogs being shown trying to locate a sheet
 4622      MsgBox "While constructing the model, OpenSolver encountered error " & Err.Number & ":" & vbCrLf & Err.Description & IIf(Erl = 0, "", " (at line " & Erl & ")") & vbCrLf & "Source = " & Err.Source & " (frmModel::cmdBuild_Click)", , "OpenSolver Code Error"

@@ -34,11 +34,9 @@ Function OptionsFilePath_Bonmin() As String
           OptionsFilePath_Bonmin = GetTempFilePath(OptionsFile_Bonmin)
 End Function
 
-Sub CleanFiles_Bonmin(errorPrefix As String)
-          ' Solution file
-9023      DeleteFileAndVerify SolutionFilePath_Bonmin(), errorPrefix, "Unable to delete the Bonmin solver solution file: " & SolutionFilePath_Bonmin()
-          ' Script file
-9024      DeleteFileAndVerify ScriptFilePath_Bonmin(), errorPrefix, "Unable to delete the Bonmin solver script file: " & ScriptFilePath_Bonmin()
+Sub CleanFiles_Bonmin()
+9023      DeleteFileAndVerify SolutionFilePath_Bonmin()
+9024      DeleteFileAndVerify ScriptFilePath_Bonmin()
 End Sub
 
 Function About_Bonmin() As String
@@ -76,10 +74,14 @@ End Function
 
 Function SolverVersion_Bonmin() As String
       ' Get Bonmin version by running 'bonmin -v' at command line
+          Dim RaiseError As Boolean
+          RaiseError = False
+          On Error GoTo ErrorHandler
+
           Dim SolverPath As String
 9038      If Not SolverAvailable_Bonmin(SolverPath) Then
 9039          SolverVersion_Bonmin = ""
-9040          Exit Function
+9040          GoTo ExitFunction
 9041      End If
           
           ' Set up Bonmin to write version info to text file
@@ -100,7 +102,6 @@ Function SolverVersion_Bonmin() As String
           ' Read version info back from output file
           Dim Line As String
 9049      If FileOrDirExists(logFile) Then
-9050          On Error GoTo ErrHandler
 9051          Open logFile For Input As #1
 9052          Line Input #1, Line
 9053          Close #1
@@ -108,11 +109,16 @@ Function SolverVersion_Bonmin() As String
 9056      Else
 9057          SolverVersion_Bonmin = ""
 9058      End If
-9059      Exit Function
-          
-ErrHandler:
-9060      Close #1
-9061      Err.Raise Err.Number, Err.Source, Err.Description & IIf(Erl = 0, "", " (at line " & Erl & ")")
+
+ExitFunction:
+          Close #1
+          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          Exit Function
+
+ErrorHandler:
+          If Not ReportError("SolverBonmin", "SolverVersion_Bonmin") Then Resume
+          RaiseError = True
+          GoTo ExitFunction
 End Function
 
 Function SolverBitness_Bonmin() As String

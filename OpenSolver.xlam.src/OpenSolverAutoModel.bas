@@ -2,8 +2,11 @@ Attribute VB_Name = "OpenSolverAutoModel"
 Option Explicit
 
 Public Function RunAutoModel(Optional MinimiseUserInteraction As Boolean = False, Optional ByRef InputModel As CModel) As Boolean
+    Dim RaiseError As Boolean
+    RaiseError = False
+    On Error GoTo ErrorHandler
 
-    If Not CheckWorksheetAvailable Then Exit Function
+    If Not CheckWorksheetAvailable Then GoTo ExitFunction
     Dim model As CModel, AskedToShow As Boolean, ShowModel As Boolean, DoBuild As Boolean
     If InputModel Is Nothing Then
         Set model = New CModel
@@ -26,7 +29,7 @@ Public Function RunAutoModel(Optional MinimiseUserInteraction As Boolean = False
             
             frmAutoModel.Show
             
-            If frmAutoModel.Tag = "Cancelled" Then Exit Function
+            If frmAutoModel.Tag = "Cancelled" Then GoTo ExitFunction
             
             Set model.ObjectiveFunctionCell = frmAutoModel.ObjectiveCell
             model.ObjectiveSense = frmAutoModel.ObjectiveSense
@@ -39,7 +42,7 @@ Public Function RunAutoModel(Optional MinimiseUserInteraction As Boolean = False
     If Not model.FindVarsAndCons(True) Then
         If Not MinimiseUserInteraction Then MsgBox "Error while looking for variables and constraints"
         RunAutoModel = False
-        Exit Function
+        GoTo ExitFunction
     End If
     
     model.NonNegativityAssumption = True
@@ -61,4 +64,13 @@ Public Function RunAutoModel(Optional MinimiseUserInteraction As Boolean = False
     End If
     
     RunAutoModel = True
+
+ExitFunction:
+    If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+    Exit Function
+
+ErrorHandler:
+    If Not ReportError("OpenSolverAutoModel", "RunAutoModel") Then Resume
+    RaiseError = True
+    GoTo ExitFunction
 End Function

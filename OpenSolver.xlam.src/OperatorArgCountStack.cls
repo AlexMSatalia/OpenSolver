@@ -22,17 +22,43 @@ Public Sub PushNewCount()
 End Sub
 
 Public Function PopCount() As Long
+          Dim RaiseError As Boolean
+          RaiseError = False
+          On Error GoTo ErrorHandler
+
           Dim Count As Long
 9165      Count = Items(Items.Count)
 9166      Items.Remove (Items.Count)
 9167      PopCount = Count
+
+ExitFunction:
+          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          Exit Function
+
+ErrorHandler:
+          If Not ReportError("OperatorArgCountStack", "PopCount") Then Resume
+          RaiseError = True
+          GoTo ExitFunction
 End Function
 
 Public Sub Increase()
+          Dim RaiseError As Boolean
+          RaiseError = False
+          On Error GoTo ErrorHandler
+
           Dim Count As Long
 9168      Count = Items(Items.Count) + 1
 9169      Items.Remove (Items.Count)
 9170      Items.Add Count
+
+ExitSub:
+          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          Exit Sub
+
+ErrorHandler:
+          If Not ReportError("OperatorArgCountStack", "Increase") Then Resume
+          RaiseError = True
+          GoTo ExitSub
 End Sub
 
 Public Function Display() As String

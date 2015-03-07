@@ -34,11 +34,9 @@ Function OptionsFilePath_Couenne() As String
           OptionsFilePath_Couenne = GetTempFilePath(OptionsFile_Couenne)
 End Function
 
-Sub CleanFiles_Couenne(errorPrefix As String)
-          ' Solution file
-8360      DeleteFileAndVerify SolutionFilePath_Couenne(), errorPrefix, "Unable to delete the Couenne solver solution file: " & SolutionFilePath_Couenne()
-          ' Script file
-8361      DeleteFileAndVerify ScriptFilePath_Couenne(), errorPrefix, "Unable to delete the Couenne solver script file: " & ScriptFilePath_Couenne()
+Sub CleanFiles_Couenne()
+8360      DeleteFileAndVerify SolutionFilePath_Couenne()
+8361      DeleteFileAndVerify ScriptFilePath_Couenne()
 End Sub
 
 Function About_Couenne() As String
@@ -77,10 +75,14 @@ End Function
 
 Function SolverVersion_Couenne() As String
       ' Get Couenne version by running 'couenne -v' at command line
+          Dim RaiseError As Boolean
+          RaiseError = False
+          On Error GoTo ErrorHandler
+
           Dim SolverPath As String
 8376      If Not SolverAvailable_Couenne(SolverPath) Then
 8377          SolverVersion_Couenne = ""
-8378          Exit Function
+8378          GoTo ExitFunction
 8379      End If
           
           ' Set up Couenne to write version info to text file
@@ -101,7 +103,6 @@ Function SolverVersion_Couenne() As String
           ' Read version info back from output file
           Dim Line As String
 8387      If FileOrDirExists(logFile) Then
-8388          On Error GoTo ErrHandler
 8389          Open logFile For Input As #1
 8390          Line Input #1, Line
 8391          Close #1
@@ -109,11 +110,16 @@ Function SolverVersion_Couenne() As String
 8394      Else
 8395          SolverVersion_Couenne = ""
 8396      End If
-8397      Exit Function
-          
-ErrHandler:
-8398      Close #1
-8399      Err.Raise Err.Number, Err.Source, Err.Description & IIf(Erl = 0, "", " (at line " & Erl & ")")
+
+ExitFunction:
+          Close #1
+          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          Exit Function
+
+ErrorHandler:
+          If Not ReportError("SolverCouenne", "SolverVersion_Couenne") Then Resume
+          RaiseError = True
+          GoTo ExitFunction
 End Function
 
 Function SolverBitness_Couenne() As String

@@ -27,16 +27,42 @@ Public Sub Push(Token As Token)
 End Sub
 
 Public Function Pop() As Token
+          Dim RaiseError As Boolean
+          RaiseError = False
+          On Error GoTo ErrorHandler
+
           Dim obj As Token
 5484      Set obj = colTokens(colTokens.Count)
 5485      colTokens.Remove (colTokens.Count)
 5486      Set Pop = obj
+
+ExitFunction:
+          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          Exit Function
+
+ErrorHandler:
+          If Not ReportError("TokenStack", "Pop") Then Resume
+          RaiseError = True
+          GoTo ExitFunction
 End Function
 
 Public Function Peek() As Token
+          Dim RaiseError As Boolean
+          RaiseError = False
+          On Error GoTo ErrorHandler
+
           Dim obj As Token
 5487      Set obj = colTokens(colTokens.Count)
 5488      Set Peek = obj
+
+ExitFunction:
+          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          Exit Function
+
+ErrorHandler:
+          If Not ReportError("TokenStack", "Peek") Then Resume
+          RaiseError = True
+          GoTo ExitFunction
 End Function
 
 Property Get Count() As Long

@@ -41,19 +41,14 @@ Function RHSRangesFilePath_CBC() As String
 6050      RHSRangesFilePath_CBC = GetTempFilePath(RHSRangesFile_CBC)
 End Function
 
-Sub CleanFiles_CBC(errorPrefix As String)
-          ' Solution file
-6051      DeleteFileAndVerify SolutionFilePath_CBC(), errorPrefix, "Unable to delete the CBC solver solution file: " & SolutionFilePath_CBC()
-          ' Cost Range file
-6052      DeleteFileAndVerify CostRangesFilePath_CBC(), errorPrefix, "Unable to delete the CBC solver sensitivity data file: " & CostRangesFilePath_CBC()
-          ' RHS Range file
-6053      DeleteFileAndVerify RHSRangesFilePath_CBC(), errorPrefix, "Unable to delete the CBC solver sensitivity data file: " & RHSRangesFilePath_CBC()
-          ' Script file
-6054      DeleteFileAndVerify ScriptFilePath_CBC(), errorPrefix, "Unable to delete the CBC solver script file: " & ScriptFilePath_CBC()
+Sub CleanFiles_CBC()
+6051      DeleteFileAndVerify SolutionFilePath_CBC()
+6052      DeleteFileAndVerify CostRangesFilePath_CBC()
+6053      DeleteFileAndVerify RHSRangesFilePath_CBC()
+6054      DeleteFileAndVerify ScriptFilePath_CBC()
 End Sub
 
 Function About_CBC() As String
-      ' Return string for "About" form
           Dim SolverPath As String, errorString As String
 6055      If Not SolverAvailable_CBC(SolverPath, errorString) Then
 6056          About_CBC = errorString
@@ -76,21 +71,23 @@ Function SolverAvailable_CBC(Optional SolverPath As String, Optional errorString
 6063          SolverAvailable_CBC = False
 6064      Else
 6065          SolverAvailable_CBC = True
-
 #If Mac Then
               ' Make sure cbc is executable on Mac
 6066          system ("chmod +x " & MakePathSafe(SolverPath))
 #End If
-          
 6067      End If
 End Function
 
 Function SolverVersion_CBC() As String
-      ' Get CBC version by running 'cbc -exit' at command line
+' Get CBC version by running 'cbc -exit' at command line
+          Dim RaiseError As Boolean
+          RaiseError = False
+          On Error GoTo ErrorHandler
+
           Dim SolverPath As String
 6068      If Not SolverAvailable_CBC(SolverPath) Then
 6069          SolverVersion_CBC = ""
-6070          Exit Function
+6070          GoTo ExitFunction
 6071      End If
           
           ' Set up cbc to write version info to text file
@@ -111,7 +108,6 @@ Function SolverVersion_CBC() As String
           ' Read version info back from output file
           Dim Line As String
 6079      If FileOrDirExists(logFile) Then
-6080          On Error GoTo ErrHandler
 6081          Open logFile For Input As #1
 6082          Line Input #1, Line
 6083          Line Input #1, Line
@@ -120,11 +116,16 @@ Function SolverVersion_CBC() As String
 6087      Else
 6088          SolverVersion_CBC = ""
 6089      End If
-6090      Exit Function
-          
-ErrHandler:
-6091      Close #1
-6092      Err.Raise Err.Number, Err.Source, Err.Description & IIf(Erl = 0, "", " (at line " & Erl & ")")
+
+ExitFunction:
+          Close #1
+          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          Exit Function
+
+ErrorHandler:
+          If Not ReportError("SolverCBC", "SolverVersion_CBC") Then Resume
+          RaiseError = True
+          GoTo ExitFunction
 End Function
 
 Function SolverBitness_CBC() As String
@@ -148,8 +149,11 @@ Function SolverBitness_CBC() As String
 End Function
 
 Function CreateSolveScript_CBC(SolutionFilePathName As String, ExtraParameters As Dictionary, SolveOptions As SolveOptionsType, s As COpenSolver) As String
-          Dim CommandLineRunString As String, PrintingOptionString As String, ExtraParametersString As String
+          Dim RaiseError As Boolean
+          RaiseError = False
+          On Error GoTo ErrorHandler
           
+          Dim CommandLineRunString As String, PrintingOptionString As String, ExtraParametersString As String
           ExtraParametersString = ParametersToString_CBC(ExtraParameters)
           
           ' have to split up the command line as excel couldn't have a string longer than 255 characters??
@@ -161,11 +165,7 @@ Function CreateSolveScript_CBC(SolutionFilePathName As String, ExtraParameters A
                                & " -solve " _
                                & IIf(s.bGetDuals, " -printingOptions all ", "") _
                                & " -solution " & MakePathSafe(SolutionFilePathName)
-          '-------------------sensitivity analysis-----------------------------------------------------------
-          'extra command line option of -printingOptions rhs -solution rhsranges.txt gives the allowable increase for constraint rhs.
-          '-this file has the increase as the third input and allowable decrease as the fifth input
-          'extra command line option of -printingOptions objective - solution costranges.txt outputs the ranges on the costs to the costranges file
-          '-this file has the increase as the fifth input and decrease as the third input
+
 6120      PrintingOptionString = IIf(s.bGetDuals, " -printingOptions rhs  -solution " & RHSRangesFile_CBC & " -printingOptions objective -solution " & CostRangesFile_CBC, "")
                         
           Dim scriptFile As String, scriptFileContents As String
@@ -174,20 +174,45 @@ Function CreateSolveScript_CBC(SolutionFilePathName As String, ExtraParameters A
 6123      CreateScriptFile scriptFile, scriptFileContents
           
 6124      CreateSolveScript_CBC = scriptFile
+
+ExitFunction:
+          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          Exit Function
+
+ErrorHandler:
+          If Not ReportError("SolverCBC", "CreateSolveScript_CBC") Then Resume
+          RaiseError = True
+          GoTo ExitFunction
 End Function
 
 Function ParametersToString_CBC(ExtraParameters As Dictionary) As String
+          Dim RaiseError As Boolean
+          RaiseError = False
+          On Error GoTo ErrorHandler
+
           Dim ParamPair As KeyValuePair
           For Each ParamPair In ExtraParameters.KeyValuePairs
               ParametersToString_CBC = ParametersToString_CBC & IIf(left(ParamPair.Key, 1) <> "-", "-", "") & ParamPair.Key & " " & ParamPair.value & " "
           Next
           ParametersToString_CBC = Trim(ParametersToString_CBC)
+
+ExitFunction:
+          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          Exit Function
+
+ErrorHandler:
+          If Not ReportError("SolverCBC", "ParametersToString_CBC") Then Resume
+          RaiseError = True
+          GoTo ExitFunction
 End Function
 
-Function ReadModel_CBC(SolutionFilePathName As String, errorString As String, s As COpenSolver) As Boolean
+Function ReadModel_CBC(SolutionFilePathName As String, s As COpenSolver) As Boolean
+          Dim RaiseError As Boolean
+          RaiseError = False
+          On Error GoTo ErrorHandler
+
           Dim Response As String
 6125      ReadModel_CBC = False
-6126      On Error GoTo ErrHandler
 6127      Open SolutionFilePathName For Input As #1 ' supply path with filename
 6128      Line Input #1, Response  ' Optimal - objective value              22
 
@@ -238,14 +263,12 @@ Function ReadModel_CBC(SolutionFilePathName As String, errorString As String, s 
 6173          End If
               '
 6175      ElseIf Response Like "Status unknown*" Then
-6176          errorString = "CBC solver did not solve the problem, suggesting there was an error in the CBC input parameters. The response was: " & vbCrLf _
+6176          Err.Raise OpenSolver_CBCError, Description:="CBC solver did not solve the problem, suggesting there was an error in the CBC input parameters. The response was: " & vbCrLf _
                & Response _
                & vbCrLf & "The CBC command line can be found at:" _
                & vbCrLf & ScriptFilePath_CBC()
-6177          GoTo ExitSub
 6178      Else
-6179          errorString = "The response from the CBC solver is not recognised. The response was: " & Response
-6180          GoTo ExitSub
+6179          Err.Raise OpenSolver_CBCError, Description:="The response from the CBC solver is not recognised. The response was: " & Response
 6181      End If
           
           ' Remove the double spaces from Response
@@ -289,8 +312,7 @@ Function ReadModel_CBC(SolutionFilePathName As String, errorString As String, s 
 
                           ' Check the index of the row
 6212                      If CInt(SplitLine(StartOffset)) <> CBCConstraintIndex Then
-6213                          errorString = "While reading the CBC solution file, OpenSolver found an unexpected constraint row."
-6214                          GoTo ExitSub
+6213                          Err.Raise OpenSolver_CBCError, Description:="While reading the CBC solution file, OpenSolver found an unexpected constraint row."
 6215                      End If
 6216
 6220                      NameValue = SplitLine(StartOffset + 1)
@@ -332,25 +354,32 @@ Function ReadModel_CBC(SolutionFilePathName As String, errorString As String, s 
               s.SolutionWasLoaded = True
 
 6288      End If
-6289      Close #1
+
 6290      ReadModel_CBC = True
-ExitSub:
-6292      Exit Function
-          
-ErrHandler:
-6293      Close #1
-6294      Err.Raise Err.Number, Err.Source, Err.Description & IIf(Erl = 0, "", " (at line " & Erl & ")")
+
+ExitFunction:
+          Close #1
+          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          Exit Function
+
+ErrorHandler:
+          If Not ReportError("SolverCBC", "ReadModel_CBC") Then Resume
+          RaiseError = True
+          GoTo ExitFunction
 End Function
 
 Sub ReadSensitivityData_CBC(SolutionFilePathName As String, s As COpenSolver)
-          'Reads the two files with the limits on the bounds of shadow prices and reduced costs
-
+'Reads the two files with the limits on the bounds of shadow prices and reduced costs
+          Dim RaiseError As Boolean
+          RaiseError = False
+          On Error GoTo ErrorHandler
+          
           Dim RangeFilePathName As String, LineData() As String, index2 As Long
           Dim Line As String, row As Long, j As Long, i As Long
           
           'Find the ranges on the constraints
 6295      RangeFilePathName = left(SolutionFilePathName, InStrRev(SolutionFilePathName, Application.PathSeparator)) & RHSRangesFile_CBC
-6296      On Error GoTo ErrHandler
+
 6297      Open RangeFilePathName For Input As #2 ' supply path with filename
 6298      Line Input #2, Line 'Dont want first line
 6299      j = 1
@@ -381,20 +410,22 @@ Sub ReadSensitivityData_CBC(SolutionFilePathName As String, s As COpenSolver)
 6340          End If
 6341          j = j + 1
 6342      Wend
-6343      Close #2
-6344      Exit Sub
-          
-ErrHandler:
-6345      Close #2
-6346      Err.Raise Err.Number, Err.Source, Err.Description & IIf(Erl = 0, "", " (at line " & Erl & ")")
+
+ExitSub:
+          Close #2
+          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          Exit Sub
+
+ErrorHandler:
+          If Not ReportError("SolverCBC", "ReadSensitivityData_CBC") Then Resume
+          RaiseError = True
+          GoTo ExitSub
 End Sub
 
 Sub LaunchCommandLine_CBC()
-      ' Open the CBC solver with our last model loaded.
-          ' If we have a worksheet open with a model, then we pass the solver options (max runtime etc) from this model to CBC. Otherwise, we don't pass any options.
-6347      On Error GoTo errorHandler
-          Dim errorPrefix  As String
-6348      errorPrefix = ""
+' Open the CBC solver with our last model loaded.
+' If we have a worksheet open with a model, then we pass the solver options (max runtime etc) from this model to CBC. Otherwise, we don't pass any options.
+6347      On Error GoTo ErrorHandler
             
           Dim WorksheetAvailable As Boolean
 6349      WorksheetAvailable = CheckWorksheetAvailable(SuppressDialogs:=True)
@@ -431,11 +462,12 @@ Sub LaunchCommandLine_CBC()
                            & SolveOptionsString _
                            & " " & ExtraParametersString _
                            & " -" ' Force CBC to accept commands from the command line
-6365      RunExternalCommand MakePathSafe(SolverPath) & CBCRunString, "", SW_SHOWNORMAL, False 'OSSolveSync
+6365      RunExternalCommand MakePathSafe(SolverPath) & CBCRunString, "", SW_SHOWNORMAL, False
 
 ExitSub:
-6366      Exit Sub
-errorHandler:
-6367      MsgBox "OpenSolver encountered error " & Err.Number & ":" & vbCrLf & Err.Description & IIf(Erl = 0, "", " (at line " & Erl & ")") & vbCrLf & "Source = " & Err.Source, , "OpenSolver Code Error"
-6368      Resume ExitSub
+          Exit Sub
+
+ErrorHandler:
+          ReportError "SolverCBC", "LaunchCommandLine_CBC", True
+          GoTo ExitSub
 End Sub

@@ -51,7 +51,11 @@ NoHighlighting:
 End Function
 
 Function CreateLabelShape(w As Worksheet, left As Long, top As Long, width As Long, height As Long, label As String, HighlightColor As Long) As Shape
-          ' Create a label (as a msoShapeRectangle) and give it text. This is used for labelling obj function as min/max, and decision vars as binary or integer
+' Create a label (as a msoShapeRectangle) and give it text. This is used for labelling obj function as min/max, and decision vars as binary or integer
+          Dim RaiseError As Boolean
+          RaiseError = False
+          On Error GoTo ErrorHandler
+    
           Dim s1 As Shape
 3042      Set s1 = w.Shapes.AddShape(msoShapeRectangle, left, top, width, height)
 3043      s1.Fill.Visible = True
@@ -77,6 +81,15 @@ Function CreateLabelShape(w As Worksheet, left As Long, top As Long, width As Lo
 3063      s1.Name = "OpenSolver" & ShapeIndex
 3064      s1.height = height      ' Force the specified height
 3065      Set CreateLabelShape = s1
+
+ExitFunction:
+          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          Exit Function
+
+ErrorHandler:
+          If Not ReportError("OpenSolverVisualizer", "CreateLabelShape") Then Resume
+          RaiseError = True
+          GoTo ExitFunction
 End Function
 
 Function AddLabelToRange(w As Worksheet, r As Range, voffset As Long, height As Long, label As String, HighlightColor As Long) As Shape
@@ -88,9 +101,12 @@ Function AddLabelToShape(w As Worksheet, s As Shape, voffset As Long, height As 
 End Function
 
 Function HighlightRange(r As Range, label As String, HighlightColor As Long, Optional ShowFill As Boolean = False, Optional ShapeNamePrefix As String = "OpenSolver", Optional Bounds As Boolean = False) As ShapeRange
-
+          Dim RaiseError As Boolean
+          RaiseError = False
+          On Error GoTo ErrorHandler
+          
           'Only show the model file that is on the active sheet to overcome hide bugs for shapes on different sheets
-3068      If r.Worksheet.Name <> ActiveSheet.Name Then Exit Function
+3068      If r.Worksheet.Name <> ActiveSheet.Name Then GoTo ExitFunction
           
           Const HighlightingOffsetStep = 1
           ' We offset our highlighting so that successive highlights are still visible
@@ -106,7 +122,7 @@ Function HighlightRange(r As Range, label As String, HighlightColor As Long, Opt
 3076          colHighlightOffsets.Remove Key
 3077          colHighlightOffsets.Add Offset + HighlightingOffsetStep, Key
 3078      End If
-3079      On Error GoTo 0
+3079      On Error GoTo ErrorHandler
           
           ' Handle merged cells
           Dim l As Single, t As Single, right As Single, bottom As Single, R2 As Range, c As Range
@@ -176,6 +192,7 @@ Function HighlightRange(r As Range, label As String, HighlightColor As Long, Opt
 3127          On Error Resume Next
               Dim tmpName As String
 3128          tmpName = r.Worksheet.Shapes(shapeName).Name
+              On Error GoTo ErrorHandler
               'If there hasn't been a bound on that cell then make a new cell
 3129          If tmpName = "" Then
 3130              r.Worksheet.Shapes.AddShape(msoShapeRectangle, l + Offset, top2, right - l, height).Name = shapeName
@@ -239,11 +256,23 @@ endLoop:
 3177          Next i
 3178      End If
 3179      Set HighlightRange = r.Worksheet.Shapes.Range(shapeNames)
+
+ExitFunction:
+          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          Exit Function
+
+ErrorHandler:
+          If Not ReportError("OpenSolverVisualizer", "HighlightRange") Then Resume
+          RaiseError = True
+          GoTo ExitFunction
 End Function
 
 Function AddLabelledConnector(w As Worksheet, s1 As Shape, s2 As Shape, label As String)
+          Dim RaiseError As Boolean
+          RaiseError = False
+          On Error GoTo ErrorHandler
+          
           Dim t As Shapes, c As Shape
-
 3180      Set t = w.Shapes
 3181      Set c = t.AddConnector(msoConnectorStraight, 0, 0, 0, 0) ' msoConnectorCurve
 3182      With c.ConnectorFormat
@@ -286,11 +315,24 @@ Function AddLabelledConnector(w As Worksheet, s1 As Shape, s2 As Shape, label As
 3213      ShapeIndex = ShapeIndex + 1
 3214      s3.Name = "OpenSolver" & ShapeIndex
 
+ExitFunction:
+          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          Exit Function
+
+ErrorHandler:
+          If Not ReportError("OpenSolverVisualizer", "AddLabelledConnector") Then Resume
+          RaiseError = True
+          GoTo ExitFunction
+
 End Function
 
 Sub HighlightConstraint(myDocument As Worksheet, LHSRange As Range, _
                         ByVal RHSisRange As Boolean, RHSRange As Range, ByVal RHSValue As String, ByVal Sense As Long, _
                         ByVal Color As Long)
+          Dim RaiseError As Boolean
+          RaiseError = False
+          On Error GoTo ErrorHandler
+          
           ' Show a constraint of the form LHS <|=|> RHS.
           ' We always put the sign in the rightmost (or bottom-most) range so we read left-to-right or top-to-bottom.
           Dim Range1 As Range, Range2 As Range, Reversed As Boolean
@@ -343,6 +385,15 @@ Sub HighlightConstraint(myDocument As Worksheet, LHSRange As Range, _
 3245      Else 'this was added if there is only a lhs that needs highlighting in linearity
 3246          Set s1 = HighlightRange(LHSRange, "", Color)
 3247      End If
+
+ExitSub:
+          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          Exit Sub
+
+ErrorHandler:
+          If Not ReportError("OpenSolverVisualizer", "HighlightConstraint") Then Resume
+          RaiseError = True
+          GoTo ExitSub
 End Sub
 
 Sub DeleteOpenSolverShapes(w As Worksheet)
@@ -355,17 +406,18 @@ Sub DeleteOpenSolverShapes(w As Worksheet)
 End Sub
 
 Function HideSolverModel() As Boolean
+          Dim RaiseError As Boolean
+          RaiseError = False
+          On Error GoTo ErrorHandler
 
 3253      HideSolverModel = False
           
 3254      If Application.Workbooks.Count = 0 Then
 3255          MsgBox "Error: No active workbook available", , "OpenSolver" & sOpenSolverVersion & " Error"
-3256          Exit Function
+3256          GoTo ExitFunction
 3257      End If
           
-          ' Trap the Escape key
 3258      Application.EnableCancelKey = xlErrorHandler
-3259      On Error GoTo errorHandler
           
 3260      Application.ScreenUpdating = False
           
@@ -375,9 +427,9 @@ Function HideSolverModel() As Boolean
 3262      Set sheet = ActiveWorkbook.ActiveSheet
 3263      If Err.Number <> 0 Then
 3264          MsgBox "Error: Unable to access the active sheet", , "OpenSolver" & sOpenSolverVersion & " Error"
-3265          Exit Function
+3265          GoTo ExitFunction
 3266      End If
-3267      On Error GoTo errorHandler
+3267      On Error GoTo ErrorHandler
           
 3268      DeleteOpenSolverShapes sheet
           Dim i As Long
@@ -386,12 +438,11 @@ Function HideSolverModel() As Boolean
 3269      sheetName = EscapeSheetName(ActiveWorkbook.ActiveSheet)
 3270      On Error Resume Next ' There may not be a model on the sheet
 3271      NumOfConstraints = Mid(Names(sheetName & "solver_num"), 2)
-3272      On Error GoTo errorHandler
+3272      On Error GoTo ErrorHandler
           
           ' Delete constraints on other sheets
           Dim b As Boolean
 3273      For i = 1 To NumOfConstraints
-              ' This code used to say On Error goto NextConstraint, but this failed because the error was never Resume'd
 3274          b = False
               ' Set b to be true only if there is no error
 3275          On Error Resume Next
@@ -401,43 +452,38 @@ Function HideSolverModel() As Boolean
 3279          End If
 NextConstraint:
 3280      Next i
-3281      On Error GoTo errorHandler
+3281      On Error GoTo ErrorHandler
           
 3282      HideSolverModel = True
 
-ExitSub:
+ExitFunction:
 3283      Application.StatusBar = False
 3284      Application.ScreenUpdating = True
-          
-3285      Exit Function
-          
-errorHandler:
-3286      If Err.Number = 18 Then
-3287          If MsgBox("You have pressed the Escape key. Do you wish to cancel?", _
-                         vbCritical + vbYesNo + vbDefaultButton1, _
-                         "OpenSolver: User Interrupt Occured...") = vbNo Then
-3288              Resume
-3289          Else
-3290              Resume ExitSub
-3291          End If
-3292      End If
-3293      MsgBox "OpenSolver encountered error " & Err.Number & ":" & vbCrLf & Err.Description & IIf(Erl = 0, "", " (at line " & Erl & ")") & vbCrLf & "Source = " & Err.Source, , "OpenSolver" & sOpenSolverVersion & " Error"
-3294      Resume ExitSub
+          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          Exit Function
+
+ErrorHandler:
+          If Not ReportError("OpenSolverVisualizer", "HideSolverModel") Then Resume
+          RaiseError = True
+          GoTo ExitFunction
           
 End Function
 
 Function ShowSolverModel() As Boolean
           
+          Dim RaiseError As Boolean
+          RaiseError = False
+          On Error GoTo ErrorHandler
+
 3295      ShowSolverModel = False
           
 3296      If Application.Workbooks.Count = 0 Then
 3297          MsgBox "Error: No active workbook available", , "OpenSolver" & sOpenSolverVersion & " Error"
-3298          Exit Function
+3298          GoTo ExitFunction
 3299      End If
 
           ' Trap the Escape key
 3300      Application.EnableCancelKey = xlErrorHandler
-3301      On Error GoTo errorHandler
           
 3302      Application.ScreenUpdating = False
           
@@ -448,9 +494,9 @@ Function ShowSolverModel() As Boolean
 3304      sheetName = EscapeSheetName(ActiveWorkbook.ActiveSheet)
 3305      If Err.Number <> 0 Then
 3306          MsgBox "Error: Unable to access the active sheet", , "OpenSolver" & sOpenSolverVersion & " Error"
-3307          Exit Function
+3307          GoTo ExitFunction
 3308      End If
-3309      On Error GoTo errorHandler
+3309      On Error GoTo ErrorHandler
           
 3310      Set book = ActiveWorkbook
           
@@ -465,9 +511,9 @@ Function ShowSolverModel() As Boolean
 3316      Set AdjustableCells = RemoveRangeOverlap(Range(sheetName & "solver_adj"))   ' Remove any overlap in the range defining the decision variables
 3317      If Err.Number <> 0 Then
 3318          MsgBox "Error: A model was found on the sheet " & ActiveWorkbook.ActiveSheet.Name & " but the decision variable cells (" & n & ") could not be interpreted. Please redefine the decision variable cells, and try again.", , "OpenSolver" & sOpenSolverVersion & " Error"
-3319          GoTo ExitSub
+3319          GoTo ExitFunction
 3320      End If
-3321      On Error GoTo errorHandler
+3321      On Error GoTo ErrorHandler
           
           ' Highlight the decision variables
 3322      AddDecisionVariableHighlighting AdjustableCells
@@ -583,31 +629,21 @@ NextConstraint:
           
 3439      If Errors <> "" Then
 3440          MsgBox Errors, , "OpenSolver Warning"
-3441          GoTo ExitSub
+3441          GoTo ExitFunction
 3442      End If
           
 3443      ShowSolverModel = True  ' success
 
-ExitSub:
+ExitFunction:
 3444      Application.StatusBar = False ' Resume normal status bar behaviour
 3445      Application.ScreenUpdating = True
-          
-3446      Exit Function
-          
-errorHandler:
-3447      If Err.Number = 18 Then
-3448          If MsgBox("You have pressed the Escape key. Do you wish to cancel?", _
-                         vbCritical + vbYesNo + vbDefaultButton1, _
-                         "OpenSolver: User Interrupt Occured...") = vbNo Then
-3449              Resume 'continue on from where error occured
-3450          Else
-3451              Resume ExitSub
-3452          End If
-3453      End If
-3454      MsgBox "OpenSolver encountered error " & Err.Number & ":" & vbCrLf & Err.Description & IIf(Erl = 0, "", " (at line " & Erl & ")") & vbCrLf & "Source = " & Err.Source, , "OpenSolver Code Error"
-          
-3455      Resume ExitSub
-3456      Resume
+          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          Exit Function
+
+ErrorHandler:
+          If Not ReportError("OpenSolverVisualizer", "ShowSolverModel") Then Resume
+          RaiseError = True
+          GoTo ExitFunction
 End Function
 
 Sub AddObjectiveHighlighting(ObjectiveRange As Range, ObjectiveType As ObjectiveSenseType, ObjectiveTargetValue As Double)

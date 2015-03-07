@@ -3,22 +3,33 @@ Option Explicit
 Public OutgoingMessage As String
 Public NeosResult As String
 
-Function CallNEOS(ModelFilePathName As String, Solver As String, errorString As String, Optional MinimiseUserInteraction As Boolean = False) As String
-          ' Import file as continuous string
-6805      On Error GoTo ErrHandler
-6806      Open ModelFilePathName For Input As #1
+Function CallNEOS(ModelFilePathName As String, Solver As String, Optional MinimiseUserInteraction As Boolean = False) As String
+          Dim RaiseError As Boolean
+          RaiseError = False
+          On Error GoTo ErrorHandler
+
+6806      ' Import file as continuous string
+          Open ModelFilePathName For Input As #1
 6807          OutgoingMessage = Input$(LOF(1), 1)
 6808      Close #1
            
           ' Wrap in XML for AMPL on NEOS
 6809      WrapAMPLForNEOS OutgoingMessage, Solver
            
+          Dim errorString As String
           If MinimiseUserInteraction Then
               CallNEOS = SolveOnNeos(OutgoingMessage, errorString)
           Else
               frmCallingNeos.Show
               CallNEOS = NeosResult
               errorString = frmCallingNeos.Tag
+          End If
+          If Len(errorString) > 0 Then
+              If errorString = "Aborted" Then
+                  Err.Raise OpenSolver_UserCancelledError, Description:="NEOS solve was aborted"
+              Else
+                  Err.Raise OpenSolver_NeosError, Description:=errorString
+              End If
           End If
    
           ' Dump the whole NEOS response to log file
@@ -28,12 +39,15 @@ Function CallNEOS(ModelFilePathName As String, Solver As String, errorString As 
               Print #1, CallNEOS
           Close #1
 
-6812      Exit Function
-          
-ErrHandler:
-6813      Close #1
-6814      Err.Raise Err.Number, Err.Source, Err.Description & IIf(Erl = 0, "", " (at line " & Erl & ")")
-           
+ExitFunction:
+          Close #1
+          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          Exit Function
+
+ErrorHandler:
+          If Not ReportError("OpenSolverNeos", "CallNEOS") Then Resume
+          RaiseError = True
+          GoTo ExitFunction
 End Function
 
 Public Function SolveOnNeos(message As String, errorString As String) As String
@@ -45,6 +59,8 @@ Public Function SolveOnNeos(message As String, errorString As String) As String
 End Function
 
 Private Function SolveOnNeos_Windows(message As String, errorString As String) As String
+          On Error GoTo ErrorHandler
+
           ' Server name
           Dim txtURL As String
 6815      txtURL = "http://www.neos-server.org:3332"
@@ -61,8 +77,16 @@ Private Function SolveOnNeos_Windows(message As String, errorString As String) A
 6819      message = Replace(message, ">", "&gt;")
           
           ' Set up message as XML
-6820      message = "<methodCall><methodName>submitJob</methodName><params><param><value><string>" _
-             & message & "</string></value></param></params></methodCall>"
+6820      message = "<methodCall>" & _
+                    "    <methodName>submitJob</methodName>" & _
+                    "    <params>" & _
+                    "        <param>" & _
+                    "            <value>" & _
+                    "                <string>" & message & "</string>" & _
+                    "            </value>" & _
+                    "        </param>" & _
+                    "    </params>" & _
+                    "</methodCall>"
           
           ' Send Message to NEOS
 6821      objSvrHTTP.send (message)
@@ -74,8 +98,8 @@ Private Function SolveOnNeos_Windows(message As String, errorString As String) A
 6824      jobNumber = Mid(objSvrHTTP.responseText, openingParen + Len("<int>"), closingParen - openingParen - Len("<int>"))
           
 6825      If jobNumber = 0 Then
-6826          MsgBox "An error occured when sending file to NEOS."
-6827          GoTo ExitSub
+6826          errorString = "An error occured when sending file to NEOS."
+6827          GoTo ExitFunction
 6828      End If
           
           ' Extract Password
@@ -86,9 +110,19 @@ Private Function SolveOnNeos_Windows(message As String, errorString As String) A
           
           ' Set up Job Status message for XML
           Dim Done As Boolean, result As String
-6832      message = "<methodCall><methodName>getJobStatus</methodName><params><param><value><int>" _
-             & jobNumber & "</int></value><value><string>" & Password & _
-             "</string></value></param></params></methodCall>"
+6832      message = "<methodCall>" & _
+                    "    <methodName>getJobStatus</methodName>" & _
+                    "    <params>" & _
+                    "        <param>" & _
+                    "            <value>" & _
+                    "                <int>" & jobNumber & "</int>" & _
+                    "            </value>" & _
+                    "            <value>" & _
+                    "                <string>" & Password & "</string>" & _
+                    "            </value>" & _
+                    "        </param>" & _
+                    "    </params>" & _
+                    "</methodCall>"
 6833      Done = False
           
           frmCallingNeos.Tag = "Running"
@@ -97,11 +131,7 @@ Private Function SolveOnNeos_Windows(message As String, errorString As String) A
           Dim time As Long
 6835      time = 0
 6836      While Done = False
-              If frmCallingNeos.Tag = "Cancelled" Then
-                    SolveOnNeos_Windows = "NEOS solve was aborted"
-                    errorString = "Aborted"
-                    Exit Function
-              End If
+              If frmCallingNeos.Tag = "Cancelled" Then GoTo Aborted
               
 6837          DoEvents
               
@@ -120,10 +150,10 @@ Private Function SolveOnNeos_Windows(message As String, errorString As String) A
 6843          If result = "Done" Then
 6844              Done = True
 6845          ElseIf result <> "Waiting" And result <> "Running" Then
-6846              MsgBox "An error occured when sending file to NEOS. Neos returned: " & result
-6847              GoTo ExitSub
+6846              errorString = "An error occured when sending file to NEOS. Neos returned: " & result
+6847              GoTo ExitFunction
 6848          Else
-6849              Application.Wait (Now + TimeValue("0:00:01"))
+6849              sleep 1000
 6850              time = time + 1
 6851              Application.StatusBar = "OpenSolver: Solving model on NEOS... Time Elapsed: " & time & " seconds"
 6852              DoEvents
@@ -131,9 +161,21 @@ Private Function SolveOnNeos_Windows(message As String, errorString As String) A
 6854      Wend
           
           ' Set up final message for XML
-6856      message = "<methodCall><methodName>getFinalResults</methodName><params><param><value><int>" & _
-                    jobNumber & "</int></value></param><param><value><string>" & Password & _
-                    "</string></value></param></params></methodCall>"
+6856      message = "<methodCall>" & _
+                    "    <methodName>getFinalResults</methodName>" & _
+                    "    <params>" & _
+                    "        <param>" & _
+                    "            <value>" & _
+                    "                <int>" & jobNumber & "</int>" & _
+                    "            </value>" & _
+                    "        </param>" & _
+                    "        <param>" & _
+                    "            <value>" & _
+                    "                <string>" & Password & "</string>" & _
+                    "            </value>" & _
+                    "        </param>" & _
+                    "    </params>" & _
+                    "</methodCall>"
           
           ' Reset obj
 6857      objSvrHTTP.Open "POST", txtURL, False
@@ -148,14 +190,22 @@ Private Function SolveOnNeos_Windows(message As String, errorString As String) A
           ' The message is returned from NEOS in base 64
 6862      SolveOnNeos_Windows = DecodeBase64(result)
           
-6863      Exit Function
-                
-ExitSub:
-6864      errorString = "ExitSub"
-6865      Exit Function
-errorHandler:
-6866      errorString = "Error while contacting NEOS."
+ExitFunction:
+          Exit Function
 
+ErrorHandler:
+' We CANNOT raise an error in these functions.
+' They are sometimes called with a form as a conduit, which means that errors can't propogate back to the main thread.
+' Instead, set the error string, which IS passed back to the main thread by the form.
+          If Not ReportError("OpenSolverNeos", "SolveOnNeos_Windows") Then Resume
+          If OpenSolverErrorHandler.ErrNum = OpenSolver_UserCancelledError Then GoTo Aborted
+          errorString = OpenSolverErrorHandler.ErrMsg
+          GoTo ExitFunction
+          
+Aborted:
+          SolveOnNeos_Windows = "NEOS solve was aborted"
+          errorString = "Aborted"
+          Exit Function
 End Function
 
 #If Mac Then
@@ -163,8 +213,9 @@ Private Function SolveOnNeos_Mac(message As String, errorString As String) As St
           ' Mac doesn't have ActiveX so can't use MSXML.
           ' It does have python by default, so we can use python's xmlrpclib to contact NEOS instead.
           ' We delegate all interaction to the NeosClient.py script file.
-          Dim errorPrefix As String
-6867      errorPrefix = "Sending model to NEOS"
+          Dim RaiseError As Boolean
+          RaiseError = False
+          On Error GoTo ErrorHandler
           
           ' For some reason this status bar doesn't stick unless we update the screen
 6868      Application.ScreenUpdating = True
@@ -173,14 +224,12 @@ Private Function SolveOnNeos_Mac(message As String, errorString As String) As St
           
           Dim ModelFilePathName As String
 6871      ModelFilePathName = GetTempFilePath("job.xml")
-6872      DeleteFileAndVerify ModelFilePathName, errorPrefix, "Unable to delete the job file: " & ModelFilePathName
-          
+6872      DeleteFileAndVerify ModelFilePathName
+
           ' Create the job file
-6873      On Error GoTo ErrHandler
 6874      Open ModelFilePathName For Output As #1
 6875      Print #1, message
 6876      Close #1
-6877      On Error GoTo 0
           
           ' Set up commands for NeosClient
           ' NeosClient call is of the form: NeosClient.py <method> <neosresult.txt> <extra params> >> <logfile>
@@ -196,11 +245,11 @@ Private Function SolveOnNeos_Mac(message As String, errorString As String) As St
           
           Dim SolutionFilePathName As String
 6884      SolutionFilePathName = GetTempFilePath("neosresult.txt")
-6885      DeleteFileAndVerify SolutionFilePathName, errorPrefix, "Unable to delete the solution file: " & SolutionFilePathName
+6885      DeleteFileAndVerify SolutionFilePathName
 
           Dim LogFilePathName As String
 6886      LogFilePathName = GetTempFilePath("log1.tmp")
-6887      DeleteFileAndVerify LogFilePathName, errorPrefix, "Unable to delete the log file: " & LogFilePathName
+6887      DeleteFileAndVerify LogFilePathName
 6888      LogFilePathName = MakePathSafe(LogFilePathName)
 
 6889      Application.ScreenUpdating = True
@@ -209,52 +258,40 @@ Private Function SolveOnNeos_Mac(message As String, errorString As String) As St
           ' Run NeosClient.py->send
           Dim result As Boolean
 6891      result = RunExternalCommand(SolverPath & " send " & MakePathSafe(SolutionFilePathName) & " " & ModelFilePathName, LogFilePathName)
-6892      If Not result Then
-6893          GoTo NEOSError
-6894      End If
+6892      If Not result Then GoTo ContactError
           
           ' Read in job number and password
           Dim jobNumber As String, Password As String
-6895      On Error GoTo ErrHandler
 6896      Open SolutionFilePathName For Input As #1
 6897          Line Input #1, message
 6898          jobNumber = Mid(message, Len("jobNumber = ") + 1)
 6899          Line Input #1, message
 6900          Password = Mid(message, Len("password = ") + 1)
 6901      Close #1
-6902      On Error GoTo 0
-6903      DeleteFileAndVerify SolutionFilePathName, errorPrefix, "Unable to delete the solution file: " & SolutionFilePathName
+6903      DeleteFileAndVerify SolutionFilePathName
 
           ' Loop until job is done
           Dim time As Long, Done As Boolean
 6904      Done = False
 6905      time = 0
 6906      While Done = False
-              If frmCallingNeos.Tag = "Cancelled" Then
-                    SolveOnNeos_Mac = "NEOS solve was aborted"
-                    errorString = "Aborted"
-                    Exit Function
-              End If
+              If frmCallingNeos.Tag = "Cancelled" Then GoTo Aborted
               
               ' Run NeosClient.py->check
 6907          result = RunExternalCommand(SolverPath & " check " & MakePathSafe(SolutionFilePathName) & " " & jobNumber & " " & Password, LogFilePathName)
-6908          If Not result Then
-6909              GoTo NEOSError
-6910          End If
-              On Error GoTo ErrHandler
+6908          If Not result Then GoTo ContactError
 6911          Open SolutionFilePathName For Input As #1
 6912              Line Input #1, message
 6913          Close #1
-              On Error GoTo 0
-6914          DeleteFileAndVerify SolutionFilePathName, errorPrefix, "Unable to delete the solution file: " & SolutionFilePathName
+6914          DeleteFileAndVerify SolutionFilePathName
 
               ' Evaluate result
 6915          If message = "Done" Then
 6916              Done = True
 6917          ElseIf message <> "Waiting" And message <> "Running" Then
-6918              GoTo NEOSError
+6918              GoTo ContactError
 6919          Else
-6920              Application.Wait (Now + TimeValue("0:00:01"))
+6920              sleep 1
 6921              time = time + 1
 6922              Application.StatusBar = "OpenSolver: Solving model on NEOS... Time Elapsed: " & time & " seconds"
 6923              DoEvents
@@ -266,39 +303,48 @@ Private Function SolveOnNeos_Mac(message As String, errorString As String) As St
           
           ' Run NeosClient.py->check
 6928      result = RunExternalCommand(SolverPath & " read " & MakePathSafe(SolutionFilePathName) & " " & jobNumber & " " & Password, LogFilePathName)
-6929      If Not result Then
-6930          GoTo NEOSError
-6931      End If
+6929      If Not result Then GoTo ContactError
           
           ' Read in results from file
-6932      On Error GoTo ErrHandler
 6933      Open SolutionFilePathName For Input As #1
 6934          message = Input$(LOF(1), 1)
 6935      Close #1
-6936      On Error GoTo 0
           
 6937      If left(message, 6) = "Error:" Then
-6938          GoTo NEOSError
+              errorString = "An error occured when sending file to NEOS. Neos returned: " & message
+6938          GoTo ExitFunction
 6939      End If
 6940      SolveOnNeos_Mac = message
+
+ExitFunction:
 6941      Exit Function
+
+ErrorHandler:
+' We CANNOT raise an error in these functions.
+' They are sometimes called with a form as a conduit, which means that errors can't propogate back to the main thread.
+' Instead, set the error string, which IS passed back to the main thread by the form.
+          If Not ReportError("OpenSolverNeos", "SolveOnNeos_Windows") Then Resume
+          If OpenSolverErrorHandler.ErrNum = OpenSolver_UserCancelledError Then GoTo Aborted
+          errorString = OpenSolverErrorHandler.ErrMsg
+          GoTo ExitFunction
           
-ErrHandler:
-6942      Close #1
-6943      errorString = Err.Description
-6944      SolveOnNeos_Mac = ""
-6945      Exit Function
+Aborted:
+          SolveOnNeos_Mac = "NEOS solve was aborted"
+          errorString = "Aborted"
+          GoTo ExitFunction
           
-NEOSError:
-6946      Close #1
-6947      errorString = "Error contacting NEOS."
-6948      SolveOnNeos_Mac = ""
-6949      MsgBox "An error occured when sending file to NEOS. Neos returned: " & message
+ContactError:
+          errorString = "An error occured contacting NEOS"
+          GoTo ExitFunction
 End Function
 #End If
 
 ' Code by Tim Hastings
 Private Function DecodeBase64(ByVal strData As String) As String
+          Dim RaiseError As Boolean
+          RaiseError = False
+          On Error GoTo ErrorHandler
+
           Dim objXML As Object 'MSXML2.DOMDocument
           Dim objNode As Object 'MSXML2.IXMLDOMElement
         
@@ -312,10 +358,23 @@ Private Function DecodeBase64(ByVal strData As String) As String
           ' Clean up
 6955      Set objNode = Nothing
 6956      Set objXML = Nothing
+
+ExitFunction:
+          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          Exit Function
+
+ErrorHandler:
+          If Not ReportError("OpenSolverNeos", "DecodeBase64") Then Resume
+          RaiseError = True
+          GoTo ExitFunction
 End Function
 
 ' Code by Tim Hastings
 Function Stream_BinaryToString(Binary)
+           Dim RaiseError As Boolean
+           RaiseError = False
+           On Error GoTo ErrorHandler
+          
            Const adTypeText = 2
            Const adTypeBinary = 1
            
@@ -340,10 +399,23 @@ Function Stream_BinaryToString(Binary)
            'Open the stream And get text/string data from the object
 6964       Stream_BinaryToString = BinaryStream.ReadText
 6965       Set BinaryStream = Nothing
+
+ExitFunction:
+           If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+           Exit Function
+
+ErrorHandler:
+           If Not ReportError("OpenSolverNeos", "Stream_BinaryToString") Then Resume
+           RaiseError = True
+           GoTo ExitFunction
 End Function
 
 Sub WrapAMPLForNEOS(AmplString As String, Solver As String)
-      ' Wraps AMPL in the required XML to send to NEOS
+' Wraps AMPL in the required XML to send to NEOS
+           Dim RaiseError As Boolean
+           RaiseError = False
+           On Error GoTo ErrorHandler
+
            Dim Category As String, SolverType As String
 6966       SolverType = GetNeosSolverType(Solver)
            Category = GetNeosSolverCategory(SolverType)
@@ -361,6 +433,15 @@ Sub WrapAMPLForNEOS(AmplString As String, Solver As String)
                   "<commands><![CDATA[]]></commands>" & _
                   "<comments><![CDATA[]]></comments>" & _
               "</document>"
+
+ExitSub:
+          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          Exit Sub
+
+ErrorHandler:
+          If Not ReportError("OpenSolverNeos", "WrapAMPLForNEOS") Then Resume
+          RaiseError = True
+          GoTo ExitSub
 End Sub
 
 Function GetNeosSolverCategory(SolverType As String)

@@ -22,16 +22,42 @@ Public Sub Push(Item As String)
 End Sub
 
 Public Function Pop() As String
+          Dim RaiseError As Boolean
+          RaiseError = False
+          On Error GoTo ErrorHandler
+
           Dim obj As String
 8982      obj = Items(Items.Count)
 8983      Items.Remove (Items.Count)
 8984      Pop = obj
+
+ExitFunction:
+          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          Exit Function
+
+ErrorHandler:
+          If Not ReportError("StringStack", "Pop") Then Resume
+          RaiseError = True
+          GoTo ExitFunction
 End Function
 
 Public Function Peek() As String
+          Dim RaiseError As Boolean
+          RaiseError = False
+          On Error GoTo ErrorHandler
+
           Dim obj As String
 8985      obj = Items(Items.Count)
 8986      Peek = obj
+
+ExitFunction:
+          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          Exit Function
+
+ErrorHandler:
+          If Not ReportError("StringStack", "Peek") Then Resume
+          RaiseError = True
+          GoTo ExitFunction
 End Function
 
 Property Get Count() As Long

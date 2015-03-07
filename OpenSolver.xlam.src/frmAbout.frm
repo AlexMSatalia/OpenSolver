@@ -42,7 +42,7 @@ End Sub
 
 Public Sub ReflectOpenSolverStatus()
           ' Update buttons to reflect install status of OpenSolver
-3479      On Error GoTo errorHandler
+3479      On Error GoTo ErrorHandler
           Dim InstalledAndActive As Boolean
 3480      InstalledAndActive = False
 
@@ -58,7 +58,7 @@ Public Sub ReflectOpenSolverStatus()
 3485          Set AddIn = Application.AddIns(title)
 3486          InstalledAndActive = AddIn.Installed
 3487      End If
-errorHandler:
+ErrorHandler:
 3488      EventsEnabled = False
 3489      chkAutoLoad.value = InstalledAndActive
 3490      chkAutoLoad.Enabled = Not InstalledAndActive
@@ -128,30 +128,7 @@ Private Sub UserForm_Activate()
           
           chkUpdate.value = GetUpdateSetting()
 
-          Dim VBAversion As String
-3516      VBAversion = "VBA"
-#If VBA7 Then
-3517      VBAversion = "VBA7"
-#ElseIf VBA6 Then
-3518      VBAversion = "VBA6"
-#End If
-
-          Dim ExcelBitness As String
-#If Win64 Then
-3519      ExcelBitness = "64"
-#Else
-3520      ExcelBitness = "32"
-#End If
-          Dim OS As String
-#If Mac Then
-3521      OS = "Mac"
-#Else
-3522      OS = "Windows"
-#End If
-
-3523      lblVersion.Caption = "Version " & sOpenSolverVersion & " (" & sOpenSolverDate & ")" & _
-                               " running on " & IIf(SystemIs64Bit, "64", "32") & "-bit " & OS & _
-                               " with " & VBAversion & " in " & ExcelBitness & "-bit Excel " & Application.Version
+3523      lblVersion.Caption = OpenSolverEnvironmentSummary()
           
           ReflectOpenSolverStatus
           EventsEnabled = True
@@ -170,7 +147,6 @@ Private Sub UserForm_Activate()
 3537      Application.StatusBar = False
 3538      Application.Cursor = xlDefault
 End Sub
-
 
 Public Function About_OpenSolver() As String
 3539  About_OpenSolver = _

@@ -21,7 +21,7 @@ Public SolverModelSheet As Worksheet
 
 Public AdjustableCells As Range
 Public AdjustableCellCount As Long
-Private AdjCellNames() As String
+Private pAdjCellNames() As String
 Public VarLowerBounds As Collection
     
 Public ObjectiveSense As ObjectiveSenseType
@@ -55,18 +55,32 @@ Public strNameRoot As String
 
 '==============================================================================
 Public Sub Setup(ByRef BookToUse As Workbook, ByRef SheetToUse As Worksheet)
+          Dim RaiseError As Boolean
+          RaiseError = False
+          On Error GoTo ErrorHandler
 
 4782      Set book = BookToUse
 4783      Set SolverModelSheet = SheetToUse
 4784      strNameRoot = EscapeSheetName(SolverModelSheet)
           Set OpenSolverParser.SheetNameMap = New Collection
           Set OpenSolverParser.SheetNameMapReverse = New Collection
-          
-          
+
+ExitSub:
+          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          Exit Sub
+
+ErrorHandler:
+          If Not ReportError("CModelParsed", "Setup") Then Resume
+          RaiseError = True
+          GoTo ExitSub
 End Sub
 
 '==============================================================================
 Public Function ProcessSolverModel(s As COpenSolver) As Boolean
+          Dim RaiseError As Boolean
+          RaiseError = False
+          On Error GoTo ErrorHandler
+
 4785      Solver = s.Solver
           
           ' =========================================
@@ -75,7 +89,7 @@ Public Function ProcessSolverModel(s As COpenSolver) As Boolean
 4787      AdjustableCellCount = AdjustableCells.Count
           
           ' Get variable names
-4788      ReDim AdjCellNames(1 To AdjustableCellCount) As String
+4788      ReDim pAdjCellNames(1 To AdjustableCellCount) As String
           Dim i As Long
 4789      For i = 1 To AdjustableCellCount
 4790          AdjCellNames(i) = s.VarNamesP(i)
@@ -125,11 +139,23 @@ Public Function ProcessSolverModel(s As COpenSolver) As Boolean
           ' Conduct parsed-specific processing
 4816      ProcessVarTypes
 4817      ProcessSolverModel = ParseFormulae(s)
+
+ExitFunction:
+          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          Exit Function
+
+ErrorHandler:
+          If Not ReportError("CModelParsed", "ProcessSolverModel") Then Resume
+          RaiseError = True
+          GoTo ExitFunction
 End Function
 
 Private Sub ProcessVarTypes()
-      ' Get var types of constraints
-          
+          Dim RaiseError As Boolean
+          RaiseError = False
+          On Error GoTo ErrorHandler
+
+          ' Get var types of constraints
 4818      Set VarTypeMap = New Collection
 4819      Set AdjCellNameMap = New Collection
           Dim curVarType As Long, lngArea As Long, cellName As String, c As Range
@@ -149,11 +175,23 @@ Private Sub ProcessVarTypes()
 4833              End If
 4834          Next
 4835      Next
+
+ExitSub:
+          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          Exit Sub
+
+ErrorHandler:
+          If Not ReportError("CModelParsed", "ProcessVarTypes") Then Resume
+          RaiseError = True
+          GoTo ExitSub
 End Sub
 
 Private Function ParseFormulae(s As COpenSolver) As Boolean
-      ' Parses all constraints and objective formulae to create formulae that depend only on variable cells and constants
-4836      On Error GoTo EscapeHandler
+' Parses all constraints and objective formulae to create formulae that depend only on variable cells and constants
+          Dim RaiseError As Boolean
+          RaiseError = False
+          On Error GoTo ErrorHandler
+
           
           ' Create a collection for the spreadsheet's formulae (DAG)
 4837      Set Formulae = New Collection
@@ -226,7 +264,7 @@ Private Function ParseFormulae(s As COpenSolver) As Boolean
                       
                       ' Get RHS
                       Dim strRHSFormula As String, rngRHSCell As Range
-4872                  Select Case GetRHSType(i)
+4872                  Select Case RHSType(i)
                       ' 1.1 RHS is a single cell
                       Case SingleCellRange
 4873                      strRHSFormula = nameRHSi.RefersToRange.Formula
@@ -246,7 +284,7 @@ Private Function ParseFormulae(s As COpenSolver) As Boolean
                           Dim isConst As Boolean
 4883                      isConst = False
                            
-4884                      Select Case GetRHSType(i)
+4884                      Select Case RHSType(i)
                           Case constant
 4885                          isConst = True
 4886                      Case Formula
@@ -294,7 +332,7 @@ Private Function ParseFormulae(s As COpenSolver) As Boolean
                                       "   " & SolverRelationAsString(ConvertRelationToEnum(nameRELi.value)) & "   " & _
                                       "RHS=" & "'" & strRHSFormula & "'" & "=" & RHSValue
 4916                              ParseFormulae = False
-4917                              Exit Function
+4917                              GoTo ExitFunction
 4918                          Else
                                   ' Otherwise the constraint is trivially satisfied, we can ignore it
 4919                              GoTo NextCol
@@ -319,7 +357,6 @@ NextCol:
               
 NextCons:
 4929      Next i
-4930      Application.StatusBar = False
           
           '==========================================================================
           ' STEP 3. Make all possible substitutions in formula tree if required by solver
@@ -343,54 +380,37 @@ NextCons:
 4943          Next lngCurDepth
 4944      End If
 4945      ParseFormulae = True
-4946      Exit Function
-          
-EscapeHandler:
-          ' We only trap Escape (Err.Number=18) here; all other errors are passed back to the caller.
-          ' Save error message
-          Dim ErrorNumber As Long, ErrorDescription As String, ErrorSource As String
-4947      ErrorNumber = Err.Number
-4948      ErrorDescription = Err.Description & IIf(Erl = 0, "", " (at line " & Erl & ")")
-4949      ErrorSource = Err.Source
 
-4950      If Err.Number = 18 Then
-4951          If MsgBox("You have pressed the Escape key. Do you wish to cancel?", _
-                         vbCritical + vbYesNo + vbDefaultButton1, _
-                         "OpenSolver: User Interrupt Occured...") = vbNo Then
-4952              Resume 'continue on from where error occured
-4953          Else
-                  ' Raise a "user cancelled" error. We cannot use Raise, as that exits immediately without going thru our code below
-4954              ErrorNumber = OpenSolver_UserCancelledError
-4955              ErrorSource = "Parsing formulae"
-4956              ErrorDescription = "Model building cancelled by user."
-4957          End If
-4958      End If
-          
-ErrorExit:
-          ' Exit, raising an error; none of the following change the Err.Number etc, but we saved them above just in case...
-4959      Application.StatusBar = False
-4960      Err.Raise ErrorNumber, ErrorSource, ErrorDescription
-End Function
-'==============================================================================
-Public Function GetLHSType(lngConNum As Long) As SolverInputType
-4961      GetLHSType = LHSType(lngConNum)
+ExitFunction:
+          Application.StatusBar = False
+          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          Exit Function
+
+ErrorHandler:
+          If Not ReportError("CModelParsed", "ParseFormulae") Then Resume
+          RaiseError = True
+          GoTo ExitFunction
 End Function
 
-Public Function GetRHSType(lngConNum As Long) As SolverInputType
-4962      GetRHSType = RHSType(lngConNum)
-End Function
+Public Property Get AdjCellNames(lngVar As Long) As String
+4963      AdjCellNames = pAdjCellNames(lngVar)
+End Property
 
-Public Function GetAdjCellName(lngVar As Long) As String
-4963      GetAdjCellName = AdjCellNames(lngVar)
-End Function
+Public Property Let AdjCellNames(lngVar As Long, strName As String)
+4963      pAdjCellNames(lngVar) = strName
+End Property
 
 ' Checks whether a cell is constant i.e. not a decision variable and does not depend on a decision variable
 Function CellIsConstant(cell As Range) As Boolean
+          Dim RaiseError As Boolean
+          RaiseError = False
+          On Error GoTo ErrorHandler
+
           ' Check if cell is a variable cell
           If cell.Parent.Name = AdjustableCells.Parent.Name Then
 4964          If Not Intersect(cell, AdjustableCells) Is Nothing Then
 4965              CellIsConstant = False
-4966              Exit Function
+4966              GoTo ExitFunction
 4967          End If
           End If
           
@@ -403,30 +423,37 @@ Function CellIsConstant(cell As Range) As Boolean
               On Error Resume Next
               Set CellPrecedents = cell.Precedents
               If Err.Number = 1004 Then
-                  ' Can't do a plain text error message check in non-english locales
-                  'If Err.Description Like "No cells were found*" Then
-                      CellIsConstant = True
-                      Exit Function
-                  'Else
-                      'On Error GoTo 0
-                      'Err.Raise Err.Number, Err.Source, Err.Description
-                  'End If
+                  CellIsConstant = True
+                  GoTo ExitFunction
               End If
-              On Error GoTo 0
+              On Error GoTo ErrorHandler
               
               If cell.Precedents.Parent.Name = AdjustableCells.Parent.Name Then
 4969              If Not Intersect(cell.Precedents, AdjustableCells) Is Nothing Then
 4970                  CellIsConstant = False
-4971                  Exit Function
+4971                  GoTo ExitFunction
                   End If
 4972          End If
 4973      End If
 4974      CellIsConstant = True
+
+ExitFunction:
+          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          Exit Function
+
+ErrorHandler:
+          If Not ReportError("CModelParsed", "CellIsConstant") Then Resume
+          RaiseError = True
+          GoTo ExitFunction
 End Function
 
 ' Checks whether a string formula depends on variable cells or is simply constant.
 ' If constant, we can evaluate it directly
 Function StringFormulaIsConstant(strFormula As String) As Boolean
+          Dim RaiseError As Boolean
+          RaiseError = False
+          On Error GoTo ErrorHandler
+
           Dim tksFormula As Tokens
 4975      Set tksFormula = ParseFormula(strFormula)
           
@@ -527,15 +554,26 @@ Function StringFormulaIsConstant(strFormula As String) As Boolean
 5028          strSheetPrefix = ""
 5029      End If
 5030      StringFormulaIsConstant = True
-5031      Exit Function
           
+ExitFunction:
+          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          Exit Function
+
+ErrorHandler:
+          If Not ReportError("CModelParsed", "StringFormulaIsConstant") Then Resume
+          RaiseError = True
+          GoTo ExitFunction
+
 NotConstant:
 5032      StringFormulaIsConstant = False
+          GoTo ExitFunction
 End Function
 
 Function ExpandFormula(ByVal strFormula As String, _
                        ByRef rngSourceCell As Range, Optional ConstraintNumber As Long) As String
-5033      On Error GoTo EscapeHandler
+          Dim RaiseError As Boolean
+          RaiseError = False
+          On Error GoTo ErrorHandler
 
           '==========================================================================
           ' STEP 0. Misc Setup
@@ -569,7 +607,7 @@ Function ExpandFormula(ByVal strFormula As String, _
               ' If root node exists already, don't need to do this again
 5039          If TestKeyExists(Formulae, strRootAddress) Then
 5040              ExpandFormula = strRootAddress
-5041              Exit Function
+5041              GoTo ExitFunction
 5042          End If
               ' Check that the source cell (e.g. objective, LHS, RHS) is not an
               ' adjustable cell itself
@@ -577,14 +615,14 @@ Function ExpandFormula(ByVal strFormula As String, _
 5044              If Not (Intersect(rngSourceCell, AdjustableCells) Is Nothing) Then
                       ' Its an adjustable cell, just return standard name and stop
 5045                  ExpandFormula = strRootAddress
-5046                  Exit Function
+5046                  GoTo ExitFunction
 5047              End If
 5048          End If
 5049      End If
           ' It doesn't exist, it isn't an adjustable cell
           ' Is it even a formula?
 5050      If Len(strFormula) = 0 Then
-5051          ExpandFormula = "0": Exit Function
+5051          ExpandFormula = "0": GoTo ExitFunction
 5052      End If
 5053      If left(strFormula, 1) <> "=" Then
 5054          If IsAmericanNumber(strFormula) Then
@@ -592,7 +630,7 @@ Function ExpandFormula(ByVal strFormula As String, _
 5056          Else
 5057              ExpandFormula = "'" + strFormula + "'"
 5058          End If
-5059          Exit Function
+5059          GoTo ExitFunction
 5060      End If
           ' Store the last index of the list-representation of the DAG
           Dim lngBaseIndex As Long
@@ -905,7 +943,7 @@ skipTokenising:
                   ' Was just a simple constant, no need to create anything in Formulae
 5229              ExpandFormula = objCurNode.strFormulaParsed
 5230              Formulae.Remove lngIndex
-5231              Exit Function
+5231              GoTo ExitFunction
 5232          End If
               
               '======================================================================
@@ -913,42 +951,25 @@ skipTokenising:
 5233          lngIndex = lngIndex + 1
 5234      Loop
           
-5235      Exit Function
-          
-EscapeHandler:
-          ' We only trap Escape (Err.Number=18) here; all other errors are passed back to the caller.
-          ' Save error message
-          Dim ErrorNumber As Long, ErrorDescription As String, ErrorSource As String
-5236      ErrorNumber = Err.Number
-5237      ErrorDescription = Err.Description & IIf(Erl = 0, "", " (at line " & Erl & ")")
-5238      ErrorSource = Err.Source
+ExitFunction:
+          Application.StatusBar = False
+          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          Exit Function
 
-5239      If Err.Number = 18 Then
-5240          If MsgBox("You have pressed the Escape key. Do you wish to cancel?", _
-                         vbCritical + vbYesNo + vbDefaultButton1, _
-                         "OpenSolver: User Interrupt Occured...") = vbNo Then
-5241              Resume 'continue on from where error occured
-5242          Else
-                  ' Raise a "user cancelled" error. We cannot use Raise, as that exits immediately without going thru our code below
-5243              ErrorNumber = OpenSolver_UserCancelledError
-5244              ErrorSource = "Parsing formulae"
-5245              ErrorDescription = "Model building cancelled by user."
-5246          End If
-5247      End If
-          
-ErrorExit:
-          ' Exit, raising an error; none of the following change the Err.Number etc, but we saved them above just in case...
-5248      Application.StatusBar = False
-5249      Err.Raise ErrorNumber, ErrorSource, ErrorDescription
+ErrorHandler:
+          If Not ReportError("CModelParsed", "ExpandFormula") Then Resume
+          RaiseError = True
+          GoTo ExitFunction
 End Function
 
 Function FindPosition(Word As String, FindString As String, Count As Long, Optional start As Long = 1) As Long
-          Dim It As Long
+          Dim RaiseError As Boolean
+          RaiseError = False
+          On Error GoTo ErrorHandler
           
-          ' Define iterator
+          Dim It As Long
 5250      It = 1
           
-          ' Define initial position
 5251      FindPosition = start
           
           ' Loop until count reached
@@ -956,11 +977,21 @@ Function FindPosition(Word As String, FindString As String, Count As Long, Optio
 5253          FindPosition = InStr(FindPosition + 1, Word, FindString)
 5254          It = It + 1
 5255      Wend
+
+ExitFunction:
+          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          Exit Function
+
+ErrorHandler:
+          If Not ReportError("CModelParsed", "FindPosition") Then Resume
+          RaiseError = True
+          GoTo ExitFunction
 End Function
 
 Sub CleanFormulae(ByVal lngFStart As Long, ByVal lngFEnd As Long, Optional ConstraintNumber As Long = 0)
-
-5256      On Error GoTo EscapeHandler
+          Dim RaiseError As Boolean
+          RaiseError = False
+          On Error GoTo ErrorHandler
 
           Dim objCurNode As CFormula, lngIndex As Long, varReturn As Variant
 
@@ -1044,36 +1075,23 @@ Sub CleanFormulae(ByVal lngFStart As Long, ByVal lngFEnd As Long, Optional Const
           
 5312          If Formulae(lngIndex).boolCanBeRemoved Then Formulae.Remove lngIndex
 5313      Next lngIndex
-5314      Exit Sub
-          
-EscapeHandler:
-          ' We only trap Escape (Err.Number=18) here; all other errors are passed back to the caller.
-          ' Save error message
-          Dim ErrorNumber As Long, ErrorDescription As String, ErrorSource As String
-5315      ErrorNumber = Err.Number
-5316      ErrorDescription = Err.Description & IIf(Erl = 0, "", " (at line " & Erl & ")")
-5317      ErrorSource = Err.Source
 
-5318      If Err.Number = 18 Then
-5319          If MsgBox("You have pressed the Escape key. Do you wish to cancel?", _
-                         vbCritical + vbYesNo + vbDefaultButton1, _
-                         "OpenSolver: User Interrupt Occured...") = vbNo Then
-5320              Resume 'continue on from where error occured
-5321          Else
-                  ' Raise a "user cancelled" error. We cannot use Raise, as that exits immediately without going thru our code below
-5322              ErrorNumber = OpenSolver_UserCancelledError
-5323              ErrorSource = "Parsing formulae"
-5324              ErrorDescription = "Model building cancelled by user."
-5325          End If
-5326      End If
-          
-ErrorExit:
-          ' Exit, raising an error; none of the following change the Err.Number etc, but we saved them above just in case...
-5327      Application.StatusBar = False
-5328      Err.Raise ErrorNumber, ErrorSource, ErrorDescription
+ExitSub:
+          Application.StatusBar = False
+          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          Exit Sub
+
+ErrorHandler:
+          If Not ReportError("CModelParsed", "CleanFormulae") Then Resume
+          RaiseError = True
+          GoTo ExitSub
 End Sub
 
 Sub PUSHDOWN(ByRef objNode As CFormula, ByVal lngNewDepth As Long)
+          Dim RaiseError As Boolean
+          RaiseError = False
+          On Error GoTo ErrorHandler
+
 5329      If lngNewDepth > lngMaxDepth Then lngMaxDepth = lngNewDepth
 5330      If lngNewDepth > objNode.lngDepth Then objNode.lngDepth = lngNewDepth
           'Dim child As Long
@@ -1084,11 +1102,23 @@ Sub PUSHDOWN(ByRef objNode As CFormula, ByVal lngNewDepth As Long)
 5331      For Each child In objNode.Children
 5332          If TestKeyExists(Formulae, CStr(child)) Then PUSHDOWN Formulae(child), objNode.lngDepth + 1
 5333      Next
+
+ExitSub:
+          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          Exit Sub
+
+ErrorHandler:
+          If Not ReportError("CModelParsed", "PUSHDOWN") Then Resume
+          RaiseError = True
+          GoTo ExitSub
 End Sub
 
 Function AddNodeIfNew(ByRef objCurNode As CFormula, ByRef c As Range) As String
+          Dim RaiseError As Boolean
+          RaiseError = False
+          On Error GoTo ErrorHandler
+
           Dim cell As Range
-5334      On Error GoTo EscapeHandler
           
           ' 1.1 Get the standard name of this cell
           Dim strStdName As String
@@ -1236,36 +1266,23 @@ Function AddNodeIfNew(ByRef objCurNode As CFormula, ByRef c As Range) As String
 5412      AddNodeIfNew = strStdName
 
 finishedNode:
-5413      Exit Function
-          
-EscapeHandler:
-          ' We only trap Escape (Err.Number=18) here; all other errors are passed back to the caller.
-          ' Save error message
-          Dim ErrorNumber As Long, ErrorDescription As String, ErrorSource As String
-5414      ErrorNumber = Err.Number
-5415      ErrorDescription = Err.Description & IIf(Erl = 0, "", " (at line " & Erl & ")")
-5416      ErrorSource = Err.Source
+          ' Done!
+ExitFunction:
+          Application.StatusBar = False
+          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          Exit Function
 
-5417      If Err.Number = 18 Then
-5418          If MsgBox("You have pressed the Escape key. Do you wish to cancel?", _
-                         vbCritical + vbYesNo + vbDefaultButton1, _
-                         "OpenSolver: User Interrupt Occured...") = vbNo Then
-5419              Resume 'continue on from where error occured
-5420          Else
-                  ' Raise a "user cancelled" error. We cannot use Raise, as that exits immediately without going thru our code below
-5421              ErrorNumber = OpenSolver_UserCancelledError
-5422              ErrorSource = "Parsing formulae"
-5423              ErrorDescription = "Model building cancelled by user."
-5424          End If
-5425      End If
-          
-ErrorExit:
-          ' Exit, raising an error; none of the following change the Err.Number etc, but we saved them above just in case...
-5426      Application.StatusBar = False
-5427      Err.Raise ErrorNumber, ErrorSource, ErrorDescription
+ErrorHandler:
+          If Not ReportError("CModelParsed", "AddNodeIfNew") Then Resume
+          RaiseError = True
+          GoTo ExitFunction
 End Function
 
 Function ConvertFormula(Solver As String, tokenText As String) As String
+          Dim RaiseError As Boolean
+          RaiseError = False
+          On Error GoTo ErrorHandler
+
 5428      Select Case Solver
           Case "PuLP"
 5429          ConvertFormula = ConvertFormula_PuLP(tokenText)
@@ -1276,10 +1293,23 @@ Function ConvertFormula(Solver As String, tokenText As String) As String
 5434      Case Else
 5435          ConvertFormula = tokenText + "("
 5436      End Select
+
+ExitFunction:
+          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          Exit Function
+
+ErrorHandler:
+          If Not ReportError("CModelParsed", "ConvertFormula") Then Resume
+          RaiseError = True
+          GoTo ExitFunction
 End Function
 
 Function ConvertFormula_AMPL(tokenText As String) As String
-5437     tokenText = LCase(tokenText)
+          Dim RaiseError As Boolean
+          RaiseError = False
+          On Error GoTo ErrorHandler
+
+5437      tokenText = LCase(tokenText)
 5438      Select Case tokenText
           ' RADIANS
           Case "radians"
@@ -1297,15 +1327,22 @@ Function ConvertFormula_AMPL(tokenText As String) As String
 5447      Case Else
 5448          ConvertFormula_AMPL = tokenText + "("
 5449      End Select
-5450      Exit Function
-          
-          ' If function is broken jump to here
-errorHandler:
-5451      MsgBox tokenText & " not implemented for AMPL yet"
-5452      ConvertFormula_AMPL = tokenText + "("
+
+ExitFunction:
+          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          Exit Function
+
+ErrorHandler:
+          If Not ReportError("CModelParsed", "ConvertFormula_AMPL") Then Resume
+          RaiseError = True
+          GoTo ExitFunction
 End Function
 
 Function ConvertFormula_NL(tokenText As String) As String
+          Dim RaiseError As Boolean
+          RaiseError = False
+          On Error GoTo ErrorHandler
+
 5453      Select Case tokenText
           ' RADIANS
           Case "RADIANS"
@@ -1322,12 +1359,15 @@ Function ConvertFormula_NL(tokenText As String) As String
 5462      Case Else
 5463          ConvertFormula_NL = tokenText + "("
 5464      End Select
-5465      Exit Function
-          
-          ' If function is broken jump to here
-errorHandler:
-5466      MsgBox tokenText & " not implemented for .nl solvers yet"
-5467      ConvertFormula_NL = tokenText + "("
+
+ExitFunction:
+          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          Exit Function
+
+ErrorHandler:
+          If Not ReportError("CModelParsed", "ConvertFormula_NL") Then Resume
+          RaiseError = True
+          GoTo ExitFunction
 End Function
 
 

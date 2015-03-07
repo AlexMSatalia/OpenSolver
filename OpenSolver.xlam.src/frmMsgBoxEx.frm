@@ -36,6 +36,41 @@ Private Sub cmdButton3_Click()
     Me.Hide
 End Sub
 
+Private Sub cmdMoreDetails_Click()
+    OpenFile GetErrorLogFilePath, "No error log was found."
+End Sub
+
+Private Sub cmdReportIssue_Click()
+    Dim ErrorLogFilePath As String
+    ErrorLogFilePath = GetErrorLogFilePath()
+    If Not FileOrDirExists(ErrorLogFilePath) Then
+        MsgBoxEx ("No error log was found")
+        Exit Sub
+    End If
+    
+    ' Read in contents of error log
+    Dim ErrorLogContents As String
+    Open ErrorLogFilePath For Input As #1
+        ErrorLogContents = Input$(LOF(1), 1)
+    Close #1
+    
+    ' Form mailto:// link
+    Dim EmailBody As String, EmailSubject As String
+    EmailSubject = "OpenSolver Error Report"
+    EmailBody = "Please insert any other information you think might be relevant here." & vbNewLine & vbNewLine & _
+                "You may want to paste in the content of the solver log file, which you can open " & _
+                "by going to the OpenSolver menu." & vbNewLine & vbNewLine & _
+                "---------- Error log follows ----------" & vbNewLine & vbNewLine & _
+                ErrorLogContents
+    
+    Dim MailToLink As String
+    MailToLink = "mailto:a.mason@auckland.ac.nz?cc=jdun087@aucklanduni.ac.nz" & _
+                 "&subject=" & URLEncode(EmailSubject) & _
+                 "&body=" & URLEncode(EmailBody)
+    
+    OpenURL MailToLink
+End Sub
+
 Private Sub lblLink_Click()
     Call OpenURL(lblLink.ControlTipText)
 End Sub
