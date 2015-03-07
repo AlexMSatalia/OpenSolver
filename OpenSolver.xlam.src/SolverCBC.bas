@@ -190,10 +190,10 @@ Function ParametersToString_CBC(ExtraParameters As Dictionary) As String
           RaiseError = False
           On Error GoTo ErrorHandler
 
-          Dim ParamPair As KeyValuePair
-          For Each ParamPair In ExtraParameters.KeyValuePairs
-              ParametersToString_CBC = ParametersToString_CBC & IIf(left(ParamPair.Key, 1) <> "-", "-", "") & ParamPair.Key & " " & ParamPair.value & " "
-          Next
+          Dim Key As Variant
+          For Each Key In ExtraParameters.Keys
+              ParametersToString_CBC = ParametersToString_CBC & IIf(left(Key, 1) <> "-", "-", "") & Key & " " & ExtraParameters.Item(Key) & " "
+          Next Key
           ParametersToString_CBC = Trim(ParametersToString_CBC)
 
 ExitFunction:
@@ -432,7 +432,7 @@ Sub LaunchCommandLine_CBC()
           
           Dim SolverPath As String, errorString As String
 6350      If Not SolverAvailable_CBC(SolverPath, errorString) Then
-6351          Err.Raise OpenSolver_CBCMissingError, Description:=errorString
+6351          Err.Raise OpenSolver_CBCError, Description:=errorString
 6352      End If
           
           Dim ModelFilePathName As String
@@ -440,7 +440,7 @@ Sub LaunchCommandLine_CBC()
           
           Dim SolveOptions As SolveOptionsType, SolveOptionsString As String
 6354      If WorksheetAvailable Then
-6355          GetSolveOptions EscapeSheetName(ActiveSheet), SolveOptions, errorString
+6355          GetSolveOptions EscapeSheetName(ActiveSheet), SolveOptions
 6356          If errorString = "" Then
 6357             SolveOptionsString = " -ratioGap " & CStr(SolveOptions.Tolerance) & " -seconds " & CStr(SolveOptions.MaxTime)
 6358          End If
@@ -448,7 +448,7 @@ Sub LaunchCommandLine_CBC()
           
           Dim ExtraParametersString As String, ExtraParameters As New Dictionary
 6360      If WorksheetAvailable Then
-              GetExtraParameters "CBC", ActiveSheet, ExtraParameters, errorString
+              GetExtraParameters "CBC", ActiveSheet, ExtraParameters
               If errorString <> "" Then
                   ExtraParametersString = ""
               Else

@@ -89,9 +89,9 @@ Dim ConstraintIndexToTreeIndex() As Long         ' Array of size n_con storing t
 Dim VariableNLIndexToCollectionIndex() As Long   ' Array of size n_var storing the parsed variable index for each .nl variable index
 Dim VariableCollectionIndexToNLIndex() As Long   ' Array of size n_var storing the .nl variable index for each parsed variable index
 
-Dim LinearConstraints As Collection     ' Collection containing the LinearConstraintNLs for each constraint stored in parsed constraint order
+Dim LinearConstraints As Collection     ' Collection containing the Dictionaries for each constraint stored in parsed constraint order
 Dim LinearConstants As Collection       ' Collection containing the constant (a Double) for each constraint stored in parsed constraint order
-Dim LinearObjectives As Collection      ' Collection containing the LinearConstraintNLs for each objective stored in parsed objective order
+Dim LinearObjectives As Collection      ' Collection containing the Dictionaries for each objective stored in parsed objective order
 
 Dim InitialVariableValues As Collection ' Collection containing the intital values for each variable in parsed variable index
 
@@ -781,7 +781,7 @@ End Sub
 
 ' Processes a single constraint into .nl format. We require:
 '     - a non-linear ExpressionTree for all non-linear parts of the equation
-'     - a linear LinearConstraintNL for the linear parts of the equation
+'     - a linear Dictionary for the linear parts of the equation
 '     - a constant Double for the constant part of the equation
 ' We also use the results of processing to update some of the model statistics
 Private Sub ProcessSingleFormula(RHSExpression As String, LHSVariable As String, Relation As RelationConsts)
@@ -795,8 +795,7 @@ Private Sub ProcessSingleFormula(RHSExpression As String, LHSVariable As String,
           
           ' The .nl file needs a linear coefficient for every variable in the constraint - non-linear or otherwise
           ' We need a list of all variables in this constraint so that we can know to include them in the linear part of the constraint.
-          Dim constraint As New LinearConstraintNL
-7797      constraint.Count = n_var
+          Dim constraint As New Dictionary
 7798      Tree.ExtractVariables constraint
 
           Dim LinearTrees As New Collection
@@ -828,15 +827,20 @@ Private Sub ProcessSingleFormula(RHSExpression As String, LHSVariable As String,
               ' Our constraint has a single term on the LHS and a formulae on the right.
               ' The single LHS term needs to be included in the expression as a linear term with coefficient 1
               ' Move variable from the LHS to the linear constraint with coefficient -1
-7810          constraint.VariablePresent(VariableIndex(LHSVariable)) = True
-7811          constraint.Coefficient(VariableIndex(LHSVariable)) = constraint.Coefficient(VariableIndex(LHSVariable)) - 1
+              Dim VarKey As Long
+              VarKey = VariableIndex(LHSVariable)
+              If constraint.Exists(VarKey) Then
+                  constraint.Item(VarKey) = constraint.Item(VarKey) - 1
+              Else
+7810              constraint.Add Key:=VariableIndex(LHSVariable), Item:=-1
+              End If
 7812      End If
           
           ' Keep constant on RHS and take everything else to LHS.
           ' Need to flip all sign of elements in this constraint
 
           ' Flip all coefficients in linear constraint
-7821      constraint.InvertCoefficients
+7821      InvertCoefficients constraint
 
           ' Negate non-linear tree
 7822      Set Tree = Tree.Negate
@@ -849,22 +853,21 @@ Private Sub ProcessSingleFormula(RHSExpression As String, LHSVariable As String,
           
           ' Mark any non-linear variables that we haven't seen before by extracting any remaining variables from the non-linear tree.
           ' Any variable still present in the constraint must be part of the non-linear section
-          Dim TempConstraint As New LinearConstraintNL
-7828      TempConstraint.Count = n_var
+          Dim TempConstraint As New Dictionary, var As Variant
 7829      Tree.ExtractVariables TempConstraint
-7830      For j = 1 To TempConstraint.Count
-7831          If TempConstraint.VariablePresent(j) And Not NonLinearVars(j) Then
-7832              NonLinearVars(j) = True
+7830      For Each var In TempConstraint.Keys
+7831          If Not NonLinearVars(var) Then
+7832              NonLinearVars(var) = True
 7833              nlvc = nlvc + 1
 7834          End If
-7835      Next j
+7835      Next var
           
           ' Remove any zero coefficients from the linear constraint if the variable is not in the non-linear tree
-7836      For j = 1 To constraint.Count
-7837          If Not NonLinearVars(j) And constraint.Coefficient(j) = 0 Then
-7838              constraint.VariablePresent(j) = False
+7836      For Each var In constraint.Keys
+7837          If Not NonLinearVars(var) And constraint.Item(var) = 0 Then
+7838              constraint.Remove var
 7839          End If
-7840      Next j
+7840      Next var
           
           ' Increase count of non-linear constraints if the non-linear tree is non-empty
           ' An empty tree has a single "0" node
@@ -876,18 +879,17 @@ Private Sub ProcessSingleFormula(RHSExpression As String, LHSVariable As String,
 7845      End If
           
           ' Update jacobian counts using the linear variables present
-7846      For j = 1 To constraint.Count
+7846      For Each var In constraint.Keys
               ' The nl documentation says that the jacobian counts relate to "the numbers of nonzeros in the first n var - 1 columns of the Jacobian matrix"
               ' This means we should increases the count for any variable that is present and has a non-zero coefficient
               ' However, .nl files generated by AMPL seem to increase the count for any present variable, even if the coefficient is zero (i.e. non-linear variables)
               ' We adopt the AMPL behaviour as it gives faster solve times (see Test 40). Swap the If conditions below to change this behaviour
               
-              'If constraint.VariablePresent(j) And constraint.Coefficient(j) <> 0 Then
-7847          If constraint.VariablePresent(j) Then
-7848              NonZeroConstraintCount(j) = NonZeroConstraintCount(j) + 1
-7849              nzc = nzc + 1
-7850          End If
-7851      Next j
+              'If constraint.Coefficient(j) <> 0 Then
+7847          NonZeroConstraintCount(CLng(var)) = NonZeroConstraintCount(CLng(var)) + 1
+7849          nzc = nzc + 1
+              'End If
+7851      Next var
 
 ExitSub:
           If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
@@ -899,9 +901,16 @@ ErrorHandler:
           GoTo ExitSub
 End Sub
 
+Sub InvertCoefficients(ByRef constraint As Dictionary)
+    Dim Key As Variant
+    For Each Key In constraint.Keys
+        constraint.Item(Key) = -constraint.Item(Key)
+    Next Key
+End Sub
+
 ' Process objective function into .nl format. We require the same as for constraints:
 '     - a non-linear ExpressionTree for all non-linear parts of the equation
-'     - a linear LinearConstraintNL for the linear parts of the equation
+'     - a linear Dictionary for the linear parts of the equation
 '     - a constant Double for the constant part of the equation
 Private Sub ProcessObjective()
           Dim RaiseError As Boolean
@@ -932,10 +941,8 @@ Private Sub ProcessObjective()
 7864          NonLinearObjectiveTrees.Add CreateTree("0", ExpressionTreeNodeType.ExpressionTreeNumber)
               
               ' Objective has a single linear term - the objective variable with coefficient 1
-              Dim Objective As New LinearConstraintNL
-7865          Objective.Count = n_var
-7866          Objective.VariablePresent(VariableIndex(ObjectiveCells(1))) = True
-7867          Objective.Coefficient(VariableIndex(ObjectiveCells(1))) = 1
+              Dim Objective As New Dictionary
+7866          Objective.Add Key:=VariableIndex(ObjectiveCells(1)), Item:=1
               
               ' Save results
 7868          LinearObjectives.Add Objective
@@ -1290,19 +1297,19 @@ Private Function MakeJBlocks() As String
 7988          TreeIndex = ConstraintIndexToTreeIndex(i - 1)
           
               ' Make header
-7989          AddNewLine Block, "J" & i - 1 & " " & LinearConstraints(TreeIndex).NumPresent, "CONSTRAINT LINEAR SECTION " & ConstraintMapRev(i)
+7989          AddNewLine Block, "J" & i - 1 & " " & LinearConstraints(TreeIndex).Count, "CONSTRAINT LINEAR SECTION " & ConstraintMapRev(i)
               
 7990          ReDim ConstraintElements(n_var)
 7991          ReDim CommentElements(n_var)
               
-              ' Note that the LinearConstraintNL object store the variables in parsed order, but we need to output in .nl order
+              ' We need variables output in .nl order
               ' First we collect all the constraint elements for the variables that are present
               Dim j As Long
-7992          For j = 1 To LinearConstraints(TreeIndex).Count
-7993              If LinearConstraints(TreeIndex).VariablePresent(j) Then
+7992          For j = 1 To n_var
+7993              If LinearConstraints(TreeIndex).Exists(j) Then
 7994                  VariableIndex = VariableCollectionIndexToNLIndex(j)
-7995                  ConstraintElements(VariableIndex) = VariableIndex & " " & StrEx_NL(LinearConstraints(TreeIndex).Coefficient(j))
-7996                  CommentElements(VariableIndex) = "    + " & LinearConstraints(TreeIndex).Coefficient(j) & " * " & VariableMapRev(CStr(VariableIndex))
+7995                  ConstraintElements(VariableIndex) = VariableIndex & " " & StrEx_NL(LinearConstraints(TreeIndex).Item(j))
+7996                  CommentElements(VariableIndex) = "    + " & LinearConstraints(TreeIndex).Item(j) & " * " & VariableMapRev(CStr(VariableIndex))
 7997              End If
 7998          Next j
               
@@ -1339,15 +1346,15 @@ Private Function MakeGBlocks() As String
           Dim i As Long, ObjectiveVariables As Collection, ObjectiveCoefficients As Collection
 8007      For i = 1 To n_obj
               ' Make header
-8008          AddNewLine Block, "G" & i - 1 & " " & LinearObjectives(i).NumPresent, "OBJECTIVE LINEAR SECTION " & ObjectiveCells(i)
+8008          AddNewLine Block, "G" & i - 1 & " " & LinearObjectives(i).Count, "OBJECTIVE LINEAR SECTION " & ObjectiveCells(i)
               
               ' This loop is not in the right order (see J blocks)
               ' Since the objective only containts one variable, the output will still be correct without reordering
               Dim j As Long, VariableIndex As Long
-8009          For j = 1 To LinearObjectives(i).Count
-8010              If LinearObjectives(i).VariablePresent(j) Then
+8009          For j = 1 To n_var
+8010              If LinearObjectives(i).Exists(j) Then
 8011                  VariableIndex = VariableCollectionIndexToNLIndex(j)
-8012                  AddNewLine Block, VariableIndex & " " & StrEx_NL(LinearObjectives(i).Coefficient(j)), "    + " & LinearObjectives(i).Coefficient(j) & " * " & VariableMapRev(CStr(VariableIndex))
+8012                  AddNewLine Block, VariableIndex & " " & StrEx_NL(LinearObjectives(i).Item(j)), "    + " & LinearObjectives(i).Item(j) & " * " & VariableMapRev(CStr(VariableIndex))
 8013              End If
 8014          Next j
 8015      Next i

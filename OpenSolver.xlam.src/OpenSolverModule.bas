@@ -2288,7 +2288,7 @@ Sub GetExtraParameters(Solver As String, sheet As Worksheet, ExtraParameters As 
 6110              ParamName = Trim(ParametersRange.Cells(i, 1))
 6111              If ParamName <> "" Then
 6112                  ParamValue = ConvertFromCurrentLocale(Trim(ParametersRange.Cells(i, 2)))
-6114                  ExtraParameters.Add ParamName, ParamValue
+6114                  ExtraParameters.Add Key:=ParamName, Item:=ParamValue
 6115              End If
 6116          Next i
 6117      End If

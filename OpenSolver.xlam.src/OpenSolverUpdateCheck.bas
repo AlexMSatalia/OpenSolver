@@ -152,4 +152,3 @@ Private Sub DeleteUpdateSetting()
     DeleteSetting OpenSolverRegName, PreferencesRegName, CheckForUpdatesRegName
 End Sub
 
-

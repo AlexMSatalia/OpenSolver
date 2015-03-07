@@ -7,140 +7,402 @@ Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = False
 Attribute VB_Exposed = False
+''
+' Dictionary v1.2.0
+' (c) Tim Hall - https://github.com/timhall/VBA-Dictionary
+'
+' Drop-in replacement for Scripting.Dictionary on Mac
+'
+' @author: tim.hall.engr@gmail.com
+' @license: MIT (http://www.opensource.org/licenses/mit-license.php
+'
+' ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ '
 Option Explicit
 
-' JWD: Obtained from https://sysmod.wordpress.com/2011/11/02/dictionary-class-in-vba-instead-of-scripting-dictionary/
-' This is an implementation of a Dictionary class so that Mac can use it as well
+' --------------------------------------------- '
+' Constants and Private Variables
+' --------------------------------------------- '
 
-'Collection methods: Add, Count, Item, Remove
-'Dictionary : .Add(Key as string, Item as variant), .CompareMode, .Count, .Exists(Key); _
-   .Item(Key) - writeable, .Items, .Keys, .Remove(Key), .RemoveAll
-'plus KeyValuePairs collection, KeyValuePair(Index as long), Tag as variant
-' 25-11-2011 KeyValuePair helper object
+#Const UseScriptingDictionaryIfAvailable = True
 
-Public KeyValuePairs As Collection ' open access but allows iteration
-Public Tag As Variant            ' read/write unrestricted
+#If Mac Or Not UseScriptingDictionaryIfAvailable Then
+
+' KeyValue 0: FormattedKey, 1: OriginalKey, 2: Value
+Private pKeyValues As Collection
+Private pKeys() As Variant
+Private pItems() As Variant
+Private pCompareMode As CompareMethod
+
+#Else
+
+Private pDictionary As Object
+
+#End If
+
+' --------------------------------------------- '
+' Types
+' --------------------------------------------- '
+
+Public Enum CompareMethod
+    BinaryCompare = vbBinaryCompare
+    TextCompare = vbTextCompare
+    DatabaseCompare = vbDatabaseCompare
+End Enum
+
+' --------------------------------------------- '
+' Properties
+' --------------------------------------------- '
+
+Public Property Get CompareMode() As CompareMethod
+#If Mac Or Not UseScriptingDictionaryIfAvailable Then
+    CompareMode = pCompareMode
+#Else
+    CompareMode = pDictionary.CompareMode
+#End If
+End Property
+Public Property Let CompareMode(value As CompareMethod)
+#If Mac Or Not UseScriptingDictionaryIfAvailable Then
+    If Me.Count > 0 Then
+        ' Can't change CompareMode for Dictionary that contains data
+        ' http://msdn.microsoft.com/en-us/library/office/gg278481(v=office.15).aspx
+        Err.Raise 5 ' Invalid procedure call or argument
+    End If
+    
+    pCompareMode = value
+#Else
+    pDictionary.CompareMode = value
+#End If
+End Property
+
+Public Property Get Count() As Long
+#If Mac Or Not UseScriptingDictionaryIfAvailable Then
+    Count = pKeyValues.Count
+#Else
+    Count = pDictionary.Count
+#End If
+End Property
+
+Public Property Get Item(Key As Variant) As Variant
+#If Mac Or Not UseScriptingDictionaryIfAvailable Then
+    Dim KeyValue As Variant
+    KeyValue = GetKeyValue(Key)
+    
+    If Not IsEmpty(KeyValue) Then
+        If IsObject(KeyValue(2)) Then
+            Set Item = KeyValue(2)
+        Else
+            Item = KeyValue(2)
+        End If
+    Else
+        ' Not found -> Returns Empty
+    End If
+#Else
+    If IsObject(pDictionary.Item(Key)) Then
+        Set Item = pDictionary.Item(Key)
+    Else
+        Item = pDictionary.Item(Key)
+    End If
+#End If
+End Property
+Public Property Let Item(Key As Variant, value As Variant)
+#If Mac Or Not UseScriptingDictionaryIfAvailable Then
+    If Me.Exists(Key) Then
+        ReplaceKeyValue GetKeyValue(Key), Key, value
+    Else
+        AddKeyValue Key, value
+    End If
+#Else
+    pDictionary.Item(Key) = value
+#End If
+End Property
+Public Property Set Item(Key As Variant, value As Variant)
+#If Mac Or Not UseScriptingDictionaryIfAvailable Then
+    If Me.Exists(Key) Then
+        ReplaceKeyValue GetKeyValue(Key), Key, value
+    Else
+        AddKeyValue Key, value
+    End If
+#Else
+    Set pDictionary.Item(Key) = value
+#End If
+End Property
+
+Public Property Let Key(Previous As Variant, Updated As Variant)
+#If Mac Or Not UseScriptingDictionaryIfAvailable Then
+    Dim KeyValue As Variant
+    KeyValue = GetKeyValue(Previous)
+    
+    If Not IsEmpty(KeyValue) Then
+        ReplaceKeyValue KeyValue, Updated, KeyValue(2)
+    End If
+#Else
+    pDictionary.Key(Previous) = Updated
+#End If
+End Property
+
+' ============================================= '
+' Public Methods
+' ============================================= '
+
+''
+' Add an item with the given key
+'
+' @param {Variant} Key
+' @param {Variant} Item
+' --------------------------------------------- '
+Public Sub Add(Key As Variant, Item As Variant)
+#If Mac Or Not UseScriptingDictionaryIfAvailable Then
+    If Not Me.Exists(Key) Then
+        AddKeyValue Key, Item
+    Else
+        ' This key is already associated with an element of this collection
+        Err.Raise 457
+    End If
+#Else
+    pDictionary.Add Key, Item
+#End If
+End Sub
+
+''
+' Check if an item exists for the given key
+'
+' @param {Variant} Key
+' @return {Boolean}
+' --------------------------------------------- '
+Public Function Exists(Key As Variant) As Boolean
+#If Mac Or Not UseScriptingDictionaryIfAvailable Then
+    Exists = Not IsEmpty(GetKeyValue(Key))
+#Else
+    Exists = pDictionary.Exists(Key)
+#End If
+End Function
+
+''
+' Get an array of all items
+'
+' @return {Variant}
+' --------------------------------------------- '
+Public Function Items() As Variant
+#If Mac Or Not UseScriptingDictionaryIfAvailable Then
+    If Me.Count > 0 Then
+        Items = pItems
+    Else
+        ' Split("") creates initialized empty array that matches Dictionary Keys and Items
+        Items = Split("")
+    End If
+#Else
+    Items = pDictionary.Items
+#End If
+End Function
+
+''
+' Get an array of all keys
+'
+' @return {Variant}
+' --------------------------------------------- '
+Public Function Keys() As Variant
+#If Mac Or Not UseScriptingDictionaryIfAvailable Then
+    If Me.Count > 0 Then
+        Keys = pKeys
+    Else
+        ' Split("") creates initialized empty array that matches Dictionary Keys and Items
+        Keys = Split("")
+    End If
+#Else
+    Keys = pDictionary.Keys
+#End If
+End Function
+
+''
+' Remove an item for the given key
+'
+' @param {Variant} Key
+' --------------------------------------------- '
+Public Sub Remove(Key As Variant)
+#If Mac Or Not UseScriptingDictionaryIfAvailable Then
+    Dim KeyValue As Variant
+    KeyValue = GetKeyValue(Key)
+    
+    If Not IsEmpty(KeyValue) Then
+        RemoveKeyValue KeyValue
+    Else
+        ' Application-defined or object-defined error
+        Err.Raise 32811
+    End If
+#Else
+    pDictionary.Remove Key
+#End If
+End Sub
+
+''
+' Remove all items
+' --------------------------------------------- '
+Public Sub RemoveAll()
+#If Mac Or Not UseScriptingDictionaryIfAvailable Then
+    Set pKeyValues = New Collection
+    
+    Erase pKeys
+    Erase pItems
+#Else
+    pDictionary.RemoveAll
+#End If
+End Sub
+
+' ============================================= '
+' Private Functions
+' ============================================= '
+
+#If Mac Or Not UseScriptingDictionaryIfAvailable Then
+
+Private Function GetKeyValue(Key As Variant) As Variant
+    On Error Resume Next
+    GetKeyValue = pKeyValues(GetFormattedKey(Key))
+    Err.Clear
+End Function
+
+Private Sub AddKeyValue(Key As Variant, value As Variant, Optional Index As Long = -1)
+    If Me.Count = 0 Then
+        ReDim pKeys(0 To 0)
+        ReDim pItems(0 To 0)
+    Else
+        ReDim Preserve pKeys(0 To UBound(pKeys) + 1)
+        ReDim Preserve pItems(0 To UBound(pItems) + 1)
+    End If
+    
+    Dim FormattedKey As String
+    FormattedKey = GetFormattedKey(Key)
+    
+    If Index > 0 And Index <= pKeyValues.Count Then
+        Dim i As Long
+        For i = UBound(pKeys) To Index Step -1
+            pKeys(i) = pKeys(i - 1)
+            If IsObject(pItems(i - 1)) Then
+                Set pItems(i) = pItems(i - 1)
+            Else
+                pItems(i) = pItems(i - 1)
+            End If
+        Next i
+        
+        pKeys(Index - 1) = Key
+        If IsObject(value) Then
+            Set pItems(Index - 1) = value
+        Else
+            pItems(Index - 1) = value
+        End If
+        
+        pKeyValues.Add Array(FormattedKey, Key, value), FormattedKey, Before:=Index
+    Else
+        pKeys(UBound(pKeys)) = Key
+        If IsObject(value) Then
+            Set pItems(UBound(pItems)) = value
+        Else
+            pItems(UBound(pItems)) = value
+        End If
+        
+        pKeyValues.Add Array(FormattedKey, Key, value), FormattedKey
+    End If
+End Sub
+
+Private Sub ReplaceKeyValue(KeyValue As Variant, Key As Variant, value As Variant)
+    Dim Index As Long
+    Dim i As Integer
+    
+    For i = 0 To UBound(pKeys)
+        If pKeys(i) = KeyValue(1) Then
+            Index = i + 1
+            Exit For
+        End If
+    Next i
+    
+    ' Remove existing value
+    RemoveKeyValue KeyValue, Index
+    
+    ' Add new key value back
+    AddKeyValue Key, value, Index
+End Sub
+
+Private Sub RemoveKeyValue(KeyValue As Variant, Optional ByVal Index As Long = -1)
+    Dim i As Long
+    If Index = -1 Then
+        For i = 0 To UBound(pKeys)
+            If pKeys(i) = KeyValue(1) Then
+                Index = i
+            End If
+        Next i
+    Else
+        Index = Index - 1
+    End If
+    
+    If Index >= 0 And Index <= UBound(pKeys) Then
+        For i = Index To UBound(pKeys) - 1
+            pKeys(i) = pKeys(i + 1)
+            
+            If IsObject(pItems(i + 1)) Then
+                Set pItems(i) = pItems(i + 1)
+            Else
+                pItems(i) = pItems(i + 1)
+            End If
+        Next i
+        
+        If UBound(pKeys) = 0 Then
+            Erase pKeys
+            Erase pItems
+        Else
+            ReDim Preserve pKeys(0 To UBound(pKeys) - 1)
+            ReDim Preserve pItems(0 To UBound(pItems) - 1)
+        End If
+    End If
+    
+    pKeyValues.Remove KeyValue(0)
+End Sub
+
+Private Function GetFormattedKey(Key As Variant) As String
+    GetFormattedKey = CStr(Key)
+    If Me.CompareMode = CompareMethod.BinaryCompare Then
+        ' Collection does not have method of setting key comparison
+        ' So case-sensitive keys aren't supported by default
+        ' -> Approach: Append lowercase characters to original key
+        '    AbC -> AbC__b, abc -> abc__abc, ABC -> ABC
+        '    Won't work in very strange cases, but should work for now
+        '    AbBb -> AbBb__bb matches AbbB -> AbbB__bb
+        Dim Lowercase As String
+        Lowercase = ""
+        
+        Dim i As Integer
+        Dim Ascii As Integer
+        Dim Char As String
+        For i = 1 To Len(GetFormattedKey)
+            Char = VBA.Mid$(GetFormattedKey, i, 1)
+            Ascii = Asc(Char)
+            If Ascii >= 97 And Ascii <= 122 Then
+                Lowercase = Lowercase & Char
+            End If
+        Next i
+        
+        If Lowercase <> "" Then
+            GetFormattedKey = GetFormattedKey & "__" & Lowercase
+        End If
+    End If
+End Function
+
+#End If
 
 Private Sub Class_Initialize()
-   Set KeyValuePairs = New Collection
+#If Mac Or Not UseScriptingDictionaryIfAvailable Then
+    Set pKeyValues = New Collection
+    
+    Erase pKeys
+    Erase pItems
+#Else
+    Set pDictionary = CreateObject("Scripting.Dictionary")
+#End If
 End Sub
 
 Private Sub Class_Terminate()
-   Set KeyValuePairs = Nothing
+#If Mac Or Not UseScriptingDictionaryIfAvailable Then
+    Set pKeyValues = Nothing
+#Else
+    Set pDictionary = Nothing
+#End If
 End Sub
-
-' in Scripting.Dictionary this is writeable, here we have only vbtextCompare because we are using a Collection
-Public Property Get CompareMode() As VbCompareMethod
-   CompareMode = vbTextCompare   '=1; vbBinaryCompare=0
-End Property
-
-Public Property Let Item(Key As String, Item As Variant)    ' dic.Item(Key) = value ' update a scalar value for an existing key
-   Let KeyValuePairs.Item(Key).value = Item
-End Property
-
-Public Property Set Item(Key As String, Item As Variant)    ' Set dic.Item(Key) = value ' update an object value for an existing key
-   Set KeyValuePairs.Item(Key).value = Item
-End Property
-
-Public Property Get Item(Key As String) As Variant
-   AssignVariable Item, KeyValuePairs.Item(Key).value
-End Property
-
-' Collection parameter order is Add(Item,Key); Dictionary is Add(Key,Item) so always used named arguments
-Public Sub Add(Key As String, Item As Variant)
-   Dim oKVP As KeyValuePair
-   Set oKVP = New KeyValuePair
-   oKVP.Key = Key
-   If IsObject(Item) Then
-      Set oKVP.value = Item
-   Else
-      Let oKVP.value = Item
-   End If
-   KeyValuePairs.Add Item:=oKVP, Key:=Key
-End Sub
-
-Public Property Get Exists(Key As String) As Boolean
-   On Error Resume Next
-   Exists = TypeName(KeyValuePairs.Item(Key)) > ""  ' we can have blank key, empty item
-End Property
-
-Public Sub Remove(Key As String)
-   'show error if not there rather than On Error Resume Next
-   KeyValuePairs.Remove Key
-End Sub
-
-Public Sub RemoveAll()
-   Set KeyValuePairs = Nothing
-   Set KeyValuePairs = New Collection
-End Sub
-
-Public Property Get Count() As Long
-   Count = KeyValuePairs.Count
-End Property
-
-Public Property Get Items() As Variant     ' for compatibility with Scripting.Dictionary
-Dim vlist As Variant, i As Long
-If Me.Count > 0 Then
-   ReDim vlist(0 To Me.Count - 1) ' to get a 0-based array same as scripting.dictionary
-   For i = LBound(vlist) To UBound(vlist)
-      AssignVariable vlist(i), KeyValuePairs.Item(1 + i).value ' could be scalar or array or object
-   Next i
-   Items = vlist
-End If
-End Property
-
-Public Property Get Keys() As String()
-Dim vlist() As String, i As Long
-If Me.Count > 0 Then
-   ReDim vlist(0 To Me.Count - 1)
-   For i = LBound(vlist) To UBound(vlist)
-      vlist(i) = KeyValuePairs.Item(1 + i).Key   '
-   Next i
-   Keys = vlist
-End If
-End Property
-
-Public Property Get KeyValuePair(Index As Long) As Variant  ' returns KeyValuePair object
-    Set KeyValuePair = KeyValuePairs.Item(1 + Index)            ' collections are 1-based
-End Property
-
-Private Sub AssignVariable(variable As Variant, value As Variant)
-   If IsObject(value) Then
-      Set variable = value
-   Else
-      Let variable = value
-   End If
-End Sub
-
-Public Sub DebugPrint()
-   Dim lItem As Long, lIndex As Long, vItem As Variant, oKVP As KeyValuePair
-   lItem = 0
-   For Each oKVP In KeyValuePairs
-      lItem = lItem + 1
-      Debug.Print lItem; oKVP.Key; " "; TypeName(oKVP.value);
-      If InStr(1, TypeName(oKVP.value), "()") > 0 Then
-         vItem = oKVP.value
-         Debug.Print "("; CStr(LBound(vItem)); " to "; CStr(UBound(vItem)); ")";
-         For lIndex = LBound(vItem) To UBound(vItem)
-            Debug.Print " (" & CStr(lIndex) & ")"; TypeName(vItem(lIndex)); "="; vItem(lIndex);
-         Next
-         Debug.Print
-      Else
-         Debug.Print "="; oKVP.value
-      End If
-   Next
-End Sub
-
-'NB VBA Collection object index is 1-based, scripting.dictionary items array is 0-based
-'cf Scripting.Dictionary Methods s.Add(Key, Item), s.CompareMode, s.Count, s.Exists(Key); _
-   s.Item(Key) - updateable, s.Items, s.Key(Key), s.Keys, s.Remove(Key), s.RemoveAll
-'Scripting.Dictionary has no index number; you can index the 0-based variant array of Items returned
-'  unlike Collections which can be indexed starting at 1
-'Efficient iteration is For Each varPair in thisdic.KeyValuePairs
-'Another difference I introduce is that in a scripting.dictionary, the doc says
-'  If key is not found when changing an item, a new key is created with the specified newitem.
-'  If key is not found when attempting to return an existing item, a new key is created and its corresponding item is left empty.
-'but I want to raise an error when addressing a key that does not exist
-'similarly, the scripting.dictionary will create separate integer and string keys for eg 2
-
 

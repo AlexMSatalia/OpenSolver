@@ -257,10 +257,10 @@ Function ParametersToString_Gurobi(ExtraParameters As Dictionary) As String
           RaiseError = False
           On Error GoTo ErrorHandler
 
-          Dim ParamPair As KeyValuePair
-          For Each ParamPair In ExtraParameters.KeyValuePairs
-              ParametersToString_Gurobi = ParametersToString_Gurobi & ParamPair.Key & "=" & ParamPair.value & " "
-          Next
+          Dim Key As Variant
+          For Each Key In ExtraParameters.Keys
+              ParametersToString_Gurobi = ParametersToString_Gurobi & Key & "=" & ExtraParameters.Item(Key) & " "
+          Next Key
           ParametersToString_Gurobi = Trim(ParametersToString_Gurobi)
 
 ExitFunction:

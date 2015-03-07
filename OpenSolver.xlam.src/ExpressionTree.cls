@@ -204,8 +204,8 @@ ErrorHandler:
           GoTo ExitFunction
 End Function
 
-' Extract all variables from the ExpressionTree into a LinearConstraintNL
-Sub ExtractVariables(constraint As LinearConstraintNL)
+' Extract all variables from the ExpressionTree into a Dictionary
+Sub ExtractVariables(constraint As Dictionary)
           Dim RaiseError As Boolean
           RaiseError = False
           On Error GoTo ErrorHandler
@@ -213,8 +213,8 @@ Sub ExtractVariables(constraint As LinearConstraintNL)
 8577      If NodeType = ExpressionTreeVariable Then
               Dim Index As Long
 8578          Index = VariableIndex(NodeText)
-8579          If Not constraint.VariablePresent(Index) Then
-8580              constraint.VariablePresent(Index) = True
+8579          If Not constraint.Exists(Index) Then
+8580              constraint.Add Key:=Index, Item:=0
 8581          End If
 8582      End If
           
@@ -892,8 +892,8 @@ ErrorHandler:
           GoTo ExitSub
 End Sub
 
-' Converts a linear tree into a LinearConstraintNL and Double
-Public Sub ConvertLinearTreeToConstraint(constraint As LinearConstraintNL, constant As Double)
+' Converts a linear tree into a Dictionary and Double
+Public Sub ConvertLinearTreeToConstraint(constraint As Dictionary, constant As Double)
           Dim RaiseError As Boolean
           RaiseError = False
           On Error GoTo ErrorHandler
@@ -1058,8 +1058,8 @@ ErrorHandler:
           GoTo ExitSub
 End Sub
 
-' Convert a collated linear tree into a LinearConstraintNL and Double constant
-Sub AddLinearTreeToConstraint(constraint As LinearConstraintNL, constant As Double)
+' Convert a collated linear tree into a Dictionary and Double constant
+Sub AddLinearTreeToConstraint(constraint As Dictionary, constant As Double)
           Dim RaiseError As Boolean
           RaiseError = False
           On Error GoTo ErrorHandler
@@ -1072,7 +1072,7 @@ Sub AddLinearTreeToConstraint(constraint As LinearConstraintNL, constant As Doub
           Case ExpressionTreeVariable
               Dim VarIndex As Long
 8967          VarIndex = VariableIndex(NodeText)
-8968          constraint.Coefficient(VarIndex) = constraint.Coefficient(VarIndex) + LinearCoefficient
+8968          constraint.Item(VarIndex) = constraint.Item(VarIndex) + LinearCoefficient
           
           ' Add constant
 8969      Case ExpressionTreeNumber
