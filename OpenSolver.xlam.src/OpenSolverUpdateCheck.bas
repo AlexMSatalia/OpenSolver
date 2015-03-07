@@ -19,9 +19,14 @@ End Function
 Private Function GetFilesPageText_Windows() As String
     GetFilesPageText_Windows = ""
     
-    Dim WinHttpReq As Object  ' MSXML2.XMLHTTP
-    Set WinHttpReq = CreateObject("MSXML2.XMLHTTP")
+    Dim WinHttpReq As Object  ' MSXML2.ServerXMLHTTP
+    Set WinHttpReq = CreateObject("MSXML2.ServerXMLHTTP")
+    ' Set timeout limits - 2 secs for each part of the request
+    WinHttpReq.setTimeouts 2000, 2000, 2000, 2000
     WinHttpReq.Open "GET", FilesPageUrl, False
+    
+    ' Send request and catch timeout errors
+    On Error Resume Next
     WinHttpReq.send
     
     If WinHttpReq.status = 200 Then
@@ -38,8 +43,8 @@ Private Function GetFilesPageText_Mac() As String
     Dim result As String
     Dim ExitCode As Long
 
-    ' -L follows redirects
-    Cmd = "curl -L " & FilesPageUrl
+    ' -L follows redirects, -m sets Max Time
+    Cmd = "curl -L -m 10 " & FilesPageUrl
     result = execShell(Cmd, ExitCode)
     
     If ExitCode = 0 Then
@@ -81,6 +86,7 @@ Sub CheckForUpdate(Optional ByVal SilentFail As Boolean = False)
     
     Dim LatestVersion As String
     LatestVersion = GetLatestOpenSolverVersion()
+    If Len(LatestVersion) = 0 Then GoTo ConnectionError
 
     Dim LatestNumbers() As String, CurrentNumbers() As String
     LatestNumbers() = Split(LatestVersion, ".")
@@ -94,14 +100,23 @@ Sub CheckForUpdate(Optional ByVal SilentFail As Boolean = False)
             Exit For
         End If
     Next
-    Application.Cursor = xlDefault
-    Application.StatusBar = False
     
     If UpdateAvailable Then
         frmUpdate.ShowUpdate LatestVersion
     ElseIf Not SilentFail Then
         MsgBox "No updates for OpenSolver are available at this time.", vbOKOnly, "OpenSolver - Update Check"
     End If
+    
+ExitSub:
+    Application.Cursor = xlDefault
+    Application.StatusBar = False
+    Exit Sub
+    
+ConnectionError:
+    If Not SilentFail Then
+        MsgBox "The update checker was unable to check for the latest version of OpenSolver. Please try again later."
+    End If
+    GoTo ExitSub
 End Sub
 
 Sub AutoUpdateCheck()
@@ -136,3 +151,5 @@ End Sub
 Private Sub DeleteUpdateSetting()
     DeleteSetting OpenSolverRegName, PreferencesRegName, CheckForUpdatesRegName
 End Sub
+
+
