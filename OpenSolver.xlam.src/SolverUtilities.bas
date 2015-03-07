@@ -58,7 +58,7 @@ Function SolverFilePath_Default(Solver As String, Optional errorString As String
 6595          If GetExistingFilePathName(JoinPaths(SearchPath, SolverDirWin64), SolverExec(Solver), SolverFilePath_Default) Then GoTo ExitFunction ' Found a 64 bit solver
 6596      End If
           ' Look for the 32 bit version
-6597      If GetExistingFilePathName(JoinPaths(SearchPath, SolverDirWin32), SolverName(Solver), SolverFilePath_Default) Then
+6597      If GetExistingFilePathName(JoinPaths(SearchPath, SolverDirWin32), SolverExec(Solver), SolverFilePath_Default) Then
 6598          If SystemIs64Bit Then
 6599              errorString = "Unable to find 64-bit " & SolverName(Solver) & " in the Solvers folder. A 32-bit version will be used instead."
 6600          End If
