@@ -54,7 +54,7 @@ Function AnalyseParameters(OpenSolver As COpenSolver, sheetName As String, _
           ' Find the Parameter range, and get the numer of parameters
           Dim ParamRange As Range
 2626      If Not OpenSolverModule.CheckModelHasParameterRange Then GoTo ExitFunction   ' Error message already shown
-2628      End If
+
 2629      Set ParamRange = OpenSolverModule.RemoveRangeOverlap(Range(sheetName & OpenSolverModule.GetParamRangeName))
           
           Dim BadCell As Range
