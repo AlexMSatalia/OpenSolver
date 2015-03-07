@@ -50,10 +50,7 @@ Private Sub AutoLayout()
         .Caption = "OpenSolver is busy running your optimisation model..."
         .left = FormMargin
         .top = FormMargin
-        .width = FormWidthCallingNeos
-        .AutoSize = False
-        .AutoSize = True
-        .AutoSize = False
+        AutoHeight lblMessage, FormWidthCallingNeos, True
     End With
     
     Me.width = lblMessage.width + 2 * FormMargin
@@ -62,10 +59,10 @@ Private Sub AutoLayout()
         .Caption = "Cancel"
         .width = FormButtonWidth
         .left = (lblMessage.width - .width) / 2 + lblMessage.left
-        .top = lblMessage.top + lblMessage.height + FormSpacing * 2
+        .top = Below(lblMessage)
     End With
     
-    Me.height = cmdCancel.top + cmdCancel.height + FormSpacing + FormMargin + FormTitleHeight
+    Me.height = FormHeight(cmdCancel)
     Me.width = Me.width + FormWindowMargin
     
     Me.BackColor = FormBackColor

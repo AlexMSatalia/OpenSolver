@@ -67,3 +67,33 @@ Public Sub AutoFormat(ByRef Controls As Controls)
         End If
     Next
 End Sub
+
+Public Function RightOf(OldControl As Control, Optional Spacing As Boolean = True) As Long
+    RightOf = OldControl.left + OldControl.width + IIf(Spacing, FormSpacing, 0)
+End Function
+
+Public Function LeftOf(OldControl As Control, NewControlWidth As Long, Optional Spacing As Boolean = True) As Long
+    LeftOf = OldControl.left - NewControlWidth - IIf(Spacing, FormSpacing, 0)
+End Function
+
+Public Function LeftOfForm(FormWidth As Long, NewControlWidth As Long)
+    LeftOfForm = FormWidth - FormMargin - NewControlWidth
+End Function
+
+Public Function Below(OldControl As Control, Optional Spacing As Boolean = True) As Long
+    Below = OldControl.top + OldControl.height + IIf(Spacing, FormSpacing, 0)
+End Function
+
+Public Function FormHeight(BottomControl As Control) As Long
+    FormHeight = Below(BottomControl, False) + FormMargin + FormTitleHeight
+End Function
+
+Public Sub AutoHeight(NewControl As Control, width As Long, Optional ShrinkWidth As Boolean = False)
+    With NewControl
+        .width = width
+        .AutoSize = False
+        .AutoSize = True
+        .AutoSize = False
+        If Not ShrinkWidth Then .width = width
+    End With
+End Sub

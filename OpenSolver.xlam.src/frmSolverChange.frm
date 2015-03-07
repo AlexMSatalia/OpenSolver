@@ -28,22 +28,13 @@ Private Sub cboSolver_Change()
 4724            ChosenSolver = ReverseSolverTitle(cboSolver.Text)
 4725            lblDesc.Caption = SolverDesc(ChosenSolver)
 
-                With lblHyperlink
-                    .Caption = SolverLink(ChosenSolver)
-                    .width = Me.width
-                    ' Reduce width to minimise size of link target
-                    .AutoSize = False
-                    .AutoSize = True
-                    .AutoSize = False
-                End With
+                lblHyperlink.Caption = SolverLink(ChosenSolver)
                 
                 Dim errorString As String
-4727            If SolverAvailable(ChosenSolver, errorString:=errorString) Then
-4728                cmdOk.Enabled = True
-4729            Else
-4730                cmdOk.Enabled = False
-4731            End If
+4727            cmdOk.Enabled = SolverAvailable(ChosenSolver, errorString:=errorString)
 4732            lblError.Caption = errorString ' empty if no errors found
+
+                AutoLayout
 End Sub
 
 Private Sub lblHyperlink_Click()
@@ -112,53 +103,45 @@ Private Sub AutoLayout()
     
     With cboSolver
         .left = lblChoose.left
-        .top = lblChoose.top + lblChoose.height
+        .top = Below(lblChoose, False)
         .width = lblChoose.width
     End With
     
     With lblDesc
         .left = lblChoose.left
-        .top = cboSolver.top + cboSolver.height + FormSpacing
-        .width = lblChoose.width
-        #If Mac Then
-            .height = 130
-        #Else
-            .height = 100
-        #End If
+        .top = Below(cboSolver)
+        AutoHeight lblDesc, lblChoose.width
     End With
     
     With lblHyperlink
         .left = lblChoose.left
-        .top = lblDesc.top + lblDesc.height + FormSpacing
-        .width = lblChoose.width
-        ' Reduce width to minimise size of link target
-        .AutoSize = False
-        .AutoSize = True
-        .AutoSize = False
+        .top = Below(lblDesc)
+        AutoHeight lblHyperlink, lblChoose.width, True
     End With
     
     With lblError
+        .Visible = Len(.Caption) <> 0
         .left = lblChoose.left
-        .top = lblHyperlink.top + lblHyperlink.height + FormSpacing
-        .width = lblChoose.width
-        .height = 1.5 * FormTextHeight
+        .top = Below(lblHyperlink)
+        AutoHeight lblError, lblChoose.width
     End With
     
     With cmdCancel
         .Caption = "Cancel"
         .width = FormButtonWidth
-        .top = lblError.top + lblError.height + FormSpacing
-        .left = Me.width - FormMargin - .width
+        .top = Below(IIf(lblError.Visible, lblError, lblHyperlink))
+        .left = LeftOfForm(Me.width, .width)
     End With
     
     With cmdOk
         .Caption = "OK"
         .width = FormButtonWidth
         .top = cmdCancel.top
-        .left = cmdCancel.left - FormSpacing - .width
+        .left = LeftOf(cmdCancel, .width)
     End With
     
-    Me.height = cmdCancel.top + cmdCancel.height + FormMargin + FormTitleHeight
+    
+    Me.height = FormHeight(cmdCancel)
     Me.width = Me.width + FormWindowMargin
     
     Me.BackColor = FormBackColor

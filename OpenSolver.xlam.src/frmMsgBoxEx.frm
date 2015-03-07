@@ -98,33 +98,26 @@ Private Sub AutoLayout()
     
     With txtMessage
         .BackColor = FormBackColor
-        .width = Me.width - 2 * FormMargin
-        .AutoSize = False
-        .AutoSize = True
-        .AutoSize = False
-        .width = Me.width - 2 * FormMargin
         .left = FormMargin
         .top = FormMargin
+        AutoHeight txtMessage, Me.width - 2 * FormMargin
     End With
     
     With lblLink
         If .Caption = "" Then
             .Visible = False
         Else
-            .width = Me.width
-            .AutoSize = False
-            .AutoSize = True
-            .AutoSize = False
+            AutoHeight lblLink, Me.width, True
             .left = (Me.width - .width) / 2
             .Font.Underline = True
         End If
-        .top = txtMessage.top + txtMessage.height + FormSpacing
+        .top = Below(txtMessage)
     End With
     
     With cmdButton3
-        .top = IIf(lblLink.Visible, lblLink.height + FormSpacing, 0) + lblLink.top
+        .top = Below(IIf(lblLink.Visible, lblLink, txtMessage))
         .width = FormButtonWidth
-        .left = Me.width - FormMargin - .width
+        .left = LeftOfForm(Me.width, .width)
     End With
     
     With cmdButton2
@@ -151,7 +144,7 @@ Private Sub AutoLayout()
         .left = cmdMoreDetails.left + IIf(cmdMoreDetails.Visible, FormSpacing + .width, 0)
     End With
     
-    Me.height = cmdButton1.top + cmdButton1.height + FormMargin + FormTitleHeight
+    Me.height = FormHeight(cmdButton1)
     Me.width = Me.width + FormWindowMargin
     
     Me.BackColor = FormBackColor

@@ -123,16 +123,13 @@ Private Sub AutoLayout()
         .left = FormMargin
         .top = FormMargin
         ' Shrink width
-        .width = Me.width
-        .AutoSize = False
-        .AutoSize = True
-        .AutoSize = False
+        AutoHeight lblStep1, Me.width, True
     End With
     
     With lblStep1Explanation
-        .left = lblStep1.left + lblStep1.width + FormSpacing
+        .left = RightOf(lblStep1)
         .top = lblStep1.top
-        .width = Me.width - FormMargin - .left
+        .width = LeftOfForm(Me.width, .left)
         .Caption = "(the objective is what you want to optimise)"
     End With
     
@@ -145,17 +142,13 @@ Private Sub AutoLayout()
                    "You can also leave both the objective sense and the objective cell blank. " & _
                    "In this case, OpenSolver will just find a feasible solution to the problem."
         .left = lblStep1.left
-        .top = lblStep1.top + lblStep1.height + FormSpacing
-        .width = Me.width - FormMargin * 2
-        .AutoSize = False
-        .AutoSize = True
-        .AutoSize = False
-        .width = Me.width - FormMargin * 2
+        .top = Below(lblStep1)
+        AutoHeight lblStep1How, Me.width - FormMargin * 2
     End With
     
     With lblDiv1
         .left = lblStep1.left
-        .top = lblStep1How.top + lblStep1How.height + FormSpacing
+        .top = Below(lblStep1How)
         .height = FormDivHeight
         .width = lblStep1How.width
         .BackColor = FormDivBackColor
@@ -165,68 +158,54 @@ Private Sub AutoLayout()
         .Caption = "AutoModel was unable to guess anything." & vbNewLine & _
                    "Please enter the objective sense and objective function cell manually."
         .left = lblStep1.left
-        .top = lblDiv1.top + lblDiv1.height + FormSpacing
-        .AutoSize = False
-        .AutoSize = True
-        .AutoSize = False
+        .top = Below(lblDiv1)
+        AutoHeight lblStatus, lblStep1How.width
         .height = .height + FormSpacing
-        .width = lblStep1How.width
     End With
     
     With lblOpt1
         .Caption = "The objective is to:"
         .left = lblStep1.left
-        .top = lblStatus.top + lblStatus.height + FormSpacing * 1.5 + optMax.height - .height / 2
-        .AutoSize = False
-        .AutoSize = True
-        .AutoSize = False
+        .top = Below(lblStatus) + FormSpacing * 1.5 + optMax.height - .height / 2
+        AutoHeight lblOpt1, Me.width, True
     End With
     
     With optMax
         .Caption = "maximise"
-        .left = lblOpt1.left + lblOpt1.width + FormSpacing
-        .top = lblStatus.top + lblStatus.height + FormSpacing
-        .AutoSize = False
-        .AutoSize = True
-        .AutoSize = False
+        .left = RightOf(lblOpt1)
+        .top = Below(lblStatus)
+        AutoHeight optMax, Me.width, True
     End With
     
     With optMin
         .Caption = "minimise"
         .left = optMax.left
-        .top = optMax.top + optMax.height
-        .AutoSize = False
-        .AutoSize = True
-        .AutoSize = False
+        .top = Below(optMax, False)
+        AutoHeight optMin, Me.width, True
     End With
     
     With lblOpt2
         .Caption = "the value of the cell:"
-        .left = optMax.left + optMax.width + FormSpacing
+        .left = RightOf(optMax)
         .top = lblOpt1.top
-        .AutoSize = False
-        .AutoSize = True
-        .AutoSize = False
+        AutoHeight lblOpt2, Me.width, True
     End With
     
     With refObj
         .top = lblOpt2.top - (.height - lblOpt2.height) / 2
-        .left = lblOpt2.left + lblOpt2.width + FormSpacing
-        .width = Me.width - FormMargin - .left
+        .left = RightOf(lblOpt2)
+        .width = LeftOfForm(Me.width, .left)
     End With
     
     With lblStep2How
-        .top = optMin.top + optMin.height + FormSpacing
+        .top = Below(optMin)
         .left = lblStep1.left
-        .width = lblStep1How.width
-        .AutoSize = False
-        .AutoSize = True
-        .AutoSize = False
+        AutoHeight lblStep2How, lblStep1How.width, True
     End With
     
     With lblDiv2
         .left = lblStep1.left
-        .top = lblStep2How.top + lblStep2How.height + FormSpacing
+        .top = Below(lblStep2How)
         .height = FormDivHeight
         .width = lblStep1How.width
         .BackColor = FormDivBackColor
@@ -234,14 +213,14 @@ Private Sub AutoLayout()
     
     With cmdCancel
         .width = FormButtonWidth * 1.2
-        .left = Me.width - FormMargin - .width
-        .top = lblDiv2.top + lblDiv2.height + FormSpacing
+        .left = LeftOfForm(Me.width, .width)
+        .top = Below(lblDiv2)
         .Caption = "Cancel"
     End With
     
     With cmdFinish
         .width = cmdCancel.width
-        .left = cmdCancel.left - FormSpacing - .width
+        .left = LeftOf(cmdCancel, .width)
         .top = cmdCancel.top
         .Caption = "Finish AutoModel"
     End With
@@ -249,12 +228,12 @@ Private Sub AutoLayout()
     With chkShow
         .left = lblStep1.left
         .top = cmdCancel.top
-        .width = cmdFinish.left - .left
+        .width = LeftOf(cmdFinish, .left, False)
         .Caption = "Show model on sheet when finished"
         .value = True
     End With
     
-    Me.height = cmdCancel.top + cmdCancel.height + FormMargin + FormTitleHeight
+    Me.height = FormHeight(cmdCancel)
     Me.width = Me.width + FormWindowMargin
     
     Me.BackColor = FormBackColor

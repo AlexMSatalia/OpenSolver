@@ -187,19 +187,15 @@ Private Sub AutoLayout()
         .Caption = "OpenSolver version information"
         .width = lblHeading.width
         .left = lblHeading.left
-        .top = lblHeading.top + lblHeading.height
+        .top = Below(lblHeading, False)
     End With
     
     With lblUrl
         .Caption = "http://www.OpenSolver.org"
         .ForeColor = FormLinkColor
         .left = lblHeading.left
-        .top = lblVersion.top + lblVersion.height
-        ' Shrink to width of link so click target isn't too big
-        .width = Me.width
-        .AutoSize = False
-        .AutoSize = True
-        .AutoSize = False
+        .top = Below(lblVersion, False)
+        AutoHeight lblUrl, Me.width, True
     End With
     
     With txtAbout
@@ -207,7 +203,7 @@ Private Sub AutoLayout()
         .Text = "Loading OpenSolver info..."
         .Locked = True
         .left = lblHeading.left
-        .top = lblUrl.top + lblUrl.height + FormSpacing
+        .top = Below(lblUrl)
         .BackColor = FormBackColor
         .SpecialEffect = fmSpecialEffectEtched
         .height = 250
@@ -219,7 +215,7 @@ Private Sub AutoLayout()
         .Text = "OpenSolver file:"
         .Locked = True
         .left = lblHeading.left
-        .top = txtAbout.top + txtAbout.height + FormSpacing
+        .top = Below(txtAbout)
         .height = 2 * FormTextHeight + 2 ' Stop the text becoming smaller
         .width = lblHeading.width
         .BackColor = FormBackColor
@@ -228,46 +224,40 @@ Private Sub AutoLayout()
     
     With chkAutoLoad
         .Caption = "Load OpenSolver when Excel starts"
-        .width = Me.width
-        .AutoSize = False
-        .AutoSize = True
-        .AutoSize = False
+        AutoHeight chkAutoLoad, Me.width, True
         .left = lblHeading.left
-        .top = txtFilePath.top + txtFilePath.height
+        .top = Below(txtFilePath, False)
     End With
     
     With cmdCancelLoad
         .Caption = "Cancel loading at startup..."
         .width = FormButtonWidth * 2
-        .left = chkAutoLoad.left + chkAutoLoad.width + FormSpacing
+        .left = RightOf(chkAutoLoad)
         .top = chkAutoLoad.top
     End With
     
     With cmdOk
         .Caption = "OK"
         .width = FormButtonWidth
-        .left = Me.width - .width - FormMargin
+        .left = LeftOfForm(Me.width, .width)
         .top = chkAutoLoad.top
     End With
     
     With cmdUpdate
         .Caption = "Check for updates"
         .width = FormButtonWidth * 1.4
-        .left = Me.width - .width - FormMargin
+        .left = LeftOfForm(Me.width, .width)
         .top = lblHeading.top
     End With
     
     With chkUpdate
         .Caption = "Check for updates automatically"
         .left = cmdUpdate.left
-        .top = cmdUpdate.top + cmdUpdate.height
-        .width = cmdUpdate.width
-        .AutoSize = False
-        .AutoSize = True
-        .AutoSize = False
+        .top = Below(cmdUpdate, False)
+        AutoHeight chkUpdate, cmdUpdate.width, True
     End With
     
-    Me.height = cmdOk.top + cmdOk.height + FormMargin + FormTitleHeight
+    Me.height = FormHeight(cmdOk)
     Me.width = Me.width + FormWindowMargin
     
     Me.BackColor = FormBackColor

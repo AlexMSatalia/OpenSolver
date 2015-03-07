@@ -50,22 +50,18 @@ Private Sub AutoLayout()
         .Caption = "A newer version of OpenSolver is available. Please follow the link below for more information and to download the update:"
         .left = FormMargin
         .top = FormMargin
-        .width = Me.width - 2 * FormMargin
-        .AutoSize = False
-        .AutoSize = True
-        .AutoSize = False
-        .width = Me.width - 2 * FormMargin
+        AutoHeight lblDesc, Me.width - 2 * FormMargin
     End With
     
     With lblLatestVersion
         .width = lblDesc.width / 2
         .left = lblDesc.left
-        .top = lblDesc.top + lblDesc.height + FormSpacing
+        .top = Below(lblDesc)
     End With
     
     With lblCurrentVersion
         .width = lblLatestVersion.width
-        .left = lblLatestVersion.left + lblLatestVersion.width
+        .left = RightOf(lblLatestVersion, False)
         .top = lblLatestVersion.top
     End With
     
@@ -74,7 +70,7 @@ Private Sub AutoLayout()
         .ForeColor = FormLinkColor
         .Font.Underline = True
         .left = lblDesc.left
-        .top = lblLatestVersion.top + lblLatestVersion.height
+        .top = Below(lblLatestVersion, False)
         .width = lblDesc.width
         .TextAlign = fmTextAlignCenter
     End With
@@ -82,7 +78,7 @@ Private Sub AutoLayout()
     With chkKeepChecking
         .Caption = "Continue checking for updates to OpenSolver"
         .width = lblDesc.width
-        .top = lblLink.top + lblLink.height
+        .top = Below(lblLink, False)
         .left = lblDesc.left
     End With
     
@@ -90,10 +86,10 @@ Private Sub AutoLayout()
         .Caption = "OK"
         .width = FormButtonWidth
         .left = (Me.width - .width) / 2
-        .top = chkKeepChecking.top + chkKeepChecking.height + FormSpacing
+        .top = Below(chkKeepChecking)
     End With
         
-    Me.height = cmdOk.top + cmdOk.height + FormSpacing + FormMargin + FormTitleHeight
+    Me.height = FormHeight(cmdOk)
     Me.width = Me.width + FormWindowMargin
     
     Me.BackColor = FormBackColor

@@ -132,34 +132,34 @@ Private Sub AutoLayout()
     With chkPerformLinearityCheck
         .Caption = "Perform a quick linearity check on the solution"
         .left = chkNonNeg.left
-        .top = chkNonNeg.height + chkNonNeg.top
+        .top = Below(chkNonNeg, False)
         .width = chkNonNeg.width
     End With
         
     With chkShowSolverProgress
         .Caption = "Show optimisation progress while solving"
         .left = chkNonNeg.left
-        .top = chkPerformLinearityCheck.height + chkPerformLinearityCheck.top
+        .top = Below(chkPerformLinearityCheck, False)
         .width = chkNonNeg.width
     End With
     
     With txtMaxTime
         .width = FormButtonWidth
-        .left = Me.width - .width - FormMargin
-        .top = chkShowSolverProgress.top + chkShowSolverProgress.height + FormSpacing
+        .left = LeftOfForm(Me.width, .width)
+        .top = Below(chkShowSolverProgress)
     End With
     
     With lblMaxTime
         .Caption = "Maximum Solution Time (seconds):"
         .left = chkNonNeg.left
-        .width = txtMaxTime.left - FormSpacing - .left
+        .width = LeftOf(txtMaxTime, .left)
         .top = txtMaxTime.top
     End With
     
     With txtTol
         .width = txtMaxTime.width
         .left = txtMaxTime.left
-        .top = txtMaxTime.top + txtMaxTime.height + FormSpacing
+        .top = Below(txtMaxTime)
     End With
     
     With lblTol
@@ -172,7 +172,7 @@ Private Sub AutoLayout()
     With txtMaxIter
         .width = txtMaxTime.width
         .left = txtMaxTime.left
-        .top = txtTol.top + txtTol.height + FormSpacing
+        .top = Below(txtTol)
     End With
     
     With lblMaxIter
@@ -185,7 +185,7 @@ Private Sub AutoLayout()
     With txtPre
         .width = txtMaxTime.width
         .left = txtMaxTime.left
-        .top = txtMaxIter.top + txtMaxIter.height + FormSpacing
+        .top = Below(txtMaxIter)
     End With
     
     With lblPre
@@ -197,30 +197,26 @@ Private Sub AutoLayout()
     
     With lblFootnote
         .Caption = "Note: Only options that are used by the currently selected solver can be changed"
-        .width = chkNonNeg.width
-        .top = txtPre.top + txtPre.height + FormSpacing
+        .top = Below(txtPre)
         .left = chkNonNeg.left
-        .AutoSize = False
-        .AutoSize = True
-        .AutoSize = False
-        .width = chkNonNeg.width
+        AutoHeight lblFootnote, chkNonNeg.width
     End With
     
     With cmdCancel
         .Caption = "Cancel"
         .left = txtMaxTime.left
         .width = txtMaxTime.width
-        .top = lblFootnote.top + lblFootnote.height + FormSpacing
+        .top = Below(lblFootnote)
     End With
     
     With cmdOk
         .Caption = "OK"
         .width = txtMaxTime.width
-        .left = cmdCancel.left - FormSpacing - .width
+        .left = LeftOf(cmdCancel, .width)
         .top = cmdCancel.top
     End With
     
-    Me.height = cmdCancel.top + cmdCancel.height + FormMargin + FormTitleHeight
+    Me.height = FormHeight(cmdCancel)
     Me.width = Me.width + FormWindowMargin
     
     Me.BackColor = FormBackColor
