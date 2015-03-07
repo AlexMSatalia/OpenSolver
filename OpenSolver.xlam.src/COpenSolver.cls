@@ -1050,7 +1050,7 @@ Sub BuildModelOptions(succeeded As Boolean, Optional SolveRelaxation As Boolean 
               ' If we are in Excel 2010 or newer, and the user has set "Solve Relaxtion", then we report an error
               Dim IngoreIntConstraints As Boolean, s As String
 1265          IngoreIntConstraints = False
-1266          If Val(Application.Version) > 14 And GetNameValueIfExists(ActiveWorkbook, sheetName & "solver_rlx", s) Then
+1266          If Val(Application.Version) >= 14 And GetNameValueIfExists(ActiveWorkbook, sheetName & "solver_rlx", s) Then
 1267              IngoreIntConstraints = (s = "1")
 1268          End If
 1269          If IngoreIntConstraints = True Then
