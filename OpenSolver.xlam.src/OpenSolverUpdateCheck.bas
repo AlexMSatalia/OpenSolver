@@ -80,7 +80,7 @@ End Function
 
 Sub CheckForUpdate(Optional ByVal SilentFail As Boolean = False)
     Application.Cursor = xlWait
-    Application.StatusBar = "Checking for updates to OpenSolver..."
+    UpdateStatusBar "Checking for updates to OpenSolver...", True
     
     HasCheckedForUpdate = True
     

@@ -2116,11 +2116,12 @@ End Function
 ' WriteToFile
 ' Writes a string to the given file number, adds a newline, and can easily
 ' uncomment debug line to print to Immediate if needed. Adds number of spaces to front if specified
-Sub WriteToFile(intFileNum As Long, strData As String, Optional numSpaces As Long = 0)
+Sub WriteToFile(intFileNum As Long, strData As String, Optional numSpaces As Long = 0, Optional AbortIfBlank As Boolean = False)
           Dim RaiseError As Boolean
           RaiseError = False
           On Error GoTo ErrorHandler
 
+          If Len(strData) = 0 And AbortIfBlank Then GoTo ExitSub
 781       Print #intFileNum, Space(numSpaces) & strData
 
 ExitSub:
@@ -2548,6 +2549,39 @@ Function OpenSolverEnvironmentSummary() As String
 3523      OpenSolverEnvironmentSummary = "Version " & sOpenSolverVersion & " (" & sOpenSolverDate & ")" & _
                                          " running on " & IIf(SystemIs64Bit, "64", "32") & "-bit " & OS & _
                                          " with " & VBAversion & " in " & ExcelBitness & "-bit Excel " & Application.Version
-          
-
 End Function
+
+Sub UpdateStatusBar(Text As String, Optional Force As Boolean = False)
+' Function for updating the status bar.
+' Saves the last time the bar was updated and won't re-update until a specified amount of time has passed
+' The bar can be forced to display the new text regardless of time with the Force argument.
+    Dim RaiseError As Boolean
+    RaiseError = False
+    On Error GoTo ErrorHandler
+        
+    Dim ScreenStatus As Boolean
+    ScreenStatus = Application.ScreenUpdating
+    
+    Static LastUpdate As Double
+    Dim TimeDiff As Double
+    TimeDiff = (Now() - LastUpdate) * 86400  ' Time since last update in seconds
+    
+    ' Check if last update was long enough ago
+    If TimeDiff > 0.5 Or Force Then
+        LastUpdate = Now()
+        
+        Application.ScreenUpdating = True
+        Application.StatusBar = Text
+        DoEvents
+    End If
+
+ExitSub:
+    Application.ScreenUpdating = ScreenStatus
+    If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+    Exit Sub
+
+ErrorHandler:
+    If Not ReportError("OpenSolverModule", "UpdateStatusBar") Then Resume
+    RaiseError = True
+    GoTo ExitSub
+End Sub

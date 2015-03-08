@@ -147,12 +147,13 @@ Function SolverBitness_NOMAD() As String
 End Function
 
 Function SolveModel_Nomad(SolveRelaxation As Boolean, s As COpenSolver) As Long
-          Dim ScreenStatus As Boolean
           Dim RaiseError As Boolean
           RaiseError = False
           On Error GoTo ErrorHandler
 
+          Dim ScreenStatus As Boolean
 7017      ScreenStatus = Application.ScreenUpdating
+
           Dim Show As String
 7018      If GetNameValueIfExists(ActiveWorkbook, EscapeSheetName(ActiveSheet) & "solver_sho", Show) Then
 7019          If Show <> 1 Then Application.ScreenUpdating = False
@@ -313,7 +314,7 @@ Function updateVar(X As Variant, Optional BestSolution As Variant = Nothing, Opt
 7122                  status = status & " (infeasible)"
 7123              End If
 7124          End If
-7125          Application.StatusBar = status
+7125          UpdateStatusBar status
 7126      End If
           
 7127      OS.updateVarOS (X)

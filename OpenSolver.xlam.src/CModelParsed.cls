@@ -661,11 +661,8 @@ Function ExpandFormula(ByVal strFormula As String, _
           '==========================================================================
           ' STEP 2. Keep processing nodes until nothing interesting left
 5077      Do While lngIndex <= Formulae.Count
-5078          If lngIndex Mod 100 = 1 Then
-5079              Application.StatusBar = "OpenSolver: Constraint progress: " & ConstraintNumber & "/" & ConstraintCount & ". " & _
-                                          "Processing formula " & lngIndex & "/" & Formulae.Count & ". "
-5080          End If
-5081          DoEvents
+5078          UpdateStatusBar "OpenSolver: Constraint progress: " & ConstraintNumber & "/" & ConstraintCount & ". " & _
+                              "Processing formula " & lngIndex & "/" & Formulae.Count & ". "
               
 5082          Set objCurNode = Formulae(lngIndex)
 5083          strParsed = ""
@@ -793,12 +790,9 @@ Function ExpandFormula(ByVal strFormula As String, _
 5132                          For Each c In rngBuildingRef
                                   ' Update status
 5133                              curProgress = curProgress + 1
-5134                              If curProgress Mod 100 = 1 Then
-5135                                  Application.StatusBar = "OpenSolver: Constraint progress: " & ConstraintNumber & "/" & ConstraintCount & ". " & _
-                                                              "Processing formula " & lngIndex & "/" & Formulae.Count & ". " & _
-                                                              "Current formula progress: " & curProgress & "/" & TotalCount
-5136                                  DoEvents
-5137                              End If
+5134                              UpdateStatusBar "OpenSolver: Constraint progress: " & ConstraintNumber & "/" & ConstraintCount & ". " & _
+                                                  "Processing formula " & lngIndex & "/" & Formulae.Count & ". " & _
+                                                  "Current formula progress: " & curProgress & "/" & TotalCount
                                   
 5138                              node = AddNodeIfNew(objCurNode, c)
                                   
@@ -999,11 +993,8 @@ Sub CleanFormulae(ByVal lngFStart As Long, ByVal lngFEnd As Long, Optional Const
           Dim lngCurDepth As Long, strChildAddr As Variant
 5257      For lngCurDepth = lngMaxDepth To 0 Step -1
 5258          For lngIndex = lngFStart To lngFEnd
-5259              If lngIndex Mod 100 = 1 Then
-5260                  Application.StatusBar = "OpenSolver: Constraint progress: " & ConstraintNumber & "/" & ConstraintCount & ". " & _
-                                              "Cleaning decision variables in formula " & lngIndex & "/" & Formulae.Count & ". "
-5261              End If
-5262              DoEvents
+5259              UpdateStatusBar "OpenSolver: Constraint progress: " & ConstraintNumber & "/" & ConstraintCount & ". " & _
+                                  "Cleaning decision variables in formula " & lngIndex & "/" & Formulae.Count & ". "
                   
 5263              Set objCurNode = Formulae(lngIndex)
 5264              If objCurNode.lngDepth = lngCurDepth Then
@@ -1042,11 +1033,8 @@ Sub CleanFormulae(ByVal lngFStart As Long, ByVal lngFEnd As Long, Optional Const
           Dim strParentAdr As Variant
 5288      For lngCurDepth = lngMaxDepth To 0 Step -1
 5289          For lngIndex = lngFStart To lngFEnd
-5290              If lngIndex Mod 100 = 1 Then
-5291                  Application.StatusBar = "OpenSolver: Constraint progress: " & ConstraintNumber & "/" & ConstraintCount & ". " & _
-                                              "Cleaning constants in formula " & lngIndex & "/" & Formulae.Count & ". "
-5292              End If
-5293              DoEvents
+5290              UpdateStatusBar "OpenSolver: Constraint progress: " & ConstraintNumber & "/" & ConstraintCount & ". " & _
+                                  "Cleaning constants in formula " & lngIndex & "/" & Formulae.Count & ". "
                   
 5294              If Formulae(lngIndex).lngDepth = lngCurDepth Then
 5295                  If Formulae(lngIndex).boolIsConstant Then
@@ -1067,11 +1055,8 @@ Sub CleanFormulae(ByVal lngFStart As Long, ByVal lngFEnd As Long, Optional Const
           
           ' Remove any unneeded nodes
 5307      For lngIndex = lngFEnd To lngFStart Step -1
-5308          If lngIndex Mod 100 = 1 Then
-5309              Application.StatusBar = "OpenSolver: Constraint progress: " & ConstraintNumber & "/" & ConstraintCount & ". " & _
-                                          "Removing unnecessary formulae: " & lngIndex & "/" & Formulae.Count & ". "
-5310          End If
-5311          DoEvents
+5308          UpdateStatusBar "OpenSolver: Constraint progress: " & ConstraintNumber & "/" & ConstraintCount & ". " & _
+                              "Removing unnecessary formulae: " & lngIndex & "/" & Formulae.Count & ". "
           
 5312          If Formulae(lngIndex).boolCanBeRemoved Then Formulae.Remove lngIndex
 5313      Next lngIndex

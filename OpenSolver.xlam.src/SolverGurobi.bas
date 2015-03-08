@@ -330,7 +330,7 @@ Function ReadModel_Gurobi(SolutionFilePathName As String, s As COpenSolver) As B
 6500      End If
           
 6501      If s.SolutionWasLoaded Then
-6502          Application.StatusBar = "OpenSolver: Loading Solution... " & s.SolveStatusString
+6502          UpdateStatusBar "OpenSolver: Loading Solution... " & s.SolveStatusString, True
               Dim NumVar As Long, SplitLine() As String
 6503          Line Input #1, Line  ' Optimal - objective value              22
 6504          If Line <> "" Then

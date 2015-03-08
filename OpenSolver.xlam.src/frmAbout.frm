@@ -119,7 +119,7 @@ Private Sub lblUrl_Click()
 End Sub
 
 Private Sub UserForm_Activate()
-3514      Application.StatusBar = "OpenSolver: Fetching solver information..."
+3514      UpdateStatusBar "OpenSolver: Fetching solver information...", True
 3515      Application.Cursor = xlWait
 
           txtFilePath.Locked = False

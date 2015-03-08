@@ -281,14 +281,14 @@ Function ReadModel_CBC(SolutionFilePathName As String, s As COpenSolver) As Bool
 
 6188      If s.SolutionWasLoaded Then
               ' We read in whatever solution CBC returned
-6189          Application.StatusBar = "OpenSolver: Loading Solution... " & Response
+6189          UpdateStatusBar "OpenSolver: Loading Solution... " & Response
           
               Dim Line As String, SplitLine() As String, Index As Double, NameValue As String, value As Double, CBCConstraintIndex As Long, StartOffset As Long
 6191          If s.bGetDuals Then
                   ' Read in the Solution File
                   ' Line format: Index ConstraintName Value ShadowPrice
                   
-                  Dim j As Long, row As Long, i As Long
+                  Dim j As Long, row As Long
 6192              CBCConstraintIndex = 0
                   
                   ' Throw away first constraint if it was from a seek objective model
@@ -374,8 +374,8 @@ Sub ReadSensitivityData_CBC(SolutionFilePathName As String, s As COpenSolver)
           RaiseError = False
           On Error GoTo ErrorHandler
           
-          Dim RangeFilePathName As String, LineData() As String, index2 As Long
-          Dim Line As String, row As Long, j As Long, i As Long
+          Dim RangeFilePathName As String, LineData() As String
+          Dim Line As String, row As Long, j As Long
           
           'Find the ranges on the constraints
 6295      RangeFilePathName = left(SolutionFilePathName, InStrRev(SolutionFilePathName, Application.PathSeparator)) & RHSRangesFile_CBC

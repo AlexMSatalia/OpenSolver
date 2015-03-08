@@ -680,7 +680,7 @@ ModelOptions:
 1048      NumConstraints = Val(Mid(Names(sheetName & "solver_num"), 2))
           ' About to process the constraints, which takes a while, so provide some
           ' user feedback!
-1049      Application.StatusBar = "OpenSolver: Setting Up Problem... " & numVars & " vars, " & NumConstraints & " Solver constraints"
+1049      UpdateStatusBar "OpenSolver: Setting Up Problem... " & numVars & " vars, " & NumConstraints & " Solver constraints", True
           'Set up arrays to be the correct size. We allow no constraints!
 1050      If NumConstraints > 0 Then
 1051          ReDim LHSOriginalValues(NumConstraints) As Variant
@@ -702,7 +702,7 @@ ModelOptions:
 1065      row = 1
           ' Iterate through each solver constraint
 1066      For constraint = 1 To NumConstraints
-1067          If constraint Mod 5 = 1 Then Application.StatusBar = "OpenSolver: Setting Up Constraints... " & numVars & " vars, " & constraint & "/" & NumConstraints & " Solver constraints"
+1067          UpdateStatusBar "OpenSolver: Setting Up Constraints... " & numVars & " vars, " & constraint & "/" & NumConstraints & " Solver constraints"
               
               '**********************************************************************
               ' Note: Solver enforces the following requirements.
@@ -1102,7 +1102,7 @@ Sub BuildConstraintMatrix(objIsMissing As Boolean, SparseA() As CIndexedCoeffs, 
               ' Count how many variables we've processed, let the user know
               ' that the program hasn't crashed!
 1281          var = var + 1
-1282          If var Mod 10 = 1 Then Application.StatusBar = "OpenSolver: Setting Up Problem... " & var & "/" & numVars & " vars, " & NumRows & " rows."
+1282          UpdateStatusBar "OpenSolver: Setting Up Problem... " & var & "/" & numVars & " vars, " & NumRows & " rows."
 
               ' Increment the value of this cell to find its coefficients
               ' Because its all linear, we can simply check the change in the objective/constraints
@@ -1284,7 +1284,7 @@ Function SolveModel_Linear(SolveRelaxation As Boolean) As Long
           ' Trap Escape key
 1420      Application.EnableCancelKey = xlErrorHandler
           
-1421      Application.StatusBar = "OpenSolver: Writing Model to disk... " & numVars & " vars, " & NumRows & " rows."
+1421      UpdateStatusBar "OpenSolver: Writing Model to disk... " & numVars & " vars, " & NumRows & " rows.", True
           
           ' If the user has a defined name OpenSolver_ConstraintList, then we need to request duals from the solver
 1422      DualsOnSameSheet = GetNamedRangeIfExistsOnSheet(ActiveSheet, "OpenSolver_Duals", rConstraintList)
@@ -1459,8 +1459,9 @@ Sub SolveModel_LinearLocal(ModelFilePathName As String, SolveRelaxation As Boole
           Dim SolveOptions As SolveOptionsType
 1557      GetSolveOptions sheetName, SolveOptions
               
-1562      Application.StatusBar = "OpenSolver: Solving " & IIf(SolveRelaxation, "Relaxed ", "") & "Model... " & numVars & " vars, " & NumIntVars & " int vars " & _
-                                  "(" & NumBinVars & " 0/1), " & NumRows & " rows, " & SolveOptions.MaxTime & "s time limit, " & SolveOptions.Tolerance * 100 & "% tolerance."
+1562      UpdateStatusBar "OpenSolver: Solving " & IIf(SolveRelaxation, "Relaxed ", "") & "Model... " & numVars & " vars, " & _
+                          NumIntVars & " int vars " & "(" & NumBinVars & " 0/1), " & NumRows & " rows, " & _
+                          SolveOptions.MaxTime & "s time limit, " & SolveOptions.Tolerance * 100 & "% tolerance.", True
               
           ' We allow user to define extra parameters
           Dim ExtraParameters As New Dictionary
@@ -2013,7 +2014,7 @@ Sub WriteModelToSheet()
 1950      oldCalculationMode = Application.Calculation
 1951      Application.Calculation = xlCalculationManual
           
-1952      Application.StatusBar = "OpenSolver: Writing Model to worksheet 'Model'... " & numVars & " vars, " & NumRows & " rows."
+1952      UpdateStatusBar "OpenSolver: Writing Model to worksheet 'Model'... " & numVars & " vars, " & NumRows & " rows.", True
 
           Dim var As Long, i As Long, row As Long, coeff As Double
           

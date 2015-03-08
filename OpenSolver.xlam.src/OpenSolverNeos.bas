@@ -71,11 +71,9 @@ Public Function SolveOnNeos(message As String, errorString As String) As String
 6836      While Done = False
               If frmCallingNeos.Tag = "Cancelled" Then GoTo Aborted
               
-6837          DoEvents
+              UpdateStatusBar "OpenSolver: Solving model on NEOS... Time Elapsed: " & time & " seconds"
               
               result = GetNeosJobStatus(jobNumber, Password)
-              
-              ' Evaluate result
 6843          If result = "Done" Then
 6844              Done = True
 6845          ElseIf result <> "Waiting" And result <> "Running" Then
@@ -83,12 +81,9 @@ Public Function SolveOnNeos(message As String, errorString As String) As String
 6848          Else
 6849              SleepSeconds 1
 6850              time = time + 1
-6851              Application.StatusBar = "OpenSolver: Solving model on NEOS... Time Elapsed: " & time & " seconds"
-6852              DoEvents
 6853          End If
 6854      Wend
           
-          ' Extract Result
 6861      SolveOnNeos = GetNeosResult(jobNumber, Password)
           
 ExitFunction:

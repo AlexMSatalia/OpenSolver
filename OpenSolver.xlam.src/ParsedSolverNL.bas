@@ -158,56 +158,24 @@ Function SolveModelParsed_NL(ModelFilePathName As String, model As CModelParsed,
           ' Write .nl file
 7474      Open ModelFilePathName For Output As #1
           
-          ' Write header
-7475      Print #1, MakeHeader()
-          ' Write C blocks
-7476      If n_con > 0 Then
-7477          Print #1, MakeCBlocks()
-7478      End If
-          
-7479      If n_obj > 0 Then
-              ' Write O block
-7480          Print #1, MakeOBlocks()
-7481      End If
-          
-'          ' Write d block
-'7482      If n_con > 0 Then
-'7483          Print #1, MakeDBlock()
-'7484      End If
-          
-          ' Write x block
-7485      Print #1, MakeXBlock()
-          
-          ' Write r block
-7486      If n_con > 0 Then
-7487          Print #1, MakeRBlock()
-7488      End If
-          
-          ' Write b block
-7489      Print #1, MakeBBlock()
-          
-          ' Write k block
-7490      If n_con > 0 Then
-7491          Print #1, MakeKBlock()
-7492      End If
-          
-          ' Write J block
-7493      If n_con > 0 Then
-7494          Print #1, MakeJBlocks()
-7495      End If
-          
-7496      If n_obj > 0 Then
-              ' Write G block
-7497          Print #1, MakeGBlocks()
-7498      End If
-          
+7475      WriteToFile 1, MakeHeader(), AbortIfBlank:=True
+7477      WriteToFile 1, MakeCBlocks(), AbortIfBlank:=True
+7480      WriteToFile 1, MakeOBlocks(), AbortIfBlank:=True
+7483      'WriteToFile 1, MakeDBlock(), AbortIfBlank:=True
+7485      WriteToFile 1, MakeXBlock(), AbortIfBlank:=True
+7487      WriteToFile 1, MakeRBlock(), AbortIfBlank:=True
+7489      WriteToFile 1, MakeBBlock(), AbortIfBlank:=True
+7491      WriteToFile 1, MakeKBlock(), AbortIfBlank:=True
+7494      WriteToFile 1, MakeJBlocks(), AbortIfBlank:=True
+7497      WriteToFile 1, MakeGBlocks(), AbortIfBlank:=True
+
 7499      Close #1
           
           ' =============================================================
           ' Solve model using chosen solver
           ' =============================================================
           
-7501      Application.StatusBar = "OpenSolver: Solving .nl model file"
+7501      UpdateStatusBar "OpenSolver: Solving .nl model file", True
           
           Dim SolutionFilePathName As String
 7502      SolutionFilePathName = SolutionFilePath(m.Solver)
@@ -233,7 +201,7 @@ Function SolveModelParsed_NL(ModelFilePathName As String, model As CModelParsed,
           ' =============================================================
           ' Read results from solution file
           ' =============================================================
-7518      Application.StatusBar = "OpenSolver: Reading .nl solution"
+7518      UpdateStatusBar "OpenSolver: Reading .nl solution", True
 
           Dim solutionLoaded As Boolean, errorString As String
 7519      solutionLoaded = ReadModel_NL(SolutionFilePathName, errorString, s)
@@ -277,10 +245,7 @@ Private Sub InitialiseModelStats()
 7551      numActualEqs = 0
 7552      numActualRanges = 0
 7553      For i = 1 To numActualCons
-7554          If i Mod 100 = 1 Then
-7555              Application.StatusBar = "OpenSolver: Creating .nl file. Counting constraints: " & i & "/" & numActualCons & ". "
-7556          End If
-7557          DoEvents
+7554          UpdateStatusBar "OpenSolver: Creating .nl file. Counting constraints: " & i & "/" & numActualCons & ". "
               
 7558          If m.Rels(i) = RelationConsts.RelationEQ Then
 7559              numActualEqs = numActualEqs + 1
@@ -367,10 +332,7 @@ Private Sub CreateVariableIndex()
           ' First read in actual vars
 7598      i = 1
 7599      For Each c In m.AdjustableCells
-7600          If i Mod 100 = 1 Then
-7601              Application.StatusBar = "OpenSolver: Creating .nl file. Counting variables: " & i & "/" & numActualVars & ". "
-7602          End If
-7603          DoEvents
+7600          UpdateStatusBar "OpenSolver: Creating .nl file. Counting variables: " & i & "/" & numActualVars & ". "
               
 7604          cellName = ConvertCellToStandardName(c)
               
@@ -385,10 +347,7 @@ Private Sub CreateVariableIndex()
           
           ' Next read in fake formulae vars
 7609      For i = 1 To numFakeVars
-7610          If i Mod 100 = 1 Then
-7611              Application.StatusBar = "OpenSolver: Creating .nl file. Counting formulae variables: " & i & "/" & numFakeVars & ". "
-7612          End If
-7613          DoEvents
+7610          UpdateStatusBar "OpenSolver: Creating .nl file. Counting formulae variables: " & i & "/" & numFakeVars & ". "
               
 7614          cellName = m.Formulae(i).strAddress
               
@@ -420,10 +379,7 @@ Private Sub MakeVariableMap(SolveRelaxation As Boolean)
           Dim c As Range, cellName As String, i As Long
 7617      i = 1
 7618      For Each c In m.AdjustableCells
-7619          If i Mod 100 = 1 Then
-7620              Application.StatusBar = "OpenSolver: Creating .nl file. Classifying variables: " & i & "/" & numActualVars & ". "
-7621          End If
-7622          DoEvents
+7619          UpdateStatusBar "OpenSolver: Creating .nl file. Classifying variables: " & i & "/" & numActualVars & ". "
               
 7623          i = i + 1
 7624          cellName = ConvertCellToStandardName(c)
@@ -432,10 +388,7 @@ Private Sub MakeVariableMap(SolveRelaxation As Boolean)
           
           ' Formulae variables
 7627      For i = 1 To m.Formulae.Count
-7628          If i Mod 100 = 1 Then
-7629              Application.StatusBar = "OpenSolver: Creating .nl file. Classifying formulae variables: " & i & "/" & numFakeVars & ". "
-7630          End If
-7631          DoEvents
+7628          UpdateStatusBar "OpenSolver: Creating .nl file. Classifying formulae variables: " & i & "/" & numFakeVars & ". "
               
 7632          cellName = m.Formulae(i).strAddress
 7633          CellNames.Add cellName
@@ -448,10 +401,8 @@ Private Sub MakeVariableMap(SolveRelaxation As Boolean)
           Dim IntegerVars() As Boolean
 7635      ReDim IntegerVars(n_var)
 7636      If Not m.IntegerCells Is Nothing Then
+7638          UpdateStatusBar "OpenSolver: Creating .nl file. Finding integer variables"
 7637          For Each c In m.IntegerCells
-7638              Application.StatusBar = "OpenSolver: Creating .nl file. Finding integer variables"
-7639              DoEvents
-              
 7640              cellName = ConvertCellToStandardName(c)
 7641              IntegerVars(VariableIndex(cellName)) = True
 7642          Next c
@@ -460,10 +411,8 @@ Private Sub MakeVariableMap(SolveRelaxation As Boolean)
           ' Get binary variables
 7644      ReDim BinaryVars(n_var)
 7645      If Not m.BinaryCells Is Nothing Then
+7647          UpdateStatusBar "OpenSolver: Creating .nl file. Finding binary variables"
 7646          For Each c In m.BinaryCells
-7647              Application.StatusBar = "OpenSolver: Creating .nl file. Finding binary variables"
-7648              DoEvents
-                  
 7649              cellName = ConvertCellToStandardName(c)
 7650              BinaryVars(VariableIndex(cellName)) = True
 7652          Next c
@@ -483,10 +432,7 @@ Private Sub MakeVariableMap(SolveRelaxation As Boolean)
           Dim LinearInteger As New Collection
           
 7654      For i = 1 To n_var
-7655          If i Mod 100 = 1 Then
-7656              Application.StatusBar = "OpenSolver: Creating .nl file. Sorting variables: " & i & "/" & n_var & ". "
-7657          End If
-7658          DoEvents
+7655          UpdateStatusBar "OpenSolver: Creating .nl file. Sorting variables: " & i & "/" & n_var & ". "
               
 7659          If NonLinearVars(i) Then
 7660              If IntegerVars(i) Or BinaryVars(i) Then
@@ -525,10 +471,7 @@ Private Sub MakeVariableMap(SolveRelaxation As Boolean)
           
           ' Non-linear continuous
 7680      For i = 1 To NonLinearContinuous.Count
-7681          If i Mod 100 = 1 Then
-7682              Application.StatusBar = "OpenSolver: Creating .nl file. Outputting non-linear continuous vars"
-7683          End If
-7684          DoEvents
+7681          UpdateStatusBar "OpenSolver: Creating .nl file. Outputting non-linear continuous vars"
               
 7685          var = NonLinearContinuous(i)
 7686          AddVariable CellNames(var), Index, var
@@ -536,10 +479,7 @@ Private Sub MakeVariableMap(SolveRelaxation As Boolean)
           
           ' Non-linear integer
 7688      For i = 1 To NonLinearInteger.Count
-7689          If i Mod 100 = 1 Then
-7690              Application.StatusBar = "OpenSolver: Creating .nl file. Outputting non-linear integer vars"
-7691          End If
-7692          DoEvents
+7689          UpdateStatusBar "OpenSolver: Creating .nl file. Outputting non-linear integer vars"
               
 7693          var = NonLinearInteger(i)
 7694          AddVariable CellNames(var), Index, var
@@ -547,21 +487,15 @@ Private Sub MakeVariableMap(SolveRelaxation As Boolean)
           
           ' Linear continuous
 7696      For i = 1 To LinearContinuous.Count
-7697          If i Mod 100 = 1 Then
-7698              Application.StatusBar = "OpenSolver: Creating .nl file. Outputting linear continuous vars"
-7699          End If
-7700          DoEvents
-              
+7697          UpdateStatusBar "OpenSolver: Creating .nl file. Outputting linear continuous vars"
+
 7701          var = LinearContinuous(i)
 7702          AddVariable CellNames(var), Index, var
 7703      Next i
           
           ' Linear binary
 7704      For i = 1 To LinearBinary.Count
-7705          If i Mod 100 = 1 Then
-7706              Application.StatusBar = "OpenSolver: Creating .nl file. Outputting linear binary vars"
-7707          End If
-7708          DoEvents
+7705          UpdateStatusBar "OpenSolver: Creating .nl file. Outputting linear binary vars"
               
 7709          var = LinearBinary(i)
 7710          AddVariable CellNames(var), Index, var
@@ -569,11 +503,8 @@ Private Sub MakeVariableMap(SolveRelaxation As Boolean)
           
           ' Linear integer
 7712      For i = 1 To LinearInteger.Count
-7713          If i Mod 100 = 1 Then
-7714              Application.StatusBar = "OpenSolver: Creating .nl file. Outputting linear integer vars"
-7715          End If
-7716          DoEvents
-              
+7713          UpdateStatusBar "OpenSolver: Creating .nl file. Outputting linear integer vars"
+
 7717          var = LinearInteger(i)
 7718          AddVariable CellNames(var), Index, var
 7719      Next i
@@ -651,11 +582,8 @@ Private Sub MakeConstraintMap()
           
           ' Non-linear constraints
 7735      For i = 1 To n_con
-7736          If i Mod 100 = 1 Then
-7737              Application.StatusBar = "OpenSolver: Creating .nl file. Outputting non-linear constraints " & i & "/" & n_con
-7738          End If
-7739          DoEvents
-              
+7736          UpdateStatusBar "OpenSolver: Creating .nl file. Outputting non-linear constraints " & i & "/" & n_con
+
 7740          If NonLinearConstraints(i) Then
                   ' Actual constraints
 7741              If i <= numActualCons Then
@@ -672,11 +600,8 @@ Private Sub MakeConstraintMap()
           
           ' Linear constraints
 7751      For i = 1 To n_con
-7752          If i Mod 100 = 1 Then
-7753              Application.StatusBar = "OpenSolver: Creating .nl file. Outputting linear constraints " & i & "/" & n_con
-7754          End If
-7755          DoEvents
-              
+7752          UpdateStatusBar "OpenSolver: Creating .nl file. Outputting linear constraints " & i & "/" & n_con
+
 7756          If Not NonLinearConstraints(i) Then
                   ' Actual constraints
 7757              If i <= numActualCons Then
@@ -751,20 +676,12 @@ Private Sub ProcessFormulae()
           ' Loop through all constraints and process each
           Dim i As Long
 7781      For i = 1 To numActualCons
-7782          If i Mod 100 = 1 Then
-7783              Application.StatusBar = "OpenSolver: Processing formulae into expression trees... " & i & "/" & n_con & " formulae."
-7784          End If
-7785          DoEvents
-              
+7782          UpdateStatusBar "OpenSolver: Processing formulae into expression trees... " & i & "/" & n_con & " formulae."
 7786          ProcessSingleFormula m.RHSKeys(i), m.LHSKeys(i), m.Rels(i)
 7787      Next i
           
 7788      For i = 1 To numFakeCons
-7789          If i Mod 100 = 1 Then
-7790              Application.StatusBar = "OpenSolver: Processing formulae into expression trees... " & i + numActualCons & "/" & n_con & " formulae."
-7791          End If
-7792          DoEvents
-              
+7789          UpdateStatusBar "OpenSolver: Processing formulae into expression trees... " & i + numActualCons & "/" & n_con & " formulae."
 7793          ProcessSingleFormula m.Formulae(i).strFormulaParsed, m.Formulae(i).strAddress, RelationConsts.RelationEQ
 7794      Next i
           
@@ -1007,11 +924,8 @@ Private Function MakeCBlocks() As String
           
           Dim i As Long
 7885      For i = 1 To n_con
-7886          If i Mod 100 = 1 Then
-7887              Application.StatusBar = "OpenSolver: Creating .nl file. Writing non-linear constraints" & i & "/" & n_con
-7888          End If
-7889          DoEvents
-              
+7886          UpdateStatusBar "OpenSolver: Creating .nl file. Writing non-linear constraints " & i & "/" & n_con
+
               ' Add block header for the constraint
 7890          AddNewLine Block, "C" & i - 1, "CONSTRAINT NON-LINEAR SECTION " + ConstraintMapRev(CStr(i - 1))
               
@@ -1077,10 +991,7 @@ Private Function MakeDBlock() As String
           ' Set duals to zero for all constraints
           Dim i As Long
 7904      For i = 1 To n_con
-7905          If i Mod 100 = 1 Then
-7906              Application.StatusBar = "OpenSolver: Creating .nl file. Writing initial duals " & i & "/" & n_con
-7907          End If
-7908          DoEvents
+7905          UpdateStatusBar "OpenSolver: Creating .nl file. Writing initial duals " & i & "/" & n_con
               
 7909          AddNewLine Block, i - 1 & " 0", "    " & ConstraintMapRev(CStr(i - 1)) & " = " & 0
 7910      Next i
@@ -1112,10 +1023,7 @@ Private Function MakeXBlock() As String
           ' Loop through the variables in .nl variable order
           Dim i As Long, initial As Double, VariableIndex As Long
 7914      For i = 1 To n_var
-7915          If i Mod 100 = 1 Then
-7916              Application.StatusBar = "OpenSolver: Creating .nl file. Writing initial values " & i & "/" & n_var
-7917          End If
-7918          DoEvents
+7915          UpdateStatusBar "OpenSolver: Creating .nl file. Writing initial values " & i & "/" & n_var
               
 7919          VariableIndex = VariableNLIndexToCollectionIndex(i - 1)
               
@@ -1148,6 +1056,8 @@ Private Function MakeRBlock() As String
           RaiseError = False
           On Error GoTo ErrorHandler
 
+          If n_con = 0 Then GoTo ExitFunction
+
           Dim Block As String
 7928      Block = ""
            ' Add block header
@@ -1156,10 +1066,7 @@ Private Function MakeRBlock() As String
           ' Apply bounds according to the relation type
           Dim i As Long, BoundType As Long, Comment As String, bound As Double
 7930      For i = 1 To n_con
-7931          If i Mod 100 = 1 Then
-7932              Application.StatusBar = "OpenSolver: Creating .nl file. Writing constraint bounds " & i & "/" & n_con
-7933          End If
-7934          DoEvents
+7931          UpdateStatusBar "OpenSolver: Creating .nl file. Writing constraint bounds " & i & "/" & n_con
               
 7935          bound = LinearConstants(ConstraintIndexToTreeIndex(i - 1))
 7936          ConvertConstraintToNL ConstraintRelations(ConstraintIndexToTreeIndex(i - 1)), BoundType, Comment
@@ -1190,12 +1097,9 @@ Private Function MakeBBlock() As String
           ' Write block header
 7941      AddNewLine Block, "b", "VARIABLE BOUNDS"
           
-          Dim i As Long, bound As String, Comment As String, VariableIndex As Long, VarName As String, value As Double
+          Dim i As Long, bound As String, Comment As String, VariableIndex As Long, VarName As String
 7942      For i = 1 To n_var
-7943          If i Mod 100 = 1 Then
-7944              Application.StatusBar = "OpenSolver: Creating .nl file. Writing variable bounds " & i & "/" & n_var
-7945          End If
-7946          DoEvents
+7943          UpdateStatusBar "OpenSolver: Creating .nl file. Writing variable bounds " & i & "/" & n_var
               
 7947          VariableIndex = VariableNLIndexToCollectionIndex(i - 1)
 7948          Comment = "    " & VariableMapRev(CStr(i - 1))
@@ -1244,6 +1148,8 @@ Private Function MakeKBlock() As String
           RaiseError = False
           On Error GoTo ErrorHandler
 
+          If n_var = 0 Then GoTo ExitFunction
+
           Dim Block As String
 7970      Block = ""
 
@@ -1254,10 +1160,7 @@ Private Function MakeKBlock() As String
           Dim i As Long, total As Long
 7972      total = 0
 7973      For i = 1 To n_var - 1
-7974          If i Mod 100 = 1 Then
-7975              Application.StatusBar = "OpenSolver: Creating .nl file. Writing jacobian counts " & i & "/" & n_var - 1
-7976          End If
-7977          DoEvents
+7974          UpdateStatusBar "OpenSolver: Creating .nl file. Writing jacobian counts " & i & "/" & n_var - 1
               
 7978          total = total + NonZeroConstraintCount(VariableNLIndexToCollectionIndex(i - 1))
 7979          AddNewLine Block, CStr(total), "    Up to " & VariableMapRev(CStr(i - 1)) & ": " & CStr(total) & " entries in Jacobian"
@@ -1289,10 +1192,7 @@ Private Function MakeJBlocks() As String
           
           Dim i As Long, TreeIndex As Long, VariableIndex As Long
 7983      For i = 1 To n_con
-7984          If i Mod 100 = 1 Then
-7985              Application.StatusBar = "OpenSolver: Creating .nl file. Writing linear constraints" & i & "/" & n_con
-7986          End If
-7987          DoEvents
+7984          UpdateStatusBar "OpenSolver: Creating .nl file. Writing linear constraints " & i & "/" & n_con
               
 7988          TreeIndex = ConstraintIndexToTreeIndex(i - 1)
           
@@ -1343,7 +1243,7 @@ Private Function MakeGBlocks() As String
           Dim Block As String
 8006      Block = ""
           
-          Dim i As Long, ObjectiveVariables As Collection, ObjectiveCoefficients As Collection
+          Dim i As Long
 8007      For i = 1 To n_obj
               ' Make header
 8008          AddNewLine Block, "G" & i - 1 & " " & LinearObjectives(i).Count, "OBJECTIVE LINEAR SECTION " & ObjectiveCells(i)
@@ -1384,10 +1284,9 @@ Private Sub OutputColFile()
 
 8020      Open ColFilePathName For Output As #2
           
+8022      UpdateStatusBar "OpenSolver: Creating .nl file. Writing col file"
           Dim var As Variant
 8021      For Each var In VariableMap
-8022          Application.StatusBar = "OpenSolver: Creating .nl file. Writing col file"
-8023          DoEvents
 8024          WriteToFile 2, VariableMapRev(var)
 8025      Next var
           
@@ -1415,9 +1314,9 @@ Private Sub OutputRowFile()
 
 8033      Open RowFilePathName For Output As #3
           
+8035      UpdateStatusBar "OpenSolver: Creating .nl file. Writing con file"
           Dim con As Variant
 8034      For Each con In ConstraintMap
-8035          Application.StatusBar = "OpenSolver: Creating .nl file. Writing con file"
 8036          DoEvents
 8037          WriteToFile 3, ConstraintMapRev(CStr(con))
 8038      Next con
@@ -1462,19 +1361,14 @@ Sub AddNewLine(CurText As String, LineText As String, Optional CommentText As St
           RaiseError = False
           On Error GoTo ErrorHandler
 
-          Dim Comment As String
-8043      Comment = ""
+          CurText = CurText & LineText
           
-          ' Add comment with padding if coment should be included
+          ' Add comment with padding if comment should be included
 8044      If WriteComments And CommentText <> "" Then
-              Dim j As Long
-8045          For j = 1 To CommentSpacing - Len(LineText)
-8046             Comment = Comment + " "
-8047          Next j
-8048          Comment = Comment + "# " + CommentText
+8048          CurText = CurText & Space(CommentSpacing - Len(LineText)) & "# " & CommentText
 8049      End If
           
-8050      CurText = CurText & LineText & Comment & vbNewLine
+8050      CurText = CurText & vbNewLine
 
 ExitSub:
           If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
@@ -1491,12 +1385,11 @@ Private Function StripTrailingNewline(Block As String) As String
           Dim RaiseError As Boolean
           RaiseError = False
           On Error GoTo ErrorHandler
-
-8051      If Len(Block) > 1 Then
-8052          StripTrailingNewline = left(Block, Len(Block) - 2)
-8053      Else
-8054          StripTrailingNewline = Block
-8055      End If
+          
+          If right(Block, Len(vbNewLine)) = vbNewLine Then
+              Block = left(Block, Len(Block) - Len(vbNewLine))
+          End If
+          StripTrailingNewline = Block
 
 ExitFunction:
           If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
@@ -1524,7 +1417,7 @@ Private Function ConvertFormulaToExpressionTree(strFormula As String) As Express
           
           Dim Operands As New ExpressionTreeStack, Operators As New StringStack, ArgCounts As New OperatorArgCountStack
           
-          Dim i As Long, c As Range, tkn As Token, tknOld As String, Tree As ExpressionTree
+          Dim i As Long, tkn As Token, tknOld As String, Tree As ExpressionTree
 8057      For i = 1 To tksFormula.Count
 8058          Set tkn = tksFormula.Item(i)
               
@@ -1669,25 +1562,12 @@ ErrorHandler:
 End Function
 
 Function IsNAry(FunctionName As String) As Boolean
-          Dim RaiseError As Boolean
-          RaiseError = False
-          On Error GoTo ErrorHandler
-
 8124      Select Case FunctionName
           Case "min", "max", "sum", "count", "numberof", "numberofs", "and_n", "or_n", "alldiff"
 8125          IsNAry = True
 8126      Case Else
 8127          IsNAry = False
 8128      End Select
-
-ExitFunction:
-          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
-          Exit Function
-
-ErrorHandler:
-          If Not ReportError("ParsedSolverNL", "IsNAry") Then Resume
-          RaiseError = True
-          GoTo ExitFunction
 End Function
 
 ' Determines the number of operands expected by a .nl operator
@@ -1778,10 +1658,6 @@ End Function
 
 ' Determines the precedence of arithmetic operators
 Private Function Precedence(tkn As String) As Long
-          Dim RaiseError As Boolean
-          RaiseError = False
-          On Error GoTo ErrorHandler
-
 8177      Select Case tkn
           Case "eq", "ne", "gt", "ge", "lt", "le"
               Precedence = 1
@@ -1796,15 +1672,6 @@ Private Function Precedence(tkn As String) As Long
 8185      Case Else
 8186          Precedence = -1
 8187      End Select
-
-ExitFunction:
-          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
-          Exit Function
-
-ErrorHandler:
-          If Not ReportError("ParsedSolverNL", "Precedence") Then Resume
-          RaiseError = True
-          GoTo ExitFunction
 End Function
 
 ' Checks the precedence of two operators to determine if the current operator on the stack should be popped
@@ -1971,10 +1838,6 @@ End Function
 
 ' Converts an operator string to .nl code
 Private Function ConvertOperatorToNLCode(FunctionName As String) As Long
-          Dim RaiseError As Boolean
-          RaiseError = False
-          On Error GoTo ErrorHandler
-
 8232      Select Case FunctionName
           Case "plus"
 8233          ConvertOperatorToNLCode = 0
@@ -2085,15 +1948,6 @@ Private Function ConvertOperatorToNLCode(FunctionName As String) As Long
 8338      Case "alldiff"
 8339          ConvertOperatorToNLCode = 74
 8340      End Select
-
-ExitFunction:
-          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
-          Exit Function
-
-ErrorHandler:
-          If Not ReportError("ParsedSolverNL", "ConvertOperatorToNLCode") Then Resume
-          RaiseError = True
-          GoTo ExitFunction
 End Function
 
 ' Converts an objective sense to .nl code
@@ -2123,10 +1977,6 @@ End Function
 
 ' Converts RelationConsts enum to .nl code.
 Private Sub ConvertConstraintToNL(Relation As RelationConsts, BoundType As Long, Comment As String)
-          Dim RaiseError As Boolean
-          RaiseError = False
-          On Error GoTo ErrorHandler
-
 8348      Select Case Relation
               Case RelationConsts.RelationLE ' Upper Bound on LHS
 8349              BoundType = 1
@@ -2138,15 +1988,6 @@ Private Sub ConvertConstraintToNL(Relation As RelationConsts, BoundType As Long,
 8355              BoundType = 2
 8356              Comment = " >= "
 8357      End Select
-
-ExitSub:
-          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
-          Exit Sub
-
-ErrorHandler:
-          If Not ReportError("ParsedSolverNL", "ConvertConstraintToNL") Then Resume
-          RaiseError = True
-          GoTo ExitSub
 End Sub
 
 Function ReadModel_NL(SolutionFilePathName As String, errorString As String, s As COpenSolverParsed) As Boolean
@@ -2156,7 +1997,7 @@ Function ReadModel_NL(SolutionFilePathName As String, errorString As String, s A
 
     ReadModel_NL = False
     
-    Dim Line As String, Index As Long
+    Dim Line As String
     Dim solutionExpected As Boolean
     solutionExpected = True
     
@@ -2207,7 +2048,7 @@ Function ReadModel_NL(SolutionFilePathName As String, errorString As String, s A
     End If
     
     If solutionExpected Then
-        Application.StatusBar = "OpenSolver: Loading Solution... " & s.SolveStatusString
+        UpdateStatusBar "OpenSolver: Loading Solution... " & s.SolveStatusString, True
         
         Line Input #1, Line ' Throw away blank line
         Line Input #1, Line ' Throw away "Options"
@@ -2322,7 +2163,7 @@ Function CreateSolveScript_NL(ModelFilePathName As String, SolveOptions As Solve
     RaiseError = False
     On Error GoTo ErrorHandler
 
-    Dim SolverString As String, CommandLineRunString As String, PrintingOptionString As String
+    Dim SolverString As String, CommandLineRunString As String
     SolverAvailable m.Solver, SolverString
     SolverString = MakePathSafe(SolverString)
     

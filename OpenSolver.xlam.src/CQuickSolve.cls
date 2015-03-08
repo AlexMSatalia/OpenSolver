@@ -95,8 +95,10 @@ Function AnalyseParameters(OpenSolver As COpenSolver, sheetName As String, _
 2649          If c.HasArray Then
 2650              Err.Raise OpenSolver_BuildError, Description:="QuickSolve Initialisation Failed: OpenSolver cannot perform quick solves for parameters that contain array formulae."
 2652          End If
+
 2653          param = param + 1
-2654          If param Mod 10 = 1 Then Application.StatusBar = "OpenSolver: Analysing Parameters... " & param & "/" & NumParams & " parameters"
+2654          UpdateStatusBar "OpenSolver: Analysing Parameters... " & param & "/" & NumParams & " parameters"
+              
               Dim OldFormula As String
 2655          On Error Resume Next
 2656          OldFormula = c.Formula

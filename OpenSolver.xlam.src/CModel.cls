@@ -32,7 +32,7 @@ Public Sub FindObjective(ByRef s As Worksheet)
 3586      Set ObjSenseCell = Nothing
 3587      ObjectiveSense = UnknownObjectiveSense
           
-3588      Application.StatusBar = "OpenSolver: Trying to determine objective sense..."
+3588      UpdateStatusBar "OpenSolver: Trying to determine objective sense...", True
 3589      Application.Cursor = xlWait
 
           Dim ObjKeywords() As Variant, ObjSenseMin() As Variant, i As Long
@@ -52,7 +52,7 @@ Public Sub FindObjective(ByRef s As Worksheet)
               GoTo ExitSub
 3620      End If
           
-3621      Application.StatusBar = "OpenSolver: Found objective sense, looking for objective cell..."
+3621      UpdateStatusBar "OpenSolver: Found objective sense, looking for objective cell...", True
 
           ' Search for objective function cell
           Dim SearchFormulae() As Variant, RowOffsets() As Variant, SearchFormula As Variant
@@ -132,7 +132,7 @@ Public Function FindVarsAndCons(IsFirstTime As Boolean) As Boolean
 3656      End If
           
           ' Look for constraints and add them if they seem at all interesting (i.e. LHS or RHS has precedents)
-3657      Application.StatusBar = "OpenSolver:  Looking for constraints"
+3657      UpdateStatusBar "OpenSolver:  Looking for constraints", True
 3658      On Error GoTo ConstraintErr
           
           ' Find all the "relation operator" cells on the sheet that the objective function is on.
@@ -187,7 +187,7 @@ NextArea:
 3700      Next AreaIndex
     
           ' Use precedents of objective function and constraints to find the set of possible decision variables
-3702      Application.StatusBar = "OpenSolver: Searching for decision variables"
+3702      UpdateStatusBar "OpenSolver: Searching for decision variables", True
           
           Dim DecRefCount As New Dictionary, PrecedentCells As Range
           
@@ -215,7 +215,7 @@ NextArea:
 3752      Next
           
           On Error GoTo ErrorHandler
-3753      Application.StatusBar = "OpenSolver: Selecting most likely decision variables"
+3753      UpdateStatusBar "OpenSolver: Selecting most likely decision variables", True
           ' If a cell has only been referenced once, we can't be sure it is a decision variable
           ' as constants are also referenced once, so take anything that is seen two or more times
           Dim addressKey As Variant
@@ -226,7 +226,7 @@ NextArea:
 3758      Next
               
           ' Look for type restrictions on decision variables
-3759      Application.StatusBar = "OpenSolver: Looking for variable type restrictions"
+3759      UpdateStatusBar "OpenSolver: Looking for variable type restrictions", True
           Dim CurDecVar As Range, PossibleType As String, i As Long
           Dim VarTypeKeywords() As Variant, VarTypes() As Variant
           VarTypeKeywords = Array("integer", "int", "i", "binary", "bin", "b")  ' Keywords that indicate variable type
@@ -251,7 +251,7 @@ NextArea:
 3781      Next
           
           ' Combine adjacent constraints of the same type
-3782      Application.StatusBar = "OpenSolver: Rationalising constraints"
+3782      UpdateStatusBar "OpenSolver: Rationalising constraints", True
           RationaliseConstraints
           
           ' Finished!
