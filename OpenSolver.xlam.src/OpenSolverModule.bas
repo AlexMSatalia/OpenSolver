@@ -332,11 +332,11 @@ Private Const ERROR_BAD_FORMAT = 11&
 
 '=====================================================================
 #If Mac Then
-    Public Declare Sub sleep Lib "libc.dylib" (ByVal seconds As Long)
+    Public Declare Sub SleepSeconds Lib "libc.dylib" Alias "sleep" (ByVal Seconds As Long)
 #ElseIf VBA7 Then
-    Public Declare PtrSafe Sub sleep Lib "kernel32" Alias "Sleep" (ByVal dwMilliseconds As Long)
+    Public Declare PtrSafe Sub Sleep Lib "kernel32" (ByVal dwMilliseconds As Long)
 #Else
-    Public Declare Sub sleep Lib "kernel32" Alias "Sleep" (ByVal dwMilliseconds As Long)
+    Public Declare Sub Sleep Lib "kernel32" (ByVal dwMilliseconds As Long)
 #End If
 
 #If Mac Then
@@ -350,6 +350,12 @@ Private Const ERROR_BAD_FORMAT = 11&
     Private Declare Function feof Lib "libc.dylib" (ByVal file As Long) As Long
 #End If
     
+#If Win32 Then
+    Sub SleepSeconds(Seconds As Long)
+        Sleep Seconds * 1000
+    End Sub
+#End If
+
 #If Mac Then
     Function execShell(command As String, Optional ByRef ExitCode As Long) As String
         Dim file As Long
@@ -464,7 +470,7 @@ Function RunExternalCommand(CommandString As String, Optional logPath As String,
 47        Do
               ' We split time between Excel and checking the solver process in 20:1 ratio, so hopefully a 20:1 chance of catching an escape press
 48            ret& = WaitForSingleObject(proc.hProcess, 10) ' Wait for up to 10 milliseconds
-              sleep 200 ' Sleep in Excel to keep escape responsive
+              Sleep 200 ' Sleep in Excel to keep escape responsive
               DoEvents
 49        Loop Until ret& <> 258
 
@@ -1328,7 +1334,7 @@ Function ForceCalculate(prompt As String, Optional MinimiseUserInteraction As Bo
               Dim i As Long
 500           For i = 1 To 10
 501               DoEvents
-502               sleep (100)
+502               Sleep (100)
 503           Next i
 504       End If
 505       If Application.CalculationState <> xlDone Then Application.Calculate

@@ -92,6 +92,7 @@ Function ReportError(ModuleName As String, ProcedureName As String, Optional IsE
             ' We are at an entry point - report the error to the user
             Dim prompt As String, LinkTarget As String, MoreDetailsButton As Boolean, ReportIssueButton As Boolean
             prompt = ErrMsg
+            ErrMsg = ""  ' Reset error message in case there's an error while showing the form
             LinkTarget = ""
             
             ' A message with an OpenSolver_*Error denotes an "intentional" error being reported, as opposed to an error we didn't expect to happen.
