@@ -2555,13 +2555,16 @@ Sub UpdateStatusBar(Text As String, Optional Force As Boolean = False)
 ' Function for updating the status bar.
 ' Saves the last time the bar was updated and won't re-update until a specified amount of time has passed
 ' The bar can be forced to display the new text regardless of time with the Force argument.
+' We only need to toggle ScreenUpdating on Mac
     Dim RaiseError As Boolean
     RaiseError = False
     On Error GoTo ErrorHandler
-        
-    Dim ScreenStatus As Boolean
-    ScreenStatus = Application.ScreenUpdating
-    
+
+    #If Mac Then
+        Dim ScreenStatus As Boolean
+        ScreenStatus = Application.ScreenUpdating
+    #End If
+
     Static LastUpdate As Double
     Dim TimeDiff As Double
     TimeDiff = (Now() - LastUpdate) * 86400  ' Time since last update in seconds
@@ -2570,13 +2573,18 @@ Sub UpdateStatusBar(Text As String, Optional Force As Boolean = False)
     If TimeDiff > 0.5 Or Force Then
         LastUpdate = Now()
         
-        Application.ScreenUpdating = True
+        #If Mac Then
+            Application.ScreenUpdating = True
+        #End If
+
         Application.StatusBar = Text
         DoEvents
     End If
 
 ExitSub:
-    Application.ScreenUpdating = ScreenStatus
+    #If Mac Then
+        Application.ScreenUpdating = ScreenStatus
+    #End If
     If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
     Exit Sub
 
@@ -2585,3 +2593,5 @@ ErrorHandler:
     RaiseError = True
     GoTo ExitSub
 End Sub
+
+
