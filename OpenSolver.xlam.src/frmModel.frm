@@ -1,7 +1,7 @@
 VERSION 5.00
 Begin {C62A69F0-16DC-11CE-9E98-00AA00574A4F} frmModel 
    Caption         =   "OpenSolver - Model"
-   ClientHeight    =   8280
+   ClientHeight    =   8281
    ClientLeft      =   45
    ClientTop       =   390
    ClientWidth     =   9840
@@ -99,12 +99,9 @@ Sub Disabler(TrueIfEnable As Boolean)
 4190      cmdCancel.Enabled = TrueIfEnable
           cmdReset.Enabled = TrueIfEnable
           cmdChange.Enabled = TrueIfEnable
-
+          
           Dim Solver As String
-4199      If Not GetNameValueIfExists(ActiveWorkbook, EscapeSheetName(ActiveSheet) & "OpenSolver_ChosenSolver", Solver) Then
-4200          Solver = "CBC"
-4201          Call SetNameOnSheet("OpenSolver_ChosenSolver", "=" & Solver)
-4202      End If
+          Solver = GetChosenSolver()
 
 4203      If Not SolverHasSensitivityAnalysis(Solver) Then
               ' Disable dual options
@@ -136,35 +133,12 @@ Sub UpdateFormFromMemory()
 4222      model.PopulateConstraintListBox lstConstraints
 4223      lstConstraints_Change
 
-          Dim sheetName As String, value As String, ResetDualsNewSheet As Boolean
-          sheetName = EscapeSheetName(ActiveWorkbook.ActiveSheet)
-4225      If GetNameValueIfExists(ActiveWorkbook, sheetName & "OpenSolver_DualsNewSheet", value) Then
-4226          chkGetDuals2.value = value
-              ' If checkbox is null, then the stored value was not 'True' or 'False'. We should reset to false
-4227          If IsNull(chkGetDuals2.value) Then
-4228              ResetDualsNewSheet = True
-4229          End If
-4230      Else
-4231          ResetDualsNewSheet = True
-4232      End If
-
-4233      If ResetDualsNewSheet Then
-4234          Call SetNameOnSheet("OpenSolver_DualsNewSheet", "=FALSE")
-4235          chkGetDuals2.value = False
-4236      End If
-
+          chkGetDuals2.value = GetDualsNewSheet()
 4237      optUpdate.Enabled = chkGetDuals2.value
 4238      optNew.Enabled = chkGetDuals2.value
-4239      If GetNameValueIfExists(ActiveWorkbook, sheetName & "OpenSolver_UpdateSensitivity", value) Then
-4240          If value = "TRUE" Then
-4241            optUpdate.value = value
-4242          Else
-4243            optNew.value = True
-4244          End If
-4245      Else
-4246          Call SetNameOnSheet("OpenSolver_UpdateSensitivity", "=TRUE")
-4247          optUpdate.value = True
-4248      End If
+
+          optUpdate.value = GetUpdateSensitivity()
+4242      optNew.value = Not optUpdate.value
 End Sub
 
 Private Sub chkGetDuals_Click()
@@ -172,7 +146,6 @@ Private Sub chkGetDuals_Click()
 End Sub
 
 Private Sub chkGetDuals2_Click()
-4252      Call SetNameOnSheet("OpenSolver_DualsNewSheet", "=" & chkGetDuals2.value)
 4253      optUpdate.Enabled = chkGetDuals2.value
 4254      optNew.Enabled = chkGetDuals2.value
 End Sub
@@ -257,16 +230,8 @@ Private Sub optMin_Click()
 4287      txtObjTarget.Enabled = optTarget.value
 End Sub
 
-Private Sub optNew_Click()
-4289      Call SetNameOnSheet("OpenSolver_UpdateSensitivity", "=" & optUpdate.value)
-End Sub
-
 Private Sub optTarget_Click()
 4291      txtObjTarget.Enabled = optTarget.value
-End Sub
-
-Private Sub optUpdate_Click()
-4293      Call SetNameOnSheet("OpenSolver_UpdateSensitivity", "=" & optUpdate.value)
 End Sub
 
 Private Sub AlterConstraints(DoDisable As Boolean)
@@ -357,12 +322,8 @@ Private Sub UserForm_Activate()
 4368      cboConRel.ListIndex = cboPosition("=")    ' We set an initial value just in case there is no model, and the user goes straight to AddNewConstraint
 
           'Find current solver
-          Dim Solver As String
-4369      If GetNameValueIfExists(ActiveWorkbook, EscapeSheetName(ActiveWorkbook.ActiveSheet) & "OpenSolver_ChosenSolver", Solver) Then
-4370          FormatCurrentSolver Solver
-4371      Else
-              FormatCurrentSolver "CBC"
-4372      End If
+          FormatCurrentSolver GetChosenSolver()
+
           ' Load the model on the sheet into memory
 4373      ListItem = -1
 4374      AlterConstraints True
@@ -472,6 +433,10 @@ Private Sub cmdBuild_Click()
           
           ' BuildModel fails if build is aborted by the user
 4448      If Not model.BuildModel Then GoTo ExitSub
+
+          ' We know the save is confirmed now, so we can update values that aren't stored in the model
+4252      SetDualsNewSheet chkGetDuals2.value
+          SetUpdateSensitivity optUpdate.value
 
           ' Display on screen
 4449      If chkShowModel.value = True Then OpenSolverVisualizer.ShowSolverModel

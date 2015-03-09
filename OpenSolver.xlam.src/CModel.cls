@@ -590,7 +590,7 @@ ContinueSaving:
               End If
 3968      Next c
           
-3969      SetNamedRangeIfExists "OpenSolver_Duals", Duals
+3969      SetDuals Duals
           
 3974      SetSolverNameOnSheet "neg", IIf(NonNegativityAssumption, "=1", "=2")
 
@@ -605,52 +605,6 @@ ErrorHandler:
           RaiseError = True
           GoTo ExitFunction
 End Function
-
-Sub SetNamedRangeIfExists(ByVal Name As String, ByRef RangeToSet As Range, Optional IsSolverName As Boolean = False)
-    Dim RaiseError As Boolean
-    RaiseError = False
-    On Error GoTo ErrorHandler
-
-    If RangeToSet Is Nothing Then
-        If IsSolverName Then
-            DeleteSolverNameOnSheet Name
-        Else
-            DeleteNameOnSheet Name
-        End If
-    Else
-        If IsSolverName Then
-            SetSolverNamedRangeOnSheet Name, RangeToSet
-        Else
-            SetNamedRangeOnSheet Name, RangeToSet
-        End If
-    End If
-
-ExitSub:
-    If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
-    Exit Sub
-
-ErrorHandler:
-    If Not ReportError("CModel", "SetNamedRangeIfExists") Then Resume
-    RaiseError = True
-    GoTo ExitSub
-End Sub
-
-Sub SetSolverNamedRangeIfExists(ByVal Name As String, ByRef RangeToSet As Range)
-    Dim RaiseError As Boolean
-    RaiseError = False
-    On Error GoTo ErrorHandler
-
-    SetNamedRangeIfExists Name, RangeToSet, True
-
-ExitSub:
-    If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
-    Exit Sub
-
-ErrorHandler:
-    If Not ReportError("CModel", "SetSolverNamedRangeIfExists") Then Resume
-    RaiseError = True
-    GoTo ExitSub
-End Sub
 
 ' Adds a single constraint, rather than a block
 Public Sub AddConstraint(newLHS As Range, newRHS As Range, newRHSstring As String, newType As String)
@@ -783,7 +737,7 @@ Public Sub LoadFromSheet()
 SkipCon:
 4043      Next constraint
           
-          GetNamedRangeIfExistsOnSheet ActiveSheet, "OpenSolver_Duals", Duals
+          Set Duals = GetDuals()
           
 ExitSub:
           If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg

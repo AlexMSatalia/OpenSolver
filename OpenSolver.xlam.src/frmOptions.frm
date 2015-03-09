@@ -45,13 +45,7 @@ Private Sub cmdOk_Click()
 4106      SetSolverNameOnSheet "tol", "=" & Trim(str(CDbl(txtTol.Text) / 100))    ' Str() uses . for decimal
                                                                       ' CDbl respects the locale. We trim the leading space which str puts in for +'ve values
                                                                       
-4107      If chkPerformLinearityCheck.value = True Then
-              ' Default is "do check", so we just delete the option
-4108          DeleteNameOnSheet "OpenSolver_LinearityCheck"
-4109      Else
-              ' Set the name, with a value of 2=off
-4110          SetNameOnSheet "OpenSolver_LinearityCheck", "=2"
-4111      End If
+4107      SetLinearityCheck chkPerformLinearityCheck.value
                                                                       
 4112      Unload Me
 End Sub
@@ -83,13 +77,6 @@ Private Sub UserForm_Activate()
 
           Dim tol As Double
 4124      GetNamedNumericValueIfExists ActiveWorkbook, sheetName & "solver_tol", tol
-          
-          ' We perform a linearity check by default unless the defined name exists with value 2=off
-          Dim performLinearityCheck As Boolean
-4125      performLinearityCheck = True
-4126      If GetNameValueIfExists(ActiveWorkbook, sheetName & "OpenSolver_LinearityCheck", s) Then
-4127          performLinearityCheck = s = "1"
-4128      End If
 
 4129      chkNonNeg.value = nonNeg
 4130      chkShowSolverProgress.value = ShowSolverProgress
@@ -97,13 +84,10 @@ Private Sub UserForm_Activate()
 4132      txtTol.Text = tol * 100
 4133      txtMaxIter.Text = CStr(maxIter)
 4134      txtPre = CStr(conPre)
-4135      chkPerformLinearityCheck.value = performLinearityCheck
+4135      chkPerformLinearityCheck.value = GetLinearityCheck()
 
           Dim Solver As String
-4136      If Not GetNameValueIfExists(ActiveWorkbook, sheetName & "OpenSolver_ChosenSolver", Solver) Then
-4137          Solver = "CBC"
-4138          Call SetNameOnSheet("OpenSolver_ChosenSolver", "=" & Solver)
-4139      End If
+4136      Solver = GetChosenSolver()
 
           chkPerformLinearityCheck.Enabled = (SolverType(Solver) = OpenSolver_SolverType.Linear) And _
                                               Not UsesParsedModel(Solver)

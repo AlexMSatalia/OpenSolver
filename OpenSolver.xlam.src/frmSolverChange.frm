@@ -1,7 +1,7 @@
 VERSION 5.00
 Begin {C62A69F0-16DC-11CE-9E98-00AA00574A4F} frmSolverChange 
    Caption         =   "Choose Solver"
-   ClientHeight    =   4650
+   ClientHeight    =   4648
    ClientLeft      =   45
    ClientTop       =   375
    ClientWidth     =   5010
@@ -42,40 +42,22 @@ Private Sub lblHyperlink_Click()
 End Sub
 
 Private Sub UserForm_Activate()
-4735      Set Solvers = New Collection
-4736      Solvers.Add "CBC"
-4737      Solvers.Add "Gurobi"
-          'Solvers.Add "Cplex"
-4738      Solvers.Add "NeosCBC"
-4739      Solvers.Add "Bonmin"
-4740      Solvers.Add "Couenne"
-4741      Solvers.Add "NOMAD"
-4742      Solvers.Add "NeosBon"
-4743      Solvers.Add "NeosCou"
-          'Solvers.Add "PuLP"
-          
 4744      cboSolver.Clear
 4745      cboSolver.MatchRequired = True
 4746      cboSolver.Style = fmStyleDropDownList
           
           Dim Solver As Variant
-4747      For Each Solver In Solvers
+4747      For Each Solver In GetAvailableSolvers()
 4748          cboSolver.AddItem SolverTitle(CStr(Solver))
 4749      Next Solver
-
-          Dim value As String
-4750      If GetNameValueIfExists(ActiveWorkbook, EscapeSheetName(ActiveWorkbook.ActiveSheet) & "OpenSolver_ChosenSolver", value) Then
-4751          On Error GoTo setDefault
-4752          cboSolver.Text = SolverTitle(value)
-4753      Else
-setDefault:
-4754          cboSolver.Text = SolverTitle("CBC")
-4755      End If
+          
+          ' This solver should always be valid
+          cboSolver.Text = SolverTitle(GetChosenSolver())
 End Sub
 
 Private Sub cmdOk_Click()
          'Add the chosen solver as a hidden name in the workbook
-4758      Call SetNameOnSheet("OpenSolver_ChosenSolver", "=" & ChosenSolver)
+4758      SetChosenSolver ChosenSolver
 4761      frmModel.FormatCurrentSolver ChosenSolver
 4762      frmModel.Disabler True
 4763      Unload Me

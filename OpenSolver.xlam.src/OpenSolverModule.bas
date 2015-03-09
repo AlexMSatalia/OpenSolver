@@ -690,6 +690,20 @@ Function GetNamedIntegerIfExists(book As Workbook, Name As String, IntegerValue 
 161       End If
 End Function
 
+Function GetNamedBooleanWithDefault(Name As String, Optional book As Workbook, Optional sheet As Worksheet, Optional DefaultValue As Boolean = False) As Boolean
+    GetActiveBookAndSheetIfMissing book, sheet
+    
+    Dim value As String
+    If Not GetNameValueIfExists(book, EscapeSheetName(sheet) & Name, value) Then GoTo SetDefault
+    On Error GoTo SetDefault
+    GetNamedBooleanWithDefault = CBool(value)  ' TODO: Check localisation
+    Exit Function
+    
+SetDefault:
+    GetNamedBooleanWithDefault = DefaultValue
+    SetBooleanNameOnSheet Name, GetNamedBooleanWithDefault, book, sheet
+End Function
+
 Function GetNamedStringIfExists(book As Workbook, Name As String, value As String) As Boolean
           ' Get a named range that must contain a string value (probably with quotes)
 162       If GetNameRefersToIfExists(book, Name, value) Then
@@ -1572,14 +1586,13 @@ ErrorHandler:
           GoTo ExitFunction
 End Function
 
-' If a key doesn't exist we have to add it, otherwise we just set it
 ' Note: Numeric values should be passed as strings in English (not the local language)
-Sub SetSolverNameOnSheet(Name As String, value As String)
+Sub SetSolverNameOnSheet(Name As String, value As String, Optional book As Workbook, Optional sheet As Worksheet)
           Dim RaiseError As Boolean
           RaiseError = False
           On Error GoTo ErrorHandler
 
-          SetNameOnSheet "solver_" & Name, value
+          SetNameOnSheet "solver_" & Name, value, book, sheet
 
 ExitSub:
           If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
@@ -1591,12 +1604,12 @@ ErrorHandler:
           GoTo ExitSub
 End Sub
 
-Sub SetSolverNamedRangeOnSheet(Name As String, value As Range)
+Sub SetSolverNamedRangeOnSheet(Name As String, value As Range, Optional book As Workbook, Optional sheet As Worksheet)
           Dim RaiseError As Boolean
           RaiseError = False
           On Error GoTo ErrorHandler
 
-          SetNamedRangeOnSheet "solver_" & Name, value
+          SetNamedRangeOnSheet "solver_" & Name, value, book, sheet
 
 ExitSub:
           If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
@@ -1608,12 +1621,12 @@ ErrorHandler:
           GoTo ExitSub
 End Sub
 
-Sub DeleteSolverNameOnSheet(Name As String)
+Sub DeleteSolverNameOnSheet(Name As String, Optional book As Workbook, Optional sheet As Worksheet)
           Dim RaiseError As Boolean
           RaiseError = False
           On Error GoTo ErrorHandler
 
-          DeleteNameOnSheet "solver_" & Name
+          DeleteNameOnSheet "solver_" & Name, book, sheet
 
 ExitSub:
           If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
@@ -1627,33 +1640,44 @@ End Sub
 
 ' If a key doesn't exist we have to add it, otherwise we just set it
 ' Note: Numeric values should be passed as strings in English (not the local language)
-Sub SetNameOnSheet(Name As String, value As String)
-600       Name = EscapeSheetName(ActiveWorkbook.ActiveSheet) & Name
+Sub SetNameOnSheet(Name As String, value As String, Optional book As Workbook, Optional sheet As Worksheet)
+          GetActiveBookAndSheetIfMissing book, sheet
+600       Name = EscapeSheetName(sheet) & Name
     On Error GoTo doesntExist:
-601       Names(Name).value = value
+601       book.Names(Name).value = value
 602       Exit Sub
 doesntExist:
-603       Names.Add Name, value, False
+603       book.Names.Add Name, value, False
 End Sub
 
-' NB: Simply using a variant in SetSolverNameOnSheet fails as passing a range can simply pass its cell value
-' If a key doesn't exist we have to add it, otherwise we just set it
-' Note: Numeric values should be passed as strings in English (not the local language)
-Sub SetNamedRangeOnSheet(Name As String, value As Range)
-604       Name = EscapeSheetName(ActiveWorkbook.ActiveSheet) & Name
-    On Error GoTo doesntExist:
-605       Names(Name).value = "=" & GetDisplayAddress(value, False) ' Cannot simply assign Names(name).Value=Value as this assigns the value in a single cell, not its address
-606       Exit Sub
-doesntExist:
-607       Names.Add Name, "=" & GetDisplayAddress(value, False), False
+Sub SetBooleanNameOnSheet(Name As String, value As Boolean, Optional book As Workbook, Optional sheet As Worksheet)
+    SetNameOnSheet Name, "=" & UCase(CStr(value)), book, sheet
 End Sub
 
-' If a key doesn't exist we have to add it, otherwise we just set it
+' NB: Simply using a variant in SetNameOnSheet fails as passing a range can simply pass its cell value
 ' Note: Numeric values should be passed as strings in English (not the local language)
-Sub DeleteNameOnSheet(Name As String)
-608       Name = EscapeSheetName(ActiveWorkbook.ActiveSheet) & Name
+Sub SetNamedRangeOnSheet(Name As String, value As Range, Optional book As Workbook, Optional sheet As Worksheet)
+          SetNameOnSheet Name, "=" & GetDisplayAddress(value, False), book, sheet
+End Sub
+
+Sub SetNamedRangeIfExists(ByVal Name As String, ByRef RangeToSet As Range, Optional book As Workbook, Optional sheet As Worksheet)
+    If RangeToSet Is Nothing Then
+        DeleteNameOnSheet Name, book, sheet
+    Else
+        SetNamedRangeOnSheet Name, RangeToSet, book, sheet
+    End If
+End Sub
+
+Sub SetSolverNamedRangeIfExists(ByVal Name As String, ByRef RangeToSet As Range, Optional book As Workbook, Optional sheet As Worksheet)
+    SetNamedRangeIfExists "solver_" & Name, RangeToSet, book, sheet
+End Sub
+
+' Note: Numeric values should be passed as strings in English (not the local language)
+Sub DeleteNameOnSheet(Name As String, Optional book As Workbook, Optional sheet As Worksheet)
+          GetActiveBookAndSheetIfMissing book, sheet
+608       Name = EscapeSheetName(sheet) & Name
 609       On Error Resume Next
-610       Names(Name).Delete
+610       book.Names(Name).Delete
 doesntExist:
 End Sub
 
@@ -2608,4 +2632,7 @@ ErrorHandler:
     GoTo ExitSub
 End Sub
 
-
+Sub GetActiveBookAndSheetIfMissing(book As Workbook, sheet As Worksheet)
+    If book Is Nothing Then Set book = ActiveWorkbook
+    If sheet Is Nothing Then Set sheet = book.ActiveSheet
+End Sub

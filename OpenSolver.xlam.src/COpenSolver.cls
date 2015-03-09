@@ -524,9 +524,7 @@ Sub BuildModelFromSolverData(Optional LinearityCheckOffset As Double = 0, Option
         
           '----------------------------------------------------------------------------------------------------------
           'Find the users preferred solver
-960       If Not GetNameValueIfExists(ActiveWorkbook, sheetName & "OpenSolver_ChosenSolver", Solver) Then
-961           Solver = "CBC"
-962       End If
+960       Solver = GetChosenSolver(book, sheet)
 
           ' We check to see if a model exists by getting the adjustable cells
           ' TODO: For some unknown reason, this fails if the sheet name as a ! in it, even when it is quoted.
@@ -1286,19 +1284,12 @@ Function SolveModel_Linear(SolveRelaxation As Boolean) As Long
           
 1421      UpdateStatusBar "OpenSolver: Writing Model to disk... " & numVars & " vars, " & NumRows & " rows.", True
           
-          ' If the user has a defined name OpenSolver_ConstraintList, then we need to request duals from the solver
-1422      DualsOnSameSheet = GetNamedRangeIfExistsOnSheet(ActiveSheet, "OpenSolver_Duals", rConstraintList)
-1423      On Error Resume Next
-1424      DualsOnNewSheet = Mid(Names(EscapeSheetName(ActiveWorkbook.ActiveSheet) & "OpenSolver_DualsNewSheet").value, 2) 'frmModel.chkGetDuals2.Value
-1425      If Err.Number <> 0 Then
-1426          Call SetNameOnSheet("OpenSolver_DualsNewSheet", "=FALSE")
-1427          DualsOnNewSheet = False
-1428      End If
-1429      On Error GoTo ErrorHandler
-1430      bGetDuals = False
-1431      If (IntegerCellsRange Is Nothing And BinaryCellsRange Is Nothing) And (DualsOnNewSheet Or DualsOnSameSheet) And SolverHasSensitivityAnalysis(Solver) Then
-1432          bGetDuals = True
-1433      End If
+          ' Check if we need to request duals from the solver
+          Set rConstraintList = GetDuals()
+1422      DualsOnSameSheet = (Not rConstraintList Is Nothing)
+1424      DualsOnNewSheet = GetDualsNewSheet()
+1430      bGetDuals = (IntegerCellsRange Is Nothing And BinaryCellsRange Is Nothing) And _
+                      (DualsOnNewSheet Or DualsOnSameSheet) And SolverHasSensitivityAnalysis(Solver)
           
           ' Set up arrays to hold solution values (to avoid dynamically resizing them later)
 1434      ReDim pFinalVarValue(numVars)
@@ -1329,12 +1320,7 @@ Function SolveModel_Linear(SolveRelaxation As Boolean) As Long
           End If
           
           ' Perform a linearity check unless the user has requested otherwise
-          Dim performLinearityCheck As Boolean, s As String
-1451      performLinearityCheck = True
-1452      If GetNameValueIfExists(ActiveWorkbook, EscapeSheetName(ActiveSheet) & "OpenSolver_LinearityCheck", s) Then
-1453          performLinearityCheck = s = "1"
-1454      End If
-1455      If performLinearityCheck Then
+          If GetLinearityCheck() Then
               Dim fullLinearityCheckWasPerformed As Boolean
 1456          QuickLinearityCheck fullLinearityCheckWasPerformed
 1457          If fullLinearityCheckWasPerformed Then
