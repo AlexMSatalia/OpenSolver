@@ -104,29 +104,7 @@ Aborted:
           Exit Function
 End Function
 
-Private Function SendToNeos_Windows(message As String) As String
-    Dim RaiseError As Boolean
-    RaiseError = False
-    On Error GoTo ErrorHandler
-
-    ' Late binding so we don't need to add the reference to MSXML, causing a crash on Mac
-    Dim objSvrHTTP As Object 'MSXML2.ServerXMLHTTP
-    Set objSvrHTTP = CreateObject("MSXML2.ServerXMLHTTP")
-    
-    objSvrHTTP.Open "POST", NEOS_ADDRESS, False
-    objSvrHTTP.send message
-    SendToNeos_Windows = objSvrHTTP.responseText
-
-ExitFunction:
-    If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
-    Exit Function
-
-ErrorHandler:
-    If Not ReportError("OpenSolverNeos", "SendToNeos_Windows") Then Resume
-    RaiseError = True
-    GoTo ExitFunction
-End Function
-
+#If Mac Then  ' Define on Mac only
 Private Function SendToNeos_Mac(method As String, param1 As String, Optional param2 As String) As String
 ' Mac doesn't have ActiveX so can't use MSXML.
 ' It does have python by default, so we can use python's xmlrpclib to contact NEOS instead.
@@ -170,19 +148,44 @@ ErrorHandler:
     GoTo ExitFunction
 End Function
 
+#Else  ' Define on Windows only
+Private Function SendToNeos_Windows(message As String) As String
+    Dim RaiseError As Boolean
+    RaiseError = False
+    On Error GoTo ErrorHandler
+
+    ' Late binding so we don't need to add the reference to MSXML, causing a crash on Mac
+    Dim objSvrHTTP As Object 'MSXML2.ServerXMLHTTP
+    Set objSvrHTTP = CreateObject("MSXML2.ServerXMLHTTP")
+    
+    objSvrHTTP.Open "POST", NEOS_ADDRESS, False
+    objSvrHTTP.send message
+    SendToNeos_Windows = objSvrHTTP.responseText
+
+ExitFunction:
+    If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+    Exit Function
+
+ErrorHandler:
+    If Not ReportError("OpenSolverNeos", "SendToNeos_Windows") Then Resume
+    RaiseError = True
+    GoTo ExitFunction
+End Function
+#End If
+
 Private Function GetNeosResult(jobNumber As String, Password As String) As String
     Dim RaiseError As Boolean
     RaiseError = False
     On Error GoTo ErrorHandler
 
-#If Mac Then
-    GetNeosResult = SendToNeos_Mac("read", jobNumber, Password)
-    If left(GetNeosResult, 6) = "Error:" Then
-        Err.Raise OpenSolver_NeosError, Description:="An error occured when sending file to NEOS. Neos returned: " & GetNeosResult
-    End If
-#Else
-    GetNeosResult = DecodeBase64(GetXmlTagValue(SendToNeos_Windows(MakeNeosMethodCall("getFinalResults", jobNumber, Password)), "base64"))
-#End If
+    #If Mac Then
+        GetNeosResult = SendToNeos_Mac("read", jobNumber, Password)
+        If left(GetNeosResult, 6) = "Error:" Then
+            Err.Raise OpenSolver_NeosError, Description:="An error occured when sending file to NEOS. Neos returned: " & GetNeosResult
+        End If
+    #Else
+        GetNeosResult = DecodeBase64(GetXmlTagValue(SendToNeos_Windows(MakeNeosMethodCall("getFinalResults", jobNumber, Password)), "base64"))
+    #End If
 
 ExitFunction:
     If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
@@ -199,37 +202,37 @@ Private Function SubmitNeosJob(message As String, ByRef jobNumber As String, ByR
     RaiseError = False
     On Error GoTo ErrorHandler
 
-#If Mac Then
-    ' Create the job file
-    Dim ModelFilePathName As String
-    ModelFilePathName = GetTempFilePath("job.xml")
-    DeleteFileAndVerify ModelFilePathName
-
-    Open ModelFilePathName For Output As #1
-    Print #1, message
-    Close #1
+    #If Mac Then
+        ' Create the job file
+        Dim ModelFilePathName As String
+        ModelFilePathName = GetTempFilePath("job.xml")
+        DeleteFileAndVerify ModelFilePathName
     
-    SubmitNeosJob = SendToNeos_Mac("send", MakePathSafe(ModelFilePathName))
+        Open ModelFilePathName For Output As #1
+        Print #1, message
+        Close #1
+        
+        SubmitNeosJob = SendToNeos_Mac("send", MakePathSafe(ModelFilePathName))
+        
+        Dim openingParen As String, closingParen As String
+        openingParen = InStr(SubmitNeosJob, "jobNumber = ") + Len("jobNumber = ")
+        closingParen = InStr(openingParen, SubmitNeosJob, Chr(10))
+        jobNumber = Mid(SubmitNeosJob, openingParen, closingParen - openingParen)
+        
+        openingParen = InStr(SubmitNeosJob, "password = ") + Len("password = ")
+        closingParen = InStr(openingParen, SubmitNeosJob, Chr(10))
+        Password = Mid(SubmitNeosJob, openingParen, closingParen - openingParen)
+        
+    #Else
+        ' Clean message up
+        message = Replace(message, "<", "&lt;")
+        message = Replace(message, ">", "&gt;")
     
-    Dim openingParen As String, closingParen As String
-    openingParen = InStr(SubmitNeosJob, "jobNumber = ") + Len("jobNumber = ")
-    closingParen = InStr(openingParen, SubmitNeosJob, Chr(10))
-    jobNumber = Mid(SubmitNeosJob, openingParen, closingParen - openingParen)
-    
-    openingParen = InStr(SubmitNeosJob, "password = ") + Len("password = ")
-    closingParen = InStr(openingParen, SubmitNeosJob, Chr(10))
-    Password = Mid(SubmitNeosJob, openingParen, closingParen - openingParen)
-    
-#Else
-    ' Clean message up
-    message = Replace(message, "<", "&lt;")
-    message = Replace(message, ">", "&gt;")
-
-    SubmitNeosJob = SendToNeos_Windows(MakeNeosMethodCall("submitJob", StringValue:=message))
-    
-    jobNumber = GetXmlTagValue(SubmitNeosJob, "int")
-    Password = GetXmlTagValue(SubmitNeosJob, "string")
-#End If
+        SubmitNeosJob = SendToNeos_Windows(MakeNeosMethodCall("submitJob", StringValue:=message))
+        
+        jobNumber = GetXmlTagValue(SubmitNeosJob, "int")
+        Password = GetXmlTagValue(SubmitNeosJob, "string")
+    #End If
 
 ExitFunction:
     Close #1
@@ -247,11 +250,11 @@ Private Function GetNeosJobStatus(jobNumber As String, Password As String) As St
     RaiseError = False
     On Error GoTo ErrorHandler
 
-#If Mac Then
-    GetNeosJobStatus = SendToNeos_Mac("check", jobNumber, Password)
-#Else
-    GetNeosJobStatus = GetXmlTagValue(SendToNeos_Windows(MakeNeosMethodCall("getJobStatus", jobNumber, Password)), "string")
-#End If
+    #If Mac Then
+        GetNeosJobStatus = SendToNeos_Mac("check", jobNumber, Password)
+    #Else
+        GetNeosJobStatus = GetXmlTagValue(SendToNeos_Windows(MakeNeosMethodCall("getJobStatus", jobNumber, Password)), "string")
+    #End If
 
 ExitFunction:
     If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
