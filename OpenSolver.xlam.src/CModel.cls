@@ -735,7 +735,7 @@ Public Sub LoadFromSheet()
 4009      Set Constraints = New Collection
 
           Dim sheetName As String
-4010      sheetName = ActiveWorkbook.ActiveSheet.Name & "!"
+4010      sheetName = EscapeSheetName(ActiveWorkbook.ActiveSheet)
 
           GetNamedRangeIfExistsOnSheet ActiveWorkbook.ActiveSheet, "solver_adj", DecisionVariables
           

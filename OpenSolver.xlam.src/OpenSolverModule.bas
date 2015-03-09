@@ -2408,7 +2408,21 @@ Function RelationEnumToString(rel As RelationConsts) As String
 End Function
 
 Function EscapeSheetName(sheet As Worksheet) As String
-    EscapeSheetName = "'" & Replace(sheet.Name, "'", "''") & "'!"
+    EscapeSheetName = sheet.Name
+    
+    Dim SpecialChars() As Variant, SpecialChar As Variant, NeedsEscaping As Boolean
+    SpecialChars = Array("'", "!", "(", ")", "+", "-")
+    NeedsEscaping = False
+    For Each SpecialChar In SpecialChars
+        If InStr(EscapeSheetName, SpecialChar) Then
+            NeedsEscaping = True
+            Exit For
+        End If
+    Next SpecialChar
+
+    If NeedsEscaping Then EscapeSheetName = "'" & Replace(sheet.Name, "'", "''") & "'"
+    
+    EscapeSheetName = EscapeSheetName & "!"
 End Function
 
 Function SetDifference(ByRef rng1 As Range, ByRef rng2 As Range) As Range
