@@ -18,7 +18,7 @@ Private SparseA() As CIndexedCoeffs
 
 Private CurrentParameterRange As Range
 
-Function AnalyseParameters(OpenSolver As COpenSolver, sheetName As String, _
+Function AnalyseParameters(OpenSolver As COpenSolver, sheet As Worksheet, _
                 NumConstraints As Long, ByRef RHS() As Double, _
                 ByRef LHSRange() As Range, ByRef RHSRange() As Range, _
                 ByRef RHSFormula() As String, _
@@ -54,8 +54,7 @@ Function AnalyseParameters(OpenSolver As COpenSolver, sheetName As String, _
           ' Find the Parameter range, and get the numer of parameters
           Dim ParamRange As Range
 2626      If Not OpenSolverModule.CheckModelHasParameterRange Then GoTo ExitFunction   ' Error message already shown
-
-2629      Set ParamRange = OpenSolverModule.RemoveRangeOverlap(Range(sheetName & OpenSolverModule.GetParamRangeName))
+2629      Set ParamRange = OpenSolverModule.RemoveRangeOverlap(GetQuickSolveParameters(sheet:=sheet))
           
           Dim BadCell As Range
 2630      If Not OpenSolverModule.CheckRangeContainsNoAmbiguousMergedCells(ParamRange, BadCell) Then
@@ -161,7 +160,7 @@ ErrorHandler:
           GoTo ExitFunction
 End Function
 
-Public Function UpdateModelRHS(sheetName As String, ByRef RHS() As Double) As Boolean
+Public Function UpdateModelRHS(sheet As Worksheet, ByRef RHS() As Double) As Boolean
 ' Given the new Parameter values on the worksheet, calculate a new set of model RHS values
           Dim RaiseError As Boolean
           RaiseError = False
@@ -169,12 +168,10 @@ Public Function UpdateModelRHS(sheetName As String, ByRef RHS() As Double) As Bo
 
           ' Find the Parameter range on the given (current) sheet, and check that this is the range we are set up for
           Dim ParamRange As Range
-2718      On Error Resume Next
-2719      Set ParamRange = Range(sheetName & GetParamRangeName)
-2720      If Err.Number <> 0 Then
+2719      Set ParamRange = GetQuickSolveParameters(sheet:=sheet)
+2720      If ParamRange Is Nothing Then
 2721          Err.Raise OpenSolver_BuildError, Description:="No Parameter range could be found on the worksheet."
 2724      End If
-2725      On Error GoTo ErrorHandler
 2726      If (CurrentParameterRange.Address <> ParamRange.Address) Or (CurrentParameterRange.Worksheet.Name <> ParamRange.Worksheet.Name) Then
 2727          Err.Raise OpenSolver_BuildError, Description:="QuickSolve Failed: You need to initialize the QuickSolve engine for the current parameters."
 2730      End If

@@ -124,10 +124,6 @@ Public Type SolveOptionsType
     ShowIterationResults As Boolean   ' Excel stores ...!solver_sho=1 if Show Iteration Results is turned on, 2 if off (NB: Not 0!)
 End Type
 
-' This name is used to define a table of parameters that get changed between successive solves using QuickSolve
-Const ParamRangeName As String = "OpenSolverModelParameters"
-
-
 'CACHE for SearchRange - Saves defined names from user
 Private SearchRangeNameCACHE As Collection  'by ASL 20130126
 
@@ -587,10 +583,6 @@ Function FileOrDirExists(pathName As String) As Boolean
            
            'Check if error exists and set response appropriately
 107       FileOrDirExists = (Err.Number = 0)
-End Function
-
-Function GetParamRangeName() As String
-113       GetParamRangeName = ParamRangeName
 End Function
 
 Function JoinPaths(Path1 As String, Path2 As String) As String
@@ -1055,21 +1047,10 @@ Function UserSetQuickSolveParameterRange() As Boolean
 363       If Application.Workbooks.Count = 0 Then
 364           Err.Raise OpenSolver_BuildError, Description:="No active workbook available"
 366       End If
-
-          Dim sheetName As String
-367       On Error Resume Next
-368       sheetName = EscapeSheetName(ActiveWorkbook.ActiveSheet)
-369       If Err.Number <> 0 Then
-              On Error GoTo ErrorHandler
-370           Err.Raise OpenSolver_BuildError, Description:="Unable to access the active sheet"
-372       End If
-373       On Error GoTo ErrorHandler
           
           ' Find the Parameter range
           Dim ParamRange As Range
-374       On Error Resume Next
-375       Set ParamRange = Range(sheetName & ParamRangeName)
-376       On Error GoTo ErrorHandler
+375       Set ParamRange = GetQuickSolveParameters()
           
           ' Get a range from the user
           Dim NewRange As Range
@@ -1085,12 +1066,8 @@ Function UserSetQuickSolveParameterRange() As Boolean
 385           If NewRange.Worksheet.Name <> ActiveSheet.Name Then
 386               Err.Raise OpenSolver_BuildError, Description:="The parameter cells need to be on the current worksheet."
 388           End If
+389           SetQuickSolveParameters NewRange
 
-389           If Not ParamRange Is Nothing Then
-                  ' Name needs to be deleted first
-390               ActiveWorkbook.Names(sheetName & ParamRangeName).Delete
-391           End If
-392           Names.Add Name:=sheetName & ParamRangeName, RefersTo:=NewRange 'ActiveWorkbook.
               ' Return true as we have succeeded
 393           UserSetQuickSolveParameterRange = True
 394       End If
@@ -1113,25 +1090,14 @@ Function CheckModelHasParameterRange()
 395       If Application.Workbooks.Count = 0 Then
 396           Err.Raise OpenSolver_BuildError, Description:="No active workbook available"
 398       End If
-
-          Dim sheetName As String
-399       On Error Resume Next
-400       sheetName = EscapeSheetName(ActiveWorkbook.ActiveSheet)
-401       If Err.Number <> 0 Then
-              On Error GoTo ErrorHandler
-402           Err.Raise OpenSolver_BuildError, Description:="Unable to access the active sheet"
-404       End If
-405       On Error GoTo ErrorHandler
           
-406       CheckModelHasParameterRange = True
           ' Find the Parameter range
           Dim ParamRange As Range
-407       On Error Resume Next
-408       Set ParamRange = Range(sheetName & ParamRangeName)
-409       If Err.Number <> 0 Then
-              On Error GoTo ErrorHandler
+408       Set ParamRange = GetQuickSolveParameters()
+409       If ParamRange Is Nothing Then
 411           Err.Raise OpenSolver_BuildError, Description:="No parameter range could be found on the worksheet. Please use the Initialize Quick Solve Parameters menu item to define the cells that you wish to change between successive OpenSolver solves. Note that changes to these cells must lead to changes in the underlying model's right hand side values for its constraints."
 413       End If
+406       CheckModelHasParameterRange = True
 
 ExitFunction:
           If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
@@ -1810,11 +1776,11 @@ Function SystemIs64Bit() As Boolean
 #End If
 End Function
 
-Function MakeNewSheet(namePrefix As String, sheetName As String) As String
+Function MakeNewSheet(namePrefix As String, sheet As Worksheet) As String
           Dim NeedSheet As Boolean, newSheet As Worksheet, nameSheet As String, i As Long
 667       On Error Resume Next
 668       Application.ScreenUpdating = False
-          Dim s As String, value As String
+          Dim s As String
 669       s = Sheets(namePrefix).Name
 670       If Err.Number <> 0 Then
 671           Set newSheet = Sheets.Add
@@ -1822,8 +1788,7 @@ Function MakeNewSheet(namePrefix As String, sheetName As String) As String
 673           nameSheet = namePrefix
 674           ActiveWindow.DisplayGridlines = False
 675       Else
-676           Call GetNameValueIfExists(ActiveWorkbook, sheetName & "OpenSolver_UpdateSensitivity", value)
-677           If value Then
+677           If GetUpdateSensitivity(sheet:=sheet) Then
 678               Sheets(namePrefix).Cells.Delete
 679               nameSheet = namePrefix
 680           Else
@@ -2310,7 +2275,8 @@ Sub GetExtraParameters(Solver As String, sheet As Worksheet, ExtraParameters As 
           On Error GoTo ErrorHandler
 
           Dim ParametersRange As Range, i As Long
-6104      If GetNamedRangeIfExistsOnSheet(sheet, "OpenSolver_" & Solver & "Parameters", ParametersRange) Then
+6104      Set ParametersRange = GetSolverParameters(Solver, sheet:=sheet)
+          If Not ParametersRange Is Nothing Then
 6105          If ParametersRange.Columns.Count <> 2 Then
 6106              Err.Raise OpenSolver_SolveError, Description:="The range OpenSolver_CBCParameters must be a two-column table."
 6108          End If

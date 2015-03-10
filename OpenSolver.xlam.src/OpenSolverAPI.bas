@@ -88,3 +88,23 @@ Public Sub SetDuals(Duals As Range, Optional book As Workbook, Optional sheet As
     GetActiveBookAndSheetIfMissing book, sheet
     SetNamedRangeIfExists "OpenSolver_Duals", Duals, book, sheet
 End Sub
+
+Public Function GetSolverParameters(Solver As String, Optional book As Workbook, Optional sheet As Worksheet) As Range
+    GetActiveBookAndSheetIfMissing book, sheet
+    If Not GetNamedRangeIfExistsOnSheet(sheet, "OpenSolver_" & Solver & "Parameters", GetSolverParameters) Then Set GetSolverParameters = Nothing
+End Function
+
+Public Sub SetSolverParameters(Solver As String, SolverParameters As Range, Optional book As Workbook, Optional sheet As Worksheet)
+    GetActiveBookAndSheetIfMissing book, sheet
+    SetNamedRangeIfExists "OpenSolver_" & Solver & "Parameters", SolverParameters, book, sheet
+End Sub
+
+Public Function GetQuickSolveParameters(Optional book As Workbook, Optional sheet As Worksheet) As Range
+    GetActiveBookAndSheetIfMissing book, sheet
+    If Not GetNamedRangeIfExistsOnSheet(sheet, "OpenSolverModelParameters", GetQuickSolveParameters) Then Set GetQuickSolveParameters = Nothing
+End Function
+
+Public Sub SetQuickSolveParameters(QuickSolveParameters As Range, Optional book As Workbook, Optional sheet As Worksheet)
+    GetActiveBookAndSheetIfMissing book, sheet
+    SetNamedRangeIfExists "OpenSolverModelParameters", QuickSolveParameters, book, sheet
+End Sub

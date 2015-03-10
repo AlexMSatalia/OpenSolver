@@ -167,6 +167,10 @@ End Function
 Sub InitializeQuickSolve()
           On Error GoTo ErrorHandler
 
+          If UsesParsedModel(GetChosenSolver) Then
+              Err.Raise OpenSolver_ModelError, Description:="The selected solver does not support QuickSolve"
+          End If
+
 2832      If CheckModelHasParameterRange Then
 2833          Set OpenSolver = New COpenSolver
 2834          OpenSolver.BuildModelFromSolverData

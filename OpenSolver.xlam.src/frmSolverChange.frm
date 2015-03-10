@@ -22,7 +22,6 @@ Option Explicit
 #End If
 
 Public ChosenSolver As String
-Dim Solvers As Collection
 
 Private Sub cboSolver_Change()
 4724            ChosenSolver = ReverseSolverTitle(cboSolver.Text)

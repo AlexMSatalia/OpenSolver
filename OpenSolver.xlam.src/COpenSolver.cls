@@ -1337,7 +1337,7 @@ Function SolveModel_Linear(SolveRelaxation As Boolean) As Long
                   'If the user wants a new sheet with the sensitivity data then call the functions that write this
 1466              If DualsOnNewSheet Then
                       Dim nameSheet As String
-1467                  nameSheet = MakeNewSheet(RawSheetName & " Sensitivity", sheetName)
+1467                  nameSheet = MakeNewSheet(RawSheetName & " Sensitivity", sheet)
 1468                  sheet.Select
 1469                  Call WriteConstraintSensitivityTable(nameSheet, Solver)
                       'If you want to end up on the sensitivity page use this next line
@@ -2078,7 +2078,7 @@ Function InitializeQuickSolve() As Boolean
 1997      End If
 
 1998      Set QuickSolve = New CQuickSolve
-1999      If QuickSolve.AnalyseParameters(Me, sheetName, NumConstraints, RHS, LHSRange, RHSRange, RHSFormula, RHSType, LHSOriginalValues, RHSOriginalValues) Then
+1999      If QuickSolve.AnalyseParameters(Me, sheet, NumConstraints, RHS, LHSRange, RHSRange, RHSFormula, RHSType, LHSOriginalValues, RHSOriginalValues) Then
 2000          InitializeQuickSolve = True
 2001      Else
 2002          Set QuickSolve = Nothing
@@ -2129,7 +2129,7 @@ Function DoQuickSolve(Optional MinimiseUserInteraction As Boolean = False) As Lo
 2013      If QuickSolve Is Nothing Then
 2014          MsgBox "Error: The quick solve data has not been initialized. Please choose Intialize Quick Solve, and then try again.", , "OpenSolver" & sOpenSolverVersion & " Error"
 2015      Else
-2016          If QuickSolve.UpdateModelRHS(sheetName, RHS) Then
+2016          If QuickSolve.UpdateModelRHS(sheet, RHS) Then
 2017              DoQuickSolve = SolveModel(False, MinimiseUserInteraction)
 2018          End If
 2019      End If
