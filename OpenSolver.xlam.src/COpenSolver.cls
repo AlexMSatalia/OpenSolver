@@ -498,6 +498,8 @@ Sub BuildModelFromSolverData(Optional LinearityCheckOffset As Double = 0, Option
           Dim oldCalculationMode As Long
 969       oldCalculationMode = Application.Calculation
 970       Application.Calculation = xlCalculationManual
+971       Application.ScreenUpdating = False
+972       Application.Cursor = xlWait
 
           Dim StartTimeOfBuild As Single, StartDateTimeOfBuild As Date
           Dim EndTimeOfBuild As Single, EndDateTimeOfBuild As Date
@@ -526,39 +528,14 @@ Sub BuildModelFromSolverData(Optional LinearityCheckOffset As Double = 0, Option
           'Find the users preferred solver
 960       Solver = GetChosenSolver(book, sheet)
 
-          ' We check to see if a model exists by getting the adjustable cells
-          ' TODO: For some unknown reason, this fails if the sheet name as a ! in it, even when it is quoted.
-          Dim n As Name
-963       On Error Resume Next
-964       Set n = Names(sheetName & "solver_adj")
-          
-965       If Err.Number <> 0 Then
-966           On Error GoTo ErrorHandler
-967           Err.Raise Number:=OpenSolver_BuildError, Description:="No Solver model with decision variables was found on sheet " & RawSheetName
-968       End If
-          On Error GoTo ErrorHandler
-          
-          Dim i As Long
-
-971       Application.ScreenUpdating = False
-972       Application.Cursor = xlWait
-
           '--------------------------------------------------------------------------
           ' ADJUSTABLE CELLS SETUP and Setting of Initial Decision Var Cell values
           '--------------------------------------------------------------------------
-973       On Error Resume Next
-          ' Get the range stored in the (hidden) Solver name solver_adj
-          Dim rTemp As Range
-974       Set rTemp = Range(sheetName & "solver_adj")
-          ' Catch any error related to either the model being incomplete, or invalid
-          ' entry for adjustable cells.
-975       If Err.Number <> 0 Then
-976           On Error GoTo ErrorHandler
-977           Err.Raise Number:=OpenSolver_BuildError, Description:="A model was found on the sheet " & RawSheetName & " but the decision variable cells (" & n & ") could not be interpreted. Please redefine the decision variable cells, and try again."
-978       End If
+
+          ' Raises an error if we can't determine a range or the name is missing.
           ' Remove any overlap
 979       On Error GoTo ErrorHandler
-980       Set AdjustableCells = RemoveRangeOverlap(rTemp)
+980       Set AdjustableCells = GetDecisionVariablesNoOverlap(book, sheet)
           ' Handle any merged ranges
           Dim BadCell As Range
 981       If Not CheckRangeContainsNoAmbiguousMergedCells(AdjustableCells, BadCell) Then
@@ -586,7 +563,7 @@ Sub BuildModelFromSolverData(Optional LinearityCheckOffset As Double = 0, Option
 993       If Solver = "NOMAD" Then
 994           ReDim StartingPosition(numVars)
 995       End If
-          Dim AdjCell As Range
+          Dim AdjCell As Range, i As Long
 996       i = 0
 997       For Each AdjCell In AdjustableCells
 998           i = i + 1

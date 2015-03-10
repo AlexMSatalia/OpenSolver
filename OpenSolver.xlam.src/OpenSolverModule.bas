@@ -628,10 +628,9 @@ Function GetNameValueIfExists(w As Workbook, theName As String, ByRef value As S
 141       GetNameValueIfExists = True
 End Function
 
-Function NameExistsInWorkbook(book As Workbook, Name As String) As Boolean
+Function NameExistsInWorkbook(book As Workbook, Name As String, Optional o As Object) As Boolean
           ' WARNING: If the name has a sheet prefix, eg Sheet1!OpenSolverCBCParameters, then this will NOT find the range
           ' if the range has been defined globally (which happens when the user defines a name if that name exists only once)
-          Dim o As Object
 142       On Error Resume Next
 143       Set o = book.Names(Name)
 144       NameExistsInWorkbook = (Err.Number = 0)
@@ -656,12 +655,10 @@ End Function
 Function GetNamedRangeIfExistsOnSheet(sheet As Worksheet, Name As String, r As Range) As Boolean
           ' This finds a named range (either local or global) if it exists, and if it refers to the specified sheet.
           ' It will not find a globally defined name
-          ' GetNamedRangeIfExistsOnSheet = False
+          GetActiveBookAndSheetIfMissing ActiveWorkbook, sheet
 151       On Error Resume Next
 152       Set r = sheet.Range(Name)   ' This will return either a local or globally defined named range, that must refer to the specified sheet. OTherwise there is an error
 153       GetNamedRangeIfExistsOnSheet = Err.Number = 0
-          ' If r.Worksheet.Name <> Sheet.Name Then Exit Function
-          ' GetNamedRangeIfExistsOnSheet = True
 End Function
 
 Function GetNamedNumericValueIfExists(book As Workbook, Name As String, value As Double) As Boolean
@@ -1591,7 +1588,7 @@ Sub DeleteSolverNameOnSheet(Name As String, Optional book As Workbook, Optional 
           Dim RaiseError As Boolean
           RaiseError = False
           On Error GoTo ErrorHandler
-
+          
           DeleteNameOnSheet "solver_" & Name, book, sheet
 
 ExitSub:
@@ -2598,7 +2595,7 @@ ErrorHandler:
     GoTo ExitSub
 End Sub
 
-Sub GetActiveBookAndSheetIfMissing(book As Workbook, sheet As Worksheet)
+Sub GetActiveBookAndSheetIfMissing(book As Workbook, Optional sheet As Worksheet)
     If book Is Nothing Then Set book = ActiveWorkbook
     If sheet Is Nothing Then Set sheet = book.ActiveSheet
 End Sub

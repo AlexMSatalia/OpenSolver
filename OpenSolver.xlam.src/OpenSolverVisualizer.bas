@@ -487,7 +487,7 @@ Function ShowSolverModel() As Boolean
           
 3302      Application.ScreenUpdating = False
           
-          Dim sheetName As String, book As Workbook, AdjustableCells As Range
+          Dim sheetName As String, book As Workbook, sheet As Worksheet
           Dim NumConstraints  As Long
 
 3303      On Error Resume Next
@@ -499,21 +499,14 @@ Function ShowSolverModel() As Boolean
 3309      On Error GoTo ErrorHandler
           
 3310      Set book = ActiveWorkbook
+          Set sheet = book.ActiveSheet
           
 3311      DeleteOpenSolverShapes ActiveSheet
 3312      InitialiseHighlighting
           
-          ' We check to see if a model exists by getting the adjustable cells. We check for a name first, as this may contain =Sheet1!$C$2:$E$2,Sheet1!#REF!
-          Dim n As Name
-3313      On Error Resume Next
-3314      Set n = Names(sheetName & "solver_adj")
-3315      On Error Resume Next
-3316      Set AdjustableCells = RemoveRangeOverlap(Range(sheetName & "solver_adj"))   ' Remove any overlap in the range defining the decision variables
-3317      If Err.Number <> 0 Then
-3318          MsgBox "Error: A model was found on the sheet " & ActiveWorkbook.ActiveSheet.Name & " but the decision variable cells (" & n & ") could not be interpreted. Please redefine the decision variable cells, and try again.", , "OpenSolver" & sOpenSolverVersion & " Error"
-3319          GoTo ExitFunction
-3320      End If
-3321      On Error GoTo ErrorHandler
+          ' Checks to see if a model exists internally
+3316      Dim AdjustableCells As Range
+          Set AdjustableCells = GetDecisionVariablesNoOverlap(book)
           
           ' Highlight the decision variables
 3322      AddDecisionVariableHighlighting AdjustableCells

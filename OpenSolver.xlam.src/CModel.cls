@@ -550,7 +550,7 @@ Function BuildModel() As Boolean
 3935      Next c
 
 ContinueSaving:
-3906      SetSolverNamedRangeIfExists "adj", DecisionVariables
+3906      SetDecisionVariables DecisionVariables
 3911      SetSolverNamedRangeIfExists "opt", ObjectiveFunctionCell
           
           ' Objective type
@@ -691,7 +691,7 @@ Public Sub LoadFromSheet()
           Dim sheetName As String
 4010      sheetName = EscapeSheetName(ActiveWorkbook.ActiveSheet)
 
-          GetNamedRangeIfExistsOnSheet ActiveWorkbook.ActiveSheet, "solver_adj", DecisionVariables
+          Set DecisionVariables = GetDecisionVariablesWithDefault()
           
           Dim s As String
 4012      NonNegativityAssumption = False
