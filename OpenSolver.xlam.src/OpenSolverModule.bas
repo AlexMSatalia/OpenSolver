@@ -693,6 +693,48 @@ SetDefault:
     SetBooleanNameOnSheet Name, GetNamedBooleanWithDefault, book, sheet
 End Function
 
+Function GetNamedDoubleWithDefault(Name As String, Optional book As Workbook, Optional sheet As Worksheet, Optional DefaultValue As Double = 0) As Double
+    GetActiveBookAndSheetIfMissing book, sheet
+    
+    Dim value As String
+    If Not GetNameValueIfExists(book, EscapeSheetName(sheet) & Name, value) Then GoTo SetDefault
+    On Error GoTo SetDefault
+    GetNamedDoubleWithDefault = CDbl(value)
+    Exit Function
+    
+SetDefault:
+    GetNamedDoubleWithDefault = DefaultValue
+    SetNumericNameOnSheet Name, GetNamedDoubleWithDefault, book, sheet
+End Function
+
+Function GetNamedIntegerWithDefault(Name As String, Optional book As Workbook, Optional sheet As Worksheet, Optional DefaultValue As Long = 0) As Long
+    GetActiveBookAndSheetIfMissing book, sheet
+    
+    Dim value As String
+    If Not GetNameValueIfExists(book, EscapeSheetName(sheet) & Name, value) Then GoTo SetDefault
+    On Error GoTo SetDefault
+    GetNamedIntegerWithDefault = CInt(value)
+    Exit Function
+    
+SetDefault:
+    GetNamedIntegerWithDefault = DefaultValue
+    SetNumericNameOnSheet Name, CDbl(GetNamedIntegerWithDefault), book, sheet
+End Function
+
+Function GetNamedIntegerAsBooleanWithDefault(Name As String, Optional book As Workbook, Optional sheet As Worksheet, Optional DefaultValue As Boolean = False) As Boolean
+    GetActiveBookAndSheetIfMissing book, sheet
+    
+    Dim value As Long
+    If Not GetNamedIntegerIfExists(book, EscapeSheetName(sheet) & Name, value) Then GoTo SetDefault
+    If value <> 1 And value <> 2 Then GoTo SetDefault
+    GetNamedIntegerAsBooleanWithDefault = (value = 1)
+    Exit Function
+    
+SetDefault:
+    GetNamedIntegerAsBooleanWithDefault = DefaultValue
+    SetBooleanAsIntegerNameOnSheet Name, GetNamedIntegerAsBooleanWithDefault, book, sheet
+End Function
+
 Function GetNamedStringIfExists(book As Workbook, Name As String, value As String) As Boolean
           ' Get a named range that must contain a string value (probably with quotes)
 162       If GetNameRefersToIfExists(book, Name, value) Then
@@ -1106,7 +1148,7 @@ ErrorHandler:
           GoTo ExitFunction
 End Function
 
-Sub GetSolveOptions(sheetName As String, SolveOptions As SolveOptionsType)
+Sub GetSolveOptions(sheet As Worksheet, SolveOptions As SolveOptionsType)
           ' Get the Solver Options, stored in named ranges with values such as "=0.12"
           ' Because these are NAMEs, they are always in English, not the local language, so get their value using Val
           Dim RaiseError As Boolean
@@ -1115,11 +1157,11 @@ Sub GetSolveOptions(sheetName As String, SolveOptions As SolveOptionsType)
 
 416       SetAnyMissingDefaultExcel2007SolverOptions ' This can happen if they have created the model using an old version of OpenSolver
 417       With SolveOptions
-418           .MaxTime = Val(Mid(Names(sheetName & "solver_tim").value, 2)) ' Trim the "="; use Val to get a conversion in English, not the local language
-419           .MaxIterations = Val(Mid(Names(sheetName & "solver_itr").value, 2))
-420           .Precision = Val(Mid(Names(sheetName & "solver_pre").value, 2))
-421           .Tolerance = Val(Mid(Names(sheetName & "solver_tol").value, 2))  ' Stored as a value between 0 and 1 by Excel's Solver (representing a percentage)
-422           .ShowIterationResults = Names(sheetName & "solver_sho").value = "=1"
+418           .MaxTime = GetMaxTime(sheet:=sheet)
+419           .MaxIterations = GetMaxIterations(sheet:=sheet)
+420           .Precision = GetPrecision(sheet:=sheet)
+421           .Tolerance = GetTolerance(sheet:=sheet)  ' Stored as a value between 0 and 1 (representing a percentage)
+422           .ShowIterationResults = GetShowSolverProgress(sheet:=sheet)
 423       End With
 
 ExitSub:
@@ -1144,8 +1186,8 @@ Sub SetAnyMissingDefaultExcel2007SolverOptions()
 427       If ActiveSheet Is Nothing Then GoTo ExitSub
 
           Dim SolverOptions() As Variant, SolverDefaults() As Variant
-          SolverOptions = Array("drv", "est", "itr", "neg", "num", "nwt", "pre", "scl", "sho", "tim", "tol", "typ", "val", "cvg")
-          SolverDefaults = Array("1", "1", "100", "1", "0", "1", "0.000001", "2", "2", "9999999999", "0.05", "1", "0", "0.0001")
+          SolverOptions = Array("drv", "est", "num", "nwt", "scl", "cvg", "rlx")
+          SolverDefaults = Array("1", "1", "0", "1", "2", "0.0001", "2")
           
           Dim s As String, sheetName As String
           sheetName = EscapeSheetName(ActiveSheet)
@@ -1615,6 +1657,14 @@ End Sub
 
 Sub SetBooleanNameOnSheet(Name As String, value As Boolean, Optional book As Workbook, Optional sheet As Worksheet)
     SetNameOnSheet Name, "=" & UCase(CStr(value)), book, sheet
+End Sub
+
+Sub SetNumericNameOnSheet(Name As String, value As Double, Optional book As Workbook, Optional sheet As Worksheet)
+    SetNameOnSheet Name, "=" & str(value), book, sheet  ' Use str() to get a US-locale number
+End Sub
+
+Sub SetBooleanAsIntegerNameOnSheet(Name As String, value As Boolean, Optional book As Workbook, Optional sheet As Worksheet)
+    SetNumericNameOnSheet Name, IIf(value, 1, 2), book, sheet
 End Sub
 
 ' NB: Simply using a variant in SetNameOnSheet fails as passing a range can simply pass its cell value

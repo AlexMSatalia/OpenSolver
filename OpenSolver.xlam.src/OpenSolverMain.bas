@@ -213,11 +213,6 @@ Sub OpenSolver_ModelClick(Optional Control)
 2851      If Not CheckWorksheetAvailable Then Exit Sub
 2853      frmModel.Show
 2854      DoEvents
-
-          If Not NameExistsInWorkbook(ActiveWorkbook, ActiveSheet.Name & "!" & "solver_rlx") Then
-              SetSolverNameOnSheet "rlx", "=2"
-          End If
-
 End Sub
 
 Sub OpenSolver_QuickAutoModelClick(Optional Control)

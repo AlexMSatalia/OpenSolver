@@ -178,17 +178,15 @@ End Sub
 Private Sub cmdOptions_Click()
           ' Save the current "Assume Non Negative" option so this is shown in the options dialog.
           ' The saved value gets updated on OK, which we then reflect in our Model dialog
-          Dim s As String
-4267      SetSolverNameOnSheet "neg", IIf(chkNonNeg.value, "=1", "=2")
+4267      SetNonNegativity chkNonNeg.value
 
 #If Mac Then
 4268      frmOptions.Show
 #Else
 4269      frmOptions.Show vbModal
 #End If
-4270      If GetNameValueIfExists(ActiveWorkbook, EscapeSheetName(ActiveSheet) & "solver_neg", s) Then    ' This should always be true
-4271          chkNonNeg.value = s = "1"
-4272      End If
+
+4270      chkNonNeg.value = GetNonNegativity
 End Sub
 
 '--------------------------------------------------------------------------------------

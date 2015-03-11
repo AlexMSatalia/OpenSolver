@@ -51,25 +51,11 @@ Public Sub SetUpdateSensitivity(UpdateSensitivity As Boolean, Optional book As W
 End Sub
 
 Public Function GetLinearityCheck(Optional book As Workbook, Optional sheet As Worksheet) As Boolean
-    GetActiveBookAndSheetIfMissing book, sheet
-    
-    Dim value As Long
-    If Not GetNamedIntegerIfExists(book, EscapeSheetName(sheet) & "OpenSolver_LinearityCheck", value) Then GoTo SetDefault
-    If value <> 2 Then GoTo SetDefault
-    GetLinearityCheck = False
-    Exit Function
-    
-SetDefault:
-    GetLinearityCheck = True
-    SetLinearityCheck GetLinearityCheck, book, sheet
+    GetLinearityCheck = GetNamedIntegerAsBooleanWithDefault("OpenSolver_LinearityCheck", book, sheet, True)
 End Function
 
 Public Sub SetLinearityCheck(LinearityCheck As Boolean, Optional book As Workbook, Optional sheet As Worksheet)
-    If LinearityCheck Then
-        DeleteNameOnSheet "OpenSolver_LinearityCheck", book, sheet
-    Else
-        SetNameOnSheet "OpenSolver_LinearityCheck", "=2", book, sheet
-    End If
+    SetBooleanAsIntegerNameOnSheet "OpenSolver_LinearityCheck", LinearityCheck, book, sheet
 End Sub
 
 Public Function GetDuals(Optional book As Workbook, Optional sheet As Worksheet) As Range
@@ -126,5 +112,62 @@ Public Function GetDecisionVariablesNoOverlap(Optional book As Workbook, Optiona
 End Function
 
 Public Sub SetDecisionVariables(DecisionVariables As Range, Optional book As Workbook, Optional sheet As Worksheet)
-    SetSolverNamedRangeIfExists "adj", DecisionVariables
+    SetSolverNamedRangeIfExists "adj", DecisionVariables, book, sheet
 End Sub
+
+Public Function GetNonNegativity(Optional book As Workbook, Optional sheet As Worksheet) As Boolean
+    GetNonNegativity = GetNamedIntegerAsBooleanWithDefault("solver_neg", book, sheet, True)
+End Function
+
+Public Sub SetNonNegativity(NonNegativity As Boolean, Optional book As Workbook, Optional sheet As Worksheet)
+    SetBooleanAsIntegerNameOnSheet "solver_neg", NonNegativity, book, sheet
+End Sub
+
+Public Function GetShowSolverProgress(Optional book As Workbook, Optional sheet As Worksheet) As Boolean
+    GetShowSolverProgress = GetNamedIntegerAsBooleanWithDefault("solver_sho", book, sheet, False)
+End Function
+
+Public Sub SetShowSolverProgress(ShowSolverProgress As Boolean, Optional book As Workbook, Optional sheet As Worksheet)
+    SetBooleanAsIntegerNameOnSheet "solver_sho", ShowSolverProgress, book, sheet
+End Sub
+
+Public Function GetTolerance(Optional book As Workbook, Optional sheet As Worksheet) As Double
+    GetTolerance = GetNamedDoubleWithDefault("solver_tol", book, sheet, 0.05)
+End Function
+
+Public Function GetToleranceAsPercentage(Optional book As Workbook, Optional sheet As Worksheet) As Double
+    GetToleranceAsPercentage = GetTolerance(book, sheet) * 100
+End Function
+
+Public Sub SetTolerance(Tolerance As Double, Optional book As Workbook, Optional sheet As Worksheet)
+    SetNumericNameOnSheet "solver_tol", Tolerance, book, sheet
+End Sub
+
+Public Sub SetToleranceAsPercentage(Tolerance As Double, Optional book As Workbook, Optional sheet As Worksheet)
+    SetTolerance Tolerance / 100, book, sheet
+End Sub
+
+Public Function GetMaxTime(Optional book As Workbook, Optional sheet As Worksheet) As Double
+    GetMaxTime = GetNamedDoubleWithDefault("solver_tim", book, sheet, 999999999)
+End Function
+
+Public Sub SetMaxTime(MaxTime As Double, Optional book As Workbook, Optional sheet As Worksheet)
+    SetNumericNameOnSheet "solver_tim", MaxTime, book, sheet
+End Sub
+
+Public Function GetPrecision(Optional book As Workbook, Optional sheet As Worksheet) As Double
+    GetPrecision = GetNamedDoubleWithDefault("solver_pre", book, sheet, 0.000001)
+End Function
+
+Public Sub SetPrecision(Precision As Double, Optional book As Workbook, Optional sheet As Worksheet)
+    SetNumericNameOnSheet "solver_pre", Precision, book, sheet
+End Sub
+
+Public Function GetMaxIterations(Optional book As Workbook, Optional sheet As Worksheet) As Long
+    GetMaxIterations = GetNamedIntegerWithDefault("solver_itr", book, sheet, 100)
+End Function
+
+Public Sub SetMaxIterations(MaxIterations As Double, Optional book As Workbook, Optional sheet As Worksheet)
+    SetNumericNameOnSheet "solver_itr", MaxIterations, book, sheet
+End Sub
+

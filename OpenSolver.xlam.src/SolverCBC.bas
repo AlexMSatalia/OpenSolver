@@ -440,7 +440,7 @@ Sub LaunchCommandLine_CBC()
           
           Dim SolveOptions As SolveOptionsType, SolveOptionsString As String
 6354      If WorksheetAvailable Then
-6355          GetSolveOptions EscapeSheetName(ActiveSheet), SolveOptions
+6355          GetSolveOptions ActiveSheet, SolveOptions
 6356          If errorString = "" Then
 6357             SolveOptionsString = " -ratioGap " & CStr(SolveOptions.Tolerance) & " -seconds " & CStr(SolveOptions.MaxTime)
 6358          End If

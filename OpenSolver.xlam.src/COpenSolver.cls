@@ -27,7 +27,8 @@ Option Base 1
 Public sheetName As String ' Sheetname in quotes as used for prefixing
 Dim RawSheetName As String ' Just the worksheet name
 Dim RawWorkBookName As String ' Just the workbook name
-Dim book As Workbook, sheet As Worksheet
+Dim book As Workbook
+Public sheet As Worksheet
 
 ' Whether to show user alerts
 Dim MinimiseUserInteraction As Boolean
@@ -635,10 +636,7 @@ Sub BuildModelFromSolverData(Optional LinearityCheckOffset As Double = 0, Option
 
 ModelOptions:
 
-          ' 4/3/2011: We now correctly handle "Assume Non Negative". Excel adds a zero lower bound to any variable which does not have any other lower bound specified
-          Dim s As String
-1041      AssumeNonNegativeVars = False
-1042      If GetNameValueIfExists(ActiveWorkbook, sheetName & "solver_neg", s) Then AssumeNonNegativeVars = s = "1"
+1041      AssumeNonNegativeVars = GetNonNegativity()
 
           Dim succeeded As Boolean
 1043      On Error GoTo ErrorHandler
@@ -1420,7 +1418,7 @@ Sub SolveModel_LinearLocal(ModelFilePathName As String, SolveRelaxation As Boole
           ' Get the Solver Options, stored in named ranges with values such as "=0.12"
           ' Because these are NAMEs, they are always in English, not the local language, so get their value using Val
           Dim SolveOptions As SolveOptionsType
-1557      GetSolveOptions sheetName, SolveOptions
+1557      GetSolveOptions sheet, SolveOptions
               
 1562      UpdateStatusBar "OpenSolver: Solving " & IIf(SolveRelaxation, "Relaxed ", "") & "Model... " & numVars & " vars, " & _
                           NumIntVars & " int vars " & "(" & NumBinVars & " 0/1), " & NumRows & " rows, " & _
@@ -3051,7 +3049,7 @@ Function getOptionDataOS() As Variant
           Dim X() As Double
 2612      ReDim X(0 To 2)
           Dim SolveOptions As SolveOptionsType
-2613      GetSolveOptions sheetName, SolveOptions
+2613      GetSolveOptions sheet, SolveOptions
 2614      X(0) = SolveOptions.MaxIterations
 2615      X(1) = SolveOptions.MaxTime
 2616      X(2) = SolveOptions.Precision

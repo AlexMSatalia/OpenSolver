@@ -57,7 +57,7 @@ Public Sub SolveModel(s As COpenSolver, Optional SolveRelaxation As Boolean = Fa
           
 7148      DeleteFileAndVerify ModelFilePathName
           
-7149      GetSolveOptions EscapeSheetName(m.SolverModelSheet), SolveOptions
+7149      GetSolveOptions m.SolverModelSheet, SolveOptions
           
           Dim ExecutionCompleted As Boolean
 7153      Select Case m.Solver

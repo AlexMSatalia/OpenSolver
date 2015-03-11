@@ -591,8 +591,7 @@ ContinueSaving:
 3968      Next c
           
 3969      SetDuals Duals
-          
-3974      SetSolverNameOnSheet "neg", IIf(NonNegativityAssumption, "=1", "=2")
+3974      SetNonNegativity NonNegativityAssumption
 
           BuildModel = True
 
@@ -693,9 +692,7 @@ Public Sub LoadFromSheet()
 
           Set DecisionVariables = GetDecisionVariablesWithDefault()
           
-          Dim s As String
-4012      NonNegativityAssumption = False
-4013      If GetNameValueIfExists(ActiveWorkbook, sheetName & "solver_neg", s) Then NonNegativityAssumption = (s = "1")
+4012      NonNegativityAssumption = GetNonNegativity()
            
           Dim temp As Long
 4014      ObjectiveSense = UnknownObjectiveSense

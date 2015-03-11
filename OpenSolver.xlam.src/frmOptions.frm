@@ -26,25 +26,12 @@ Private Sub cmdCancel_Click()
 End Sub
 
 Private Sub cmdOk_Click()
-4092      If chkNonNeg.value = True Then
-4093          SetSolverNameOnSheet "neg", "=1"
-4094      Else
-4095          SetSolverNameOnSheet "neg", "=2"     ' 2 means false
-4096      End If
-          
-4097      If chkShowSolverProgress.value = True Then
-4098          SetSolverNameOnSheet "sho", "=1"
-4099      Else
-4100          SetSolverNameOnSheet "sho", "=2"     ' 2 means false
-4101      End If
-          
-4102      SetSolverNameOnSheet "tim", "=" & Trim(str(CDbl(txtMaxTime.Text)))  ' Trim the leading space which str puts in for +'ve values
-4103      SetSolverNameOnSheet "itr", "=" & Trim(str(CDbl(txtMaxIter.Text)))  ' Trim the leading space which str puts in for +'ve values
-4104      SetSolverNameOnSheet "pre", "=" & Trim(str(CDbl(txtPre.Text)))  ' Trim the leading space which str puts in for +'ve values
-4105      txtTol.Text = Replace(txtTol.Text, "%", "")
-4106      SetSolverNameOnSheet "tol", "=" & Trim(str(CDbl(txtTol.Text) / 100))    ' Str() uses . for decimal
-                                                                      ' CDbl respects the locale. We trim the leading space which str puts in for +'ve values
-                                                                      
+4092      SetNonNegativity chkNonNeg.value
+4098      SetShowSolverProgress chkShowSolverProgress.value
+4102      SetMaxTime CDbl(txtMaxTime.Text)
+4103      SetMaxIterations CDbl(txtMaxIter.Text)
+4104      SetPrecision CDbl(txtPre.Text)
+4106      SetToleranceAsPercentage CDbl(Replace(txtTol.Text, "%", ""))
 4107      SetLinearityCheck chkPerformLinearityCheck.value
                                                                       
 4112      Unload Me
@@ -53,37 +40,12 @@ End Sub
 Private Sub UserForm_Activate()
 4114      SetAnyMissingDefaultExcel2007SolverOptions
 
-          Dim sheetName As String
-          sheetName = EscapeSheetName(ActiveSheet)
-
-          Dim nonNeg As Boolean, s As String
-4115      If GetNameValueIfExists(ActiveWorkbook, sheetName & "solver_neg", s) Then
-4116          nonNeg = s = "1"
-4117      End If
-          
-          Dim ShowSolverProgress As Boolean
-4118      If GetNameValueIfExists(ActiveWorkbook, sheetName & "solver_sho", s) Then
-4119          ShowSolverProgress = s = "1"
-4120      End If
-          
-          Dim MaxTime As Double
-4121      GetNamedNumericValueIfExists ActiveWorkbook, sheetName & "solver_tim", MaxTime
-          
-          Dim maxIter As Double
-4122      GetNamedNumericValueIfExists ActiveWorkbook, sheetName & "solver_itr", maxIter
-
-          Dim conPre As Double
-4123      GetNamedNumericValueIfExists ActiveWorkbook, sheetName & "solver_pre", conPre
-
-          Dim tol As Double
-4124      GetNamedNumericValueIfExists ActiveWorkbook, sheetName & "solver_tol", tol
-
-4129      chkNonNeg.value = nonNeg
-4130      chkShowSolverProgress.value = ShowSolverProgress
-4131      txtMaxTime.Text = CStr(MaxTime)
-4132      txtTol.Text = tol * 100
-4133      txtMaxIter.Text = CStr(maxIter)
-4134      txtPre = CStr(conPre)
+4129      chkNonNeg.value = GetNonNegativity()
+4130      chkShowSolverProgress.value = GetShowSolverProgress()
+4131      txtMaxTime.Text = CStr(GetMaxTime())
+4132      txtTol.Text = CStr(GetToleranceAsPercentage())
+4133      txtMaxIter.Text = CStr(GetMaxIterations())
+4134      txtPre = CStr(GetPrecision())
 4135      chkPerformLinearityCheck.value = GetLinearityCheck()
 
           Dim Solver As String

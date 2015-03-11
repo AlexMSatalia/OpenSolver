@@ -154,10 +154,7 @@ Function SolveModel_Nomad(SolveRelaxation As Boolean, s As COpenSolver) As Long
           Dim ScreenStatus As Boolean
 7017      ScreenStatus = Application.ScreenUpdating
 
-          Dim Show As String
-7018      If GetNameValueIfExists(ActiveWorkbook, EscapeSheetName(ActiveSheet) & "solver_sho", Show) Then
-7019          If Show <> 1 Then Application.ScreenUpdating = False
-7020      End If
+          If GetShowSolverProgress() Then Application.ScreenUpdating = False
 
 7024      If s.ModelStatus <> ModelStatus_Built Then
 7025          Err.Raise Number:=OpenSolver_NomadError, Description:="The model cannot be solved as it has not yet been built."
@@ -168,7 +165,7 @@ Function SolveModel_Nomad(SolveRelaxation As Boolean, s As COpenSolver) As Long
 
           ' Check precision is not 0
           Dim SolveOptions As SolveOptionsType
-          GetSolveOptions OS.sheetName, SolveOptions
+          GetSolveOptions OS.sheet, SolveOptions
           
           If SolveOptions.Precision <= 0 Then
               Err.Raise Number:=OpenSolver_NomadError, Description:="The current level of precision (" & CStr(SolveOptions.Precision) & ") is invalid. Please set the precision to a small positive (non-zero) value and try again."
