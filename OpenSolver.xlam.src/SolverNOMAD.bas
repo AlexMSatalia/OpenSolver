@@ -294,7 +294,7 @@ ErrorHandler:
           GoTo ExitSub
 End Sub
 
-Function updateVar(X As Variant, Optional BestSolution As Variant = Nothing, Optional Infeasible As Boolean = False)
+Sub NOMAD_UpdateVar(X As Variant, Optional BestSolution As Variant = Nothing, Optional Infeasible As Boolean = False)
 7115      IterationCount = IterationCount + 1
 
           ' Update solution
@@ -315,29 +315,29 @@ Function updateVar(X As Variant, Optional BestSolution As Variant = Nothing, Opt
 7126      End If
           
 7127      OS.updateVarOS (X)
+End Sub
+
+Function NOMAD_GetValues() As Variant
+7128      NOMAD_GetValues = OS.getValuesOS()
 End Function
 
-Function getValues() As Variant
-7128      getValues = OS.getValuesOS()
-End Function
-
-Sub RecalculateValues()
+Sub NOMAD_RecalculateValues()
 7129      If Not ForceCalculate("Warning: The worksheet calculation did not complete, and so the iteration may not be calculated correctly. Would you like to retry?") Then Exit Sub
 End Sub
 
-Function getNumVariables() As Variant
-7130      getNumVariables = OS.getNumVariablesOS
+Function NOMAD_GetNumVariables() As Variant
+7130      NOMAD_GetNumVariables = OS.getNumVariablesOS
 End Function
 
-Function getNumConstraints() As Variant
-7131      getNumConstraints = OS.getNumConstraintsOS
+Function NOMAD_GetNumConstraints() As Variant
+7131      NOMAD_GetNumConstraints = OS.getNumConstraintsOS
 End Function
 
-Function getVariableData() As Variant
-7132      getVariableData = OS.getVariableDataOS()
+Function NOMAD_GetVariableData() As Variant
+7132      NOMAD_GetVariableData = OS.getVariableDataOS()
 End Function
 
-Function getOptionData() As Variant
-7133      getOptionData = OS.getOptionDataOS()
+Function NOMAD_GetOptionData() As Variant
+7133      NOMAD_GetOptionData = OS.getOptionDataOS()
 End Function
 
