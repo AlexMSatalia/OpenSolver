@@ -67,7 +67,6 @@ Public Sub SetDuals(Duals As Range, Optional book As Workbook, Optional sheet As
 End Sub
 
 Public Function GetSolverParameters(Solver As String, Optional book As Workbook, Optional sheet As Worksheet) As Range
-    GetActiveBookAndSheetIfMissing book, sheet
     If Not GetNamedRangeIfExistsOnSheet(sheet, "OpenSolver_" & Solver & "Parameters", GetSolverParameters) Then Set GetSolverParameters = Nothing
 End Function
 
@@ -129,6 +128,14 @@ End Function
 
 Public Sub SetShowSolverProgress(ShowSolverProgress As Boolean, Optional book As Workbook, Optional sheet As Worksheet)
     SetBooleanAsIntegerNameOnSheet "solver_sho", ShowSolverProgress, book, sheet
+End Sub
+
+Public Function GetIgnoreIntegerConstraints(Optional book As Workbook, Optional sheet As Worksheet) As Boolean
+    GetIgnoreIntegerConstraints = GetNamedIntegerAsBooleanWithDefault("solver_rlx", book, sheet, False)
+End Function
+
+Public Sub SetIgnoreIntegerConstraints(IgnoreIntegerConstraints As Boolean, Optional book As Workbook, Optional sheet As Worksheet)
+    SetBooleanAsIntegerNameOnSheet "solver_rlx", IgnoreIntegerConstraints, book, sheet
 End Sub
 
 Public Function GetTolerance(Optional book As Workbook, Optional sheet As Worksheet) As Double
@@ -194,4 +201,114 @@ End Function
 
 Public Sub SetNumConstraints(NumConstraints As Long, Optional book As Workbook, Optional sheet As Worksheet)
     SetIntegerNameOnSheet "solver_num", NumConstraints, book, sheet
+End Sub
+
+Public Function GetObjectiveTargetValue(Optional book As Workbook, Optional sheet As Worksheet) As Double
+    GetObjectiveTargetValue = GetNamedDoubleWithDefault("solver_val", book, sheet, 0)
+End Function
+
+Public Sub SetObjectiveTargetValue(ObjectiveTargetValue As Double, Optional book As Workbook, Optional sheet As Worksheet)
+    SetDoubleNameOnSheet "solver_val", ObjectiveTargetValue, book, sheet
+End Sub
+
+Public Function GetObjectiveFunctionCell(Optional book As Workbook, Optional sheet As Worksheet, Optional ValidateObjective As Boolean = False) As Range
+    GetActiveBookAndSheetIfMissing book, sheet
+    
+    ' Get and check the objective function
+    Dim isRangeObj As Boolean, valObj As Double, ObjRefersToError As Boolean, ObjRefersToFormula As Boolean, sRefersToObj As String, objIsMissing As Boolean
+    GetNameAsValueOrRange book, EscapeSheetName(sheet) & "solver_opt", objIsMissing, isRangeObj, GetObjectiveFunctionCell, ObjRefersToFormula, ObjRefersToError, sRefersToObj, valObj
+
+    If Not ValidateObjective Or GetObjectiveFunctionCell Is Nothing Then Exit Function
+
+    ' If objMissing is false, but the ObjRange is empty, the objective might be an out of date reference
+    If objIsMissing = False And GetObjectiveFunctionCell Is Nothing Then
+        Err.Raise Number:=OpenSolver_BuildError, Description:="OpenSolver cannot find the objective ('solver_opt' is out of date). Please re-enter the objective, and try again."
+    End If
+    ' Objective is corrupted somehow
+    If ObjRefersToError Then
+        Err.Raise Number:=OpenSolver_BuildError, Description:="The objective is marked #REF!, indicating this cell has been deleted. Please fix the objective, and try again."
+    End If
+    ' Objective has a value that is not a number
+    If VarType(GetObjectiveFunctionCell.Value2) <> vbDouble Then
+        If VarType(GetObjectiveFunctionCell.Value2) = vbError Then
+            Err.Raise Number:=OpenSolver_BuildError, Description:="The objective cell appears to contain an error. This could have occurred if there is a divide by zero error or if you have used the wrong function (eg #DIV/0! or #VALUE!). Please fix this, and try again."
+        Else
+            Err.Raise Number:=OpenSolver_BuildError, Description:="The objective cell does not appear to contain a numeric value. Please fix this, and try again."
+        End If
+    End If
+End Function
+
+Public Function GetObjectiveFunctionCellWithValidation(Optional book As Workbook, Optional sheet As Worksheet) As Range
+    Set GetObjectiveFunctionCellWithValidation = GetObjectiveFunctionCell(book, sheet, True)
+End Function
+
+Public Sub SetObjectiveFunctionCell(ObjectiveFunctionCell As Range, Optional book As Workbook, Optional sheet As Worksheet)
+    SetNamedRangeIfExists "solver_opt", ObjectiveFunctionCell, book, sheet
+End Sub
+
+Public Function GetConstraintRel(Index As Long, Optional book As Workbook, Optional sheet As Worksheet) As RelationConsts
+    GetConstraintRel = GetNamedIntegerWithDefault("solver_rel" & Index, book, sheet, RelationConsts.RelationLE)
+    
+    ' Check that our integer is a valid value for the enum
+    Dim i As Integer
+    For i = RelationConsts.[_First] To RelationConsts.[_Last]
+        If GetConstraintRel = i Then Exit Function
+    Next i
+    ' It wasn't in the enum - set default
+    GetConstraintRel = RelationConsts.RelationLE
+    SetConstraintRel Index, GetConstraintRel, book, sheet
+End Function
+
+Public Sub SetConstraintRel(Index As Long, ConstraintRel As RelationConsts, Optional book As Workbook, Optional sheet As Worksheet)
+    SetIntegerNameOnSheet "solver_rel" & Index, ConstraintRel, book, sheet
+End Sub
+
+Public Function GetConstraintLhs(Index As Long, Optional book As Workbook, Optional sheet As Worksheet) As Range
+    GetActiveBookAndSheetIfMissing book, sheet
+    
+    Set GetConstraintLhs = Nothing
+    
+    Dim IsRange As Boolean, value As Double, RefersToError As Boolean, RefersToFormula As Boolean, RangeFormula As String, IsMissing As Boolean
+    GetNameAsValueOrRange book, EscapeSheetName(sheet) & "solver_lhs" & Index, IsMissing, IsRange, GetConstraintLhs, RefersToFormula, RefersToError, RangeFormula, value
+    ' Must have a left hand side defined
+    If IsMissing Then
+        Err.Raise Number:=OpenSolver_BuildError, Description:="The left hand side for a constraint does not appear to be defined ('solver_lhs" & Index & " is missing). Please fix this, and try again."
+    End If
+    ' Must be valid
+    If RefersToError Then
+        Err.Raise Number:=OpenSolver_BuildError, Description:="The constraints reference cells marked #REF!, indicating these cells have been deleted. Please fix these constraints, and try again."
+    End If
+    ' LHSs must be ranges
+    If Not IsRange Then
+        Err.Raise Number:=OpenSolver_BuildError, Description:="A constraint was entered with a left hand side (" & RangeFormula & ") that is not a range. Please update the constraint, and try again."
+    End If
+End Function
+
+Public Sub SetConstraintLhs(Index As Long, ConstraintLhs As Range, Optional book As Workbook, Optional sheet As Worksheet)
+    SetNamedRangeIfExists "solver_lhs" & Index, ConstraintLhs, book, sheet
+End Sub
+
+Public Function GetConstraintRhs(Index As Long, Formula As String, value As Double, RefersToFormula As Boolean, Optional book As Workbook, Optional sheet As Worksheet) As Range
+    GetActiveBookAndSheetIfMissing book, sheet
+    
+    Set GetConstraintRhs = Nothing
+    
+    Dim IsRange As Boolean, RefersToError As Boolean, IsMissing As Boolean
+    GetNameAsValueOrRange book, EscapeSheetName(sheet) & "solver_rhs" & Index, IsMissing, IsRange, GetConstraintRhs, RefersToFormula, RefersToError, Formula, value
+    ' Must have a right hand side defined
+    If IsMissing Then
+        Err.Raise Number:=OpenSolver_BuildError, Description:="The right hand side for a constraint does not appear to be defined ('solver_rhs" & Index & " is missing). Please fix this, and try again."
+    End If
+    ' Must be valid
+    If RefersToError Then
+        Err.Raise Number:=OpenSolver_BuildError, Description:="The constraints reference cells marked #REF!, indicating these cells have been deleted. Please fix these constraints, and try again."
+    End If
+End Function
+
+Public Sub SetConstraintRhs(Index As Long, ConstraintRhsRange As Range, ConstraintRhsFormula As String, Optional book As Workbook, Optional sheet As Worksheet)
+    If ConstraintRhsRange Is Nothing Then
+        SetSolverNameOnSheet "rhs", ConstraintRhsFormula, book, sheet
+    Else
+        SetNamedRangeIfExists "solver_rhs" & Index, ConstraintRhsRange, book, sheet
+    End If
 End Sub

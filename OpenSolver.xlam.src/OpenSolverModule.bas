@@ -94,12 +94,14 @@ Public Const ModelStatus_Built = 1
 
 ' Solver's different types of constraints
 Public Enum RelationConsts
+    [_First] = 1
     RelationLE = 1
     RelationEQ = 2
     RelationGE = 3
     RelationINT = 4
     RelationBIN = 5
     RelationAllDiff = 6
+    [_Last] = 6
 End Enum
 
 Public Enum ObjectiveSenseType
@@ -123,7 +125,7 @@ Public Type SolveOptionsType
     Precision As Double ' ???
     Tolerance As Double ' Tolerance, being allowable percentage gap. NB: Solver shows this as a percentage, but stores it as a value, eg 1% is stored as 0.01
     ' Convergence As Double   ' Convergence, being ??
-    ShowIterationResults As Boolean   ' Excel stores ...!solver_sho=1 if Show Iteration Results is turned on, 2 if off (NB: Not 0!)
+    ShowIterationResults As Boolean
 End Type
 
 'CACHE for SearchRange - Saves defined names from user
@@ -436,7 +438,7 @@ Function RunExternalCommand(CommandString As String, Optional logPath As String,
           ' Initialize the STARTUPINFO structure:
 31        With start
 32            .cb = Len(start)
-33        If Not isMissing(WindowStyle) Then
+33        If Not IsMissing(WindowStyle) Then
 34            .dwFlags = STARTF_USESHOWWINDOW
 35            .wShowWindow = WindowStyle
 36        End If
@@ -459,7 +461,7 @@ Function RunExternalCommand(CommandString As String, Optional logPath As String,
 41            Err.Raise Number:=OpenSolver_ExecutableError, Description:="Unable to run the external program: " & CommandString & ". " & vbCrLf & vbCrLf & _
                                                                          "Error " & Err.LastDllError & ": " & DLLErrorText(Err.LastDllError)
 42        End If
-43        If Not isMissing(WaitForCompletion) Then
+43        If Not IsMissing(WaitForCompletion) Then
 44            If Not WaitForCompletion Then GoTo ExitSuccessfully
 45        End If
           
@@ -475,7 +477,7 @@ Function RunExternalCommand(CommandString As String, Optional logPath As String,
           ' Get the return code for the executable; http://msdn.microsoft.com/en-us/library/windows/desktop/ms683189%28v=vs.85%29.aspx
           Dim lExitCode As Long
 50        If GetExitCodeProcess(proc.hProcess, lExitCode) = 0 Then GoTo DLLErrorHandler
-51        If Not isMissing(exeResult) Then
+51        If Not IsMissing(exeResult) Then
 52            exeResult = lExitCode
 53        End If
 
@@ -665,9 +667,9 @@ End Function
 
 Function GetNamedNumericValueIfExists(book As Workbook, Name As String, value As Double) As Boolean
           ' Get a named range that must contain a double value or the form "=12.34" or "=12" etc, with no spaces
-          Dim isRange As Boolean, r As Range, RefersToFormula As Boolean, RangeRefersToError As Boolean, RefersTo As String, isMissing As Boolean
-154       GetNameAsValueOrRange book, Name, isMissing, isRange, r, RefersToFormula, RangeRefersToError, RefersTo, value
-155       GetNamedNumericValueIfExists = Not isMissing And Not isRange And Not RefersToFormula And Not RangeRefersToError
+          Dim IsRange As Boolean, r As Range, RefersToFormula As Boolean, RangeRefersToError As Boolean, RefersTo As String, IsMissing As Boolean
+154       GetNameAsValueOrRange book, Name, IsMissing, IsRange, r, RefersToFormula, RangeRefersToError, RefersTo, value
+155       GetNamedNumericValueIfExists = Not IsMissing And Not IsRange And Not RefersToFormula And Not RangeRefersToError
 End Function
 
 Function GetNamedIntegerIfExists(book As Workbook, Name As String, IntegerValue As Long) As Boolean
@@ -715,7 +717,7 @@ Function GetNamedIntegerWithDefault(Name As String, Optional book As Workbook, O
     Dim value As String
     If Not GetNameValueIfExists(book, EscapeSheetName(sheet) & Name, value) Then GoTo SetDefault
     On Error GoTo SetDefault
-    GetNamedIntegerWithDefault = CInt(value)
+    GetNamedIntegerWithDefault = CLng(value)
     Exit Function
     
 SetDefault:
@@ -751,7 +753,7 @@ Function GetNamedStringIfExists(book As Workbook, Name As String, value As Strin
 171       End If
 End Function
 
-Sub GetNameAsValueOrRange(book As Workbook, theName As String, isMissing As Boolean, isRange As Boolean, r As Range, RefersToFormula As Boolean, RangeRefersToError As Boolean, RefersTo As String, value As Double)
+Sub GetNameAsValueOrRange(book As Workbook, theName As String, IsMissing As Boolean, IsRange As Boolean, r As Range, RefersToFormula As Boolean, RangeRefersToError As Boolean, RefersTo As String, value As Double)
           ' See http://www.cpearson.com/excel/DefinedNames.aspx, but see below for internationalisation problems with this code
 172       RangeRefersToError = False
 173       RefersToFormula = False
@@ -760,18 +762,18 @@ Sub GetNameAsValueOrRange(book As Workbook, theName As String, isMissing As Bool
 174       On Error Resume Next
 175       Set NM = book.Names(theName)
 176       If Err.Number <> 0 Then
-177           isMissing = True
+177           IsMissing = True
 178           Exit Sub
 179       End If
-180       isMissing = False
+180       IsMissing = False
 181       On Error Resume Next
 182       Set r = NM.RefersToRange
 183       If Err.Number = 0 Then
-184           isRange = True
+184           IsRange = True
 185       Else
-186           isRange = False
+186           IsRange = False
 187       End If
-188       If Not isRange Then
+188       If Not IsRange Then
               ' String will be of form: "=5", or "=Sheet1!#REF!" or "=Test4!$M$11/4+Test4!$A$3"
 189           RefersTo = Mid(NM.RefersTo, 2)
 190           If right(RefersTo, 6) = "!#REF!" Then
@@ -1662,7 +1664,7 @@ Sub SetBooleanNameOnSheet(Name As String, value As Boolean, Optional book As Wor
 End Sub
 
 Sub SetDoubleNameOnSheet(Name As String, value As Double, Optional book As Workbook, Optional sheet As Worksheet)
-    SetNameOnSheet Name, "=" & str(value), book, sheet  ' Use str() to get a US-locale number
+    SetNameOnSheet Name, "=" & Mid(str(value), 2), book, sheet ' Use str() to get a US-locale number
 End Sub
 
 Sub SetIntegerNameOnSheet(Name As String, value As Long, Optional book As Workbook, Optional sheet As Worksheet)

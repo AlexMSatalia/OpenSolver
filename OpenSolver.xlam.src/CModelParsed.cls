@@ -221,18 +221,19 @@ Private Function ParseFormulae(s As COpenSolver) As Boolean
           Dim Count As Long
 4849      Count = 1
 4850      For i = 1 To ConstraintCount
-              Dim nameLHSi As Name, nameRELi As Name, nameRHSi As Name
-4851          Set nameLHSi = Names(strNameRoot + "solver_lhs" + CStr(i))
-4852          Set nameRELi = Names(strNameRoot + "solver_rel" + CStr(i))
-4853          Set nameRHSi = Names(strNameRoot + "solver_rhs" + CStr(i))
-              
               Dim lngFormulaeCountBefore As Long
               Dim cRow As Long, cCol As Long, cRowCount As Long, cColCount As Long
               Dim varLHSFormulae As Variant, rngLHS As Range, curLHSFormulae As String
+4851          Set rngLHS = GetConstraintLhs(i, book, SolverModelSheet)
               
-4854          If nameRELi.value = "=5" Or nameRELi.value = "=4" Then
+              Dim rel As RelationConsts
+4852          rel = GetConstraintRel(i, book, SolverModelSheet)
+4854          If rel = RelationINT Or rel = RelationBIN Or rel = RelationAllDiff Then
 4855              GoTo NextCons
 4856          End If
+
+              Dim strRHS As String, rngRHS As Range, valRHS As Double, RHSIsFormula As Boolean
+              Set rngRHS = GetConstraintRhs(i, strRHS, valRHS, RHSIsFormula, book, SolverModelSheet)
               
 4857          lngFormulaeCountBefore = Formulae.Count
               
@@ -243,9 +244,8 @@ Private Function ParseFormulae(s As COpenSolver) As Boolean
               ' Because mismatched shapes are cruel, we will just throw an error if we find them
               ' OpenSolver1 just threw a general error.
               
-4858          cRowCount = nameLHSi.RefersToRange.Rows.Count
-4859          cColCount = nameLHSi.RefersToRange.Columns.Count
-4860          Set rngLHS = nameLHSi.RefersToRange
+4858          cRowCount = rngLHS.Rows.Count
+4859          cColCount = rngLHS.Columns.Count
 4861          varLHSFormulae = rngLHS.Formula
                       
               Dim singleRngLHS As Range
@@ -263,19 +263,19 @@ Private Function ParseFormulae(s As COpenSolver) As Boolean
 4871                  End If
                       
                       ' Get RHS
-                      Dim strRHSFormula As String, rngRHSCell As Range
+                      Dim rngRHSCell As Range, strRHSCell As String
 4872                  Select Case RHSType(i)
                       ' 1.1 RHS is a single cell
                       Case SingleCellRange
-4873                      strRHSFormula = nameRHSi.RefersToRange.Formula
-4874                      Set rngRHSCell = nameRHSi.RefersToRange
+4874                      Set rngRHSCell = rngRHS
+4873                      strRHSCell = rngRHSCell.Formula
                       ' 1.2 RHS is multiple cells
 4875                  Case MultiCellRange
-4876                      strRHSFormula = nameRHSi.RefersToRange.Cells(cRow, cCol).Formula
-4877                      Set rngRHSCell = nameRHSi.RefersToRange.Cells(cRow, cCol)
+4877                      Set rngRHSCell = rngRHS.Cells(cRow, cCol)
+4876                      strRHSCell = rngRHSCell.Formula
                       ' 1.3 RHS is value or formula
 4878                  Case constant, Formula
-4879                      strRHSFormula = nameRHSi.value
+4879                      strRHSCell = "=" & strRHS
 4880                      Set rngRHSCell = Nothing
 4881                  End Select
 
@@ -288,7 +288,7 @@ Private Function ParseFormulae(s As COpenSolver) As Boolean
                           Case constant
 4885                          isConst = True
 4886                      Case Formula
-4887                          isConst = StringFormulaIsConstant(strRHSFormula)
+4887                          isConst = StringFormulaIsConstant(strRHSCell)
 4888                      Case SingleCellRange, MultiCellRange
 4889                          isConst = CellIsConstant(rngRHSCell)
 4890                      End Select
@@ -299,14 +299,14 @@ Private Function ParseFormulae(s As COpenSolver) As Boolean
 4892                          isValid = True
                               
 4893                          LHSValue = singleRngLHS.Value2
-4894                          If strRHSFormula = "" Then
+4894                          If strRHSCell = "" Then
 4895                              RHSValue = 0
 4896                          Else
-4897                              RHSValue = Application.Evaluate(strRHSFormula)
+4897                              RHSValue = Application.Evaluate(strRHSCell)
 4898                          End If
                               
                               ' Test LHS and RHS in the constraint
-4899                          Select Case ConvertRelationToEnum(nameRELi.value)
+4899                          Select Case rel
                               Case RelationGE
 4900                              If LHSValue < RHSValue Then
 4901                                  isValid = False
@@ -329,8 +329,8 @@ Private Function ParseFormulae(s As COpenSolver) As Boolean
                                       "The model contains an Excel constraint which does not depend on the decision variables and is not satisfied." & vbCrLf & _
                                       "Constraint specifies: " & _
                                       "LHS=" & singleRngLHS.AddressLocal(RowAbsolute:=False, ColumnAbsolute:=False) & "=" & LHSValue & _
-                                      "   " & SolverRelationAsString(ConvertRelationToEnum(nameRELi.value)) & "   " & _
-                                      "RHS=" & "'" & strRHSFormula & "'" & "=" & RHSValue
+                                      "   " & SolverRelationAsString(rel) & "   " & _
+                                      "RHS=" & "'" & strRHSCell & "'" & "=" & RHSValue
 4916                              ParseFormulae = False
 4917                              GoTo ExitFunction
 4918                          Else
@@ -344,10 +344,10 @@ Private Function ParseFormulae(s As COpenSolver) As Boolean
 4923                  LHSKeys.Add ExpandFormula(curLHSFormulae, rngLHS(cRow, cCol), i)
                       
                       ' Parse RHS
-4924                  RHSKeys.Add ExpandFormula(strRHSFormula, rngRHSCell, i)
+4924                  RHSKeys.Add ExpandFormula(strRHSCell, rngRHSCell, i)
                       
                       ' Determine appropriate relation
-4925                  Rels.Add ConvertRelationToEnum(nameRELi.value)
+4925                  Rels.Add rel
 NextCol:
 4926              Next cCol
 4927          Next cRow

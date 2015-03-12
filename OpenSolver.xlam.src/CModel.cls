@@ -531,7 +531,7 @@ Function BuildModel() As Boolean
           On Error GoTo ErrorHandler
 
           ' Check int/bin constraints not set on non-decision variables before we start saving things
-          Dim c As Long, intersection As Range, ShowWarning As Boolean
+          Dim c As Long, ShowWarning As Boolean
           ShowWarning = False
 3924      For c = 1 To Constraints.Count
 3925          If Constraints(c).ConstraintType = "bin" Or Constraints(c).ConstraintType = "int" Then
@@ -551,12 +551,12 @@ Function BuildModel() As Boolean
 
 ContinueSaving:
 3906      SetDecisionVariables DecisionVariables
-3911      SetSolverNamedRangeIfExists "opt", ObjectiveFunctionCell
+3911      SetObjectiveFunctionCell ObjectiveFunctionCell
           
           ' Objective type
 3916      SetObjectiveSense ObjectiveSense
 3918      If ObjectiveSense = TargetObjective Then
-3922          SetSolverNameOnSheet "val", "=" + Trim(str(ObjectiveTarget)) ' AJM Changed from CStr to Str as we must store this using US numbers, and we must strip any leading space
+3922          SetObjectiveTargetValue ObjectiveTarget
 3923      End If
           
           ' Constraints
@@ -564,10 +564,10 @@ ContinueSaving:
           Dim RHSstring As String, rel As RelationConsts, constraintNum As String
 3937      For c = 1 To Constraints.Count
               constraintNum = CStr(c)
-3939          SetSolverNamedRangeOnSheet "lhs" & constraintNum, Constraints(c).LHS
+3939          SetConstraintLhs c, Constraints(c).LHS
               
               rel = RelationStringToEnum(Constraints(c).ConstraintType)
-3940          SetSolverNameOnSheet "rel" & constraintNum, "=" & rel
+3940          SetConstraintRel c, rel
 
 3938          Select Case rel
               Case RelationINT
@@ -582,12 +582,8 @@ ContinueSaving:
 3960              End If
 3967          End Select
 
-              If Constraints(c).RHS Is Nothing Then
-                  If left(RHSstring, 1) <> "=" Then RHSstring = "=" & RHSstring
-                  SetSolverNameOnSheet "rhs" & constraintNum, RHSstring
-              Else
-                  SetSolverNamedRangeOnSheet "rhs" & constraintNum, Constraints(c).RHS
-              End If
+              If left(RHSstring, 1) <> "=" Then RHSstring = "=" & RHSstring
+              SetConstraintRhs c, Constraints(c).RHS, RHSstring
 3968      Next c
           
 3969      SetDuals Duals
@@ -695,37 +691,34 @@ Public Sub LoadFromSheet()
 4012      NonNegativityAssumption = GetNonNegativity()
            
 4014      ObjectiveSense = GetObjectiveSense()
-4016      ObjectiveTarget = 0
-4017      GetNamedNumericValueIfExists ActiveWorkbook, sheetName & "solver_val", ObjectiveTarget
-          
-4018      GetNamedRangeIfExistsOnSheet ActiveWorkbook.ActiveSheet, "solver_opt", ObjectiveFunctionCell
+4016      ObjectiveTarget = GetObjectiveTargetValue()
+4018      Set ObjectiveFunctionCell = GetObjectiveFunctionCell()
           
           Dim constraint As Long, NumConstraints As Long
 4020      NumConstraints = GetNumConstraints()
 4021      For constraint = 1 To NumConstraints
               
-              Dim isRangeLHS As Boolean, valLHS As Double, rLHS As Range, LHSRefersToError As Boolean, LHSRefersToFormula As Boolean, sRefersToLHS As String, LHSisMissing As Boolean
-              Dim isRangeRHS As Boolean, valRHS As Double, rRHS As Range, RHSRefersToError As Boolean, RHSRefersToFormula As Boolean, sRefersToRHS As String, RHSisMissing As Boolean
+              Dim rLHS As Range, valRHS As Double, rRHS As Range, RHSRefersToFormula As Boolean, sRefersToRHS As String
               
-4022          GetNameAsValueOrRange ActiveWorkbook, sheetName & "solver_lhs" & constraint, LHSisMissing, isRangeLHS, rLHS, LHSRefersToFormula, LHSRefersToError, sRefersToLHS, valLHS
-4023          If (LHSisMissing) Or (Not isRangeLHS) Then GoTo SkipCon
+4022          On Error Resume Next
+              Set rLHS = GetConstraintLhs(constraint)
+              If Err.Number <> 0 Then GoTo SkipCon
+              On Error GoTo ErrorHandler
               
               Dim rel As Long, relString As String
-4024          rel = Val(Mid(Names(sheetName & "solver_rel" & constraint), 2))
+4024          rel = GetConstraintRel(constraint)
               relString = RelationEnumToString(rel)
                             
 4025          Select Case rel
               Case RelationINT, RelationBIN, RelationAllDiff
 4026              AddConstraint rLHS, Nothing, "", relString
 4029          Case RelationLE, RelationEQ, RelationGE
-4030              GetNameAsValueOrRange ActiveWorkbook, sheetName & "solver_rhs" & constraint, RHSisMissing, isRangeRHS, rRHS, RHSRefersToFormula, RHSRefersToError, sRefersToRHS, valRHS
-4031              If RHSisMissing Then GoTo SkipCon
+4030              On Error Resume Next
+                  Set rRHS = GetConstraintRhs(constraint, sRefersToRHS, valRHS, RHSRefersToFormula)
+4031              If Err.Number <> 0 Then GoTo SkipCon
+                  On Error GoTo ErrorHandler
 
-4033              If Not isRangeRHS Then
-4034                  AddConstraint rLHS, Nothing, sRefersToRHS, relString
-4037              Else
-4038                  AddConstraint rLHS, rRHS, "", relString
-4041              End If
+4033              AddConstraint rLHS, rRHS, sRefersToRHS, relString
               Case Else
                   GoTo SkipCon
 4042          End Select

@@ -327,7 +327,7 @@ ErrorHandler:
 End Function
 
 Sub HighlightConstraint(myDocument As Worksheet, LHSRange As Range, _
-                        ByVal RHSisRange As Boolean, RHSRange As Range, ByVal RHSValue As String, ByVal Sense As Long, _
+                        RHSRange As Range, ByVal RHSValue As String, ByVal Sense As Long, _
                         ByVal Color As Long)
           Dim RaiseError As Boolean
           RaiseError = False
@@ -342,10 +342,10 @@ Sub HighlightConstraint(myDocument As Worksheet, LHSRange As Range, _
 3215      If Color = 0 Then Color = NextHighlightColor
           
 3216      Reversed = False
-3217      If Not RHSisRange And RHSValue <> "" Then
+3217      If RHSRange Is Nothing And RHSValue <> "" Then
               ' We have a constant or formula in the constraint. Put into form RHS <|=|> Range1 (reversing the sense)
 3218          Set s1 = HighlightRange(LHSRange, RHSValue & SolverRelationAsUnicodeChar(4 - Sense), Color, , , True)
-3219      ElseIf RHSisRange Then
+3219      ElseIf Not RHSRange Is Nothing Then
               ' If ranges overlaps on rows, then the top one becomes Range1
 3220          If ((RHSRange.top >= LHSRange.top And RHSRange.top < LHSRange.top + LHSRange.height) _
               Or (LHSRange.top >= RHSRange.top And LHSRange.top < RHSRange.top + RHSRange.height)) Then
@@ -436,19 +436,18 @@ Function HideSolverModel() As Boolean
           Dim NumOfConstraints As Long
           Dim sheetName As String
 3269      sheetName = EscapeSheetName(ActiveWorkbook.ActiveSheet)
-3270      On Error Resume Next ' There may not be a model on the sheet
-3271      NumConstraints = GetNumConstraints()
-3272      On Error GoTo ErrorHandler
           
           ' Delete constraints on other sheets
-          Dim b As Boolean
-3273      For i = 1 To NumConstraints
+          Dim b As Boolean, rLHS As Range
+3273      For i = 1 To GetNumConstraints()
 3274          b = False
+              Set rLHS = Nothing
               ' Set b to be true only if there is no error
 3275          On Error Resume Next
-3276          b = Range(sheetName & "solver_lhs" & i).Worksheet.Name <> ActiveWorkbook.ActiveSheet.Name
+              Set rLHS = GetConstraintLhs(i)
+3276          b = rLHS.Worksheet.Name <> ActiveWorkbook.ActiveSheet.Name
 3277          If b Then
-3278              DeleteOpenSolverShapes Range(sheetName & "solver_lhs" & i).Worksheet
+3278              DeleteOpenSolverShapes rLHS.Worksheet
 3279          End If
 NextConstraint:
 3280      Next i
@@ -515,11 +514,11 @@ Function ShowSolverModel() As Boolean
           
           ' Highlight the objective cell, if there is one
           Dim ObjRange As Range
-3323      If GetNamedRangeIfExists(book, sheetName & "solver_opt", ObjRange) Then
-3324          Set ObjRange = Range(sheetName & "solver_opt")
-              Dim ObjType As ObjectiveSenseType, temp As Long, ObjectiveTargetValue As Double
-3325          ObjType = GetObjectiveSense()
-3327          If ObjType = TargetObjective Then GetNamedNumericValueIfExists book, sheetName & "solver_val", ObjectiveTargetValue
+3323      Set ObjRange = GetObjectiveFunctionCell(book, sheet)
+          If Not ObjRange Is Nothing Then
+              Dim ObjType As ObjectiveSenseType, ObjectiveTargetValue As Double
+3325          ObjType = GetObjectiveSense(book, sheet)
+3327          If ObjType = TargetObjective Then ObjectiveTargetValue = GetObjectiveTargetValue(book, sheet)
 3328          AddObjectiveHighlighting ObjRange, ObjType, ObjectiveTargetValue
 3330      End If
           
@@ -540,21 +539,19 @@ Function ShowSolverModel() As Boolean
           Dim currentSheet As Worksheet
 3334      For constraint = 1 To NumConstraints
               
-              Dim isRangeLHS As Boolean, valLHS As Double, rLHS As Range, RangeRefersToError As Boolean, RefersToFormula As Boolean, sNameLHS As String, sRefersToLHS As String, isMissingLHS As Boolean
-3335          sNameLHS = sheetName & "solver_lhs" & constraint
-3336          GetNameAsValueOrRange book, sNameLHS, isMissingLHS, isRangeLHS, rLHS, RefersToFormula, RangeRefersToError, sRefersToLHS, valLHS
-3337          If isMissingLHS Then
-3338              Errors = Errors & "Error: The left hand side of constraint " & constraint & " is not defined (no 'solver_lhs" & constraint & "')." & vbCrLf
-3339              GoTo NextConstraint
-3340          End If
-3341          If Not isRangeLHS Or RangeRefersToError Or RefersToFormula Then
-3342              Errors = Errors & "Error: Range " & book.Names(sNameLHS).RefersTo & " is not a valid left hand side for a constraint." & vbCrLf
-3343              GoTo NextConstraint
-3344          End If
+              Dim rLHS As Range
+              Set rLHS = Nothing
+              On Error Resume Next
+              Set rLHS = GetConstraintLhs(constraint, book, sheet)
+              If Err.Number <> 0 Then
+                  Errors = Error & "Error: " & Err.Description & vbNewLine
+                  GoTo NextConstraint
+              End If
+              On Error GoTo ErrorHandler
 
               Dim rel As Long
 
-3345          rel = Mid(Names(sheetName & "solver_rel" & constraint), 2)
+3345          rel = GetConstraintRel(constraint, book, sheet)
                       
               Dim LHSCount As Double, Count As Double
 3346          LHSCount = rLHS.Count
@@ -573,28 +570,26 @@ Function ShowSolverModel() As Boolean
                   Set NonAdjustableCellsRange = ProperUnion(NonAdjustableCellsRange, SetDifference(rLHS, AdjustableCells))
 3373          Else
                   ' Constraint is a full equation with a RHS
-                  Dim isRangeRHS As Boolean, valRHS As Double, rRHS As Range, sNameRHS As String, sRefersToRHS As String, isMissingRHS As Boolean
-3374              sNameRHS = sheetName & "solver_rhs" & constraint
-3375              GetNameAsValueOrRange book, sNameRHS, isMissingRHS, isRangeRHS, rRHS, RefersToFormula, RangeRefersToError, sRefersToRHS, valRHS
-3376              If isMissingRHS Then
-3377                  Errors = Errors & "Error: The right hand side of constraint " & constraint & " is not defined (no 'solver_rhs" & constraint & "')." & vbCrLf
-3378                  GoTo NextConstraint
-3379              End If
-3380              If RangeRefersToError Then
-3381                  Errors = Errors & "Error: Range " & Mid(book.Names(sNameRHS), 2) & " is not a valid right hand side in a constraint." & vbCrLf
-3382                  GoTo NextConstraint
-3383              End If
+                  Dim valRHS As Double, rRHS As Range, sRefersToRHS As String, RefersToFormula As Boolean
+3374              Set rRHS = Nothing
+                  On Error Resume Next
+                  Set rRHS = GetConstraintRhs(constraint, sRefersToRHS, valRHS, RefersToFormula, book, sheet)
+                  If Err.Number <> 0 Then
+                      Errors = Error & "Error: " & Err.Description & vbNewLine
+                      GoTo NextConstraint
+                  End If
+                  On Error GoTo ErrorHandler
                   
-3384              If Range(sheetName & "solver_lhs" & constraint).Worksheet.Name <> ActiveWorkbook.ActiveSheet.Name Then
-3385                  Set currentSheet = Range(sheetName & "solver_lhs" & constraint).Worksheet
+3384              If rLHS.Worksheet.Name <> ActiveWorkbook.ActiveSheet.Name Then
+3385                  Set currentSheet = rLHS.Worksheet
 3386              Else
 3387                  Set currentSheet = ActiveSheet
 3388              End If
                   
-3389              If RefersToFormula Then
+3389              If rRHS Is Nothing Then
 3390                  sRefersToRHS = ConvertToCurrentLocale(StripWorksheetNameAndDollars(sRefersToRHS, currentSheet))
 3393              End If
-3394              HighlightConstraint currentSheet, rLHS, isRangeRHS, rRHS, sRefersToRHS, rel, 0  ' Show either a value or a formula from sRefersToRHS
+3394              HighlightConstraint currentSheet, rLHS, rRHS, sRefersToRHS, rel, 0  ' Show either a value or a formula from sRefersToRHS
 
 3395          End If
 NextConstraint:
@@ -618,11 +613,6 @@ NextConstraint:
                   HighlightRange selectedArea, "", RGB(255, 255, 0), True  ' Yellow highlight
               Next selectedArea
           End If
-          
-3439      If Errors <> "" Then
-3440          MsgBox Errors, , "OpenSolver Warning"
-3441          GoTo ExitFunction
-3442      End If
           
 3443      ShowSolverModel = True  ' success
 

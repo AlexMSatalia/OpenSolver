@@ -524,7 +524,7 @@ Private Sub cmdAddCon_Click()
 4506      Set rngLHS = Range(Trim(refConLHS.Text))
 
           ' RIGHT HAND SIDE
-          Dim RHSisRange As Boolean, RHSisFormula As Boolean, RHSIsValueWithEqual As Boolean, RHSIsValueWithoutEqual As Boolean
+          Dim RHSisRange As Boolean, RHSIsFormula As Boolean, RHSIsValueWithEqual As Boolean, RHSIsValueWithoutEqual As Boolean
           Dim strRel As String
 4507      strRel = cboConRel.Text
 4508      If strRel = "" Then ' Should not happen
@@ -545,9 +545,9 @@ Private Sub cmdAddCon_Click()
 4516              Exit Sub
 4517          End If
 
-4518          TestStringForConstraint refConRHS.Text, RHSisRange, RHSisFormula, RHSIsValueWithEqual, RHSIsValueWithoutEqual
+4518          TestStringForConstraint refConRHS.Text, RHSisRange, RHSIsFormula, RHSIsValueWithEqual, RHSIsValueWithoutEqual
 
-4519          If Not RHSisRange And Not RHSisFormula _
+4519          If Not RHSisRange And Not RHSIsFormula _
               And Not RHSIsValueWithEqual And Not RHSIsValueWithoutEqual Then
 4520              MsgBox "The right-hand-side of a constraint can be either:" + vbNewLine + _
                          "A single-cell range (e.g. =A4)" + vbNewLine + _

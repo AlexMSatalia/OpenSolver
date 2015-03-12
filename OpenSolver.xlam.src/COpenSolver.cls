@@ -592,46 +592,17 @@ Sub BuildModelFromSolverData(Optional LinearityCheckOffset As Double = 0, Option
           '--------------------------------------------------------------------------
           ' OBJECTIVE SETUP
           '--------------------------------------------------------------------------
-          ' Get the objective sense
-          Dim temp As Long
-1011      ObjectiveSense = GetObjectiveSense()
-1013      ObjectiveTargetValue = 0
-1014      If ObjectiveSense = TargetObjective Then GetNamedNumericValueIfExists book, sheetName & "solver_val", ObjectiveTargetValue    ' Target will be 0 if this fails
-          ' Get and check the objective function
-          Dim isRangeObj As Boolean, valObj As Double, ObjRefersToError As Boolean
-          Dim ObjRefersToFormula As Boolean, sRefersToObj As String, objIsMissing As Boolean
-1015      GetNameAsValueOrRange book, sheetName & "solver_opt", objIsMissing, isRangeObj, ObjRange, ObjRefersToFormula, ObjRefersToError, sRefersToObj, valObj
-          ' Allow no objective in order to seek a feasible solution
-1016      If objIsMissing Then
-1017          GoTo ModelOptions
-1018      End If
-          ' If objMissing is false, but the ObjRange is empty, the objective might be an out of date reference
-1019      If objIsMissing = False And ObjRange Is Nothing Then
-1020          On Error GoTo ErrorHandler
-1021          Err.Raise Number:=OpenSolver_BuildError, Description:="OpenSolver cannot find the objective ('solver_opt' is out of date). Please re-enter the objective, and try again."
-1022          GoTo ExitSub
-1023      End If
-          ' Objective is corrupted somehow
-1024      If ObjRefersToError Then
-1025          On Error GoTo ErrorHandler
-1026          Err.Raise Number:=OpenSolver_BuildError, Description:="The objective is marked #REF!, indicating this cell has been deleted. Please fix the objective, and try again."
-1027          GoTo ExitSub
-1028      End If
-          ' Objective has a value that is not a number
-1029      If VarType(ObjRange.Value2) <> vbDouble Then
-1030          On Error GoTo ErrorHandler
-1031          If VarType(ObjRange.Value2) = vbError Then
-1032              Err.Raise Number:=OpenSolver_BuildError, Description:="The objective cell appears to contain an error. This could have occurred if there is a divide by zero error or if you have used the wrong function (eg #DIV/0! or #VALUE!). Please fix this, and try again."
-1033          Else
-1034              Err.Raise Number:=OpenSolver_BuildError, Description:="The objective cell does not appear to contain a numeric value. Please fix this, and try again."
-1035          End If
-1036          GoTo ExitSub
-1037      End If
 
-          ' Store the value currently in the objective cell
-1038      ObjRange.Calculate ' This does not always seem to work in that it doesn't track back predecessors; we now do a full re-calc above anyway
-1039      objValue = ObjRange.Value2
-1040      ObjectiveFunctionConstant = ObjRange.Value2
+1011      ObjectiveSense = GetObjectiveSense(book, sheet)
+1013      ObjectiveTargetValue = GetObjectiveTargetValue(book, sheet)
+
+          Set ObjRange = GetObjectiveFunctionCellWithValidation(book, sheet)
+1016      If Not ObjRange Is Nothing Then
+              ' Store the value currently in the objective cell
+1038          ObjRange.Calculate ' This does not always seem to work in that it doesn't track back predecessors; we now do a full re-calc above anyway
+1039          objValue = ObjRange.Value2
+1040          ObjectiveFunctionConstant = ObjRange.Value2
+          End If
 
 ModelOptions:
 
@@ -639,7 +610,7 @@ ModelOptions:
 
           Dim succeeded As Boolean
 1043      On Error GoTo ErrorHandler
-1045      Call BuildModelOptions(succeeded, SolveRelaxation, MinimiseUserInteraction)
+1045      BuildModelOptions succeeded, SolveRelaxation, MinimiseUserInteraction
 1046      If succeeded = False Then GoTo ExitSub
           
           '--------------------------------------------------------------------------
@@ -647,11 +618,7 @@ ModelOptions:
           '--------------------------------------------------------------------------
           ' Count the correct number of constraints - not necessarily the number of
           ' rows though.
-          ' NB: Solver leaves around old constraints - the name <sheet>!solver_num
-          ' gives the correct number of constraints (eg "=4")
 1048      NumConstraints = GetNumConstraints(sheet:=sheet)
-          ' About to process the constraints, which takes a while, so provide some
-          ' user feedback!
 1049      UpdateStatusBar "OpenSolver: Setting Up Problem... " & numVars & " vars, " & NumConstraints & " Solver constraints", True
           'Set up arrays to be the correct size. We allow no constraints!
 1050      If NumConstraints > 0 Then
@@ -689,38 +656,21 @@ ModelOptions:
               '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
               ' LEFT HAND SIDE
               '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
-              Dim isRangeLHS As Boolean, valLHS As Double, rangeLHS As Range, LHSRefersToError As Boolean
-              Dim LHSRefersToFormula As Boolean, sRefersToLHS As String, LHSisMissing As Boolean
-              
-1068          GetNameAsValueOrRange book, sheetName & "solver_lhs" & constraint, LHSisMissing, isRangeLHS, rangeLHS, LHSRefersToFormula, LHSRefersToError, sRefersToLHS, valLHS
-              ' Must have a left hand side defined
-1069          If LHSisMissing Then
-1070              On Error GoTo ErrorHandler
-1071              Err.Raise Number:=OpenSolver_BuildError, Description:="The left hand side for a constraint does not appear to be defined ('solver_lhs" & constraint & " is missing). Please fix this, and try again."
-1072          End If
-              ' Must be valid
-1073          If LHSRefersToError Then
-1074              On Error GoTo ErrorHandler
-1075              Err.Raise Number:=OpenSolver_BuildError, Description:="The constraints reference cells marked #REF!, indicating these cells have been deleted. Please fix these constraints, and try again."
-1076          End If
-              ' LHSs must be ranges
-1077          If Not isRangeLHS Then
-1078              On Error GoTo ErrorHandler
-1079              Err.Raise Number:=OpenSolver_BuildError, Description:="A constraint was entered with a left hand side (" & sRefersToLHS & ") that is not a range. Please update the constraint, and try again."
-1080          End If
+              Dim rangeLHS As Range
+              Set rangeLHS = GetConstraintLhs(constraint, book, sheet)
               
               '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
               ' RELATIONSHIP
               '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
               Dim rel As Long
               ' Either <=, = or >=, or int or bin (or 'alldif' in Excel 2010)
-1081          rel = Val(Mid(Names(sheetName & "solver_rel" & constraint), 2))
+1081          rel = GetConstraintRel(constraint, book, sheet)
                       
               Dim RHSCount As Long, RowCount As Long
 1082          RowCount = rangeLHS.Count
               
-              ' If its integer or binary, there is no right-hand-side
-1083          If rel = RelationINT Or rel = RelationBIN Then
+1083          Select Case rel
+              Case RelationINT, RelationBIN
                   ' Make the LHS variables integer or binary
                   ' Check that they haven't set as integer or binary something that
                   ' is not a decision variable...
@@ -751,23 +701,10 @@ ModelOptions:
               '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
               ' RIGHT HAND SIDE
               '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
-1100          Else
+1100          Case RelationGE, RelationLE, RelationEQ
                   ' ... then the constraint is a full equation with a RHS
-                  Dim isRangeRHS As Boolean, valRHS As Double, rangeRHS As Range, RHSRefersToError As Boolean
-                  Dim RHSRefersToFormula As Boolean, sRefersToRHS As String, RHSisMissing As Boolean
-1101              Set rangeRHS = Nothing
-                  
-1102              GetNameAsValueOrRange book, sheetName & "solver_rhs" & constraint, RHSisMissing, isRangeRHS, rangeRHS, RHSRefersToFormula, RHSRefersToError, sRefersToRHS, valRHS
-                  ' Must have a right hand side defined
-1103              If RHSisMissing Then
-1104                  On Error GoTo ErrorHandler
-1105                  Err.Raise Number:=OpenSolver_BuildError, Description:="The right hand side for a constraint does not appear to be defined ('solver_rhs" & constraint & " is missing). Please fix this, and try again."
-1106              End If
-                  ' Must be valid
-1107              If RHSRefersToError Then
-1108                  On Error GoTo ErrorHandler
-1109                  Err.Raise Number:=OpenSolver_BuildError, Description:="The constraints reference cells marked #REF!, indicating these cells have been deleted. Please fix these constraints, and try again."
-1110              End If
+                  Dim valRHS As Double, rangeRHS As Range, sRefersToRHS As String, RHSRefersToFormula As Boolean
+1101              Set rangeRHS = GetConstraintRhs(constraint, sRefersToRHS, valRHS, RHSRefersToFormula, book, sheet)
                   
                   ' Track the constraints
                   Dim summary As String
@@ -776,17 +713,13 @@ ModelOptions:
 1113              summary = summary & " " & SolverRelationAsString(rel) & " "
 1114              summary = summary & Mid(Names(sheetName & "solver_rhs" & constraint), 2)
 1115              ConstraintSummary(constraint) = summary
-                  
-                  ' Don't allow 'alldiff' from Excel 2010 or any other wierd things
-1116              If rel <> RelationLE And rel <> RelationEQ And rel <> RelationGE Then
-1117                  On Error GoTo ErrorHandler
-1118                  Err.Raise Number:=OpenSolver_BuildError, Description:="Unrecognised relationship for constraint " & ConstraintSummary(constraint)
-1119              End If
 
                   ' Check we have a compatible constraint system.
                   ' Solver should have checked this already, but just to make sure...
 1120              RHSCount = 1
-1121              If isRangeRHS Then RHSCount = rangeRHS.Count
+1121              If Not rangeRHS Is Nothing Then
+                      RHSCount = rangeRHS.Count
+                  End If
 1122              If (RowCount <> 1 And RHSCount <> 1) And (RowCount <> RHSCount) Then
 1123                  On Error GoTo ErrorHandler
 1124                  Err.Raise Number:=OpenSolver_BuildError, Description:="The constraint '" & summary & "' has a different cell count on the left and the right. The model cannot be built."
@@ -812,7 +745,7 @@ ModelOptions:
                   
                   ' Right hand side:
                   ' If it is a range, it is much like LHS
-1134              If isRangeRHS Then
+1134              If Not rangeRHS Is Nothing Then
 1135                  Set RHSRange(constraint) = rangeRHS
 1136                  RHSType(constraint) = IIf(rangeRHS.Count = 1, SolverInputType.SingleCellRange, SolverInputType.MultiCellRange)
 1137                  RHSOriginalValues(constraint) = rangeRHS.Value2  ' Copy the entire range over into an array of variants
@@ -830,7 +763,7 @@ ModelOptions:
                   ' Check if this constraint applies any bounds on decision variables
 1146              If RowCount = 1 Then
                       ' Single LHS, single RHS
-1147                  ApplyBounds row, rel, rangeLHS, rangeRHS, valRHS, isRangeRHS, RHSRefersToFormula
+1147                  ApplyBounds row, rel, rangeLHS, rangeRHS, valRHS, RHSRefersToFormula
 1148              Else
                       Dim CurRow As Long, RHSRowCount As Long
 1149                  If rangeRHS Is Nothing Then
@@ -842,12 +775,12 @@ ModelOptions:
 1154                  If RHSRowCount > 1 Then
                           ' multiple LHS, multiple RHS
 1155                      For CurRow = 1 To RowCount
-1156                          ApplyBounds row + CurRow - 1, rel, rangeLHS(CurRow), rangeRHS(CurRow), valRHS, isRangeRHS, RHSRefersToFormula
+1156                          ApplyBounds row + CurRow - 1, rel, rangeLHS(CurRow), rangeRHS(CurRow), valRHS, RHSRefersToFormula
 1157                      Next CurRow
 1158                  Else
                           ' multiple LHS, single RHS
 1159                      For CurRow = 1 To RowCount
-1160                          ApplyBounds row + CurRow - 1, rel, rangeLHS(CurRow), rangeRHS, valRHS, isRangeRHS, RHSRefersToFormula
+1160                          ApplyBounds row + CurRow - 1, rel, rangeLHS(CurRow), rangeRHS, valRHS, RHSRefersToFormula
 1161                      Next CurRow
 1162                  End If
 1163              End If
@@ -868,7 +801,12 @@ ModelOptions:
 1172                  On Error GoTo ErrorHandler
 1173                  Err.Raise Number:=OpenSolver_BuildError, Description:=ErrorMsg
 1174              End If
-1175          End If
+              
+              Case Else
+                  ' Don't allow 'alldiff' from Excel 2010 or any other wierd things
+1116              On Error GoTo ErrorHandler
+1118              Err.Raise Number:=OpenSolver_BuildError, Description:="Unrecognised relationship for constraint " & ConstraintSummary(constraint)
+1175          End Select
 1176      Next constraint
 
           ' Binary trumps integer, so remove all overlap
@@ -889,7 +827,7 @@ ModelOptions:
 1183              Set SparseA(row) = New CIndexedCoeffs
 1184          Next row
 1185          If NumRows > 0 Then ReDim RHS(NumRows) As Double
-1186          Call BuildConstraintMatrix(objIsMissing, SparseA, succeeded)
+1186          BuildConstraintMatrix ObjRange Is Nothing, SparseA, succeeded
 1187          If succeeded = False Then GoTo ExitSub
 1188      End If
 
@@ -913,7 +851,7 @@ ErrorHandler:
           GoTo ExitSub
 End Sub
 
-Sub ApplyBounds(row As Long, rel As Long, LHS As Range, RHS As Range, RHSValue As Double, isRangeRHS As Boolean, RHSRefersToFormula As Boolean)
+Sub ApplyBounds(row As Long, rel As Long, LHS As Range, RHS As Range, RHSValue As Double, RHSRefersToFormula As Boolean)
           ' Determines whether the current LHS and RHS should be applied as a bound
 
           ' Excel 2007 requires the following conditions to be met for a user-supplied lower bound to exist
@@ -938,7 +876,7 @@ Sub ApplyBounds(row As Long, rel As Long, LHS As Range, RHS As Range, RHSValue A
           ' Check if LHS cell is a variable cell
 1226      If Intersect(LHS, AdjustableCells) Is Nothing Then GoTo ExitSub
           
-1229      If isRangeRHS Then
+1229      If Not RHS Is Nothing Then
 1230          If Not RHS.HasFormula Then
                   ' The RHS range is a constant - apply a bound
 1231              UpdateBound row, LHS.Address, CDbl(RHS), rel
@@ -1020,18 +958,16 @@ Sub BuildModelOptions(succeeded As Boolean, Optional SolveRelaxation As Boolean 
           ' Ignore integrality check if the user is solving the relaxation
           If Not SolveRelaxation Then
               ' If we are in Excel 2010 or newer, and the user has set "Solve Relaxtion", then we report an error
-              Dim IngoreIntConstraints As Boolean, s As String
+              Dim IngoreIntConstraints As Boolean
 1265          IngoreIntConstraints = False
-1266          If Val(Application.Version) >= 14 And GetNameValueIfExists(ActiveWorkbook, sheetName & "solver_rlx", s) Then
-1267              IngoreIntConstraints = (s = "1")
-1268          End If
-1269          If IngoreIntConstraints = True Then
+1266          If Val(Application.Version) >= 14 And GetIgnoreIntegerConstraints(book, sheet) Then
                    If MinimiseUserInteraction Then GoTo RaiseError
                    If Not MsgBox("You have the 'Ignore integer constraints' option enabled in Solver, so OpenSolver cannot proceed with solving. Would you like OpenSolver to disable this option and proceed?", vbCritical + vbYesNo + vbDefaultButton1, "OpenSolver Warning") = vbNo Then
-                       SetSolverNameOnSheet "rlx", "=2"
+                       SetIgnoreIntegerConstraints False, book, sheet
                    Else
 RaiseError:
-                       Err.Raise Number:=OpenSolver_BuildError, Description:="You have the Solver option 'ignore integer constraints' turned on. Please turn this off in the Solver (not OpenSolver) options menu and then solve with OpenSolver again or choose OpenSolver's solve relaxed model option"
+                       ' Set UserCancelledError because the user has already confirmed the abort if not in silent mode
+                       Err.Raise Number:=OpenSolver_UserCancelledError, Description:="You have the Solver option 'ignore integer constraints' turned on. Please turn this off in the Solver (not OpenSolver) options menu and then solve with OpenSolver again or choose OpenSolver's solve relaxed model option"
                    End If
 1271          End If
           End If
@@ -2139,13 +2075,13 @@ Sub HighlightNonLinearities(RowIsNonLinear() As Boolean, ObjectiveIsNonLinear As
 2038              RHSstring = StripWorksheetNameAndDollars(RHSstring, LHSCellRange.Worksheet) ' Strip any worksheet name and $'s from the RHS (useful if it is a formula)
                   Dim RHSisRange As Boolean
 2039              RHSisRange = RHSType(constraint) = MultiCellRange Or RHSType(constraint) = SingleCellRange
-2040              HighlightConstraint LHSCellRange.Worksheet, LHSCellRange, RHSisRange, RHSCellRange, RHSstring, Relation(row), 0  ' Show either a value or a formula
+2040              HighlightConstraint LHSCellRange.Worksheet, LHSCellRange, RHSCellRange, RHSstring, Relation(row), 0  ' Show either a value or a formula
 2041          End If
 2042      Next row
 2043      If ObjectiveIsNonLinear Then
-              Dim ObjType As ObjectiveSenseType, temp As Long, ObjectiveTargetValue As Double
-2044          ObjType = GetObjectiveSense()
-2046          If ObjType = TargetObjective Then GetNamedNumericValueIfExists book, sheetName & "solver_val", ObjectiveTargetValue   ' Target will be 0 if this fails
+              Dim ObjType As ObjectiveSenseType, ObjectiveTargetValue As Double
+2044          ObjType = GetObjectiveSense(book, sheet)
+2046          If ObjType = TargetObjective Then ObjectiveTargetValue = GetObjectiveTargetValue(book, sheet)
 2047          AddObjectiveHighlighting ObjRange, ObjType, ObjectiveTargetValue
 2048      End If
 
@@ -2460,13 +2396,12 @@ Sub QuickLinearityCheck(fullLinearityCheckWasPerformed As Boolean)
 
           'check objective function for linearity
           Dim CalculatedObjValue As Double, ObservedObjValue As Double, ObjectiveIsNonLinear As Boolean
-2230      On Error Resume Next
-          Dim NM As Name
-2231      Set NM = book.Names(sheetName & "solver_opt")
-2232      If Not Err.Number <> 0 Then
+          If ObjRange Is Nothing Then
+              ObservedObjValue = 0
+          Else
 2233          ObservedObjValue = ObjRange.Value2
-2234      End If
-2235      On Error GoTo ErrorHandler
+          End If
+          
 2236      CalculatedObjValue = CalcObjFnValue(DecisionVariableValues)
 2237      ObjectiveIsNonLinear = Abs(CalculatedObjValue - ObservedObjValue) / (1 + Abs(CalculatedObjValue)) > EPSILON
 2238      If ObjectiveIsNonLinear Then
