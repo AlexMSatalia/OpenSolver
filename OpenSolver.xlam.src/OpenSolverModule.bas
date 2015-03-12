@@ -103,10 +103,12 @@ Public Enum RelationConsts
 End Enum
 
 Public Enum ObjectiveSenseType
+   [_First] = 0
    UnknownObjectiveSense = 0
    MaximiseObjective = 1
    MinimiseObjective = 2
    TargetObjective = 3   ' Seek a specific value
+   [_Last] = 3
 End Enum
 
 Public Enum VariableType
@@ -116,7 +118,7 @@ Public Enum VariableType
 End Enum
 
 Public Type SolveOptionsType
-    MaxTime As Double ' "MaxTime"=Max run time in seconds
+    MaxTime As Long ' "MaxTime"=Max run time in seconds
     MaxIterations As Long ' "Iterations" = max number of branch and bound nodes?
     Precision As Double ' ???
     Tolerance As Double ' Tolerance, being allowable percentage gap. NB: Solver shows this as a percentage, but stores it as a value, eg 1% is stored as 0.01
@@ -704,7 +706,7 @@ Function GetNamedDoubleWithDefault(Name As String, Optional book As Workbook, Op
     
 SetDefault:
     GetNamedDoubleWithDefault = DefaultValue
-    SetNumericNameOnSheet Name, GetNamedDoubleWithDefault, book, sheet
+    SetDoubleNameOnSheet Name, GetNamedDoubleWithDefault, book, sheet
 End Function
 
 Function GetNamedIntegerWithDefault(Name As String, Optional book As Workbook, Optional sheet As Worksheet, Optional DefaultValue As Long = 0) As Long
@@ -718,7 +720,7 @@ Function GetNamedIntegerWithDefault(Name As String, Optional book As Workbook, O
     
 SetDefault:
     GetNamedIntegerWithDefault = DefaultValue
-    SetNumericNameOnSheet Name, CDbl(GetNamedIntegerWithDefault), book, sheet
+    SetIntegerNameOnSheet Name, GetNamedIntegerWithDefault, book, sheet
 End Function
 
 Function GetNamedIntegerAsBooleanWithDefault(Name As String, Optional book As Workbook, Optional sheet As Worksheet, Optional DefaultValue As Boolean = False) As Boolean
@@ -1186,8 +1188,8 @@ Sub SetAnyMissingDefaultExcel2007SolverOptions()
 427       If ActiveSheet Is Nothing Then GoTo ExitSub
 
           Dim SolverOptions() As Variant, SolverDefaults() As Variant
-          SolverOptions = Array("drv", "est", "num", "nwt", "scl", "cvg", "rlx")
-          SolverDefaults = Array("1", "1", "0", "1", "2", "0.0001", "2")
+          SolverOptions = Array("drv", "est", "nwt", "scl", "cvg", "rlx")
+          SolverDefaults = Array("1", "1", "1", "2", "0.0001", "2")
           
           Dim s As String, sheetName As String
           sheetName = EscapeSheetName(ActiveSheet)
@@ -1659,12 +1661,16 @@ Sub SetBooleanNameOnSheet(Name As String, value As Boolean, Optional book As Wor
     SetNameOnSheet Name, "=" & UCase(CStr(value)), book, sheet
 End Sub
 
-Sub SetNumericNameOnSheet(Name As String, value As Double, Optional book As Workbook, Optional sheet As Worksheet)
+Sub SetDoubleNameOnSheet(Name As String, value As Double, Optional book As Workbook, Optional sheet As Worksheet)
     SetNameOnSheet Name, "=" & str(value), book, sheet  ' Use str() to get a US-locale number
 End Sub
 
+Sub SetIntegerNameOnSheet(Name As String, value As Long, Optional book As Workbook, Optional sheet As Worksheet)
+    SetDoubleNameOnSheet Name, CDbl(value), book, sheet
+End Sub
+
 Sub SetBooleanAsIntegerNameOnSheet(Name As String, value As Boolean, Optional book As Workbook, Optional sheet As Worksheet)
-    SetNumericNameOnSheet Name, IIf(value, 1, 2), book, sheet
+    SetIntegerNameOnSheet Name, IIf(value, 1, 2), book, sheet
 End Sub
 
 ' NB: Simply using a variant in SetNameOnSheet fails as passing a range can simply pass its cell value

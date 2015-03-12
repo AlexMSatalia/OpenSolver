@@ -554,13 +554,13 @@ ContinueSaving:
 3911      SetSolverNamedRangeIfExists "opt", ObjectiveFunctionCell
           
           ' Objective type
-3916      SetSolverNameOnSheet "typ", "=" & ObjectiveSense
+3916      SetObjectiveSense ObjectiveSense
 3918      If ObjectiveSense = TargetObjective Then
 3922          SetSolverNameOnSheet "val", "=" + Trim(str(ObjectiveTarget)) ' AJM Changed from CStr to Str as we must store this using US numbers, and we must strip any leading space
 3923      End If
           
           ' Constraints
-3936      SetSolverNameOnSheet "num", "=" + CStr(Constraints.Count)
+3936      SetNumConstraints Constraints.Count
           Dim RHSstring As String, rel As RelationConsts, constraintNum As String
 3937      For c = 1 To Constraints.Count
               constraintNum = CStr(c)
@@ -694,16 +694,14 @@ Public Sub LoadFromSheet()
           
 4012      NonNegativityAssumption = GetNonNegativity()
            
-          Dim temp As Long
-4014      ObjectiveSense = UnknownObjectiveSense
-4015      If GetNamedIntegerIfExists(ActiveWorkbook, sheetName & "solver_typ", temp) Then ObjectiveSense = temp
+4014      ObjectiveSense = GetObjectiveSense()
 4016      ObjectiveTarget = 0
 4017      GetNamedNumericValueIfExists ActiveWorkbook, sheetName & "solver_val", ObjectiveTarget
           
 4018      GetNamedRangeIfExistsOnSheet ActiveWorkbook.ActiveSheet, "solver_opt", ObjectiveFunctionCell
           
           Dim constraint As Long, NumConstraints As Long
-4020      NumConstraints = Val(Mid(Names(sheetName & "solver_num"), 2))
+4020      NumConstraints = GetNumConstraints()
 4021      For constraint = 1 To NumConstraints
               
               Dim isRangeLHS As Boolean, valLHS As Double, rLHS As Range, LHSRefersToError As Boolean, LHSRefersToFormula As Boolean, sRefersToLHS As String, LHSisMissing As Boolean

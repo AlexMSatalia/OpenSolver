@@ -594,8 +594,7 @@ Sub BuildModelFromSolverData(Optional LinearityCheckOffset As Double = 0, Option
           '--------------------------------------------------------------------------
           ' Get the objective sense
           Dim temp As Long
-1011      ObjectiveSense = UnknownObjectiveSense
-1012      If GetNamedIntegerIfExists(book, sheetName & "solver_typ", temp) Then ObjectiveSense = temp
+1011      ObjectiveSense = GetObjectiveSense()
 1013      ObjectiveTargetValue = 0
 1014      If ObjectiveSense = TargetObjective Then GetNamedNumericValueIfExists book, sheetName & "solver_val", ObjectiveTargetValue    ' Target will be 0 if this fails
           ' Get and check the objective function
@@ -650,7 +649,7 @@ ModelOptions:
           ' rows though.
           ' NB: Solver leaves around old constraints - the name <sheet>!solver_num
           ' gives the correct number of constraints (eg "=4")
-1048      NumConstraints = Val(Mid(Names(sheetName & "solver_num"), 2))
+1048      NumConstraints = GetNumConstraints(sheet:=sheet)
           ' About to process the constraints, which takes a while, so provide some
           ' user feedback!
 1049      UpdateStatusBar "OpenSolver: Setting Up Problem... " & numVars & " vars, " & NumConstraints & " Solver constraints", True
@@ -2145,8 +2144,7 @@ Sub HighlightNonLinearities(RowIsNonLinear() As Boolean, ObjectiveIsNonLinear As
 2042      Next row
 2043      If ObjectiveIsNonLinear Then
               Dim ObjType As ObjectiveSenseType, temp As Long, ObjectiveTargetValue As Double
-2044          ObjType = UnknownObjectiveSense
-2045          If GetNamedIntegerIfExists(book, sheetName & "solver_typ", temp) Then ObjType = temp
+2044          ObjType = GetObjectiveSense()
 2046          If ObjType = TargetObjective Then GetNamedNumericValueIfExists book, sheetName & "solver_val", ObjectiveTargetValue   ' Target will be 0 if this fails
 2047          AddObjectiveHighlighting ObjRange, ObjType, ObjectiveTargetValue
 2048      End If

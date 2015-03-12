@@ -437,12 +437,12 @@ Function HideSolverModel() As Boolean
           Dim sheetName As String
 3269      sheetName = EscapeSheetName(ActiveWorkbook.ActiveSheet)
 3270      On Error Resume Next ' There may not be a model on the sheet
-3271      NumOfConstraints = Mid(Names(sheetName & "solver_num"), 2)
+3271      NumConstraints = GetNumConstraints()
 3272      On Error GoTo ErrorHandler
           
           ' Delete constraints on other sheets
           Dim b As Boolean
-3273      For i = 1 To NumOfConstraints
+3273      For i = 1 To NumConstraints
 3274          b = False
               ' Set b to be true only if there is no error
 3275          On Error Resume Next
@@ -518,14 +518,13 @@ Function ShowSolverModel() As Boolean
 3323      If GetNamedRangeIfExists(book, sheetName & "solver_opt", ObjRange) Then
 3324          Set ObjRange = Range(sheetName & "solver_opt")
               Dim ObjType As ObjectiveSenseType, temp As Long, ObjectiveTargetValue As Double
-3325          ObjType = UnknownObjectiveSense
-3326          If GetNamedIntegerIfExists(book, sheetName & "solver_typ", temp) Then ObjType = temp
+3325          ObjType = GetObjectiveSense()
 3327          If ObjType = TargetObjective Then GetNamedNumericValueIfExists book, sheetName & "solver_val", ObjectiveTargetValue
 3328          AddObjectiveHighlighting ObjRange, ObjType, ObjectiveTargetValue
 3330      End If
           
           ' Count the correct number of constraints, and form the constraint
-3331      NumConstraints = Mid(Names(sheetName & "solver_num"), 2)  ' Number of constraints entered in excel; can include ranges covering many constraints
+3331      NumConstraints = GetNumConstraints()  ' Number of constraints entered in excel; can include ranges covering many constraints
           ' Note: Solver leaves around old constraints; the name <sheet>!solver_num gives the correct number of constraints (eg "=4")
           
 3332      UpdateStatusBar "OpenSolver: Displaying Problem... " & AdjustableCells.Count & " vars, " & NumConstraints & " Solver constraints", True

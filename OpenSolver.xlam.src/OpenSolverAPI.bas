@@ -140,19 +140,19 @@ Public Function GetToleranceAsPercentage(Optional book As Workbook, Optional she
 End Function
 
 Public Sub SetTolerance(Tolerance As Double, Optional book As Workbook, Optional sheet As Worksheet)
-    SetNumericNameOnSheet "solver_tol", Tolerance, book, sheet
+    SetDoubleNameOnSheet "solver_tol", Tolerance, book, sheet
 End Sub
 
 Public Sub SetToleranceAsPercentage(Tolerance As Double, Optional book As Workbook, Optional sheet As Worksheet)
     SetTolerance Tolerance / 100, book, sheet
 End Sub
 
-Public Function GetMaxTime(Optional book As Workbook, Optional sheet As Worksheet) As Double
-    GetMaxTime = GetNamedDoubleWithDefault("solver_tim", book, sheet, 999999999)
+Public Function GetMaxTime(Optional book As Workbook, Optional sheet As Worksheet) As Long
+    GetMaxTime = GetNamedIntegerWithDefault("solver_tim", book, sheet, 999999999)
 End Function
 
-Public Sub SetMaxTime(MaxTime As Double, Optional book As Workbook, Optional sheet As Worksheet)
-    SetNumericNameOnSheet "solver_tim", MaxTime, book, sheet
+Public Sub SetMaxTime(MaxTime As Long, Optional book As Workbook, Optional sheet As Worksheet)
+    SetIntegerNameOnSheet "solver_tim", MaxTime, book, sheet
 End Sub
 
 Public Function GetPrecision(Optional book As Workbook, Optional sheet As Worksheet) As Double
@@ -160,14 +160,38 @@ Public Function GetPrecision(Optional book As Workbook, Optional sheet As Worksh
 End Function
 
 Public Sub SetPrecision(Precision As Double, Optional book As Workbook, Optional sheet As Worksheet)
-    SetNumericNameOnSheet "solver_pre", Precision, book, sheet
+    SetDoubleNameOnSheet "solver_pre", Precision, book, sheet
 End Sub
 
 Public Function GetMaxIterations(Optional book As Workbook, Optional sheet As Worksheet) As Long
     GetMaxIterations = GetNamedIntegerWithDefault("solver_itr", book, sheet, 100)
 End Function
 
-Public Sub SetMaxIterations(MaxIterations As Double, Optional book As Workbook, Optional sheet As Worksheet)
-    SetNumericNameOnSheet "solver_itr", MaxIterations, book, sheet
+Public Sub SetMaxIterations(MaxIterations As Long, Optional book As Workbook, Optional sheet As Worksheet)
+    SetIntegerNameOnSheet "solver_itr", MaxIterations, book, sheet
 End Sub
 
+Public Function GetObjectiveSense(Optional book As Workbook, Optional sheet As Worksheet) As ObjectiveSenseType
+    GetObjectiveSense = GetNamedIntegerWithDefault("solver_typ", book, sheet, ObjectiveSenseType.MinimiseObjective)
+    
+    ' Check that our integer is a valid value for the enum
+    Dim i As Integer
+    For i = ObjectiveSenseType.[_First] To ObjectiveSenseType.[_Last]
+        If GetObjectiveSense = i Then Exit Function
+    Next i
+    ' It wasn't in the enum - set default
+    GetObjectiveSense = ObjectiveSenseType.MinimiseObjective
+    SetObjectiveSense GetObjectiveSense, book, sheet
+End Function
+
+Public Sub SetObjectiveSense(ObjectiveSense As ObjectiveSenseType, Optional book As Workbook, Optional sheet As Worksheet)
+    SetIntegerNameOnSheet "solver_typ", ObjectiveSense, book, sheet
+End Sub
+
+Public Function GetNumConstraints(Optional book As Workbook, Optional sheet As Worksheet) As Long
+    GetNumConstraints = GetNamedIntegerWithDefault("solver_num", book, sheet, 0)
+End Function
+
+Public Sub SetNumConstraints(NumConstraints As Long, Optional book As Workbook, Optional sheet As Worksheet)
+    SetIntegerNameOnSheet "solver_num", NumConstraints, book, sheet
+End Sub
