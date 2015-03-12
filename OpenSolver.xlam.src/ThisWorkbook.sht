@@ -35,21 +35,6 @@ End Sub
 ' Provided by Paul Becker of Eclipse Engineering (www.eclipseeng.com)
 '====================================================================
 
-Sub AlterMenuItems(AddItems As Boolean)
-          Dim NeedToAdd As Boolean
-5         NeedToAdd = Application.Version = "11.0"
-#If Mac Then
-6         NeedToAdd = True
-#End If
-7         If NeedToAdd Then
-8             If AddItems Then
-9                 Call OpenSolverMain.AddMenuItems
-10            Else
-11                Call OpenSolverMain.DelMenuItems
-12            End If
-13        End If
-End Sub
-
 '====================================================================
 ' Excel Code Exporter by Mike Woodhouse
 ' Released under MIT License at https://xlvbadevtools.codeplex.com/
