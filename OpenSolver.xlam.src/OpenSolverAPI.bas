@@ -307,8 +307,69 @@ End Function
 
 Public Sub SetConstraintRhs(Index As Long, ConstraintRhsRange As Range, ConstraintRhsFormula As String, Optional book As Workbook, Optional sheet As Worksheet)
     If ConstraintRhsRange Is Nothing Then
-        SetSolverNameOnSheet "rhs", ConstraintRhsFormula, book, sheet
+        SetSolverNameOnSheet "rhs" & Index, ConstraintRhsFormula, book, sheet
     Else
         SetNamedRangeIfExists "solver_rhs" & Index, ConstraintRhsRange, book, sheet
     End If
+End Sub
+
+Public Sub DeleteConstraint(Index As Long, Optional book As Workbook, Optional sheet As Worksheet)
+    Dim NumConstraints As Long
+    NumConstraints = GetNumConstraints(book, sheet)
+    
+    If Index > NumConstraints Or Index < 1 Then Exit Sub
+    
+    ' Shift all the constraints down one position
+    Dim i As Long
+    For i = Index To NumConstraints - 1
+        Dim LHSRange As Range, Relation As RelationConsts, RHSFormula As String, RHSRange As Range, RHSValue As Double, RHSRefersToFormula As Boolean
+        Set LHSRange = GetConstraintLhs(i + 1, book, sheet)
+        Relation = GetConstraintRel(i + 1, book, sheet)
+        Set RHSRange = GetConstraintRhs(i + 1, RHSFormula, RHSValue, RHSRefersToFormula, book, sheet)
+        UpdateConstraint i, LHSRange, Relation, RHSRange, RHSFormula, book, sheet
+    Next i
+    
+    DeleteSolverNameOnSheet "lhs" & NumConstraints, book, sheet
+    DeleteSolverNameOnSheet "rel" & NumConstraints, book, sheet
+    DeleteSolverNameOnSheet "rhs" & NumConstraints, book, sheet
+    
+    SetNumConstraints NumConstraints - 1, book, sheet
+End Sub
+
+Public Sub AddConstraint(LHSRange As Range, Relation As RelationConsts, Optional RHSRange As Range, Optional RHSFormula As String, Optional book As Workbook, Optional sheet As Worksheet)
+    Dim NewIndex As Long
+    NewIndex = GetNumConstraints(book, sheet) + 1
+    UpdateConstraint NewIndex, LHSRange, Relation, RHSRange, RHSFormula, book, sheet
+End Sub
+
+Public Sub UpdateConstraint(Index As Long, LHSRange As Range, Relation As RelationConsts, Optional RHSRange As Range, Optional RHSFormula As String, Optional book As Workbook, Optional sheet As Worksheet)
+    SetConstraintLhs Index, LHSRange, book, sheet
+    SetConstraintRel Index, Relation, book, sheet
+    
+    Select Case Relation
+    Case RelationINT
+        RHSFormula = "integer"
+    Case RelationBIN
+        RHSFormula = "binary"
+    Case RelationAllDiff
+        RHSFormula = "alldiff"
+    End Select
+    If left(RHSFormula, 1) <> "=" Then RHSFormula = "=" & RHSFormula
+    
+    SetConstraintRhs Index, RHSRange, RHSFormula, book, sheet
+    
+    If Index > GetNumConstraints(book, sheet) Then SetNumConstraints Index, book, sheet
+End Sub
+
+Public Sub ResetModel(Optional book As Workbook, Optional sheet As Worksheet)
+    Dim SolverNames() As Variant, OpenSolverNames() As Variant, Name As Variant
+    SolverNames = Array("opt", "typ", "adj", "neg", "sho", "rlx", "tol", "tim", "pre", "itr", "num", "val")
+    OpenSolverNames = Array("ChosenSolver", "DualsNewSheet", "UpdateSensitivity", "LinearityCheck", "Duals")
+    
+    For Each Name In SolverNames
+        DeleteSolverNameOnSheet CStr(Name), book, sheet
+    Next Name
+    For Each Name In OpenSolverNames
+        DeleteNameOnSheet "OpenSolver_" & CStr(Name), book, sheet
+    Next Name
 End Sub

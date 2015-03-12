@@ -563,27 +563,9 @@ ContinueSaving:
 3936      SetNumConstraints Constraints.Count
           Dim RHSstring As String, rel As RelationConsts, constraintNum As String
 3937      For c = 1 To Constraints.Count
-              constraintNum = CStr(c)
-3939          SetConstraintLhs c, Constraints(c).LHS
-              
-              rel = RelationStringToEnum(Constraints(c).ConstraintType)
-3940          SetConstraintRel c, rel
-
-3938          Select Case rel
-              Case RelationINT
-                  RHSstring = "integer"
-              Case RelationBIN
-                  RHSstring = "binary"
-              Case RelationAllDiff
-                  RHSstring = "alldiff"
-              Case Else
-3951              If Constraints(c).RHS Is Nothing Then
-3953                  RHSstring = Constraints(c).RHSstring
-3960              End If
-3967          End Select
-
-              If left(RHSstring, 1) <> "=" Then RHSstring = "=" & RHSstring
-              SetConstraintRhs c, Constraints(c).RHS, RHSstring
+              With Constraints(c)
+                  UpdateConstraint c, .LHS, RelationStringToEnum(.ConstraintType), .RHS, .RHSstring
+              End With
 3968      Next c
           
 3969      SetDuals Duals
