@@ -2085,7 +2085,6 @@ Public Sub CreateScriptFile(ByRef ScriptFilePath As String, FileContents As Stri
 751       Print #1, FileContents
 752       Close #1
           
-          ' Make shell script executable on Mac
 #If Mac Then
 753       system ("chmod +x " & MakePathSafe(ScriptFilePath))
 #End If
