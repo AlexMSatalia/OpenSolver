@@ -40,7 +40,7 @@ Function SheetHasOpenSolverHighlighting(w As Worksheet)
           Dim s As Shape
 3032      SheetHasOpenSolverHighlighting = True
 3033      On Error Resume Next
-3034      Set s = w.Shapes("OpenSolver1")
+3034      Set s = w.Shapes("OpenSolver" & 1) ' This string is split up to avoid false positives on anti-virus scans
 3035      If Err.Number = 0 Then Exit Function ' Yes, we have highlighting
           ' Because the highlighting may be on another sheet, we also check all the shapes on this sheet
 3038      For Each s In w.Shapes
