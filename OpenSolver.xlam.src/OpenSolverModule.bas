@@ -703,7 +703,7 @@ Function GetNamedDoubleWithDefault(Name As String, Optional book As Workbook, Op
     Dim value As String
     If Not GetNameValueIfExists(book, EscapeSheetName(sheet) & Name, value) Then GoTo SetDefault
     On Error GoTo SetDefault
-    GetNamedDoubleWithDefault = CDbl(value)
+    GetNamedDoubleWithDefault = ConvertToCurrentLocale(value)
     Exit Function
     
 SetDefault:
@@ -1660,7 +1660,7 @@ doesntExist:
 End Sub
 
 Sub SetBooleanNameOnSheet(Name As String, value As Boolean, Optional book As Workbook, Optional sheet As Worksheet)
-    SetNameOnSheet Name, "=" & UCase(CStr(value)), book, sheet
+    SetNameOnSheet Name, "=" & IIf(value, "TRUE", "FALSE"), book, sheet
 End Sub
 
 Sub SetDoubleNameOnSheet(Name As String, value As Double, Optional book As Workbook, Optional sheet As Worksheet)

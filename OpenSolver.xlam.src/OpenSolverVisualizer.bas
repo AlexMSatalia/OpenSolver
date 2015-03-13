@@ -505,7 +505,13 @@ Function ShowSolverModel() As Boolean
           
           ' Checks to see if a model exists internally
 3316      Dim AdjustableCells As Range
+          On Error Resume Next
           Set AdjustableCells = GetDecisionVariablesNoOverlap(book)
+          ' Don't try to highlight if we have no vars
+          If AdjustableCells Is Nothing Then
+              ShowSolverModel = False
+              GoTo ExitFunction
+          End If
           
           ' Highlight the decision variables
 3322      AddDecisionVariableHighlighting AdjustableCells
