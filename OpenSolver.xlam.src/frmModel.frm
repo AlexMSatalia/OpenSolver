@@ -85,8 +85,7 @@ Sub Disabler(TrueIfEnable As Boolean)
 
 4180      chkGetDuals.Enabled = TrueIfEnable
 4181      chkGetDuals2.Enabled = TrueIfEnable
-4182      optUpdate.Enabled = chkGetDuals2.value And TrueIfEnable
-4183      optNew.Enabled = chkGetDuals2.value And TrueIfEnable
+4182      chkGetDuals2_Click
 
 4184      refDuals.Enabled = TrueIfEnable And chkGetDuals.value And chkGetDuals.Enabled
 
@@ -107,8 +106,7 @@ Sub Disabler(TrueIfEnable As Boolean)
               ' Disable dual options
 4204          chkGetDuals2.Enabled = False
 4205          chkGetDuals.Enabled = False
-4206          optUpdate.Enabled = False
-4207          optNew.Enabled = False
+4206          chkGetDuals2_Click
 4208      End If
 
           '============================================================================================
@@ -134,8 +132,7 @@ Sub UpdateFormFromMemory()
 4223      lstConstraints_Change
 
           chkGetDuals2.value = GetDualsNewSheet()
-4237      optUpdate.Enabled = chkGetDuals2.value
-4238      optNew.Enabled = chkGetDuals2.value
+4237      chkGetDuals2_Click
 
           optUpdate.value = GetUpdateSensitivity()
 4242      optNew.value = Not optUpdate.value
@@ -146,8 +143,8 @@ Private Sub chkGetDuals_Click()
 End Sub
 
 Private Sub chkGetDuals2_Click()
-4253      optUpdate.Enabled = chkGetDuals2.value
-4254      optNew.Enabled = chkGetDuals2.value
+4253      optUpdate.Enabled = chkGetDuals2.value And chkGetDuals2.Enabled
+4254      optNew.Enabled = chkGetDuals2.value And chkGetDuals2.Enabled
 End Sub
 
 Private Sub chkNameRange_Click()
