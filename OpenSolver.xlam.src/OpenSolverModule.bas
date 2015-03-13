@@ -1810,15 +1810,9 @@ End Sub
 
 Function SystemIs64Bit() As Boolean
 #If Mac Then
-          ' Check bitness of Mac by attempting to load 64-bit kernel
-          ' http://macscripter.net/viewtopic.php?pid=137569#p137569
-          Dim script As String
-664       script = "try" & vbNewLine & _
-                 "return ((do shell script ""sysctl -n hw.optional.x86_64"") as integer) as boolean" & vbNewLine & _
-             "on error" & vbNewLine & _
-                 "return false" & vbNewLine & _
-             "end try"
-665       SystemIs64Bit = MacScript(script)
+          Dim result As String
+664       result = execShell("uname -a")
+665       SystemIs64Bit = (InStr(result, "x86_64") > 0)
 #Else
           ' Is true if the Windows system is a 64 bit one
           ' If Not Environ("ProgramFiles(x86)") = "" Then Is64Bit=True, or
