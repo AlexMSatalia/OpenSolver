@@ -171,42 +171,6 @@ Public TempFolderPathCached As String
     #End If
 #End If
 
-'Code Courtesy of Dev Ashish
-#If VBA7 Then
-    Private Declare PtrSafe Function apiShellExecute Lib "shell32.dll" _
-        Alias "ShellExecuteA" _
-        (ByVal hwnd As LongPtr, _
-        ByVal lpOperation As String, _
-        ByVal lpFile As String, _
-        ByVal lpParameters As String, _
-        ByVal lpDirectory As String, _
-        ByVal nShowCmd As Long) _
-        As Long
-#Else
-    Private Declare Function apiShellExecute Lib "shell32.dll" _
-        Alias "ShellExecuteA" _
-        (ByVal hwnd As Long, _
-        ByVal lpOperation As String, _
-        ByVal lpFile As String, _
-        ByVal lpParameters As String, _
-        ByVal lpDirectory As String, _
-        ByVal nShowCmd As Long) _
-        As Long
-#End If
-
-Public Const WIN_NORMAL = 1         'Open Normal
-Public Const WIN_MAX = 2            'Open Maximized
-Public Const WIN_MIN = 3            'Open Minimized
-
-Private Const ERROR_SUCCESS = 32&
-Private Const ERROR_NO_ASSOC = 31&
-Private Const ERROR_OUT_OF_MEM = 0&
-Private Const ERROR_FILE_NOT_FOUND = 2&
-Private Const ERROR_PATH_NOT_FOUND = 3&
-Private Const ERROR_BAD_FORMAT = 11&
-
-
-
 '=====================================================================
 #If Mac Then
     Public Declare Sub SleepSeconds Lib "libc.dylib" Alias "sleep" (ByVal Seconds As Long)
@@ -913,43 +877,6 @@ ErrorHandler:
           GoTo ExitSub
 End Sub
 
-'Code Courtesy of
-'Dev Ashish
-Public Function fHandleFile(stFile As String, lShowHow As Long)
-' Used to open a URL
-      Dim lRet As Long, varTaskID As Variant
-      Dim stRet As String
-          Dim hwnd
-          ' Dim StartDoc
-          ' hwnd = apiFindWindow("OPUSAPP", "0")
-          'First try ShellExecute
-442       lRet = apiShellExecute(hwnd, vbNullString, _
-                  stFile, vbNullString, vbNullString, lShowHow)
-                  
-443       If lRet > ERROR_SUCCESS Then
-444           stRet = vbNullString
-445           lRet = -1
-446       Else
-447           Select Case lRet
-                  Case ERROR_NO_ASSOC:
-                      'Try the OpenWith dialog
-448                   varTaskID = Shell("rundll32.exe shell32.dll,OpenAs_RunDLL " _
-                              & stFile, WIN_NORMAL)
-449                   lRet = (varTaskID <> 0)
-450               Case ERROR_OUT_OF_MEM:
-451                   stRet = "Error: Out of Memory/Resources. Couldn't Execute!"
-452               Case ERROR_FILE_NOT_FOUND:
-453                   stRet = "Error: File not found.  Couldn't Execute!"
-454               Case ERROR_PATH_NOT_FOUND:
-455                   stRet = "Error: Path not found. Couldn't Execute!"
-456               Case ERROR_BAD_FORMAT:
-457                   stRet = "Error:  Bad File Format. Couldn't Execute!"
-458               Case Else:
-459           End Select
-460       End If
-461       fHandleFile = lRet & IIf(stRet = "", vbNullString, ", " & stRet)
-End Function
-
 Function GetExistingFilePathName(Directory As String, FileName As String, ByRef pathName As String) As Boolean
 462      pathName = JoinPaths(Directory, FileName)
 463      GetExistingFilePathName = FileOrDirExists(pathName)
@@ -1655,15 +1582,7 @@ Public Sub OpenURL(URL As String)
           RaiseError = False
           On Error GoTo ErrorHandler
 
-#If Mac Then
-          ' Use applescript to open the webpage
-          Dim s As String
-732       s = "open location """ + URL + """"
-733       MacScript s
-#Else
-          ' Use windows file handler to open webpage
-734       Call fHandleFile(URL, WIN_NORMAL)
-#End If
+          ThisWorkbook.FollowHyperlink URL
 
 ExitSub:
           If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
