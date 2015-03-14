@@ -561,7 +561,6 @@ ContinueSaving:
           
           ' Constraints
 3936      SetNumConstraints Constraints.Count
-          Dim RHSstring As String, rel As RelationConsts, constraintNum As String
 3937      For c = 1 To Constraints.Count
               With Constraints(c)
                   UpdateConstraint c, .LHS, RelationStringToEnum(.ConstraintType), .RHS, .RHSstring

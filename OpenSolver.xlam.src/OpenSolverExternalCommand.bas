@@ -79,7 +79,6 @@ Option Explicit
         End Type
     #End If
 
-    Private Const WAIT_INFINITE         As Long = (-1&)
     Private Const NORMAL_PRIORITY_CLASS As Long = &H20&
     Private Const STARTF_USESHOWWINDOW  As Long = &H1
     Private Const STARTF_USESTDHANDLES  As Long = &H100
@@ -143,7 +142,6 @@ Public Function RunExternalCommand(CommandString As String, Optional LogPath As 
                 ret = system(FullCommand)
                 If ret = 0 Then RunExternalCommand = True
             Else
-                Dim CommandToRun As String
                 ' Applescript escapes double quotes with a backslash
                 FullCommand = Replace(FullCommand, """", "\""")
             
@@ -183,7 +181,7 @@ Public Function RunExternalCommand(CommandString As String, Optional LogPath As 
         End If
 
     #Else
-        RunExternalCommand = RunCommand(FullCommand, WindowStyle, ExitCode, False, 0&, 0&, WaitForCompletion)
+        RunExternalCommand = RunCommand(FullCommand, WindowStyle, ExitCode, False, 0&, WaitForCompletion)
     #End If
 
 ExitFunction:
@@ -237,7 +235,7 @@ Public Function ReadExternalCommandOutput(CommandString As String, Optional LogP
         Dim hRead As Long, hWrite As Long
         If (CreatePipe(hRead, hWrite, tSA_CreatePipe, 0&) <> 0&) Then
             ' Run the command inside our pipe
-            RunCommand CommandString, Hide, ExitCode, True, hRead, hWrite, True
+            RunCommand CommandString, Hide, ExitCode, True, hWrite, True
             
             ' Read the results from the pipe
             Dim lngSizeOf As Long
@@ -283,7 +281,7 @@ ErrorHandler:
     #End If
 End Function
 
-Private Function RunCommand(CommandString As String, Optional WindowStyle As WindowStyleType = Hide, Optional ExitCode As Long, Optional IsBeingPiped As Boolean, Optional hRead As Long, Optional hWrite As Long, Optional WaitForCompletion As Boolean = True) As Boolean
+Private Function RunCommand(CommandString As String, Optional WindowStyle As WindowStyleType = Hide, Optional ExitCode As Long, Optional IsBeingPiped As Boolean, Optional hWrite As Long, Optional WaitForCompletion As Boolean = True) As Boolean
 ' Helper function to spawn a new process for our command. Returns true if process starts/runs successfully
 '     CommandString:        the command to run
 '     WindowStyle:          the visibility of the process
@@ -400,13 +398,8 @@ Private Function DLLErrorText(ByVal lLastDLLError As Long) As String
 ' From http://stackoverflow.com/questions/1439200/vba-shell-and-wait-with-exit-code
     Dim sBuff As String * 256
     Dim lCount As Long
-    Const FORMAT_MESSAGE_ALLOCATE_BUFFER = &H100
-    Const FORMAT_MESSAGE_ARGUMENT_ARRAY = &H2000
-    Const FORMAT_MESSAGE_FROM_HMODULE = &H800
-    Const FORMAT_MESSAGE_FROM_STRING = &H400
     Const FORMAT_MESSAGE_FROM_SYSTEM = &H1000
     Const FORMAT_MESSAGE_IGNORE_INSERTS = &H200
-    Const FORMAT_MESSAGE_MAX_WIDTH_MASK = &HFF
 
     lCount = FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM Or FORMAT_MESSAGE_IGNORE_INSERTS, 0, lLastDLLError, 0&, sBuff, Len(sBuff), ByVal 0)
     If lCount Then

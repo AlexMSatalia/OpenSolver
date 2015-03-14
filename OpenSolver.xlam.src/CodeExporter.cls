@@ -50,20 +50,9 @@ Private Sub WriteCode()
 
 End Sub
 
-Private Function IsExportable(codeComponent As VBComponent) As Boolean
-         
-6032     Select Case codeComponent.Type
-             Case vbext_ct_ClassModule, vbext_ct_MSForm, vbext_ct_StdModule
-6033             IsExportable = True
-6034         Case Else
-6035             IsExportable = True
-6036     End Select
-
-End Function
-
 Private Function ExportFileNameFor(codeComponent As VBComponent) As String
 
-      Dim extension As String
+         Dim extension As String
 
 6037     Select Case codeComponent.Type
              Case vbext_ct_ClassModule
