@@ -1142,9 +1142,9 @@ Function SolveModel(SolveRelaxation As Boolean, ShouldMinimiseUserInteraction As
 1378      End If
 
           'Delete any existing log file
-          Dim logPath As String
-1379      logPath = GetTempFilePath("log1.tmp")
-1380      DeleteFileAndVerify logPath
+          Dim LogPath As String
+1379      LogPath = GetTempFilePath("log1.tmp")
+1380      DeleteFileAndVerify LogPath
 
 1381      ModelFilePathName = ModelFilePath(Solver)
           
@@ -1368,7 +1368,7 @@ Sub SolveModel_LinearLocal(ModelFilePathName As String, SolveRelaxation As Boole
          
           Dim logCommand As String, logFileName As String
 1570      logFileName = "log1.tmp"
-1571      logCommand = MakePathSafe(GetTempFilePath(logFileName))
+1571      logCommand = GetTempFilePath(logFileName)
          
 1569      ExternalSolverPathName = CreateSolveScript(Solver, SolutionFilePathName, ExtraParameters, SolveOptions, Me)
 

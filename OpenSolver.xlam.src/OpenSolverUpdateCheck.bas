@@ -45,7 +45,7 @@ Private Function GetFilesPageText_Mac() As String
 
     ' -L follows redirects, -m sets Max Time
     Cmd = "curl -L -m 10 " & FilesPageUrl
-    result = execShell(Cmd, ExitCode)
+    result = ReadExternalCommandOutput(Cmd, ExitCode:=ExitCode)
     
     If ExitCode = 0 Then
         GetFilesPageText_Mac = result

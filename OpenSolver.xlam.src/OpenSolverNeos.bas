@@ -37,9 +37,9 @@ Function CallNEOS(ModelFilePathName As String, Solver As String, Optional Minimi
           End If
    
           ' Dump the whole NEOS response to log file
-          Dim logPath As String
-          logPath = GetTempFilePath("log1.tmp")
-          Open logPath For Output As #1
+          Dim LogPath As String
+          LogPath = GetTempFilePath("log1.tmp")
+          Open LogPath For Output As #1
               Print #1, CallNEOS
           Close #1
 
@@ -117,7 +117,7 @@ Private Function SendToNeos_Mac(method As String, param1 As String, Optional par
     NeosClientDir = JoinPaths(JoinPaths(ThisWorkbook.Path, SolverDir), SolverDirMac)
     GetExistingFilePathName NeosClientDir, NEOS_SCRIPT_FILE, SolverPath
     SolverPath = MakePathSafe(SolverPath)
-    system ("chmod +x " & SolverPath)
+    RunExternalCommand "chmod +x " & SolverPath
 
     Dim SolutionFilePathName As String
     SolutionFilePathName = GetTempFilePath(NEOS_RESULT_FILE)
@@ -126,9 +126,8 @@ Private Function SendToNeos_Mac(method As String, param1 As String, Optional par
     Dim LogFilePathName As String
     LogFilePathName = GetTempFilePath("log1.tmp")
     DeleteFileAndVerify LogFilePathName
-    LogFilePathName = MakePathSafe(LogFilePathName)
     
-    If Not RunExternalCommand(SolverPath & " " & method & " " & MakePathSafe(SolutionFilePathName) & " " & param1 & " " & param2, LogFilePathName) Then
+    If Not RunExternalCommand(SolverPath & " " & method & " " & MakePathSafe(SolutionFilePathName) & " " & param1 & " " & param2, LogFilePathName, Hide, True) Then
         Err.Raise OpenSolver_NeosError, Description:="Error while contacting NEOS"
     End If
     

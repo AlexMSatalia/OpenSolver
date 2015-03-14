@@ -171,119 +171,6 @@ Public TempFolderPathCached As String
     #End If
 #End If
 
-'***************** Code Start ******************
-'This code was originally written by Terry Kreft.
-'It is not to be altered or distributed,
-'except as part of an application.
-'You are free to use it in any application,
-'provided the copyright notice is left unchanged.
-'
-'Code Courtesy of
-'Terry Kreft
-Private Const STARTF_USESHOWWINDOW& = &H1
-Private Const NORMAL_PRIORITY_CLASS = &H20&
-Private Const INFINITE = -1&
-
-
-#If VBA7 Then
-
-    Private Type STARTUPINFO
-        cb As Long
-        lpReserved As String
-        lpDesktop As String
-        lpTitle As String
-        dwX As Long
-        dwY As Long
-        dwXSize As Long
-        dwYSize As Long
-        dwXCountChars As Long
-        dwYCountChars As Long
-        dwFillAttribute As Long
-        dwFlags As Long
-        wShowWindow As Long
-        cbReserved2 As Long
-        lpReserved2 As Long
-        hStdInput As LongPtr
-        hStdOutput As LongPtr
-        hStdError As LongPtr
-    End Type
-    
-    Private Type PROCESS_INFORMATION
-        hProcess As LongPtr
-        hThread As LongPtr
-        dwProcessID As Long
-        dwThreadID As Long
-    End Type
-    
-    Private Declare PtrSafe Function WaitForSingleObject Lib "kernel32" (ByVal _
-    hHandle As LongPtr, ByVal dwMilliseconds As Long) As Long
-    
-    Private Declare PtrSafe Function CreateProcessA Lib "kernel32" (ByVal _
-        lpApplicationName As Long, ByVal lpCommandLine As String, ByVal _
-        lpProcessAttributes As Long, ByVal lpThreadAttributes As Long, _
-        ByVal bInheritHandles As Long, ByVal dwCreationFlags As Long, _
-        ByVal lpEnvironment As Long, ByVal lpCurrentDirectory As Long, _
-        lpStartupInfo As STARTUPINFO, lpProcessInformation As _
-        PROCESS_INFORMATION) As Long
-    
-    Private Declare PtrSafe Function CloseHandle Lib "kernel32" (ByVal _
-        hObject As LongPtr) As Long
-#Else
-
-    Private Type STARTUPINFO
-        cb As Long
-        lpReserved As String
-        lpDesktop As String
-        lpTitle As String
-        dwX As Long
-        dwY As Long
-        dwXSize As Long
-        dwYSize As Long
-        dwXCountChars As Long
-        dwYCountChars As Long
-        dwFillAttribute As Long
-        dwFlags As Long
-        wShowWindow As Long
-        cbReserved2 As Long
-        lpReserved2 As Long
-        hStdInput As Long
-        hStdOutput As Long
-        hStdError As Long
-    End Type
-    
-    Private Type PROCESS_INFORMATION
-        hProcess As Long
-        hThread As Long
-        dwProcessID As Long
-        dwThreadID As Long
-    End Type
-
-    Private Declare Function WaitForSingleObject Lib "kernel32" (ByVal _
-    hHandle As Long, ByVal dwMilliseconds As Long) As Long
-    Private Declare Function CreateProcessA Lib "kernel32" (ByVal _
-    lpApplicationName As Long, ByVal lpCommandLine As String, ByVal _
-    lpProcessAttributes As Long, ByVal lpThreadAttributes As Long, _
-    ByVal bInheritHandles As Long, ByVal dwCreationFlags As Long, _
-    ByVal lpEnvironment As Long, ByVal lpCurrentDirectory As Long, _
-    lpStartupInfo As STARTUPINFO, lpProcessInformation As _
-    PROCESS_INFORMATION) As Long
-    Private Declare Function CloseHandle Lib "kernel32" (ByVal _
-    hObject As Long) As Long
-#End If
-'***************** Code End Terry Kreft ****************
-#If VBA7 Then
-    Declare PtrSafe Function TerminateProcess Lib "kernel32.dll" (ByVal ApphProcess As LongPtr, _
-    ByVal uExitCode As Long) As Long
-#Else
-    Declare Function TerminateProcess Lib "kernel32.dll" (ByVal ApphProcess As Long, _
-    ByVal uExitCode As Long) As Long
-#End If
-
-' For ShowWindow
-Public Const SW_HIDE = 0
-Public Const SW_SHOWNORMAL = 1
-Public Const SW_SHOWMINIMIZED = 2
-
 'Code Courtesy of Dev Ashish
 #If VBA7 Then
     Private Declare PtrSafe Function apiShellExecute Lib "shell32.dll" _
@@ -318,17 +205,7 @@ Private Const ERROR_FILE_NOT_FOUND = 2&
 Private Const ERROR_PATH_NOT_FOUND = 3&
 Private Const ERROR_BAD_FORMAT = 11&
 
-#If VBA7 Then
-   Private Declare PtrSafe Function GetExitCodeProcess Lib "kernel32" (ByVal hProcess As LongPtr, lpExitCode As Long) As Long
-#Else
-   Private Declare Function GetExitCodeProcess Lib "kernel32" (ByVal hProcess As Long, lpExitCode As Long) As Long
-#End If
 
-#If VBA7 Then
-  Private Declare PtrSafe Function FormatMessage Lib "kernel32" Alias "FormatMessageA" (ByVal dwFlags As Long, lpSource As Any, ByVal dwMessageId As Long, ByVal dwLanguageId As Long, ByVal lpBuffer As String, ByVal nSize As Long, Arguments As LongPtr) As Long
-#Else
-  Private Declare Function FormatMessage Lib "kernel32" Alias "FormatMessageA" (ByVal dwFlags As Long, lpSource As Any, ByVal dwMessageId As Long, ByVal dwLanguageId As Long, ByVal lpBuffer As String, ByVal nSize As Long, Arguments As Long) As Long
-#End If
 
 '=====================================================================
 #If Mac Then
@@ -338,197 +215,12 @@ Private Const ERROR_BAD_FORMAT = 11&
 #Else
     Public Declare Sub Sleep Lib "kernel32" (ByVal dwMilliseconds As Long)
 #End If
-
-#If Mac Then
-    Public Declare Function system Lib "libc.dylib" (ByVal command As String) As Long
-#End If
-
-#If Mac Then
-    Private Declare Function popen Lib "libc.dylib" (ByVal command As String, ByVal mode As String) As Long
-    Private Declare Function pclose Lib "libc.dylib" (ByVal file As Long) As Long
-    Private Declare Function fread Lib "libc.dylib" (ByVal outStr As String, ByVal Size As Long, ByVal Items As Long, ByVal stream As Long) As Long
-    Private Declare Function feof Lib "libc.dylib" (ByVal file As Long) As Long
-#End If
     
 #If Win32 Then
     Sub SleepSeconds(Seconds As Long)
         Sleep Seconds * 1000
     End Sub
 #End If
-
-#If Mac Then
-    Function execShell(command As String, Optional ByRef ExitCode As Long) As String
-        Dim file As Long
-        file = popen(command, "r")
-    
-        If file = 0 Then
-            Exit Function
-        End If
-    
-        While feof(file) = 0
-            Dim chunk As String
-            Dim read As Long
-            chunk = Space(50)
-            read = fread(chunk, 1, Len(chunk) - 1, file)
-            If read > 0 Then
-                chunk = left$(chunk, read)
-                execShell = execShell & chunk
-            End If
-        Wend
-    
-        ExitCode = pclose(file)
-    End Function
-#End If
-
-'***************** Code Start ******************
-'This code was originally written by Terry Kreft.
-'It is not to be altered or distributed,
-'except as part of an application.
-'You are free to use it in any application,
-'provided the copyright notice is left unchanged.
-'
-'Code Courtesy of
-'Terry Kreft
-' Modified by A Mason
-Function RunExternalCommand(CommandString As String, Optional logPath As String, Optional WindowStyle As Long, Optional WaitForCompletion As Boolean, Optional exeResult As Long) As Boolean
-          Dim RaiseError As Boolean
-          RaiseError = False
-          On Error GoTo ErrorHandler
-
-#If Mac Then
-          If WindowStyle = SW_HIDE Then
-              Dim ret As Long
-26            ret = system(CommandString & IIf(logPath <> "", " > " & logPath, ""))
-27            If ret = 0 Then RunExternalCommand = True
-          Else
-              Dim CommandToRun As String
-              ' Applescript escapes double quotes with a backslash
-              CommandToRun = Replace(CommandString, """", "\""")
-              ' Pipe through tee if we are logging
-              If logPath <> "" Then
-                  CommandToRun = CommandToRun & " | tee " & Replace(logPath, """", "\""")
-              End If
-          
-              ' Applescript for opening a terminal to run our command
-              ' 1. Create window if terminal not already open, then activate window
-              ' 2. Run our shell command in the terminal, saving a reference to the open window
-              ' 3. Loop until the window is no longer busy
-              Dim script As String
-              script = _
-                  "tell application ""Terminal""" & vbNewLine & _
-                  "    if not (exists window 1) then reopen" & vbNewLine & _
-                  "    activate" & vbNewLine & _
-                  "    set w to do script """ & CommandToRun & """ in window 1" & vbNewLine & _
-                  "    repeat" & vbNewLine & _
-                  "        delay 1" & vbNewLine & _
-                  "        if not busy of w then exit repeat" & vbNewLine & _
-                  "    end repeat" & vbNewLine & _
-                  "end tell"
-              MacScript (script)
-          End If
-              
-#Else
-      'TODO: Optional for Boolean doesn't seem to work IsMissing is always false and value is false?
-      ' Returns true if successful completion, false if escape was pressed
-28        RunExternalCommand = False
-30        exeResult = -1
-          Dim proc As PROCESS_INFORMATION
-          Dim start As STARTUPINFO
-          Dim ret As Long
-          ' Initialize the STARTUPINFO structure:
-31        With start
-32            .cb = Len(start)
-33        If Not IsMissing(WindowStyle) Then
-34            .dwFlags = STARTF_USESHOWWINDOW
-35            .wShowWindow = WindowStyle
-36        End If
-37        End With
-
-          If logPath <> "" Then
-              If WindowStyle = SW_HIDE Then
-                  logPath = " > " & logPath
-              Else
-                  Dim mteePath As String
-                  GetExistingFilePathName JoinPaths(JoinPaths(ThisWorkbook.Path, "Utils"), "mtee"), "mtee.exe", mteePath
-                  logPath = " | " & MakePathSafe(mteePath) & " " & logPath
-              End If
-          End If
-
-          ' Start the shelled application:
-38        ret& = CreateProcessA(0&, CommandString & logPath, 0&, 0&, 1&, _
-                                NORMAL_PRIORITY_CLASS, 0&, 0&, start, proc)
-39        If ret& = 0 Then
-41            Err.Raise Number:=OpenSolver_ExecutableError, Description:="Unable to run the external program: " & CommandString & ". " & vbCrLf & vbCrLf & _
-                                                                         "Error " & Err.LastDllError & ": " & DLLErrorText(Err.LastDllError)
-42        End If
-43        If Not IsMissing(WaitForCompletion) Then
-44            If Not WaitForCompletion Then GoTo ExitSuccessfully
-45        End If
-          
-          ' Wait for the shelled application to finish:
-46        On Error GoTo ErrorHandler
-47        Do
-              ' We split time between Excel and checking the solver process in 20:1 ratio, so hopefully a 20:1 chance of catching an escape press
-48            ret& = WaitForSingleObject(proc.hProcess, 10) ' Wait for up to 10 milliseconds
-              Sleep 200 ' Sleep in Excel to keep escape responsive
-              DoEvents
-49        Loop Until ret& <> 258
-
-          ' Get the return code for the executable; http://msdn.microsoft.com/en-us/library/windows/desktop/ms683189%28v=vs.85%29.aspx
-          Dim lExitCode As Long
-50        If GetExitCodeProcess(proc.hProcess, lExitCode) = 0 Then GoTo DLLErrorHandler
-51        If Not IsMissing(exeResult) Then
-52            exeResult = lExitCode
-53        End If
-
-ExitSuccessfully:
-54        RunExternalCommand = True
-          GoTo ExitFunction
-
-DLLErrorHandler:
-81        On Error Resume Next
-82        ret& = CloseHandle(proc.hProcess)
-          On Error GoTo 0
-83        Err.Raise Err.LastDllError, Description:=DLLErrorText(Err.LastDllError)
-#End If
-
-ExitFunction:
-          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
-          Exit Function
-
-ErrorHandler:
-          If Not ReportError("OpenSolverModule", "RunExternalCommand") Then Resume
-          RaiseError = True
-          
-          #If Win32 Then
-              On Error Resume Next
-              If OpenSolverErrorHandler.ErrNum = OpenSolver_UserCancelledError Then
-                  TerminateProcess proc.hProcess, 0
-              Else
-                  ret& = CloseHandle(proc.hProcess)
-              End If
-              On Error GoTo 0
-          #End If
-          GoTo ExitFunction
-End Function
-'***************** Code End Terry Kreft ****************
-
-' From http://stackoverflow.com/questions/1439200/vba-shell-and-wait-with-exit-code
-Public Function DLLErrorText(ByVal lLastDLLError As Long) As String
-          Dim sBuff As String * 256
-          Dim lCount As Long
-          Const FORMAT_MESSAGE_ALLOCATE_BUFFER = &H100, FORMAT_MESSAGE_ARGUMENT_ARRAY = &H2000
-          Const FORMAT_MESSAGE_FROM_HMODULE = &H800, FORMAT_MESSAGE_FROM_STRING = &H400
-          Const FORMAT_MESSAGE_FROM_SYSTEM = &H1000, FORMAT_MESSAGE_IGNORE_INSERTS = &H200
-          Const FORMAT_MESSAGE_MAX_WIDTH_MASK = &HFF
-
-84        lCount = FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM Or FORMAT_MESSAGE_IGNORE_INSERTS, 0, lLastDLLError, 0&, sBuff, Len(sBuff), ByVal 0)
-85        If lCount Then
-86            DLLErrorText = left$(sBuff, lCount - 2) ' Remove line feeds
-87        End If
-
-End Function
-
 
 Function GetTempFolder() As String
           Dim RaiseError As Boolean
@@ -593,6 +285,14 @@ Function JoinPaths(Path1 As String, Path2 As String) As String
 114       JoinPaths = Path1
 115       If right(" " & JoinPaths, 1) <> Application.PathSeparator Then JoinPaths = JoinPaths & Application.PathSeparator
 116       JoinPaths = JoinPaths & Path2
+End Function
+
+Function JoinPathsMult(ParamArray Paths() As Variant) As String
+          Dim i As Long
+          For i = LBound(Paths) To UBound(Paths) - 1
+              JoinPathsMult = JoinPathsMult & Paths(i) & IIf(right(Paths(i), 1) <> Application.PathSeparator, Application.PathSeparator, "")
+          Next i
+          JoinPathsMult = JoinPathsMult & Paths(UBound(Paths))
 End Function
 
 Function GetNameValueIfExists(w As Workbook, theName As String, ByRef value As String) As Boolean
@@ -1811,7 +1511,7 @@ End Sub
 Function SystemIs64Bit() As Boolean
 #If Mac Then
           Dim result As String
-664       result = execShell("uname -a")
+664       result = ReadExternalCommandOutput("uname -a")
 665       SystemIs64Bit = (InStr(result, "x86_64") > 0)
 #Else
           ' Is true if the Windows system is a 64 bit one
@@ -2065,7 +1765,7 @@ Public Function QuotePath(Path As String) As String
 End Function
 
 Public Function MakePathSafe(Path As String) As String
-    MakePathSafe = QuotePath(ConvertHfsPath(Path))
+    MakePathSafe = IIf(Len(Path) = 0, "", QuotePath(ConvertHfsPath(Path)))
 End Function
 
 Public Sub CreateScriptFile(ByRef ScriptFilePath As String, FileContents As String, Optional EnableEcho As Boolean)
@@ -2086,7 +1786,7 @@ Public Sub CreateScriptFile(ByRef ScriptFilePath As String, FileContents As Stri
 752       Close #1
           
 #If Mac Then
-753       system ("chmod +x " & MakePathSafe(ScriptFilePath))
+753       RunExternalCommand "chmod +x " & MakePathSafe(ScriptFilePath)
 #End If
 
 ExitSub:

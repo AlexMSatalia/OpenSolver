@@ -66,7 +66,7 @@ Function SolverAvailable_Bonmin(Optional SolverPath As String, Optional errorStr
 
 #If Mac Then
               ' Make sure Bonmin is executable on Mac
-9036          system ("chmod +x " & MakePathSafe(SolverPath))
+9036          RunExternalCommand "chmod +x " & MakePathSafe(SolverPath)
 #End If
           
 9037      End If
@@ -84,34 +84,11 @@ Function SolverVersion_Bonmin() As String
 9040          GoTo ExitFunction
 9041      End If
           
-          ' Set up Bonmin to write version info to text file
-          Dim logFile As String
-9042      logFile = GetTempFilePath("bonminversion.txt")
-9043      If FileOrDirExists(logFile) Then Kill logFile
-          
-          Dim RunPath As String, FileContents As String
-9044      RunPath = ScriptFilePath_Bonmin()
-9045      If FileOrDirExists(RunPath) Then Kill RunPath
-9046      FileContents = MakePathSafe(SolverPath) & " -v"
-9047      CreateScriptFile RunPath, FileContents
-          
-          ' Run Bonmin
-          Dim completed As Boolean
-9048      completed = RunExternalCommand(MakePathSafe(RunPath), MakePathSafe(logFile), SW_HIDE, True)
-          
-          ' Read version info back from output file
-          Dim Line As String
-9049      If FileOrDirExists(logFile) Then
-9051          Open logFile For Input As #1
-9052          Line Input #1, Line
-9053          Close #1
-9054          SolverVersion_Bonmin = Mid(Line, 8, 5)
-9056      Else
-9057          SolverVersion_Bonmin = ""
-9058      End If
+          Dim result As String
+9048      result = ReadExternalCommandOutput(MakePathSafe(SolverPath) & " -v")
+          SolverVersion_Bonmin = Mid(result, 8, 5)
 
 ExitFunction:
-          Close #1
           If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
           Exit Function
 

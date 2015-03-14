@@ -73,7 +73,7 @@ Function SolverAvailable_CBC(Optional SolverPath As String, Optional errorString
 6065          SolverAvailable_CBC = True
 #If Mac Then
               ' Make sure cbc is executable on Mac
-6066          system ("chmod +x " & MakePathSafe(SolverPath))
+6066          RunExternalCommand "chmod +x " & MakePathSafe(SolverPath)
 #End If
 6067      End If
 End Function
@@ -90,35 +90,11 @@ Function SolverVersion_CBC() As String
 6070          GoTo ExitFunction
 6071      End If
           
-          ' Set up cbc to write version info to text file
-          Dim logFile As String
-6072      logFile = GetTempFilePath("cbcversion.txt")
-6073      If FileOrDirExists(logFile) Then Kill logFile
-          
-          Dim RunPath As String, FileContents As String
-6074      RunPath = ScriptFilePath_CBC()
-6075      If FileOrDirExists(RunPath) Then Kill RunPath
-6076      FileContents = MakePathSafe(SolverPath) & " -exit"
-6077      CreateScriptFile RunPath, FileContents
-          
-          ' Run cbc
-          Dim completed As Boolean
-6078      completed = RunExternalCommand(MakePathSafe(RunPath), MakePathSafe(logFile), SW_HIDE, True) 'OSSolveSync
-          
-          ' Read version info back from output file
-          Dim Line As String
-6079      If FileOrDirExists(logFile) Then
-6081          Open logFile For Input As #1
-6082          Line Input #1, Line
-6083          Line Input #1, Line
-6084          Close #1
-6085          SolverVersion_CBC = Mid(Line, 10, 5)
-6087      Else
-6088          SolverVersion_CBC = ""
-6089      End If
+          Dim result As String
+6078      result = ReadExternalCommandOutput(MakePathSafe(SolverPath) & " -exit")
+          SolverVersion_CBC = Mid(result, InStr(result, "Version:") + 9, 5)
 
 ExitFunction:
-          Close #1
           If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
           Exit Function
 
@@ -462,7 +438,7 @@ Sub LaunchCommandLine_CBC()
                            & SolveOptionsString _
                            & " " & ExtraParametersString _
                            & " -" ' Force CBC to accept commands from the command line
-6365      RunExternalCommand MakePathSafe(SolverPath) & CBCRunString, "", SW_SHOWNORMAL, False
+6365      RunExternalCommand MakePathSafe(SolverPath) & CBCRunString, "", Normal, False
 
 ExitSub:
           Exit Sub

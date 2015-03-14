@@ -67,14 +67,14 @@ Function SolverAvailable_Couenne(Optional SolverPath As String, Optional errorSt
 
 #If Mac Then
               ' Make sure couenne is executable on Mac
-8374          system ("chmod +x " & MakePathSafe(SolverPath))
+8374          RunExternalCommand "chmod +x " & MakePathSafe(SolverPath)
 #End If
           
 8375      End If
 End Function
 
 Function SolverVersion_Couenne() As String
-      ' Get Couenne version by running 'couenne -v' at command line
+' Get Couenne version by running 'couenne -v' at command line
           Dim RaiseError As Boolean
           RaiseError = False
           On Error GoTo ErrorHandler
@@ -85,34 +85,11 @@ Function SolverVersion_Couenne() As String
 8378          GoTo ExitFunction
 8379      End If
           
-          ' Set up Couenne to write version info to text file
-          Dim logFile As String
-8380      logFile = GetTempFilePath("couenneversion.txt")
-8381      If FileOrDirExists(logFile) Then Kill logFile
-          
-          Dim RunPath As String, FileContents As String
-8382      RunPath = ScriptFilePath_Couenne()
-8383      If FileOrDirExists(RunPath) Then Kill RunPath
-8384      FileContents = MakePathSafe(SolverPath) & " -v"
-8385      CreateScriptFile RunPath, FileContents
-          
-          ' Run Couenne
-          Dim completed As Boolean
-8386      completed = RunExternalCommand(MakePathSafe(RunPath), MakePathSafe(logFile), SW_HIDE, True)
-          
-          ' Read version info back from output file
-          Dim Line As String
-8387      If FileOrDirExists(logFile) Then
-8389          Open logFile For Input As #1
-8390          Line Input #1, Line
-8391          Close #1
-8392          SolverVersion_Couenne = Mid(Line, 9, 5)
-8394      Else
-8395          SolverVersion_Couenne = ""
-8396      End If
+          Dim result As String
+8386      result = ReadExternalCommandOutput(MakePathSafe(SolverPath) & " -v")
+          SolverVersion_Couenne = Mid(result, 9, 5)
 
 ExitFunction:
-          Close #1
           If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
           Exit Function
 

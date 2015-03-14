@@ -131,32 +131,9 @@ Function SolverVersion_Gurobi() As String
 6394          GoTo ExitFunction
 6395      End If
           
-          ' Set up Gurobi to write version info to text file
-          Dim logFile As String
-6396      logFile = GetTempFilePath("gurobiversion.txt")
-6397      If FileOrDirExists(logFile) Then Kill logFile
-          
-          Dim RunPath As String, FileContents As String
-6398      RunPath = ScriptFilePath_Gurobi()
-6399      If FileOrDirExists(RunPath) Then Kill RunPath
-6400      FileContents = MakePathSafe(SolverPath) & " -v"
-6401      CreateScriptFile RunPath, FileContents
-          
-          ' Run Gurobi
-          Dim completed As Boolean
-6402      completed = RunExternalCommand(MakePathSafe(RunPath), MakePathSafe(logFile), SW_HIDE, True)
-          
-          ' Read version info back from output file
-          ' Output like 'Gurobi Optimizer version 5.6.3 (win64)'
-          Dim Line As String
-6403      If FileOrDirExists(logFile) Then
-6405          Open logFile For Input As #1
-6406          Line Input #1, Line
-6407          Close #1
-6408          SolverVersion_Gurobi = Mid(Line, 26, 5)
-6410      Else
-6411          SolverVersion_Gurobi = ""
-6412      End If
+          Dim result As String
+6402      result = ReadExternalCommandOutput(MakePathSafe(SolverPath) & " -v")
+          SolverVersion_Gurobi = Mid(result, 26, 5)
 
 ExitFunction:
           Close #1
@@ -180,38 +157,12 @@ Function SolverBitness_Gurobi() As String
 6417          SolverBitness_Gurobi = ""
 6418          GoTo ExitFunction
 6419      End If
-          
-          ' Set up Gurobi to write version info to text file
-          Dim logFile As String
-6420      logFile = GetTempFilePath("gurobiversion.txt")
-6421      If FileOrDirExists(logFile) Then Kill logFile
-          
-          Dim RunPath As String, FileContents As String
-6422      RunPath = ScriptFilePath_Gurobi()
-6423      If FileOrDirExists(RunPath) Then Kill RunPath
-6424      FileContents = MakePathSafe(SolverPath) & " -v"
-6425      CreateScriptFile RunPath, FileContents
-          
-          ' Run Gurobi
-          Dim completed As Boolean
-6426      completed = RunExternalCommand(MakePathSafe(RunPath), MakePathSafe(logFile), SW_HIDE, True)
-          
-          ' Read bitness info back from output file
-          ' Output like 'Gurobi Optimizer version 5.6.3 (win64)'
-          Dim Line As String
-6427      If FileOrDirExists(logFile) Then
-6429          Open logFile For Input As #1
-6430          Line Input #1, Line
-6431          Close #1
-6432          If right(Line, 3) = "64)" Then
-6433              SolverBitness_Gurobi = "64"
-6434          Else
-6435              SolverBitness_Gurobi = "32"
-6436          End If
-6437      End If
-    
+
+          Dim result As String
+          result = ReadExternalCommandOutput(MakePathSafe(SolverPath) & " -v")
+          SolverBitness_Gurobi = IIf(InStr(result, "64)") > 0, "64", "32")
+
 ExitFunction:
-          Close #1
           If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
           Exit Function
 
