@@ -99,8 +99,7 @@ Function SolverVersion_NOMAD() As String
 6995      SetCurrentDirectory NomadDir()
           
           ' Get version info from DLL
-6996      sNomadVersion = NomadVersion()
-6997      sNomadVersion = left(sNomadVersion, InStr(sNomadVersion, vbNullChar) - 1)
+6996      sNomadVersion = left(Replace(NomadVersion(), vbNullChar, ""), 5)
           
 6998      SetCurrentDirectory currentDir
           
@@ -120,8 +119,7 @@ Function DllVersion_NOMAD() As String
 7005      SetCurrentDirectory NomadDir()
           
           ' Get version info from DLL
-7006      sDllVersion = NomadDllVersion()
-7007      sDllVersion = left(sDllVersion, InStr(sDllVersion, vbNullChar) - 1)
+7006      sDllVersion = left(Replace(NomadDllVersion(), vbNullChar, ""), 5)
           
 7008      SetCurrentDirectory currentDir
           
