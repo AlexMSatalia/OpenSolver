@@ -129,11 +129,12 @@ Sub AutoUpdateCheck()
 End Sub
 
 Public Function GetUpdateSetting() As Boolean
+    ' From rondebruin.nl: The GetSetting default argument can't be an empty string on Mac
     Dim result As Variant
-    result = GetSetting(OpenSolverRegName, PreferencesRegName, CheckForUpdatesRegName, "")
+    result = GetSetting(OpenSolverRegName, PreferencesRegName, CheckForUpdatesRegName, "?")
     
     ' If registry key is missing, then check with user whether to autocheck
-    If result = "" Then
+    If result = "?" Then
         result = MsgBox("Would you like OpenSolver to automatically check for updates? " & vbNewLine & vbNewLine & _
                         "You can change this option at any time by going to ""About OpenSolver"". " & _
                         "You can also run update checks manually from there.", vbYesNo, "OpenSolver - Check for Updates?") = vbYes
