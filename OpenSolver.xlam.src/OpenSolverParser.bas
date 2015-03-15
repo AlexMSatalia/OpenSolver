@@ -18,9 +18,11 @@ Function ConvertCellToStandardName(rngCell As Range, Optional strParentName As S
 
           Dim strCleanAddress As String
 7438      strCleanAddress = rngCell.Address
-7441      strCleanAddress = Replace(strCleanAddress, "$", "")
-7442      strCleanAddress = Replace(strCleanAddress, ":", "_")
-7443      strCleanAddress = Replace(strCleanAddress, "-", "_")
+
+          Dim BannedChar As Variant
+          For Each BannedChar In Array("$", ":", "-")
+7441          strCleanAddress = Replace(strCleanAddress, BannedChar, "")
+          Next BannedChar
 
 7439      If strParentName = "" Then strParentName = Replace(rngCell.Parent.Name, " ", "_")
           
@@ -28,15 +30,10 @@ Function ConvertCellToStandardName(rngCell As Range, Optional strParentName As S
           If TestKeyExists(SheetNameMap, strParentName) Then
               strCleanParentName = SheetNameMap(strParentName)
           Else
-7440          strCleanParentName = Replace(strParentName, "-", "_")
-              strCleanParentName = Replace(strCleanParentName, "+", "_")
-              strCleanParentName = Replace(strCleanParentName, " ", "_")
-              strCleanParentName = Replace(strCleanParentName, "(", "_")
-              strCleanParentName = Replace(strCleanParentName, ")", "_")
-              strCleanParentName = Replace(strCleanParentName, ":", "_")
-              strCleanParentName = Replace(strCleanParentName, "*", "_")
-              strCleanParentName = Replace(strCleanParentName, "/", "_")
-              strCleanParentName = Replace(strCleanParentName, "^", "_")
+              For Each BannedChar In Array("-", "+", " ", "(", ")", ":", "*", "/", "^")
+                  strCleanParentName = Replace(strCleanParentName, BannedChar, "_")
+              Next BannedChar
+              
               ' If the cleaned name already exists, append an extra "1"
               Do While TestKeyExists(SheetNameMapReverse, strCleanParentName)
                   strCleanParentName = strCleanParentName & "1"

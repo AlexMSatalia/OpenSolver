@@ -2087,10 +2087,9 @@ End Function
 Function EscapeSheetName(sheet As Worksheet) As String
     EscapeSheetName = sheet.Name
     
-    Dim SpecialChars() As Variant, SpecialChar As Variant, NeedsEscaping As Boolean
-    SpecialChars = Array("'", "!", "(", ")", "+", "-")
+    Dim SpecialChar As Variant, NeedsEscaping As Boolean
     NeedsEscaping = False
-    For Each SpecialChar In SpecialChars
+    For Each SpecialChar In Array("'", "!", "(", ")", "+", "-")
         If InStr(EscapeSheetName, SpecialChar) Then
             NeedsEscaping = True
             Exit For
