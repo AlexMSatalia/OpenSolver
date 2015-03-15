@@ -118,7 +118,7 @@ Public Enum WindowStyleType
     Minimize
 End Enum
 
-Public Function RunExternalCommand(CommandString As String, Optional LogPath As String, Optional WindowStyle As WindowStyleType = Hide, Optional WaitForCompletion As Boolean, Optional ExitCode As Long) As Boolean
+Public Function RunExternalCommand(CommandString As String, Optional LogPath As String, Optional WindowStyle As WindowStyleType = Hide, Optional WaitForCompletion As Boolean = True, Optional ExitCode As Long) As Boolean
 ' Runs an external command, returning false if the command doesn't run
 '     CommandString:      the command to run
 '     LogPath:            if specified, echos stdout to this file

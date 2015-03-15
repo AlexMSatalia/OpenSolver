@@ -139,86 +139,69 @@ Private SearchRangeNameCACHE As Collection  'by ASL 20130126
     Public Const NBSP = 160 ' ascii char code for non-breaking space on Windows
 #End If
 
-Public TempFolderPathCached As String
-
-#If Mac Then
-    ' Variable to save Drive name
-    Public CachedDriveName As String
-#End If
-
-' TODO: These & other declarations, and type definitons, need to be updated for 64 bit systems; see:
-'   http://msdn.microsoft.com/en-us/library/ee691831.aspx
-'   http://technet.microsoft.com/en-us/library/ee833946.aspx
 #If Win32 Then
     #If VBA7 Then
-        Private Declare PtrSafe Function GetTempPath Lib "kernel32" _
-        Alias "GetTempPathA" (ByVal nBufferLength As Long, _
-        ByVal lpBuffer As String) As Long
+        Private Declare PtrSafe Function GetTempPath Lib "kernel32" Alias "GetTempPathA" (ByVal nBufferLength As Long, ByVal lpBuffer As String) As Long
     #Else
-        Private Declare Function GetTempPath Lib "kernel32" _
-        Alias "GetTempPathA" (ByVal nBufferLength As Long, _
-        ByVal lpBuffer As String) As Long
+        Private Declare Function GetTempPath Lib "kernel32" Alias "GetTempPathA" (ByVal nBufferLength As Long, ByVal lpBuffer As String) As Long
     #End If
 #End If
 
 #If Win32 Then
     #If VBA7 Then
-        Declare PtrSafe Function SetCurrentDirectoryA Lib "kernel32" _
-        (ByVal lpPathName As String) As Long
+        Declare PtrSafe Function SetCurrentDirectoryA Lib "kernel32" (ByVal lpPathName As String) As Long
     #Else
-        Declare Function SetCurrentDirectoryA Lib "kernel32" _
-        (ByVal lpPathName As String) As Long
+        Declare Function SetCurrentDirectoryA Lib "kernel32" (ByVal lpPathName As String) As Long
     #End If
 #End If
 
-'=====================================================================
 #If Mac Then
     Public Declare Sub SleepSeconds Lib "libc.dylib" Alias "sleep" (ByVal Seconds As Long)
-#ElseIf VBA7 Then
-    Public Declare PtrSafe Sub Sleep Lib "kernel32" (ByVal dwMilliseconds As Long)
 #Else
-    Public Declare Sub Sleep Lib "kernel32" (ByVal dwMilliseconds As Long)
-#End If
+    #If VBA7 Then
+        Public Declare PtrSafe Sub Sleep Lib "kernel32" (ByVal dwMilliseconds As Long)
+    #Else
+        Public Declare Sub Sleep Lib "kernel32" (ByVal dwMilliseconds As Long)
+    #End If
     
-#If Win32 Then
     Sub SleepSeconds(Seconds As Long)
         Sleep Seconds * 1000
     End Sub
 #End If
 
-Function GetTempFolder() As String
+Function GetTempFolder(Optional AllowEnvironOverride As Boolean = True) As String
           Dim RaiseError As Boolean
           RaiseError = False
           On Error GoTo ErrorHandler
 
-88        If TempFolderPathCached = "" Then
-#If Mac Then
-89        TempFolderPathCached = MacScript("return (path to temporary items) as string")
-#Else
-          'Get Temp Folder
-          ' See http://www.pcreview.co.uk/forums/thread-934893.php
-          Dim fctRet As Long
-90        TempFolderPathCached = String$(255, 0)
-91        fctRet = GetTempPath(255, TempFolderPathCached)
-92        If fctRet <> 0 Then
-93            TempFolderPathCached = left(TempFolderPathCached, fctRet)
-94            If right(TempFolderPathCached, 1) <> "\" Then TempFolderPathCached = TempFolderPathCached & "\"
-95        Else
-96            TempFolderPathCached = ""
-97        End If
-#End If
-        '  NEW CODE 2013-01-22 - Andres Sommerhoff (ASL) - Country: Chile
-        '  Use Environment Var to have the option to a different Temp path for Opensolver.
-        '  To allow have independent configuration in different computers, Environment Var
-        '  is used instead of saving the option in the excel.
-        '  This also work as workaround to avoid problem with spaces in the temp path.
-98        If Environ("OpenSolverTempPath") <> "" Then
-99              TempFolderPathCached = Environ("OpenSolverTempPath")
-100       End If
-        '  ASL END NEW CODE
+          Static TempFolderPath As String
+88        If Len(TempFolderPath) = 0 Then
+              #If Mac Then
+89                TempFolderPath = MacScript("return (path to temporary items) as string")
 
+              #Else
+                  ' Get Temp Folder
+                  ' See http://www.pcreview.co.uk/forums/thread-934893.php
+                  Dim ret As Long
+90                TempFolderPath = String$(255, 0)
+91                ret = GetTempPath(255, TempFolderPath)
+92                If ret <> 0 Then
+93                    TempFolderPath = left(TempFolderPath, ret)
+94                    If right(TempFolderPath, 1) <> "\" Then TempFolderPath = TempFolderPath & "\"
+95                Else
+96                    TempFolderPath = ""
+97                End If
+              #End If
+              ' Andres Sommerhoff (ASL) - Country: Chile
+              ' Allow user to specify a temp path using an environment variable
+              ' This can also be a workaround to avoid problem with spaces in the temp path.
+98            If AllowEnvironOverride Then
+                  If Environ("OpenSolverTempPath") <> "" Then
+99                    TempFolderPath = Environ("OpenSolverTempPath")
+                  End If
+100           End If
 101       End If
-102       GetTempFolder = TempFolderPathCached
+102       GetTempFolder = TempFolderPath
 
 ExitFunction:
           If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
@@ -1619,53 +1602,95 @@ Public Function ReplaceDelimitersMac(Path As String) As String
 737       ReplaceDelimitersMac = Replace(Path, ":", "/")
 End Function
 
-Public Function ConvertHfsPath(Path As String) As String
-      ' Any direct file system access (using 'system' or in script files) on Mac requires
-      ' that HFS-style paths are converted to normal posix paths. On windows this
-      ' function does nothing, so it can safely wrap all file system calls on any platform
-      ' Input (HFS path):   "Macintosh HD:Users:jack:filename.txt"
-      ' Output (posix path): "/Volumes/Macintosh HD/Users/jack/filename.txt"
+Public Function ConvertHfsPathToPosix(Path As String) As String
+' Any direct file system access (using 'system' or in script files) on Mac requires
+' that HFS-style paths are converted to normal POSIX paths. On Windows this
+' function does nothing, so it can safely wrap all file system calls on any platform
+' Input (HFS path):   "Macintosh HD:Users:jack:filename.txt"
+' Output (POSIX path): "/Volumes/Macintosh HD/Users/jack/filename.txt"
+
           Dim RaiseError As Boolean
           RaiseError = False
           On Error GoTo ErrorHandler
 
-#If Mac Then
-          ' Check we have an HFS path and not posix
-738       If InStr(Path, ":") > 0 Then
-              ' Prefix disk name with :Volumes:
-739           ConvertHfsPath = ":Volumes:" & Path
-              ' Convert path delimiters
-740           ConvertHfsPath = ReplaceDelimitersMac(ConvertHfsPath)
-741       Else
-              ' Path is already posix
-742           ConvertHfsPath = Path
-743       End If
-#Else
-744       ConvertHfsPath = Path
-#End If
+          #If Mac Then
+              ' Check we have an HFS path and not POSIX
+738           If InStr(Path, "/") = 0 Then
+                  Dim RootDriveName As String
+                  RootDriveName = GetRootDriveName()
+                  If left(Path, Len(RootDriveName)) = RootDriveName Then
+                      ConvertHfsPathToPosix = Mid(Path, Len(RootDriveName) + 1)
+                  Else
+                      ' Prefix disk name with :Volumes:
+739                   ConvertHfsPathToPosix = ":Volumes:" & Path
+                  End If
+                  ' Convert path delimiters
+740               ConvertHfsPathToPosix = Replace(ConvertHfsPathToPosix, ":", "/")
+741           Else
+                  ' Path is already POSIX
+742               ConvertHfsPathToPosix = Path
+743           End If
+          #Else
+744           ConvertHfsPathToPosix = Path
+          #End If
 
 ExitFunction:
           If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
           Exit Function
 
 ErrorHandler:
-          If Not ReportError("OpenSolverModule", "ConvertHfsPath") Then Resume
+          If Not ReportError("OpenSolverModule", "ConvertHfsPathToPosix") Then Resume
           RaiseError = True
           GoTo ExitFunction
 End Function
 
-Public Function GetDriveName() As String
+Public Function ConvertPosixPathToHfs(Path As String) As String
+' Converts a POSIX path back to HFS
+' Input (POSIX path): "/Volumes/Macintosh HD/Users/jack/filename.txt"
+' Output (HFS path): "Macintosh HD:Users:jack:filename.txt"
+    Dim RaiseError As Boolean
+    RaiseError = False
+    On Error GoTo ErrorHandler
+
+    #If Mac Then
+        If InStr(Path, ":") = 0 Then
+            Const VolumePrefix = "/Volumes/"
+            If left(Path, Len(VolumePrefix)) = VolumePrefix Then
+                ConvertPosixPathToHfs = Mid(Path, Len(VolumePrefix) + 1)
+            Else
+                ConvertPosixPathToHfs = GetRootDriveName() & Path
+            End If
+            ConvertPosixPathToHfs = Replace(ConvertPosixPathToHfs, "/", ":")
+        Else
+            ConvertPosixPathToHfs = Path
+        End If
+    #Else
+        ConvertPosixPathToHfs = Path
+    #End If
+
+ExitFunction:
+    If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+    Exit Function
+
+ErrorHandler:
+    If Not ReportError("OpenSolverModule", "ConvertPosixPathToHfs") Then Resume
+    RaiseError = True
+    GoTo ExitFunction
+End Function
+
+Public Function GetRootDriveName() As String
           Dim RaiseError As Boolean
           RaiseError = False
           On Error GoTo ErrorHandler
 
 #If Mac Then
-          If CachedDriveName = "" Then
+          Static DriveName As String
+          If DriveName = "" Then
               Dim Path As String
-              Path = GetTempFolder()
-              CachedDriveName = left(Path, InStr(Path, ":") - 1)
+              Path = GetTempFolder(False)
+              DriveName = left(Path, InStr(Path, ":") - 1)
           End If
-          GetDriveName = CachedDriveName
+          GetRootDriveName = DriveName
 #End If
 
 ExitFunction:
@@ -1673,7 +1698,7 @@ ExitFunction:
           Exit Function
 
 ErrorHandler:
-          If Not ReportError("OpenSolverModule", "GetDriveName") Then Resume
+          If Not ReportError("OpenSolverModule", "GetRootDriveName") Then Resume
           RaiseError = True
           GoTo ExitFunction
 End Function
@@ -1684,7 +1709,7 @@ Public Function QuotePath(Path As String) As String
 End Function
 
 Public Function MakePathSafe(Path As String) As String
-    MakePathSafe = IIf(Len(Path) = 0, "", QuotePath(ConvertHfsPath(Path)))
+    MakePathSafe = IIf(Len(Path) = 0, "", QuotePath(ConvertHfsPathToPosix(Path)))
 End Function
 
 Public Sub CreateScriptFile(ByRef ScriptFilePath As String, FileContents As String, Optional EnableEcho As Boolean)

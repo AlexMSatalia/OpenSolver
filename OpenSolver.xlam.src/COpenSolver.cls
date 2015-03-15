@@ -1377,7 +1377,7 @@ Sub SolveModel_LinearLocal(ModelFilePathName As String, SolveRelaxation As Boole
           ExternalSolverPathName = MakePathSafe(ExternalSolverPathName) ' fix error for Gurobi with spaces in path name by quoting path
           
           Dim exeResult As Long
-1573      ExecutionCompleted = RunExternalCommand(ExternalSolverPathName, logCommand, IIf(SolveOptions.ShowIterationResults And Not MinimiseUserInteraction, SW_SHOWNORMAL, SW_HIDE), True, exeResult) ' Run solver, waiting for completion
+1573      ExecutionCompleted = RunExternalCommand(ExternalSolverPathName, logCommand, IIf(SolveOptions.ShowIterationResults And Not MinimiseUserInteraction, WindowStyleType.Normal, WindowStyleType.Hide), True, exeResult) ' Run solver, waiting for completion
 1578      If exeResult <> 0 Then
 1580          Err.Raise Number:=OpenSolver_SolveError, Description:="The " & Solver & " solver did not complete, but aborted with the error code " & exeResult & "." & vbCrLf & vbCrLf & "The last log file can be viewed under the OpenSolver menu and may give you more information on what caused this error."
 1581      End If

@@ -123,7 +123,7 @@ Private Sub UserForm_Activate()
 3515      Application.Cursor = xlWait
 
           txtFilePath.Locked = False
-          txtFilePath = "OpenSolver file: " & MakeSpacesNonBreaking(ConvertHfsPath(ThisWorkbook.FullName))
+          txtFilePath = "OpenSolver file: " & MakeSpacesNonBreaking(MakePathSafe(ThisWorkbook.FullName))
           txtFilePath.Locked = True
           
           chkUpdate.value = GetUpdateSetting()
