@@ -94,7 +94,7 @@ Private Sub AutoLayout()
     NumButtonWidths = NumButtonWidths - (cmdButton1.Visible + cmdButton2.Visible + cmdButton3.Visible)
     
     ' Calculate the width, and set to minimum constant width if button width is less than this.
-    Me.width = Max_Double(FormWidthMessageBox, NumButtonWidths * FormButtonWidth + (NumButtonWidths - 1) * FormSpacing + 2 * FormMargin)
+    Me.width = Max(FormWidthMessageBox, NumButtonWidths * FormButtonWidth + (NumButtonWidths - 1) * FormSpacing + 2 * FormMargin)
     
     With txtMessage
         .BackColor = FormBackColor

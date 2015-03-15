@@ -114,7 +114,7 @@ Private Function SendToNeos_Mac(method As String, param1 As String, Optional par
     On Error GoTo ErrorHandler
 
     Dim SolverPath As String, NeosClientDir As String
-    NeosClientDir = JoinPaths(JoinPaths(ThisWorkbook.Path, SolverDir), SolverDirMac)
+    NeosClientDir = JoinPaths(ThisWorkbook.Path, SolverDir, SolverDirMac)
     GetExistingFilePathName NeosClientDir, NEOS_SCRIPT_FILE, SolverPath
     SolverPath = MakePathSafe(SolverPath)
     RunExternalCommand "chmod +x " & SolverPath

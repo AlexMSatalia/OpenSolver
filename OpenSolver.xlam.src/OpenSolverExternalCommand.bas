@@ -390,7 +390,7 @@ Private Function TeePath() As String
     #If Mac Then
         TeePath = "tee"
     #Else
-        GetExistingFilePathName JoinPathsMult(ThisWorkbook.Path, "Utils", "mtee"), "mtee.exe", TeePath
+        GetExistingFilePathName JoinPaths(ThisWorkbook.Path, "Utils", "mtee"), "mtee.exe", TeePath
     #End If
 End Function
 

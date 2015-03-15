@@ -2162,7 +2162,7 @@ Sub CheckLinearityOfModel()
 2085          ValueOneCounter = ValueOne(row).Count
 2086          ValueTenCounter = ValueTen(row).Count
               'find out how many variables it dependent on
-2087          NumEntries = ChooseMaximum(ValueZeroCounter, ValueOneCounter, ValueTenCounter)
+2087          NumEntries = Max(ValueZeroCounter, ValueOneCounter, ValueTenCounter)
 2088          For i = 1 To NumEntries
 2089              If TestExistanceOfEntry(ValueZero(row), ValueOne(row), ValueTen(row), i) Then
                       'do a ratio test
@@ -2294,10 +2294,6 @@ ErrorHandler:
           GoTo ExitSub
 End Sub
 
-Function ChooseMaximum(EntriesZero As Long, EntriesOne As Long, EntriesTen As Long) As Long
-2167      ChooseMaximum = Max_Int(Max_Int(EntriesZero, EntriesOne), EntriesTen)
-End Function
-
 Sub QuickLinearityCheck(fullLinearityCheckWasPerformed As Boolean)
 ' Returns false if a full check was performed by the user, meaning the model result is no longer valid.
           Dim RaiseError As Boolean
@@ -2363,7 +2359,7 @@ Sub QuickLinearityCheck(fullLinearityCheckWasPerformed As Boolean)
 2209                      If Abs(RHS(row)) > maxValueInCalculation Then maxValueInCalculation = Abs(RHS(row))
           
                           ' do a ratio test
-2210                      If Abs(ExpectedValue - SolutionValue) / (1 + Abs(ExpectedValue)) > Max_Double(EPSILON, EPSILON * maxValueInCalculation) Then
+2210                      If Abs(ExpectedValue - SolutionValue) / (1 + Abs(ExpectedValue)) > Max(EPSILON, EPSILON * maxValueInCalculation) Then
 2211                          If NonLinearInfo = "" Then NonLinearInfo = "The following constraint(s) do not appear to be linear: "
 2212                          If NonLinearityCount <= 10 Then
 2213                              NonLinearInfo = NonLinearInfo & vbNewLine & ConstraintSummary(constraint)

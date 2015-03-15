@@ -76,7 +76,7 @@ End Function
 
 Function GetGurobiBinFolder() As String
 #If Mac Then
-6381      GetGurobiBinFolder = JoinPathsMult(GetRootDriveName(), "usr", "local", "bin")
+6381      GetGurobiBinFolder = JoinPaths(GetRootDriveName(), "usr", "local", "bin")
 #Else
 6382      GetExistingFilePathName Environ("GUROBI_HOME"), "bin", GetGurobiBinFolder
 #End If
@@ -88,7 +88,7 @@ Function SolverFilePath_Gurobi() As String
           ' The mac gurobi.sh script, unlike windows, doesn't have a check for a gurobi install, thus it doesn't do anything for us here and is safe to skip.
           ' We can just run python by itself. We need to use the default system python (pre-installed on mac) and not any other version (e.g. a version from homebrew)
           ' We also need to launch it without going via /Volumes/.../
-6383      SolverFilePath_Gurobi = ConvertHfsPathToPosix(JoinPathsMult(GetRootDriveName(), "usr", "bin", "python"))
+6383      SolverFilePath_Gurobi = ConvertHfsPathToPosix(JoinPaths(GetRootDriveName(), "usr", "bin", "python"))
 #Else
 6384      GetExistingFilePathName GetGurobiBinFolder(), Solver_Gurobi, SolverFilePath_Gurobi
 #End If

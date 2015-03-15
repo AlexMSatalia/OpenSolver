@@ -228,18 +228,12 @@ Function FileOrDirExists(pathName As String) As Boolean
 107       FileOrDirExists = (Err.Number = 0)
 End Function
 
-Function JoinPaths(Path1 As String, Path2 As String) As String
-114       JoinPaths = Path1
-115       If right(" " & JoinPaths, 1) <> Application.PathSeparator Then JoinPaths = JoinPaths & Application.PathSeparator
-116       JoinPaths = JoinPaths & Path2
-End Function
-
-Function JoinPathsMult(ParamArray Paths() As Variant) As String
+Function JoinPaths(ParamArray Paths() As Variant) As String
           Dim i As Long
           For i = LBound(Paths) To UBound(Paths) - 1
-              JoinPathsMult = JoinPathsMult & Paths(i) & IIf(right(Paths(i), 1) <> Application.PathSeparator, Application.PathSeparator, "")
+              JoinPaths = JoinPaths & Paths(i) & IIf(right(Paths(i), 1) <> Application.PathSeparator, Application.PathSeparator, "")
           Next i
-          JoinPathsMult = JoinPathsMult & Paths(UBound(Paths))
+          JoinPaths = JoinPaths & Paths(UBound(Paths))
 End Function
 
 Function GetNameValueIfExists(w As Workbook, theName As String, ByRef value As String) As Boolean
@@ -923,20 +917,15 @@ ErrorHandler:
           GoTo ExitFunction
 End Function
 
-Function Max_Int(a As Long, b As Long) As Long
-482       If a > b Then
-483           Max_Int = a
-484       Else
-485           Max_Int = b
-486       End If
-End Function
-
-Function Max_Double(a As Double, b As Double) As Double
-487       If a > b Then
-488           Max_Double = a
-489       Else
-490           Max_Double = b
-491       End If
+Function Max(ParamArray Vals() As Variant) As Variant
+          Max = Vals(LBound(Vals))
+          
+          Dim i As Long
+          For i = LBound(Vals) + 1 To UBound(Vals)
+482           If Vals(i) > Max Then
+483               Max = Vals(i)
+486           End If
+          Next i
 End Function
 
 Function Create1x1Array(X As Variant) As Variant
