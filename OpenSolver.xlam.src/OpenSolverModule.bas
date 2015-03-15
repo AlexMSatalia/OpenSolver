@@ -1653,13 +1653,17 @@ Public Function ConvertPosixPathToHfs(Path As String) As String
     On Error GoTo ErrorHandler
 
     #If Mac Then
+        ' Make sure we have an HFS path
         If InStr(Path, ":") = 0 Then
             Const VolumePrefix = "/Volumes/"
             If left(Path, Len(VolumePrefix)) = VolumePrefix Then
+                ' If the POSIX path starts with /Volumes/, then we keep the drive name after /Volumes/
                 ConvertPosixPathToHfs = Mid(Path, Len(VolumePrefix) + 1)
             Else
+                ' If the POSIX path starts at the root, we add the name of the root drive
                 ConvertPosixPathToHfs = GetRootDriveName() & Path
             End If
+            ' Convert Path delimiters
             ConvertPosixPathToHfs = Replace(ConvertPosixPathToHfs, "/", ":")
         Else
             ConvertPosixPathToHfs = Path
@@ -1685,6 +1689,8 @@ Public Function GetRootDriveName() As String
 
 #If Mac Then
           Static DriveName As String
+          ' We assume that the temp folder is on the root drive
+          ' Seems reasonable, the user might be able to mess this up if they really try.
           If DriveName = "" Then
               Dim Path As String
               Path = GetTempFolder(False)
@@ -1704,11 +1710,11 @@ ErrorHandler:
 End Function
 
 Public Function QuotePath(Path As String) As String
-          ' Quote path
 745       QuotePath = """" & Path & """"
 End Function
 
 Public Function MakePathSafe(Path As String) As String
+' Prepares a path for command-line invocation
     MakePathSafe = IIf(Len(Path) = 0, "", QuotePath(ConvertHfsPathToPosix(Path)))
 End Function
 
