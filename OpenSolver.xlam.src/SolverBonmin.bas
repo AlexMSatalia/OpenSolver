@@ -23,20 +23,21 @@ Public Const UsesTolerance_Bonmin = True
 Public Const UsesTimeLimit_Bonmin = True
 
 Function ScriptFilePath_Bonmin() As String
-9021      ScriptFilePath_Bonmin = GetTempFilePath(SolverScript_Bonmin)
+9021      GetTempFilePath SolverScript_Bonmin, ScriptFilePath_Bonmin
 End Function
 
 Function SolutionFilePath_Bonmin() As String
-9022      SolutionFilePath_Bonmin = GetTempFilePath(NLSolutionFileName)
+9022      GetTempFilePath NLSolutionFileName, SolutionFilePath_Bonmin
 End Function
 
 Function OptionsFilePath_Bonmin() As String
-          OptionsFilePath_Bonmin = GetTempFilePath(OptionsFile_Bonmin)
+          GetTempFilePath OptionsFile_Bonmin, OptionsFilePath_Bonmin
 End Function
 
 Sub CleanFiles_Bonmin()
 9023      DeleteFileAndVerify SolutionFilePath_Bonmin()
 9024      DeleteFileAndVerify ScriptFilePath_Bonmin()
+          DeleteFileAndVerify OptionsFilePath_Bonmin()
 End Sub
 
 Function About_Bonmin() As String

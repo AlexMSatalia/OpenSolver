@@ -40,7 +40,7 @@ Public Enum GurobiResult
 End Enum
 
 Function SolutionFilePath_Gurobi() As String
-6369      SolutionFilePath_Gurobi = GetTempFilePath(SolutionFile_Gurobi)
+6369      GetTempFilePath SolutionFile_Gurobi, SolutionFilePath_Gurobi
 End Function
 
 Function SolverPythonScriptPath_Gurobi() As String
@@ -48,15 +48,16 @@ Function SolverPythonScriptPath_Gurobi() As String
 End Function
 
 Function ScriptFilePath_Gurobi() As String
-6371      ScriptFilePath_Gurobi = GetTempFilePath(SolverScript_Gurobi)
+6371      GetTempFilePath SolverScript_Gurobi, ScriptFilePath_Gurobi
 End Function
 
 Function SensitivityFilePath_Gurobi() As String
-6372      SensitivityFilePath_Gurobi = GetTempFilePath(SensitivityFile_Gurobi)
+6372      GetTempFilePath SensitivityFile_Gurobi, SensitivityFilePath_Gurobi
 End Function
 
 Sub CleanFiles_Gurobi()
 6373      DeleteFileAndVerify SolutionFilePath_Gurobi()
+          DeleteFileAndVerify ScriptFilePath_Gurobi()
 6374      DeleteFileAndVerify SensitivityFilePath_Gurobi()
 End Sub
 

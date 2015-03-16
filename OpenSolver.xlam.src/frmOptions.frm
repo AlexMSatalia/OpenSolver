@@ -38,7 +38,7 @@ Private Sub cmdOk_Click()
 End Sub
 
 Private Sub UserForm_Activate()
-4114      SetAnyMissingDefaultExcel2007SolverOptions
+4114      SetAnyMissingDefaultSolverOptions
 
 4129      chkNonNeg.value = GetNonNegativity()
 4130      chkShowSolverProgress.value = GetShowSolverProgress()

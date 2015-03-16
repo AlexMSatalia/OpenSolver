@@ -128,7 +128,7 @@ Private Sub UserForm_Activate()
           
           chkUpdate.value = GetUpdateSetting()
 
-3523      lblVersion.Caption = OpenSolverEnvironmentSummary()
+3523      lblVersion.Caption = EnvironmentSummary()
           
           ReflectOpenSolverStatus
           EventsEnabled = True

@@ -199,7 +199,7 @@ End Function
 Function ModelFilePath(Solver As String) As String
 6677      ModelFilePath = ModelFile(Solver)
           ' If model file is empty, then don't return anything
-6678      If ModelFilePath <> "" Then ModelFilePath = GetTempFilePath(ModelFilePath)
+6678      If ModelFilePath <> "" Then GetTempFilePath ModelFilePath, ModelFilePath
 End Function
 
 Function RunsOnNeos(Solver As String) As Boolean

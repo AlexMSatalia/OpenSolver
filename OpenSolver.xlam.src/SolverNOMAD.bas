@@ -265,8 +265,7 @@ Sub CheckNomadLogs()
           On Error GoTo ErrorHandler
 
           Dim logFile As String
-7100      logFile = GetTempFilePath("log1.tmp")
-7101      If Not FileOrDirExists(logFile) Then GoTo ExitSub
+7100      If Not GetTempFilePath("log1.tmp", logFile) Then GoTo ExitSub
 
           
           Dim message As String

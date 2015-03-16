@@ -170,8 +170,7 @@ Public Function RunExternalCommand(CommandString As String, Optional LogPath As 
             ' We need to start the command asynchronously.
             ' To do this, we dump the command to script file then start using "open -a Terminal <file>"
             Dim TempScript As String
-            TempScript = GetTempFilePath("tempscript.sh")
-            If FileOrDirExists(TempScript) Then Kill TempScript
+            If GetTempFilePath("tempscript.sh", TempScript) Then DeleteFileAndVerify TempScript
             
             CreateScriptFile TempScript, FullCommand
             

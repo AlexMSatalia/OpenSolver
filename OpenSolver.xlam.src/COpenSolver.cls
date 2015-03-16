@@ -710,7 +710,7 @@ ModelOptions:
                   Dim summary As String
 1111              summary = ""
 1112              summary = summary & Mid(Names(sheetName & "solver_lhs" & constraint), 2)
-1113              summary = summary & " " & SolverRelationAsString(rel) & " "
+1113              summary = summary & " " & RelationEnumToString(rel) & " "
 1114              summary = summary & Mid(Names(sheetName & "solver_rhs" & constraint), 2)
 1115              ConstraintSummary(constraint) = summary
 
@@ -1143,8 +1143,7 @@ Function SolveModel(SolveRelaxation As Boolean, ShouldMinimiseUserInteraction As
 
           'Delete any existing log file
           Dim LogPath As String
-1379      LogPath = GetTempFilePath("log1.tmp")
-1380      DeleteFileAndVerify LogPath
+1379      If GetTempFilePath("log1.tmp", LogPath) Then DeleteFileAndVerify LogPath
 
 1381      ModelFilePathName = ModelFilePath(Solver)
           
@@ -1247,7 +1246,7 @@ Function SolveModel_Linear(SolveRelaxation As Boolean) As Long
                   'If the user wants a new sheet with the sensitivity data then call the functions that write this
 1466              If DualsOnNewSheet Then
                       Dim nameSheet As String
-1467                  nameSheet = MakeNewSheet(RawSheetName & " Sensitivity", sheet)
+1467                  nameSheet = MakeNewSheet(RawSheetName & " Sensitivity", GetUpdateSensitivity(book, sheet))
 1468                  sheet.Select
 1469                  Call WriteConstraintSensitivityTable(nameSheet, Solver)
                       'If you want to end up on the sensitivity page use this next line
@@ -1368,7 +1367,7 @@ Sub SolveModel_LinearLocal(ModelFilePathName As String, SolveRelaxation As Boole
          
           Dim logCommand As String, logFileName As String
 1570      logFileName = "log1.tmp"
-1571      logCommand = GetTempFilePath(logFileName)
+1571      GetTempFilePath logFileName, logCommand
          
 1569      ExternalSolverPathName = CreateSolveScript(Solver, SolutionFilePathName, ExtraParameters, SolveOptions, Me)
 
@@ -1802,7 +1801,7 @@ Function CheckConstantConstraintIsSatisfied(row As Long, constraint As Long, ins
                      & instance & " does not depend on the decision variables and is not satisfied." & vbCrLf _
                     & "Constraint specifies: " _
                      & "LHS=" & LHSCellRange.AddressLocal(RowAbsolute:=False, ColumnAbsolute:=False) & "=" & LHSValue _
-                    & " " & SolverRelationAsString(Relation(row)) & " " _
+                    & " " & RelationEnumToString(Relation(row)) & " " _
                     & "RHS=" & RHSstring & "=" & RHSValue
 1899          Close #1
 1900          CheckConstantConstraintIsSatisfied = False
@@ -1866,7 +1865,7 @@ Sub WriteConstraintListToSheet(r As Range)
               
               Dim s As String
 1931          s = IIf(UnusedConstraint, "", "") & LHSCellRange.AddressLocal(RowAbsolute:=False, ColumnAbsolute:=False) & _
-                  SolverRelationAsString(Relation(row)) & RHSstring & IIf(UnusedConstraint, "", "")
+                  RelationEnumToString(Relation(row)) & RHSstring & IIf(UnusedConstraint, "", "")
           
 1932          r.Cells(row + 1, 1).value = s
 1933          r.Cells(row + 1, 2).Value2 = ZeroIfSmall(ShadowPrice(row))
@@ -2510,7 +2509,7 @@ Sub WriteConstraintSensitivityTable(nameSheet As String, Solver As String)
 2319          End If
               Dim s As String
 2320          s = IIf(UnusedConstraint, "", "") & LHSCellRange.AddressLocal(RowAbsolute:=False, ColumnAbsolute:=False) & _
-              SolverRelationAsString(Relation(i)) & RHSstring & IIf(UnusedConstraint, "", "")
+                      RelationEnumToString(Relation(i)) & RHSstring & IIf(UnusedConstraint, "", "")
               'Cell Range for each constraint
 2321          Sheets(nameSheet).Cells(row, Column).value = s
               'Finds the nearest name for the constraint
@@ -2543,6 +2542,7 @@ Sub FormatSensitivityTable(nameSheet As String, row As Long, numVars As Double)
 2327      sheet = ActiveSheet.Name
 2328      Sheets(nameSheet).Select
 2329      startRow = 6
+          ActiveWindow.DisplayGridlines = False
           
 2330      Sheets(nameSheet).Cells.EntireColumn.AutoFit
 2331      Columns("A:A").ColumnWidth = 5

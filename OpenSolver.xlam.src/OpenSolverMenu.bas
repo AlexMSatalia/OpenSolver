@@ -77,21 +77,21 @@ End Sub
 
 Sub OpenSolver_ViewLastModelClickHandler(Optional Control)
           Dim notFoundMessage As String, FilePath As String
-2781      FilePath = GetTempFilePath(LPFileName)
+2781      GetTempFilePath LPFileName, FilePath
 2782      notFoundMessage = "Error: There is no LP file (" & FilePath & ") to open. Please solve the model using one of the linear solvers within OpenSolver, and then try again."
 2783      OpenFile FilePath, notFoundMessage
 End Sub
 
 Sub OpenSolver_ViewLastAmplClickHandler(Optional Control)
           Dim notFoundMessage As String, FilePath As String
-2784      FilePath = GetTempFilePath(AMPLFileName)
+2784      GetTempFilePath AMPLFileName, FilePath
 2785      notFoundMessage = "Error: There is no AMPL file (" & FilePath & ") to open. Please solve the model using one of the NEOS solvers within OpenSolver, and then try again."
 2786      OpenFile FilePath, notFoundMessage
 End Sub
 
 Sub OpenSolver_ViewLogFile(Optional Control)
           Dim notFoundMessage As String, FilePath As String
-2787      FilePath = GetTempFilePath("log1.tmp")
+2787      GetTempFilePath "log1.tmp", FilePath
 2788      notFoundMessage = "Error: There is no log file (" & FilePath & ") to open. Please re-solve the OpenSolver model, and then try again."
 2789      OpenFile FilePath, notFoundMessage
 End Sub

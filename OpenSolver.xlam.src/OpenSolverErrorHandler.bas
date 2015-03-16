@@ -84,7 +84,7 @@ Function ReportError(ModuleName As String, ProcedureName As String, Optional IsE
     Open Path For Append As #FileNum
     Print #FileNum, LogText
     If IsEntryPoint Then Print #FileNum, vbNewLine & "Error " & CStr(ErrNum) & ": " & ErrMsg & _
-                                         vbNewLine & vbNewLine & OpenSolverEnvironmentSummary()
+                                         vbNewLine & vbNewLine & EnvironmentSummary()
     Close #FileNum
     
     If IsEntryPoint Then
@@ -127,5 +127,5 @@ Function ReportError(ModuleName As String, ProcedureName As String, Optional IsE
 End Function
 
 Public Function GetErrorLogFilePath() As String
-    GetErrorLogFilePath = GetTempFilePath(FILE_ERROR_LOG)
+    GetTempFilePath FILE_ERROR_LOG, GetErrorLogFilePath
 End Function

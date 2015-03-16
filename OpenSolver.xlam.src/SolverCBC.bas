@@ -26,19 +26,19 @@ Public Const UsesTolerance_CBC = True
 Public Const UsesTimeLimit_CBC = True
 
 Function ScriptFilePath_CBC() As String
-6047      ScriptFilePath_CBC = GetTempFilePath(SolverScript_CBC)
+6047      GetTempFilePath SolverScript_CBC, ScriptFilePath_CBC
 End Function
 
 Function SolutionFilePath_CBC() As String
-6048      SolutionFilePath_CBC = GetTempFilePath(SolutionFile_CBC)
+6048      GetTempFilePath SolutionFile_CBC, SolutionFilePath_CBC
 End Function
 
 Function CostRangesFilePath_CBC() As String
-6049      CostRangesFilePath_CBC = GetTempFilePath(CostRangesFile_CBC)
+6049      GetTempFilePath CostRangesFile_CBC, CostRangesFilePath_CBC
 End Function
 
 Function RHSRangesFilePath_CBC() As String
-6050      RHSRangesFilePath_CBC = GetTempFilePath(RHSRangesFile_CBC)
+6050      GetTempFilePath RHSRangesFile_CBC, RHSRangesFilePath_CBC
 End Function
 
 Sub CleanFiles_CBC()

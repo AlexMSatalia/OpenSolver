@@ -278,7 +278,7 @@ Private Sub UserForm_Activate()
 
           cmdCancel.SetFocus
 
-4349      SetAnyMissingDefaultExcel2007SolverOptions
+4349      SetAnyMissingDefaultSolverOptions
 
           ' Check if we have indicated to keep the model from the last time form was shown
 4350      If PreserveModel Then

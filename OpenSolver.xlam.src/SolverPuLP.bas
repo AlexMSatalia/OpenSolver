@@ -4,7 +4,7 @@ Option Explicit
 Public Const SolutionFile_PuLP = "pulp_sol.txt"
 
 Function SolutionFilePath_PuLP() As String
-7314      SolutionFilePath_PuLP = GetTempFilePath(SolutionFile_PuLP)
+7314      GetTempFilePath SolutionFile_PuLP, SolutionFilePath_PuLP
 End Function
 
 Function SolveModelParsed_PuLP(ModelFilePathName As String, m As CModelParsed, s As COpenSolverParsed) As Boolean

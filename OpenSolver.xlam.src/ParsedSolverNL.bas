@@ -187,7 +187,7 @@ Function SolveModelParsed_NL(ModelFilePathName As String, model As CModelParsed,
                    
           Dim logCommand As String, logFileName As String
 7505      logFileName = "log1.tmp"
-7506      logCommand = GetTempFilePath(logFileName)
+7506      GetTempFilePath logFileName, logCommand
                         
           Dim ExecutionCompleted As Boolean
 7507      ExternalSolverPathName = MakePathSafe(ExternalSolverPathName)
@@ -1278,7 +1278,7 @@ Private Sub OutputColFile()
           On Error GoTo ErrorHandler
 
           Dim ColFilePathName As String
-8017      ColFilePathName = GetTempFilePath("model.col")
+8017      GetTempFilePath "model.col", ColFilePathName
           
 8018      DeleteFileAndVerify ColFilePathName
 
@@ -1308,7 +1308,7 @@ Private Sub OutputRowFile()
           On Error GoTo ErrorHandler
 
           Dim RowFilePathName As String
-8030      RowFilePathName = GetTempFilePath("model.row")
+8030      GetTempFilePath "model.row", RowFilePathName
           
 8031      DeleteFileAndVerify RowFilePathName
 
@@ -2102,7 +2102,7 @@ Private Function TryParseLogs(s As COpenSolverParsed) As Boolean
           
           ' Check if log exists
           Dim logFile As String
-8477      logFile = GetTempFilePath("log1.tmp")
+8477      GetTempFilePath "log1.tmp", logFile
           
           On Error GoTo ErrorHandler
 8478      If Not FileOrDirExists(logFile) Then

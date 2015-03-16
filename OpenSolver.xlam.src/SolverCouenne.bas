@@ -23,20 +23,21 @@ Public Const UsesTolerance_Couenne = True
 Public Const UsesTimeLimit_Couenne = True
 
 Function ScriptFilePath_Couenne() As String
-8358      ScriptFilePath_Couenne = GetTempFilePath(SolverScript_Couenne)
+8358      GetTempFilePath SolverScript_Couenne, ScriptFilePath_Couenne
 End Function
 
 Function SolutionFilePath_Couenne() As String
-8359      SolutionFilePath_Couenne = GetTempFilePath(NLSolutionFileName)
+8359      GetTempFilePath NLSolutionFileName, SolutionFilePath_Couenne
 End Function
 
 Function OptionsFilePath_Couenne() As String
-          OptionsFilePath_Couenne = GetTempFilePath(OptionsFile_Couenne)
+          GetTempFilePath OptionsFile_Couenne, OptionsFilePath_Couenne
 End Function
 
 Sub CleanFiles_Couenne()
 8360      DeleteFileAndVerify SolutionFilePath_Couenne()
 8361      DeleteFileAndVerify ScriptFilePath_Couenne()
+          DeleteFileAndVerify OptionsFilePath_Couenne()
 End Sub
 
 Function About_Couenne() As String

@@ -329,7 +329,7 @@ Private Function ParseFormulae(s As COpenSolver) As Boolean
                                       "The model contains an Excel constraint which does not depend on the decision variables and is not satisfied." & vbCrLf & _
                                       "Constraint specifies: " & _
                                       "LHS=" & singleRngLHS.AddressLocal(RowAbsolute:=False, ColumnAbsolute:=False) & "=" & LHSValue & _
-                                      "   " & SolverRelationAsString(rel) & "   " & _
+                                      "   " & RelationEnumToString(rel) & "   " & _
                                       "RHS=" & "'" & strRHSCell & "'" & "=" & RHSValue
 4916                              ParseFormulae = False
 4917                              GoTo ExitFunction

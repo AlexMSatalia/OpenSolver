@@ -38,7 +38,7 @@ Function CallNEOS(ModelFilePathName As String, Solver As String, Optional Minimi
    
           ' Dump the whole NEOS response to log file
           Dim LogPath As String
-          LogPath = GetTempFilePath("log1.tmp")
+          GetTempFilePath "log1.tmp", LogPath
           Open LogPath For Output As #1
               Print #1, CallNEOS
           Close #1
@@ -120,11 +120,11 @@ Private Function SendToNeos_Mac(method As String, param1 As String, Optional par
     RunExternalCommand "chmod +x " & SolverPath
 
     Dim SolutionFilePathName As String
-    SolutionFilePathName = GetTempFilePath(NEOS_RESULT_FILE)
+    GetTempFilePath NEOS_RESULT_FILE, SolutionFilePathName
     DeleteFileAndVerify SolutionFilePathName
 
     Dim LogFilePathName As String
-    LogFilePathName = GetTempFilePath("log1.tmp")
+    GetTempFilePath "log1.tmp", LogFilePathName
     DeleteFileAndVerify LogFilePathName
     
     If Not RunExternalCommand(SolverPath & " " & method & " " & MakePathSafe(SolutionFilePathName) & " " & param1 & " " & param2, LogFilePathName, Hide, True) Then
@@ -204,7 +204,7 @@ Private Function SubmitNeosJob(message As String, ByRef jobNumber As String, ByR
     #If Mac Then
         ' Create the job file
         Dim ModelFilePathName As String
-        ModelFilePathName = GetTempFilePath("job.xml")
+        GetTempFilePath "job.xml", ModelFilePathName
         DeleteFileAndVerify ModelFilePathName
     
         Open ModelFilePathName For Output As #1
