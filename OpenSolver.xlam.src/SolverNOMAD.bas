@@ -99,7 +99,9 @@ Function SolverVersion_NOMAD() As String
 6995      SetCurrentDirectory NomadDir()
           
           ' Get version info from DLL
-6996      sNomadVersion = left(Replace(NomadVersion(), vbNullChar, ""), 5)
+          ' Save to a new string first - modifying the string from the DLL can sometimes crash Excel
+          sNomadVersion = NomadVersion()
+6996      sNomadVersion = left(Replace(sNomadVersion, vbNullChar, ""), 5)
           
 6998      SetCurrentDirectory currentDir
           
@@ -119,7 +121,9 @@ Function DllVersion_NOMAD() As String
 7005      SetCurrentDirectory NomadDir()
           
           ' Get version info from DLL
-7006      sDllVersion = left(Replace(NomadDllVersion(), vbNullChar, ""), 5)
+          ' Save to a new string first - modifying the string from the DLL can sometimes crash Excel
+          sDllVersion = NomadDllVersion()
+7006      sDllVersion = left(Replace(sDllVersion, vbNullChar, ""), 5)
           
 7008      SetCurrentDirectory currentDir
           
