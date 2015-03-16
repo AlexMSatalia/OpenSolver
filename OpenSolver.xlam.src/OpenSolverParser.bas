@@ -30,6 +30,8 @@ Function ConvertCellToStandardName(rngCell As Range, Optional strParentName As S
           If TestKeyExists(SheetNameMap, strParentName) Then
               strCleanParentName = SheetNameMap(strParentName)
           Else
+              strCleanParentName = strParentName
+              
               For Each BannedChar In Array("-", "+", " ", "(", ")", ":", "*", "/", "^")
                   strCleanParentName = Replace(strCleanParentName, BannedChar, "_")
               Next BannedChar
