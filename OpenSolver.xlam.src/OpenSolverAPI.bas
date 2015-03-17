@@ -83,9 +83,9 @@ Public Sub SetQuickSolveParameters(QuickSolveParameters As Range, Optional book 
 End Sub
 
 Public Function GetDecisionVariables(Optional book As Workbook, Optional sheet As Worksheet) As Range
+' We check to see if a model exists by getting the adjustable cells. We check for a name first, as this may contain =Sheet1!$C$2:$E$2,Sheet1!#REF!
     GetActiveBookAndSheetIfMissing book, sheet
-              
-    ' We check to see if a model exists by getting the adjustable cells. We check for a name first, as this may contain =Sheet1!$C$2:$E$2,Sheet1!#REF!
+    
     Dim n As Name
     If Not NameExistsInWorkbook(book, EscapeSheetName(sheet) & "solver_adj", n) Then
         Err.Raise Number:=OpenSolver_ModelError, Description:="No Solver model with decision variables was found on sheet " & sheet.Name
@@ -111,7 +111,7 @@ Public Function GetDecisionVariablesNoOverlap(Optional book As Workbook, Optiona
 End Function
 
 Public Sub SetDecisionVariables(DecisionVariables As Range, Optional book As Workbook, Optional sheet As Worksheet)
-    SetSolverNamedRangeIfExists "adj", DecisionVariables, book, sheet
+    SetNamedRangeIfExists "adj", DecisionVariables, book, sheet, True
 End Sub
 
 Public Function GetNonNegativity(Optional book As Workbook, Optional sheet As Worksheet) As Boolean
@@ -263,13 +263,13 @@ Public Sub SetConstraintRel(Index As Long, ConstraintRel As RelationConsts, Opti
     SetIntegerNameOnSheet "solver_rel" & Index, ConstraintRel, book, sheet
 End Sub
 
-Public Function GetConstraintLhs(Index As Long, Optional book As Workbook, Optional sheet As Worksheet) As Range
+Public Function GetConstraintLhs(Index As Long, Optional book As Workbook, Optional sheet As Worksheet, Optional RefersTo As String) As Range
     GetActiveBookAndSheetIfMissing book, sheet
     
     Set GetConstraintLhs = Nothing
     
-    Dim IsRange As Boolean, value As Double, RefersToError As Boolean, RefersToFormula As Boolean, RangeFormula As String, IsMissing As Boolean
-    GetNameAsValueOrRange book, EscapeSheetName(sheet) & "solver_lhs" & Index, IsMissing, IsRange, GetConstraintLhs, RefersToFormula, RefersToError, RangeFormula, value
+    Dim IsRange As Boolean, value As Double, RefersToError As Boolean, RefersToFormula As Boolean, IsMissing As Boolean
+    GetNameAsValueOrRange book, EscapeSheetName(sheet) & "solver_lhs" & Index, IsMissing, IsRange, GetConstraintLhs, RefersToFormula, RefersToError, RefersTo, value
     ' Must have a left hand side defined
     If IsMissing Then
         Err.Raise Number:=OpenSolver_BuildError, Description:="The left hand side for a constraint does not appear to be defined ('solver_lhs" & Index & " is missing). Please fix this, and try again."
@@ -280,7 +280,7 @@ Public Function GetConstraintLhs(Index As Long, Optional book As Workbook, Optio
     End If
     ' LHSs must be ranges
     If Not IsRange Then
-        Err.Raise Number:=OpenSolver_BuildError, Description:="A constraint was entered with a left hand side (" & RangeFormula & ") that is not a range. Please update the constraint, and try again."
+        Err.Raise Number:=OpenSolver_BuildError, Description:="A constraint was entered with a left hand side (" & RefersTo & ") that is not a range. Please update the constraint, and try again."
     End If
 End Function
 
@@ -307,9 +307,9 @@ End Function
 
 Public Sub SetConstraintRhs(Index As Long, ConstraintRhsRange As Range, ConstraintRhsFormula As String, Optional book As Workbook, Optional sheet As Worksheet)
     If ConstraintRhsRange Is Nothing Then
-        SetSolverNameOnSheet "rhs" & Index, ConstraintRhsFormula, book, sheet
+        SetNameOnSheet "rhs" & Index, ConstraintRhsFormula, book, sheet, True
     Else
-        SetNamedRangeIfExists "solver_rhs" & Index, ConstraintRhsRange, book, sheet
+        SetNamedRangeIfExists "rhs" & Index, ConstraintRhsRange, book, sheet, True
     End If
 End Sub
 
@@ -329,9 +329,9 @@ Public Sub DeleteConstraint(Index As Long, Optional book As Workbook, Optional s
         UpdateConstraint i, LHSRange, Relation, RHSRange, RHSFormula, book, sheet
     Next i
     
-    DeleteSolverNameOnSheet "lhs" & NumConstraints, book, sheet
-    DeleteSolverNameOnSheet "rel" & NumConstraints, book, sheet
-    DeleteSolverNameOnSheet "rhs" & NumConstraints, book, sheet
+    DeleteNameOnSheet "lhs" & NumConstraints, book, sheet, True
+    DeleteNameOnSheet "rel" & NumConstraints, book, sheet, True
+    DeleteNameOnSheet "rhs" & NumConstraints, book, sheet, True
     
     SetNumConstraints NumConstraints - 1, book, sheet
 End Sub
@@ -367,9 +367,11 @@ Public Sub ResetModel(Optional book As Workbook, Optional sheet As Worksheet)
     OpenSolverNames = Array("ChosenSolver", "DualsNewSheet", "UpdateSensitivity", "LinearityCheck", "Duals")
     
     For Each Name In SolverNames
-        DeleteSolverNameOnSheet CStr(Name), book, sheet
+        DeleteNameOnSheet CStr(Name), book, sheet, True
     Next Name
     For Each Name In OpenSolverNames
         DeleteNameOnSheet "OpenSolver_" & CStr(Name), book, sheet
     Next Name
 End Sub
+
+

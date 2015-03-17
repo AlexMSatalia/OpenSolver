@@ -125,7 +125,7 @@ Sub UpdateFormFromMemory()
 4216      chkGetDuals.value = Not model.Duals Is Nothing
 
 4214      refObj.Text = GetDisplayAddress(model.ObjectiveFunctionCell, False)
-4215      refDecision.Text = GetDisplayAddressInCurrentLocale(model.DecisionVariables)
+4215      refDecision.Text = ConvertToCurrentLocale(GetDisplayAddress(model.DecisionVariables))
 4218      refDuals.Text = GetDisplayAddress(model.Duals, False)
 
 4222      model.PopulateConstraintListBox lstConstraints

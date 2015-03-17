@@ -82,7 +82,6 @@ ErrorHandler:
           GoTo ExitFunction
 End Function
 
-
 Public Function IsDependentOn(rngAdjDepedents As Range) As Boolean
           Dim RaiseError As Boolean
           RaiseError = False

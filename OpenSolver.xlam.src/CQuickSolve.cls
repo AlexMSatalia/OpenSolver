@@ -53,11 +53,11 @@ Function AnalyseParameters(OpenSolver As COpenSolver, sheet As Worksheet, _
           
           ' Find the Parameter range, and get the numer of parameters
           Dim ParamRange As Range
-2626      If Not OpenSolverModule.CheckModelHasParameterRange Then GoTo ExitFunction   ' Error message already shown
-2629      Set ParamRange = OpenSolverModule.RemoveRangeOverlap(GetQuickSolveParameters(sheet:=sheet))
+2626      If Not CheckModelHasParameterRange Then GoTo ExitFunction   ' Error message already shown
+2629      Set ParamRange = RemoveRangeOverlap(GetQuickSolveParameters(sheet:=sheet))
           
           Dim BadCell As Range
-2630      If Not OpenSolverModule.CheckRangeContainsNoAmbiguousMergedCells(ParamRange, BadCell) Then
+2630      If Not CheckRangeContainsNoAmbiguousMergedCells(ParamRange, BadCell) Then
 2631          Err.Raise OpenSolver_BuildError, Description:="QuickSolve Initialisation Failed: The parameter " & BadCell.AddressLocal(RowAbsolute:=False, ColumnAbsolute:=False) & " is inaccessible as it is within the merged range " & BadCell.MergeArea.AddressLocal(RowAbsolute:=False, ColumnAbsolute:=False) & "."
 2633      End If
           

@@ -11,7 +11,7 @@ Option Explicit
 
 Dim m As CModelParsed
 
-Public SolveStatus As OpenSolverResult ' See Enum in OpenSolverModule; Optimal,Infeasible, etc
+Public SolveStatus As OpenSolverResult
 Public SolveStatusString As String    ' Eg Infeasible, Opimal etc
 Public SolveStatusComment As String ' Eg constraint 1 cannot be satisified
 Public SolutionWasLoaded As Boolean

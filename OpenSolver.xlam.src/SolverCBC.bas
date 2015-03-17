@@ -424,7 +424,7 @@ Sub LaunchCommandLine_CBC()
           
           Dim ExtraParametersString As String, ExtraParameters As New Dictionary
 6360      If WorksheetAvailable Then
-              GetExtraParameters "CBC", ActiveSheet, ExtraParameters
+              GetExtraSolverParameters "CBC", ActiveSheet, ExtraParameters
               If errorString <> "" Then
                   ExtraParametersString = ""
               Else

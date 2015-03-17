@@ -109,7 +109,7 @@ Dim SparseA() As CIndexedCoeffs
 Dim MappingRowsToConstraints() As Long
 
 ' Our result as an enum and a string
-Public SolveStatus As OpenSolverResult ' See Enum in OpenSolverModule; Optimal,Infeasible, etc
+Public SolveStatus As OpenSolverResult
 Public SolveStatusString As String    ' Eg Infeasible, Opimal etc
 Public SolveStatusComment As String ' Eg constraint 1 cannot be satisified
 Public SolutionWasLoaded As Boolean ' True if we loaded a solution into the spreadsheet
@@ -656,8 +656,8 @@ ModelOptions:
               '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
               ' LEFT HAND SIDE
               '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
-              Dim rangeLHS As Range
-              Set rangeLHS = GetConstraintLhs(constraint, book, sheet)
+              Dim rangeLHS As Range, sRefersToLHS As String
+              Set rangeLHS = GetConstraintLhs(constraint, book, sheet, sRefersToLHS)
               
               '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
               ' RELATIONSHIP
@@ -709,9 +709,9 @@ ModelOptions:
                   ' Track the constraints
                   Dim summary As String
 1111              summary = ""
-1112              summary = summary & Mid(Names(sheetName & "solver_lhs" & constraint), 2)
+1112              summary = summary & sRefersToLHS
 1113              summary = summary & " " & RelationEnumToString(rel) & " "
-1114              summary = summary & Mid(Names(sheetName & "solver_rhs" & constraint), 2)
+1114              summary = summary & sRefersToRHS
 1115              ConstraintSummary(constraint) = summary
 
                   ' Check we have a compatible constraint system.
@@ -1360,7 +1360,7 @@ Sub SolveModel_LinearLocal(ModelFilePathName As String, SolveRelaxation As Boole
               
           ' We allow user to define extra parameters
           Dim ExtraParameters As New Dictionary
-1563      GetExtraParameters Solver, sheet, ExtraParameters
+1563      GetExtraSolverParameters Solver, sheet, ExtraParameters
               
           Dim SolutionFilePathName As String
 1568      SolutionFilePathName = SolutionFilePath(Solver)
