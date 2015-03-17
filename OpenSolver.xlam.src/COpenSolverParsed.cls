@@ -203,7 +203,7 @@ Sub WriteAMPLFile_Parsed(ModelFilePathName As String, SolverType As String, Solv
 7228      For i = 1 To m.LHSKeys.Count
               Dim strLHS As String, strRel As String, strRHS As String
 7229          strLHS = m.LHSKeys(i)
-7230          strRel = ConvertRelationToAMPL(m.Rels(i))
+7230          strRel = RelationToAmplString(m.Rels(i))
 7231          strRHS = m.RHSKeys(i)
 7232          WriteToFile 1, "# Actual constraint: " & strLHS & strRel & strRHS
 7233          WriteToFile 1, "subject to c" & i & ":"

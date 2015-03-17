@@ -1608,38 +1608,22 @@ Private Function ConvertExcelFunctionToNL(FunctionName As String) As String
 
 8140      FunctionName = LCase(FunctionName)
 8141      Select Case FunctionName
-          Case "ln"
-8142          FunctionName = "log"
-8143      Case "+"
-8144          FunctionName = "plus"
-8145      Case "-"
-8146          FunctionName = "minus"
-8147      Case "*"
-8148          FunctionName = "mult"
-8149      Case "/"
-8150          FunctionName = "div"
-8151      Case "mod"
-8152          FunctionName = "rem"
-8153      Case "^"
-8154          FunctionName = "pow"
-8155      Case "<"
-8156          FunctionName = "lt"
-8157      Case "<="
-8158          FunctionName = "le"
-8159      Case "="
-8160          FunctionName = "eq"
-8161      Case ">="
-8162          FunctionName = "ge"
-8163      Case ">"
-8164          FunctionName = "gt"
-8165      Case "<>"
-8166          FunctionName = "ne"
-8167      Case "quotient"
-8168          FunctionName = "intdiv"
-8169      Case "and"
-8170          FunctionName = "and_n"
-8171      Case "or"
-8172          FunctionName = "or_n"
+          Case "ln":       FunctionName = "log"
+8143      Case "+":        FunctionName = "plus"
+8145      Case "-":        FunctionName = "minus"
+8147      Case "*":        FunctionName = "mult"
+8149      Case "/":        FunctionName = "div"
+8151      Case "mod":      FunctionName = "rem"
+8153      Case "^":        FunctionName = "pow"
+8155      Case "<":        FunctionName = "lt"
+8157      Case "<=":       FunctionName = "le"
+8159      Case "=":        FunctionName = "eq"
+8161      Case ">=":       FunctionName = "ge"
+8163      Case ">":        FunctionName = "gt"
+8165      Case "<>":       FunctionName = "ne"
+8167      Case "quotient": FunctionName = "intdiv"
+8169      Case "and":      FunctionName = "and_n"
+8171      Case "or":       FunctionName = "or_n"
               
 8173      Case "log", "ceiling", "floor", "power"
 8174          Err.Raise OpenSolver_BuildError, "Building expression tree", "Not implemented yet: " & FunctionName & vbCrLf & "Please let us know about this at opensolver.org so we can fix it."
@@ -1839,114 +1823,60 @@ End Function
 ' Converts an operator string to .nl code
 Private Function ConvertOperatorToNLCode(FunctionName As String) As Long
 8232      Select Case FunctionName
-          Case "plus"
-8233          ConvertOperatorToNLCode = 0
-8234      Case "minus"
-8235          ConvertOperatorToNLCode = 1
-8236      Case "mult"
-8237          ConvertOperatorToNLCode = 2
-8238      Case "div"
-8239          ConvertOperatorToNLCode = 3
-8240      Case "rem"
-8241          ConvertOperatorToNLCode = 4
-8242      Case "pow"
-8243          ConvertOperatorToNLCode = 5
-8244      Case "less"
-8245          ConvertOperatorToNLCode = 6
-8246      Case "min"
-8247          ConvertOperatorToNLCode = 11
-8248      Case "max"
-8249          ConvertOperatorToNLCode = 12
-8250      Case "floor"
-8251          ConvertOperatorToNLCode = 13
-8252      Case "ceil"
-8253          ConvertOperatorToNLCode = 14
-8254      Case "abs"
-8255          ConvertOperatorToNLCode = 15
-8256      Case "neg"
-8257          ConvertOperatorToNLCode = 16
-8258      Case "or"
-8259          ConvertOperatorToNLCode = 20
-8260      Case "and"
-8261          ConvertOperatorToNLCode = 21
-8262      Case "lt"
-8263          ConvertOperatorToNLCode = 22
-8264      Case "le"
-8265          ConvertOperatorToNLCode = 23
-8266      Case "eq"
-8267          ConvertOperatorToNLCode = 24
-8268      Case "ge"
-8269          ConvertOperatorToNLCode = 28
-8270      Case "gt"
-8271          ConvertOperatorToNLCode = 29
-8272      Case "ne"
-8273          ConvertOperatorToNLCode = 30
-8274      Case "if"
-8275          ConvertOperatorToNLCode = 35
-8276      Case "not"
-8277          ConvertOperatorToNLCode = 34
-8278      Case "tanh"
-8279          ConvertOperatorToNLCode = 37
-8280      Case "tan"
-8281          ConvertOperatorToNLCode = 38
-8282      Case "sqrt"
-8283          ConvertOperatorToNLCode = 39
-8284      Case "sinh"
-8285          ConvertOperatorToNLCode = 40
-8286      Case "sin"
-8287          ConvertOperatorToNLCode = 41
-8288      Case "log10"
-8289          ConvertOperatorToNLCode = 42
-8290      Case "log"
-8291          ConvertOperatorToNLCode = 43
-8292      Case "exp"
-8293          ConvertOperatorToNLCode = 44
-8294      Case "cosh"
-8295          ConvertOperatorToNLCode = 45
-8296      Case "cos"
-8297          ConvertOperatorToNLCode = 46
-8298      Case "atanh"
-8299          ConvertOperatorToNLCode = 47
-8300      Case "atan2"
-8301          ConvertOperatorToNLCode = 48
-8302      Case "atan"
-8303          ConvertOperatorToNLCode = 49
-8304      Case "asinh"
-8305          ConvertOperatorToNLCode = 50
-8306      Case "asin"
-8307          ConvertOperatorToNLCode = 51
-8308      Case "acosh"
-8309          ConvertOperatorToNLCode = 52
-8310      Case "acos"
-8311          ConvertOperatorToNLCode = 53
-8312      Case "sum"
-8313          ConvertOperatorToNLCode = 54
-8314      Case "intdiv"
-8315          ConvertOperatorToNLCode = 55
-8316      Case "precision"
-8317          ConvertOperatorToNLCode = 56
-8318      Case "round"
-8319          ConvertOperatorToNLCode = 57
-8320      Case "trunc"
-8321          ConvertOperatorToNLCode = 58
-8322      Case "count"
-8323          ConvertOperatorToNLCode = 59
-8324      Case "numberof"
-8325          ConvertOperatorToNLCode = 60
-8326      Case "numberofs"
-8327          ConvertOperatorToNLCode = 61
-8328      Case "ifs"
-8329          ConvertOperatorToNLCode = 65
-8330      Case "and_n"
-8331          ConvertOperatorToNLCode = 70
-8332      Case "or_n"
-8333          ConvertOperatorToNLCode = 71
-8334      Case "implies"
-8335          ConvertOperatorToNLCode = 72
-8336      Case "iff"
-8337          ConvertOperatorToNLCode = 73
-8338      Case "alldiff"
-8339          ConvertOperatorToNLCode = 74
+          Case "plus":      ConvertOperatorToNLCode = 0
+8234      Case "minus":     ConvertOperatorToNLCode = 1
+8236      Case "mult":      ConvertOperatorToNLCode = 2
+8238      Case "div":       ConvertOperatorToNLCode = 3
+8240      Case "rem":       ConvertOperatorToNLCode = 4
+8242      Case "pow":       ConvertOperatorToNLCode = 5
+8244      Case "less":      ConvertOperatorToNLCode = 6
+8246      Case "min":       ConvertOperatorToNLCode = 11
+8248      Case "max":       ConvertOperatorToNLCode = 12
+8250      Case "floor":     ConvertOperatorToNLCode = 13
+8252      Case "ceil":      ConvertOperatorToNLCode = 14
+8254      Case "abs":       ConvertOperatorToNLCode = 15
+8256      Case "neg":       ConvertOperatorToNLCode = 16
+8258      Case "or":        ConvertOperatorToNLCode = 20
+8260      Case "and":       ConvertOperatorToNLCode = 21
+8262      Case "lt":        ConvertOperatorToNLCode = 22
+8264      Case "le":        ConvertOperatorToNLCode = 23
+8266      Case "eq":        ConvertOperatorToNLCode = 24
+8268      Case "ge":        ConvertOperatorToNLCode = 28
+8270      Case "gt":        ConvertOperatorToNLCode = 29
+8272      Case "ne":        ConvertOperatorToNLCode = 30
+8274      Case "if":        ConvertOperatorToNLCode = 35
+8276      Case "not":       ConvertOperatorToNLCode = 34
+8278      Case "tanh":      ConvertOperatorToNLCode = 37
+8280      Case "tan":       ConvertOperatorToNLCode = 38
+8282      Case "sqrt":      ConvertOperatorToNLCode = 39
+8284      Case "sinh":      ConvertOperatorToNLCode = 40
+8286      Case "sin":       ConvertOperatorToNLCode = 41
+8288      Case "log10":     ConvertOperatorToNLCode = 42
+8290      Case "log":       ConvertOperatorToNLCode = 43
+8292      Case "exp":       ConvertOperatorToNLCode = 44
+8294      Case "cosh":      ConvertOperatorToNLCode = 45
+8296      Case "cos":       ConvertOperatorToNLCode = 46
+8298      Case "atanh":     ConvertOperatorToNLCode = 47
+8300      Case "atan2":     ConvertOperatorToNLCode = 48
+8302      Case "atan":      ConvertOperatorToNLCode = 49
+8304      Case "asinh":     ConvertOperatorToNLCode = 50
+8306      Case "asin":      ConvertOperatorToNLCode = 51
+8308      Case "acosh":     ConvertOperatorToNLCode = 52
+8310      Case "acos":      ConvertOperatorToNLCode = 53
+8312      Case "sum":       ConvertOperatorToNLCode = 54
+8314      Case "intdiv":    ConvertOperatorToNLCode = 55
+8316      Case "precision": ConvertOperatorToNLCode = 56
+8318      Case "round":     ConvertOperatorToNLCode = 57
+8320      Case "trunc":     ConvertOperatorToNLCode = 58
+8322      Case "count":     ConvertOperatorToNLCode = 59
+8324      Case "numberof":  ConvertOperatorToNLCode = 60
+8326      Case "numberofs": ConvertOperatorToNLCode = 61
+8328      Case "ifs":       ConvertOperatorToNLCode = 65
+8330      Case "and_n":     ConvertOperatorToNLCode = 70
+8332      Case "or_n":      ConvertOperatorToNLCode = 71
+8334      Case "implies":   ConvertOperatorToNLCode = 72
+8336      Case "iff":       ConvertOperatorToNLCode = 73
+8338      Case "alldiff":   ConvertOperatorToNLCode = 74
 8340      End Select
 End Function
 

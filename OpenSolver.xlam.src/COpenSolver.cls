@@ -1507,14 +1507,8 @@ Sub WriteLPFile(ModelFilePathName As String, SolveRelaxation As Boolean)
 1671                GoTo ExitSub
 1672            End If
 1673          End If
-1674          If Relation(row) = RelationGE Then
-1675              Print #1, " >= ";
-1676          ElseIf Relation(row) = RelationLE Then
-1677              Print #1, " <= ";
-1678          ElseIf Relation(row) = RelationEQ Then
-1679              Print #1, " = ";
-1680          End If
-1681          Print #1, StrEx(RHS(row))
+1674
+1681          Print #1, RelationToLpString(Relation(row)) & StrEx(RHS(row))
 1682      Next row
 1683      Print #1,   ' New line
           Dim c As Range
@@ -1718,13 +1712,7 @@ Sub WriteAMPLFile(ModelFilePathName As String, SolveRelaxation As Boolean)
 1847           End With
               
               ' Check sense
-1848          If Relation(row) = RelationGE Then
-1849              Line = Line & ">= "
-1850          ElseIf Relation(row) = RelationLE Then
-1851              Line = Line & "<= "
-1852          ElseIf Relation(row) = RelationEQ Then
-1853              Line = Line & "== "
-1854          End If
+1848          Line = Line & RelationToAmplString(Relation(row))
               
               ' Add RHS
 1855          Line = Line & StrEx(RHS(row))

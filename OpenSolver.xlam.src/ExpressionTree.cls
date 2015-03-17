@@ -159,12 +159,9 @@ End Function
 ' Display the linearity of a node for debugging
 Function DisplayLinearity() As String
 8550      Select Case NodeLinearity
-          Case ExpressionTreeNonLinear
-8551          DisplayLinearity = "N"
-8552      Case ExpressionTreeLinear
-8553          DisplayLinearity = "L"
-8554      Case ExpressionTreeConstant
-8555          DisplayLinearity = "C"
+          Case ExpressionTreeNonLinear: DisplayLinearity = "N"
+8552      Case ExpressionTreeLinear:    DisplayLinearity = "L"
+8554      Case ExpressionTreeConstant:  DisplayLinearity = "C"
 8556      End Select
 End Function
 
