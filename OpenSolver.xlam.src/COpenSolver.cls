@@ -709,9 +709,9 @@ ModelOptions:
                   ' Track the constraints
                   Dim summary As String
 1111              summary = ""
-1112              summary = summary & sRefersToLHS
+1112              summary = summary & StripWorksheetNameAndDollars(sRefersToLHS, sheet)
 1113              summary = summary & " " & RelationEnumToString(rel) & " "
-1114              summary = summary & sRefersToRHS
+1114              summary = summary & StripWorksheetNameAndDollars(sRefersToRHS, sheet)
 1115              ConstraintSummary(constraint) = summary
 
                   ' Check we have a compatible constraint system.
@@ -962,7 +962,7 @@ Sub BuildModelOptions(succeeded As Boolean, Optional SolveRelaxation As Boolean 
 1265          IngoreIntConstraints = False
 1266          If Val(Application.Version) >= 14 And GetIgnoreIntegerConstraints(book, sheet) Then
                    If MinimiseUserInteraction Then GoTo RaiseError
-                   If Not MsgBox("You have the 'Ignore integer constraints' option enabled in Solver, so OpenSolver cannot proceed with solving. Would you like OpenSolver to disable this option and proceed?", vbCritical + vbYesNo + vbDefaultButton1, "OpenSolver Warning") = vbNo Then
+                   If Not MsgBox("You have the 'Ignore integer constraints' option enabled in Solver, so OpenSolver cannot proceed with solving. You can either disable this option, or use the 'Solve Relaxation' option in the OpenSolver menu. Would you like OpenSolver to disable this option and proceed?", vbCritical + vbYesNo + vbDefaultButton1, "OpenSolver Warning") = vbNo Then
                        SetIgnoreIntegerConstraints False, book, sheet
                    Else
 RaiseError:
@@ -1785,12 +1785,12 @@ Function CheckConstantConstraintIsSatisfied(row As Long, constraint As Long, ins
 1895          If Not RHSCellRange Is Nothing Then RHSstring = RHSCellRange.AddressLocal(RowAbsolute:=False, ColumnAbsolute:=False)
 1896          SolveStatus = OpenSolverResult.Infeasible
 1897          SolveStatusString = "Infeasible"
-1898          SolveStatusComment = "The model contains an Excel constraint '" & ConstraintSummary(constraint) & "' for which instance " _
+1898          SolveStatusComment = "The model contains a constraint '" & ConstraintSummary(constraint) & "' for which instance " _
                      & instance & " does not depend on the decision variables and is not satisfied." & vbCrLf _
                     & "Constraint specifies: " _
                      & "LHS=" & LHSCellRange.AddressLocal(RowAbsolute:=False, ColumnAbsolute:=False) & "=" & LHSValue _
                     & " " & RelationEnumToString(Relation(row)) & " " _
-                    & "RHS=" & RHSstring & "=" & RHSValue
+                    & "RHS=" & StripWorksheetNameAndDollars(RHSstring, sheet) & "=" & RHSValue
 1899          Close #1
 1900          CheckConstantConstraintIsSatisfied = False
 1901          GoTo ExitFunction

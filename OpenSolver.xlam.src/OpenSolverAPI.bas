@@ -218,7 +218,7 @@ Public Function GetObjectiveFunctionCell(Optional book As Workbook, Optional she
     Dim isRangeObj As Boolean, valObj As Double, ObjRefersToError As Boolean, ObjRefersToFormula As Boolean, sRefersToObj As String, objIsMissing As Boolean
     GetNameAsValueOrRange book, EscapeSheetName(sheet) & "solver_opt", objIsMissing, isRangeObj, GetObjectiveFunctionCell, ObjRefersToFormula, ObjRefersToError, sRefersToObj, valObj
 
-    If Not ValidateObjective Or GetObjectiveFunctionCell Is Nothing Then Exit Function
+    If Not ValidateObjective Then Exit Function
 
     ' If objMissing is false, but the ObjRange is empty, the objective might be an out of date reference
     If objIsMissing = False And GetObjectiveFunctionCell Is Nothing Then
@@ -228,6 +228,9 @@ Public Function GetObjectiveFunctionCell(Optional book As Workbook, Optional she
     If ObjRefersToError Then
         Err.Raise Number:=OpenSolver_BuildError, Description:="The objective is marked #REF!, indicating this cell has been deleted. Please fix the objective, and try again."
     End If
+    
+    If GetObjectiveFunctionCell Is Nothing Then Exit Function
+    
     ' Objective has a value that is not a number
     If VarType(GetObjectiveFunctionCell.Value2) <> vbDouble Then
         If VarType(GetObjectiveFunctionCell.Value2) = vbError Then

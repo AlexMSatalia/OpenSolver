@@ -214,7 +214,7 @@ End Function
 ' Note: Numeric values should be passed as strings in English (not the local language)
 Sub DeleteNameOnSheet(Name As String, Optional book As Workbook, Optional sheet As Worksheet, Optional SolverName As Boolean = False)
           GetActiveBookAndSheetIfMissing book, sheet
-608       Name = EscapeSheetName(sheet) & Name
+608       Name = EscapeSheetName(sheet) & IIf(SolverName, SolverPrefix, "") & Name
 609       On Error Resume Next
 610       book.Names(Name).Delete
 doesntExist:
