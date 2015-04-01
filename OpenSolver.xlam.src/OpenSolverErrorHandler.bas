@@ -78,13 +78,23 @@ Function ReportError(ModuleName As String, ProcedureName As String, Optional IsE
     Dim LogText As String
     LogText = ErrSource & ": Line " & ErrLine
     
+    ' Get the solver info if we need it, avoiding clashes in file handles while writing the log file
+    ' TODO fix our file IO throughout so that this extra step isn't needed
+    Dim SolverInfo As String
+    If IsEntryPoint Then
+        SolverInfo = SolverSummary()
+    End If
+    
     ' Open the log file, write out the error information and close the log file.
     Dim FileNum As Integer
     FileNum = FreeFile()
     Open Path For Append As #FileNum
     Print #FileNum, LogText
-    If IsEntryPoint Then Print #FileNum, vbNewLine & "Error " & CStr(ErrNum) & ": " & ErrMsg & _
-                                         vbNewLine & vbNewLine & EnvironmentSummary()
+    If IsEntryPoint Then
+        Print #FileNum, vbNewLine & "Error " & CStr(ErrNum) & ": " & ErrMsg & vbNewLine
+        Print #FileNum, EnvironmentSummary() & vbNewLine
+        Print #FileNum, StripNonBreakingSpaces(SolverInfo)
+    End If
     Close #FileNum
     
     If IsEntryPoint Then

@@ -47,6 +47,7 @@ Function About_Couenne() As String
 8363          About_Couenne = errorString
 8364          Exit Function
 8365      End If
+
           ' Assemble version info
 8366      About_Couenne = "Couenne " & SolverBitness_Couenne & "-bit" & _
                           " v" & SolverVersion_Couenne & _

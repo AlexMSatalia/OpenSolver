@@ -100,15 +100,19 @@ Function SolverAvailable_Gurobi(Optional SolverPath As String, Optional errorStr
           Dim RaiseError As Boolean
           RaiseError = False
           On Error GoTo ErrorHandler
-
-6385      If GetExistingFilePathName(GetGurobiBinFolder, SolverExec_Gurobi, SolverPath) And _
-             FileOrDirExists(SolverPythonScriptPath_Gurobi()) Then
-6386          SolverAvailable_Gurobi = True
-6387      Else
-6388          SolverPath = ""
+          If Not FileOrDirExists(SolverPythonScriptPath_Gurobi()) Then
+              errorString = "Unable to find OpenSolver Gurobi script ('" & SolverPythonScript_Gurobi & "'). Folders searched:" & _
+                            vbNewLine & MakePathSafe(JoinPaths(ThisWorkbook.Path, SolverDir))
+6385      ElseIf Not GetExistingFilePathName(GetGurobiBinFolder, SolverExec_Gurobi, SolverPath) Then
 6389          errorString = "No Gurobi installation was detected."
-6390          SolverAvailable_Gurobi = False
 6391      End If
+
+          If errorString <> "" Then
+6388          SolverPath = ""
+6390          SolverAvailable_Gurobi = False
+          Else
+              SolverAvailable_Gurobi = True
+          End If
 
 ExitFunction:
           If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg

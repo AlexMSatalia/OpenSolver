@@ -44,6 +44,7 @@ Function About_NOMAD() As String
 6969          About_NOMAD = errorString
 6970          Exit Function
 6971      End If
+
           ' Assemble version info
 6972      About_NOMAD = "NOMAD " & SolverBitness_NOMAD & "-bit v" & SolverVersion_NOMAD() & _
                         " using OpenSolverNomadDLL v" & DllVersion_NOMAD() & _
@@ -81,7 +82,8 @@ Function SolverAvailable_NOMAD(Optional errorString As String) As Boolean
 NotFound:
 6986      SetCurrentDirectory currentDir
 6987      SolverAvailable_NOMAD = False
-6988      errorString = "Unable to find NOMAD (" & NomadDllName & ") in the `Solvers` folder (" & NomadDir() & ")"
+6988      errorString = "Unable to find NOMAD ('" & NomadDllName & "'). Folders searched:" & _
+                        vbNewLine & MakePathSafe(NomadDir())
 6989      Exit Function
 #End If
 End Function

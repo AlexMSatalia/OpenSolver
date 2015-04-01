@@ -47,6 +47,7 @@ Function About_Bonmin() As String
 9026          About_Bonmin = errorString
 9027          Exit Function
 9028      End If
+
           ' Assemble version info
 9029      About_Bonmin = "Bonmin " & SolverBitness_Bonmin & "-bit" & _
                           " v" & SolverVersion_Bonmin & _

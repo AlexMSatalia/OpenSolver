@@ -347,6 +347,11 @@ Function MakeSpacesNonBreaking(Text As String) As String
 784       MakeSpacesNonBreaking = Replace(Text, Chr(32), Chr(NBSP))
 End Function
 
+Function StripNonBreakingSpaces(Text As String) As String
+' Replaces all spaces with NBSP char
+784       StripNonBreakingSpaces = Replace(Text, Chr(NBSP), Chr(32))
+End Function
+
 Function TrimBlankLines(s As String) As String
 ' Remove any blank lines at the beginning or end of s
           Dim RaiseError As Boolean
@@ -614,6 +619,15 @@ Function EnvironmentSummary() As String
 3523      EnvironmentSummary = "Version " & sOpenSolverVersion & " (" & sOpenSolverDate & ")" & _
                                " running on " & IIf(SystemIs64Bit, "64", "32") & "-bit " & OSFamily() & _
                                " with " & VBAversion() & " in " & ExcelBitness() & "-bit Excel " & Application.Version
+End Function
+
+Function SolverSummary() As String
+    ' On separate lines so we can easily step when debugging
+    SolverSummary = About_CBC() & vbNewLine & vbNewLine
+    SolverSummary = SolverSummary & About_Gurobi() & vbNewLine & vbNewLine
+    SolverSummary = SolverSummary & About_NOMAD() & vbNewLine & vbNewLine
+    SolverSummary = SolverSummary & About_Bonmin() & vbNewLine & vbNewLine
+    SolverSummary = SolverSummary & About_Couenne()
 End Function
 
 Sub UpdateStatusBar(Text As String, Optional Force As Boolean = False)

@@ -16,7 +16,7 @@ Attribute VB_Exposed = False
 Option Explicit
 
 #If Mac Then
-    Const FormWidthAbout = 620
+    Const FormWidthAbout = 650
 #Else
     Const FormWidthAbout = 450
 #End If
@@ -115,34 +115,42 @@ Private Sub cmdUpdate_Click()
 End Sub
 
 Private Sub lblUrl_Click()
-3512      Call OpenURL("http://www.opensolver.org")
+3512      OpenURL "http://www.opensolver.org"
 End Sub
 
 Private Sub UserForm_Activate()
 3514      UpdateStatusBar "OpenSolver: Fetching solver information...", True
 3515      Application.Cursor = xlWait
 
-          txtFilePath.Locked = False
-          txtFilePath = "OpenSolver file: " & MakeSpacesNonBreaking(MakePathSafe(ThisWorkbook.FullName))
-          txtFilePath.Locked = True
+          With txtFilePath
+              .Locked = False
+              .value = "OpenSolver file: " & MakeSpacesNonBreaking(MakePathSafe(ThisWorkbook.FullName))
+              .Locked = True
+          End With
           
           chkUpdate.value = GetUpdateSetting()
 
-3523      lblVersion.Caption = EnvironmentSummary()
+          With txtVersion
+              .Locked = False
+3523          .value = EnvironmentSummary()
+              .Locked = True
+              AutoHeight txtVersion, Me.width, True
+              #If Mac Then
+                  ' On Mac the autosizing isn't quite wide enough
+                  .width = .width + 10
+              #End If
+          End With
           
           ReflectOpenSolverStatus
           EventsEnabled = True
           
-3524      txtAbout.Locked = False
-3525      txtAbout.Text = About_OpenSolver & _
-                          About_CBC & vbNewLine & vbNewLine & _
-                          About_Gurobi & vbNewLine & vbNewLine & _
-                          About_NOMAD & vbNewLine & vbNewLine & _
-                          About_Bonmin & vbNewLine & vbNewLine & _
-                          About_Couenne
-3534      txtAbout.Locked = True
-3535      txtAbout.SetFocus
-3536      txtAbout.SelStart = 0
+          With txtAbout
+3524          .Locked = False
+3525          .Text = About_OpenSolver & vbNewLine & vbNewLine & SolverSummary()
+3534          .Locked = True
+3535          .SetFocus
+3536          .SelStart = 0
+          End With
           
 3537      Application.StatusBar = False
 3538      Application.Cursor = xlDefault
@@ -164,8 +172,7 @@ Public Function About_OpenSolver() As String
       vbNewLine & _
       "OpenSolver is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.  You should have received a copy of the GNU General Public License along with OpenSolver.  If not, see http://www.gnu.org/licenses/" & vbNewLine & _
       vbNewLine & _
-      "Excel Solver is a product developed by Frontline Systems (www.solver.com) for Microsoft. OpenSolver has no affiliation with, nor is recommend by, Microsoft or Frontline Systems. All trademark terms are the property of their respective owners." & vbNewLine & _
-      vbNewLine
+      "Excel Solver is a product developed by Frontline Systems (www.solver.com) for Microsoft. OpenSolver has no affiliation with, nor is recommend by, Microsoft or Frontline Systems. All trademark terms are the property of their respective owners."
 
 End Function
 
@@ -183,18 +190,21 @@ Private Sub AutoLayout()
         .height = FormHeadingHeight
     End With
     
-    With lblVersion
-        .Caption = "OpenSolver version information"
+    With txtVersion
+        .Locked = False
+        .value = "OpenSolver version information"
+        .Locked = True
         .width = lblHeading.width
         .left = lblHeading.left
         .top = Below(lblHeading, False)
+        .BackStyle = fmBackStyleTransparent
     End With
     
     With lblUrl
         .Caption = "http://www.OpenSolver.org"
         .ForeColor = FormLinkColor
         .left = lblHeading.left
-        .top = Below(lblVersion, False)
+        .top = Below(txtVersion, False)
         AutoHeight lblUrl, Me.width, True
     End With
     
@@ -204,7 +214,7 @@ Private Sub AutoLayout()
         .Locked = True
         .left = lblHeading.left
         .top = Below(lblUrl)
-        .BackColor = FormBackColor
+        .BackStyle = fmBackStyleTransparent
         .SpecialEffect = fmSpecialEffectEtched
         .height = 250
         .width = lblHeading.width
@@ -218,7 +228,7 @@ Private Sub AutoLayout()
         .top = Below(txtAbout)
         .height = 2 * FormTextHeight + 2 ' Stop the text becoming smaller
         .width = lblHeading.width
-        .BackColor = FormBackColor
+        .BackStyle = fmBackStyleTransparent
         .MultiLine = True
     End With
     

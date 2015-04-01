@@ -49,7 +49,8 @@ Function SolverFilePath_Default(Solver As String, Optional errorString As String
           
 #If Mac Then
 6590      If GetExistingFilePathName(JoinPaths(SearchPath, SolverDirMac), SolverExec(Solver), SolverFilePath_Default) Then GoTo ExitFunction ' Found a mac solver
-6591      errorString = "Unable to find Mac version of " & SolverName(Solver) & " ('" & SolverExec(Solver) & "') in the Solvers folder."
+6591      errorString = "Unable to find " & SolverName(Solver) & " ('" & SolverExec(Solver) & "'). Folders searched:" & _
+                        vbNewLine & MakePathSafe(JoinPaths(SearchPath, SolverDirMac))
 6592      SolverFilePath_Default = ""
 6593      Exit Function
 #Else
@@ -66,7 +67,10 @@ Function SolverFilePath_Default(Solver As String, Optional errorString As String
 6602      End If
           ' Fail
 6603      SolverFilePath_Default = ""
-6604      errorString = "Unable to find " & SolverName(Solver) & " ('" & SolverExec(Solver) & "') in the Solvers folder."
+6604      errorString = "Unable to find " & SolverName(Solver) & " ('" & SolverExec(Solver) & "'). Folders searched:" & _
+                        IIf(SystemIs64Bit, vbNewLine & MakePathSafe(JoinPaths(SearchPath, SolverDirWin64)), "") & _
+                        IIf(SystemIs64Bit, vbNewLine & MakePathSafe(JoinPaths(SearchPath, SolverDirWin32)), "")
+
 #End If
 
 ExitFunction:

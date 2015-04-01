@@ -54,6 +54,7 @@ Function About_CBC() As String
 6056          About_CBC = errorString
 6057          Exit Function
 6058      End If
+
           ' Assemble version info
 6059      About_CBC = "CBC " & SolverBitness_CBC & "-bit" & _
                            " v" & SolverVersion_CBC & _
