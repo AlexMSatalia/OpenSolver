@@ -27,8 +27,6 @@ End Sub
 
 Private Sub Workbook_Open()
 4         AlterMenuItems (True)
-          ' Schedule an update check for 10s after Addin load
-          Application.OnTime Now + TimeSerial(0, 0, 10), "AutoUpdateCheck"
 End Sub
 '====================================================================
 ' Excel 2003 Menu Code

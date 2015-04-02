@@ -24,25 +24,30 @@ End Sub
 Sub OpenSolver_SolveClickHandler(Optional Control)
 2754      If Not CheckWorksheetAvailable Then Exit Sub
 2755      RunOpenSolver False
+          AutoUpdateCheck
 End Sub
 
 Sub OpenSolver_ModelOptions(Optional Control)
 2756      If Not CheckWorksheetAvailable Then Exit Sub
 2757      frmOptions.Show
+          AutoUpdateCheck
 End Sub
 
 Sub OpenSolver_SolverOptions(Optional Control)
 2759      If Not CheckWorksheetAvailable Then Exit Sub
 2761      frmSolverChange.Show
+          AutoUpdateCheck
 End Sub
 
 Sub OpenSolver_SolveRelaxationClickHandler(Optional Control)
 2762      If Not CheckWorksheetAvailable Then Exit Sub
 2763      RunOpenSolver True
+          AutoUpdateCheck
 End Sub
 
 Sub OpenSolver_LaunchCBCCommandLine(Optional Control)
 2764      LaunchCommandLine_CBC
+          AutoUpdateCheck
 End Sub
 
 Sub OpenSolver_ShowHideModelClickHandler(Optional Control)
@@ -55,6 +60,7 @@ Sub OpenSolver_ShowHideModelClickHandler(Optional Control)
 2770      Else
 2771          ShowSolverModel
 2772      End If
+          AutoUpdateCheck
 ExitSub:
 End Sub
 
@@ -63,16 +69,19 @@ Sub OpenSolver_SetQuickSolveParametersClickHandler(Optional Control)
 2774      If UserSetQuickSolveParameterRange Then
 2775          ClearQuickSolve
 2776      End If
+          AutoUpdateCheck
 End Sub
 
 Sub OpenSolver_InitQuickSolveClickHandler(Optional Control)
 2777      If Not CheckWorksheetAvailable Then Exit Sub
 2778      InitializeQuickSolve
+          AutoUpdateCheck
 End Sub
 
 Sub OpenSolver_QuickSolveClickHandler(Optional Control)
 2779      If Not CheckWorksheetAvailable Then Exit Sub
 2780      RunQuickSolve
+          AutoUpdateCheck
 End Sub
 
 Sub OpenSolver_ViewLastModelClickHandler(Optional Control)
@@ -80,6 +89,7 @@ Sub OpenSolver_ViewLastModelClickHandler(Optional Control)
 2781      GetTempFilePath LPFileName, FilePath
 2782      notFoundMessage = "Error: There is no LP file (" & FilePath & ") to open. Please solve the model using one of the linear solvers within OpenSolver, and then try again."
 2783      OpenFile FilePath, notFoundMessage
+          AutoUpdateCheck
 End Sub
 
 Sub OpenSolver_ViewLastAmplClickHandler(Optional Control)
@@ -87,6 +97,7 @@ Sub OpenSolver_ViewLastAmplClickHandler(Optional Control)
 2784      GetTempFilePath AMPLFileName, FilePath
 2785      notFoundMessage = "Error: There is no AMPL file (" & FilePath & ") to open. Please solve the model using one of the NEOS solvers within OpenSolver, and then try again."
 2786      OpenFile FilePath, notFoundMessage
+          AutoUpdateCheck
 End Sub
 
 Sub OpenSolver_ViewLogFile(Optional Control)
@@ -94,6 +105,7 @@ Sub OpenSolver_ViewLogFile(Optional Control)
 2787      GetTempFilePath "log1.tmp", FilePath
 2788      notFoundMessage = "Error: There is no log file (" & FilePath & ") to open. Please re-solve the OpenSolver model, and then try again."
 2789      OpenFile FilePath, notFoundMessage
+          AutoUpdateCheck
 End Sub
 
 Sub OpenSolver_ViewLastSolutionClickHandler(Optional Control)
@@ -101,6 +113,7 @@ Sub OpenSolver_ViewLastSolutionClickHandler(Optional Control)
 2790      FilePath = SolutionFilePath_CBC()
 2791      notFoundMessage = "Error: There is no solution file (" & FilePath & ") to open. Please solve the model using the CBC solver for OpenSolver, and then try again. Or if you solved your model using a different solver try opening that file instead."
 2792      OpenFile FilePath, notFoundMessage
+          AutoUpdateCheck
 End Sub
 
 Sub OpenSolver_ViewLastGurobiSolutionClickHandler(Optional Control)
@@ -108,14 +121,17 @@ Sub OpenSolver_ViewLastGurobiSolutionClickHandler(Optional Control)
 2793      FilePath = SolutionFilePath_Gurobi()
 2794      notFoundMessage = "Error: There is no solution file (" & FilePath & ") to open. Please solve the model using the Gurobi solver for OpenSolver, and then try again. Or if you solved your model using a different solver try opening that file instead."
 2795      OpenFile FilePath, notFoundMessage
+          AutoUpdateCheck
 End Sub
 
 Sub OpenSolver_OnlineHelp(Optional Control)
-2796      Call OpenURL("http://help.opensolver.org")
+2796      OpenURL "http://help.opensolver.org"
+          AutoUpdateCheck
 End Sub
 
 Sub OpenSolver_AboutClickHandler(Optional Control)
 2798      frmAbout.Show
+          AutoUpdateCheck
 End Sub
 
 Sub OpenSolver_AboutCoinOR(Optional Control)
@@ -125,28 +141,34 @@ Sub OpenSolver_AboutCoinOR(Optional Control)
                  "The Computational Infrastructure for Operations Research (COIN-OR, or simply COIN)  project is an initiative to spur the development of open-source software for the operations research community." & vbCrLf & _
                  vbCrLf & _
                  "OpenSolver uses the Coin-OR CBC optimization engine. CBC is licensed under the Common Public License 1.0. Visit the web sites for more information."
+          AutoUpdateCheck
 End Sub
 
 Sub OpenSolver_VisitOpenSolverOrg(Optional Control)
-2800      Call OpenURL("http://www.opensolver.org")
+2800      OpenURL "http://www.opensolver.org"
+          AutoUpdateCheck
 End Sub
 
 Sub OpenSolver_VisitCoinOROrg(Optional Control)
-2801      Call OpenURL("http://www.coin-or.org")
+2801      OpenURL "http://www.coin-or.org"
+          AutoUpdateCheck
 End Sub
 Sub OpenSolver_ModelClick(Optional Control)
 2851      If Not CheckWorksheetAvailable Then Exit Sub
 2853      frmModel.Show
 2854      DoEvents
+          AutoUpdateCheck
 End Sub
 
 Sub OpenSolver_QuickAutoModelClick(Optional Control)
 2855      RunAutoModel False
+          AutoUpdateCheck
 End Sub
 
 Sub OpenSolver_AutoModelAndSolveClick(Optional Control)
           If Not RunAutoModel(False) Then Exit Sub
 2882      RunOpenSolver False
+          AutoUpdateCheck
 End Sub
 
 '====================================================================

@@ -174,9 +174,15 @@ Public Function RunExternalCommand(CommandString As String, Optional LogPath As 
             
             CreateScriptFile TempScript, FullCommand
             
-            ' TODO: Figure out if we can do this silently
-            ret = system("open -a Terminal " & MakePathSafe(TempScript))
-            If ret = 0 Then RunExternalCommand = True
+            If WindowStyle = Hide Then
+                ' Applescript escapes double quotes with a backslash
+                FullCommand = Replace(MakePathSafe(TempScript), """", "\""")
+                MacScript "do shell script """ & FullCommand & " > /dev/null 2>&1 &"""
+                RunExternalCommand = True
+            Else
+                ret = system("open -a Terminal " & MakePathSafe(TempScript))
+                If ret = 0 Then RunExternalCommand = True
+            End If
         End If
 
     #Else

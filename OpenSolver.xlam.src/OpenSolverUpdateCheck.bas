@@ -1,73 +1,114 @@
 Attribute VB_Name = "OpenSolverUpdateCheck"
-Const FilesPageUrl = "http://sourceforge.net/projects/opensolver/files/"
+Const FilesPageUrl = "http://opensolver.org/latest-version/"
+' The link below is a useful tool for testing async-ness, timeouts and slow connections
+' It delays the response of the server (2s by default). Add "?sleep=5" to change timeout to 5s etc
+' Const FilesPageUrl = "https://fake-response.appspot.com/"
 Private HasCheckedForUpdate As Boolean
+
+Private DoSilentFail As Boolean
 
 Const OpenSolverRegName = "OpenSolver"
 Const PreferencesRegName = "Preferences"
 Const CheckForUpdatesRegName = "CheckForUpdates"
+Const LastUpdateCheckRegName = "LastUpdateCheck"
 
-Private Function GetFilesPageText() As String
+Const MinTimeBetweenChecks As Double = 1 ' 1 day between checks
+
+#If Mac Then
+    Private Const UpdateLogName = "update.log"
+    Dim LogFilePath As String
+    Dim NumChecks As Long
+    Const MaxTime As Long = 10
+#End If
+
+Sub InitialiseUpdateCheck(Optional ByVal SilentFail As Boolean = False)
+    HasCheckedForUpdate = True
+    SetLastCheckTime Now
+    
+    DoSilentFail = SilentFail
+    
+    ' We initiate a request for the version info.
+    ' This check should be asynchronous, and fire "CompleteUpdateCheck" when the response is returned
     #If Mac Then
-        GetFilesPageText = GetFilesPageText_Mac()
+        InitialiseUpdateCheck_Mac
     #Else
-        GetFilesPageText = GetFilesPageText_Windows()
+        InitialiseUpdateCheck_Windows
     #End If
-End Function
+End Sub
 
-' On Windows we use an MSXML Http request to get the page.
-' Late binding is required so we don't have the (failing on Mac) reference to MSXML
-Private Function GetFilesPageText_Windows() As String
-    GetFilesPageText_Windows = ""
+Sub InitialiseUpdateCheck_Windows()
+'http://dailydoseofexcel.com/archives/2006/10/09/async-xmlhttp-calls/
+    Dim xmlHttpRequest As Object ' MSXML2.XMLHTTP
+    Set xmlHttpRequest = CreateObject("MSXML2.ServerXMLHTTP")
+    ' Set timeout limits - 5 secs for each part of the request
+    xmlHttpRequest.setTimeouts 5000, 5000, 5000, 5000
     
-    Dim WinHttpReq As Object  ' MSXML2.ServerXMLHTTP
-    Set WinHttpReq = CreateObject("MSXML2.ServerXMLHTTP")
-    ' Set timeout limits - 2 secs for each part of the request
-    WinHttpReq.setTimeouts 2000, 2000, 2000, 2000
-    WinHttpReq.Open "GET", FilesPageUrl, False
-    
-    ' Send request and catch timeout errors
-    On Error Resume Next
-    WinHttpReq.send
-    
-    If WinHttpReq.status = 200 Then
-        GetFilesPageText_Windows = WinHttpReq.responseText
-    End If
-End Function
+    On Error GoTo FailedState
+
+    ' Create an instance of the wrapper class.
+    Dim MyXmlAsyncHandler As XmlAsyncHandler
+    Set MyXmlAsyncHandler = New XmlAsyncHandler
+    MyXmlAsyncHandler.Initialize xmlHttpRequest, "CompleteUpdateCheck"
+
+    ' Assign the wrapper class object to onreadystatechange.
+    xmlHttpRequest.OnReadyStateChange = MyXmlAsyncHandler
+
+    ' Get the page asynchronously.
+    xmlHttpRequest.Open "GET", FilesPageUrl, True
+    xmlHttpRequest.send ""
+    Exit Sub
+
+FailedState:
+    MsgBox Err.Number & ": " & Err.Description
+End Sub
 
 ' On Mac, we use `cURL` via command line which is included by default
-#If Mac Then
-Private Function GetFilesPageText_Mac() As String
-    GetFilesPageText_Mac = ""
-    
+Private Function InitialiseUpdateCheck_Mac() As String
     Dim Cmd As String
     Dim result As String
     Dim ExitCode As Long
+    
+    If GetTempFilePath(UpdateLogName, LogFilePath) Then DeleteFileAndVerify (LogFilePath)
 
     ' -L follows redirects, -m sets Max Time
-    Cmd = "curl -L -m 10 " & FilesPageUrl
-    result = ReadExternalCommandOutput(Cmd, ExitCode:=ExitCode)
+    Cmd = "curl -L -m " & MaxTime & " " & FilesPageUrl
+    RunExternalCommand Cmd, LogFilePath, Hide, False
     
-    If ExitCode = 0 Then
-        GetFilesPageText_Mac = result
-    End If
+    NumChecks = 0
+    
+    Application.OnTime Now + TimeSerial(0, 0, 1), "CheckForCompletion_Mac"
 End Function
-#End If
 
-' Gets version number of current release from Sourceforge.
-' The release script updates readme.txt on Sourceforge with the current version.
-' The readme gets displayed at the bottom of the files page, so we can scrape it for the version.
-' An alternative would be to download the readme directly, but Sourceforge's download redirection
-' makes this difficult to do using MSXML (cURL works fine).
-Private Function GetLatestOpenSolverVersion() As String
-    GetLatestOpenSolverVersion = ""
+Public Sub CheckForCompletion_Mac()
+    Dim CheckAgain As Boolean
+    CheckAgain = True
     
     Dim Response As String
-    Response = GetFilesPageText()
+    
+    If FileOrDirExists(LogFilePath) Then
+        Open LogFilePath For Input As #1
+            Response = Input$(LOF(1), 1)
+        Close #1
+        
+        If Len(Response) > 0 Then CheckAgain = False
+    End If
+    
+    If CheckAgain And NumChecks < MaxTime Then
+        NumChecks = NumChecks + 1
+        Application.OnTime Now + TimeSerial(0, 0, 1), "CheckForCompletion_Mac"
+    Else
+        CompleteUpdateCheck Response
+    End If
+End Sub
+
+' Gets version number of current release from our response text.
+Private Function GetLatestOpenSolverVersion(Response As String) As String
+    GetLatestOpenSolverVersion = ""
     
     ' We are looking for the following message:
-    '   "Please download the latest version listed here (x.x.x)."
+    '   "Latest version: (x.x.x)"
     Dim startString As String
-    startString = "the latest version listed here"
+    startString = "Latest version: "
     
     Dim start As Long, openingParen As Long, closingParen As Long
     start = InStrText(Response, startString)
@@ -78,14 +119,10 @@ Private Function GetLatestOpenSolverVersion() As String
     End If
 End Function
 
-Sub CheckForUpdate(Optional ByVal SilentFail As Boolean = False)
-    Application.Cursor = xlWait
-    UpdateStatusBar "Checking for updates to OpenSolver...", True
-    
-    HasCheckedForUpdate = True
-    
+' Function to run once our request has completed
+Sub CompleteUpdateCheck(Response As String)
     Dim LatestVersion As String
-    LatestVersion = GetLatestOpenSolverVersion()
+    LatestVersion = GetLatestOpenSolverVersion(Response)
     If Len(LatestVersion) = 0 Then GoTo ConnectionError
 
     Dim LatestNumbers() As String, CurrentNumbers() As String
@@ -103,18 +140,16 @@ Sub CheckForUpdate(Optional ByVal SilentFail As Boolean = False)
     
     If UpdateAvailable Then
         frmUpdate.ShowUpdate LatestVersion
-    ElseIf Not SilentFail Then
+    ElseIf Not DoSilentFail Then
         MsgBox "No updates for OpenSolver are available at this time.", vbOKOnly, "OpenSolver - Update Check"
     End If
     
 ExitSub:
-    Application.Cursor = xlDefault
-    Application.StatusBar = False
     Exit Sub
     
 ConnectionError:
     If Not SilentFail Then
-        MsgBox "The update checker was unable to check for the latest version of OpenSolver. Please try again later."
+        MsgBox "The update checker was unable to determine the latest version of OpenSolver. Please try again later."
     End If
     GoTo ExitSub
 End Sub
@@ -123,7 +158,10 @@ Sub AutoUpdateCheck()
     ' Don't check the saved setting if we have already run the checker
     If Not HasCheckedForUpdate Then
         If GetUpdateSetting() Then
-            CheckForUpdate True
+            ' Check time since last check
+            If Now - GetLastCheckTime() > MinTimeBetweenChecks Then
+                InitialiseUpdateCheck True
+            End If
         End If
     End If
 End Sub
@@ -137,8 +175,15 @@ Public Function GetUpdateSetting() As Boolean
     If result = "?" Then
         result = MsgBox("Would you like OpenSolver to automatically check for updates? " & vbNewLine & vbNewLine & _
                         "You can change this option at any time by going to ""About OpenSolver"". " & _
-                        "You can also run update checks manually from there.", vbYesNo, "OpenSolver - Check for Updates?") = vbYes
-        SaveUpdateSetting (CBool(result))
+                        "You can also run update checks manually from there.", vbYesNoCancel, "OpenSolver - Check for Updates?")
+        If result = vbCancel Then
+            ' Set result to false (without saving it) so that the check doesn't run this time
+            result = False
+        Else
+            ' Save result
+            result = (result = vbYes)
+            SaveUpdateSetting (CBool(result))
+        End If
     End If
     
     GetUpdateSetting = CBool(result)
@@ -153,3 +198,17 @@ Private Sub DeleteUpdateSetting()
     DeleteSetting OpenSolverRegName, PreferencesRegName, CheckForUpdatesRegName
 End Sub
 
+Private Function GetLastCheckTime() As Double
+    Dim result As Variant
+    result = GetSetting(OpenSolverRegName, PreferencesRegName, LastUpdateCheckRegName, 0)
+    
+    GetLastCheckTime = CDbl(result)
+End Function
+
+Private Sub SetLastCheckTime(CheckTime As Double)
+    SaveSetting OpenSolverRegName, PreferencesRegName, LastUpdateCheckRegName, CStr(CheckTime)
+End Sub
+
+Private Sub DeleteLastCheckTime()
+    DeleteSetting OpenSolverRegName, PreferencesRegName, LastUpdateCheckRegName
+End Sub
