@@ -19,6 +19,7 @@ Public Sub Initialize(ByRef xmlHttpRequest As Object, MacroName As String)
 End Sub
 
 Sub OnReadyStateChange()
+Attribute OnReadyStateChange.VB_UserMemId = 0
     If m_xmlHttp.readyState = 4 Then
         If m_xmlHttp.status = 200 Then
             Application.Run MacroToRun, m_xmlHttp.responseText
