@@ -723,7 +723,7 @@ Function ExpandFormula(ByVal strFormula As String, _
                               
 5110                  Case TokenType.Number
                           ' TODO: Scientific notation for small/large numbers?
-5111                      strParsed = strParsed + StrEx_NL(Val(tkn.Text))
+5111                      strParsed = strParsed + StrExNoPlus(Val(tkn.Text))
                           
 5112                  Case TokenType.Bool
 5113                      strParsed = strParsed + IIf(tkn.Text = "TRUE", "True", "False")
@@ -1200,13 +1200,13 @@ Function AddNodeIfNew(ByRef objCurNode As CFormula, ByRef c As Range) As String
 5383              If (VBA.VarType(varReturn) = vbError) Then
                       ' Fall back to calculating the cell
 5384                  c.Calculate
-5385                  AddNodeIfNew = StrEx_NL(c.value)
+5385                  AddNodeIfNew = StrExNoPlus(c.value)
 5386                  GoTo finishedNode
                   ElseIf IsArray(varReturn) Then
-                      AddNodeIfNew = StrEx_NL(CDbl(varReturn(1)))
+                      AddNodeIfNew = StrExNoPlus(CDbl(varReturn(1)))
                       GoTo finishedNode
 5387              Else
-5388                  AddNodeIfNew = StrEx_NL(CDbl(varReturn))
+5388                  AddNodeIfNew = StrExNoPlus(CDbl(varReturn))
 5389                  GoTo finishedNode
 5390              End If
 5391          End If
@@ -1222,10 +1222,10 @@ Function AddNodeIfNew(ByRef objCurNode As CFormula, ByRef c As Range) As String
 5394              If (VBA.VarType(varReturn) = vbError) Then
                       ' Fall back to calculating the cell
 5395                  c.Calculate
-5396                  AddNodeIfNew = StrEx_NL(c.value)
+5396                  AddNodeIfNew = StrExNoPlus(c.value)
 5397                  GoTo finishedNode
 5398              Else
-5399                  AddNodeIfNew = StrEx_NL(CDbl(varReturn))
+5399                  AddNodeIfNew = StrExNoPlus(CDbl(varReturn))
 5400                  GoTo finishedNode
 5401              End If
 5402      End If

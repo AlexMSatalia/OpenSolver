@@ -119,6 +119,6 @@ Function SolverBitness_Bonmin() As String
 #End If
 End Function
 
-Function CreateSolveScript_Bonmin(ModelFilePathName As String, SolveOptions As SolveOptionsType) As String
-    CreateSolveScript_Bonmin = CreateSolveScript_NL(ModelFilePathName, SolveOptions)
+Function CreateSolveScript_Bonmin(ModelFilePathName As String, SolverParameters As Dictionary) As String
+    CreateSolveScript_Bonmin = CreateSolveScript_NL(ModelFilePathName, SolverParameters)
 End Function

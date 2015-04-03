@@ -117,7 +117,7 @@ Public Property Get GetVariableNLIndex(Index As Long) As Long
 End Property
 
 ' Creates .nl file and solves model
-Function SolveModelParsed_NL(ModelFilePathName As String, model As CModelParsed, s As COpenSolverParsed, SolveOptions As SolveOptionsType, SolveRelaxation As Boolean, Optional ShouldWriteComments As Boolean = True)
+Function SolveModelParsed_NL(ModelFilePathName As String, model As CModelParsed, s As COpenSolverParsed, SolverParameters As Dictionary, SolveRelaxation As Boolean, Optional ShouldWriteComments As Boolean = True)
           Dim RaiseError As Boolean
           RaiseError = False
           On Error GoTo ErrorHandler
@@ -183,7 +183,7 @@ Function SolveModelParsed_NL(ModelFilePathName As String, model As CModelParsed,
 7503      DeleteFileAndVerify SolutionFilePathName
 
           Dim ExternalSolverPathName As String
-7504      ExternalSolverPathName = CreateSolveScriptParsed(m.Solver, ModelFilePathName, SolveOptions)
+7504      ExternalSolverPathName = CreateSolveScriptParsed(m.Solver, ModelFilePathName, SolverParameters)
                    
           Dim logCommand As String, logFileName As String
 7505      logFileName = "log1.tmp"
@@ -193,7 +193,7 @@ Function SolveModelParsed_NL(ModelFilePathName As String, model As CModelParsed,
 7507      ExternalSolverPathName = MakePathSafe(ExternalSolverPathName)
                     
           Dim exeResult As Long
-7508      ExecutionCompleted = RunExternalCommand(ExternalSolverPathName, logCommand, IIf(s.GetShowIterationResults And Not s.MinimiseUserInteraction, Normal, Hide), True, exeResult) ' Run solver, waiting for completion
+7508      ExecutionCompleted = RunExternalCommand(ExternalSolverPathName, logCommand, IIf(s.ShowIterationResults And Not s.MinimiseUserInteraction, Normal, Hide), True, exeResult) ' Run solver, waiting for completion
 7513      If exeResult <> 0 Then
 7515          Err.Raise Number:=OpenSolver_SolveError, Description:="The " & m.Solver & " solver did not complete, but aborted with the error code " & exeResult & "." & vbCrLf & vbCrLf & "The last log file can be viewed under the OpenSolver menu and may give you more information on what caused this error."
 7516      End If
@@ -1035,7 +1035,7 @@ Private Function MakeXBlock() As String
                   ' Formulae variables - use the initial value saved in the CFormula instance
 7923              initial = CDbl(m.Formulae(VariableIndex - numActualVars).initialValue)
 7924          End If
-7925          AddNewLine Block, i - 1 & " " & StrEx_NL(initial), "    " & VariableMapRev(CStr(i - 1)) & " = " & initial
+7925          AddNewLine Block, i - 1 & " " & StrExNoPlus(initial), "    " & VariableMapRev(CStr(i - 1)) & " = " & initial
 7926      Next i
           
 7927      MakeXBlock = StripTrailingNewline(Block)
@@ -1070,7 +1070,7 @@ Private Function MakeRBlock() As String
               
 7935          bound = LinearConstants(ConstraintIndexToTreeIndex(i - 1))
 7936          ConvertConstraintToNL ConstraintRelations(ConstraintIndexToTreeIndex(i - 1)), BoundType, Comment
-7937          AddNewLine Block, BoundType & " " & StrEx_NL(bound), "    " & ConstraintMapRev(CStr(i - 1)) & Comment & bound
+7937          AddNewLine Block, BoundType & " " & StrExNoPlus(bound), "    " & ConstraintMapRev(CStr(i - 1)) & Comment & bound
 7938      Next i
           
 7939      MakeRBlock = StripTrailingNewline(Block)
@@ -1208,7 +1208,7 @@ Private Function MakeJBlocks() As String
 7992          For j = 1 To n_var
 7993              If LinearConstraints(TreeIndex).Exists(j) Then
 7994                  VariableIndex = VariableCollectionIndexToNLIndex(j)
-7995                  ConstraintElements(VariableIndex) = VariableIndex & " " & StrEx_NL(LinearConstraints(TreeIndex).Item(j))
+7995                  ConstraintElements(VariableIndex) = VariableIndex & " " & StrExNoPlus(LinearConstraints(TreeIndex).Item(j))
 7996                  CommentElements(VariableIndex) = "    + " & LinearConstraints(TreeIndex).Item(j) & " * " & VariableMapRev(CStr(VariableIndex))
 7997              End If
 7998          Next j
@@ -1254,7 +1254,7 @@ Private Function MakeGBlocks() As String
 8009          For j = 1 To n_var
 8010              If LinearObjectives(i).Exists(j) Then
 8011                  VariableIndex = VariableCollectionIndexToNLIndex(j)
-8012                  AddNewLine Block, VariableIndex & " " & StrEx_NL(LinearObjectives(i).Item(j)), "    + " & LinearObjectives(i).Item(j) & " * " & VariableMapRev(CStr(VariableIndex))
+8012                  AddNewLine Block, VariableIndex & " " & StrExNoPlus(LinearObjectives(i).Item(j)), "    + " & LinearObjectives(i).Item(j) & " * " & VariableMapRev(CStr(VariableIndex))
 8013              End If
 8014          Next j
 8015      Next i
@@ -1332,7 +1332,7 @@ ErrorHandler:
           GoTo ExitSub
 End Sub
 
-Private Sub OutputOptionsFile(OptionsFilePath As String, SolveOptions As SolveOptionsType)
+Private Sub OutputOptionsFile(OptionsFilePath As String, SolverParameters As Dictionary)
           Dim RaiseError As Boolean
           RaiseError = False
           On Error GoTo ErrorHandler
@@ -1340,9 +1340,10 @@ Private Sub OutputOptionsFile(OptionsFilePath As String, SolveOptions As SolveOp
           DeleteFileAndVerify OptionsFilePath
           
           Open OptionsFilePath For Output As #4
-          Print #4, "iteration_limit " & str(SolveOptions.MaxIterations)
-          Print #4, "allowable_fraction_gap " & StrEx_NL(SolveOptions.Tolerance)
-          Print #4, "time_limit " & str(SolveOptions.MaxTime)
+          Dim Key As Variant
+          For Each Key In SolverParameters.Keys
+              Print #4, Key & " " & StrExNoPlus(SolverParameters.Item(Key))
+          Next Key
 
 ExitSub:
           Close #4
@@ -1805,7 +1806,7 @@ Function FormatNL(NodeText As String, NodeType As ExpressionTreeNodeType) As Str
           Case ExpressionTreeVariable
 8226          FormatNL = "v" & VariableMap(NodeText)
 8227      Case ExpressionTreeNumber
-8228          FormatNL = "n" & StrEx_NL(Val(NodeText))
+8228          FormatNL = "n" & StrExNoPlus(Val(NodeText))
 8229      Case ExpressionTreeOperator
 8230          FormatNL = "o" & CStr(ConvertOperatorToNLCode(NodeText))
 8231      End Select
@@ -2086,7 +2087,7 @@ ErrorHandler:
           GoTo ExitFunction
 End Function
 
-Function CreateSolveScript_NL(ModelFilePathName As String, SolveOptions As SolveOptionsType) As String
+Function CreateSolveScript_NL(ModelFilePathName As String, SolverParameters As Dictionary) As String
     ' Create a script to cd to temp and run "/path/to/solver /path/to/<ModelFilePathName>"
     
     Dim RaiseError As Boolean
@@ -2109,7 +2110,7 @@ Function CreateSolveScript_NL(ModelFilePathName As String, SolveOptions As Solve
     CreateSolveScript_NL = scriptFile
     
     ' Create the options file in the temp folder
-    OutputOptionsFile OptionsFilePath(m.Solver), SolveOptions
+    OutputOptionsFile OptionsFilePath(m.Solver), SolverParameters
 
 ExitFunction:
     If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg

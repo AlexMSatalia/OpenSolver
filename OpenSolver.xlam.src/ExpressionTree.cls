@@ -726,7 +726,7 @@ Public Sub EvaluateConstantOperator()
 FinishNode:
           ' Replace subtree with a constant node
 8850      NodeType = ExpressionTreeNumber
-8851      NodeText = StrEx_NL(NewValue)
+8851      NodeText = StrExNoPlus(NewValue)
 8852      ClearChildren
 
 ExitSub:

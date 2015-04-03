@@ -209,7 +209,7 @@ Function ParametersToKwargs(SolverParameters As Dictionary) As String
 
           Dim Key As Variant, result As String
           For Each Key In SolverParameters.Keys
-              result = result & Key & "=" & Trim(str(SolverParameters.Item(Key))) & " "
+              result = result & Key & "=" & StrExNoPlus(SolverParameters.Item(Key)) & " "
           Next Key
           ParametersToKwargs = Trim(result)
 
@@ -230,7 +230,7 @@ Function ParametersToFlags(SolverParameters As Dictionary) As String
 
           Dim Key As Variant, result As String
           For Each Key In SolverParameters.Keys
-              result = result & IIf(left(Key, 1) <> "-", "-", "") & Key & " " & Trim(str(SolverParameters.Item(Key))) & " "
+              result = result & IIf(left(Key, 1) <> "-", "-", "") & Key & " " & StrExNoPlus(SolverParameters.Item(Key)) & " "
           Next Key
           ParametersToFlags = Trim(result)
 
@@ -459,8 +459,8 @@ Function StrEx(d As Double, Optional AddSign As Boolean = True) As String
               If AddSign Or d < 0 Then StrEx = IIf(d >= 0, "+", "-") & StrEx
 End Function
 
-Function StrEx_NL(d As Double) As String
-    StrEx_NL = StrEx(d, False)
+Function StrExNoPlus(d As Double) As String
+    StrExNoPlus = StrEx(d, False)
 End Function
 
 Function IsAmericanNumber(s As String, Optional i As Long = 1) As Boolean

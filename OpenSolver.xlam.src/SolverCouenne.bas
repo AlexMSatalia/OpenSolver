@@ -120,6 +120,6 @@ Function SolverBitness_Couenne() As String
 #End If
 End Function
 
-Function CreateSolveScript_Couenne(ModelFilePathName As String, SolveOptions As SolveOptionsType) As String
-    CreateSolveScript_Couenne = CreateSolveScript_NL(ModelFilePathName, SolveOptions)
+Function CreateSolveScript_Couenne(ModelFilePathName As String, SolverParameters As Dictionary) As String
+    CreateSolveScript_Couenne = CreateSolveScript_NL(ModelFilePathName, SolverParameters)
 End Function

@@ -34,7 +34,7 @@ Public sheet As Worksheet
 Dim MinimiseUserInteraction As Boolean
 
 Dim SolverParameters As Dictionary
-Dim ShowIterationResults As Boolean
+Public ShowIterationResults As Boolean
 
 ' Data for our model. We work thru the original Excel 'constraints' and form model 'rows' from these
 Public AdjustableCells As Range    ' A range we form containing all the adjustable (ie decision) variables
@@ -250,6 +250,10 @@ End Function
 Public Function GetSparseACount(Index As Long) As Long
 825       GetSparseACount = SparseA(Index).Count
 End Function
+
+Public Sub CopySolverParameters(ByRef NewSolverParameters As Dictionary)
+          Set NewSolverParameters = SolverParameters
+End Sub
 
 Sub GetConstraintFromRow(row As Long, ByRef constraint As Long, ByRef instance As Long)
           ' Get the Excel constraint that goes with this LP row

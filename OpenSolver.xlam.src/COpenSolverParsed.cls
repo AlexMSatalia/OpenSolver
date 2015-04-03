@@ -16,13 +16,10 @@ Public SolveStatusString As String    ' Eg Infeasible, Opimal etc
 Public SolveStatusComment As String ' Eg constraint 1 cannot be satisified
 Public SolutionWasLoaded As Boolean
 Public MinimiseUserInteraction As Boolean
+Public ShowIterationResults As Boolean
 
-Dim SolveOptions As SolveOptionsType
+Dim SolverParameters As Dictionary
     
-Public Property Get GetShowIterationResults() As Boolean
-7134      GetShowIterationResults = SolveOptions.ShowIterationResults
-End Property
-
 Public Sub SolveModel(s As COpenSolver, Optional SolveRelaxation As Boolean = False, Optional ShouldMinimiseUserInteraction As Boolean = False)
           Dim RaiseError As Boolean
           RaiseError = False
@@ -35,6 +32,8 @@ Public Sub SolveModel(s As COpenSolver, Optional SolveRelaxation As Boolean = Fa
           SolveStatusString = "Unsolved"
           SolveStatusComment = ""
           MinimiseUserInteraction = ShouldMinimiseUserInteraction
+          ShowIterationResults = s.ShowIterationResults
+          s.CopySolverParameters SolverParameters
           
 7137      Application.EnableCancelKey = xlErrorHandler
           
@@ -57,14 +56,12 @@ Public Sub SolveModel(s As COpenSolver, Optional SolveRelaxation As Boolean = Fa
           
 7148      DeleteFileAndVerify ModelFilePathName
           
-7149      GetSolveOptions m.SolverModelSheet, SolveOptions
-          
           Dim ExecutionCompleted As Boolean
 7153      Select Case m.Solver
           Case "PuLP"
 7154          ExecutionCompleted = SolveModelParsed_PuLP(ModelFilePathName, m, Me)
 7155      Case "Couenne", "Bonmin"
-7156          ExecutionCompleted = SolveModelParsed_NL(ModelFilePathName, m, Me, SolveOptions, SolveRelaxation)
+7156          ExecutionCompleted = SolveModelParsed_NL(ModelFilePathName, m, Me, SolverParameters, SolveRelaxation)
 7157      Case "NeosBon", "NeosCou"
 7158          ExecutionCompleted = SolveModelParsed_AMPL(ModelFilePathName, m, Me, SolveRelaxation)
 7159      Case Else
@@ -165,7 +162,7 @@ Sub WriteAMPLFile_Parsed(ModelFilePathName As String, SolverType As String, Solv
 7200          If VarType(c) = vbEmpty Then
 7201              Line = Line & " := 0"
 7202          Else
-7203              Line = Line & " := " & StrEx_NL(CDbl(c))
+7203              Line = Line & " := " & StrExNoPlus(CDbl(c))
 7204          End If
 7205          WriteToFile 1, Line & ";"
 7206      Next
@@ -173,7 +170,7 @@ Sub WriteAMPLFile_Parsed(ModelFilePathName As String, SolverType As String, Solv
           
           Dim Formula As Variant
 7208      For Each Formula In m.Formulae
-7209          WriteToFile 1, "var " & Formula.strAddress & " := " & StrEx_NL(Formula.initialValue) & ";"
+7209          WriteToFile 1, "var " & Formula.strAddress & " := " & StrExNoPlus(Formula.initialValue) & ";"
 7210      Next Formula
 7211      WriteToFile 1, ""
           
