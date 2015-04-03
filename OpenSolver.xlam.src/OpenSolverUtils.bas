@@ -202,6 +202,48 @@ ErrorHandler:
           GoTo ExitSub
 End Sub
 
+Function ParametersToKwargs(SolverParameters As Dictionary) As String
+          Dim RaiseError As Boolean
+          RaiseError = False
+          On Error GoTo ErrorHandler
+
+          Dim Key As Variant, result As String
+          For Each Key In SolverParameters.Keys
+              result = result & Key & "=" & Trim(str(SolverParameters.Item(Key))) & " "
+          Next Key
+          ParametersToKwargs = Trim(result)
+
+ExitFunction:
+          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          Exit Function
+
+ErrorHandler:
+          If Not ReportError("OpenSolverUtils", "ParametersToKwargs") Then Resume
+          RaiseError = True
+          GoTo ExitFunction
+End Function
+
+Function ParametersToFlags(SolverParameters As Dictionary) As String
+          Dim RaiseError As Boolean
+          RaiseError = False
+          On Error GoTo ErrorHandler
+
+          Dim Key As Variant, result As String
+          For Each Key In SolverParameters.Keys
+              result = result & IIf(left(Key, 1) <> "-", "-", "") & Key & " " & Trim(str(SolverParameters.Item(Key))) & " "
+          Next Key
+          ParametersToFlags = Trim(result)
+
+ExitFunction:
+          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          Exit Function
+
+ErrorHandler:
+          If Not ReportError("OpenSolverUtils", "ParametersToFlags") Then Resume
+          RaiseError = True
+          GoTo ExitFunction
+End Function
+
 Sub GetSolveOptions(sheet As Worksheet, SolveOptions As SolveOptionsType)
           ' Get the Solver Options, stored in named ranges with values such as "=0.12"
           ' Because these are NAMEs, they are always in English, not the local language, so get their value using Val

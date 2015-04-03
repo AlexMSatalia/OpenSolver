@@ -7,7 +7,7 @@ Public Const SolverType_NeosCBC = OpenSolver_SolverType.Linear
 Public Const SolverName_NeosCBC = "CBC"
 
 Public Const UsesPrecision_NeosCBC = False
-Public Const UsesIterationLimit_NeosCBC = False
-Public Const UsesTolerance_NeosCBC = False
-Public Const UsesTimeLimit_NeosCBC = False
+Public Const UsesIterationLimit_NeosCBC = True
+Public Const UsesTolerance_NeosCBC = True
+Public Const UsesTimeLimit_NeosCBC = True
 

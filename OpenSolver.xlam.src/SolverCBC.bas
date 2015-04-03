@@ -129,13 +129,13 @@ Function SolverBitness_CBC() As String
 #End If
 End Function
 
-Function CreateSolveScript_CBC(SolutionFilePathName As String, ExtraParameters As Dictionary, s As COpenSolver) As String
+Function CreateSolveScript_CBC(SolutionFilePathName As String, SolverParameters As Dictionary, s As COpenSolver) As String
           Dim RaiseError As Boolean
           RaiseError = False
           On Error GoTo ErrorHandler
           
           Dim CommandLineRunString As String, PrintingOptionString As String, SolverParametersString As String
-          SolverParametersString = ParametersToString_CBC(ExtraParameters)
+          SolverParametersString = ParametersToFlags(SolverParameters)
           
           ' have to split up the command line as excel couldn't have a string longer than 255 characters??
 6119      CommandLineRunString = " -directory " & MakePathSafe(left(GetTempFolder, Len(GetTempFolder) - 1)) _
@@ -160,27 +160,6 @@ ExitFunction:
 
 ErrorHandler:
           If Not ReportError("SolverCBC", "CreateSolveScript_CBC") Then Resume
-          RaiseError = True
-          GoTo ExitFunction
-End Function
-
-Function ParametersToString_CBC(ExtraParameters As Dictionary) As String
-          Dim RaiseError As Boolean
-          RaiseError = False
-          On Error GoTo ErrorHandler
-
-          Dim Key As Variant
-          For Each Key In ExtraParameters.Keys
-              ParametersToString_CBC = ParametersToString_CBC & IIf(left(Key, 1) <> "-", "-", "") & Key & " " & ExtraParameters.Item(Key) & " "
-          Next Key
-          ParametersToString_CBC = Trim(ParametersToString_CBC)
-
-ExitFunction:
-          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
-          Exit Function
-
-ErrorHandler:
-          If Not ReportError("SolverCBC", "ParametersToString_CBC") Then Resume
           RaiseError = True
           GoTo ExitFunction
 End Function
@@ -422,7 +401,7 @@ Sub LaunchCommandLine_CBC()
 6360      If WorksheetAvailable Then
               GetSolveOptions ActiveSheet, SolveOptions
               PopulateSolverParameters "CBC", ActiveSheet, SolverParameters, SolveOptions
-              SolverParametersString = ParametersToString_CBC(SolverParameters)
+              SolverParametersString = ParametersToFlags(SolverParameters)
 6363      End If
              
           Dim CBCRunString As String

@@ -190,7 +190,7 @@ Function CreateSolveScript_Gurobi(SolutionFilePathName As String, SolverParamete
 
 6442      CommandLineRunString = MakePathSafe(SolverPythonScriptPath_Gurobi())
           
-          SolverParametersString = ParametersToString_Gurobi(SolverParameters)
+          SolverParametersString = ParametersToKwargs(SolverParameters)
           
           Dim scriptFile As String, scriptFileContents As String
 6444      scriptFile = ScriptFilePath_Gurobi()
@@ -205,27 +205,6 @@ ExitFunction:
 
 ErrorHandler:
           If Not ReportError("SolverGurobi", "CreateSolveScript_Gurobi") Then Resume
-          RaiseError = True
-          GoTo ExitFunction
-End Function
-
-Function ParametersToString_Gurobi(ExtraParameters As Dictionary) As String
-          Dim RaiseError As Boolean
-          RaiseError = False
-          On Error GoTo ErrorHandler
-
-          Dim Key As Variant
-          For Each Key In ExtraParameters.Keys
-              ParametersToString_Gurobi = ParametersToString_Gurobi & Key & "=" & ExtraParameters.Item(Key) & " "
-          Next Key
-          ParametersToString_Gurobi = Trim(ParametersToString_Gurobi)
-
-ExitFunction:
-          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
-          Exit Function
-
-ErrorHandler:
-          If Not ReportError("SolverGurobi", "ParametersToString_Gurobi") Then Resume
           RaiseError = True
           GoTo ExitFunction
 End Function

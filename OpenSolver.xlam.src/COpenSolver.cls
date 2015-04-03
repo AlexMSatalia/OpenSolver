@@ -1744,7 +1744,8 @@ Sub WriteAMPLFile(ModelFilePathName As String, SolveRelaxation As Boolean)
            ' Run Commands
 1869       Print #1,   ' New line
 1870       Print #1, commentStart & " Solve the problem"
-1871       Print #1, "option solver cbc;"
+1871       Print #1, "option solver " & GetAmplSolverValues(Solver) & ";"
+           Print #1, "option " & GetAmplSolverValues(Solver) & "_options """ & ParametersToKwargs(SolverParameters) & """;"
 1872       Print #1, "solve;"
 1873       Print #1,   ' New line
            ' Display variables
