@@ -21,9 +21,13 @@ Public Const CostRangesFile_CBC = "costranges.txt"
 Public Const RHSRangesFile_CBC = "rhsranges.txt"
 
 Public Const UsesPrecision_CBC = False
-Public Const UsesIterationLimit_CBC = False
+Public Const UsesIterationLimit_CBC = True
 Public Const UsesTolerance_CBC = True
 Public Const UsesTimeLimit_CBC = True
+
+Public Const ToleranceName_CBC = "ratioGap"
+Public Const TimeLimitName_CBC = "seconds"
+Public Const IterationLimitName_CBC = "maxIterations"
 
 Function ScriptFilePath_CBC() As String
 6047      GetTempFilePath SolverScript_CBC, ScriptFilePath_CBC
@@ -125,20 +129,18 @@ Function SolverBitness_CBC() As String
 #End If
 End Function
 
-Function CreateSolveScript_CBC(SolutionFilePathName As String, ExtraParameters As Dictionary, SolveOptions As SolveOptionsType, s As COpenSolver) As String
+Function CreateSolveScript_CBC(SolutionFilePathName As String, ExtraParameters As Dictionary, s As COpenSolver) As String
           Dim RaiseError As Boolean
           RaiseError = False
           On Error GoTo ErrorHandler
           
-          Dim CommandLineRunString As String, PrintingOptionString As String, ExtraParametersString As String
-          ExtraParametersString = ParametersToString_CBC(ExtraParameters)
+          Dim CommandLineRunString As String, PrintingOptionString As String, SolverParametersString As String
+          SolverParametersString = ParametersToString_CBC(ExtraParameters)
           
           ' have to split up the command line as excel couldn't have a string longer than 255 characters??
 6119      CommandLineRunString = " -directory " & MakePathSafe(left(GetTempFolder, Len(GetTempFolder) - 1)) _
                                & " -import " & MakePathSafe(s.ModelFilePathName) _
-                               & " -ratioGap " & str(SolveOptions.Tolerance) _
-                               & " -seconds " & str(SolveOptions.MaxTime) _
-                               & " " & ExtraParametersString _
+                               & " " & SolverParametersString _
                                & " -solve " _
                                & IIf(s.bGetDuals, " -printingOptions all ", "") _
                                & " -solution " & MakePathSafe(SolutionFilePathName)
@@ -415,29 +417,18 @@ Sub LaunchCommandLine_CBC()
           Dim ModelFilePathName As String
 6353      ModelFilePathName = ModelFilePath("CBC")
           
-          Dim SolveOptions As SolveOptionsType, SolveOptionsString As String
-6354      If WorksheetAvailable Then
-6355          GetSolveOptions ActiveSheet, SolveOptions
-6356          If errorString = "" Then
-6357             SolveOptionsString = " -ratioGap " & CStr(SolveOptions.Tolerance) & " -seconds " & CStr(SolveOptions.MaxTime)
-6358          End If
-6359      End If
-          
-          Dim ExtraParametersString As String, ExtraParameters As New Dictionary
+          Dim SolveOptions As SolveOptionsType
+          Dim SolverParametersString As String, SolverParameters As New Dictionary
 6360      If WorksheetAvailable Then
-              GetExtraSolverParameters "CBC", ActiveSheet, ExtraParameters
-              If errorString <> "" Then
-                  ExtraParametersString = ""
-              Else
-6361              ExtraParametersString = ParametersToString_CBC(ExtraParameters)
-6362          End If
+              GetSolveOptions ActiveSheet, SolveOptions
+              PopulateSolverParameters "CBC", ActiveSheet, SolverParameters, SolveOptions
+              SolverParametersString = ParametersToString_CBC(SolverParameters)
 6363      End If
              
           Dim CBCRunString As String
 6364      CBCRunString = " -directory " & MakePathSafe(left(GetTempFolder, Len(GetTempFolder) - 1)) _
                            & " -import " & MakePathSafe(ModelFilePathName) _
-                           & SolveOptionsString _
-                           & " " & ExtraParametersString _
+                           & " " & SolverParametersString _
                            & " -" ' Force CBC to accept commands from the command line
 6365      RunExternalCommand MakePathSafe(SolverPath) & CBCRunString, "", Normal, False
 

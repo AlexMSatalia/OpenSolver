@@ -162,24 +162,32 @@ ErrorHandler:
           GoTo ExitFunction
 End Function
 
-Sub GetExtraSolverParameters(Solver As String, sheet As Worksheet, ExtraParameters As Dictionary)
-' The user can define a set of parameters they want to pass to the solver; this gets them as a dictionary. MUST be on the current sheet
+Sub PopulateSolverParameters(Solver As String, sheet As Worksheet, SolverParameters As Dictionary, SolveOptions As SolveOptionsType)
           Dim RaiseError As Boolean
           RaiseError = False
           On Error GoTo ErrorHandler
-
+          
+          ' First we fill all info from the SolveOptions. These can then be overridden by the parameters defined on the sheet
+          With SolveOptions
+              If UsesPrecision(Solver) Then SolverParameters.Add Key:=PrecisionName(Solver), Item:=.Precision
+              If UsesTimeLimit(Solver) Then SolverParameters.Add Key:=TimeLimitName(Solver), Item:=.MaxTime
+              If UsesIterationLimit(Solver) Then SolverParameters.Add Key:=IterationLimitName(Solver), Item:=.MaxIterations
+              If UsesTolerance(Solver) Then SolverParameters.Add Key:=ToleranceName(Solver), Item:=.Tolerance
+          End With
+          
+          ' The user can define a set of parameters they want to pass to the solver; this gets them as a dictionary. MUST be on the current sheet
           Dim ParametersRange As Range, i As Long
 6104      Set ParametersRange = GetSolverParameters(Solver, sheet:=sheet)
           If Not ParametersRange Is Nothing Then
 6105          If ParametersRange.Columns.Count <> 2 Then
-6106              Err.Raise OpenSolver_SolveError, Description:="The range OpenSolver_CBCParameters must be a two-column table."
+6106              Err.Raise OpenSolver_SolveError, Description:="The range OpenSolver_" & Solver & "Parameters must be a two-column table."
 6108          End If
 6109          For i = 1 To ParametersRange.Rows.Count
                   Dim ParamName As String, ParamValue As String
 6110              ParamName = Trim(ParametersRange.Cells(i, 1))
 6111              If ParamName <> "" Then
 6112                  ParamValue = ConvertFromCurrentLocale(Trim(ParametersRange.Cells(i, 2)))
-6114                  ExtraParameters.Add Key:=ParamName, Item:=ParamValue
+6114                  SolverParameters.Add Key:=ParamName, Item:=ParamValue
 6115              End If
 6116          Next i
 6117      End If
@@ -189,7 +197,7 @@ ExitSub:
           Exit Sub
 
 ErrorHandler:
-          If Not ReportError("OpenSolverUtils", "GetExtraSolverParameters") Then Resume
+          If Not ReportError("OpenSolverUtils", "PopulateSolverParameters") Then Resume
           RaiseError = True
           GoTo ExitSub
 End Sub

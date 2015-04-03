@@ -33,6 +33,9 @@ Public sheet As Worksheet
 ' Whether to show user alerts
 Dim MinimiseUserInteraction As Boolean
 
+Dim SolverParameters As Dictionary
+Dim ShowIterationResults As Boolean
+
 ' Data for our model. We work thru the original Excel 'constraints' and form model 'rows' from these
 Public AdjustableCells As Range    ' A range we form containing all the adjustable (ie decision) variables
 Public BinaryCellsRange As Range   ' A range we form containing all the adjustable (ie decision) variables that are binary
@@ -612,6 +615,15 @@ ModelOptions:
 1043      On Error GoTo ErrorHandler
 1045      BuildModelOptions succeeded, SolveRelaxation, MinimiseUserInteraction
 1046      If succeeded = False Then GoTo ExitSub
+
+          Dim SolveOptions As SolveOptionsType
+1557      GetSolveOptions sheet, SolveOptions
+
+          ShowIterationResults = SolveOptions.ShowIterationResults
+          
+          ' Collate all solver parameters (ours and user-defined)
+          Set SolverParameters = New Dictionary
+1563      PopulateSolverParameters Solver, sheet, SolverParameters, SolveOptions
           
           '--------------------------------------------------------------------------
           ' CONSTRAINTS SETUP
@@ -1348,19 +1360,13 @@ Sub SolveModel_LinearLocal(ModelFilePathName As String, SolveRelaxation As Boole
              
 1550      WriteLPFile ModelFilePathName, SolveRelaxation
           If SolveStatus <> OpenSolverResult.Unsolved Then GoTo ExitSub
-                  
-          ' Get the Solver Options, stored in named ranges with values such as "=0.12"
-          ' Because these are NAMEs, they are always in English, not the local language, so get their value using Val
-          Dim SolveOptions As SolveOptionsType
-1557      GetSolveOptions sheet, SolveOptions
               
-1562      UpdateStatusBar "OpenSolver: Solving " & IIf(SolveRelaxation, "Relaxed ", "") & "Model... " & numVars & " vars, " & _
-                          NumIntVars & " int vars " & "(" & NumBinVars & " 0/1), " & NumRows & " rows, " & _
-                          SolveOptions.MaxTime & "s time limit, " & SolveOptions.Tolerance * 100 & "% tolerance.", True
-              
-          ' We allow user to define extra parameters
-          Dim ExtraParameters As New Dictionary
-1563      GetExtraSolverParameters Solver, sheet, ExtraParameters
+1562      UpdateStatusBar "OpenSolver: Solving " & IIf(SolveRelaxation, "Relaxed ", "") & "Model... " & _
+                          numVars & " vars, " & _
+                          NumIntVars & " int vars " & "(" & NumBinVars & " 0/1), " & _
+                          NumRows & " rows, " & _
+                          SolverParameters.Item(TimeLimitName(Solver)) & "s time limit, " & _
+                          SolverParameters.Item(ToleranceName(Solver)) * 100 & "% tolerance.", True
               
           Dim SolutionFilePathName As String
 1568      SolutionFilePathName = SolutionFilePath(Solver)
@@ -1369,14 +1375,14 @@ Sub SolveModel_LinearLocal(ModelFilePathName As String, SolveRelaxation As Boole
 1570      logFileName = "log1.tmp"
 1571      GetTempFilePath logFileName, logCommand
          
-1569      ExternalSolverPathName = CreateSolveScript(Solver, SolutionFilePathName, ExtraParameters, SolveOptions, Me)
+1569      ExternalSolverPathName = CreateSolveScript(Solver, SolutionFilePathName, SolverParameters, Me)
 
-              
+        
           Dim ExecutionCompleted As Boolean
           ExternalSolverPathName = MakePathSafe(ExternalSolverPathName) ' fix error for Gurobi with spaces in path name by quoting path
           
           Dim exeResult As Long
-1573      ExecutionCompleted = RunExternalCommand(ExternalSolverPathName, logCommand, IIf(SolveOptions.ShowIterationResults And Not MinimiseUserInteraction, WindowStyleType.Normal, WindowStyleType.Hide), True, exeResult) ' Run solver, waiting for completion
+1573      ExecutionCompleted = RunExternalCommand(ExternalSolverPathName, logCommand, IIf(ShowIterationResults And Not MinimiseUserInteraction, WindowStyleType.Normal, WindowStyleType.Hide), True, exeResult) ' Run solver, waiting for completion
 1578      If exeResult <> 0 Then
 1580          Err.Raise Number:=OpenSolver_SolveError, Description:="The " & Solver & " solver did not complete, but aborted with the error code " & exeResult & "." & vbCrLf & vbCrLf & "The last log file can be viewed under the OpenSolver menu and may give you more information on what caused this error."
 1581      End If
@@ -2970,6 +2976,9 @@ Function getOptionDataOS() As Variant
 2614      X(0) = SolveOptions.MaxIterations
 2615      X(1) = SolveOptions.MaxTime
 2616      X(2) = SolveOptions.Precision
+'          If SolverParameters.Exists(PrecisionName(Solver)) Then
+'              SolverParameters.Add Key:="H_MIN", Item:=SolverParameters.Item(PrecisionName(Solver))
+'          End If
 2617      getOptionDataOS = X
 End Function
 

@@ -14,6 +14,10 @@ Public Const UsesIterationLimit_NOMAD = True
 Public Const UsesTolerance_NOMAD = False
 Public Const UsesTimeLimit_NOMAD = True
 
+Public Const PrecisionName_NOMAD = "EPSILON"
+Public Const TimeLimitName_NOMAD = "MAX_TIME"
+Public Const IterationLimitName_NOMAD = "MAX_BB_EVAL"
+
 Public Const NomadDllName = "OpenSolverNomad.dll"
 
 ' Don't forget we need to chdir to the directory containing the DLL before calling any of the functions

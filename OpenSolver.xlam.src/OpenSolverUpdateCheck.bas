@@ -63,6 +63,7 @@ FailedState:
 End Sub
 
 ' On Mac, we use `cURL` via command line which is included by default
+#If Mac Then
 Private Function InitialiseUpdateCheck_Mac() As String
     Dim Cmd As String
     Dim result As String
@@ -78,7 +79,9 @@ Private Function InitialiseUpdateCheck_Mac() As String
     
     Application.OnTime Now + TimeSerial(0, 0, 1), "CheckForCompletion_Mac"
 End Function
+#End If
 
+#If Mac Then
 Public Sub CheckForCompletion_Mac()
     Dim CheckAgain As Boolean
     CheckAgain = True
@@ -100,6 +103,7 @@ Public Sub CheckForCompletion_Mac()
         CompleteUpdateCheck Response
     End If
 End Sub
+#End If
 
 ' Gets version number of current release from our response text.
 Private Function GetLatestOpenSolverVersion(Response As String) As String

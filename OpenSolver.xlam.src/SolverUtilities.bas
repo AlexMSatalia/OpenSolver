@@ -255,12 +255,12 @@ Function DoBackSubstitution(Solver As String) As Boolean
 6713      DoBackSubstitution = False
 End Function
 
-Function CreateSolveScript(Solver As String, SolutionFilePathName As String, ExtraParameters As Dictionary, SolveOptions As SolveOptionsType, s As COpenSolver) As String
+Function CreateSolveScript(Solver As String, SolutionFilePathName As String, SolverParameters As Dictionary, s As COpenSolver) As String
 6719      Select Case Solver
           Case "CBC"
-6720          CreateSolveScript = CreateSolveScript_CBC(SolutionFilePathName, ExtraParameters, SolveOptions, s)
+6720          CreateSolveScript = CreateSolveScript_CBC(SolutionFilePathName, SolverParameters, s)
 6721      Case "Gurobi"
-6722          CreateSolveScript = CreateSolveScript_Gurobi(SolutionFilePathName, ExtraParameters, SolveOptions)
+6722          CreateSolveScript = CreateSolveScript_Gurobi(SolutionFilePathName, SolverParameters)
 6723      End Select
 End Function
 
@@ -401,6 +401,13 @@ Function UsesPrecision(Solver As String) As Boolean
     End Select
 End Function
 
+Function PrecisionName(Solver As String) As String
+    Select Case Solver
+    Case "NOMAD"
+        PrecisionName = PrecisionName_NOMAD
+    End Select
+End Function
+
 Function UsesTimeLimit(Solver As String) As Boolean
     Select Case Solver
     Case "CBC"
@@ -419,6 +426,17 @@ Function UsesTimeLimit(Solver As String) As Boolean
         UsesTimeLimit = UsesTimeLimit_NeosCou
     Case "NeosBon"
         UsesTimeLimit = UsesTimeLimit_NeosBon
+    End Select
+End Function
+
+Function TimeLimitName(Solver As String) As String
+    Select Case Solver
+    Case "CBC", "NeosCBC"
+        TimeLimitName = TimeLimitName_CBC
+    Case "Gurobi"
+        TimeLimitName = TimeLimitName_Gurobi
+    Case "NOMAD"
+        TimeLimitName = TimeLimitName_NOMAD
     End Select
 End Function
 
@@ -443,6 +461,17 @@ Function UsesIterationLimit(Solver As String) As Boolean
     End Select
 End Function
 
+Function IterationLimitName(Solver As String) As String
+    Select Case Solver
+    Case "CBC", "NeosCBC"
+        IterationLimitName = IterationLimitName_CBC
+    Case "Gurobi"
+        IterationLimitName = IterationLimitName_Gurobi
+    Case "NOMAD"
+        IterationLimitName = IterationLimitName_NOMAD
+    End Select
+End Function
+
 Function UsesTolerance(Solver As String) As Boolean
     Select Case Solver
     Case "CBC"
@@ -461,6 +490,15 @@ Function UsesTolerance(Solver As String) As Boolean
         UsesTolerance = UsesTolerance_NeosCou
     Case "NeosBon"
         UsesTolerance = UsesTolerance_NeosBon
+    End Select
+End Function
+
+Function ToleranceName(Solver As String) As String
+    Select Case Solver
+    Case "CBC", "NeosCBC"
+        ToleranceName = ToleranceName_CBC
+    Case "Gurobi"
+        ToleranceName = ToleranceName_Gurobi
     End Select
 End Function
 

@@ -22,9 +22,13 @@ Public Const SolutionFile_Gurobi = "modelsolution.sol"
 Public Const SensitivityFile_Gurobi = "sensitivityData.sol"
 
 Public Const UsesPrecision_Gurobi = False
-Public Const UsesIterationLimit_Gurobi = False
+Public Const UsesIterationLimit_Gurobi = True
 Public Const UsesTolerance_Gurobi = True
 Public Const UsesTimeLimit_Gurobi = True
+
+Public Const ToleranceName_Gurobi = "MIPGap"
+Public Const TimeLimitName_Gurobi = "TimeLimit"
+Public Const IterationLimitName_Gurobi = "IterationLimit"
 
 'Gurobi return status codes
 Public Enum GurobiResult
@@ -176,24 +180,21 @@ ErrorHandler:
           RaiseError = True
           GoTo ExitFunction
 End Function
-Function CreateSolveScript_Gurobi(SolutionFilePathName As String, ExtraParameters As Dictionary, SolveOptions As SolveOptionsType) As String
+Function CreateSolveScript_Gurobi(SolutionFilePathName As String, SolverParameters As Dictionary) As String
           Dim RaiseError As Boolean
           RaiseError = False
           On Error GoTo ErrorHandler
 
-          Dim SolverString As String, CommandLineRunString As String, PrintingOptionString As String, ExtraParametersString As String
+          Dim SolverString As String, CommandLineRunString As String, SolverParametersString As String
 6441      SolverString = MakePathSafe(SolverFilePath_Gurobi())
 
 6442      CommandLineRunString = MakePathSafe(SolverPythonScriptPath_Gurobi())
-
-6443      PrintingOptionString = "TimeLimit=" & Trim(str(SolveOptions.MaxTime)) & " " & _
-                                 "MIPGap=" & Trim(str(SolveOptions.Tolerance))
           
-          ExtraParametersString = ParametersToString_Gurobi(ExtraParameters)
+          SolverParametersString = ParametersToString_Gurobi(SolverParameters)
           
           Dim scriptFile As String, scriptFileContents As String
 6444      scriptFile = ScriptFilePath_Gurobi()
-6445      scriptFileContents = SolverString & " " & CommandLineRunString & " " & PrintingOptionString & " " & ExtraParametersString
+6445      scriptFileContents = SolverString & " " & CommandLineRunString & " " & SolverParametersString
 6446      CreateScriptFile scriptFile, scriptFileContents
           
 6447      CreateSolveScript_Gurobi = scriptFile
