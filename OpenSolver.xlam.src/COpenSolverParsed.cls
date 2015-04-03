@@ -216,7 +216,7 @@ Sub WriteAMPLFile_Parsed(ModelFilePathName As String, SolverType As String, Solv
           ' Run Commands
 7241      WriteToFile 1, "# Solve the problem"
 7242      WriteToFile 1, "option solver " & GetAmplSolverValues(SolverType) & ";"
-          
+ 
 7243      WriteToFile 1, "solve;" & vbNewLine
          
           Dim cellName As String
@@ -275,9 +275,12 @@ Function SolveModelParsed_NEOS(ModelFilePathName As String, Solver As String, s 
           Dim RaiseError As Boolean
           RaiseError = False
           On Error GoTo ErrorHandler
+          
+          Dim OptionsFileString As String
+          OptionsFileString = ParametersToOptionsFileString(SolverParameters)
 
           Dim solution As String
-7269      solution = CallNEOS(ModelFilePathName, Solver, s.MinimiseUserInteraction)
+7269      solution = CallNEOS(ModelFilePathName, Solver, s.MinimiseUserInteraction, OptionsFileString)
 
           Dim openingParen As Long, closingParen As Long, SolveStatusString As String, result As String
           ' Extract the solve status

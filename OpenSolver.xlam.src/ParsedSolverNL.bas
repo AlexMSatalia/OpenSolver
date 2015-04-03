@@ -1340,10 +1340,7 @@ Private Sub OutputOptionsFile(OptionsFilePath As String, SolverParameters As Dic
           DeleteFileAndVerify OptionsFilePath
           
           Open OptionsFilePath For Output As #4
-          Dim Key As Variant
-          For Each Key In SolverParameters.Keys
-              Print #4, Key & " " & StrExNoPlus(SolverParameters.Item(Key))
-          Next Key
+          Print #4, ParametersToOptionsFileString(SolverParameters)
 
 ExitSub:
           Close #4
@@ -1380,27 +1377,6 @@ ErrorHandler:
           RaiseError = True
           GoTo ExitSub
 End Sub
-
-' Removes a "\n" character from the end of a string
-Private Function StripTrailingNewline(Block As String) As String
-          Dim RaiseError As Boolean
-          RaiseError = False
-          On Error GoTo ErrorHandler
-          
-          If right(Block, Len(vbNewLine)) = vbNewLine Then
-              Block = left(Block, Len(Block) - Len(vbNewLine))
-          End If
-          StripTrailingNewline = Block
-
-ExitFunction:
-          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
-          Exit Function
-
-ErrorHandler:
-          If Not ReportError("ParsedSolverNL", "StripTrailingNewline") Then Resume
-          RaiseError = True
-          GoTo ExitFunction
-End Function
 
 Private Function ConvertFormulaToExpressionTree(strFormula As String) As ExpressionTree
           ' Converts a string formula to a complete expression tree

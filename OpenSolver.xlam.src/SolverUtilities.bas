@@ -403,9 +403,9 @@ Function TimeLimitName(Solver As String) As String
         TimeLimitName = TimeLimitName_Gurobi
     Case "NOMAD"
         TimeLimitName = TimeLimitName_NOMAD
-    Case "Bonmin"
+    Case "Bonmin", "NeosBon"
         TimeLimitName = TimeLimitName_Bonmin
-    Case "Couenne"
+    Case "Couenne", "NeosCou"
         TimeLimitName = TimeLimitName_Couenne
     End Select
 End Function
@@ -422,9 +422,9 @@ Function IterationLimitName(Solver As String) As String
         IterationLimitName = IterationLimitName_Gurobi
     Case "NOMAD"
         IterationLimitName = IterationLimitName_NOMAD
-    Case "Bonmin"
+    Case "Bonmin", "NeosBon"
         IterationLimitName = IterationLimitName_Bonmin
-    Case "Couenne"
+    Case "Couenne", "NeosCou"
         IterationLimitName = IterationLimitName_Couenne
     End Select
 End Function
@@ -439,9 +439,9 @@ Function ToleranceName(Solver As String) As String
         ToleranceName = ToleranceName_CBC
     Case "Gurobi"
         ToleranceName = ToleranceName_Gurobi
-    Case "Bonmin"
+    Case "Bonmin", "NeosBon"
         ToleranceName = ToleranceName_Bonmin
-    Case "Couenne"
+    Case "Couenne", "NeosCou"
         ToleranceName = ToleranceName_Couenne
     End Select
 End Function

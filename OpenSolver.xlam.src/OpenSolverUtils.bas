@@ -50,6 +50,27 @@ Function RemoveActiveSheetNameFromString(s As String) As String
           RemoveActiveSheetNameFromString = RemoveSheetNameFromString(s, ActiveSheet)
 End Function
 
+' Removes a "\n" character from the end of a string
+Function StripTrailingNewline(Block As String) As String
+          Dim RaiseError As Boolean
+          RaiseError = False
+          On Error GoTo ErrorHandler
+          
+          If right(Block, Len(vbNewLine)) = vbNewLine Then
+              Block = left(Block, Len(Block) - Len(vbNewLine))
+          End If
+          StripTrailingNewline = Block
+
+ExitFunction:
+          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          Exit Function
+
+ErrorHandler:
+          If Not ReportError("OpenSolverUtils", "StripTrailingNewline") Then Resume
+          RaiseError = True
+          GoTo ExitFunction
+End Function
+
 Function StripWorksheetNameAndDollars(s As String, currentSheet As Worksheet) As String
           Dim RaiseError As Boolean
           RaiseError = False
@@ -240,6 +261,28 @@ ExitFunction:
 
 ErrorHandler:
           If Not ReportError("OpenSolverUtils", "ParametersToFlags") Then Resume
+          RaiseError = True
+          GoTo ExitFunction
+End Function
+
+Function ParametersToOptionsFileString(SolverParameters As Dictionary) As String
+          Dim RaiseError As Boolean
+          RaiseError = False
+          On Error GoTo ErrorHandler
+          
+          Dim Key As Variant, result As String
+          For Each Key In SolverParameters.Keys
+              result = result & Key & " " & StrExNoPlus(SolverParameters.Item(Key)) & vbNewLine
+          Next Key
+          
+          ParametersToOptionsFileString = StripTrailingNewline(result)
+          
+ExitFunction:
+          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          Exit Function
+
+ErrorHandler:
+          If Not ReportError("OpenSolverUtils", "ParametersToOptionsFileString") Then Resume
           RaiseError = True
           GoTo ExitFunction
 End Function

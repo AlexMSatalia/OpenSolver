@@ -7,7 +7,7 @@ Private Const NEOS_ADDRESS = "http://www.neos-server.org:3332"
 Private Const NEOS_RESULT_FILE = "neosresult.txt"
 Private Const NEOS_SCRIPT_FILE = "NeosClient.py"
 
-Function CallNEOS(ModelFilePathName As String, Solver As String, Optional MinimiseUserInteraction As Boolean = False) As String
+Function CallNEOS(ModelFilePathName As String, Solver As String, Optional MinimiseUserInteraction As Boolean = False, Optional OptionsFileString As String) As String
           Dim RaiseError As Boolean
           RaiseError = False
           On Error GoTo ErrorHandler
@@ -18,7 +18,7 @@ Function CallNEOS(ModelFilePathName As String, Solver As String, Optional Minimi
 6808      Close #1
            
           ' Wrap in XML for AMPL on NEOS
-6809      WrapAMPLForNEOS OutgoingMessage, Solver
+6809      WrapAMPLForNEOS OutgoingMessage, Solver, OptionsFileString
            
           Dim errorString As String
           If MinimiseUserInteraction Then
@@ -359,7 +359,7 @@ ErrorHandler:
            GoTo ExitFunction
 End Function
 
-Sub WrapAMPLForNEOS(AmplString As String, Solver As String)
+Sub WrapAMPLForNEOS(AmplString As String, Solver As String, Optional OptionsFileString As String)
 ' Wraps AMPL in the required XML to send to NEOS
            Dim RaiseError As Boolean
            RaiseError = False
@@ -380,6 +380,7 @@ Sub WrapAMPLForNEOS(AmplString As String, Solver As String)
                   "<model><![CDATA[" & AmplString & "end]]></model>" & _
                   "<data><![CDATA[]]></data>" & _
                   "<commands><![CDATA[]]></commands>" & _
+                  IIf(Len(OptionsFileString) <> 0, "<options><![CDATA[" & OptionsFileString & vbNewLine & "]]></options>", "") & _
                   "<comments><![CDATA[]]></comments>" & _
               "</document>"
 
