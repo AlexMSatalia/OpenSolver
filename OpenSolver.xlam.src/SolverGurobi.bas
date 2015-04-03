@@ -21,11 +21,6 @@ Public Const Solver_Gurobi = "gurobi" & ScriptExtension
 Public Const SolutionFile_Gurobi = "modelsolution.sol"
 Public Const SensitivityFile_Gurobi = "sensitivityData.sol"
 
-Public Const UsesPrecision_Gurobi = False
-Public Const UsesIterationLimit_Gurobi = True
-Public Const UsesTolerance_Gurobi = True
-Public Const UsesTimeLimit_Gurobi = True
-
 Public Const ToleranceName_Gurobi = "MIPGap"
 Public Const TimeLimitName_Gurobi = "TimeLimit"
 Public Const IterationLimitName_Gurobi = "IterationLimit"

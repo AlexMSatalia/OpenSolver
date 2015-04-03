@@ -5,8 +5,3 @@ Public Const SolverLink_NeosCou = "https://projects.coin-or.org/Couenne"
 Public Const SolverType_NeosCou = OpenSolver_SolverType.NonLinear
 
 Public Const SolverName_NeosCou = "Couenne"
-
-Public Const UsesPrecision_NeosCou = False
-Public Const UsesIterationLimit_NeosCou = False
-Public Const UsesTolerance_NeosCou = False
-Public Const UsesTimeLimit_NeosCou = False

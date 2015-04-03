@@ -17,10 +17,9 @@ Public Const SolverExec_Couenne = "couenne.exe"
 Public Const SolverScript_Couenne = "couenne" & ScriptExtension
 Public Const OptionsFile_Couenne = "couenne.opt"
 
-Public Const UsesPrecision_Couenne = False
-Public Const UsesIterationLimit_Couenne = True
-Public Const UsesTolerance_Couenne = True
-Public Const UsesTimeLimit_Couenne = True
+Public Const IterationLimitName_Couenne = "iteration_limit"
+Public Const ToleranceName_Couenne = "allowable_fraction_gap"
+Public Const TimeLimitName_Couenne = "time_limit"
 
 Function ScriptFilePath_Couenne() As String
 8358      GetTempFilePath SolverScript_Couenne, ScriptFilePath_Couenne

@@ -20,11 +20,6 @@ Public Const SolutionFile_CBC = "modelsolution.txt"
 Public Const CostRangesFile_CBC = "costranges.txt"
 Public Const RHSRangesFile_CBC = "rhsranges.txt"
 
-Public Const UsesPrecision_CBC = False
-Public Const UsesIterationLimit_CBC = True
-Public Const UsesTolerance_CBC = True
-Public Const UsesTimeLimit_CBC = True
-
 Public Const ToleranceName_CBC = "ratioGap"
 Public Const TimeLimitName_CBC = "seconds"
 Public Const IterationLimitName_CBC = "maxIterations"

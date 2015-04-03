@@ -381,24 +381,7 @@ Function SolverHasSensitivityAnalysis(Solver As String) As Boolean
 End Function
 
 Function UsesPrecision(Solver As String) As Boolean
-    Select Case Solver
-    Case "CBC"
-        UsesPrecision = UsesPrecision_CBC
-    Case "Gurobi"
-        UsesPrecision = UsesPrecision_Gurobi
-    Case "Bonmin"
-        UsesPrecision = UsesPrecision_Bonmin
-    Case "Couenne"
-        UsesPrecision = UsesPrecision_Couenne
-    Case "NOMAD"
-        UsesPrecision = UsesPrecision_NOMAD
-    Case "NeosCBC"
-        UsesPrecision = UsesPrecision_NeosCBC
-    Case "NeosCou"
-        UsesPrecision = UsesPrecision_NeosCou
-    Case "NeosBon"
-        UsesPrecision = UsesPrecision_NeosBon
-    End Select
+    UsesPrecision = (Len(PrecisionName(Solver)) > 0)
 End Function
 
 Function PrecisionName(Solver As String) As String
@@ -409,24 +392,7 @@ Function PrecisionName(Solver As String) As String
 End Function
 
 Function UsesTimeLimit(Solver As String) As Boolean
-    Select Case Solver
-    Case "CBC"
-        UsesTimeLimit = UsesTimeLimit_CBC
-    Case "Gurobi"
-        UsesTimeLimit = UsesTimeLimit_Gurobi
-    Case "Bonmin"
-        UsesTimeLimit = UsesTimeLimit_Bonmin
-    Case "Couenne"
-        UsesTimeLimit = UsesTimeLimit_Couenne
-    Case "NOMAD"
-        UsesTimeLimit = UsesTimeLimit_NOMAD
-    Case "NeosCBC"
-        UsesTimeLimit = UsesTimeLimit_NeosCBC
-    Case "NeosCou"
-        UsesTimeLimit = UsesTimeLimit_NeosCou
-    Case "NeosBon"
-        UsesTimeLimit = UsesTimeLimit_NeosBon
-    End Select
+    UsesTimeLimit = (Len(TimeLimitName(Solver)) > 0)
 End Function
 
 Function TimeLimitName(Solver As String) As String
@@ -441,24 +407,7 @@ Function TimeLimitName(Solver As String) As String
 End Function
 
 Function UsesIterationLimit(Solver As String) As Boolean
-    Select Case Solver
-    Case "CBC"
-        UsesIterationLimit = UsesIterationLimit_CBC
-    Case "Gurobi"
-        UsesIterationLimit = UsesIterationLimit_Gurobi
-    Case "Bonmin"
-        UsesIterationLimit = UsesIterationLimit_Bonmin
-    Case "Couenne"
-        UsesIterationLimit = UsesIterationLimit_Couenne
-    Case "NOMAD"
-        UsesIterationLimit = UsesIterationLimit_NOMAD
-    Case "NeosCBC"
-        UsesIterationLimit = UsesIterationLimit_NeosCBC
-    Case "NeosCou"
-        UsesIterationLimit = UsesIterationLimit_NeosCou
-    Case "NeosBon"
-        UsesIterationLimit = UsesIterationLimit_NeosBon
-    End Select
+    UsesIterationLimit = (Len(IterationLimitName(Solver)) > 0)
 End Function
 
 Function IterationLimitName(Solver As String) As String
@@ -473,24 +422,7 @@ Function IterationLimitName(Solver As String) As String
 End Function
 
 Function UsesTolerance(Solver As String) As Boolean
-    Select Case Solver
-    Case "CBC"
-        UsesTolerance = UsesTolerance_CBC
-    Case "Gurobi"
-        UsesTolerance = UsesTolerance_Gurobi
-    Case "Bonmin"
-        UsesTolerance = UsesTolerance_Bonmin
-    Case "Couenne"
-        UsesTolerance = UsesTolerance_Couenne
-    Case "NOMAD"
-        UsesTolerance = UsesTolerance_NOMAD
-    Case "NeosCBC"
-        UsesTolerance = UsesTolerance_NeosCBC
-    Case "NeosCou"
-        UsesTolerance = UsesTolerance_NeosCou
-    Case "NeosBon"
-        UsesTolerance = UsesTolerance_NeosBon
-    End Select
+    UsesTolerance = (Len(ToleranceName(Solver)) > 0)
 End Function
 
 Function ToleranceName(Solver As String) As String

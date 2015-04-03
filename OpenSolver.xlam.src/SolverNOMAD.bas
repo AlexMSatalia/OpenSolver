@@ -9,11 +9,6 @@ Public Const SolverType_NOMAD = OpenSolver_SolverType.NonLinear
 
 Public Const SolverName_NOMAD = "NOMAD"
 
-Public Const UsesPrecision_NOMAD = True
-Public Const UsesIterationLimit_NOMAD = True
-Public Const UsesTolerance_NOMAD = False
-Public Const UsesTimeLimit_NOMAD = True
-
 Public Const PrecisionName_NOMAD = "EPSILON"
 Public Const TimeLimitName_NOMAD = "MAX_TIME"
 Public Const IterationLimitName_NOMAD = "MAX_BB_EVAL"

@@ -17,10 +17,9 @@ Public Const SolverExec_Bonmin = "bonmin.exe"
 Public Const SolverScript_Bonmin = "bonmin" & ScriptExtension
 Public Const OptionsFile_Bonmin = "bonmin.opt"
 
-Public Const UsesPrecision_Bonmin = False
-Public Const UsesIterationLimit_Bonmin = True
-Public Const UsesTolerance_Bonmin = True
-Public Const UsesTimeLimit_Bonmin = True
+Public Const IterationLimitName_Bonmin = "iteration_limit"
+Public Const ToleranceName_Bonmin = "allowable_fraction_gap"
+Public Const TimeLimitName_Bonmin = "time_limit"
 
 Function ScriptFilePath_Bonmin() As String
 9021      GetTempFilePath SolverScript_Bonmin, ScriptFilePath_Bonmin
