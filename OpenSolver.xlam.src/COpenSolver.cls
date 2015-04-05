@@ -2974,16 +2974,22 @@ Function getVariableDataOS() As Variant
 End Function
 
 Function getOptionDataOS() As Variant
-          Dim X() As Double
-2612      ReDim X(0 To 2)
-          Dim SolveOptions As SolveOptionsType
-2613      GetSolveOptions sheet, SolveOptions
-2614      X(0) = SolveOptions.MaxIterations
-2615      X(1) = SolveOptions.MaxTime
-2616      X(2) = SolveOptions.Precision
-'          If SolverParameters.Exists(PrecisionName(Solver)) Then
-'              SolverParameters.Add Key:="H_MIN", Item:=SolverParameters.Item(PrecisionName(Solver))
-'          End If
+          ' Add extra values that depend on precision
+          If SolverParameters.Exists(PrecisionName(Solver)) Then
+              SolverParameters.Add Key:="H_MIN", Item:=SolverParameters.Item(PrecisionName(Solver))
+          End If
+          
+          Dim X() As Variant
+2612      ReDim X(1 To SolverParameters.Count, 1 To 2)
+
+          Dim i As Long, Key As Variant
+          i = 1
+          For Each Key In SolverParameters.Keys
+              X(i, 1) = Key & " " & StrExNoPlus(SolverParameters.Item(Key))
+              X(i, 2) = Len(X(i, 1))
+              i = i + 1
+          Next Key
+
 2617      getOptionDataOS = X
 End Function
 
