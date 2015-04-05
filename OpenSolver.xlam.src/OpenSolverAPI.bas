@@ -171,7 +171,7 @@ Public Sub SetPrecision(Precision As Double, Optional book As Workbook, Optional
 End Sub
 
 Public Function GetMaxIterations(Optional book As Workbook, Optional sheet As Worksheet) As Long
-    GetMaxIterations = GetNamedIntegerWithDefault("solver_itr", book, sheet, 100)
+    GetMaxIterations = GetNamedIntegerWithDefault("solver_itr", book, sheet, 999999999)
 End Function
 
 Public Sub SetMaxIterations(MaxIterations As Long, Optional book As Workbook, Optional sheet As Worksheet)
