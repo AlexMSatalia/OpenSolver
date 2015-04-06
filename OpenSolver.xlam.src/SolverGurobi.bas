@@ -212,11 +212,28 @@ Function ReadModel_Gurobi(SolutionFilePathName As String, s As COpenSolver) As B
           On Error GoTo ErrorHandler
 
 6448      ReadModel_Gurobi = False
-          Dim Line As String, Index As Long
+          
+          ' Check logs for invalid parameter values
+          Dim logFile As String, message As String
+7100      If Not GetTempFilePath("log1.tmp", logFile) Then GoTo ExitFunction
+7105      Open logFile For Input As #1
+7106      message = Input$(LOF(1), 1)
+7107      Close #1
+
+          Dim Key As Variant, SolverParameters As Dictionary
+          s.CopySolverParameters SolverParameters
+          For Each Key In SolverParameters.Keys
+              If InStrText(message, "No parameters matching '" & Key & "' found") Then
+                  s.SolveStatus = OpenSolverResult.ErrorOccurred
+                  s.SolveStatusString = "The parameter '" & Key & "' was not recognised by Gurobi. Please check the parameter name you have specified, or consult the Gurobi documentation for more information."
+                  GoTo ExitFunction
+              End If
+          Next Key
           
 6450      s.SolutionWasLoaded = True
           
 6451      Open SolutionFilePathName For Input As #1 ' supply path with filename
+          Dim Line As String, Index As Long
 6452      Line Input #1, Line
           ' Check for python exception while running Gurobi
           Dim GurobiError As String ' The string that identifies a gurobi error in the model file

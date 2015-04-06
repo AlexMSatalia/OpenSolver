@@ -281,9 +281,24 @@ Sub CheckNomadLogs()
               Position = InStrRev(message, " ")
               MaxSize = CInt(Mid(message, Position + 1, InStrRev(message, ")") - Position - 1))
               Err.Raise OpenSolver_NomadError, Description:="This model contains too many variables for NOMAD to solve. NOMAD is only capable of solving models with up to " & MaxSize & " variables."
-          ElseIf message Like "*invalid parameter*" Then
+          End If
+          
+          Dim SolverParameters As Dictionary
+          OS.CopySolverParameters SolverParameters
+          
+          Dim Key As Variant
+          For Each Key In SolverParameters.Keys()
+              If InStrText(message, "invalid parameter: " & UCase(Key) & " - unknown") Then
+                  Err.Raise OpenSolver_NomadError, Description:="The parameter '" & UCase(Key) & "' was not understood by NOMAD. Check that you have specified a valid parameter name, or consult the NOMAD documentation for more information."
+              End If
+              If InStrText(message, "invalid parameter: " & UCase(Key)) Then
+                  Err.Raise OpenSolver_NomadError, Description:="The value of the parameter '" & UCase(Key) & "' supplied to NOMAD was invalid. Check that you have specified a valid value for this parameter, or consult the NOMAD documentation for more information."
+              End If
+          Next Key
+              
+          If message Like "*invalid parameter*" Then
 7112          Err.Raise OpenSolver_NomadError, Description:="One of the parameters supplied to NOMAD was invalid. This usually happens if the precision is too large. Try adjusting the values in the Solve Options dialog box."
-7113      End If
+          End If
 
 ExitSub:
           Close #3

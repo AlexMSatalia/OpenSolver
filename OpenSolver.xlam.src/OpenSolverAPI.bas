@@ -74,6 +74,10 @@ Public Sub SetSolverParameters(Solver As String, SolverParameters As Range, Opti
     SetNamedRangeIfExists "OpenSolver_" & Solver & "Parameters", SolverParameters, book, sheet
 End Sub
 
+Public Sub DeleteSolverParameters(Solver As String, Optional book As Workbook, Optional sheet As Worksheet)
+    SetSolverParameters Solver, Nothing, book, sheet
+End Sub
+
 Public Function GetQuickSolveParameters(Optional book As Workbook, Optional sheet As Worksheet) As Range
     If Not GetNamedRangeIfExistsOnSheet(sheet, "OpenSolverModelParameters", GetQuickSolveParameters) Then Set GetQuickSolveParameters = Nothing
 End Function

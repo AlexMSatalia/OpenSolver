@@ -19,6 +19,9 @@ Public MinimiseUserInteraction As Boolean
 Public ShowIterationResults As Boolean
 
 Dim SolverParameters As Dictionary
+Public Sub CopySolverParameters(ByRef NewSolverParameters As Dictionary)
+          Set NewSolverParameters = SolverParameters
+End Sub
     
 Public Sub SolveModel(s As COpenSolver, Optional SolveRelaxation As Boolean = False, Optional ShouldMinimiseUserInteraction As Boolean = False)
           Dim RaiseError As Boolean
@@ -281,6 +284,12 @@ Function SolveModelParsed_NEOS(ModelFilePathName As String, Solver As String, s 
 
           Dim solution As String
 7269      solution = CallNEOS(ModelFilePathName, Solver, s.MinimiseUserInteraction, OptionsFileString)
+
+          ' Check logs first
+          If TryParseLogs(Me, m.Solver) Then
+              SolveModelParsed_NEOS = True
+              GoTo ExitFunction
+          End If
 
           Dim openingParen As Long, closingParen As Long, SolveStatusString As String, result As String
           ' Extract the solve status

@@ -166,6 +166,23 @@ Function ReadModel_CBC(SolutionFilePathName As String, s As COpenSolver) As Bool
 
           Dim Response As String
 6125      ReadModel_CBC = False
+
+          ' Check logs for invalid parameter values
+          Dim logFile As String
+7100      If Not GetTempFilePath("log1.tmp", logFile) Then GoTo ExitFunction
+7105      Open logFile For Input As #1
+7106      Response = Input$(LOF(1), 1)
+7107      Close #1
+
+          Dim SolverParameters As Dictionary
+          s.CopySolverParameters SolverParameters
+          
+          If CheckCBCLogs(Response, SolverParameters, s) Then
+              ReadModel_CBC = True
+              GoTo ExitFunction
+          End If
+          
+          ' All parameters valid, now we can check the solution
 6127      Open SolutionFilePathName For Input As #1 ' supply path with filename
 6128      Line Input #1, Response  ' Optimal - objective value              22
 
@@ -413,3 +430,21 @@ ErrorHandler:
           ReportError "SolverCBC", "LaunchCommandLine_CBC", True
           GoTo ExitSub
 End Sub
+
+Function CheckCBCLogs(message As String, SolverParameters As Dictionary, s As COpenSolver) As Boolean
+    Dim Key As Variant
+    For Each Key In SolverParameters.Keys
+        If InStrText(message, "parameter " & Key & " value remains") Then
+            s.SolveStatus = OpenSolverResult.ErrorOccurred
+            s.SolveStatusString = "The value for the parameter '" & Key & "' supplied to CBC was invalid. Please check the value you have specified, or consult the CBC documentation for more information."
+            CheckCBCLogs = True
+            Exit Function
+        End If
+        If InStrText(message, "No match for " & Key) Then
+            s.SolveStatus = OpenSolverResult.ErrorOccurred
+            s.SolveStatusString = "The parameter '" & Key & "' was not recognised by CBC. Please check the parameter name you have specified, or consult the CBC documentation for more information."
+            CheckCBCLogs = True
+            Exit Function
+        End If
+    Next Key
+End Function

@@ -1303,6 +1303,9 @@ Sub SolveModel_LinearNeos(ModelFilePathName As String, SolveRelaxation As Boolea
 
           SolutionWasLoaded = False
           
+          ' Check for any invalid parameters
+          If CheckCBCLogs(solution, SolverParameters, Me) Then GoTo ExitSub
+          
           Dim openingParen As String, closingParen As String
           ' Extract the solve status
 1511      openingParen = InStr(solution, "solve_result")
@@ -1315,6 +1318,10 @@ Sub SolveModel_LinearNeos(ModelFilePathName As String, SolveRelaxation As Boolea
 1517      ElseIf SolveStatusString Like "*infeasible*" Then ' Stopped on iterations or time
 1518          SolveStatus = OpenSolverResult.Infeasible
 1519          SolveStatusString = "No Feasible Solution"
+          ElseIf SolveStatusString Like "*limit*" Then ' Stopped on iterations or time
+              SolveStatus = OpenSolverResult.LimitedSubOptimal
+              SolveStatusString = "Stopped on User Limit (Time/Iterations)"
+              SolutionWasLoaded = True
 1522      ElseIf Not SolveStatusString Like "*solved*" Then
 1523          openingParen = InStr(solution, ">>>")
 1524          If openingParen = 0 Then

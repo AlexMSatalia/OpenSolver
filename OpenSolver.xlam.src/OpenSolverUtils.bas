@@ -207,6 +207,7 @@ Sub PopulateSolverParameters(Solver As String, sheet As Worksheet, SolverParamet
                   Dim ParamName As String, ParamValue As String
 6110              ParamName = Trim(ParametersRange.Cells(i, 1))
 6111              If ParamName <> "" Then
+                      If SolverParameters.Exists(ParamName) Then SolverParameters.Remove ParamName
 6112                  ParamValue = ConvertFromCurrentLocale(Trim(ParametersRange.Cells(i, 2)))
 6114                  SolverParameters.Add Key:=ParamName, Item:=ParamValue
 6115              End If

@@ -27,7 +27,12 @@ path = os.path.join(tFile, 'modelsolution.sol')
 
 for param in params_list:
     name, value = param.split('=')
-    m.setParam(name, float(value))
+    try:
+        m.setParam(name, float(value))
+    except GurobiError as e:
+        with open(path,'w') as File:
+            File.write('Gurobi Error: %s' % e.message)
+        sys.exit()
 
 # Catch any GurobiError that occurs when solving
 try:

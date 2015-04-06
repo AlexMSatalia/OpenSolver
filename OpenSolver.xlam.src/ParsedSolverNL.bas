@@ -1910,7 +1910,7 @@ Function ReadModel_NL(SolutionFilePathName As String, errorString As String, s A
     
     If Not FileOrDirExists(SolutionFilePathName) Then
         solutionExpected = False
-        If Not TryParseLogs(s) Then
+        If Not TryParseLogs(s, m.Solver) Then
             errorString = "The solver did not create a solution file. No new solution is available." & vbCrLf & vbCrLf & _
                           "This can happen when the initial conditions are invalid. " & _
                           "Check the log file for more information."
@@ -1937,12 +1937,12 @@ Function ReadModel_NL(SolutionFilePathName As String, errorString As String, s A
             s.SolveStatus = OpenSolverResult.LimitedSubOptimal
             s.SolveStatusString = "Stopped on User Limit (Time/Iterations)"
             ' See if we can find out which limit was hit from the log file
-            TryParseLogs s
+            TryParseLogs s, m.Solver
         ElseIf InStrText(Line, "interrupted by user") Then
             s.SolveStatus = OpenSolverResult.AbortedThruUserAction
             s.SolveStatusString = "Stopped on Ctrl-C"
         Else
-            If Not TryParseLogs(s) Then
+            If Not TryParseLogs(s, m.Solver) Then
                 errorString = "The response from the " & SolverName(m.Solver) & " solver is not recognised. The response was: " & vbCrLf & vbCrLf & _
                               Line & vbCrLf & vbCrLf & _
                               "The " & SolverName(m.Solver) & " command line can be found at:" & vbCrLf & _
@@ -2004,7 +2004,7 @@ ErrorHandler:
     GoTo ExitFunction
 End Function
 
-Private Function TryParseLogs(s As COpenSolverParsed) As Boolean
+Function TryParseLogs(s As COpenSolverParsed, Solver As String) As Boolean
       ' We examine the log file if it exists to try to find more info about the solve
           
           ' Check if log exists
@@ -2023,14 +2023,31 @@ Private Function TryParseLogs(s As COpenSolverParsed) As Boolean
 8485      Close #3
           
           ' We need to check > 0 explicitly, as the expression doesn't work without it
-8486      If Not InStrText(left(message, 7), SolverName(m.Solver)) > 0 Then
+8486      If Not InStrText(message, SolverName(Solver)) > 0 Then
              ' Not dealing with the correct solver log, abort
 8487          TryParseLogs = False
 8488          GoTo ExitFunction
 8489      End If
+
+          ' Scan for parameter information
+          Dim Key As Variant, SolverParameters As Dictionary
+          s.CopySolverParameters SolverParameters
+          For Each Key In SolverParameters.Keys
+              If InStrText(message, Key & """. It is not a valid option.") Then
+                  s.SolveStatus = OpenSolverResult.ErrorOccurred
+                  s.SolveStatusString = "The parameter '" & Key & "' was not recognised by the " & Solver & " solver. Please check that this name is correct, or consult the solver documentation for more information."
+                  TryParseLogs = True
+                  GoTo ExitFunction
+              End If
+              If InStrText(message, "not a valid setting for Option: " & Key) Then
+                  s.SolveStatus = OpenSolverResult.ErrorOccurred
+                  s.SolveStatusString = "The value specified for the parameter '" & Key & "' was invalid. Please check the OpenSolver log file for a description, or consult the solver documentation for more information."
+                  TryParseLogs = True
+                  GoTo ExitFunction
+              End If
+          Next Key
           
           ' Scan for information
-          
           ' 1 - scan for time limit
           If InStrText(message, "exiting on maximum time") Then
               s.SolveStatus = OpenSolverResult.LimitedSubOptimal
