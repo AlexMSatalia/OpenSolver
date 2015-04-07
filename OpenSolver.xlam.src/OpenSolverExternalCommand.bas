@@ -25,9 +25,9 @@ Option Explicit
 
         Type STARTUPINFO
             cb As Long
-            lpReserved As Long
-            lpDesktop As Long
-            lpTitle As Long
+            lpReserved As LongPtr
+            lpDesktop As LongPtr
+            lpTitle As LongPtr
             dwX As Long
             dwY As Long
             dwXSize As Long
@@ -38,7 +38,7 @@ Option Explicit
             dwFlags As Long
             wShowWindow As Integer
             cbReserved2 As Integer
-            lpReserved2 As Byte
+            lpReserved2 As LongPtr
             hStdInput As LongPtr
             hStdOutput As LongPtr
             hStdError As LongPtr
@@ -237,7 +237,12 @@ Public Function ReadExternalCommandOutput(CommandString As String, Optional LogP
         tSA_CreatePipe.bInheritHandle = True
         
         ' Create the pipe
-        Dim hRead As Long, hWrite As Long
+        #If VBA7 Then
+            Dim hRead As LongPtr, hWrite As LongPtr
+        #Else
+            Dim hRead As Long, hWrite As Long
+        #End If
+        
         If (CreatePipe(hRead, hWrite, tSA_CreatePipe, 0&) <> 0&) Then
             ' Run the command inside our pipe
             RunCommand CommandString, Hide, ExitCode, True, hWrite, True
@@ -286,7 +291,12 @@ ErrorHandler:
     #End If
 End Function
 
+' Declaration uses pointers so needs the right pointer length based on bitness of excel
+#If VBA7 Then
+Private Function RunCommand(CommandString As String, Optional WindowStyle As WindowStyleType = Hide, Optional ExitCode As Long, Optional IsBeingPiped As Boolean, Optional hWrite As LongPtr, Optional WaitForCompletion As Boolean = True) As Boolean
+#Else
 Private Function RunCommand(CommandString As String, Optional WindowStyle As WindowStyleType = Hide, Optional ExitCode As Long, Optional IsBeingPiped As Boolean, Optional hWrite As Long, Optional WaitForCompletion As Boolean = True) As Boolean
+#End If
 ' Helper function to spawn a new process for our command. Returns true if process starts/runs successfully
 '     CommandString:        the command to run
 '     WindowStyle:          the visibility of the process
