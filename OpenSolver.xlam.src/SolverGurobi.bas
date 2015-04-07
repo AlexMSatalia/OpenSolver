@@ -290,7 +290,20 @@ Function ReadModel_Gurobi(SolutionFilePathName As String, s As COpenSolver) As B
 6508              While Not EOF(1)
 6509                  Line Input #1, Line
 6510                  SplitLine = SplitWithoutRepeats(Line, " ")
-6511                  s.FinalVarValue(i) = ConvertToCurrentLocale(SplitLine(1))
+                      Dim FinalValue As String
+                      FinalValue = SplitLine(1)
+                      
+                      ' Check for an exponent that is too large, rougly >300
+                      ' Only do it for -ve exponents, since e-30 ~= e-300
+                      Index = InStrText(FinalValue, "e-")
+                      If Index > 0 Then
+                          ' Trim the final digit if the exponent has 3 digits
+                          If Len(FinalValue) - Index - 1 > 2 Then
+                              FinalValue = left(FinalValue, Len(FinalValue) - 1)
+                          End If
+                      End If
+                      
+6511                  s.FinalVarValue(i) = ConvertToCurrentLocale(FinalValue)
                       s.VarCell(i) = SplitLine(0)
 6513                  If left(s.VarCell(i), 1) = "_" Then
                           ' Strip any _ character added to make a valid name
