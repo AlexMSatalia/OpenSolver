@@ -2062,8 +2062,8 @@ Function TryParseLogs(s As COpenSolverParsed, Solver As String) As Boolean
               TryParseLogs = True
               GoTo ExitFunction
           End If
-          ' 3 - scan for infeasible
-8490      If InStrText(message, "infeasible") Then
+          ' 3 - scan for infeasible. Don't look just for "infeasible", it is shown a lot even in optimal solutions
+8490      If InStrText(message, "The LP relaxation is infeasible or too expensive") Then
 8491          s.SolveStatus = OpenSolverResult.Infeasible
 8492          s.SolveStatusString = "No Feasible Solution"
 8493          TryParseLogs = True
