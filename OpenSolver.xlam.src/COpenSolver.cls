@@ -1240,7 +1240,9 @@ Function SolveModel_Linear(SolveRelaxation As Boolean) As Long
               AdjustableCells.Value2 = 0
               Dim i As Long
               For i = 1 To numVars
-                  AdjustableCells.Worksheet.Range(VarCell(i)).Value2 = FinalVarValue(i)
+                  If Len(VarCell(i)) <> 0 Then
+                      AdjustableCells.Worksheet.Range(VarCell(i)).Value2 = FinalVarValue(i)
+                  End If
               Next i
           End If
           
