@@ -1213,7 +1213,7 @@ Function SolveModel_Linear(SolveRelaxation As Boolean) As Long
           Set rConstraintList = GetDuals()
 1422      DualsOnSameSheet = (Not rConstraintList Is Nothing)
 1424      DualsOnNewSheet = GetDualsNewSheet()
-1430      bGetDuals = (IntegerCellsRange Is Nothing And BinaryCellsRange Is Nothing) And _
+1430      bGetDuals = ((IntegerCellsRange Is Nothing And BinaryCellsRange Is Nothing) Or SolveRelaxation) And _
                       (DualsOnNewSheet Or DualsOnSameSheet) And SolverHasSensitivityAnalysis(Solver)
           
           ' Set up arrays to hold solution values (to avoid dynamically resizing them later)
@@ -1530,6 +1530,9 @@ Sub WriteLPFile(ModelFilePathName As String, SolveRelaxation As Boolean)
 1681          Print #1, RelationToLpString(Relation(row)) & StrEx(RHS(row))
 1682      Next row
 1683      Print #1,   ' New line
+1692      Print #1, "BOUNDS"
+          Print #1,   ' New line
+          
           Dim c As Range
 1684      If SolveRelaxation And Not (BinaryCellsRange Is Nothing) Then
 1685          Print #1, commentStart & " (Upper bounds of 1 on the relaxed binary variables)"
@@ -1548,7 +1551,6 @@ Sub WriteLPFile(ModelFilePathName As String, SolveRelaxation As Boolean)
           ' The LP file assumes lower bounds on all variables unless we tell it otherwise.
 1691      If Not AssumeNonNegativeVars Then
               ' We need to make all variables FREE variables (i.e. no lower bounds), except for the Binary variables
-1692          Print #1, "BOUNDS"
 1693          Print #1, commentStart & "'Assume Non Negative' is FALSE, so default lower bounds of zero are removed from all non-binary variables."
 1695          For Each c In SetDifference(AdjustableCells, BinaryCellsRange)
 1696              Print #1, " " & ValidLPFileVarName(c.Address(RowAbsolute:=False, ColumnAbsolute:=False)) & " FREE"
@@ -1570,7 +1572,6 @@ Sub WriteLPFile(ModelFilePathName As String, SolveRelaxation As Boolean)
               ' We need to mark variables with explicit lower bounds as FREE variables (allowing the possibly negative lower bound to be effective).
               ' However, we don't make Binary variables free
 1712          If Not BoundedVariables Is Nothing Then
-1713              Print #1, "BOUNDS"
 1714              Print #1, commentStart & "'Assume Non Negative' is TRUE, so default lower bounds of zero are removed only from non-binary variables already given explicit lower bounds."
 1716              For Each c In SetDifference(BoundedVariables, BinaryCellsRange)
 1717                  Print #1, " " & ValidLPFileVarName(c.Address(RowAbsolute:=False, ColumnAbsolute:=False)) & " FREE"
@@ -2685,7 +2686,7 @@ Function findName(sheet As String, cell As String) As String
 2427      While (NotFoundStringLeft And i > 0) Or (NotFoundStringTop And j > 0)
               'Find the nearest name to the left of the variable or constraint if one exists
 2428          If i > 0 And NotFoundStringLeft Then
-2429              CellValue = Sheets(sheet).Cells(row, i)
+2429              CellValue = CStr(Sheets(sheet).Cells(row, i).value)
                   'x = IsAmericanNumber(CellValue)
 2430              If Not (IsNumeric(CellValue) Or (left(CellValue, 1) = "=") Or (CellValue = "")) Then
 2431                  NotFoundStringLeft = False
@@ -2701,8 +2702,8 @@ Function findName(sheet As String, cell As String) As String
 2440              j = j - 1
 2441          End If
 2442      Wend
-2443      LHSName = Cells(row, i + 1)
-2444      AboveName = Cells(j + 1, col)
+2443      LHSName = CStr(Cells(row, i + 1).value)
+2444      AboveName = CStr(Cells(j + 1, col).value)
           
           'Put the names together
 2445      If AboveName = "" Then
