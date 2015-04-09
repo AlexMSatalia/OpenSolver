@@ -95,7 +95,7 @@ Function EscapeSheetName(sheet As Worksheet, Optional ForceQuotes As Boolean = F
     
     Dim SpecialChar As Variant, NeedsEscaping As Boolean
     NeedsEscaping = False
-    For Each SpecialChar In Array("'", "!", "(", ")", "+", "-")
+    For Each SpecialChar In Array("'", "!", "(", ")", "+", "-", " ")
         If InStr(EscapeSheetName, SpecialChar) Then
             NeedsEscaping = True
             Exit For
@@ -741,7 +741,7 @@ Sub UpdateStatusBar(Text As String, Optional Force As Boolean = False)
     Static LastUpdate As Double
     Dim TimeDiff As Double
     TimeDiff = (Now() - LastUpdate) * 86400  ' Time since last update in seconds
-    
+
     ' Check if last update was long enough ago
     If TimeDiff > 0.5 Or Force Then
         LastUpdate = Now()
