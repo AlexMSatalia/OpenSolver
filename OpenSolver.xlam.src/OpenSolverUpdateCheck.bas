@@ -1,5 +1,5 @@
 Attribute VB_Name = "OpenSolverUpdateCheck"
-Const FilesPageUrl = "http://opensolver.org/latest-version/"
+Const FilesPageUrl = "http://opensolver.org/download/726/"
 ' The link below is a useful tool for testing async-ness, timeouts and slow connections
 ' It delays the response of the server (2s by default). Add "?sleep=5" to change timeout to 5s etc
 ' Const FilesPageUrl = "https://fake-response.appspot.com/"
@@ -118,32 +118,17 @@ Public Sub CheckForCompletion_Mac()
 End Sub
 #End If
 
-' Gets version number of current release from our response text.
-Private Function GetLatestOpenSolverVersion(Response As String) As String
-    GetLatestOpenSolverVersion = ""
-    
-    ' We are looking for the following message:
-    '   "Latest version: (x.x.x)"
-    Dim startString As String
-    startString = "Latest version: "
-    
-    Dim start As Long, openingParen As Long, closingParen As Long
-    start = InStrText(Response, startString)
-    If start > 0 Then
-        openingParen = InStr(start, Response, "(") + 1
-        closingParen = InStr(openingParen, Response, ")")
-        GetLatestOpenSolverVersion = Mid(Response, openingParen, closingParen - openingParen)
-    End If
-End Function
-
 ' Function to run once our request has completed
 Sub CompleteUpdateCheck(Response As String)
-    Dim LatestVersion As String
-    LatestVersion = GetLatestOpenSolverVersion(Response)
-    If Len(LatestVersion) = 0 Then GoTo ConnectionError
+    On Error GoTo ConnectionError
+    If Len(Response) < 5 Or _
+       Mid(Response, 2, 1) <> "." Or _
+       Mid(Response, 4, 1) <> "." Then
+        GoTo ConnectionError
+    End If
 
     Dim LatestNumbers() As String, CurrentNumbers() As String
-    LatestNumbers() = Split(LatestVersion, ".")
+    LatestNumbers() = Split(Response, ".")
     CurrentNumbers() = Split(sOpenSolverVersion, ".")
     
     Dim UpdateAvailable As Boolean
@@ -158,7 +143,7 @@ Sub CompleteUpdateCheck(Response As String)
     Application.Cursor = xlDefault
     
     If UpdateAvailable Then
-        frmUpdate.ShowUpdate LatestVersion
+        frmUpdate.ShowUpdate Response
     ElseIf Not DoSilentFail Then
         MsgBox "No updates for OpenSolver are available at this time.", vbOKOnly, "OpenSolver - Update Check"
     End If
