@@ -16,9 +16,11 @@ Attribute VB_Exposed = False
 Option Explicit
 
 #If Mac Then
-    Const FormWidthAbout = 650
+    Const FormWidthAbout = 700
+    Const txtAboutHeight = 300
 #Else
-    Const FormWidthAbout = 450
+    Const FormWidthAbout = 500
+    Const txtAboutHeight = 250
 #End If
 
 Public EventsEnabled As Boolean
@@ -34,6 +36,11 @@ End Function
 
 Private Sub chkUpdate_Change()
     SaveUpdateSetting chkUpdate.value
+    chkUpdateExperimental.Enabled = chkUpdate.value
+End Sub
+
+Private Sub chkUpdateExperimental_Change()
+    SaveBetaUpdateSetting chkUpdateExperimental.value
 End Sub
 
 Private Sub cmdOk_Click()
@@ -129,6 +136,7 @@ Private Sub UserForm_Activate()
           End With
           
           chkUpdate.value = GetUpdateSetting()
+          chkUpdateExperimental.value = GetBetaUpdateSetting()
 
           With txtVersion
               .Locked = False
@@ -207,16 +215,39 @@ Private Sub AutoLayout()
         .top = Below(txtVersion, False)
         AutoHeight lblUrl, Me.width, True
     End With
+        
+    cmdUpdate.top = lblHeading.top
+    
+    With chkUpdate
+        .Caption = "Check for updates automatically"
+        .top = Below(cmdUpdate, False)
+        AutoHeight chkUpdate, Me.width, True
+    End With
+    
+    With chkUpdateExperimental
+        .Caption = "Check for experimental updates"
+        .top = Below(chkUpdate, False)
+        AutoHeight chkUpdateExperimental, Me.width, True
+    End With
+    
+    With cmdUpdate
+        .Caption = "Check for updates"
+        .width = Max(chkUpdate.width, chkUpdateExperimental.width)
+        .left = LeftOfForm(Me.width, .width)
+    End With
+    
+    chkUpdate.left = cmdUpdate.left
+    chkUpdateExperimental.left = cmdUpdate.left
     
     With txtAbout
         .Locked = False
         .Text = "Loading OpenSolver info..."
         .Locked = True
         .left = lblHeading.left
-        .top = Below(lblUrl)
+        .top = Max(Below(lblUrl), Below(chkUpdateExperimental))
         .BackStyle = fmBackStyleTransparent
         .SpecialEffect = fmSpecialEffectEtched
-        .height = 250
+        .height = txtAboutHeight
         .width = lblHeading.width
     End With
     
@@ -251,20 +282,6 @@ Private Sub AutoLayout()
         .width = FormButtonWidth
         .left = LeftOfForm(Me.width, .width)
         .top = chkAutoLoad.top
-    End With
-    
-    With cmdUpdate
-        .Caption = "Check for updates"
-        .width = FormButtonWidth * 1.4
-        .left = LeftOfForm(Me.width, .width)
-        .top = lblHeading.top
-    End With
-    
-    With chkUpdate
-        .Caption = "Check for updates automatically"
-        .left = cmdUpdate.left
-        .top = Below(cmdUpdate, False)
-        AutoHeight chkUpdate, cmdUpdate.width, True
     End With
     
     Me.height = FormHeight(cmdOk)

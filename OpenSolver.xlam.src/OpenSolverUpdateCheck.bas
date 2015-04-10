@@ -1,8 +1,4 @@
 Attribute VB_Name = "OpenSolverUpdateCheck"
-Const FilesPageUrl = "http://opensolver.org/download/726/"
-' The link below is a useful tool for testing async-ness, timeouts and slow connections
-' It delays the response of the server (2s by default). Add "?sleep=5" to change timeout to 5s etc
-' Const FilesPageUrl = "https://fake-response.appspot.com/"
 Private HasCheckedForUpdate As Boolean
 
 Private DoSilentFail As Boolean
@@ -11,6 +7,7 @@ Private DoWaitForResponse As Boolean
 Const OpenSolverRegName = "OpenSolver"
 Const PreferencesRegName = "Preferences"
 Const CheckForUpdatesRegName = "CheckForUpdates"
+Const CheckForBetaUpdatesRegName = "CheckForBetaUpdates"
 Const LastUpdateCheckRegName = "LastUpdateCheck"
 Const GuidRegName = "Guid"
 
@@ -28,6 +25,18 @@ Private Function GetUserAgent() As String
                    "Excel/" & Application.Version & "x" & ExcelBitness() & " " & _
                    "OpenSolver/" & sOpenSolverVersion & "x" & OpenSolverDistribution() & " " & _
                    "GUID/" & GetGuid()
+End Function
+
+Private Function GetPageUrl() As String
+    If DEBUG_MODE Then
+        ' The link below is a useful tool for async testing
+        ' It delays the response of the server (2s by default). Add "?sleep=5" to change timeout to 5s etc
+        GetPageUrl = "https://fake-response.appspot.com/"
+    ElseIf GetBetaUpdateSetting() Then
+        GetPageUrl = "http://opensolver.org/download/731/"
+    Else
+        GetPageUrl = "http://opensolver.org/download/726/"
+    End If
 End Function
 
 Sub InitialiseUpdateCheck(Optional ByVal SilentFail As Boolean = False, Optional WaitForResponse As Boolean = False)
@@ -65,7 +74,7 @@ Sub InitialiseUpdateCheck_Windows()
     xmlHttpRequest.OnReadyStateChange = MyXmlAsyncHandler
 
     ' Get the page asynchronously.
-    xmlHttpRequest.Open "GET", FilesPageUrl, True
+    xmlHttpRequest.Open "GET", GetPageUrl(), True
     xmlHttpRequest.setRequestHeader "User-Agent", GetUserAgent()
     xmlHttpRequest.send ""
     Exit Sub
@@ -84,8 +93,11 @@ Private Function InitialiseUpdateCheck_Mac() As String
     If GetTempFilePath(UpdateLogName, LogFilePath) Then DeleteFileAndVerify (LogFilePath)
 
     ' -L follows redirects, -m sets Max Time
-    Cmd = "curl -L -m " & MaxTime & " -o " & MakePathSafe(LogFilePath) & _
-          " -A " & QuotePath(GetUserAgent()) & " " & FilesPageUrl
+    Cmd = "curl -L" & _
+              " -m " & MaxTime & _
+              " -o " & MakePathSafe(LogFilePath) & _
+              " -A " & QuotePath(GetUserAgent()) & _
+              " " & GetPageUrl()
     RunExternalCommand Cmd, "", Hide, False
     
     NumChecks = 0
@@ -196,7 +208,7 @@ Public Function GetUpdateSetting() As Boolean
         Else
             ' Save result
             result = (result = vbYes)
-            SaveUpdateSetting (CBool(result))
+            SaveUpdateSetting CBool(result)
         End If
     End If
     
@@ -210,6 +222,36 @@ End Sub
 ' Useful for testing update check
 Private Sub DeleteUpdateSetting()
     DeleteSetting OpenSolverRegName, PreferencesRegName, CheckForUpdatesRegName
+End Sub
+
+Public Function GetBetaUpdateSetting() As Boolean
+    ' From rondebruin.nl: The GetSetting default argument can't be an empty string on Mac
+    Dim result As Variant
+    result = GetSetting(OpenSolverRegName, PreferencesRegName, CheckForBetaUpdatesRegName, "?")
+    
+    ' If registry key is missing, then check with user whether to autocheck
+    If result = "?" Then
+        result = MsgBox("Do you want OpenSolver to check for experimental OpenSolver updates? " & vbNewLine & vbNewLine & _
+                        "If not, OpenSolver will only check for stable releases.", vbYesNoCancel, "OpenSolver - Check for Updates?")
+        If result = vbCancel Then
+            ' Set result to false (without saving it) so that the check doesn't run this time
+            result = False
+        Else
+            ' Save result
+            result = (result = vbYes)
+            SaveBetaUpdateSetting CBool(result)
+        End If
+    End If
+    
+    GetBetaUpdateSetting = CBool(result)
+End Function
+
+Public Sub SaveBetaUpdateSetting(BetaUpdateSetting As Boolean)
+    SaveSetting OpenSolverRegName, PreferencesRegName, CheckForBetaUpdatesRegName, BetaUpdateSetting
+End Sub
+
+Private Sub DeleteBetaUpdateSetting()
+    DeleteSetting OpenSolverRegName, PreferencesRegName, CheckForBetaUpdatesRegName
 End Sub
 
 Private Function GetLastCheckTime() As Double
