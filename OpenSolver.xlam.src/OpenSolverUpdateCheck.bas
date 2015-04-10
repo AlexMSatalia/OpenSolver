@@ -12,6 +12,7 @@ Const OpenSolverRegName = "OpenSolver"
 Const PreferencesRegName = "Preferences"
 Const CheckForUpdatesRegName = "CheckForUpdates"
 Const LastUpdateCheckRegName = "LastUpdateCheck"
+Const GuidRegName = "Guid"
 
 Const MinTimeBetweenChecks As Double = 1 ' 1 day between checks
 
@@ -25,7 +26,8 @@ Const MinTimeBetweenChecks As Double = 1 ' 1 day between checks
 Private Function GetUserAgent() As String
     GetUserAgent = OSFamily() & "/" & OSVersion() & "x" & OSBitness() & " " & _
                    "Excel/" & Application.Version & "x" & ExcelBitness() & " " & _
-                   "OpenSolver/" & sOpenSolverVersion & "x" & OpenSolverDistribution()
+                   "OpenSolver/" & sOpenSolverVersion & "x" & OpenSolverDistribution() & " " & _
+                   "GUID/" & GetGuid()
 End Function
 
 Sub InitialiseUpdateCheck(Optional ByVal SilentFail As Boolean = False, Optional WaitForResponse As Boolean = False)
@@ -228,3 +230,31 @@ End Sub
 Private Sub ResetHasChecked()
     HasCheckedForUpdate = False
 End Sub
+
+Private Function GetGuid() As String
+    Dim result As Variant
+    result = GetSetting(OpenSolverRegName, PreferencesRegName, GuidRegName, "?")
+    
+    If result = "?" Then
+        result = MakeGuid()
+        SetGuid CStr(result)
+    End If
+    
+    GetGuid = CStr(result)
+End Function
+
+Private Sub SetGuid(Guid As String)
+    SaveSetting OpenSolverRegName, PreferencesRegName, GuidRegName, Guid
+End Sub
+
+Private Sub DeleteGuid()
+    DeleteSetting OpenSolverRegName, PreferencesRegName, GuidRegName
+End Sub
+
+Private Function MakeGuid() As String
+    #If Mac Then
+        MakeGuid = Application.Clean(ReadExternalCommandOutput("uuidgen"))
+    #Else
+        MakeGuid = Mid$(CreateObject("Scriptlet.TypeLib").Guid, 2, 36)
+    #End If
+End Function
