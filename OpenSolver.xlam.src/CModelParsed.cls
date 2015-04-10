@@ -1301,11 +1301,6 @@ Function ConvertFormula_AMPL(tokenText As String) As String
 5439          ConvertFormula_AMPL = "pi/180*("
 5440      Case "pi"
 5441          ConvertFormula_AMPL = "(pi"
-5442      Case "min", "max"
-5443          If Solver = "NeosCou" Then
-5444              Err.Raise OpenSolver_BuildError, "Parsing model formulae", "The operator " & UCase(tokenText) & " is not yet supported by Couenne."
-5445          End If
-5446          ConvertFormula_AMPL = tokenText + "("
           Case "sumif"
               Err.Raise OpenSolver_BuildError, "Parsing model formulae", "The operator " & UCase(tokenText) & " is not yet supported by OpenSolver when using the NEOS solvers."
               ConvertFormula_AMPL = tokenText + "("
@@ -1336,11 +1331,6 @@ Function ConvertFormula_NL(tokenText As String) As String
               ConvertFormula_NL = "("
 5455      Case "PI"
 5456          ConvertFormula_NL = "(4*ATAN(1)"
-5457      Case "MIN", "MAX"
-5458          If Solver = "Couenne" Then
-5459              Err.Raise OpenSolver_BuildError, "Parsing model formulae", "The operator " & UCase(tokenText) & " is not yet supported by Couenne."
-5460          End If
-5461          ConvertFormula_NL = tokenText + "("
 5462      Case Else
 5463          ConvertFormula_NL = tokenText + "("
 5464      End Select

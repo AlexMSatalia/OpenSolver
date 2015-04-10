@@ -393,12 +393,12 @@ Private Function AddLoggingToCommand(CommandString As String, LogPath As String,
     Dim LoggingOperator As String
     If Len(LogPath) <> 0 Then
         If NeedsStdOut Then
-            LoggingOperator = " | " & MakePathSafe(TeePath) & " "
+            LoggingOperator = " 2>&1 | " & MakePathSafe(TeePath) & " "
         Else
             LoggingOperator = " > "
         End If
     End If
-    AddLoggingToCommand = CommandString & LoggingOperator & MakePathSafe(LogPath)
+    AddLoggingToCommand = CommandString & LoggingOperator & MakePathSafe(LogPath) & IIf(NeedsStdOut, "", " 2>&1")
 End Function
 
 Private Function TeePath() As String

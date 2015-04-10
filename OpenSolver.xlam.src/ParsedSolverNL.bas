@@ -195,6 +195,7 @@ Function SolveModelParsed_NL(ModelFilePathName As String, model As CModelParsed,
           Dim exeResult As Long
 7508      ExecutionCompleted = RunExternalCommand(ExternalSolverPathName, logCommand, IIf(s.ShowIterationResults And Not s.MinimiseUserInteraction, Normal, Hide), True, exeResult) ' Run solver, waiting for completion
 7513      If exeResult <> 0 Then
+              If TryParseLogs(s, m.Solver) Then GoTo ExitFunction
 7515          Err.Raise Number:=OpenSolver_SolveError, Description:="The " & m.Solver & " solver did not complete, but aborted with the error code " & exeResult & "." & vbCrLf & vbCrLf & "The last log file can be viewed under the OpenSolver menu and may give you more information on what caused this error."
 7516      End If
           
@@ -2069,6 +2070,23 @@ Function TryParseLogs(s As COpenSolverParsed, Solver As String) As Boolean
 8493          TryParseLogs = True
 8494          GoTo ExitFunction
 8495      End If
+
+          Dim BadFunction As Variant
+          For Each BadFunction In Array("max", "min")
+              If InStrText(message, BadFunction & " not implemented") Then
+                  s.SolveStatus = OpenSolverResult.ErrorOccurred
+                  s.SolveStatusString = "The '" & BadFunction & "' function is not supported by the " & SolverName(m.Solver) & " solver"
+                  TryParseLogs = True
+                  GoTo ExitFunction
+              End If
+          Next BadFunction
+          
+          If InStr(message, "unknown operator") Then
+              s.SolveStatus = OpenSolverResult.ErrorOccurred
+              s.SolveStatusString = "A function in the model is not supported by the " & SolverName(m.Solver) & " solver. This is likely to be either MIN or MAX"
+              TryParseLogs = True
+              GoTo ExitFunction
+          End If
 
 ExitFunction:
 8496      Close #3
