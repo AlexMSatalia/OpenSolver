@@ -6,6 +6,7 @@ Const FilesPageUrl = "http://opensolver.org/latest-version/"
 Private HasCheckedForUpdate As Boolean
 
 Private DoSilentFail As Boolean
+Private DoWaitForResponse As Boolean
 
 Const OpenSolverRegName = "OpenSolver"
 Const PreferencesRegName = "Preferences"
@@ -21,11 +22,13 @@ Const MinTimeBetweenChecks As Double = 1 ' 1 day between checks
     Const MaxTime As Long = 10
 #End If
 
-Sub InitialiseUpdateCheck(Optional ByVal SilentFail As Boolean = False)
+Sub InitialiseUpdateCheck(Optional ByVal SilentFail As Boolean = False, Optional WaitForResponse As Boolean = False)
     HasCheckedForUpdate = True
     SetLastCheckTime Now
     
     DoSilentFail = SilentFail
+    DoWaitForResponse = WaitForResponse
+    If DoWaitForResponse Then Application.Cursor = xlWait
     
     ' We initiate a request for the version info.
     ' This check should be asynchronous, and fire "CompleteUpdateCheck" when the response is returned
@@ -72,12 +75,16 @@ Private Function InitialiseUpdateCheck_Mac() As String
     If GetTempFilePath(UpdateLogName, LogFilePath) Then DeleteFileAndVerify (LogFilePath)
 
     ' -L follows redirects, -m sets Max Time
-    Cmd = "curl -L -m " & MaxTime & " " & FilesPageUrl
-    RunExternalCommand Cmd, LogFilePath, Hide, False
+    Cmd = "curl -L -m " & MaxTime & " -o " & MakePathSafe(LogFilePath) & " " & FilesPageUrl
+    RunExternalCommand Cmd, "", Hide, False
     
     NumChecks = 0
     
-    Application.OnTime Now + TimeSerial(0, 0, 1), "CheckForCompletion_Mac"
+    If DoWaitForResponse Then
+        CheckForCompletion_Mac
+    Else
+        Application.OnTime Now + TimeSerial(0, 0, 1), "CheckForCompletion_Mac"
+    End If
 End Function
 #End If
 
@@ -93,12 +100,18 @@ Public Sub CheckForCompletion_Mac()
             Response = Input$(LOF(1), 1)
         Close #1
         
+        ' If the log file is not empty then we may be finished
         If Len(Response) > 0 Then CheckAgain = False
     End If
     
     If CheckAgain And NumChecks < MaxTime Then
         NumChecks = NumChecks + 1
-        Application.OnTime Now + TimeSerial(0, 0, 1), "CheckForCompletion_Mac"
+        If DoWaitForResponse Then
+            SleepSeconds 1
+            CheckForCompletion_Mac
+        Else
+            Application.OnTime Now + TimeSerial(0, 0, 1), "CheckForCompletion_Mac"
+        End If
     Else
         CompleteUpdateCheck Response
     End If
@@ -141,6 +154,8 @@ Sub CompleteUpdateCheck(Response As String)
             Exit For
         End If
     Next
+    
+    Application.Cursor = xlDefault
     
     If UpdateAvailable Then
         frmUpdate.ShowUpdate LatestVersion
@@ -215,4 +230,8 @@ End Sub
 
 Private Sub DeleteLastCheckTime()
     DeleteSetting OpenSolverRegName, PreferencesRegName, LastUpdateCheckRegName
+End Sub
+
+Private Sub ResetHasChecked()
+    HasCheckedForUpdate = False
 End Sub

@@ -110,7 +110,7 @@ End Sub
 
 
 Private Sub cmdUpdate_Click()
-    InitialiseUpdateCheck
+    InitialiseUpdateCheck False, True
     chkUpdate.value = GetUpdateSetting()
 End Sub
 
