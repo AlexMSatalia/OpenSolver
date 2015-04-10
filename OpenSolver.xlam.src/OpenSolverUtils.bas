@@ -5,6 +5,28 @@ Option Explicit
     Public Declare Sub SleepSeconds Lib "libc.dylib" Alias "sleep" (ByVal Seconds As Long)
 #Else
     #If VBA7 Then
+        Type OSVERSIONINFO
+            dwOSVersionInfoSize As Long
+            dwMajorVersion As Long
+            dwMinorVersion As Long
+            dwBuildNumber As Long
+            dwPlatformId As Long
+            szCSDVersion As String * 128
+        End Type
+        Private Declare PtrSafe Function GetVersionExA Lib "kernel32" (lpVersionInformation As OSVERSIONINFO) As Integer
+    #Else
+        Type OSVERSIONINFO
+            dwOSVersionInfoSize As Long
+            dwMajorVersion As Long
+            dwMinorVersion As Long
+            dwBuildNumber As Long
+            dwPlatformId As Long
+            szCSDVersion As String * 128
+        End Type
+        Private Declare Function GetVersionExA Lib "kernel32" (lpVersionInformation As OSVERSIONINFO) As Integer
+    #End If
+
+    #If VBA7 Then
         Public Declare PtrSafe Sub Sleep Lib "kernel32" (ByVal dwMilliseconds As Long)
     #Else
         Public Declare Sub Sleep Lib "kernel32" (ByVal dwMilliseconds As Long)
@@ -446,6 +468,10 @@ Function StripNonBreakingSpaces(Text As String) As String
 784       StripNonBreakingSpaces = Replace(Text, Chr(NBSP), Chr(32))
 End Function
 
+Function QuotePath(Path As String) As String
+745       QuotePath = """" & Path & """"
+End Function
+
 Function TrimBlankLines(s As String) As String
 ' Remove any blank lines at the beginning or end of s
           Dim RaiseError As Boolean
@@ -709,9 +735,30 @@ Function OSFamily() As String
           #End If
 End Function
 
+Public Function OSVersion() As String
+    #If Mac Then
+        OSVersion = Application.Clean(ReadExternalCommandOutput("sw_vers -productVersion"))
+    #Else
+        Dim info As OSVERSIONINFO
+        Dim retvalue As Integer
+        info.dwOSVersionInfoSize = 148
+        info.szCSDVersion = Space$(128)
+        retvalue = GetVersionExA(info)
+        OSVersion = info.dwMajorVersion & "." & info.dwMinorVersion
+    #End If
+End Function
+
+Function OSBitness() As String
+    OSBitness = IIf(SystemIs64Bit, "64", "32")
+End Function
+
+Function OpenSolverDistribution() As String
+    OpenSolverDistribution = IIf(SolverAvailable("Bonmin"), "Advanced", "Linear")
+End Function
+
 Function EnvironmentSummary() As String
 3523      EnvironmentSummary = "Version " & sOpenSolverVersion & " (" & sOpenSolverDate & ")" & _
-                               " running on " & IIf(SystemIs64Bit, "64", "32") & "-bit " & OSFamily() & _
+                               " running on " & OSBitness() & "-bit " & OSFamily() & _
                                " with " & VBAversion() & " in " & ExcelBitness() & "-bit Excel " & Application.Version
 End Function
 

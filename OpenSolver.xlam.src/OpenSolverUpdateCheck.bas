@@ -22,6 +22,12 @@ Const MinTimeBetweenChecks As Double = 1 ' 1 day between checks
     Const MaxTime As Long = 10
 #End If
 
+Private Function GetUserAgent() As String
+    GetUserAgent = OSFamily() & "/" & OSVersion() & "x" & OSBitness() & " " & _
+                   "Excel/" & Application.Version & "x" & ExcelBitness() & " " & _
+                   "OpenSolver/" & sOpenSolverVersion & "x" & OpenSolverDistribution()
+End Function
+
 Sub InitialiseUpdateCheck(Optional ByVal SilentFail As Boolean = False, Optional WaitForResponse As Boolean = False)
     HasCheckedForUpdate = True
     SetLastCheckTime Now
@@ -58,6 +64,7 @@ Sub InitialiseUpdateCheck_Windows()
 
     ' Get the page asynchronously.
     xmlHttpRequest.Open "GET", FilesPageUrl, True
+    xmlHttpRequest.setRequestHeader "User-Agent", GetUserAgent()
     xmlHttpRequest.send ""
     Exit Sub
 
@@ -75,7 +82,8 @@ Private Function InitialiseUpdateCheck_Mac() As String
     If GetTempFilePath(UpdateLogName, LogFilePath) Then DeleteFileAndVerify (LogFilePath)
 
     ' -L follows redirects, -m sets Max Time
-    Cmd = "curl -L -m " & MaxTime & " -o " & MakePathSafe(LogFilePath) & " " & FilesPageUrl
+    Cmd = "curl -L -m " & MaxTime & " -o " & MakePathSafe(LogFilePath) & _
+          " -A " & QuotePath(GetUserAgent()) & " " & FilesPageUrl
     RunExternalCommand Cmd, "", Hide, False
     
     NumChecks = 0

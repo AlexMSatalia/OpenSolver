@@ -197,10 +197,6 @@ ErrorHandler:
     GoTo ExitFunction
 End Function
 
-Private Function QuotePath(Path As String) As String
-745       QuotePath = """" & Path & """"
-End Function
-
 Function MakePathSafe(Path As String) As String
 ' Prepares a path for command-line invocation
     MakePathSafe = IIf(Len(Path) = 0, "", QuotePath(ConvertHfsPathToPosix(Path)))
