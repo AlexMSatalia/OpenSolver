@@ -150,6 +150,35 @@ Private Function ConvertLocale(ByVal s As String, ConvertToUS As Boolean) As Str
           RaiseError = False
           On Error GoTo ErrorHandler
 
+          ' Static to track whether we can skip or not
+          ' 0 = Haven't checked yet
+          ' 1 = Can't skip
+          ' 2 = Can skip
+          Static SkipConvert As Long
+          
+          If SkipConvert < 1 Then
+              ' If we are in an english version of Excel and a known locale, we can skip the conversion
+              If Application.International(xlCountryCode) = 1 Then ' English language excel
+                  Dim Country As Long, DoConvert As Boolean
+                  Country = Application.International(xlCountrySetting)
+                  SkipConvert = 2
+                  
+                  Select Case Country
+                  Case 1  ' US
+                  Case 44 ' UK
+                  Case 61 ' Australia
+                  Case 64 ' NZ
+                  Case Else: SkipConvert = 1
+                  End Select
+              End If
+          End If
+          
+          If SkipConvert = 2 Then
+              ConvertLocale = s
+              Exit Function
+          End If
+              
+
           ' We turn off calculation & hide alerts as we don't want Excel popping up dialogs asking for references to other sheets
           Dim oldCalculation As Long
 291       oldCalculation = Application.Calculation
