@@ -668,7 +668,7 @@ Public Sub OpenURL(URL As String)
           RaiseError = False
           On Error GoTo ErrorHandler
 
-          ThisWorkbook.FollowHyperlink URL
+          ActiveWorkbook.FollowHyperlink URL
 
 ExitSub:
           If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
