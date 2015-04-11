@@ -16,7 +16,7 @@ Attribute VB_Exposed = False
 Option Explicit
 
 #If Mac Then
-    Const FormWidthAbout = 700
+    Const FormWidthAbout = 730
     Const txtAboutHeight = 300
 #Else
     Const FormWidthAbout = 500

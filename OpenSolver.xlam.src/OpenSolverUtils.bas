@@ -791,7 +791,7 @@ End Function
 
 Function EnvironmentSummary() As String
 3523      EnvironmentSummary = "Version " & sOpenSolverVersion & " (" & sOpenSolverDate & ")" & _
-                               " running on " & OSBitness() & "-bit " & OSFamily() & _
+                               " running on " & OSBitness() & "-bit " & OSFamily() & " " & OSVersion() & _
                                " with " & VBAversion() & " in " & ExcelBitness() & "-bit Excel " & Application.Version
 End Function
 
