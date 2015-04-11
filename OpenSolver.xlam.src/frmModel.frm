@@ -276,6 +276,9 @@ Private Sub UserForm_Activate()
 4347          Exit Sub
 4348      End If
 
+          UpdateStatusBar "Loading model...", True
+          Application.Cursor = xlWait
+
           cmdCancel.SetFocus
 
 4349      SetAnyMissingDefaultSolverOptions
@@ -325,13 +328,17 @@ Private Sub UserForm_Activate()
           IsLoadingModel = False
 4378      DoEvents
 4379      UpdateFormFromMemory
-4380      DoEvents
+        
+ExitSub:
+          Application.StatusBar = False
+          Application.Cursor = xlDefault
+          ' This line forces the cursor to update - sometimes it wouldn't until the mouse is moved
+          Application.ScreenUpdating = Application.ScreenUpdating
+          
           ' Take focus away from refEdits
 4381      DoEvents
 4382      Repaint
 4383      DoEvents
-
-ExitSub:
           Exit Sub
 
 ErrorHandler:
