@@ -9,6 +9,8 @@ Public ErrMsg As String
 Public ErrNum As Long
 Public ErrSource As String
 
+Public SolverInUse As String
+
 ' OpenSolver error numbers.
 Public Const OpenSolver_ModelError = vbObjectError + 1001 ' An error occured while building the model
 Public Const OpenSolver_BuildError = vbObjectError + 1002 ' An error occured while building the model
@@ -92,6 +94,7 @@ Function ReportError(ModuleName As String, ProcedureName As String, Optional IsE
     Print #FileNum, LogText
     If IsEntryPoint Then
         Print #FileNum, vbNewLine & "Error " & CStr(ErrNum) & ": " & ErrMsg & vbNewLine
+        If Len(SolverInUse) <> 0 Then Print #FileNum, "Solver: " & SolverInUse & vbNewLine
         Print #FileNum, EnvironmentSummary() & vbNewLine
         Print #FileNum, StripNonBreakingSpaces(SolverInfo)
     End If

@@ -535,6 +535,7 @@ Sub BuildModelFromSolverData(Optional LinearityCheckOffset As Double = 0, Option
           '----------------------------------------------------------------------------------------------------------
           'Find the users preferred solver
 960       Solver = GetChosenSolver(book, sheet)
+          OpenSolverErrorHandler.SolverInUse = Solver
 
           '--------------------------------------------------------------------------
           ' ADJUSTABLE CELLS SETUP and Setting of Initial Decision Var Cell values
