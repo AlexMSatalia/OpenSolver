@@ -211,7 +211,6 @@ Function GetNamedStringIfExists(book As Workbook, Name As String, value As Strin
 171       End If
 End Function
 
-' Note: Numeric values should be passed as strings in English (not the local language)
 Sub DeleteNameOnSheet(Name As String, Optional book As Workbook, Optional sheet As Worksheet, Optional SolverName As Boolean = False)
           GetActiveBookAndSheetIfMissing book, sheet
 608       Name = EscapeSheetName(sheet) & IIf(SolverName, SolverPrefix, "") & Name
@@ -220,14 +219,10 @@ Sub DeleteNameOnSheet(Name As String, Optional book As Workbook, Optional sheet 
 doesntExist:
 End Sub
 
-Sub SetNameOnSheet(Name As String, value As String, Optional book As Workbook, Optional sheet As Worksheet, Optional SolverName As Boolean = False)
-' If a key doesn't exist we have to add it, otherwise we just set it
+Sub SetNameOnSheet(Name As String, value As Variant, Optional book As Workbook, Optional sheet As Worksheet, Optional SolverName As Boolean = False)
+' If a key exists we can just add it (http://www.cpearson.com/Excel/DefinedNames.aspx)
           GetActiveBookAndSheetIfMissing book, sheet
 600       Name = EscapeSheetName(sheet) & IIf(SolverName, SolverPrefix, "") & Name
-    On Error GoTo doesntExist:
-601       book.Names(Name).value = value
-602       Exit Sub
-doesntExist:
 603       book.Names.Add Name, value, False
 End Sub
 
@@ -240,8 +235,7 @@ Sub SetNamedRangeIfExists(ByVal Name As String, ByRef RangeToSet As Range, Optio
 End Sub
 
 Sub SetNamedRangeOnSheet(Name As String, value As Range, Optional book As Workbook, Optional sheet As Worksheet, Optional SolverName As Boolean = False)
-' NB: Simply using a variant in SetNameOnSheet fails as passing a range can simply pass its cell value
-    SetNameOnSheet Name, "=" & GetDisplayAddress(value, False), book, sheet, SolverName
+    SetNameOnSheet Name, value, book, sheet, SolverName
 End Sub
 
 Sub SetIntegerNameOnSheet(Name As String, value As Long, Optional book As Workbook, Optional sheet As Worksheet, Optional SolverName As Boolean = False)
@@ -249,11 +243,11 @@ Sub SetIntegerNameOnSheet(Name As String, value As Long, Optional book As Workbo
 End Sub
 
 Sub SetDoubleNameOnSheet(Name As String, value As Double, Optional book As Workbook, Optional sheet As Worksheet, Optional SolverName As Boolean = False)
-    SetNameOnSheet Name, "=" & Mid(str(value), 2), book, sheet, SolverName ' Use str() to get a US-locale number
+    SetNameOnSheet Name, value, book, sheet, SolverName
 End Sub
 
 Sub SetBooleanNameOnSheet(Name As String, value As Boolean, Optional book As Workbook, Optional sheet As Worksheet, Optional SolverName As Boolean = False)
-    SetNameOnSheet Name, "=" & IIf(value, "TRUE", "FALSE"), book, sheet, SolverName
+    SetNameOnSheet Name, value, book, sheet, SolverName
 End Sub
 
 Sub SetBooleanAsIntegerNameOnSheet(Name As String, value As Boolean, Optional book As Workbook, Optional sheet As Worksheet, Optional SolverName As Boolean = False)

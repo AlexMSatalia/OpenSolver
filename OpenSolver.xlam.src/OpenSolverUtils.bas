@@ -230,7 +230,7 @@ Sub PopulateSolverParameters(Solver As String, sheet As Worksheet, SolverParamet
 6110              ParamName = Trim(ParametersRange.Cells(i, 1))
 6111              If ParamName <> "" Then
                       If SolverParameters.Exists(ParamName) Then SolverParameters.Remove ParamName
-6112                  ParamValue = ConvertFromCurrentLocale(Trim(ParametersRange.Cells(i, 2)))
+6112                  ParamValue = ParametersRange.Cells(i, 2).value
 6114                  SolverParameters.Add Key:=ParamName, Item:=ParamValue
 6115              End If
 6116          Next i
@@ -520,7 +520,11 @@ Function ZeroIfSmall(value As Double) As Double
           ZeroIfSmall = IIf(IsZero(value), 0, value)
 End Function
 
-Function StrEx(d As Double, Optional AddSign As Boolean = True) As String
+Function StrEx(d As Variant, Optional AddSign As Boolean = True) As String
+              If VarType(d) = vbString Then
+                  StrEx = d
+              End If
+
 ' Convert a double to a string, always with a + or -. Also ensure we have "0.", not just "." for values between -1 and 1
               Dim s As String, prependedZero As String
 1912          s = Mid(str(d), 2)  ' remove the initial space (reserved by VB for the sign)
@@ -529,7 +533,7 @@ Function StrEx(d As Double, Optional AddSign As Boolean = True) As String
               If AddSign Or d < 0 Then StrEx = IIf(d >= 0, "+", "-") & StrEx
 End Function
 
-Function StrExNoPlus(d As Double) As String
+Function StrExNoPlus(d As Variant) As String
     StrExNoPlus = StrEx(d, False)
 End Function
 
