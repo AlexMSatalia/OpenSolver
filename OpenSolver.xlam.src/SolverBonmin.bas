@@ -57,20 +57,33 @@ Function SolverFilePath_Bonmin(Optional errorString As String) As String
 9030      SolverFilePath_Bonmin = SolverFilePath_Default("Bonmin", errorString)
 End Function
 
-Function SolverAvailable_Bonmin(Optional SolverPath As String, Optional errorString As String) As Boolean
+Function SolverPresent_Bonmin(Optional SolverPath As String, Optional errorString As String) As Boolean
       ' Returns true if Bonmin is available and sets SolverPath
 9031      SolverPath = SolverFilePath_Bonmin(errorString)
 9032      If SolverPath = "" Then
-9033          SolverAvailable_Bonmin = False
+9033          SolverPresent_Bonmin = False
 9034      Else
-9035          SolverAvailable_Bonmin = True
+9035          SolverPresent_Bonmin = True
 
-#If Mac Then
-              ' Make sure Bonmin is executable on Mac
-9036          RunExternalCommand "chmod +x " & MakePathSafe(SolverPath)
-#End If
+              #If Mac Then
+                  ' Make sure Bonmin is executable on Mac
+9036              RunExternalCommand "chmod +x " & MakePathSafe(SolverPath)
+              #End If
           
 9037      End If
+End Function
+
+Function SolverAvailable_Bonmin(Optional SolverPath As String, Optional errorString As String) As Boolean
+          If Not SolverPresent_Bonmin(SolverPath, errorString) Then Exit Function
+          
+          On Error GoTo ErrorHandler
+          If Len(SolverVersion_Bonmin) <> 0 Then
+              SolverAvailable_Bonmin = True
+          Else
+ErrorHandler:
+              SolverAvailable_Bonmin = False
+              errorString = "Unable to access the Bonmin solver at " & MakeSpacesNonBreaking(MakePathSafe(SolverPath))
+          End If
 End Function
 
 Function SolverVersion_Bonmin() As String
@@ -80,7 +93,7 @@ Function SolverVersion_Bonmin() As String
           On Error GoTo ErrorHandler
 
           Dim SolverPath As String
-9038      If Not SolverAvailable_Bonmin(SolverPath) Then
+9038      If Not SolverPresent_Bonmin(SolverPath) Then
 9039          SolverVersion_Bonmin = ""
 9040          GoTo ExitFunction
 9041      End If
@@ -102,21 +115,21 @@ End Function
 Function SolverBitness_Bonmin() As String
       ' Get Bitness of Bonmin solver
           Dim SolverPath As String
-9062      If Not SolverAvailable_Bonmin(SolverPath) Then
+9062      If Not SolverPresent_Bonmin(SolverPath) Then
 9063          SolverBitness_Bonmin = ""
 9064          Exit Function
 9065      End If
           
           ' All Macs are 64-bit so we only provide 64-bit binaries
-#If Mac Then
-9066      SolverBitness_Bonmin = "64"
-#Else
-9067      If right(SolverPath, 13) = "64\bonmin.exe" Then
-9068          SolverBitness_Bonmin = "64"
-9069      Else
-9070          SolverBitness_Bonmin = "32"
-9071      End If
-#End If
+          #If Mac Then
+9066          SolverBitness_Bonmin = "64"
+          #Else
+9067          If right(SolverPath, 13) = "64\bonmin.exe" Then
+9068              SolverBitness_Bonmin = "64"
+9069          Else
+9070              SolverBitness_Bonmin = "32"
+9071          End If
+          #End If
 End Function
 
 Function CreateSolveScript_Bonmin(ModelFilePathName As String, SolverParameters As Dictionary) As String

@@ -30,7 +30,7 @@ Private Sub cboSolver_Change()
                 lblHyperlink.Caption = SolverLink(ChosenSolver)
                 
                 Dim errorString As String
-4727            cmdOk.Enabled = SolverAvailable(ChosenSolver, errorString:=errorString)
+4727            cmdOk.Enabled = SolverPresent(ChosenSolver, errorString:=errorString)
 4732            lblError.Caption = errorString ' empty if no errors found
 
                 AutoLayout

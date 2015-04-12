@@ -64,18 +64,31 @@ Function SolverFilePath_CBC(errorString As String) As String
 6060      SolverFilePath_CBC = SolverFilePath_Default("CBC", errorString)
 End Function
 
-Function SolverAvailable_CBC(Optional SolverPath As String, Optional errorString As String) As Boolean
+Function SolverPresent_CBC(Optional SolverPath As String, Optional errorString As String) As Boolean
       ' Returns true if CBC is available and sets SolverPath
 6061      SolverPath = SolverFilePath_CBC(errorString)
 6062      If SolverPath = "" Then
-6063          SolverAvailable_CBC = False
+6063          SolverPresent_CBC = False
 6064      Else
-6065          SolverAvailable_CBC = True
+6065          SolverPresent_CBC = True
 #If Mac Then
               ' Make sure cbc is executable on Mac
 6066          RunExternalCommand "chmod +x " & MakePathSafe(SolverPath)
 #End If
 6067      End If
+End Function
+
+Function SolverAvailable_CBC(Optional SolverPath As String, Optional errorString As String) As Boolean
+          If Not SolverPresent_CBC(SolverPath, errorString) Then Exit Function
+          
+          On Error GoTo ErrorHandler
+          If Len(SolverVersion_CBC) <> 0 Then
+              SolverAvailable_CBC = True
+          Else
+ErrorHandler:
+              SolverAvailable_CBC = False
+              errorString = "Unable to access the CBC solver at " & MakeSpacesNonBreaking(MakePathSafe(SolverPath))
+          End If
 End Function
 
 Function SolverVersion_CBC() As String
@@ -85,7 +98,7 @@ Function SolverVersion_CBC() As String
           On Error GoTo ErrorHandler
 
           Dim SolverPath As String
-6068      If Not SolverAvailable_CBC(SolverPath) Then
+6068      If Not SolverPresent_CBC(SolverPath) Then
 6069          SolverVersion_CBC = ""
 6070          GoTo ExitFunction
 6071      End If
@@ -107,7 +120,7 @@ End Function
 Function SolverBitness_CBC() As String
       ' Get Bitness of CBC solver
           Dim SolverPath As String
-6093      If Not SolverAvailable_CBC(SolverPath) Then
+6093      If Not SolverPresent_CBC(SolverPath) Then
 6094          SolverBitness_CBC = ""
 6095          Exit Function
 6096      End If

@@ -59,36 +59,39 @@ Function NomadDir() As String
 #End If
 End Function
 
+Function SolverPresent_NOMAD(Optional errorString As String) As Boolean
+#If Mac Then
+          errorString = "NOMAD for OpenSolver is not currently supported on Mac"
+          SolverPresent_NOMAD = False
+          Exit Function
+#Else
+          If FileOrDirExists(JoinPaths(NomadDir(), NomadDllName)) Then
+              SolverPresent_NOMAD = True
+          Else
+              SolverPresent_NOMAD = False
+              errorString = "Unable to find NOMAD ('" & NomadDllName & "'). Folders searched:" & _
+                            vbNewLine & MakePathSafe(NomadDir())
+          End If
+          Exit Function
+#End If
+End Function
+
 Function SolverAvailable_NOMAD(Optional errorString As String) As Boolean
 #If Mac Then
-6976      errorString = "NOMAD for OpenSolver is not currently supported on Mac"
-6977      SolverAvailable_NOMAD = False
+6977      SolverAvailable_NOMAD = SolverPresent_NOMAD(errorString)
 6978      Exit Function
 #Else
-          ' Set current dir for finding the DLL
-          Dim currentDir As String
-6979      currentDir = CurDir
-6980      SetCurrentDirectory NomadDir()
-          
-          ' Try to access DLL - throws error if not found
-6981      On Error GoTo NotFound
-6982      NomadVersion
-          
-6983      SetCurrentDirectory currentDir
-6984      SolverAvailable_NOMAD = True
-6985      Exit Function
-
-NotFound:
-6986      SetCurrentDirectory currentDir
-6987      SolverAvailable_NOMAD = False
-6988      errorString = "Unable to find NOMAD ('" & NomadDllName & "'). Folders searched:" & _
-                        vbNewLine & MakePathSafe(NomadDir())
-6989      Exit Function
+          If Len(SolverVersion_NOMAD()) <> 0 Then
+              SolverAvailable_NOMAD = True
+          Else
+              SolverAvailable_NOMAD = False
+              errorString = "Unable to access the NOMAD solver at " & DllPath_NOMAD
+          End If
 #End If
 End Function
 
 Function SolverVersion_NOMAD() As String
-6990      If Not SolverAvailable_NOMAD() Then
+6990      If Not SolverPresent_NOMAD() Then
 6991          SolverVersion_NOMAD = ""
 6992          Exit Function
 6993      End If
@@ -101,16 +104,21 @@ Function SolverVersion_NOMAD() As String
           
           ' Get version info from DLL
           ' Save to a new string first - modifying the string from the DLL can sometimes crash Excel
+          On Error GoTo ErrorHandler
           sNomadVersion = NomadVersion()
 6996      sNomadVersion = left(Replace(sNomadVersion, vbNullChar, ""), 5)
           
 6998      SetCurrentDirectory currentDir
           
 6999      SolverVersion_NOMAD = sNomadVersion
+          Exit Function
+
+ErrorHandler:
+          SolverVersion_NOMAD = ""
 End Function
 
 Function DllVersion_NOMAD() As String
-7000      If Not SolverAvailable_NOMAD() Then
+7000      If Not SolverPresent_NOMAD() Then
 7001          DllVersion_NOMAD = ""
 7002          Exit Function
 7003      End If
@@ -132,21 +140,21 @@ Function DllVersion_NOMAD() As String
 End Function
 
 Function DllPath_NOMAD() As String
-7010      GetExistingFilePathName ThisWorkbook.Path, NomadDllName, DllPath_NOMAD
+7010      GetExistingFilePathName NomadDir(), NomadDllName, DllPath_NOMAD
 End Function
 
 Function SolverBitness_NOMAD() As String
       ' Get Bitness of NOMAD solver
-7011      If Not SolverAvailable_NOMAD() Then
+7011      If Not SolverPresent_NOMAD() Then
 7012          SolverBitness_NOMAD = ""
 7013          Exit Function
 7014      End If
           
-#If Win64 Then
+          #If Win64 Then
 7015          SolverBitness_NOMAD = "64"
-#Else
+          #Else
 7016          SolverBitness_NOMAD = "32"
-#End If
+          #End If
 End Function
 
 Function SolveModel_Nomad(SolveRelaxation As Boolean, s As COpenSolver) As Long

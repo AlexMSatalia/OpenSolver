@@ -57,13 +57,13 @@ Function SolverFilePath_Couenne(Optional errorString As String) As String
 8367      SolverFilePath_Couenne = SolverFilePath_Default("Couenne", errorString)
 End Function
 
-Function SolverAvailable_Couenne(Optional SolverPath As String, Optional errorString As String) As Boolean
+Function SolverPresent_Couenne(Optional SolverPath As String, Optional errorString As String) As Boolean
       ' Returns true if Couenne is available and sets SolverPath
 8368      SolverPath = SolverFilePath_Couenne(errorString)
 8369      If SolverPath = "" Then
-8370          SolverAvailable_Couenne = False
+8370          SolverPresent_Couenne = False
 8371      Else
-8372          SolverAvailable_Couenne = True
+8372          SolverPresent_Couenne = True
 8373          errorString = "WARNING: Couenne is EXPERIMENTAL and is not guaranteed to give optimal or even good solutions. Proceed with caution." & vbCrLf & vbCrLf & errorString
 
 #If Mac Then
@@ -74,6 +74,19 @@ Function SolverAvailable_Couenne(Optional SolverPath As String, Optional errorSt
 8375      End If
 End Function
 
+Function SolverAvailable_Couenne(Optional SolverPath As String, Optional errorString As String) As Boolean
+          If Not SolverPresent_Couenne(SolverPath, errorString) Then Exit Function
+          
+          On Error GoTo ErrorHandler
+          If Len(SolverVersion_Couenne) <> 0 Then
+              SolverAvailable_Couenne = True
+          Else
+ErrorHandler:
+              SolverAvailable_Couenne = False
+              errorString = "Unable to access the Couenne solver at " & MakeSpacesNonBreaking(MakePathSafe(SolverPath))
+          End If
+End Function
+
 Function SolverVersion_Couenne() As String
 ' Get Couenne version by running 'couenne -v' at command line
           Dim RaiseError As Boolean
@@ -81,7 +94,7 @@ Function SolverVersion_Couenne() As String
           On Error GoTo ErrorHandler
 
           Dim SolverPath As String
-8376      If Not SolverAvailable_Couenne(SolverPath) Then
+8376      If Not SolverPresent_Couenne(SolverPath) Then
 8377          SolverVersion_Couenne = ""
 8378          GoTo ExitFunction
 8379      End If
@@ -103,21 +116,21 @@ End Function
 Function SolverBitness_Couenne() As String
       ' Get Bitness of Couenne solver
           Dim SolverPath As String
-8400      If Not SolverAvailable_Couenne(SolverPath) Then
+8400      If Not SolverPresent_Couenne(SolverPath) Then
 8401          SolverBitness_Couenne = ""
 8402          Exit Function
 8403      End If
               
           ' All Macs are 64-bit so we only provide 64-bit binaries
-#If Mac Then
-8404      SolverBitness_Couenne = "64"
-#Else
-8405      If right(SolverPath, 14) = "64\couenne.exe" Then
-8406          SolverBitness_Couenne = "64"
-8407      Else
-8408          SolverBitness_Couenne = "32"
-8409      End If
-#End If
+          #If Mac Then
+8404          SolverBitness_Couenne = "64"
+          #Else
+8405          If right(SolverPath, 14) = "64\couenne.exe" Then
+8406              SolverBitness_Couenne = "64"
+8407          Else
+8408              SolverBitness_Couenne = "32"
+8409          End If
+          #End If
 End Function
 
 Function CreateSolveScript_Couenne(ModelFilePathName As String, SolverParameters As Dictionary) As String

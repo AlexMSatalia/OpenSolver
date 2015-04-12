@@ -12,6 +12,33 @@ Public Const SolverDirMac As String = "osx"
 Public Const SolverDirWin32 As String = "win32"
 Public Const SolverDirWin64 As String = "win64"
 
+Function SolverPresent(Solver As String, Optional SolverPath As String, Optional errorString As String) As Boolean
+      ' Delegated function returns True if solver is available and sets SolverPath to location of solver
+          
+          'All Neos solvers always available
+6570      If RunsOnNeos(Solver) Then
+6571          SolverPresent = True
+6572          SolverPath = ""
+6573          Exit Function
+6574      End If
+
+6575      Select Case Solver
+          Case "CBC"
+6576          SolverPresent = SolverPresent_CBC(SolverPath, errorString)
+6577      Case "Gurobi"
+6578          SolverPresent = SolverPresent_Gurobi(SolverPath, errorString)
+6579      Case "NOMAD"
+6580          SolverPresent = SolverPresent_NOMAD(errorString)
+6581      Case "Bonmin"
+6582          SolverPresent = SolverPresent_Bonmin(SolverPath, errorString)
+6583      Case "Couenne"
+6584          SolverPresent = SolverPresent_Couenne(SolverPath, errorString)
+6585      Case Else
+6586          SolverPresent = False
+6587          SolverPath = ""
+6588      End Select
+End Function
+
 Function SolverAvailable(Solver As String, Optional SolverPath As String, Optional errorString As String) As Boolean
       ' Delegated function returns True if solver is available and sets SolverPath to location of solver
           

@@ -786,7 +786,7 @@ Function OSBitness() As String
 End Function
 
 Function OpenSolverDistribution() As String
-    OpenSolverDistribution = IIf(SolverAvailable("Bonmin"), "Advanced", "Linear")
+    OpenSolverDistribution = IIf(SolverPresent("Bonmin"), "Advanced", "Linear")
 End Function
 
 Function EnvironmentSummary() As String

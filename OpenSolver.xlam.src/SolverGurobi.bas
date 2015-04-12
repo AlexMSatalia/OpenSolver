@@ -94,7 +94,7 @@ Function SolverFilePath_Gurobi() As String
 #End If
 End Function
 
-Function SolverAvailable_Gurobi(Optional SolverPath As String, Optional errorString As String) As Boolean
+Function SolverPresent_Gurobi(Optional SolverPath As String, Optional errorString As String) As Boolean
 ' Returns true if Gurobi is available and sets SolverPath as path to gurobi_cl
           Dim RaiseError As Boolean
           RaiseError = False
@@ -108,9 +108,9 @@ Function SolverAvailable_Gurobi(Optional SolverPath As String, Optional errorStr
 
           If errorString <> "" Then
 6388          SolverPath = ""
-6390          SolverAvailable_Gurobi = False
+6390          SolverPresent_Gurobi = False
           Else
-              SolverAvailable_Gurobi = True
+              SolverPresent_Gurobi = True
           End If
 
 ExitFunction:
@@ -118,9 +118,22 @@ ExitFunction:
           Exit Function
 
 ErrorHandler:
-          If Not ReportError("SolverGurobi", "SolverAvailable_Gurobi") Then Resume
+          If Not ReportError("SolverGurobi", "SolverPresent_Gurobi") Then Resume
           RaiseError = True
           GoTo ExitFunction
+End Function
+
+Function SolverAvailable_Gurobi(Optional SolverPath As String, Optional errorString As String) As Boolean
+          If Not SolverPresent_Gurobi(SolverPath, errorString) Then Exit Function
+          
+          On Error GoTo ErrorHandler
+          If Len(SolverVersion_Gurobi) <> 0 Then
+              SolverAvailable_Gurobi = True
+          Else
+ErrorHandler:
+              SolverAvailable_Gurobi = False
+              errorString = "Unable to access the Gurobi solver at " & MakeSpacesNonBreaking(MakePathSafe(SolverPath))
+          End If
 End Function
 
 Function SolverVersion_Gurobi() As String
@@ -130,7 +143,7 @@ Function SolverVersion_Gurobi() As String
           On Error GoTo ErrorHandler
 
           Dim SolverPath As String
-6392      If Not SolverAvailable_Gurobi(SolverPath) Then
+6392      If Not SolverPresent_Gurobi(SolverPath) Then
 6393          SolverVersion_Gurobi = ""
 6394          GoTo ExitFunction
 6395      End If
@@ -157,7 +170,7 @@ Function SolverBitness_Gurobi() As String
           On Error GoTo ErrorHandler
 
           Dim SolverPath As String
-6416      If Not SolverAvailable_Gurobi(SolverPath) Then
+6416      If Not SolverPresent_Gurobi(SolverPath) Then
 6417          SolverBitness_Gurobi = ""
 6418          GoTo ExitFunction
 6419      End If
