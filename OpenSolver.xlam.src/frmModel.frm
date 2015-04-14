@@ -278,6 +278,7 @@ Private Sub UserForm_Activate()
 
           UpdateStatusBar "Loading model...", True
           Application.Cursor = xlWait
+          Application.ScreenUpdating = False
 
           cmdCancel.SetFocus
 
@@ -332,8 +333,7 @@ Private Sub UserForm_Activate()
 ExitSub:
           Application.StatusBar = False
           Application.Cursor = xlDefault
-          ' This line forces the cursor to update - sometimes it wouldn't until the mouse is moved
-          Application.ScreenUpdating = Application.ScreenUpdating
+          Application.ScreenUpdating = True
           
           ' Take focus away from refEdits
 4381      DoEvents
