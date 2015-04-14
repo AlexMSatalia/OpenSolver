@@ -161,7 +161,7 @@ Function GetNamedDoubleWithDefault(Name As String, Optional book As Workbook, Op
     Dim value As String
     If Not GetNameValueIfExists(book, EscapeSheetName(sheet) & Name, value) Then GoTo SetDefault
     On Error GoTo SetDefault
-    GetNamedDoubleWithDefault = ConvertToCurrentLocale(value)
+    GetNamedDoubleWithDefault = Val(value)
     Exit Function
     
 SetDefault:

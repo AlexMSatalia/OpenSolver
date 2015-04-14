@@ -1982,9 +1982,7 @@ Function ReadModel_NL(SolutionFilePathName As String, errorString As String, s A
         For Each c In m.AdjustableCells
             ' Extract the correct variable value
             VariableIndex = GetVariableNLIndex(i) + 1
-            
-            ' Need to make sure number is in US locale when Value2 is set
-            Range(c.Address).Value2 = ConvertFromCurrentLocale(VariableValues(VariableIndex))
+            Range(c.Address).Value2 = VariableValues(VariableIndex)
             i = i + 1
         Next c
         s.SolutionWasLoaded = True

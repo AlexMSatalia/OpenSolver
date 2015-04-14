@@ -1349,7 +1349,7 @@ Sub SolveModel_LinearNeos(ModelFilePathName As String, SolveRelaxation As Boolea
                   start = openingParen + Len(ValidLPFileVarName(VarNames(var))) + 1
 1541              resultLength = closingParen - start
                   If resultLength > 0 Then
-                      FinalVarValue(var) = ConvertToCurrentLocale(Mid(solution, start, resultLength))
+                      FinalVarValue(var) = Val(Mid(solution, start, resultLength))
                   Else
                       FinalVarValue(var) = 0
                   End If

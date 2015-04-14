@@ -299,8 +299,8 @@ Function ReadModel_CBC(SolutionFilePathName As String, s As COpenSolver) As Bool
 6215                      End If
 6216
 6220                      NameValue = SplitLine(StartOffset + 1)
-6225                      s.FinalValue(j) = ConvertToCurrentLocale(SplitLine(StartOffset + 2))
-                          value = ConvertToCurrentLocale(SplitLine(StartOffset + 3))
+6225                      s.FinalValue(j) = Val(SplitLine(StartOffset + 2))
+                          value = Val(SplitLine(StartOffset + 3))
 6230                      If s.ObjectiveSense = MaximiseObjective Then value = -value
 6235                      s.ShadowPrice(j) = value
 6239                      CBCConstraintIndex = CBCConstraintIndex + 1
@@ -325,10 +325,10 @@ Function ReadModel_CBC(SolutionFilePathName As String, s As COpenSolver) As Bool
 6258              NameValue = SplitLine(StartOffset + 1)
 6263              If left(NameValue, 1) = "_" Then NameValue = Mid(NameValue, 2) ' Strip any _ character added to make a valid name
                   s.VarCell(j) = NameValue
-6268              s.FinalVarValue(j) = ConvertToCurrentLocale(SplitLine(StartOffset + 2))
+6268              s.FinalVarValue(j) = Val(SplitLine(StartOffset + 2))
                  
                   If s.bGetDuals Then
-6271                  value = ConvertToCurrentLocale(SplitLine(StartOffset + 3))
+6271                  value = Val(SplitLine(StartOffset + 3))
 6275                  If s.ObjectiveSense = MaximiseObjective Then value = -value
 6280                  s.ReducedCosts(j) = value
 6285              End If
@@ -369,8 +369,8 @@ Sub ReadSensitivityData_CBC(SolutionFilePathName As String, s As COpenSolver)
 6300      While Not EOF(2)
 6301          Line Input #2, Line
 6302          LineData() = Split(Line, ",")
-6312          s.IncreaseCon(j) = ConvertToCurrentLocale(LineData(2))
-6313          s.DecreaseCon(j) = ConvertToCurrentLocale(LineData(4))
+6312          s.IncreaseCon(j) = Val(LineData(2))
+6313          s.DecreaseCon(j) = Val(LineData(4))
 6314          j = j + 1
 6315      Wend
 6316      Close 2
@@ -385,11 +385,11 @@ Sub ReadSensitivityData_CBC(SolutionFilePathName As String, s As COpenSolver)
 6323          Line Input #2, Line
               LineData() = Split(Line, ",")
 6334          If s.ObjectiveSense = MaximiseObjective Then
-6335              s.IncreaseVar(j) = ConvertToCurrentLocale(LineData(4))
-6336              s.DecreaseVar(j) = ConvertToCurrentLocale(LineData(2))
+6335              s.IncreaseVar(j) = Val(LineData(4))
+6336              s.DecreaseVar(j) = Val(LineData(2))
 6337          Else
-6338              s.IncreaseVar(j) = ConvertToCurrentLocale(LineData(2))
-6339              s.DecreaseVar(j) = ConvertToCurrentLocale(LineData(4))
+6338              s.IncreaseVar(j) = Val(LineData(2))
+6339              s.DecreaseVar(j) = Val(LineData(4))
 6340          End If
 6341          j = j + 1
 6342      Wend

@@ -297,7 +297,7 @@ Function ReadModel_Gurobi(SolutionFilePathName As String, s As COpenSolver) As B
 6504          If Line <> "" Then
 6505              Index = InStr(Line, "=")
                   Dim ObjectiveValue As Double
-6506              ObjectiveValue = ConvertToCurrentLocale(Mid(Line, Index + 2))
+6506              ObjectiveValue = Val(Mid(Line, Index + 2))
                   Dim i As Long
 6507              i = 1
 6508              While Not EOF(1)
@@ -316,7 +316,7 @@ Function ReadModel_Gurobi(SolutionFilePathName As String, s As COpenSolver) As B
                           End If
                       End If
                       
-6511                  s.FinalVarValue(i) = ConvertToCurrentLocale(FinalValue)
+6511                  s.FinalVarValue(i) = Val(FinalValue)
                       s.VarCell(i) = SplitLine(0)
 6513                  If left(s.VarCell(i), 1) = "_" Then
                           ' Strip any _ character added to make a valid name
@@ -333,20 +333,20 @@ Function ReadModel_Gurobi(SolutionFilePathName As String, s As COpenSolver) As B
 6527              For i = 1 To NumVar
 6528                  Line Input #2, Line
 6529                  SplitLine = SplitWithoutRepeats(Line, ",")
-6538                  s.ReducedCosts(i) = ConvertToCurrentLocale(SplitLine(0))
-6540                  s.DecreaseVar(i) = s.CostCoeffs(i) - ConvertToCurrentLocale(SplitLine(1))
-6539                  s.IncreaseVar(i) = ConvertToCurrentLocale(SplitLine(2)) - s.CostCoeffs(i)
+6538                  s.ReducedCosts(i) = Val(SplitLine(0))
+6540                  s.DecreaseVar(i) = s.CostCoeffs(i) - Val(SplitLine(1))
+6539                  s.IncreaseVar(i) = Val(SplitLine(2)) - s.CostCoeffs(i)
 6541              Next i
 
 6543              For i = 1 To s.NumRows
 6544                  Line Input #2, Line
 6545                  SplitLine = SplitWithoutRepeats(Line, ",")
-6554                  s.ShadowPrice(i) = ConvertToCurrentLocale(SplitLine(0))
+6554                  s.ShadowPrice(i) = Val(SplitLine(0))
                       Dim RHSValue As Double
-                      RHSValue = ConvertToCurrentLocale(SplitLine(1))
-6555                  s.IncreaseCon(i) = ConvertToCurrentLocale(SplitLine(4)) - RHSValue
-6556                  s.DecreaseCon(i) = RHSValue - ConvertToCurrentLocale(SplitLine(3))
-6557                  s.FinalValue(i) = RHSValue - ConvertToCurrentLocale(SplitLine(2))
+                      RHSValue = Val(SplitLine(1))
+6555                  s.IncreaseCon(i) = Val(SplitLine(4)) - RHSValue
+6556                  s.DecreaseCon(i) = RHSValue - Val(SplitLine(3))
+6557                  s.FinalValue(i) = RHSValue - Val(SplitLine(2))
 6558              Next i
 6559          End If
 6560          ReadModel_Gurobi = True
