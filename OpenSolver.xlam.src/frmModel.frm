@@ -99,10 +99,10 @@ Sub Disabler(TrueIfEnable As Boolean)
           cmdReset.Enabled = TrueIfEnable
           cmdChange.Enabled = TrueIfEnable
           
-          Dim Solver As String
-          Solver = GetChosenSolver()
+          Dim Solver As ISolver
+          Set Solver = CreateSolver(GetChosenSolver())
 
-4203      If Not SolverHasSensitivityAnalysis(Solver) Then
+4203      If Not SensitivityAnalysisAvailable(Solver) Then
               ' Disable dual options
 4204          chkGetDuals2.Enabled = False
 4205          chkGetDuals.Enabled = False
@@ -168,7 +168,9 @@ Private Sub cmdChange_Click()
 #End If
 End Sub
 
-Sub FormatCurrentSolver(Solver As String)
+Sub FormatCurrentSolver()
+    Dim Solver As String
+    Solver = GetChosenSolver()
     lblSolver.Caption = "Current Solver Engine: " & UCase(left(Solver, 1)) & Mid(Solver, 2)
 End Sub
 
@@ -321,7 +323,7 @@ Private Sub UserForm_Activate()
 4368      cboConRel.ListIndex = cboPosition("=")    ' We set an initial value just in case there is no model, and the user goes straight to AddNewConstraint
 
           'Find current solver
-          FormatCurrentSolver GetChosenSolver()
+          FormatCurrentSolver
 
           ' Load the model on the sheet into memory
 4373      ListItem = -1

@@ -21,16 +21,16 @@ SetDefault:
     SetChosenSolver GetChosenSolver, book, sheet
 End Function
 
-Public Sub SetChosenSolver(Solver As String, Optional book As Workbook, Optional sheet As Worksheet)
+Public Sub SetChosenSolver(SolverShortName As String, Optional book As Workbook, Optional sheet As Worksheet)
     ' Check that a valid solver has been specified
     On Error GoTo SolverNotAllowed
-    WorksheetFunction.Match Solver, GetAvailableSolvers, 0
+    WorksheetFunction.Match SolverShortName, GetAvailableSolvers, 0
         
-    SetNameOnSheet "OpenSolver_ChosenSolver", "=" & Solver, book, sheet
+    SetNameOnSheet "OpenSolver_ChosenSolver", "=" & SolverShortName, book, sheet
     Exit Sub
     
 SolverNotAllowed:
-    Err.Raise OpenSolver_ModelError, Description:="The specified solver (" & Solver & ") is not in the list of available solvers. " & _
+    Err.Raise OpenSolver_ModelError, Description:="The specified solver (" & SolverShortName & ") is not in the list of available solvers. " & _
                                                   "Please see the OpenSolverAPI module for the list of available solvers."
 End Sub
 
@@ -66,16 +66,16 @@ Public Sub SetDuals(Duals As Range, Optional book As Workbook, Optional sheet As
     SetNamedRangeIfExists "OpenSolver_Duals", Duals, book, sheet
 End Sub
 
-Public Function GetSolverParameters(Solver As String, Optional book As Workbook, Optional sheet As Worksheet) As Range
-    If Not GetNamedRangeIfExistsOnSheet(sheet, "OpenSolver_" & Solver & "Parameters", GetSolverParameters) Then Set GetSolverParameters = Nothing
+Public Function GetSolverParameters(SolverShortName As String, Optional book As Workbook, Optional sheet As Worksheet) As Range
+    If Not GetNamedRangeIfExistsOnSheet(sheet, "OpenSolver_" & SolverShortName & "Parameters", GetSolverParameters) Then Set GetSolverParameters = Nothing
 End Function
 
-Public Sub SetSolverParameters(Solver As String, SolverParameters As Range, Optional book As Workbook, Optional sheet As Worksheet)
-    SetNamedRangeIfExists "OpenSolver_" & Solver & "Parameters", SolverParameters, book, sheet
+Public Sub SetSolverParameters(SolverShortName As String, SolverParameters As Range, Optional book As Workbook, Optional sheet As Worksheet)
+    SetNamedRangeIfExists "OpenSolver_" & SolverShortName & "Parameters", SolverParameters, book, sheet
 End Sub
 
-Public Sub DeleteSolverParameters(Solver As String, Optional book As Workbook, Optional sheet As Worksheet)
-    SetSolverParameters Solver, Nothing, book, sheet
+Public Sub DeleteSolverParameters(SolverShortName As String, Optional book As Workbook, Optional sheet As Worksheet)
+    SetSolverParameters SolverShortName, Nothing, book, sheet
 End Sub
 
 Public Function GetQuickSolveParameters(Optional book As Workbook, Optional sheet As Worksheet) As Range

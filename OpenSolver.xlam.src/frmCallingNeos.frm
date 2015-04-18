@@ -28,12 +28,12 @@ End Sub
 
 Private Sub UserForm_Activate()
     Dim message As String, errorString As String, result As String
-    message = OpenSolverNeos.OutgoingMessage
+    message = SolverNeos.FinalMessage
     errorString = ""
 
     result = SolveOnNeos(message, errorString)
 
-    OpenSolverNeos.NeosResult = result
+    SolverNeos.NeosResult = result
     Me.Tag = errorString
     Me.Hide
 End Sub

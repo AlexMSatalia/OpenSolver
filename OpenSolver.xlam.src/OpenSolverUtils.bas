@@ -159,7 +159,7 @@ Private Function ConvertLocale(ByVal s As String, ConvertToUS As Boolean) As Str
           If SkipConvert < 1 Then
               ' If we are in an english version of Excel and a known locale, we can skip the conversion
               If Application.International(xlCountryCode) = 1 Then ' English language excel
-                  Dim Country As Long, DoConvert As Boolean
+                  Dim Country As Long
                   Country = Application.International(xlCountrySetting)
                   SkipConvert = 2
                   
@@ -234,25 +234,25 @@ ErrorHandler:
           GoTo ExitFunction
 End Function
 
-Sub PopulateSolverParameters(Solver As String, sheet As Worksheet, SolverParameters As Dictionary, SolveOptions As SolveOptionsType)
+Sub PopulateSolverParameters(Solver As ISolver, sheet As Worksheet, SolverParameters As Dictionary, SolveOptions As SolveOptionsType)
           Dim RaiseError As Boolean
           RaiseError = False
           On Error GoTo ErrorHandler
           
           ' First we fill all info from the SolveOptions. These can then be overridden by the parameters defined on the sheet
           With SolveOptions
-              If UsesPrecision(Solver) Then SolverParameters.Add Key:=PrecisionName(Solver), Item:=.Precision
-              If UsesTimeLimit(Solver) Then SolverParameters.Add Key:=TimeLimitName(Solver), Item:=.MaxTime
-              If UsesIterationLimit(Solver) Then SolverParameters.Add Key:=IterationLimitName(Solver), Item:=.MaxIterations
-              If UsesTolerance(Solver) Then SolverParameters.Add Key:=ToleranceName(Solver), Item:=.Tolerance
+              If PrecisionAvailable(Solver) Then SolverParameters.Add Key:=Solver.PrecisionName, Item:=.Precision
+              If TimeLimitAvailable(Solver) Then SolverParameters.Add Key:=Solver.TimeLimitName, Item:=.MaxTime
+              If IterationLimitAvailable(Solver) Then SolverParameters.Add Key:=Solver.IterationLimitName, Item:=.MaxIterations
+              If ToleranceAvailable(Solver) Then SolverParameters.Add Key:=Solver.ToleranceName, Item:=.Tolerance
           End With
           
           ' The user can define a set of parameters they want to pass to the solver; this gets them as a dictionary. MUST be on the current sheet
           Dim ParametersRange As Range, i As Long
-6104      Set ParametersRange = GetSolverParameters(Solver, sheet:=sheet)
+6104      Set ParametersRange = GetSolverParameters(Solver.ShortName, sheet:=sheet)
           If Not ParametersRange Is Nothing Then
 6105          If ParametersRange.Columns.Count <> 2 Then
-6106              Err.Raise OpenSolver_SolveError, Description:="The range OpenSolver_" & Solver & "Parameters must be a two-column table."
+6106              Err.Raise OpenSolver_SolveError, Description:="The range OpenSolver_" & Solver.ShortName & "Parameters must be a two-column table."
 6108          End If
 6109          For i = 1 To ParametersRange.Rows.Count
                   Dim ParamName As String, ParamValue As String
@@ -786,7 +786,7 @@ Function OSBitness() As String
 End Function
 
 Function OpenSolverDistribution() As String
-    OpenSolverDistribution = IIf(SolverPresent("Bonmin"), "Advanced", "Linear")
+    OpenSolverDistribution = IIf(SolverIsPresent(CreateSolver("Bonmin")), "Advanced", "Linear")
 End Function
 
 Function EnvironmentSummary() As String
@@ -796,12 +796,13 @@ Function EnvironmentSummary() As String
 End Function
 
 Function SolverSummary() As String
-    ' On separate lines so we can easily step when debugging
-    SolverSummary = About_CBC() & vbNewLine & vbNewLine
-    SolverSummary = SolverSummary & About_Gurobi() & vbNewLine & vbNewLine
-    SolverSummary = SolverSummary & About_NOMAD() & vbNewLine & vbNewLine
-    SolverSummary = SolverSummary & About_Bonmin() & vbNewLine & vbNewLine
-    SolverSummary = SolverSummary & About_Couenne()
+    Dim SolverShortName As Variant, Solver As ISolver
+    For Each SolverShortName In GetAvailableSolvers()
+        Set Solver = CreateSolver(CStr(SolverShortName))
+        If TypeOf Solver Is ISolverLocal Then
+            SolverSummary = SolverSummary & AboutLocalSolver(Solver) & vbNewLine & vbNewLine
+        End If
+    Next SolverShortName
 End Function
 
 Sub UpdateStatusBar(Text As String, Optional Force As Boolean = False)
@@ -849,7 +850,7 @@ End Sub
 
 Public Function MsgBoxEx(ByVal prompt As String, _
                 Optional ByVal Options As VbMsgBoxStyle = 0&, _
-                Optional ByVal title As String = "OpenSolver", _
+                Optional ByVal Title As String = "OpenSolver", _
                 Optional ByVal HelpFile As String, _
                 Optional ByVal Context As Long, _
                 Optional ByVal LinkTarget As String, _
@@ -938,7 +939,7 @@ Public Function MsgBoxEx(ByVal prompt As String, _
         .lblLink.Caption = LinkText
         .lblLink.ControlTipText = LinkTarget
     
-        .Caption = title
+        .Caption = Title
         
         .Show
      

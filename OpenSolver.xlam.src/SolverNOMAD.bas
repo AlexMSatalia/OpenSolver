@@ -1,349 +1,111 @@
 Attribute VB_Name = "SolverNOMAD"
+Option Explicit
+
 Public OS As COpenSolver
 Dim IterationCount As Long
 
-Public Const SolverTitle_NOMAD = "NOMAD (Non-linear solver)"
-Public Const SolverDesc_NOMAD = "Nomad (Nonsmooth Optimization by Mesh Adaptive Direct search) is a C++ implementation of the Mesh Adaptive Direct Search (Mads) algorithm that solves non-linear problems. It works by updating the values on the sheet and passing them to the C++ solver. Like many non-linear solvers NOMAD cannot guarantee optimality of its solutions."
-Public Const SolverLink_NOMAD = "http://www.gerad.ca/nomad/Project/Home.html"
-Public Const SolverType_NOMAD = OpenSolver_SolverType.NonLinear
-
-Public Const SolverName_NOMAD = "NOMAD"
-
-Public Const PrecisionName_NOMAD = "EPSILON"
-Public Const TimeLimitName_NOMAD = "MAX_TIME"
-Public Const IterationLimitName_NOMAD = "MAX_BB_EVAL"
-
-Public Const NomadDllName = "OpenSolverNomad.dll"
-
-' Don't forget we need to chdir to the directory containing the DLL before calling any of the functions
-#If VBA7 Then
-    Public Declare PtrSafe Function NomadMain Lib "OpenSolverNomad.dll" (ByVal SolveRelaxation As Boolean) As Long
-    Private Declare PtrSafe Function NomadVersion Lib "OpenSolverNomad.dll" () As String
-    Private Declare PtrSafe Function NomadDllVersion Lib "OpenSolverNomad.dll" Alias "NomadDLLVersion" () As String
-#Else
-    Public Declare Function NomadMain Lib "OpenSolverNomad.dll" (ByVal SolveRelaxation As Boolean) As Long
-    Private Declare Function NomadVersion Lib "OpenSolverNomad.dll" () As String
-    Private Declare Function NomadDllVersion Lib "OpenSolverNomad.dll" Alias "NomadDLLVersion" () As String
-#End If
-
-'NOMAD return status codes
-Public Enum NomadResult
-    UserCancelled = -3
-    Optimal = 0
-    ErrorOccured = 1
-    SolveStoppedIter = 2
-    SolveStoppedTime = 3
-    Infeasible = 4
-    SolveStoppedNoSolution = 10
-End Enum
-
-Function About_NOMAD() As String
-          Dim errorString As String
-6968      If Not SolverAvailable_NOMAD(errorString) Then
-6969          About_NOMAD = errorString
-6970          Exit Function
-6971      End If
-
-          ' Assemble version info
-6972      About_NOMAD = "NOMAD " & SolverBitness_NOMAD & "-bit v" & SolverVersion_NOMAD() & _
-                        " using OpenSolverNomadDLL v" & DllVersion_NOMAD() & _
-                        " at " & MakeSpacesNonBreaking(MakePathSafe(DllPath_NOMAD()))
-End Function
-
-Function NomadDir() As String
-6973      NomadDir = JoinPaths(ThisWorkbook.Path, SolverDir)
-#If Win64 Then
-6974      NomadDir = JoinPaths(NomadDir, SolverDirWin64)
-#Else
-6975      NomadDir = JoinPaths(NomadDir, SolverDirWin32)
-#End If
-End Function
-
-Function SolverPresent_NOMAD(Optional errorString As String) As Boolean
-#If Mac Then
-          errorString = "NOMAD for OpenSolver is not currently supported on Mac"
-          SolverPresent_NOMAD = False
-          Exit Function
-#Else
-          If FileOrDirExists(JoinPaths(NomadDir(), NomadDllName)) Then
-              SolverPresent_NOMAD = True
-          Else
-              SolverPresent_NOMAD = False
-              errorString = "Unable to find NOMAD ('" & NomadDllName & "'). Folders searched:" & _
-                            vbNewLine & MakePathSafe(NomadDir())
-          End If
-          Exit Function
-#End If
-End Function
-
-Function SolverAvailable_NOMAD(Optional errorString As String) As Boolean
-#If Mac Then
-6977      SolverAvailable_NOMAD = SolverPresent_NOMAD(errorString)
-6978      Exit Function
-#Else
-          If Len(SolverVersion_NOMAD()) <> 0 Then
-              SolverAvailable_NOMAD = True
-          Else
-              SolverAvailable_NOMAD = False
-              errorString = "Unable to access the NOMAD solver at " & DllPath_NOMAD
-          End If
-#End If
-End Function
-
-Function SolverVersion_NOMAD() As String
-6990      If Not SolverPresent_NOMAD() Then
-6991          SolverVersion_NOMAD = ""
-6992          Exit Function
-6993      End If
-          
-          Dim currentDir As String, sNomadVersion As String
-          
-          ' Set current dir for finding the DLL
-6994      currentDir = CurDir
-6995      SetCurrentDirectory NomadDir()
-          
-          ' Get version info from DLL
-          ' Save to a new string first - modifying the string from the DLL can sometimes crash Excel
-          On Error GoTo ErrorHandler
-          sNomadVersion = NomadVersion()
-6996      sNomadVersion = left(Replace(sNomadVersion, vbNullChar, ""), 5)
-          
-6998      SetCurrentDirectory currentDir
-          
-6999      SolverVersion_NOMAD = sNomadVersion
-          Exit Function
-
-ErrorHandler:
-          SolverVersion_NOMAD = ""
-End Function
-
-Function DllVersion_NOMAD() As String
-7000      If Not SolverPresent_NOMAD() Then
-7001          DllVersion_NOMAD = ""
-7002          Exit Function
-7003      End If
-          
-          Dim currentDir As String, sDllVersion As String
-          
-          ' Set current dir for finding the DLL
-7004      currentDir = CurDir
-7005      SetCurrentDirectory NomadDir()
-          
-          ' Get version info from DLL
-          ' Save to a new string first - modifying the string from the DLL can sometimes crash Excel
-          sDllVersion = NomadDllVersion()
-7006      sDllVersion = left(Replace(sDllVersion, vbNullChar, ""), 5)
-          
-7008      SetCurrentDirectory currentDir
-          
-7009      DllVersion_NOMAD = sDllVersion
-End Function
-
-Function DllPath_NOMAD() As String
-7010      GetExistingFilePathName NomadDir(), NomadDllName, DllPath_NOMAD
-End Function
-
-Function SolverBitness_NOMAD() As String
-      ' Get Bitness of NOMAD solver
-7011      If Not SolverPresent_NOMAD() Then
-7012          SolverBitness_NOMAD = ""
-7013          Exit Function
-7014      End If
-          
-          #If Win64 Then
-7015          SolverBitness_NOMAD = "64"
-          #Else
-7016          SolverBitness_NOMAD = "32"
-          #End If
-End Function
-
-Function SolveModel_Nomad(SolveRelaxation As Boolean, s As COpenSolver) As Long
-          Dim RaiseError As Boolean
-          RaiseError = False
-          On Error GoTo ErrorHandler
-
-          Dim ScreenStatus As Boolean
-7017      ScreenStatus = Application.ScreenUpdating
-
-          If GetShowSolverProgress() Then Application.ScreenUpdating = False
-
-7024      If s.ModelStatus <> ModelStatus_Built Then
-7025          Err.Raise Number:=OpenSolver_NomadError, Description:="The model cannot be solved as it has not yet been built."
-7026      End If
-          
-          ' Set OS for the calls back into Excel from NOMAD
-7030      Set OS = s
-
-          ' Check precision is not 0
-          Dim SolveOptions As SolveOptionsType
-          GetSolveOptions OS.sheet, SolveOptions
-          
-          If SolveOptions.Precision <= 0 Then
-              Err.Raise Number:=OpenSolver_NomadError, Description:="The current level of precision (" & CStr(SolveOptions.Precision) & ") is invalid. Please set the precision to a small positive (non-zero) value and try again."
-          End If
-          
-          Dim oldCalculationMode As Long
-7031      oldCalculationMode = Application.Calculation
-7032      Application.Calculation = xlCalculationManual
-
-          ' Loop through all decision vars and set their values
-          ' This is to try and catch any protected cells as we can't catch VBA errors that occur while NOMAD calls back into VBA
-          ' Do this after setting calculation mode to manual!
-          Dim c As Range
-          For Each c In s.AdjustableCells
-              c.Value2 = c.Value2
-          Next c
-          
-          Dim currentDir As String
-7033      currentDir = CurDir
-          
-7034      SetCurrentDirectory NomadDir()
-
-7035      IterationCount = 0
-          
-          ' We need to call NomadMain directly rather than use Application.Run .
-          ' Using Application.Run causes the API calls inside the DLL to fail on 64 bit Office
-          Dim NomadRetVal As Long
-7036      NomadRetVal = NomadMain(SolveRelaxation)
-          
-          'Catch any errors that occured while Nomad was solving
-7037      Select Case NomadRetVal
-          Case NomadResult.ErrorOccured
-7041          s.SolveStatus = OpenSolverResult.ErrorOccurred
-
-              ' Check logs for more info
-7039          CheckNomadLogs
-              
-7040          Err.Raise Number:=OpenSolver_NomadError, Description:="There was an error while Nomad was solving. No solution has been loaded into the sheet."
-7042      Case NomadResult.SolveStoppedIter
-7043          s.SolveStatusComment = "Nomad reached the maximum number of iterations and returned the best feasible solution it found. This solution is not guaranteed to be an optimal solution." & vbCrLf & vbCrLf & _
-                                     "You can increase the maximum time and iterations under the options in the model dialogue or check whether your model is feasible."
-7044          s.SolveStatus = OpenSolverResult.LimitedSubOptimal
-7045          s.SolveStatusString = "Stopped on Iteration Limit"
-7046          s.SolutionWasLoaded = True
-7047      Case NomadResult.SolveStoppedTime
-7048          s.SolveStatusComment = "Nomad reached the maximum time and returned the best feasible solution it found. This solution is not guaranteed to be an optimal solution." & vbCrLf & vbCrLf & _
-                                     "You can increase the maximum time and iterations under the options in the model dialogue or check whether your model is feasible."
-7049          s.SolveStatus = OpenSolverResult.LimitedSubOptimal
-7050          s.SolveStatusString = "Stopped on Time Limit"
-7051          s.SolutionWasLoaded = True
-7052      Case NomadResult.Infeasible
-7053          s.SolveStatusComment = "Nomad reached the maximum time or number of iterations without finding a feasible solution. The best infeasible solution has been returned to the sheet." & vbCrLf & vbCrLf & _
-                                     "You can increase the maximum time and iterations under the options in the model dialogue or check whether your model is feasible."
-7054          s.SolveStatus = OpenSolverResult.Infeasible
-7055          s.SolveStatusString = "No Feasible Solution"
-7056          s.SolutionWasLoaded = True
-7057      Case NomadResult.SolveStoppedNoSolution
-7058          s.SolveStatusComment = "Nomad could not find a feasible solution. The best infeasible solution has been returned to the sheet." & vbCrLf & vbCrLf & _
-                                     "Try resolving at a different start point or check whether your model is feasible or relax some of your constraints."
-7059          s.SolveStatus = OpenSolverResult.Infeasible
-7060          s.SolveStatusString = "No Feasible Solution"
-7061          s.SolutionWasLoaded = True
-7062      Case NomadResult.UserCancelled
-7063          Err.Raise OpenSolver_UserCancelledError, "Running NOMAD", "Model solve cancelled by user."
-7064      Case NomadResult.Optimal
-7065          s.SolveStatus = OpenSolverResult.Optimal
-7066          s.SolveStatusString = "Optimal"
-7067      End Select
-
-          SolveModel_Nomad = s.SolveStatus
-          
-ExitFunction:
-7091      SetCurrentDirectory currentDir
-7092      Application.Cursor = xlDefault
-7093      Application.StatusBar = False
-7094      Application.ScreenUpdating = ScreenStatus
-7095      Application.Calculation = oldCalculationMode
-7096      Application.Calculate
-7097      Close #1
-7098      Set OS = Nothing
-          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
-          Exit Function
-
-ErrorHandler:
-          If Not ReportError("SolverNOMAD", "SolveModel_Nomad") Then Resume
-          RaiseError = True
-          GoTo ExitFunction
-
-End Function
-
-Sub CheckNomadLogs()
-' If NOMAD encounters an error, we dump the exception to the log file. We can use this to deduce what went wrong
-          Dim RaiseError As Boolean
-          RaiseError = False
-          On Error GoTo ErrorHandler
-
-          Dim logFile As String
-7100      If Not GetTempFilePath("log1.tmp", logFile) Then GoTo ExitSub
-
-          
-          Dim message As String
-7105      Open logFile For Input As #3
-7106      message = Input$(LOF(3), 3)
-7107      Close #3
-          
-7108      If Not message Like "*NOMAD*" Then GoTo ExitSub
-
-          If InStrText(message, "invalid parameter: DIMENSION") Then
-              Dim MaxSize As Long, Position As Long
-              Position = InStrRev(message, " ")
-              MaxSize = CInt(Mid(message, Position + 1, InStrRev(message, ")") - Position - 1))
-              Err.Raise OpenSolver_NomadError, Description:="This model contains too many variables for NOMAD to solve. NOMAD is only capable of solving models with up to " & MaxSize & " variables."
-          End If
-          
-          Dim SolverParameters As Dictionary
-          OS.CopySolverParameters SolverParameters
-          
-          Dim Key As Variant
-          For Each Key In SolverParameters.Keys()
-              If InStrText(message, "invalid parameter: " & UCase(Key) & " - unknown") Then
-                  Err.Raise OpenSolver_NomadError, Description:="The parameter '" & UCase(Key) & "' was not understood by NOMAD. Check that you have specified a valid parameter name, or consult the NOMAD documentation for more information."
-              End If
-              If InStrText(message, "invalid parameter: " & UCase(Key)) Then
-                  Err.Raise OpenSolver_NomadError, Description:="The value of the parameter '" & UCase(Key) & "' supplied to NOMAD was invalid. Check that you have specified a valid value for this parameter, or consult the NOMAD documentation for more information."
-              End If
-          Next Key
-              
-          If message Like "*invalid parameter*" Then
-7112          Err.Raise OpenSolver_NomadError, Description:="One of the parameters supplied to NOMAD was invalid. This usually happens if the precision is too large. Try adjusting the values in the Solve Options dialog box."
-          End If
-
-ExitSub:
-          Close #3
-          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
-          Exit Sub
-
-ErrorHandler:
-          If Not ReportError("SolverNOMAD", "CheckNomadLogs") Then Resume
-          RaiseError = True
-          GoTo ExitSub
-End Sub
+' NOMAD functions
+' Do not put error handling in these functions, there is already error-handling in the NOMAD DLL
 
 Sub NOMAD_UpdateVar(X As Variant, Optional BestSolution As Variant = Nothing, Optional Infeasible As Boolean = False)
 7115      IterationCount = IterationCount + 1
 
           ' Update solution
-7116      If IterationCount Mod 5 = 1 Then
-              Dim status As String
-7117          status = "OpenSolver: Running NOMAD. Iteration " & IterationCount & "."
-              ' Check for BestSolution = Nothing
-7118          If Not VarType(BestSolution) = 9 Then
-                  ' Flip solution if maximisation
-7119              If OS.ObjectiveSense = MaximiseObjective Then BestSolution = -BestSolution
+7116      Dim status As String
+7117      status = "OpenSolver: Running NOMAD. Iteration " & IterationCount & "."
+          ' Check for BestSolution = Nothing
+7118      If Not VarType(BestSolution) = 9 Then
+              ' Flip solution if maximisation
+7119          If OS.ObjectiveSense = MaximiseObjective Then BestSolution = -BestSolution
 
-7120              status = status & " Best solution so far: " & BestSolution
-7121              If Infeasible Then
-7122                  status = status & " (infeasible)"
-7123              End If
-7124          End If
-7125          UpdateStatusBar status
-7126      End If
-          
-7127      OS.updateVarOS (X)
+7120          status = status & " Best solution so far: " & BestSolution
+7121          If Infeasible Then
+7122              status = status & " (infeasible)"
+7123          End If
+7124      End If
+7125      UpdateStatusBar status
+
+          Dim i As Long, numVars As Long
+          'set new variable values on sheet
+2452      numVars = UBound(X)
+2453      i = 1
+          Dim AdjCell As Range
+          ' If only one variable is returned, X is treated as a 1D array rather than 2D, so we need to access it
+          ' differently.
+2454      If numVars = 1 Then
+2455          For Each AdjCell In OS.AdjustableCells
+2456              AdjCell.Value2 = X(i)
+2457              i = i + 1
+2458          Next AdjCell
+2459      Else
+2460          For Each AdjCell In OS.AdjustableCells
+2461              AdjCell.Value2 = X(i, 1)
+2462              i = i + 1
+2463          Next AdjCell
+2464      End If
 End Sub
 
 Function NOMAD_GetValues() As Variant
-7128      NOMAD_GetValues = OS.getValuesOS()
+          Dim X As Variant, i As Long, j As Long, k As Long, numCons As Variant
+2465      numCons = NOMAD_GetNumConstraints()
+2466      ReDim X(1 To numCons(0), 1 To 1)
+          '====NOMAD only does minimise so need to change objective if it is max====
+          ' If no objective, just set a constant.
+          ' TODO: fix this to set it based on amount of violation to hunt for feasibility
+2467      If OS.ObjRange Is Nothing Then
+2468          X(1, 1) = 0
+          ' If objective cell is error, report this directly to NOMAD. Attempting to manipulate it can cause errors
+2469      ElseIf VarType(OS.ObjRange.Value2) = vbError Then
+2470          X(1, 1) = OS.ObjRange.Value2
+          'If objective sense is maximise then multiply by minus 1
+2471      ElseIf OS.ObjectiveSense = MaximiseObjective Then
+2472          If OS.ObjRange.Value2 <> 0 Then
+2473              X(1, 1) = -1 * OS.ObjRange.Value2 'objective value
+2474          Else
+2475              X(1, 1) = OS.ObjRange.Value2
+2476          End If
+          'Else if objective sense is minimise leave it
+2477      ElseIf OS.ObjectiveSense = MinimiseObjective Then
+2478          X(1, 1) = OS.ObjRange.Value2
+2479      ElseIf OS.ObjectiveSense = TargetObjective Then
+2480          X(1, 1) = Abs(OS.ObjRange.Value2 - OS.ObjectiveTargetValue)
+2481      End If
+2483      k = 1 'keep a count of what constraint its up to not including bounds
+          Dim row As Long, constraint As Long
+2484      row = 1
+          Dim CurrentLHSValues As Variant
+          Dim CurrentRHSValues As Variant
+2485      For constraint = 1 To OS.NumConstraints
+              ' Check to see what is different and add rows to sparsea
+2486          If Not OS.LHSRange(constraint) Is Nothing Then ' skip Binary and Integer constraints
+                  ' Get current value(s) for LHS and RHS of this constraint off the sheet. LHS is always an array (even if 1x1)
+2487              OS.GetCurrentConstraintValues constraint, CurrentLHSValues, CurrentRHSValues
+2488              If OS.LHSType(constraint) = SolverInputType.MultiCellRange Then
+2489                  For i = 1 To UBound(OS.LHSOriginalValues(constraint), 1)
+2490                      For j = 1 To UBound(OS.LHSOriginalValues(constraint), 2)
+2491                          If OS.RowSetsBound(row) = False Then
+2492                              If OS.RHSType(constraint) <> SolverInputType.MultiCellRange Then
+2493                                  SetConstraintValue X, k, CurrentRHSValues, CurrentLHSValues(i, j), OS.Relation(row)
+2494                              ElseIf UBound(OS.LHSOriginalValues(constraint), 1) = UBound(OS.RHSOriginalValues(constraint), 1) Then
+2495                                  SetConstraintValue X, k, CurrentRHSValues(i, j), CurrentLHSValues(i, j), OS.Relation(row)
+2496                              Else
+2497                                  SetConstraintValueMismatchedDims X, k, CurrentRHSValues, CurrentLHSValues, OS.Relation(row), i, j
+2498                              End If
+2499                          End If
+2500                          row = row + 1
+2501                      Next j
+2502                  Next i
+2503              Else
+2504                  If OS.RowSetsBound(row) = False Then
+2505                      SetConstraintValue X, k, CurrentRHSValues, CurrentLHSValues(1, 1), OS.Relation(row)
+2506                  End If
+2507                  row = row + 1
+2508              End If
+2509          End If
+2510      Next constraint
+          
+          'Get back new objective and difference between LHS and RHS values
+2511      NOMAD_GetValues = X
 End Function
 
 Sub NOMAD_RecalculateValues()
@@ -351,18 +113,182 @@ Sub NOMAD_RecalculateValues()
 End Sub
 
 Function NOMAD_GetNumVariables() As Variant
-7130      NOMAD_GetNumVariables = OS.getNumVariablesOS
+7130      NOMAD_GetNumVariables = OS.AdjustableCells.Count
 End Function
 
 Function NOMAD_GetNumConstraints() As Variant
-7131      NOMAD_GetNumConstraints = OS.getNumConstraintsOS
+          'The number of constraints is actually the number of Objectives + Number of Constraints
+          'Note: Bounds do not count as constraints and equalities count as 2 constraints
+          Dim row As Long
+          Dim X(0 To 1) As Double
+2540      X(0) = 1
+2541      For row = 1 To OS.NumRows
+2542          If OS.RowSetsBound(row) = False Then X(0) = X(0) + 1
+2543          If OS.Relation(row) = RelationEQ Then X(0) = X(0) + 1
+2544      Next row
+
+          'Number of objectives - NOMAD can do bi-objective
+          'Note: Currently OpenSolver can only do single objectives- will need to set up multi objectives yourself
+2545      X(1) = 1 'number of objectives
+
+7131      NOMAD_GetNumConstraints = X
 End Function
 
 Function NOMAD_GetVariableData() As Variant
-7132      NOMAD_GetVariableData = OS.getVariableDataOS()
+7132      Dim numVars As Double
+2547      numVars = NOMAD_GetNumVariables
+
+          Dim X() As Double
+2548      ReDim X(0 To 4 * numVars - 1)
+
+          ' Get bounds
+          Dim i As Long, j As Long
+2549      For i = 0 To numVars - 1
+2550          If OS.AssumeNonNegativeVars Then
+2551              X(2 * i) = 0
+2552          Else
+2553              X(2 * i) = -10000000000000#
+2554          End If
+2555          X(2 * i + 1) = 10000000000000#
+2556      Next i
+
+          ' Apply bounds
+          Dim var As Long, c As Range
+          var = 0
+2562      For Each c In OS.AdjustableCells
+2563          If TestKeyExists(OS.VarLowerBounds, c.Address) Then
+2564              X(2 * var) = OS.VarLowerBounds(c.Address)
+2565          End If
+              If TestKeyExists(OS.VarUpperBounds, c.Address) Then
+                  X(2 * var + 1) = OS.VarUpperBounds(c.Address)
+              End If
+              var = var + 1
+2566      Next c
+
+          'Get the starting point
+          'Takes the points on the sheet and forces them between the bounds
+          Dim CellValue As Double
+          j = 0
+2567      For Each c In OS.AdjustableCells
+              CellValue = c.value
+2568          If CellValue < X(2 * j) Then
+2569              X(j + 2 * numVars) = X(2 * j)
+2570          ElseIf CellValue > X(2 * j + 1) Then
+2571              X(j + 2 * numVars) = X(2 * j + 1)
+2572          Else
+2573              X(j + 2 * numVars) = CellValue
+2574          End If
+              j = j + 1
+2575      Next c
+          
+          'Get the variable type(real, int or bin)
+2576      For i = 1 To numVars
+          'initialise all variables as continuous
+2577          X(i - 1 + 3 * numVars) = 1
+2578      Next i
+          Dim counter As Long, types As Variant
+2579      counter = 2
+2580      For Each types In Array(OS.IntegerCellsRange, OS.BinaryCellsRange)
+2581          If Not types Is Nothing Then
+2582              For Each c In types
+2583                  For i = 1 To numVars
+2584                      If OS.VarNames(i) = c.Address(RowAbsolute:=False, ColumnAbsolute:=False) Then
+2585                          X(i - 1 + 3 * numVars) = counter
+2586                          If Not OS.SolveRelaxation Then
+                                  'Make bounds on integer and binary constraints integer
+2587                              If X(2 * i - 2) > 0 Then
+2588                                  X(2 * i - 2) = Application.WorksheetFunction.RoundUp(X(2 * i - 2), 0)
+2589                              Else
+2590                                  X(2 * i - 2) = Application.WorksheetFunction.RoundDown(X(2 * i - 2), 0)
+2591                              End If
+2592                              If X(2 * i - 1) > 0 Then
+2593                                  X(2 * i - 1) = Application.WorksheetFunction.RoundDown(X(2 * i - 1), 0)
+2594                              Else
+2595                                  X(2 * i - 1) = Application.WorksheetFunction.RoundUp(X(2 * i - 1), 0)
+2596                              End If
+                                  'Make starting positions on integer and binary constraints integer
+2597                              If X(i - 1 + 2 * numVars) < X(2 * i - 2) Then
+2598                                  X(i - 1 + 2 * numVars) = X(2 * i - 2)
+2599                              ElseIf X(i - 1 + 2 * numVars) > X(2 * i - 1) Then
+2600                                  X(i - 1 + 2 * numVars) = X(2 * i - 1)
+2601                              Else
+2602                                  X(i - 1 + 2 * numVars) = Round(X(i - 1 + 2 * numVars))
+2603                              End If
+2604                          End If
+2605                      End If
+2606                  Next i
+2607              Next c
+2608          End If
+2609          counter = counter + 1
+2610      Next types
+          
+2611      NOMAD_GetVariableData = X
 End Function
 
 Function NOMAD_GetOptionData() As Variant
-7133      NOMAD_GetOptionData = OS.getOptionDataOS()
+          IterationCount = 0
+
+          Dim SolverParameters As Dictionary
+          Set SolverParameters = OS.SolverParameters
+          ' Add extra values that depend on precision
+          If SolverParameters.Exists(OS.Solver.PrecisionName) Then
+              SolverParameters.Add Key:="H_MIN", Item:=SolverParameters.Item(OS.Solver.PrecisionName)
+          End If
+          
+          Dim X() As Variant
+          ReDim X(1 To SolverParameters.Count, 1 To 2)
+
+          Dim i As Long, Key As Variant
+          i = 1
+          For Each Key In SolverParameters.Keys
+              X(i, 1) = Key & " " & StrExNoPlus(SolverParameters.Item(Key))
+              X(i, 2) = Len(X(i, 1))
+              i = i + 1
+          Next Key
+          
+          NOMAD_GetOptionData = X
 End Function
 
+Private Sub SetConstraintValue(ByRef ConstraintValues As Variant, ByRef k As Long, RHSValue As Variant, LHSValue As Variant, RelationType As Long)
+                ' Sets the constraint value as appropriate for the given constraint (eg. LHS - RHS for <=) or returns
+                ' "NaN" if either side contains an error (eg. #DIV/0!)
+                ' This is for when the LHS and RHS ranges are the same dimension (both m x n)
+2512            Select Case RelationType
+                    Case RelationLE
+2513                    ConstraintValues(k + 1, 1) = DifferenceOrError(LHSValue, RHSValue)
+2514                Case RelationGE
+2515                    ConstraintValues(k + 1, 1) = DifferenceOrError(RHSValue, LHSValue)
+2516                Case RelationEQ
+2517                    ConstraintValues(k + 1, 1) = DifferenceOrError(LHSValue, RHSValue)
+2518                    ConstraintValues(k + 2, 1) = DifferenceOrError(RHSValue, LHSValue)
+2519                    k = k + 1
+2520            End Select
+2521            k = k + 1
+End Sub
+
+Private Sub SetConstraintValueMismatchedDims(ByRef ConstraintValues As Variant, ByRef k As Long, RHSValues As Variant, LHSValues As Variant, RelationType As Long, i As Long, j As Long)
+                ' Sets the constraint value as appropriate for the given constraint (eg. LHS - RHS for <=) or returns
+                ' "NaN" if either side contains an error (eg. #DIV/0!)
+                ' This is for when the LHS and RHS ranges have mismatched dimensions (m x n and n x m)
+2522            Select Case RelationType
+                    Case RelationLE
+2523                    ConstraintValues(k + 1, 1) = DifferenceOrError(LHSValues(j, i), RHSValues(i, j))
+2524                Case RelationGE
+2525                    ConstraintValues(k + 1, 1) = DifferenceOrError(RHSValues(j, i), LHSValues(i, j))
+2526                Case RelationEQ
+2527                    ConstraintValues(k + 1, 1) = DifferenceOrError(LHSValues(j, i), RHSValues(i, j))
+2528                    ConstraintValues(k + 2, 1) = DifferenceOrError(RHSValues(j, i), LHSValues(i, j))
+2529                    k = k + 1
+2530            End Select
+2531            k = k + 1
+End Sub
+
+Private Function DifferenceOrError(Value1 As Variant, Value2 As Variant) As Variant
+2532            If VarType(Value1) = vbError Then
+2533                DifferenceOrError = Value1
+2534            ElseIf VarType(Value2) = vbError Then
+2535                DifferenceOrError = Value2
+2536            Else
+2537                DifferenceOrError = Value1 - Value2
+2538            End If
+End Function

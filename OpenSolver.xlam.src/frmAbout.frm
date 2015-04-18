@@ -25,12 +25,12 @@ Option Explicit
 
 Public EventsEnabled As Boolean
 
-Private Function GetAddInIfExists(AddIn As Variant, title As String) As Boolean
+Private Function GetAddInIfExists(AddIn As Variant, Title As String) As Boolean
           ' See http://msdn.microsoft.com/en-us/library/microsoft.office.interop.excel.addins.aspx
           ' http://msdn.microsoft.com/en-us/library/microsoft.office.interop.excel.addin.aspx
 3474      Set AddIn = Nothing
 3475      On Error Resume Next
-3476      Set AddIn = Application.AddIns.Item(title)
+3476      Set AddIn = Application.AddIns.Item(Title)
 3477      GetAddInIfExists = Err = 0
 End Function
 
@@ -53,16 +53,16 @@ Public Sub ReflectOpenSolverStatus()
           Dim InstalledAndActive As Boolean
 3480      InstalledAndActive = False
 
-          Dim title As String
-3481      title = "OpenSolver"
+          Dim Title As String
+3481      Title = "OpenSolver"
 #If Mac Then
           ' On Mac, the Application.AddIns collection is indexed by filename.ext rather than just filename as on Windows
-3482      title = title & ".xlam"
+3482      Title = Title & ".xlam"
 #End If
           Dim AddIn As Variant
 3483      Set AddIn = Nothing
-3484      If GetAddInIfExists(AddIn, title) Then
-3485          Set AddIn = Application.AddIns(title)
+3484      If GetAddInIfExists(AddIn, Title) Then
+3485          Set AddIn = Application.AddIns(Title)
 3486          InstalledAndActive = AddIn.Installed
 3487      End If
 ErrorHandler:

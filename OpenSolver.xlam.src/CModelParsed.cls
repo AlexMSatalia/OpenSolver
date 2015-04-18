@@ -15,130 +15,45 @@ Attribute VB_Exposed = False
 '==============================================================================
 Option Explicit
 
-'------------------------------------------------------------------------------
-' MODEL DEFINITION
-Public SolverModelSheet As Worksheet
-
-Public AdjustableCells As Range
-Public AdjustableCellCount As Long
-Private pAdjCellNames() As String
-Public VarLowerBounds As Collection
-    
-Public ObjectiveSense As ObjectiveSenseType
-Public ObjectiveTargetValue As Double
-Public ObjectiveCell As Range
-Public ObjectiveCellConstant As Double
-
-Public ConstraintCount As Long
-Public IntegerCells As Range
-Public BinaryCells As Range
-Private LHSType() As SolverInputType
-Private RHSType() As SolverInputType
-
-Public AssumeNonNegative As Boolean
-
-Public Solver As String
 
 Public Formulae As Collection
 Public VarTypeMap As Collection
 Public AdjCellNameMap As Collection
 Public LHSKeys As Collection
 Public RHSKeys As Collection
-Public Rels As Collection
+Public RELs As Collection
 
 Public lngMaxDepth As Long
 
-'------------------------------------------------------------------------------
-' USEFUL GLOBALS
-Public book As Workbook
-Public strNameRoot As String
+Private s As COpenSolver
 
 '==============================================================================
-Public Sub Setup(ByRef BookToUse As Workbook, ByRef SheetToUse As Worksheet)
+Public Function ProcessSolverModel(OpenSolver As COpenSolver) As Boolean
           Dim RaiseError As Boolean
           RaiseError = False
           On Error GoTo ErrorHandler
-
-4782      Set book = BookToUse
-4783      Set SolverModelSheet = SheetToUse
-4784      strNameRoot = EscapeSheetName(SolverModelSheet)
-          Set OpenSolverParser.SheetNameMap = New Collection
-          Set OpenSolverParser.SheetNameMapReverse = New Collection
-
-ExitSub:
-          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
-          Exit Sub
-
-ErrorHandler:
-          If Not ReportError("CModelParsed", "Setup") Then Resume
-          RaiseError = True
-          GoTo ExitSub
-End Sub
-
-'==============================================================================
-Public Function ProcessSolverModel(s As COpenSolver) As Boolean
-          Dim RaiseError As Boolean
-          RaiseError = False
-          On Error GoTo ErrorHandler
-
-4785      Solver = s.Solver
           
-          ' =========================================
-          ' Process adjustable cells from COpenSolver
-4786      Set AdjustableCells = s.AdjustableCells
-4787      AdjustableCellCount = AdjustableCells.Count
+          Set s = OpenSolver
           
-          ' Get variable names
-4788      ReDim pAdjCellNames(1 To AdjustableCellCount) As String
-          Dim i As Long
-4789      For i = 1 To AdjustableCellCount
-4790          AdjCellNames(i) = s.VarNamesP(i)
-4791      Next i
+          Set SolverModelParsed.SheetNameMap = New Collection
+          Set SolverModelParsed.SheetNameMapReverse = New Collection
 
-          ' Get variable lower bounds
-4792      Set VarLowerBounds = New Collection
           Dim c As Range
-4793      For Each c In AdjustableCells
-              ' Try and catch any protected cells so we don't waste time parsing
-              c.Value2 = c.Value2
-              
+4793      For Each c In s.AdjustableCells
+              ' Reindex lower bound collection by local address
+              ' TODO why not just use absolute?
 4794          If TestKeyExists(s.VarLowerBounds, c.Address) Then
-4795              VarLowerBounds.Add s.VarLowerBounds(c.Address), c.Address(RowAbsolute:=False, ColumnAbsolute:=False)
+                  Dim bound As Double
+                  bound = s.VarLowerBounds(c.Address)
+                  s.VarLowerBounds.Remove c.Address
+4795              s.VarLowerBounds.Add bound, c.Address(RowAbsolute:=False, ColumnAbsolute:=False)
 4796          End If
 4797      Next c
-          
-          ' =========================================
-          ' Process objective from COpenSolver
-4798      ObjectiveSense = s.ObjectiveSense
-4799      ObjectiveTargetValue = s.ObjectiveTargetValue
-4800      Set ObjectiveCell = s.ObjRange
-4801      If Not ObjectiveCell Is Nothing Then
-4802          ObjectiveCellConstant = ObjectiveCell.Value2
-4803      End If
-          
-          ' =========================================
-          ' Process constraints from COpenSolver
-4804      ConstraintCount = s.NumConstraints
-4805      Set IntegerCells = s.IntegerCellsRange
-4806      Set BinaryCells = s.BinaryCellsRange
-          
-4807      If ConstraintCount > 0 Then
-4808          ReDim LHSType(1 To ConstraintCount) As SolverInputType
-4809          ReDim RHSType(1 To ConstraintCount) As SolverInputType
-4810          For i = 1 To ConstraintCount
-4811              LHSType(i) = s.LHSTypeP(i)
-4812              RHSType(i) = s.RHSTypeP(i)
-4813          Next i
-4814      End If
-          
-          ' =========================================
-          ' Process model options from COpenSolver
-4815      AssumeNonNegative = s.AssumeNonNegativeVars
-          
+
           ' =========================================
           ' Conduct parsed-specific processing
 4816      ProcessVarTypes
-4817      ProcessSolverModel = ParseFormulae(s)
+4817      ProcessSolverModel = ParseFormulae()
 
 ExitFunction:
           If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
@@ -159,17 +74,17 @@ Private Sub ProcessVarTypes()
 4818      Set VarTypeMap = New Collection
 4819      Set AdjCellNameMap = New Collection
           Dim curVarType As Long, lngArea As Long, cellName As String, c As Range
-4820      For lngArea = 1 To AdjustableCells.Areas.Count
-4821          For Each c In AdjustableCells.Areas(lngArea)
+4820      For lngArea = 1 To s.AdjustableCells.Areas.Count
+4821          For Each c In s.AdjustableCells.Areas(lngArea)
 4822              cellName = ConvertCellToStandardName(c)
 4823              If Not TestKeyExists(AdjCellNameMap, cellName) Then
 4824                  AdjCellNameMap.Add c, cellName
 4825                  curVarType = VarContinuous
-4826                  If Not (IntegerCells Is Nothing) Then
-4827                      If Not (Intersect(c, IntegerCells) Is Nothing) Then curVarType = VarInteger
+4826                  If Not (s.IntegerCellsRange Is Nothing) Then
+4827                      If Not (Intersect(c, s.IntegerCellsRange) Is Nothing) Then curVarType = VarInteger
 4828                  End If
-4829                  If Not (BinaryCells Is Nothing) Then
-4830                      If Not (Intersect(c, BinaryCells) Is Nothing) Then curVarType = VarBinary
+4829                  If Not (s.BinaryCellsRange Is Nothing) Then
+4830                      If Not (Intersect(c, s.BinaryCellsRange) Is Nothing) Then curVarType = VarBinary
 4831                  End If
 4832                  VarTypeMap.Add curVarType, cellName
 4833              End If
@@ -186,7 +101,7 @@ ErrorHandler:
           GoTo ExitSub
 End Sub
 
-Private Function ParseFormulae(s As COpenSolver) As Boolean
+Private Function ParseFormulae() As Boolean
 ' Parses all constraints and objective formulae to create formulae that depend only on variable cells and constants
           Dim RaiseError As Boolean
           RaiseError = False
@@ -202,8 +117,8 @@ Private Function ParseFormulae(s As COpenSolver) As Boolean
           ' STEP 1. Parse objective cell
           Dim objresult As String
           
-4839      If Not ObjectiveCell Is Nothing Then
-4840          objresult = ExpandFormula(ObjectiveCell.Formula, ObjectiveCell, 0)
+4839      If Not s.ObjRange Is Nothing Then
+4840          objresult = ExpandFormula(s.ObjRange.Formula, s.ObjRange, 0)
               
 4841          If objresult Like "*Error*" Then
 4842              Err.Raise OpenSolver_BuildError, Description:="The objective contains an error"
@@ -215,25 +130,27 @@ Private Function ParseFormulae(s As COpenSolver) As Boolean
           ' STEP 2. Parse constraints
 4846      Set LHSKeys = New Collection
 4847      Set RHSKeys = New Collection
-4848      Set Rels = New Collection
+4848      Set RELs = New Collection
 
           Dim i As Long
           Dim Count As Long
 4849      Count = 1
-4850      For i = 1 To ConstraintCount
+4850      For i = 1 To s.NumConstraints
               Dim lngFormulaeCountBefore As Long
               Dim cRow As Long, cCol As Long, cRowCount As Long, cColCount As Long
               Dim varLHSFormulae As Variant, rngLHS As Range, curLHSFormulae As String
-4851          Set rngLHS = GetConstraintLhs(i, book, SolverModelSheet)
+4851          Set rngLHS = s.LHSRange(i)
               
               Dim rel As RelationConsts
-4852          rel = GetConstraintRel(i, book, SolverModelSheet)
-4854          If rel = RelationINT Or rel = RelationBIN Or rel = RelationAllDiff Then
+4852          rel = s.RELs(i)
+4854          Select Case rel
+              Case RelationINT, RelationBIN, RelationAllDiff
 4855              GoTo NextCons
-4856          End If
+4856          End Select
 
-              Dim strRHS As String, rngRHS As Range, valRHS As Double, RHSIsFormula As Boolean
-              Set rngRHS = GetConstraintRhs(i, strRHS, valRHS, RHSIsFormula, book, SolverModelSheet)
+              Dim strRHS As String, rngRHS As Range
+              Set rngRHS = s.RHSRange(i)
+              strRHS = s.RHSFormula(i)
               
 4857          lngFormulaeCountBefore = Formulae.Count
               
@@ -264,7 +181,7 @@ Private Function ParseFormulae(s As COpenSolver) As Boolean
                       
                       ' Get RHS
                       Dim rngRHSCell As Range, strRHSCell As String
-4872                  Select Case RHSType(i)
+4872                  Select Case s.RHSType(i)
                       ' 1.1 RHS is a single cell
                       Case SingleCellRange
 4874                      Set rngRHSCell = rngRHS
@@ -284,7 +201,7 @@ Private Function ParseFormulae(s As COpenSolver) As Boolean
                           Dim isConst As Boolean
 4883                      isConst = False
                            
-4884                      Select Case RHSType(i)
+4884                      Select Case s.RHSType(i)
                           Case constant
 4885                          isConst = True
 4886                      Case Formula
@@ -347,7 +264,7 @@ Private Function ParseFormulae(s As COpenSolver) As Boolean
 4924                  RHSKeys.Add ExpandFormula(strRHSCell, rngRHSCell, i)
                       
                       ' Determine appropriate relation
-4925                  Rels.Add rel
+4925                  RELs.Add rel
 NextCol:
 4926              Next cCol
 4927          Next cRow
@@ -360,7 +277,7 @@ NextCons:
           
           '==========================================================================
           ' STEP 3. Make all possible substitutions in formula tree if required by solver
-4931      If DoBackSubstitution(Solver) Then
+4931      If DoBackSubstitution(s.Solver) Then
           
               Dim lngCurDepth As Long
               Dim lngIndex As Long, objCurNode As CFormula, strParentAdr As Variant
@@ -392,13 +309,9 @@ ErrorHandler:
           GoTo ExitFunction
 End Function
 
-Public Property Get AdjCellNames(lngVar As Long) As String
-4963      AdjCellNames = pAdjCellNames(lngVar)
-End Property
-
-Public Property Let AdjCellNames(lngVar As Long, strName As String)
-4963      pAdjCellNames(lngVar) = strName
-End Property
+Function DoBackSubstitution(Solver As ISolver) As Boolean
+6713      DoBackSubstitution = False
+End Function
 
 ' Checks whether a cell is constant i.e. not a decision variable and does not depend on a decision variable
 Function CellIsConstant(cell As Range) As Boolean
@@ -407,8 +320,8 @@ Function CellIsConstant(cell As Range) As Boolean
           On Error GoTo ErrorHandler
 
           ' Check if cell is a variable cell
-          If cell.Parent.Name = AdjustableCells.Parent.Name Then
-4964          If Not Intersect(cell, AdjustableCells) Is Nothing Then
+          If cell.Parent.Name = s.AdjustableCells.Parent.Name Then
+4964          If Not Intersect(cell, s.AdjustableCells) Is Nothing Then
 4965              CellIsConstant = False
 4966              GoTo ExitFunction
 4967          End If
@@ -428,8 +341,8 @@ Function CellIsConstant(cell As Range) As Boolean
               End If
               On Error GoTo ErrorHandler
               
-              If cell.Precedents.Parent.Name = AdjustableCells.Parent.Name Then
-4969              If Not Intersect(cell.Precedents, AdjustableCells) Is Nothing Then
+              If cell.Precedents.Parent.Name = s.AdjustableCells.Parent.Name Then
+4969              If Not Intersect(cell.Precedents, s.AdjustableCells) Is Nothing Then
 4970                  CellIsConstant = False
 4971                  GoTo ExitFunction
                   End If
@@ -507,7 +420,7 @@ Function StringFormulaIsConstant(strFormula As String) As Boolean
                           ' Cell reference found, check if constant
 5000                      Set rngBuildingRef = Range(BuildingRef)
 5001                      For Each c In rngBuildingRef
-5002                          If Not Intersect(c.Precedents, AdjustableCells) Is Nothing Then GoTo NotConstant
+5002                          If Not Intersect(c.Precedents, s.AdjustableCells) Is Nothing Then GoTo NotConstant
 5003                      Next c
 
                           ' Reset the sheet we are tracking
@@ -545,10 +458,10 @@ Function StringFormulaIsConstant(strFormula As String) As Boolean
               ' Cell reference found, check if constant
 5021          If rngBuildingRef.Count > 1 Then
 5022              For Each c In rngBuildingRef
-5023                  If Not Intersect(c.Precedents, AdjustableCells) Is Nothing Then GoTo NotConstant
+5023                  If Not Intersect(c.Precedents, s.AdjustableCells) Is Nothing Then GoTo NotConstant
 5024              Next c
 5025          Else
-5026              If Not Intersect(rngBuildingRef.Precedents, AdjustableCells) Is Nothing Then GoTo NotConstant
+5026              If Not Intersect(rngBuildingRef.Precedents, s.AdjustableCells) Is Nothing Then GoTo NotConstant
 5027          End If
               
 5028          strSheetPrefix = ""
@@ -585,7 +498,7 @@ Function ExpandFormula(ByVal strFormula As String, _
           Dim strSheetPrefix As String
           ' The sheet the adjustable cells are on
           Dim strAdjCellSheet As String
-5034      strAdjCellSheet = AdjustableCells.Parent.Name
+5034      strAdjCellSheet = s.AdjustableCells.Parent.Name
           ' Avoid unnecessary evaluations of AddNodeIfNew by checking if whole ranges
           ' are decision variables
           Dim rngBuildingRef As Range
@@ -612,7 +525,7 @@ Function ExpandFormula(ByVal strFormula As String, _
               ' Check that the source cell (e.g. objective, LHS, RHS) is not an
               ' adjustable cell itself
 5043          If rngSourceCell.Parent.Name = strAdjCellSheet Then
-5044              If Not (Intersect(rngSourceCell, AdjustableCells) Is Nothing) Then
+5044              If Not (Intersect(rngSourceCell, s.AdjustableCells) Is Nothing) Then
                       ' Its an adjustable cell, just return standard name and stop
 5045                  ExpandFormula = strRootAddress
 5046                  GoTo ExitFunction
@@ -661,7 +574,7 @@ Function ExpandFormula(ByVal strFormula As String, _
           '==========================================================================
           ' STEP 2. Keep processing nodes until nothing interesting left
 5077      Do While lngIndex <= Formulae.Count
-5078          UpdateStatusBar "OpenSolver: Constraint progress: " & ConstraintNumber & "/" & ConstraintCount & ". " & _
+5078          UpdateStatusBar "OpenSolver: Constraint progress: " & ConstraintNumber & "/" & s.NumConstraints & ". " & _
                               "Processing formula " & lngIndex & "/" & Formulae.Count & ". "
               
 5082          Set objCurNode = Formulae(lngIndex)
@@ -790,7 +703,7 @@ Function ExpandFormula(ByVal strFormula As String, _
 5132                          For Each c In rngBuildingRef
                                   ' Update status
 5133                              curProgress = curProgress + 1
-5134                              UpdateStatusBar "OpenSolver: Constraint progress: " & ConstraintNumber & "/" & ConstraintCount & ". " & _
+5134                              UpdateStatusBar "OpenSolver: Constraint progress: " & ConstraintNumber & "/" & s.NumConstraints & ". " & _
                                                   "Processing formula " & lngIndex & "/" & Formulae.Count & ". " & _
                                                   "Current formula progress: " & curProgress & "/" & TotalCount
                                   
@@ -884,7 +797,7 @@ Function ExpandFormula(ByVal strFormula As String, _
 5193                          output = "("
 5194                      Case Else
                               ' Delegate to solver specific conversion code
-5195                          output = ConvertFormula(Solver, output)
+5195                          output = ConvertFormula(output)
 5196                      End Select
 5197                      strParsed = strParsed + output
                           
@@ -993,7 +906,7 @@ Sub CleanFormulae(ByVal lngFStart As Long, ByVal lngFEnd As Long, Optional Const
           Dim lngCurDepth As Long, strChildAddr As Variant
 5257      For lngCurDepth = lngMaxDepth To 0 Step -1
 5258          For lngIndex = lngFStart To lngFEnd
-5259              UpdateStatusBar "OpenSolver: Constraint progress: " & ConstraintNumber & "/" & ConstraintCount & ". " & _
+5259              UpdateStatusBar "OpenSolver: Constraint progress: " & ConstraintNumber & "/" & s.NumConstraints & ". " & _
                                   "Cleaning decision variables in formula " & lngIndex & "/" & Formulae.Count & ". "
                   
 5263              Set objCurNode = Formulae(lngIndex)
@@ -1033,7 +946,7 @@ Sub CleanFormulae(ByVal lngFStart As Long, ByVal lngFEnd As Long, Optional Const
           Dim strParentAdr As Variant
 5288      For lngCurDepth = lngMaxDepth To 0 Step -1
 5289          For lngIndex = lngFStart To lngFEnd
-5290              UpdateStatusBar "OpenSolver: Constraint progress: " & ConstraintNumber & "/" & ConstraintCount & ". " & _
+5290              UpdateStatusBar "OpenSolver: Constraint progress: " & ConstraintNumber & "/" & s.NumConstraints & ". " & _
                                   "Cleaning constants in formula " & lngIndex & "/" & Formulae.Count & ". "
                   
 5294              If Formulae(lngIndex).lngDepth = lngCurDepth Then
@@ -1055,7 +968,7 @@ Sub CleanFormulae(ByVal lngFStart As Long, ByVal lngFEnd As Long, Optional Const
           
           ' Remove any unneeded nodes
 5307      For lngIndex = lngFEnd To lngFStart Step -1
-5308          UpdateStatusBar "OpenSolver: Constraint progress: " & ConstraintNumber & "/" & ConstraintCount & ". " & _
+5308          UpdateStatusBar "OpenSolver: Constraint progress: " & ConstraintNumber & "/" & s.NumConstraints & ". " & _
                               "Removing unnecessary formulae: " & lngIndex & "/" & Formulae.Count & ". "
           
 5312          If Formulae(lngIndex).boolCanBeRemoved Then Formulae.Remove lngIndex
@@ -1110,8 +1023,8 @@ Function AddNodeIfNew(ByRef objCurNode As CFormula, ByRef c As Range) As String
 5335      strStdName = ConvertCellToStandardName(c)
           
           ' Check if cell is an adjustable cell
-5336      If c.Parent.Name = SolverModelSheet.Name Then
-5337          If Not Intersect(c, AdjustableCells) Is Nothing Then
+5336      If c.Parent.Name = s.sheet.Name Then
+5337          If Not Intersect(c, s.AdjustableCells) Is Nothing Then
 5338              AddNodeIfNew = strStdName
 5339              GoTo finishedNode
 5340          End If
@@ -1179,11 +1092,11 @@ Function AddNodeIfNew(ByRef objCurNode As CFormula, ByRef c As Range) As String
 5374      Set objNewNode.rngAddress = c
 5375      objNewNode.strAddress = strStdName
           ' Is on same sheet?
-5376      If objNewNode.GetSheet = AdjustableCells.Parent.Name Then
+5376      If objNewNode.GetSheet = s.AdjustableCells.Parent.Name Then
               ' This formula is on the same sheet as the adjacent cells
               ' Thus we can safely check if this formula's cell is depedent on
               ' a decision variable
-5377          If objNewNode.IsDependentOn(AdjustableCells.Dependents) Then
+5377          If objNewNode.IsDependentOn(s.AdjustableCells.Dependents) Then
                   ' This formula depends on the value of the adjustable cells
                   ' This means we can NOT evaluate it
 5378              objNewNode.boolCanEval = False
@@ -1263,17 +1176,18 @@ ErrorHandler:
           GoTo ExitFunction
 End Function
 
-Function ConvertFormula(Solver As String, tokenText As String) As String
+Function ConvertFormula(tokenText As String) As String
           Dim RaiseError As Boolean
           RaiseError = False
           On Error GoTo ErrorHandler
 
-5428      Select Case Solver
-          Case "PuLP"
-5429          ConvertFormula = ConvertFormula_PuLP(tokenText)
-5430      Case "NeosBon", "NeosCou"
+          Dim FileSolver As ISolverFile
+          Set FileSolver = s.Solver
+
+5428      Select Case FileSolver.FileType
+          Case AMPL
 5431          ConvertFormula = ConvertFormula_AMPL(tokenText)
-5432      Case "Couenne", "Bonmin"
+5432      Case NL
 5433          ConvertFormula = ConvertFormula_NL(tokenText)
 5434      Case Else
 5435          ConvertFormula = tokenText + "("

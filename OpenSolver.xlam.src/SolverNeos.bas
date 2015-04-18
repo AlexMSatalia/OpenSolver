@@ -1,28 +1,33 @@
-Attribute VB_Name = "OpenSolverNeos"
+Attribute VB_Name = "SolverNeos"
 Option Explicit
-Public OutgoingMessage As String
+Public FinalMessage As String
 Public NeosResult As String
 
 Private Const NEOS_ADDRESS = "http://www.neos-server.org:3332"
 Private Const NEOS_RESULT_FILE = "neosresult.txt"
 Private Const NEOS_SCRIPT_FILE = "NeosClient.py"
 
-Function CallNEOS(ModelFilePathName As String, Solver As String, Optional MinimiseUserInteraction As Boolean = False, Optional OptionsFileString As String) As String
+Function NeosClientScriptPath() As String
+          NeosClientScriptPath = JoinPaths(ThisWorkbook.Path, SolverDir, SolverDirMac, NEOS_SCRIPT_FILE)
+End Function
+
+Function CallNEOS(s As COpenSolver, OutgoingMessage As String) As String
           Dim RaiseError As Boolean
           RaiseError = False
           On Error GoTo ErrorHandler
-
-6806      ' Import file as continuous string
-          Open ModelFilePathName For Input As #1
-6807          OutgoingMessage = Input$(LOF(1), 1)
-6808      Close #1
+          
+          Dim NeosSolver As ISolverNeos, OptionsFileString As String
+          Set NeosSolver = s.Solver
+          If NeosSolver.UsesOptionFile Then
+              OptionsFileString = ParametersToOptionsFileString(s.SolverParameters)
+          End If
            
           ' Wrap in XML for AMPL on NEOS
-6809      WrapAMPLForNEOS OutgoingMessage, Solver, OptionsFileString
+6809      FinalMessage = WrapMessageForNEOS(OutgoingMessage, NeosSolver, OptionsFileString)
            
           Dim errorString As String
-          If MinimiseUserInteraction Then
-              CallNEOS = SolveOnNeos(OutgoingMessage, errorString)
+          If s.MinimiseUserInteraction Then
+              CallNEOS = SolveOnNeos(FinalMessage, errorString)
           Else
               frmCallingNeos.Show
               CallNEOS = NeosResult
@@ -38,7 +43,7 @@ Function CallNEOS(ModelFilePathName As String, Solver As String, Optional Minimi
    
           ' Dump the whole NEOS response to log file
           Dim LogPath As String
-          GetTempFilePath "log1.tmp", LogPath
+          GetLogFilePath LogPath
           Open LogPath For Output As #1
               Print #1, CallNEOS
           Close #1
@@ -49,7 +54,7 @@ ExitFunction:
           Exit Function
 
 ErrorHandler:
-          If Not ReportError("OpenSolverNeos", "CallNEOS") Then Resume
+          If Not ReportError("SolverNeos", "CallNEOS") Then Resume
           RaiseError = True
           GoTo ExitFunction
 End Function
@@ -124,8 +129,7 @@ Private Function SendToNeos_Mac(method As String, param1 As String, Optional par
     DeleteFileAndVerify SolutionFilePathName
 
     Dim LogFilePathName As String
-    GetTempFilePath "log1.tmp", LogFilePathName
-    DeleteFileAndVerify LogFilePathName
+    If GetLogFilePath(LogFilePathName) Then DeleteFileAndVerify LogFilePathName
     
     If Not RunExternalCommand(SolverPath & " " & method & " " & MakePathSafe(SolutionFilePathName) & " " & param1 & " " & param2, LogFilePathName, Hide, True) Then
         Err.Raise OpenSolver_NeosError, Description:="Error while contacting NEOS"
@@ -142,7 +146,7 @@ ExitFunction:
     Exit Function
 
 ErrorHandler:
-    If Not ReportError("OpenSolverNeos", "SendToNeos_Mac") Then Resume
+    If Not ReportError("SolverNeos", "SendToNeos_Mac") Then Resume
     RaiseError = True
     GoTo ExitFunction
 End Function
@@ -166,7 +170,7 @@ ExitFunction:
     Exit Function
 
 ErrorHandler:
-    If Not ReportError("OpenSolverNeos", "SendToNeos_Windows") Then Resume
+    If Not ReportError("SolverNeos", "SendToNeos_Windows") Then Resume
     RaiseError = True
     GoTo ExitFunction
 End Function
@@ -191,7 +195,7 @@ ExitFunction:
     Exit Function
 
 ErrorHandler:
-    If Not ReportError("OpenSolverNeos", "GetNeosResult") Then Resume
+    If Not ReportError("SolverNeos", "GetNeosResult") Then Resume
     RaiseError = True
     GoTo ExitFunction
 End Function
@@ -239,7 +243,7 @@ ExitFunction:
     Exit Function
 
 ErrorHandler:
-    If Not ReportError("OpenSolverNeos", "SubmitNeosJob") Then Resume
+    If Not ReportError("SolverNeos", "SubmitNeosJob") Then Resume
     RaiseError = True
     GoTo ExitFunction
 End Function
@@ -260,7 +264,7 @@ ExitFunction:
     Exit Function
 
 ErrorHandler:
-    If Not ReportError("OpenSolverNeos", "GetNeosJobStatus") Then Resume
+    If Not ReportError("SolverNeos", "GetNeosJobStatus") Then Resume
     RaiseError = True
     GoTo ExitFunction
 End Function
@@ -283,7 +287,7 @@ ExitFunction:
     Exit Function
 
 ErrorHandler:
-    If Not ReportError("OpenSolverNeos", "GetXmlTagValue") Then Resume
+    If Not ReportError("SolverNeos", "GetXmlTagValue") Then Resume
     RaiseError = True
     GoTo ExitFunction
 End Function
@@ -313,7 +317,7 @@ ExitFunction:
           Exit Function
 
 ErrorHandler:
-          If Not ReportError("OpenSolverNeos", "DecodeBase64") Then Resume
+          If Not ReportError("SolverNeos", "DecodeBase64") Then Resume
           RaiseError = True
           GoTo ExitFunction
 End Function
@@ -354,71 +358,72 @@ ExitFunction:
            Exit Function
 
 ErrorHandler:
-           If Not ReportError("OpenSolverNeos", "Stream_BinaryToString") Then Resume
+           If Not ReportError("SolverNeos", "Stream_BinaryToString") Then Resume
            RaiseError = True
            GoTo ExitFunction
 End Function
 
-Sub WrapAMPLForNEOS(AmplString As String, Solver As String, Optional OptionsFileString As String)
+Function WrapMessageForNEOS(message As String, NeosSolver As ISolverNeos, Optional OptionsFileString As String) As String
 ' Wraps AMPL in the required XML to send to NEOS
-           Dim RaiseError As Boolean
-           RaiseError = False
-           On Error GoTo ErrorHandler
-
-           Dim Category As String, SolverType As String
-6966       SolverType = GetNeosSolverType(Solver)
-           Category = GetNeosSolverCategory(SolverType)
-           
-6967       AmplString = _
-              "<document>" & _
-                  "<category>" & Category & "</category>" & _
-                  "<solver>" & SolverType & "</solver>" & _
-                  "<inputType>AMPL</inputType>" & _
-                  "<client></client>" & _
-                  "<priority>short</priority>" & _
-                  "<email></email>" & _
-                  "<model><![CDATA[" & AmplString & "end]]></model>" & _
-                  "<data><![CDATA[]]></data>" & _
-                  "<commands><![CDATA[]]></commands>" & _
-                  IIf(Len(OptionsFileString) <> 0, "<options><![CDATA[" & OptionsFileString & vbNewLine & "]]></options>", "") & _
-                  "<comments><![CDATA[]]></comments>" & _
-              "</document>"
+    Dim RaiseError As Boolean
+    RaiseError = False
+    On Error GoTo ErrorHandler
+    
+    WrapMessageForNEOS = _
+        WrapInTag( _
+            WrapInTag(NeosSolver.NeosSolverCategory, "category") & _
+            WrapInTag(NeosSolver.NeosSolverName, "solver") & _
+            WrapInTag(GetInputType(NeosSolver), "inputType") & _
+            WrapInTag("", "client") & _
+            WrapInTag("short", "priority") & _
+            WrapInTag("", "email") & _
+            WrapInTag(message, "model", True) & _
+            WrapInTag("", "data", True) & _
+            WrapInTag("", "commands", True) & _
+            IIf(NeosSolver.UsesOptionFile, WrapInTag(OptionsFileString & vbNewLine, "options", True), "") & _
+            WrapInTag("", "comments", True), _
+        "document")
 
 ExitSub:
-          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
-          Exit Sub
+    If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+    Exit Function
 
 ErrorHandler:
-          If Not ReportError("OpenSolverNeos", "WrapAMPLForNEOS") Then Resume
-          RaiseError = True
-          GoTo ExitSub
-End Sub
+    If Not ReportError("SolverNeos", "WrapAMPLForNEOS") Then Resume
+    RaiseError = True
+    GoTo ExitSub
+End Function
+
+Function WrapInTag(value As String, TagName As String, Optional AddCData As Boolean = False) As String
+    WrapInTag = "<" & TagName & ">" & _
+                    IIf(AddCData, "<![CDATA[", "") & _
+                        value & _
+                    IIf(AddCData, "]]>", "") & _
+                "</" & TagName & ">"
+End Function
 
 Function MakeNeosMethodCall(MethodName As String, Optional IntValue As String = "", Optional StringValue As String = "") As String
-    MakeNeosMethodCall = "<methodCall>" & _
-                         "  <methodName>" & MethodName & "</methodName>" & _
-                         "  <params>" & _
-                         IIf(Len(IntValue) > 0, "    " & MakeNeosParam("int", IntValue), "") & _
-                         IIf(Len(StringValue) > 0, "    " & MakeNeosParam("string", StringValue), "") & _
-                         "  </params>" & _
-                         "</methodCall>"
+    MakeNeosMethodCall = WrapInTag( _
+                             WrapInTag(MethodName, "methodName") & _
+                             WrapInTag( _
+                                 IIf(Len(IntValue) > 0, MakeNeosParam("int", IntValue), "") & _
+                                 IIf(Len(StringValue) > 0, MakeNeosParam("string", StringValue), ""), _
+                             "params"), _
+                         "methodCall")
 
 End Function
 
 Function MakeNeosParam(ParamType As String, ParamValue As String) As String
-    MakeNeosParam = "<param>" & _
-                    "  <value>" & _
-                    "    <" & ParamType & ">" & ParamValue & "</" & ParamType & ">" & _
-                    "  </value>" & _
-                    "</param>"
+    MakeNeosParam = WrapInTag( _
+                        WrapInTag( _
+                            WrapInTag(ParamValue, ParamType), _
+                        "value"), _
+                    "param")
 
 End Function
 
-Function GetNeosSolverCategory(SolverType As String)
-    Select Case SolverType
-    Case "cbc"
-        GetNeosSolverCategory = "milp"
-    Case "Bonmin", "Couenne"
-        GetNeosSolverCategory = "minco"
-    End Select
+Private Function GetInputType(Solver As ISolver)
+    If TypeOf Solver Is ISolverFileAMPL Then
+        GetInputType = "AMPL"
+    End If
 End Function

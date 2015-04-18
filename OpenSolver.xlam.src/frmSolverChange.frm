@@ -21,19 +21,20 @@ Option Explicit
     Const FormWidthSolverChange = 255
 #End If
 
-Public ChosenSolver As String
+Private Solvers() As ISolver
 
 Private Sub cboSolver_Change()
-4724            ChosenSolver = ReverseSolverTitle(cboSolver.Text)
-4725            lblDesc.Caption = SolverDesc(ChosenSolver)
+          Dim Solver As ISolver
+4724      Set Solver = Solvers(cboSolver.ListIndex)
+4725      lblDesc.Caption = Solver.Desc
 
-                lblHyperlink.Caption = SolverLink(ChosenSolver)
+          lblHyperlink.Caption = Solver.Link
                 
-                Dim errorString As String
-4727            cmdOk.Enabled = SolverPresent(ChosenSolver, errorString:=errorString)
-4732            lblError.Caption = errorString ' empty if no errors found
+          Dim errorString As String
+4727      cmdOk.Enabled = SolverIsPresent(Solver, errorString:=errorString)
+4732      lblError.Caption = errorString ' empty if no errors found
 
-                AutoLayout
+          AutoLayout
 End Sub
 
 Private Sub lblHyperlink_Click()
@@ -45,19 +46,29 @@ Private Sub UserForm_Activate()
 4745      cboSolver.MatchRequired = True
 4746      cboSolver.Style = fmStyleDropDownList
           
-          Dim Solver As Variant
-4747      For Each Solver In GetAvailableSolvers()
-4748          cboSolver.AddItem SolverTitle(CStr(Solver))
-4749      Next Solver
+          Dim ChosenSolver As String
+          ChosenSolver = GetChosenSolver()
           
-          ' This solver should always be valid
-          cboSolver.Text = SolverTitle(GetChosenSolver())
+          Dim NumSolvers As Long
+          NumSolvers = UBound(GetAvailableSolvers) - LBound(GetAvailableSolvers) + 1
+          
+          ReDim Solvers(0 To NumSolvers - 1)
+          
+          Dim Solver As Variant, SolverString As String, i As Long
+          i = 0
+4747      For Each Solver In GetAvailableSolvers()
+              SolverString = CStr(Solver)
+              Set Solvers(i) = CreateSolver(SolverString)
+4748          cboSolver.AddItem Solvers(i).Title
+              If Solvers(i).ShortName = ChosenSolver Then cboSolver.ListIndex = i
+              i = i + 1
+4749      Next Solver
 End Sub
 
 Private Sub cmdOk_Click()
          'Add the chosen solver as a hidden name in the workbook
-4758      SetChosenSolver ChosenSolver
-4761      frmModel.FormatCurrentSolver ChosenSolver
+4758      SetChosenSolver Solvers(cboSolver.ListIndex).ShortName
+4761      frmModel.FormatCurrentSolver
 4762      frmModel.Disabler True
 4763      Unload Me
 End Sub

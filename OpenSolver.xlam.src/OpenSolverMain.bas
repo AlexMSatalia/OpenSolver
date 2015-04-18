@@ -9,30 +9,20 @@ Dim OpenSolver As COpenSolver
 Function RunOpenSolver(Optional SolveRelaxation As Boolean = False, Optional MinimiseUserInteraction As Boolean = False, Optional LinearityCheckOffset As Double = 0) As OpenSolverResult
           On Error GoTo ErrorHandler
 
-          'Save iterative calcalation state
-          Dim oldIterationMode As Boolean
-2803      oldIterationMode = Application.Iteration
-
 2804      RunOpenSolver = OpenSolverResult.Unsolved
 2805      Set OpenSolver = New COpenSolver
+
 2806      OpenSolver.BuildModelFromSolverData LinearityCheckOffset, MinimiseUserInteraction, SolveRelaxation
-
-          ' Run appropriate solve routine
-          Dim OpenSolverParsed As COpenSolverParsed
-2807      If UsesParsedModel(OpenSolver.Solver) Then
-              Set OpenSolverParsed = New COpenSolverParsed
-              OpenSolverParsed.SolveModel OpenSolver, SolveRelaxation, MinimiseUserInteraction
-              RunOpenSolver = OpenSolver.SolveStatus
-2809      Else
-2810          RunOpenSolver = OpenSolver.SolveModel(SolveRelaxation, MinimiseUserInteraction)
-2811      End If
-
+          ' Only proceed with solve if nothing detected while building model
+          If OpenSolver.SolveStatus = OpenSolverResult.Unsolved Then
+              SolveModel OpenSolver, SolveRelaxation, MinimiseUserInteraction
+          End If
+          
+          RunOpenSolver = OpenSolver.SolveStatus
           If Not MinimiseUserInteraction Then OpenSolver.ReportAnySolutionSubOptimality
 
 ExitFunction:
           Set OpenSolver = Nothing    ' Free any OpenSolver memory used
-          Set OpenSolverParsed = Nothing
-          Application.Iteration = oldIterationMode
           Exit Function
 
 ErrorHandler:
@@ -45,12 +35,12 @@ ErrorHandler:
           GoTo ExitFunction
 End Function
 
-Function UserSetQuickSolveParameterRange() As Boolean
+Function SetQuickSolveParameterRange() As Boolean
           Dim RaiseError As Boolean
           RaiseError = False
           On Error GoTo ErrorHandler
 
-362       UserSetQuickSolveParameterRange = False
+362       SetQuickSolveParameterRange = False
 363       If Application.Workbooks.Count = 0 Then
 364           Err.Raise OpenSolver_BuildError, Description:="No active workbook available"
 366       End If
@@ -63,9 +53,9 @@ Function UserSetQuickSolveParameterRange() As Boolean
           Dim NewRange As Range
 377       On Error Resume Next
 378       If ParamRange Is Nothing Then
-379           Set NewRange = Application.InputBox(prompt:="Please select the 'parameter' cells that you will be changing between successsive solves of the model.", Type:=8, title:="OpenSolver Quick Solve Parameters")
+379           Set NewRange = Application.InputBox(prompt:="Please select the 'parameter' cells that you will be changing between successsive solves of the model.", Type:=8, Title:="OpenSolver Quick Solve Parameters")
 380       Else
-381           Set NewRange = Application.InputBox(prompt:="Please select the 'parameter' cells that you will be changing between successsive solves of the model.", Type:=8, Default:=ParamRange.Address, title:="OpenSolver Quick Solve Parameters")
+381           Set NewRange = Application.InputBox(prompt:="Please select the 'parameter' cells that you will be changing between successsive solves of the model.", Type:=8, Default:=ParamRange.Address, Title:="OpenSolver Quick Solve Parameters")
 382       End If
 383       On Error GoTo ErrorHandler
           
@@ -76,7 +66,7 @@ Function UserSetQuickSolveParameterRange() As Boolean
 389           SetQuickSolveParameters NewRange
 
               ' Return true as we have succeeded
-393           UserSetQuickSolveParameterRange = True
+393           SetQuickSolveParameterRange = True
 394       End If
 
 ExitFunction:
@@ -84,7 +74,7 @@ ExitFunction:
           Exit Function
 
 ErrorHandler:
-          If Not ReportError("OpenSolverMain", "UserSetQuickSolveParameterRange") Then Resume
+          If Not ReportError("OpenSolverMain", "SetQuickSolveParameterRange") Then Resume
           RaiseError = True
           GoTo ExitFunction
 End Function
@@ -119,7 +109,7 @@ End Function
 Sub InitializeQuickSolve()
           On Error GoTo ErrorHandler
 
-          If UsesParsedModel(GetChosenSolver) Then
+          If Not CreateSolver(GetChosenSolver()).ModelType = Diff Then
               Err.Raise OpenSolver_ModelError, Description:="The selected solver does not support QuickSolve"
           End If
 
@@ -137,16 +127,17 @@ ErrorHandler:
           GoTo ExitSub
 End Sub
 
-Function RunQuickSolve(Optional MinimiseUserInteraction As Boolean = False) As Long
+Function RunQuickSolve(Optional MinimiseUserInteraction As Boolean = False) As OpenSolverResult
           On Error GoTo ErrorHandler
 
 2840      If OpenSolver Is Nothing Then
-2841          MsgBox "Error: There is no model to solve, and so the quick solve cannot be completed. Please select the Initialize Quick Solve command.", , "OpenSolver" & sOpenSolverVersion & " Error"
-              'MsgBoxEx "Help_Error: There is no model to solve, and so the quick solve cannot be completed. Please select the Initialize Quick Solve command."
-2842          RunQuickSolve = OpenSolverResult.ErrorOccurred
+2841          Err.Raise OpenSolver_SolveError, Description:="There is no model to solve, and so the quick solve cannot be completed. Please select the Initialize Quick Solve command."
 2843      ElseIf OpenSolver.CanDoQuickSolveForActiveSheet Then    ' This will report any errors
-2844          RunQuickSolve = OpenSolver.DoQuickSolve(MinimiseUserInteraction)
+2844          OpenSolver.DoQuickSolve MinimiseUserInteraction
+              RunQuickSolve = OpenSolver.SolveStatus
 2845      End If
+
+          If Not MinimiseUserInteraction Then OpenSolver.ReportAnySolutionSubOptimality
 
 ExitFunction:
           Exit Function

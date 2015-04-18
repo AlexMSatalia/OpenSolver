@@ -48,15 +48,16 @@ Private Sub UserForm_Activate()
 4134      txtPre = CStr(GetPrecision())
 4135      chkPerformLinearityCheck.value = GetLinearityCheck()
 
-          Dim Solver As String
-4136      Solver = GetChosenSolver()
+          Dim SolverString As String, Solver As ISolver
+4136      SolverString = GetChosenSolver()
+          Set Solver = CreateSolver(GetChosenSolver())
 
-          chkPerformLinearityCheck.Enabled = (SolverType(Solver) = OpenSolver_SolverType.Linear) And _
-                                              Not UsesParsedModel(Solver)
-          txtPre.Enabled = UsesPrecision(Solver)
-          txtMaxIter.Enabled = UsesIterationLimit(Solver)
-          txtTol.Enabled = UsesTolerance(Solver)
-          txtMaxTime.Enabled = UsesTimeLimit(Solver)
+          chkPerformLinearityCheck.Enabled = (SolverLinearity(Solver) = Linear) And _
+                                             Solver.ModelType = Diff
+          txtMaxIter.Enabled = IterationLimitAvailable(Solver)
+          txtPre.Enabled = PrecisionAvailable(Solver)
+          txtMaxTime.Enabled = TimeLimitAvailable(Solver)
+          txtTol.Enabled = ToleranceAvailable(Solver)
 End Sub
 
 Private Sub UserForm_Initialize()

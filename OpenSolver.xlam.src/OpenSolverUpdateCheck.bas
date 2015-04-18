@@ -87,8 +87,6 @@ End Sub
 #If Mac Then
 Private Function InitialiseUpdateCheck_Mac() As String
     Dim Cmd As String
-    Dim result As String
-    Dim ExitCode As Long
     
     If GetTempFilePath(UpdateLogName, LogFilePath) Then DeleteFileAndVerify (LogFilePath)
 

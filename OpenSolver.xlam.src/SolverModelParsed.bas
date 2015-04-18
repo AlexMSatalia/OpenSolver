@@ -1,9 +1,8 @@
-Attribute VB_Name = "OpenSolverParser"
+Attribute VB_Name = "SolverModelParsed"
 Option Explicit
 
 Public SheetNameMap As Collection          ' Stores a map from sheet name to cleaned name
 Public SheetNameMapReverse As Collection   ' Stores a map from cleaned name to sheet name
-
 
 '==============================================================================
 ' ConvertCellToStandardName
@@ -79,21 +78,4 @@ ErrorHandler:
           GoTo ExitFunction
 End Function
 
-' Shows .strFormulaParsed for all nodes in the Collection
-Sub showFormulae(Formulae As Collection)
-          Dim f As Variant, showstr As String
-7450      For Each f In Formulae
-7451          showstr = showstr & f.strFormulaParsed & vbNewLine & vbNewLine
-7452          Debug.Print f.strFormulaParsed
-7453      Next f
-          'MsgBox showstr
-End Sub
 
-' Shows all members of a collection
-Sub showCollection(c As Collection)
-          Dim f As Variant, showstr As String
-7454      For Each f In c
-7455          showstr = showstr & f & vbNewLine & vbNewLine
-7456      Next f
-7457      MsgBox showstr
-End Sub

@@ -51,8 +51,18 @@ Enum OpenSolver_SolverType
     NonLinear = 2
 End Enum
 
-Public Const ModelStatus_Unitialized = 0
-Public Const ModelStatus_Built = 1
+Enum OpenSolver_ModelStatus
+    Unitialized = 0
+    Built = 1
+End Enum
+
+' The type of value in the LHS/RHS of a constraint
+Enum SolverInputType
+    SingleCellRange = 1 ' Valid for a LHS and a RHS
+    MultiCellRange = 2  ' Valid for a LHS and a RHS
+    Formula = 3         ' Valid for a RHS only
+    constant = 4        ' Valid for a RHS only
+End Enum
 
 ' Solver's different types of constraints
 Public Enum RelationConsts
@@ -76,9 +86,9 @@ Public Enum ObjectiveSenseType
 End Enum
 
 Public Enum VariableType
-   VarContinuous = 0
-   VarInteger = 1
-   VarBinary = 2
+    VarContinuous = 0
+    VarInteger = 1
+    VarBinary = 2
 End Enum
 
 Public Type SolveOptionsType
@@ -89,11 +99,25 @@ Public Type SolveOptionsType
     ShowIterationResults As Boolean
 End Type
 
+Public Enum OpenSolver_FileType
+    LP = 1
+    AMPL = 2
+    NL = 3
+End Enum
+
+Public Enum OpenSolver_ModelType
+    None = 1
+    Diff = 2
+    Parsed = 3
+End Enum
+
 
 #If Mac Then
+    Public Const ExecExtension = ""
     Public Const ScriptExtension = ".sh"
     Public Const NBSP = 202 ' ascii char code for non-breaking space on Mac
 #Else
+    Public Const ExecExtension = ".exe"
     Public Const ScriptExtension = ".bat"
     Public Const NBSP = 160 ' ascii char code for non-breaking space on Windows
 #End If
@@ -133,14 +157,3 @@ Function ReverseRelation(rel As Long) As Long
 361       ReverseRelation 4 - rel
 End Function
 
-Function RelationToAmplString(rel As RelationConsts) As String
-7258      Select Case rel
-              Case RelationLE: RelationToAmplString = " <= "
-7259          Case RelationEQ: RelationToAmplString = " == "
-7260          Case RelationGE: RelationToAmplString = " >= "
-7261      End Select
-End Function
-
-Function RelationToLpString(rel As RelationConsts) As String
-    RelationToLpString = " " & RelationEnumToString(rel) & " "
-End Function
