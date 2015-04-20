@@ -249,6 +249,14 @@ Function NOMAD_GetOptionData() As Variant
           NOMAD_GetOptionData = X
 End Function
 
+Function NOMAD_ShowCancelDialog() As Variant
+          Dim Response As VbMsgBoxResult
+          Response = MsgBox("You have pressed the Escape key. Do you wish to cancel?", _
+                            vbCritical + vbYesNo + vbDefaultButton1, _
+                            "OpenSolver - User Interrupt Occured...")
+          NOMAD_ShowCancelDialog = (Response = vbYes)
+End Function
+
 Private Sub SetConstraintValue(ByRef ConstraintValues As Variant, ByRef k As Long, RHSValue As Variant, LHSValue As Variant, RelationType As Long)
                 ' Sets the constraint value as appropriate for the given constraint (eg. LHS - RHS for <=) or returns
                 ' "NaN" if either side contains an error (eg. #DIV/0!)
@@ -289,6 +297,11 @@ Private Function DifferenceOrError(Value1 As Variant, Value2 As Variant) As Vari
 2534            ElseIf VarType(Value2) = vbError Then
 2535                DifferenceOrError = Value2
 2536            Else
+                    On Error GoTo ErrorHandler
 2537                DifferenceOrError = Value1 - Value2
 2538            End If
+                Exit Function
+                
+ErrorHandler:
+                DifferenceOrError = Value1
 End Function

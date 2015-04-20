@@ -43,7 +43,7 @@ Function ReportError(ModuleName As String, ProcedureName As String, Optional IsE
     If ErrNum = USER_CANCEL Then
         If MsgBox("You have pressed the Escape key. Do you wish to cancel?", _
                   vbCritical + vbYesNo + vbDefaultButton1, _
-                  "OpenSolver: User Interrupt Occured...") = vbNo Then
+                  "OpenSolver - User Interrupt Occured...") = vbNo Then
             ReportError = False  'Continue on from where error occured in original code
             Exit Function
         Else
