@@ -164,7 +164,7 @@ Sub WriteAMPLFile_Diff(s As COpenSolver, ModelFilePathName As String)
 1875           Print #1, "_display " & ValidLPFileVarName(s.VarNames(var)) & ";"
 1876       Next var
 
-           If Not s.ObjRange Is Nothing Then
+           If Not s.ObjRange Is Nothing And Not s.ObjectiveSense = TargetObjective Then
               ' Display objective
                WriteToFile 1, "_display Total_Cost;" & vbNewLine
            Else

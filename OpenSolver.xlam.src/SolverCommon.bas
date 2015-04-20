@@ -35,8 +35,9 @@ Sub SolveModel(s As COpenSolver, ShouldSolveRelaxation As Boolean, ShouldMinimis
     End If
 
     'Check that solver is available
-    If Not SolverIsAvailable(s.Solver) Then
-        Err.Raise Number:=OpenSolver_SolveError, Description:="The specified solver, " & s.Solver.ShortName & " could not be found. Make sure it is correctly installed or try another solver."
+    Dim errorString As String
+    If Not SolverIsAvailable(s.Solver, errorString:=errorString) Then
+        Err.Raise Number:=OpenSolver_SolveError, Description:=errorString
     End If
 
     'Delete any existing log file
@@ -112,8 +113,11 @@ Sub SolveModel(s As COpenSolver, ShouldSolveRelaxation As Boolean, ShouldMinimis
                     s.sheet.Select
                     WriteConstraintSensitivityTable nameSheet, s
                 End If
-            ElseIf Not s.bGetDuals And (s.DualsOnNewSheet Or s.DualsOnSameSheet) Then
-                Err.Raise Number:=OpenSolver_SolveError, Description:="Could not get sensitivity analysis due to binary and/or integer constraints." & vbCrLf & vbCrLf & "Turn off sensitivity in the model dialogue or reformulate your model without these constraints." & vbCrLf & vbCrLf & "The " & s.Solver.ShortName & " solution has been returned to the sheet." & vbCrLf
+            ElseIf Not s.bGetDuals And (s.DualsOnNewSheet Or s.DualsOnSameSheet) And LinearSolver.SensitivityAnalysisAvailable Then
+                Err.Raise Number:=OpenSolver_SolveError, Description:= _
+                    "Could not get sensitivity analysis due to binary and/or integer constraints." & vbNewLine & vbNewLine & _
+                    "Turn off sensitivity in the model dialogue or reformulate your model without these constraints." & vbNewLine & vbNewLine & _
+                    "The " & s.Solver.ShortName & " solution has been returned to the sheet." & vbNewLine
             End If
         End If
     End If
