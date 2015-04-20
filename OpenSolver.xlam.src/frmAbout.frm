@@ -34,15 +34,6 @@ Private Function GetAddInIfExists(AddIn As Variant, Title As String) As Boolean
 3477      GetAddInIfExists = Err = 0
 End Function
 
-Private Sub chkUpdate_Change()
-    SaveUpdateSetting chkUpdate.value
-    chkUpdateExperimental.Enabled = chkUpdate.value
-End Sub
-
-Private Sub chkUpdateExperimental_Change()
-    SaveBetaUpdateSetting chkUpdateExperimental.value
-End Sub
-
 Private Sub cmdOk_Click()
 3478      Me.Hide
 End Sub
@@ -115,10 +106,12 @@ ExitSub:
 3511      ReflectOpenSolverStatus
 End Sub
 
-
 Private Sub cmdUpdate_Click()
     InitialiseUpdateCheck False, True
-    chkUpdate.value = GetUpdateSetting()
+End Sub
+
+Private Sub cmdUpdateSettings_Click()
+    frmUpdateSettings.Show
 End Sub
 
 Private Sub lblUrl_Click()
@@ -135,9 +128,6 @@ Private Sub UserForm_Activate()
               .Locked = True
           End With
           
-          chkUpdate.value = GetUpdateSetting()
-          chkUpdateExperimental.value = GetBetaUpdateSetting()
-
           With txtVersion
               .Locked = False
 3523          .value = EnvironmentSummary()
@@ -215,36 +205,27 @@ Private Sub AutoLayout()
         .top = Below(txtVersion, False)
         AutoHeight lblUrl, Me.width, True
     End With
-        
-    cmdUpdate.top = lblHeading.top
-    
-    With chkUpdate
-        .Caption = "Check for updates automatically"
-        .top = Below(cmdUpdate, False)
-        AutoHeight chkUpdate, Me.width, True
-    End With
-    
-    With chkUpdateExperimental
-        .Caption = "Check for experimental updates"
-        .top = Below(chkUpdate, False)
-        AutoHeight chkUpdateExperimental, Me.width, True
-    End With
     
     With cmdUpdate
         .Caption = "Check for updates"
-        .width = Max(chkUpdate.width, chkUpdateExperimental.width)
+        .width = FormButtonWidth * 2
         .left = LeftOfForm(Me.width, .width)
+        .top = lblHeading.top
     End With
     
-    chkUpdate.left = cmdUpdate.left
-    chkUpdateExperimental.left = cmdUpdate.left
+    With cmdUpdateSettings
+        .Caption = "Update Check settings..."
+        .width = cmdUpdate.width
+        .left = cmdUpdate.left
+        .top = Below(cmdUpdate)
+    End With
     
     With txtAbout
         .Locked = False
         .Text = "Loading OpenSolver info..."
         .Locked = True
         .left = lblHeading.left
-        .top = Max(Below(lblUrl), Below(chkUpdateExperimental))
+        .top = Max(Below(lblUrl), Below(cmdUpdateSettings))
         .BackStyle = fmBackStyleTransparent
         .SpecialEffect = fmSpecialEffectEtched
         .height = txtAboutHeight

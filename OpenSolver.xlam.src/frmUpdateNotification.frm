@@ -1,14 +1,14 @@
 VERSION 5.00
-Begin {C62A69F0-16DC-11CE-9E98-00AA00574A4F} frmUpdate 
+Begin {C62A69F0-16DC-11CE-9E98-00AA00574A4F} frmUpdateNotification 
    Caption         =   "OpenSolver - Update Available"
-   ClientHeight    =   3164
+   ClientHeight    =   3165
    ClientLeft      =   45
    ClientTop       =   390
    ClientWidth     =   4725
-   OleObjectBlob   =   "frmUpdate.frx":0000
+   OleObjectBlob   =   "frmUpdateNotification.frx":0000
    StartUpPosition =   1  'CenterOwner
 End
-Attribute VB_Name = "frmUpdate"
+Attribute VB_Name = "frmUpdateNotification"
 Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = True
@@ -16,25 +16,21 @@ Attribute VB_Exposed = False
 Option Explicit
 
 #If Mac Then
-    Const FormWidthUpdate = 300
+    Const FormWidthUpdateNotification = 300
 #Else
-    Const FormWidthUpdate = 195
+    Const FormWidthUpdateNotification = 195
 #End If
-
-Private Sub chkKeepChecking_Change()
-    SaveUpdateSetting chkKeepChecking.value
-End Sub
 
 Private Sub cmdOk_Click()
     Me.Hide
 End Sub
 
-Private Sub lblLink_Click()
-    OpenURL lblLink.Caption
+Private Sub cmdSettings_Click()
+    frmUpdateSettings.Show
 End Sub
 
-Private Sub UserForm_Activate()
-   chkKeepChecking.value = GetUpdateSetting()
+Private Sub lblLink_Click()
+    OpenURL lblLink.Caption
 End Sub
 
 Private Sub UserForm_Initialize()
@@ -44,7 +40,7 @@ End Sub
 Private Sub AutoLayout()
     AutoFormat Me.Controls
     
-    Me.width = FormWidthUpdate
+    Me.width = FormWidthUpdateNotification
     
     With lblDesc
         .Caption = "A newer version of OpenSolver is available. Please follow the link below for more information and to download the update:"
@@ -75,18 +71,18 @@ Private Sub AutoLayout()
         .TextAlign = fmTextAlignCenter
     End With
     
-    With chkKeepChecking
-        .Caption = "Continue checking for updates to OpenSolver"
-        .width = lblDesc.width
-        .top = Below(lblLink, False)
+    With cmdSettings
+        .Caption = "Update Settings..."
+        .width = (lblDesc.width - FormSpacing) / 2
         .left = lblDesc.left
+        .top = Below(lblLink)
     End With
     
     With cmdOk
         .Caption = "OK"
-        .width = FormButtonWidth
-        .left = (Me.width - .width) / 2
-        .top = Below(chkKeepChecking)
+        .left = RightOf(cmdSettings)
+        .width = cmdSettings.width
+        .top = cmdSettings.top
     End With
         
     Me.height = FormHeight(cmdOk)
