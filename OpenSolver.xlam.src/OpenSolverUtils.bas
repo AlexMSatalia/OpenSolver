@@ -951,5 +951,9 @@ Public Function MsgBoxEx(ByVal prompt As String, _
     End With
 End Function
 
-
+Function ShowEscapeCancelMessage() As VbMsgBoxResult
+    ShowEscapeCancelMessage = MsgBox("You have pressed the Escape key. Do you wish to cancel?", _
+                                     vbCritical + vbYesNo + vbDefaultButton1, _
+                                     "OpenSolver - User Interrupt Occured...")
+End Function
 

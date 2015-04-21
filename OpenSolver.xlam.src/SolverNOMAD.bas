@@ -251,9 +251,7 @@ End Function
 
 Function NOMAD_ShowCancelDialog() As Variant
           Dim Response As VbMsgBoxResult
-          Response = MsgBox("You have pressed the Escape key. Do you wish to cancel?", _
-                            vbCritical + vbYesNo + vbDefaultButton1, _
-                            "OpenSolver - User Interrupt Occured...")
+          Response = ShowEscapeCancelMessage()
           NOMAD_ShowCancelDialog = (Response = vbYes)
 End Function
 
