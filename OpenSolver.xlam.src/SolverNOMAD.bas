@@ -4,6 +4,8 @@ Option Explicit
 Public OS As COpenSolver
 Dim IterationCount As Long
 
+Dim numVars As Long
+
 ' NOMAD functions
 ' Do not put error handling in these functions, there is already error-handling in the NOMAD DLL
 
@@ -135,92 +137,92 @@ Function NOMAD_GetNumConstraints() As Variant
 End Function
 
 Function NOMAD_GetVariableData() As Variant
-7132      Dim numVars As Double
 2547      numVars = NOMAD_GetNumVariables
 
           Dim X() As Double
 2548      ReDim X(0 To 4 * numVars - 1)
 
-          ' Get bounds
-          Dim i As Long, j As Long
-2549      For i = 0 To numVars - 1
-2550          If OS.AssumeNonNegativeVars Then
-2551              X(2 * i) = 0
-2552          Else
-2553              X(2 * i) = -10000000000000#
-2554          End If
-2555          X(2 * i + 1) = 10000000000000#
-2556      Next i
+          Dim DefaultLowerBound As Double, DefaultUpperBound As Double
+          DefaultLowerBound = IIf(OS.AssumeNonNegativeVars, 0, -10000000000000#)
+          DefaultUpperBound = 10000000000000#
 
-          ' Apply bounds
-          Dim var As Long, c As Range
-          var = 0
-2562      For Each c In OS.AdjustableCells
-2563          If TestKeyExists(OS.VarLowerBounds, c.Address) Then
-2564              X(2 * var) = OS.VarLowerBounds(c.Address)
-2565          End If
-              If TestKeyExists(OS.VarUpperBounds, c.Address) Then
-                  X(2 * var + 1) = OS.VarUpperBounds(c.Address)
+          Dim i As Long, c As Range
+          i = 0
+          For Each c In OS.AdjustableCells
+              ' Set the default bounds
+              SetLowerBound X, i, DefaultLowerBound
+              SetUpperBound X, i, DefaultUpperBound
+              
+              ' Set any specified bounds (overwriting defaults)
+              If TestKeyExists(OS.VarLowerBounds, c.Address) Then
+                  SetLowerBound X, i, OS.VarLowerBounds(c.Address)
               End If
-              var = var + 1
-2566      Next c
-
-          'Get the starting point
-          'Takes the points on the sheet and forces them between the bounds
-          Dim CellValue As Double
-          j = 0
-2567      For Each c In OS.AdjustableCells
-              CellValue = c.value
-2568          If CellValue < X(2 * j) Then
-2569              X(j + 2 * numVars) = X(2 * j)
-2570          ElseIf CellValue > X(2 * j + 1) Then
-2571              X(j + 2 * numVars) = X(2 * j + 1)
-2572          Else
-2573              X(j + 2 * numVars) = CellValue
-2574          End If
-              j = j + 1
-2575      Next c
+              If TestKeyExists(OS.VarUpperBounds, c.Address) Then
+                  SetUpperBound X, i, OS.VarUpperBounds(c.Address)
+              End If
+              
+              Dim LowerBound As Double, UpperBound As Double
+              LowerBound = GetLowerBound(X, i)
+              UpperBound = GetUpperBound(X, i)
           
-          'Get the variable type(real, int or bin)
-2576      For i = 1 To numVars
-          'initialise all variables as continuous
-2577          X(i - 1 + 3 * numVars) = 1
-2578      Next i
-          Dim counter As Long, types As Variant
-2579      counter = 2
-2580      For Each types In Array(OS.IntegerCellsRange, OS.BinaryCellsRange)
-2581          If Not types Is Nothing Then
-2582              For Each c In types
-2583                  For i = 1 To numVars
-2584                      If OS.VarNames(i) = c.Address(RowAbsolute:=False, ColumnAbsolute:=False) Then
-2585                          X(i - 1 + 3 * numVars) = counter
-2586                          If Not OS.SolveRelaxation Then
-                                  'Make bounds on integer and binary constraints integer
-2587                              If X(2 * i - 2) > 0 Then
-2588                                  X(2 * i - 2) = Application.WorksheetFunction.RoundUp(X(2 * i - 2), 0)
-2589                              Else
-2590                                  X(2 * i - 2) = Application.WorksheetFunction.RoundDown(X(2 * i - 2), 0)
-2591                              End If
-2592                              If X(2 * i - 1) > 0 Then
-2593                                  X(2 * i - 1) = Application.WorksheetFunction.RoundDown(X(2 * i - 1), 0)
-2594                              Else
-2595                                  X(2 * i - 1) = Application.WorksheetFunction.RoundUp(X(2 * i - 1), 0)
-2596                              End If
-                                  'Make starting positions on integer and binary constraints integer
-2597                              If X(i - 1 + 2 * numVars) < X(2 * i - 2) Then
-2598                                  X(i - 1 + 2 * numVars) = X(2 * i - 2)
-2599                              ElseIf X(i - 1 + 2 * numVars) > X(2 * i - 1) Then
-2600                                  X(i - 1 + 2 * numVars) = X(2 * i - 1)
-2601                              Else
-2602                                  X(i - 1 + 2 * numVars) = Round(X(i - 1 + 2 * numVars))
-2603                              End If
-2604                          End If
-2605                      End If
-2606                  Next i
-2607              Next c
-2608          End If
-2609          counter = counter + 1
-2610      Next types
+              ' Get the starting point
+              SetStartingPoint X, i, c.value
+          
+              ' Initialise all variables as continuous
+              SetVarType X, i, 1
+              
+              ' Get the variable type (int or bin)
+2584          If OS.SolveRelaxation Then
+                  ' Set Binary vars to have bounds of 0 and 1 and start at 0
+                  If TestIntersect(c, OS.BinaryCellsRange) Then
+                      SetLowerBound X, i, 0
+                      SetUpperBound X, i, 1
+                      SetStartingPoint X, i, 0
+                  End If
+              Else
+                  Dim Integral As Boolean
+                  Integral = True
+                  If TestIntersect(c, OS.BinaryCellsRange) Then
+                      SetVarType X, i, 3
+                  ElseIf TestIntersect(c, OS.IntegerCellsRange) Then
+                      SetVarType X, i, 2
+                  Else
+                      Integral = False
+                  End If
+                  
+                  If Integral Then
+                      'Make bounds on integer and binary constraints integer
+2587                  If LowerBound > 0 Then
+2588                      LowerBound = Application.WorksheetFunction.RoundUp(LowerBound, 0)
+2589                  Else
+2590                      LowerBound = Application.WorksheetFunction.RoundDown(LowerBound, 0)
+2591                  End If
+                      SetLowerBound X, i, LowerBound
+
+2592                  If UpperBound > 0 Then
+2593                      UpperBound = Application.WorksheetFunction.RoundDown(UpperBound, 0)
+2594                  Else
+2595                      UpperBound = Application.WorksheetFunction.RoundUp(UpperBound, 0)
+2596                  End If
+                      SetUpperBound X, i, UpperBound
+                      
+                      'Make starting positions on integer and binary constraints integer
+                      SetStartingPoint X, i, Round(GetStartingPoint(X, i))
+                  End If
+              End If
+              
+              ' Force starting point between the bounds
+              Dim StartingPoint As Double
+              StartingPoint = GetStartingPoint(X, i)
+              If StartingPoint < LowerBound Then
+                  StartingPoint = LowerBound
+              ElseIf StartingPoint > UpperBound Then
+                  StartingPoint = UpperBound
+              End If
+              SetStartingPoint X, i, StartingPoint
+              
+              i = i + 1
+          Next c
           
 2611      NOMAD_GetVariableData = X
 End Function
@@ -303,3 +305,36 @@ Private Function DifferenceOrError(Value1 As Variant, Value2 As Variant) As Vari
 ErrorHandler:
                 DifferenceOrError = Value1
 End Function
+
+Private Function GetLowerBound(X As Variant, i As Long) As Double
+    GetLowerBound = X(i * 2)
+End Function
+
+Private Sub SetLowerBound(ByRef X As Variant, i As Long, value As Double)
+    X(i * 2) = value
+End Sub
+
+Private Function GetUpperBound(X As Variant, i As Long) As Double
+    GetUpperBound = X(i * 2 + 1)
+End Function
+
+Private Sub SetUpperBound(ByRef X As Variant, i As Long, value As Double)
+    X(i * 2 + 1) = value
+End Sub
+
+Private Function GetStartingPoint(X As Variant, i As Long) As Double
+    GetStartingPoint = X(numVars * 2 + i)
+End Function
+
+Private Sub SetStartingPoint(X As Variant, i As Long, value As Double)
+    X(numVars * 2 + i) = value
+End Sub
+
+Private Function GetVarType(X As Variant, i As Long) As Double
+    GetVarType = X(numVars * 3 + i)
+End Function
+
+Private Sub SetVarType(X As Variant, i As Long, value As Double)
+    X(numVars * 3 + i) = value
+End Sub
+

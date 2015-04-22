@@ -221,7 +221,11 @@ ErrorHandler:
 End Function
 
 Function TestIntersect(ByRef R1 As Range, ByRef R2 As Range) As Boolean
-783       TestIntersect = Not (Intersect(R1, R2) Is Nothing)
+          If R1 Is Nothing Or R2 Is Nothing Then
+              TestIntersect = False
+          Else
+783           TestIntersect = Not (Intersect(R1, R2) Is Nothing)
+          End If
 End Function
 
 Function CheckRangeContainsNoAmbiguousMergedCells(r As Range, BadCell As Range) As Boolean
