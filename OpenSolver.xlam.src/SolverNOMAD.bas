@@ -169,7 +169,7 @@ Function NOMAD_GetVariableData() As Variant
               SetStartingPoint X, i, c.value
           
               ' Initialise all variables as continuous
-              SetVarType X, i, 1
+              SetVarType X, i, VariableType.VarContinuous
               
               ' Get the variable type (int or bin)
 2584          If OS.SolveRelaxation Then
@@ -183,9 +183,9 @@ Function NOMAD_GetVariableData() As Variant
                   Dim Integral As Boolean
                   Integral = True
                   If TestIntersect(c, OS.BinaryCellsRange) Then
-                      SetVarType X, i, 3
+                      SetVarType X, i, VariableType.VarBinary
                   ElseIf TestIntersect(c, OS.IntegerCellsRange) Then
-                      SetVarType X, i, 2
+                      SetVarType X, i, VariableType.VarInteger
                   Else
                       Integral = False
                   End If
