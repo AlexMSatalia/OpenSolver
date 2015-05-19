@@ -257,6 +257,10 @@ Function NOMAD_ShowCancelDialog() As Variant
           NOMAD_ShowCancelDialog = (Response = vbYes)
 End Function
 
+Function NOMAD_GetLogFilePath() As Variant
+          NOMAD_GetLogFilePath = ConvertHfsPathToPosix(OS.LogFilePathName)
+End Function
+
 Private Sub SetConstraintValue(ByRef ConstraintValues As Variant, ByRef k As Long, RHSValue As Variant, LHSValue As Variant, RelationType As Long)
                 ' Sets the constraint value as appropriate for the given constraint (eg. LHS - RHS for <=) or returns
                 ' "NaN" if either side contains an error (eg. #DIV/0!)
