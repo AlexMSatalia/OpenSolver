@@ -258,7 +258,11 @@ Function NOMAD_ShowCancelDialog() As Variant
 End Function
 
 Function NOMAD_GetLogFilePath() As Variant
-          NOMAD_GetLogFilePath = ConvertHfsPathToPosix(OS.LogFilePathName)
+          Dim X() As Variant
+          ReDim X(1 To 1, 1 To 2)
+          X(1, 1) = ConvertHfsPathToPosix(OS.LogFilePathName)
+          X(1, 2) = Len(X(1, 1))
+          NOMAD_GetLogFilePath = X
 End Function
 
 Private Sub SetConstraintValue(ByRef ConstraintValues As Variant, ByRef k As Long, RHSValue As Variant, LHSValue As Variant, RelationType As Long)
