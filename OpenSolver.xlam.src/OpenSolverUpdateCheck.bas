@@ -309,3 +309,10 @@ Private Function MakeGuid() As String
         MakeGuid = Mid$(CreateObject("Scriptlet.TypeLib").Guid, 2, 36)
     #End If
 End Function
+
+Private Sub ResetAllUpdateSettings()
+    DeleteBetaUpdateSetting
+    DeleteUpdateSetting
+    DeleteLastCheckTime
+    HasCheckedForUpdate = False
+End Sub
