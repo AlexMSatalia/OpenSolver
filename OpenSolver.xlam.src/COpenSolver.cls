@@ -656,9 +656,12 @@ Sub BuildModelFromSolverData(Optional LinearityCheckOffset As Double = 0, _
 1004      If SolverLinearity(Solver) = Linear Then
 1005          AdjustableCells.Value2 = LinearityCheckOffset
           Else
-              For Each AdjCell In AdjustableCells
-                  AdjCell.Value2 = AdjCell.Value2
-              Next AdjCell
+              ' We can't do AdjustableCells.Value2 = AdjustableCells.Value2 as this
+              ' just sets the values from the first area in all areas
+              Dim AdjCellArea As Range
+              For Each AdjCellArea In AdjustableCells.Areas
+                  AdjCellArea.Value2 = AdjCellArea.Value2
+              Next AdjCellArea
 1006      End If
           
           '--------------------------------------------------------------------------
