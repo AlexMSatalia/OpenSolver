@@ -166,7 +166,7 @@ Private Function ShellScriptPath() As String
         ' The mac gurobi.sh script, unlike windows, doesn't have a check for a gurobi install, thus it doesn't do anything for us here and is safe to skip.
         ' We can just run python by itself. We need to use the default system python (pre-installed on mac) and not any other version (e.g. a version from homebrew)
         ' We also need to launch it without going via /Volumes/.../
-        ShellScriptPath = ConvertHfsPathToPosix(JoinPaths(GetRootDriveName(), "usr", "bin", "python"))
+        ShellScriptPath = JoinPaths(GetRootDriveName(), "usr", "bin", "python")
     #Else
         ShellScriptPath = JoinPaths(GetBinDir(), pShellScript)
     #End If

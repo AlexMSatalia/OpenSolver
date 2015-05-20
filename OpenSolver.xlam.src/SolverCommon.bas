@@ -280,7 +280,7 @@ Sub RunLocalSolver(s As COpenSolver, ExternalCommand As String)
                     s.SolverParameters.Item(s.Solver.ToleranceName) * 100 & "% tolerance.", True
                           
     Dim exeResult As Long
-    RunExternalCommand ExternalCommand, s.LogFilePathName, IIf(s.ShowIterationResults And Not s.MinimiseUserInteraction, WindowStyleType.Normal, WindowStyleType.Hide), True, exeResult
+    RunExternalCommand MakePathSafe(ExternalCommand), MakePathSafe(s.LogFilePathName), IIf(s.ShowIterationResults And Not s.MinimiseUserInteraction, WindowStyleType.Normal, WindowStyleType.Hide), True, exeResult
     
     ' Check log for any errors which can offer more descriptive messages than exeresult <> 0
     s.Solver.CheckLog s
