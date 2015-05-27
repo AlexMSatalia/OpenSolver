@@ -313,11 +313,11 @@ Function LibDir(Optional Bitness As String) As String
 End Function
 
 Function SolverLibPath(LocalLibSolver As ISolverLocalLib, Optional errorString As String, Optional Bitness As String) As String
-    If Not GetExistingFilePathName(LibDir(Bitness), LocalLibSolver.LibName, SolverLibPath) Then
+    If Not GetExistingFilePathName(LibDir(Bitness), LocalLibSolver.LibBinary, SolverLibPath) Then
         SolverLibPath = ""
         Dim Solver As ISolver
         Set Solver = LocalLibSolver
-        errorString = "Unable to find " & Solver.Name & " ('" & LocalLibSolver.LibName & "'). Folders searched:" & _
+        errorString = "Unable to find " & Solver.Name & " ('" & LocalLibSolver.LibBinary & "'). Folders searched:" & _
                       vbNewLine & MakePathSafe(LibDir())
     End If
 End Function

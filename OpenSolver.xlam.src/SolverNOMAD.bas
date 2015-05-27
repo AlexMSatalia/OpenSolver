@@ -6,6 +6,17 @@ Dim IterationCount As Long
 
 Dim numVars As Long
 
+'NOMAD return status codes
+Private Enum NomadResult
+    UserCancelled = -3
+    Optimal = 0
+    ErrorOccured = 1
+    SolveStoppedIter = 2
+    SolveStoppedTime = 3
+    Infeasible = 4
+    SolveStoppedNoSolution = 10
+End Enum
+
 ' NOMAD functions
 ' Do not put error handling in these functions, there is already error-handling in the NOMAD DLL
 
@@ -344,5 +355,103 @@ End Function
 
 Private Sub SetVarType(X As Variant, i As Long, value As Double)
     X(numVars * 3 + i) = value
+End Sub
+
+Public Sub NOMAD_LoadResult(NomadRetVal As Long)
+    'Catch any errors that occured while Nomad was solving
+    Select Case NomadRetVal
+    Case NomadResult.ErrorOccured
+        OS.SolveStatus = OpenSolverResult.ErrorOccurred
+
+        ' Check logs for more info and raise an error if we find anything specific
+        CheckLog OS
+        
+        Err.Raise Number:=OpenSolver_NomadError, Description:="There was an error while Nomad was solving. No solution has been loaded into the sheet."
+    Case NomadResult.SolveStoppedIter
+        OS.SolveStatus = OpenSolverResult.LimitedSubOptimal
+        OS.SolveStatusString = "NOMAD reached the maximum number of iterations and returned the best feasible solution it found. " & _
+                              "This solution is not guaranteed to be an optimal solution." & vbNewLine & vbNewLine & _
+                              "You can increase the maximum time and iterations under the options in the model dialogue or check whether your model is feasible."
+        OS.SolutionWasLoaded = True
+    Case NomadResult.SolveStoppedTime
+        OS.SolveStatusString = "NOMAD reached the maximum time and returned the best feasible solution it found. " & _
+                              "This solution is not guaranteed to be an optimal solution." & vbNewLine & vbNewLine & _
+                              "You can increase the maximum time and iterations under the options in the model dialogue or check whether your model is feasible."
+        OS.SolveStatus = OpenSolverResult.LimitedSubOptimal
+        OS.SolutionWasLoaded = True
+    Case NomadResult.Infeasible
+        OS.SolveStatusString = "Nomad reached the maximum time or number of iterations without finding a feasible solution. " & _
+                              "The best infeasible solution has been returned to the sheet." & vbNewLine & vbNewLine & _
+                              "You can increase the maximum time and iterations under the options in the model dialogue or check whether your model is feasible."
+        OS.SolveStatus = OpenSolverResult.Infeasible
+        OS.SolutionWasLoaded = True
+    Case NomadResult.SolveStoppedNoSolution
+        OS.SolveStatusString = "Nomad could not find a feasible solution. " & _
+                              "The best infeasible solution has been returned to the sheet." & vbNewLine & vbNewLine & _
+                              "Try resolving at a different start point or check whether your model is feasible or relax some of your constraints."
+        OS.SolveStatus = OpenSolverResult.Infeasible
+        OS.SolutionWasLoaded = True
+    Case NomadResult.UserCancelled
+        Err.Raise OpenSolver_UserCancelledError, "Running NOMAD", "Model solve cancelled by user."
+    Case NomadResult.Optimal
+        OS.SolveStatus = OpenSolverResult.Optimal
+        OS.SolveStatusString = "Optimal"
+    End Select
+
+    #If Mac Then
+        OS.ReportAnySolutionSubOptimality
+        Set OS = Nothing
+        Application.StatusBar = False
+    #End If
+End Sub
+
+
+Sub CheckLog(s As COpenSolver)
+' If NOMAD encounters an error, we dump the exception to the log file. We can use this to deduce what went wrong
+    Dim RaiseError As Boolean
+    RaiseError = False
+    On Error GoTo ErrorHandler
+    
+    If Not FileOrDirExists(s.LogFilePathName) Then
+        Err.Raise Number:=OpenSolver_SolveError, Description:="The solver did not create a log file. No new solution is available."
+    End If
+    
+    Dim message As String
+    Open s.LogFilePathName For Input As #3
+        message = Input$(LOF(3), 3)
+    Close #3
+    
+    If Not InStrText(message, "NOMAD") Then GoTo ExitSub
+
+    If InStrText(message, "invalid parameter: DIMENSION") Then
+        Dim MaxSize As Long, Position As Long
+        Position = InStrRev(message, " ")
+        MaxSize = CInt(Mid(message, Position + 1, InStrRev(message, ")") - Position - 1))
+        Err.Raise OpenSolver_NomadError, Description:="This model contains too many variables for NOMAD to solve. NOMAD is only capable of solving models with up to " & MaxSize & " variables."
+    End If
+    
+    Dim Key As Variant
+    For Each Key In s.SolverParameters.Keys()
+        If InStrText(message, "invalid parameter: " & UCase(Key) & " - unknown") Then
+            Err.Raise OpenSolver_NomadError, Description:="The parameter '" & UCase(Key) & "' was not understood by NOMAD. Check that you have specified a valid parameter name, or consult the NOMAD documentation for more information."
+        End If
+        If InStrText(message, "invalid parameter: " & UCase(Key)) Then
+            Err.Raise OpenSolver_NomadError, Description:="The value of the parameter '" & UCase(Key) & "' supplied to NOMAD was invalid. Check that you have specified a valid value for this parameter, or consult the NOMAD documentation for more information."
+        End If
+    Next Key
+        
+    If InStrText(message, "invalid parameter") Then
+        Err.Raise OpenSolver_NomadError, Description:="One of the parameters supplied to NOMAD was invalid. This usually happens if the precision is too large. Try adjusting the values in the Solve Options dialog box."
+    End If
+
+ExitSub:
+    Close #3
+    If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+    Exit Sub
+
+ErrorHandler:
+    If Not ReportError("CSolverNomad", "CheckLog") Then Resume
+    RaiseError = True
+    GoTo ExitSub
 End Sub
 

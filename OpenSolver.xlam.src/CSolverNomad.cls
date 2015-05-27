@@ -26,18 +26,12 @@ Private Const pTimeLimitName = "MAX_TIME"
 
 Private Const pModelType = OpenSolver_ModelType.None
 
-Private Const pLibName = "OpenSolverNomad.dll"
-
-'NOMAD return status codes
-Private Enum NomadResult
-    UserCancelled = -3
-    Optimal = 0
-    ErrorOccured = 1
-    SolveStoppedIter = 2
-    SolveStoppedTime = 3
-    Infeasible = 4
-    SolveStoppedNoSolution = 10
-End Enum
+Private Const pLibName = "OpenSolverNomad"
+#If Mac Then
+    Private Const pLibBinary = "OpenSolverNomad"
+#Else
+    Private Const pLibBinary = "OpenSolverNomad.dll"
+#End If
 
 ' Don't forget we need to chdir to the directory containing the lib before calling any of the functions
 #If VBA7 Then
@@ -103,7 +97,11 @@ End Sub
 ' ISolverLocal
 
 Private Property Get ISolverLocal_Version() As String
-    ISolverLocal_Version = Version()
+    #If Mac Then
+        ISolverLocal_Version = Version_Mac()
+    #Else
+        ISolverLocal_Version = Version_Win()
+    #End If
 End Property
 
 Private Property Get ISolverLocal_Bitness() As String
@@ -113,15 +111,23 @@ End Property
 ' ISolverLocalLib
 
 Private Function ISolverLocalLib_GetLibPath(Optional errorString As String, Optional Bitness As String) As String
-    ISolverLocalLib_GetLibPath = GetPath(errorString, Bitness)
+    ISolverLocalLib_GetLibPath = SolverLibPath(Me, errorString, Bitness)
 End Function
 
 Private Property Get ISolverLocalLib_LibName() As String
     ISolverLocalLib_LibName = pLibName
 End Property
 
+Private Property Get ISolverLocalLib_LibBinary() As String
+    ISolverLocalLib_LibBinary = pLibBinary
+End Property
+
 Private Property Get ISolverLocalLib_LibVersion() As String
-    ISolverLocalLib_LibVersion = LibVersion()
+    #If Mac Then
+        ISolverLocalLib_LibVersion = LibVersion_Mac()
+    #Else
+        ISolverLocalLib_LibVersion = LibVersion_Win()
+    #End If
 End Property
 
 Private Sub ISolverLocalLib_Solve(s As COpenSolver)
@@ -130,18 +136,9 @@ End Sub
 
 ' Methods
 
-Private Function GetPath(Optional errorString As String, Optional Bitness As String) As String
-    #If Mac Then
-          errorString = "NOMAD for OpenSolver is not currently supported on Mac"
-          GetPath = ""
-    #Else
-          GetPath = SolverLibPath(Me, errorString, Bitness)
-    #End If
-End Function
-
-Private Function Version() As String
+Private Function Version_Win() As String
     If Not SolverIsPresent(Me) Then
-        Version = ""
+        Version_Win = ""
         Exit Function
     End If
     
@@ -160,16 +157,26 @@ Private Function Version() As String
     
     SetCurrentDirectory currentDir
     
-    Version = sNomadVersion
+    Version_Win = sNomadVersion
     Exit Function
 
 ErrorHandler:
-    Version = ""
+    Version_Win = ""
 End Function
 
-Private Function LibVersion() As String
+Private Function Version_Mac() As String
+    Dim SolverPath As String
+    If Not SolverIsPresent(Me, SolverPath) Then
+        Version_Mac = ""
+        Exit Function
+    End If
+    
+    Version_Mac = ReadExternalCommandOutput(MakePathSafe(SolverPath) & " -nv")
+End Function
+
+Private Function LibVersion_Win() As String
     If Not SolverIsPresent(Me) Then
-        LibVersion = ""
+        LibVersion_Win = ""
         Exit Function
     End If
     
@@ -187,7 +194,17 @@ Private Function LibVersion() As String
     
     SetCurrentDirectory currentDir
     
-    LibVersion = sLibVersion
+    LibVersion_Win = sLibVersion
+End Function
+
+Private Function LibVersion_Mac() As String
+    Dim SolverPath As String
+    If Not SolverIsPresent(Me, SolverPath) Then
+        LibVersion_Mac = ""
+        Exit Function
+    End If
+    
+    LibVersion_Mac = ReadExternalCommandOutput(MakePathSafe(SolverPath) & " -v")
 End Function
 
 Private Sub Solve(s As COpenSolver)
@@ -215,55 +232,28 @@ Private Sub Solve(s As COpenSolver)
 
     Set SolverNOMAD.OS = s
     
-    ' We need to call NomadMain directly rather than use Application.Run .
-    ' Using Application.Run causes the API calls inside the DLL to fail on 64 bit Office
-    Dim NomadRetVal As Long
-    NomadRetVal = NomadMain(s.SolveRelaxation)
-    
-    'Catch any errors that occured while Nomad was solving
-    Select Case NomadRetVal
-    Case NomadResult.ErrorOccured
-        s.SolveStatus = OpenSolverResult.ErrorOccurred
-
-        ' Check logs for more info and raise an error if we find anything specific
-        CheckLog s
-        
-        Err.Raise Number:=OpenSolver_NomadError, Description:="There was an error while Nomad was solving. No solution has been loaded into the sheet."
-    Case NomadResult.SolveStoppedIter
-        s.SolveStatus = OpenSolverResult.LimitedSubOptimal
-        s.SolveStatusString = "NOMAD reached the maximum number of iterations and returned the best feasible solution it found. " & _
-                              "This solution is not guaranteed to be an optimal solution." & vbNewLine & vbNewLine & _
-                              "You can increase the maximum time and iterations under the options in the model dialogue or check whether your model is feasible."
-        s.SolutionWasLoaded = True
-    Case NomadResult.SolveStoppedTime
-        s.SolveStatusString = "NOMAD reached the maximum time and returned the best feasible solution it found. " & _
-                              "This solution is not guaranteed to be an optimal solution." & vbNewLine & vbNewLine & _
-                              "You can increase the maximum time and iterations under the options in the model dialogue or check whether your model is feasible."
-        s.SolveStatus = OpenSolverResult.LimitedSubOptimal
-        s.SolutionWasLoaded = True
-    Case NomadResult.Infeasible
-        s.SolveStatusString = "Nomad reached the maximum time or number of iterations without finding a feasible solution. " & _
-                              "The best infeasible solution has been returned to the sheet." & vbNewLine & vbNewLine & _
-                              "You can increase the maximum time and iterations under the options in the model dialogue or check whether your model is feasible."
-        s.SolveStatus = OpenSolverResult.Infeasible
-        s.SolutionWasLoaded = True
-    Case NomadResult.SolveStoppedNoSolution
-        s.SolveStatusString = "Nomad could not find a feasible solution. " & _
-                              "The best infeasible solution has been returned to the sheet." & vbNewLine & vbNewLine & _
-                              "Try resolving at a different start point or check whether your model is feasible or relax some of your constraints."
-        s.SolveStatus = OpenSolverResult.Infeasible
-        s.SolutionWasLoaded = True
-    Case NomadResult.UserCancelled
-        Err.Raise OpenSolver_UserCancelledError, "Running NOMAD", "Model solve cancelled by user."
-    Case NomadResult.Optimal
-        s.SolveStatus = OpenSolverResult.Optimal
-        s.SolveStatusString = "Optimal"
-    End Select
+    #If Mac Then
+        s.SolveStatus = Pending
+        Dim LocalLibSolver As ISolverLocalLib
+        Set LocalLibSolver = Me
+        Shell LocalLibSolver.GetLibPath()
+    #Else
+        ' We need to call NomadMain directly rather than use Application.Run .
+        ' Using Application.Run causes the API calls inside the DLL to fail on 64 bit Office
+        Dim NomadRetVal As Long
+        NomadRetVal = NomadMain(s.SolveRelaxation)
+        NOMAD_LoadResult NomadRetVal
+        s.SolveStatus = OS.SolveStatus
+        s.SolveStatusComment = OS.SolveStatusComment
+    #End If
     
 ExitSub:
-    SetCurrentDirectory currentDir
-    Application.Calculate
-    Set SolverNOMAD.OS = Nothing
+    #If Mac Then
+    #Else
+        SetCurrentDirectory currentDir
+        Application.Calculate
+        Set SolverNOMAD.OS = Nothing
+    #End If
     If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
     Exit Sub
 
@@ -272,54 +262,5 @@ ErrorHandler:
     RaiseError = True
     GoTo ExitSub
 
-End Sub
-
-Private Sub CheckLog(s As COpenSolver)
-' If NOMAD encounters an error, we dump the exception to the log file. We can use this to deduce what went wrong
-    Dim RaiseError As Boolean
-    RaiseError = False
-    On Error GoTo ErrorHandler
-    
-    If Not FileOrDirExists(s.LogFilePathName) Then
-        Err.Raise Number:=OpenSolver_SolveError, Description:="The solver did not create a log file. No new solution is available."
-    End If
-    
-    Dim message As String
-    Open s.LogFilePathName For Input As #3
-        message = Input$(LOF(3), 3)
-    Close #3
-    
-    If Not InStrText(message, "NOMAD") Then GoTo ExitSub
-
-    If InStrText(message, "invalid parameter: DIMENSION") Then
-        Dim MaxSize As Long, Position As Long
-        Position = InStrRev(message, " ")
-        MaxSize = CInt(Mid(message, Position + 1, InStrRev(message, ")") - Position - 1))
-        Err.Raise OpenSolver_NomadError, Description:="This model contains too many variables for NOMAD to solve. NOMAD is only capable of solving models with up to " & MaxSize & " variables."
-    End If
-    
-    Dim Key As Variant
-    For Each Key In s.SolverParameters.Keys()
-        If InStrText(message, "invalid parameter: " & UCase(Key) & " - unknown") Then
-            Err.Raise OpenSolver_NomadError, Description:="The parameter '" & UCase(Key) & "' was not understood by NOMAD. Check that you have specified a valid parameter name, or consult the NOMAD documentation for more information."
-        End If
-        If InStrText(message, "invalid parameter: " & UCase(Key)) Then
-            Err.Raise OpenSolver_NomadError, Description:="The value of the parameter '" & UCase(Key) & "' supplied to NOMAD was invalid. Check that you have specified a valid value for this parameter, or consult the NOMAD documentation for more information."
-        End If
-    Next Key
-        
-    If InStrText(message, "invalid parameter") Then
-        Err.Raise OpenSolver_NomadError, Description:="One of the parameters supplied to NOMAD was invalid. This usually happens if the precision is too large. Try adjusting the values in the Solve Options dialog box."
-    End If
-
-ExitSub:
-    Close #3
-    If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
-    Exit Sub
-
-ErrorHandler:
-    If Not ReportError("CSolverNomad", "CheckLog") Then Resume
-    RaiseError = True
-    GoTo ExitSub
 End Sub
 

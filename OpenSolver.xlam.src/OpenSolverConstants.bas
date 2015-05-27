@@ -31,6 +31,7 @@ Public Const EPSILON = 0.000001
 ' See also OpenSolver.SolveStatusString, which gives a slightly more detailed text summary
 ' and OpenSolver.SolveStatusComment, for any detailed comment on an infeasible problem
 Enum OpenSolverResult
+   Pending = -4  ' Added by us - used for solvers that asynchronously and are yet to run
    AbortedThruUserAction = -3   ' Used to indicate that a non-linearity check was made (losing the solution)
    ErrorOccurred = -2    ' Added by us - used in RunOpenSolver to indicate an error occured and has been reported to the user
    Unsolved = -1        ' Added by us - indicates a model not yet solved

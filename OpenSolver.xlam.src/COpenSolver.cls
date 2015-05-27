@@ -1275,17 +1275,18 @@ End Function
 
 Sub ReportAnySolutionSubOptimality()
           ' Call this after SolveModel to report to the user what happened. A dialog is shown if the optimal result was not found
-          ' We have already raised non-linearity to the user, don't show this again
-1904      If SolveStatus <> OpenSolverResult.Optimal And SolveStatus <> OpenSolver.NotLinear Then
-1905          If SolveStatus = OpenSolverResult.AbortedThruUserAction Then
-                  ' Do nothing; user has already interacted with some dialogs
-1906          Else
+          Select Case SolveStatus
+              Case OpenSolverResult.Optimal                ' We are optimal
+              Case OpenSolverResult.Pending                ' The solve is scheduled
+              Case OpenSolverResult.NotLinear              ' Already shown non-linearity details
+              Case OpenSolverResult.AbortedThruUserAction  ' Already shown escape dialog
+          
+              Case Else
 1909              MsgBox "OpenSolver could not find an optimal solution, and reported:" & vbCrLf & _
                          SolveStatusString & vbCrLf & vbCrLf & _
                          IIf(SolveStatusComment = "", "", SolveStatusComment & vbCrLf & vbCrLf) & _
                          IIf(SolutionWasLoaded, "The solution generated has been loaded into the spreadsheet.", "No solution was available to load into the spreadsheet.")
-1910          End If
-1911      End If
+1910      End Select
 End Sub
 
 Sub ClearQuickSolve()

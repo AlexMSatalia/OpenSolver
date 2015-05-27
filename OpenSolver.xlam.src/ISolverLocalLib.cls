@@ -15,6 +15,9 @@ End Function
 Public Property Get LibName() As String
 End Property
 
+Public Property Get LibBinary() As String
+End Property
+
 Public Property Get LibVersion() As String
 End Property
 
