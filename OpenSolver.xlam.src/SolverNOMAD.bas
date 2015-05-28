@@ -15,6 +15,11 @@ Private Enum NomadResult
     SolveStoppedNoSolution = 10
 End Enum
 
+Private Type VariableData
+    X() As Variant
+    numVars As Long
+End Type
+
 ' NOMAD functions
 ' Do not put error handling in these functions, there is already error-handling in the NOMAD DLL
 
@@ -146,56 +151,55 @@ Function NOMAD_GetNumConstraints() As Variant
 End Function
 
 Function NOMAD_GetVariableData() As Variant
-          Dim numVars As Long
-2547      numVars = NOMAD_GetNumVariables
+          Dim data As VariableData
+2547      data.numVars = NOMAD_GetNumVariables
 
-          Dim X() As Double
-2548      ReDim X(0 To 4 * numVars - 1)
+2548      ReDim data.X(1 To 4 * data.numVars)
 
           Dim DefaultLowerBound As Double, DefaultUpperBound As Double
           DefaultLowerBound = IIf(OS.AssumeNonNegativeVars, 0, -10000000000000#)
           DefaultUpperBound = 10000000000000#
 
           Dim i As Long, c As Range
-          i = 0
+          i = 1
           For Each c In OS.AdjustableCells
               ' Set the default bounds
-              SetLowerBound X, i, DefaultLowerBound
-              SetUpperBound X, i, DefaultUpperBound
+              SetLowerBound data, i, DefaultLowerBound
+              SetUpperBound data, i, DefaultUpperBound
               
               ' Set any specified bounds (overwriting defaults)
               If TestKeyExists(OS.VarLowerBounds, c.Address) Then
-                  SetLowerBound X, i, OS.VarLowerBounds(c.Address)
+                  SetLowerBound data, i, OS.VarLowerBounds(c.Address)
               End If
               If TestKeyExists(OS.VarUpperBounds, c.Address) Then
-                  SetUpperBound X, i, OS.VarUpperBounds(c.Address)
+                  SetUpperBound data, i, OS.VarUpperBounds(c.Address)
               End If
               
               Dim LowerBound As Double, UpperBound As Double
-              LowerBound = GetLowerBound(X, i)
-              UpperBound = GetUpperBound(X, i)
+              LowerBound = GetLowerBound(data, i)
+              UpperBound = GetUpperBound(data, i)
           
               ' Get the starting point
-              SetStartingPoint X, i, c.value, numVars
+              SetStartingPoint data, i, c.value
           
               ' Initialise all variables as continuous
-              SetVarType X, i, VariableType.VarContinuous, numVars
+              SetVarType data, i, VariableType.VarContinuous
               
               ' Get the variable type (int or bin)
 2584          If OS.SolveRelaxation Then
                   ' Set Binary vars to have bounds of 0 and 1 and start at 0
                   If TestIntersect(c, OS.BinaryCellsRange) Then
-                      SetLowerBound X, i, 0
-                      SetUpperBound X, i, 1
-                      SetStartingPoint X, i, 0, numVars
+                      SetLowerBound data, i, 0
+                      SetUpperBound data, i, 1
+                      SetStartingPoint data, i, 0
                   End If
               Else
                   Dim Integral As Boolean
                   Integral = True
                   If TestIntersect(c, OS.BinaryCellsRange) Then
-                      SetVarType X, i, VariableType.VarBinary, numVars
+                      SetVarType data, i, VariableType.VarBinary
                   ElseIf TestIntersect(c, OS.IntegerCellsRange) Then
-                      SetVarType X, i, VariableType.VarInteger, numVars
+                      SetVarType data, i, VariableType.VarInteger
                   Else
                       Integral = False
                   End If
@@ -207,34 +211,34 @@ Function NOMAD_GetVariableData() As Variant
 2589                  Else
 2590                      LowerBound = Application.WorksheetFunction.RoundDown(LowerBound, 0)
 2591                  End If
-                      SetLowerBound X, i, LowerBound
+                      SetLowerBound data, i, LowerBound
 
 2592                  If UpperBound > 0 Then
 2593                      UpperBound = Application.WorksheetFunction.RoundDown(UpperBound, 0)
 2594                  Else
 2595                      UpperBound = Application.WorksheetFunction.RoundUp(UpperBound, 0)
 2596                  End If
-                      SetUpperBound X, i, UpperBound
+                      SetUpperBound data, i, UpperBound
                       
                       'Make starting positions on integer and binary constraints integer
-                      SetStartingPoint X, i, Round(GetStartingPoint(X, i, numVars)), numVars
+                      SetStartingPoint data, i, Round(GetStartingPoint(data, i))
                   End If
               End If
               
               ' Force starting point between the bounds
               Dim StartingPoint As Double
-              StartingPoint = GetStartingPoint(X, i, numVars)
+              StartingPoint = GetStartingPoint(data, i)
               If StartingPoint < LowerBound Then
                   StartingPoint = LowerBound
               ElseIf StartingPoint > UpperBound Then
                   StartingPoint = UpperBound
               End If
-              SetStartingPoint X, i, StartingPoint, numVars
+              SetStartingPoint data, i, StartingPoint
               
               i = i + 1
           Next c
           
-2611      NOMAD_GetVariableData = X
+2611      NOMAD_GetVariableData = data.X
 End Function
 
 Function NOMAD_GetOptionData() As Variant
@@ -324,36 +328,36 @@ ErrorHandler:
                 DifferenceOrError = Value1
 End Function
 
-Private Function GetLowerBound(X As Variant, i As Long) As Double
-    GetLowerBound = X(i * 2)
+Private Function GetLowerBound(data As VariableData, i As Long) As Double
+    GetLowerBound = data.X(i)
 End Function
 
-Private Sub SetLowerBound(ByRef X As Variant, i As Long, value As Double)
-    X(i * 2) = value
+Private Sub SetLowerBound(ByRef data As VariableData, i As Long, value As Double)
+    data.X(i) = value
 End Sub
 
-Private Function GetUpperBound(X As Variant, i As Long) As Double
-    GetUpperBound = X(i * 2 + 1)
+Private Function GetUpperBound(data As VariableData, i As Long) As Double
+    GetUpperBound = data.X(data.numVars + i)
 End Function
 
-Private Sub SetUpperBound(ByRef X As Variant, i As Long, value As Double)
-    X(i * 2 + 1) = value
+Private Sub SetUpperBound(ByRef data As VariableData, i As Long, value As Double)
+    data.X(data.numVars + i) = value
 End Sub
 
-Private Function GetStartingPoint(X As Variant, i As Long, numVars As Long) As Double
-    GetStartingPoint = X(numVars * 2 + i)
+Private Function GetStartingPoint(data As VariableData, i As Long) As Double
+    GetStartingPoint = data.X(2 * data.numVars + i)
 End Function
 
-Private Sub SetStartingPoint(X As Variant, i As Long, value As Double, numVars As Long)
-    X(numVars * 2 + i) = value
+Private Sub SetStartingPoint(ByRef data As VariableData, i As Long, value As Double)
+    data.X(2 * data.numVars + i) = value
 End Sub
 
-Private Function GetVarType(X As Variant, i As Long, numVars As Long) As Double
-    GetVarType = X(numVars * 3 + i)
+Private Function GetVarType(data As VariableData, i As Long) As Double
+    GetVarType = data.X(3 * data.numVars + i)
 End Function
 
-Private Sub SetVarType(X As Variant, i As Long, value As Double, numVars As Long)
-    X(numVars * 3 + i) = value
+Private Sub SetVarType(ByRef data As VariableData, i As Long, value As Double)
+    data.X(3 * data.numVars + i) = value
 End Sub
 
 Public Sub NOMAD_LoadResult(NomadRetVal As Long)
