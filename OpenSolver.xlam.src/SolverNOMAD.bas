@@ -4,8 +4,6 @@ Option Explicit
 Public OS As COpenSolver
 Dim IterationCount As Long
 
-Dim numVars As Long
-
 'NOMAD return status codes
 Private Enum NomadResult
     UserCancelled = -3
@@ -148,6 +146,7 @@ Function NOMAD_GetNumConstraints() As Variant
 End Function
 
 Function NOMAD_GetVariableData() As Variant
+          Dim numVars As Long
 2547      numVars = NOMAD_GetNumVariables
 
           Dim X() As Double
@@ -177,10 +176,10 @@ Function NOMAD_GetVariableData() As Variant
               UpperBound = GetUpperBound(X, i)
           
               ' Get the starting point
-              SetStartingPoint X, i, c.value
+              SetStartingPoint X, i, c.value, numVars
           
               ' Initialise all variables as continuous
-              SetVarType X, i, VariableType.VarContinuous
+              SetVarType X, i, VariableType.VarContinuous, numVars
               
               ' Get the variable type (int or bin)
 2584          If OS.SolveRelaxation Then
@@ -188,15 +187,15 @@ Function NOMAD_GetVariableData() As Variant
                   If TestIntersect(c, OS.BinaryCellsRange) Then
                       SetLowerBound X, i, 0
                       SetUpperBound X, i, 1
-                      SetStartingPoint X, i, 0
+                      SetStartingPoint X, i, 0, numVars
                   End If
               Else
                   Dim Integral As Boolean
                   Integral = True
                   If TestIntersect(c, OS.BinaryCellsRange) Then
-                      SetVarType X, i, VariableType.VarBinary
+                      SetVarType X, i, VariableType.VarBinary, numVars
                   ElseIf TestIntersect(c, OS.IntegerCellsRange) Then
-                      SetVarType X, i, VariableType.VarInteger
+                      SetVarType X, i, VariableType.VarInteger, numVars
                   Else
                       Integral = False
                   End If
@@ -218,19 +217,19 @@ Function NOMAD_GetVariableData() As Variant
                       SetUpperBound X, i, UpperBound
                       
                       'Make starting positions on integer and binary constraints integer
-                      SetStartingPoint X, i, Round(GetStartingPoint(X, i))
+                      SetStartingPoint X, i, Round(GetStartingPoint(X, i, numVars)), numVars
                   End If
               End If
               
               ' Force starting point between the bounds
               Dim StartingPoint As Double
-              StartingPoint = GetStartingPoint(X, i)
+              StartingPoint = GetStartingPoint(X, i, numVars)
               If StartingPoint < LowerBound Then
                   StartingPoint = LowerBound
               ElseIf StartingPoint > UpperBound Then
                   StartingPoint = UpperBound
               End If
-              SetStartingPoint X, i, StartingPoint
+              SetStartingPoint X, i, StartingPoint, numVars
               
               i = i + 1
           Next c
@@ -341,19 +340,19 @@ Private Sub SetUpperBound(ByRef X As Variant, i As Long, value As Double)
     X(i * 2 + 1) = value
 End Sub
 
-Private Function GetStartingPoint(X As Variant, i As Long) As Double
+Private Function GetStartingPoint(X As Variant, i As Long, numVars As Long) As Double
     GetStartingPoint = X(numVars * 2 + i)
 End Function
 
-Private Sub SetStartingPoint(X As Variant, i As Long, value As Double)
+Private Sub SetStartingPoint(X As Variant, i As Long, value As Double, numVars As Long)
     X(numVars * 2 + i) = value
 End Sub
 
-Private Function GetVarType(X As Variant, i As Long) As Double
+Private Function GetVarType(X As Variant, i As Long, numVars As Long) As Double
     GetVarType = X(numVars * 3 + i)
 End Function
 
-Private Sub SetVarType(X As Variant, i As Long, value As Double)
+Private Sub SetVarType(X As Variant, i As Long, value As Double, numVars As Long)
     X(numVars * 3 + i) = value
 End Sub
 
