@@ -79,6 +79,8 @@ Function AnalyseParameters(OpenSolver As COpenSolver, sheet As Worksheet, _
           
           ' Look at how the LHSRange and RHSRange values now change as we perturb the parameters, and hence deduce how the OpenSolver model's RHS values alter
 2641      Application.Calculation = xlCalculationManual
+          Dim ScreenStatus As Boolean
+          ScreenStatus = Application.ScreenUpdating
 2642      Application.ScreenUpdating = False
           
           Dim param As Long, row As Long, NonZeros As Long, constraint As Long
@@ -149,7 +151,7 @@ Function AnalyseParameters(OpenSolver As COpenSolver, sheet As Worksheet, _
           
 ExitFunction:
 2704      Application.StatusBar = False ' Resume normal status bar behaviour
-2705      Application.ScreenUpdating = True
+2705      Application.ScreenUpdating = ScreenStatus
 2706      Application.Calculation = oldCalculationMode
           If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
           Exit Function

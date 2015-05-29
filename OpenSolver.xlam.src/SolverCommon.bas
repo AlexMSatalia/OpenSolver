@@ -30,6 +30,10 @@ Sub SolveModel(s As COpenSolver, ShouldSolveRelaxation As Boolean, ShouldMinimis
     oldCalculationMode = Application.Calculation
     Application.Calculation = xlCalculationManual
     
+    Dim ScreenStatus As Boolean
+    ScreenStatus = Application.ScreenUpdating
+    Application.ScreenUpdating = False
+    
     If s.ModelStatus <> Built Then
         Err.Raise Number:=OpenSolver_SolveError, Description:="The model cannot be solved as it has not yet been built."
     End If
@@ -125,7 +129,7 @@ Sub SolveModel(s As COpenSolver, ShouldSolveRelaxation As Boolean, ShouldMinimis
 ExitSub:
     Application.Cursor = xlDefault
     Application.StatusBar = False ' Resume normal status bar behaviour
-    Application.ScreenUpdating = True
+    Application.ScreenUpdating = ScreenStatus
     Application.Calculation = oldCalculationMode
     Application.Iteration = oldIterationMode
     Application.Calculate

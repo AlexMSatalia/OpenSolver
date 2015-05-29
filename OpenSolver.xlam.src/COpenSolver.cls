@@ -599,6 +599,8 @@ Sub BuildModelFromSolverData(Optional LinearityCheckOffset As Double = 0, _
           Dim oldCalculationMode As Long
 969       oldCalculationMode = Application.Calculation
 970       Application.Calculation = xlCalculationManual
+          Dim ScreenStatus As Boolean
+          ScreenStatus = Application.ScreenUpdating
 971       Application.ScreenUpdating = False
 972       Application.Cursor = xlWait
 
@@ -938,7 +940,7 @@ ModelOptions:
 ExitSub:
           Application.Cursor = xlDefault
           Application.StatusBar = False
-          Application.ScreenUpdating = True
+          Application.ScreenUpdating = ScreenStatus
           Application.Calculation = oldCalculationMode
           If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
           Exit Sub

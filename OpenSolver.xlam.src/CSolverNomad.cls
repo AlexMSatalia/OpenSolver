@@ -214,8 +214,7 @@ Private Sub Solve(s As COpenSolver)
 
     Dim ScreenStatus As Boolean
     ScreenStatus = Application.ScreenUpdating
-
-    If Not GetShowSolverProgress() Then Application.ScreenUpdating = False
+    Application.ScreenUpdating = GetShowSolverProgress()
 
     ' Check precision is not 0
     Dim SolveOptions As SolveOptionsType

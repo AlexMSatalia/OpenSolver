@@ -55,9 +55,11 @@ End Sub
 
 Function MakeNewSheet(namePrefix As String, OverwriteExisting As Boolean) As String
           Dim NeedSheet As Boolean, newSheet As Worksheet, nameSheet As String, i As Long
-667       On Error Resume Next
+          Dim ScreenStatus As Boolean
+          ScreenStatus = Application.ScreenUpdating
 668       Application.ScreenUpdating = False
           Dim s As String
+          On Error Resume Next
 669       s = Sheets(namePrefix).Name
 670       If Err.Number <> 0 Then
 671           Set newSheet = Sheets.Add
@@ -82,7 +84,7 @@ Function MakeNewSheet(namePrefix As String, OverwriteExisting As Boolean) As Str
 693           End If
 694       End If
 695       MakeNewSheet = nameSheet
-696       Application.ScreenUpdating = True
+696       Application.ScreenUpdating = ScreenStatus
 End Function
 
 Function GetExistingFilePathName(Directory As String, FileName As String, ByRef pathName As String) As Boolean

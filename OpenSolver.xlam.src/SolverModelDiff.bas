@@ -544,7 +544,9 @@ Sub FormatSensitivityTable(nameSheet As String, row As Long, numVars As Double)
           RaiseError = False
           On Error GoTo ErrorHandler
 
-2326      Application.ScreenUpdating = False
+          Dim ScreenStatus As Boolean
+          ScreenStatus = Application.ScreenUpdating
+2326      Application.ScreenUpdating = ScreenStatus
           Dim sheet As String, startRow As String
 2327      sheet = ActiveSheet.Name
 2328      Sheets(nameSheet).Select
@@ -654,6 +656,7 @@ Sub FormatSensitivityTable(nameSheet As String, row As Long, numVars As Double)
 2419      Sheets(sheet).Select
 
 ExitSub:
+          Application.ScreenUpdating = ScreenStatus
           If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
           Exit Sub
 

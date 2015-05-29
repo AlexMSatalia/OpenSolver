@@ -419,6 +419,8 @@ Function HideSolverModel() As Boolean
           
 3258      Application.EnableCancelKey = xlErrorHandler
           
+          Dim ScreenStatus As Boolean
+          ScreenStatus = Application.ScreenUpdating
 3260      Application.ScreenUpdating = False
           
           Dim sheet As Worksheet
@@ -457,7 +459,7 @@ NextConstraint:
 
 ExitFunction:
 3283      Application.StatusBar = False
-3284      Application.ScreenUpdating = True
+3284      Application.ScreenUpdating = ScreenStatus
           If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
           Exit Function
 
@@ -484,6 +486,8 @@ Function ShowSolverModel() As Boolean
           ' Trap the Escape key
 3300      Application.EnableCancelKey = xlErrorHandler
           
+          Dim ScreenStatus As Boolean
+          ScreenStatus = Application.ScreenUpdating
 3302      Application.ScreenUpdating = False
           
           Dim sheetName As String, book As Workbook, sheet As Worksheet
@@ -624,7 +628,7 @@ NextConstraint:
 
 ExitFunction:
 3444      Application.StatusBar = False ' Resume normal status bar behaviour
-3445      Application.ScreenUpdating = True
+3445      Application.ScreenUpdating = ScreenStatus
           If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
           Exit Function
 
