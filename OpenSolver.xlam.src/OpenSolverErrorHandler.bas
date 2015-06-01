@@ -29,6 +29,12 @@ Public Const OpenSolver_NoWorkbook = vbObjectError + 1023 ' There is no active w
 
 Public Const OpenSolver_VisualizerError = vbObjectError + 1031 ' An error occured while running the visualizer
 
+Sub ClearError()
+    ' Clear all saved error details
+    ErrNum = 0
+    ErrSource = ""
+    ErrMsg = ""
+End Sub
  
 Function ReportError(ModuleName As String, ProcedureName As String, Optional IsEntryPoint = False, Optional MinimiseUserInteraction As Boolean = False) As Boolean
     ' See if we should clear the log file
@@ -127,11 +133,6 @@ Function ReportError(ModuleName As String, ProcedureName As String, Optional IsE
             
             MsgBoxEx prompt, vbOKOnly, "OpenSolver - Error", LinkTarget:=LinkTarget, MoreDetailsButton:=MoreDetailsButton, ReportIssueButton:=ReportIssueButton
         End If
-        
-        ' Clear all saved error details
-        ErrNum = 0
-        ErrSource = ""
-        ErrMsg = ""
     End If
     
     ReportError = True

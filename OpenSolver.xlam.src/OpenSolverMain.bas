@@ -7,6 +7,7 @@ Public Const sOpenSolverDate As String = "2015.02.15"
 Dim OpenSolver As COpenSolver
 
 Function RunOpenSolver(Optional SolveRelaxation As Boolean = False, Optional MinimiseUserInteraction As Boolean = False, Optional LinearityCheckOffset As Double = 0) As OpenSolverResult
+          ClearError
           On Error GoTo ErrorHandler
 
 2804      RunOpenSolver = OpenSolverResult.Unsolved
@@ -107,6 +108,7 @@ ErrorHandler:
 End Function
 
 Sub InitializeQuickSolve()
+          ClearError
           On Error GoTo ErrorHandler
 
           If Not CreateSolver(GetChosenSolver()).ModelType = Diff Then
@@ -128,6 +130,7 @@ ErrorHandler:
 End Sub
 
 Function RunQuickSolve(Optional MinimiseUserInteraction As Boolean = False) As OpenSolverResult
+          ClearError
           On Error GoTo ErrorHandler
 
 2840      If OpenSolver Is Nothing Then
