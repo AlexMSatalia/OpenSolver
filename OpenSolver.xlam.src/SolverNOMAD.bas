@@ -39,7 +39,7 @@ Sub NOMAD_UpdateVar(X As Variant, Optional BestSolution As Variant = Nothing, Op
 7122              status = status & " (infeasible)"
 7123          End If
 7124      End If
-7125      UpdateStatusBar status
+7125      UpdateStatusBar status, (IterationCount = 1)
 
           Dim i As Long, numVars As Long
           'set new variable values on sheet
