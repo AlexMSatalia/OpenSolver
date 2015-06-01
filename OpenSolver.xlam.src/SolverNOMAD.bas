@@ -424,7 +424,7 @@ Sub CheckLog(s As COpenSolver)
         message = Input$(LOF(3), 3)
     Close #3
     
-    If Not InStrText(message, "NOMAD") Then GoTo ExitSub
+    If Not InStrText(message, "NOMAD") > 0 Then GoTo ExitSub
 
     If InStrText(message, "invalid parameter: DIMENSION") Then
         Dim MaxSize As Long, Position As Long
