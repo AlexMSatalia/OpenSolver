@@ -172,11 +172,15 @@ Private Function ShellScriptPath() As String
     #End If
 End Function
 
+Private Function GetGurobiHomeDir() As String
+    GetGurobiHomeDir = Environ("GUROBI_HOME")
+End Function
+
 Private Function GetBinDir() As String
     #If Mac Then
         GetBinDir = JoinPaths(GetRootDriveName(), "usr", "local", "bin")
     #Else
-        GetBinDir = JoinPaths(Environ("GUROBI_HOME"), "bin")
+        GetBinDir = JoinPaths(GetGurobiHomeDir(), "bin")
     #End If
 End Function
 
@@ -189,8 +193,15 @@ Function IsPresent(Optional SolverPath As String, Optional errorString As String
     If Not FileOrDirExists(PythonScriptPath()) Then
         errorString = "Unable to find OpenSolver Gurobi script ('" & pPythonScript & "'). Folders searched:" & _
                       vbNewLine & MakePathSafe(JoinPaths(ThisWorkbook.Path, SolverDir))
-    ElseIf Not FileOrDirExists(ExecFilePath()) Or Not FileOrDirExists(ShellScriptPath()) Then
-        errorString = "No Gurobi installation was detected."
+    #If Win32 Then
+        ElseIf Not FileOrDirExists(GetGurobiHomeDir()) Then
+            errorString = "No Gurobi installation was detected. " & _
+                          "The value of GUROBI_HOME was " & IIf(GetGurobiHomeDir() = "", "not set.", "invalid (" & MakePathSafe(GetGurobiHomeDir()) & ").")
+    #End If
+    ElseIf Not FileOrDirExists(ExecFilePath()) Then
+        errorString = "No Gurobi installation was detected. The following file was not found: " & MakePathSafe(ExecFilePath())
+    ElseIf Not FileOrDirExists(ShellScriptPath()) Then
+        errorString = "No Gurobi installation was detected. The following file was not found: " & MakePathSafe(ShellScriptPath())
     End If
 
     If errorString <> "" Then
