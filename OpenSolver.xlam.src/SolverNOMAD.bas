@@ -10,10 +10,11 @@ Private Enum NomadResult
     UserCancelled = -3
     Optimal = 0
     ErrorOccured = 1
-    SolveStoppedIter = 2
-    SolveStoppedTime = 3
-    Infeasible = 4
-    SolveStoppedNoSolution = 10
+    SolveStoppedIter = 2         ' Limited by iterations
+    SolveStoppedTime = 3         ' Limited by time
+    Infeasible = 4               ' Provably infeasible
+    SolveStoppedIterInfeas = 10  ' Infeasible after iter limit reached
+    SolveStoppedTimeInfeas = 11  ' Infeasible after time limit reached
 End Enum
 
 Private Type VariableData
@@ -389,15 +390,21 @@ Public Sub NOMAD_LoadResult(NomadRetVal As Long)
         OS.SolveStatus = OpenSolverResult.LimitedSubOptimal
         OS.SolutionWasLoaded = True
     Case NomadResult.Infeasible
-        OS.SolveStatusString = "Nomad reached the maximum time or number of iterations without finding a feasible solution. " & _
-                              "The best infeasible solution has been returned to the sheet." & vbNewLine & vbNewLine & _
-                              "You can increase the maximum time and iterations under the options in the model dialogue or check whether your model is feasible."
-        OS.SolveStatus = OpenSolverResult.Infeasible
-        OS.SolutionWasLoaded = True
-    Case NomadResult.SolveStoppedNoSolution
         OS.SolveStatusString = "Nomad could not find a feasible solution. " & _
                               "The best infeasible solution has been returned to the sheet." & vbNewLine & vbNewLine & _
                               "Try resolving at a different start point or check whether your model is feasible or relax some of your constraints."
+        OS.SolveStatus = OpenSolverResult.Infeasible
+        OS.SolutionWasLoaded = True
+    Case NomadResult.SolveStoppedIterInfeas
+        OS.SolveStatusString = "Nomad reached the maximum number of iterations without finding a feasible solution. " & _
+                              "The best infeasible solution has been returned to the sheet." & vbNewLine & vbNewLine & _
+                              "You can increase the maximum number of iterations under the options in the model dialogue or check whether your model is feasible."
+        OS.SolveStatus = OpenSolverResult.Infeasible
+        OS.SolutionWasLoaded = True
+    Case NomadResult.SolveStoppedTimeInfeas
+        OS.SolveStatusString = "Nomad reached the maximum time limit without finding a feasible solution. " & _
+                              "The best infeasible solution has been returned to the sheet." & vbNewLine & vbNewLine & _
+                              "You can increase the maximum time limit under the options in the model dialogue or check whether your model is feasible."
         OS.SolveStatus = OpenSolverResult.Infeasible
         OS.SolutionWasLoaded = True
     Case NomadResult.UserCancelled
