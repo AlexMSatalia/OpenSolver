@@ -34,9 +34,10 @@ Sub NOMAD_UpdateVar(X As Variant, Optional BestSolution As Variant = Nothing, Op
               ' Flip solution if maximisation
 7119          If OS.ObjectiveSense = MaximiseObjective Then BestSolution = -BestSolution
 
-7120          status = status & " Best solution so far: " & BestSolution
 7121          If Infeasible Then
-7122              status = status & " (infeasible)"
+7122              status = status & " Distance to feasibility: " & BestSolution
+              Else
+                  status = status & " Best solution so far: " & BestSolution
 7123          End If
 7124      End If
 7125      UpdateStatusBar status, (IterationCount = 1)
