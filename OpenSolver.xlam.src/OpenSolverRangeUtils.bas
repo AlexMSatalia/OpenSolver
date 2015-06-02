@@ -420,3 +420,11 @@ ErrorHandler:
     GoTo ExitFunction
 End Function
 
+Sub TestCellsForWriting(r As Range)
+    ' We can't do r.Value2 = r.Value2 as this
+    ' just sets the values from the first area in all areas
+    Dim area As Range
+    For Each area In r.Areas
+        area.Value2 = area.Value2
+    Next area
+End Sub

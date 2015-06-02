@@ -53,10 +53,7 @@ Sub SolveModel(s As COpenSolver, ShouldSolveRelaxation As Boolean, ShouldMinimis
     s.Solver.CleanFiles
     
     'Check that we can write to all cells
-    Dim AdjCell As Range
-    For Each AdjCell In s.AdjustableCells
-        AdjCell.Value2 = AdjCell.Value2
-    Next AdjCell
+    TestCellsForWriting s.AdjustableCells
 
     If TypeOf s.Solver Is ISolverLocalLib Then
         Dim LocalLibSolver As ISolverLocalLib
