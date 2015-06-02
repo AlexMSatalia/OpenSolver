@@ -6,6 +6,7 @@ Dim IterationCount As Long
 
 'NOMAD return status codes
 Private Enum NomadResult
+    LogFileError = -12  ' Error opening the log file, special code because we can't log the error to see what it is!
     UserCancelled = -3
     Optimal = 0
     ErrorOccured = 1
@@ -364,9 +365,13 @@ End Sub
 Public Sub NOMAD_LoadResult(NomadRetVal As Long)
     'Catch any errors that occured while Nomad was solving
     Select Case NomadRetVal
+    Case NomadResult.LogFileError
+        OS.SolveStatus = OpenSolverResult.ErrorOccurred
+        Err.Raise OpenSolver_NomadError, Description:="NOMAD was unable to open the specified log file for writing: " & vbNewLine & vbNewLine & _
+                                                      OS.LogFilePathName
     Case NomadResult.ErrorOccured
         OS.SolveStatus = OpenSolverResult.ErrorOccurred
-
+        
         ' Check logs for more info and raise an error if we find anything specific
         CheckLog OS
         
