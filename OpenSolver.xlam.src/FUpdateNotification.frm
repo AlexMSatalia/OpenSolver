@@ -1,14 +1,13 @@
 VERSION 5.00
-Begin {C62A69F0-16DC-11CE-9E98-00AA00574A4F} frmUpdateNotification 
+Begin {C62A69F0-16DC-11CE-9E98-00AA00574A4F} FUpdateNotification 
    Caption         =   "OpenSolver - Update Available"
-   ClientHeight    =   3165
+   ClientHeight    =   3164
    ClientLeft      =   45
    ClientTop       =   390
    ClientWidth     =   4725
-   OleObjectBlob   =   "frmUpdateNotification.frx":0000
-   StartUpPosition =   1  'CenterOwner
+   OleObjectBlob   =   "FUpdateNotification.frx":0000
 End
-Attribute VB_Name = "frmUpdateNotification"
+Attribute VB_Name = "FUpdateNotification"
 Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = True
@@ -25,16 +24,34 @@ Private Sub cmdOk_Click()
     Me.Hide
 End Sub
 
+' Make the [x] hide the form rather than unload
+Private Sub UserForm_QueryClose(Cancel As Integer, CloseMode As Integer)
+    ' If CloseMode = vbFormControlMenu then we know the user
+    ' clicked the [x] close button or Alt+F4 to close the form.
+    If CloseMode = vbFormControlMenu Then
+        cmdOk_Click
+        Cancel = True
+    End If
+End Sub
+
 Private Sub cmdSettings_Click()
+    Dim frmUpdateSettings As FUpdateSettings
+    Set frmUpdateSettings = New FUpdateSettings
     frmUpdateSettings.Show
+    Unload frmUpdateSettings
 End Sub
 
 Private Sub lblLink_Click()
     OpenURL lblLink.Caption
 End Sub
 
+Private Sub UserForm_Activate()
+    CenterForm
+End Sub
+
 Private Sub UserForm_Initialize()
-   AutoLayout
+    AutoLayout
+    CenterForm
 End Sub
 
 Private Sub AutoLayout()
@@ -90,6 +107,11 @@ Private Sub AutoLayout()
     
     Me.BackColor = FormBackColor
     Me.Caption = "OpenSolver - Update Available"
+End Sub
+
+Private Sub CenterForm()
+    Me.top = CenterFormTop(Me.height)
+    Me.left = CenterFormLeft(Me.width)
 End Sub
 
 Sub ShowUpdate(LatestVersion As String)

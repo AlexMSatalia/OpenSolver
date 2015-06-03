@@ -29,13 +29,19 @@ End Sub
 
 Sub OpenSolver_ModelOptions(Optional Control)
 2756      If Not CheckWorksheetAvailable Then Exit Sub
+          Dim frmOptions As FOptions
+          Set frmOptions = New FOptions
 2757      frmOptions.Show
+          Unload frmOptions
           AutoUpdateCheck
 End Sub
 
 Sub OpenSolver_SolverOptions(Optional Control)
 2759      If Not CheckWorksheetAvailable Then Exit Sub
+          Dim frmSolverChange As FSolverChange
+          Set frmSolverChange = New FSolverChange
 2761      frmSolverChange.Show
+          Unload frmSolverChange
           AutoUpdateCheck
 End Sub
 
@@ -132,7 +138,10 @@ Sub OpenSolver_OnlineHelp(Optional Control)
 End Sub
 
 Sub OpenSolver_AboutClickHandler(Optional Control)
+          Dim frmAbout As FAbout
+          Set frmAbout = New FAbout
 2798      frmAbout.Show
+          Unload frmAbout
           AutoUpdateCheck
 End Sub
 
@@ -157,7 +166,10 @@ Sub OpenSolver_VisitCoinOROrg(Optional Control)
 End Sub
 Sub OpenSolver_ModelClick(Optional Control)
 2851      If Not CheckWorksheetAvailable Then Exit Sub
+          Dim frmModel As FModel
+          Set frmModel = New FModel
 2853      frmModel.Show
+          Unload frmModel
 2854      DoEvents
           AutoUpdateCheck
 End Sub

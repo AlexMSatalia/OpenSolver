@@ -164,7 +164,10 @@ Sub CompleteUpdateCheck(Response As String)
     Application.Cursor = xlDefault
     
     If UpdateAvailable Then
+        Dim frmUpdateNotification As FUpdateNotification
+        Set frmUpdateNotification = New FUpdateNotification
         frmUpdateNotification.ShowUpdate Response
+        Unload frmUpdateNotification
     ElseIf Not DoSilentFail Then
         MsgBox "No updates for OpenSolver are available at this time.", vbOKOnly, "OpenSolver - Update Check"
     End If
@@ -212,7 +215,10 @@ Public Function GetUpdateSetting(Optional SilentFail As Boolean = True, Optional
             result = False
         Else
             ' Otherwise, show the dialog and get the setting
+            Dim frmUpdateSettings As FUpdateSettings
+            Set frmUpdateSettings = New FUpdateSettings
             frmUpdateSettings.Show
+            Unload frmUpdateSettings
             result = GetUpdateSetting(True)
         End If
     Else
@@ -244,7 +250,10 @@ Public Function GetBetaUpdateSetting(Optional SilentFail As Boolean = True, Opti
             result = False
         Else
             ' Otherwise, show the dialog and get the setting
+            Dim frmUpdateSettings As FUpdateSettings
+            Set frmUpdateSettings = New FUpdateSettings
             frmUpdateSettings.Show
+            Unload frmUpdateSettings
             result = GetUpdateSetting(True)
         End If
     Else

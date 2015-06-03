@@ -1,14 +1,13 @@
 VERSION 5.00
-Begin {C62A69F0-16DC-11CE-9E98-00AA00574A4F} frmUpdateSettings 
+Begin {C62A69F0-16DC-11CE-9E98-00AA00574A4F} FUpdateSettings 
    Caption         =   "OpenSolver - Update Settings"
-   ClientHeight    =   4395
+   ClientHeight    =   4396
    ClientLeft      =   45
    ClientTop       =   390
    ClientWidth     =   4710
-   OleObjectBlob   =   "frmUpdateSettings.frx":0000
-   StartUpPosition =   1  'CenterOwner
+   OleObjectBlob   =   "FUpdateSettings.frx":0000
 End
-Attribute VB_Name = "frmUpdateSettings"
+Attribute VB_Name = "FUpdateSettings"
 Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = True
@@ -29,10 +28,24 @@ Private Sub cmdCancel_Click()
     Me.Hide
 End Sub
 
+' Make the [x] hide the form rather than unload
+Private Sub UserForm_QueryClose(Cancel As Integer, CloseMode As Integer)
+    ' If CloseMode = vbFormControlMenu then we know the user
+    ' clicked the [x] close button or Alt+F4 to close the form.
+    If CloseMode = vbFormControlMenu Then
+        cmdCancel_Click
+        Cancel = True
+    End If
+End Sub
+
 Private Sub cmdOk_Click()
     SaveUpdateSetting chkEnabled.value
     SaveBetaUpdateSetting chkExperimental.value
     Me.Hide
+End Sub
+
+Private Sub UserForm_Activate()
+    CenterForm
 End Sub
 
 Private Sub UserForm_Initialize()
@@ -42,6 +55,7 @@ Private Sub UserForm_Initialize()
     chkEnabled_Change
     
     AutoLayout
+    CenterForm
 End Sub
 
 Private Sub AutoLayout()
@@ -105,4 +119,9 @@ Private Sub AutoLayout()
     
     Me.BackColor = FormBackColor
     Me.Caption = "OpenSolver - Update Settings"
+End Sub
+
+Private Sub CenterForm()
+    Me.top = CenterFormTop(Me.height)
+    Me.left = CenterFormLeft(Me.width)
 End Sub

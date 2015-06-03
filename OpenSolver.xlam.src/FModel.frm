@@ -1,14 +1,13 @@
 VERSION 5.00
-Begin {C62A69F0-16DC-11CE-9E98-00AA00574A4F} frmModel 
+Begin {C62A69F0-16DC-11CE-9E98-00AA00574A4F} FModel 
    Caption         =   "OpenSolver - Model"
    ClientHeight    =   8281
    ClientLeft      =   45
    ClientTop       =   390
    ClientWidth     =   9840
-   OleObjectBlob   =   "frmModel.frx":0000
-   StartUpPosition =   1  'CenterOwner
+   OleObjectBlob   =   "FModel.frx":0000
 End
-Attribute VB_Name = "frmModel"
+Attribute VB_Name = "FModel"
 Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = True
@@ -128,7 +127,7 @@ Sub UpdateFormFromMemory()
 4215      refDecision.Text = ConvertToCurrentLocale(GetDisplayAddress(model.DecisionVariables))
 4218      refDuals.Text = GetDisplayAddress(model.Duals, False)
 
-4222      model.PopulateConstraintListBox lstConstraints
+4222      model.PopulateConstraintListBox lstConstraints, chkNameRange.value
 4223      lstConstraints_Change
 
           chkGetDuals2.value = GetDualsNewSheet()
@@ -148,7 +147,7 @@ Private Sub chkGetDuals2_Click()
 End Sub
 
 Private Sub chkNameRange_Click()
-4256      model.PopulateConstraintListBox lstConstraints
+4256      model.PopulateConstraintListBox lstConstraints, chkNameRange.value
 4257      lstConstraints_Change
 End Sub
 
@@ -161,11 +160,16 @@ End Sub
 
 
 Private Sub cmdChange_Click()
-#If Mac Then
-4264      frmSolverChange.Show
-#Else
-4265      frmSolverChange.Show vbModal
-#End If
+    Dim frmSolverChange As FSolverChange
+    Set frmSolverChange = New FSolverChange
+    #If Mac Then
+        frmSolverChange.Show
+    #Else
+        frmSolverChange.Show vbModal
+    #End If
+    Unload frmSolverChange
+    FormatCurrentSolver
+    Disabler True
 End Sub
 
 Sub FormatCurrentSolver()
@@ -178,13 +182,14 @@ Private Sub cmdOptions_Click()
           ' Save the current "Assume Non Negative" option so this is shown in the options dialog.
           ' The saved value gets updated on OK, which we then reflect in our Model dialog
 4267      SetNonNegativity chkNonNeg.value
-
+          Dim frmOptions As FOptions
+          Set frmOptions = New FOptions
 #If Mac Then
 4268      frmOptions.Show
 #Else
 4269      frmOptions.Show vbModal
 #End If
-
+          Unload frmOptions
 4270      chkNonNeg.value = GetNonNegativity
 End Sub
 
@@ -215,7 +220,7 @@ Private Sub cmdReset_Click()
 4282      Next i
 
           ' Update constraints form
-4283      model.PopulateConstraintListBox lstConstraints
+4283      model.PopulateConstraintListBox lstConstraints, chkNameRange.value
 
 End Sub
 
@@ -270,13 +275,11 @@ Private Sub refConRHS_Change()
 End Sub
 
 Private Sub UserForm_Activate()
+          CenterForm
           On Error GoTo ErrorHandler
 
           ' Check we can even start
-4345      If Not CheckWorksheetAvailable Then
-4346          Unload Me
-4347          Exit Sub
-4348      End If
+4345      If Not CheckWorksheetAvailable Then Exit Sub
 
           UpdateStatusBar "Loading model...", True
           Application.Cursor = xlWait
@@ -345,7 +348,7 @@ ExitSub:
 
 ErrorHandler:
           Me.Hide
-          ReportError "frmModel", "UserForm_Activate", True
+          ReportError "FModel", "UserForm_Activate", True
           GoTo ExitSub
 End Sub
 
@@ -357,6 +360,16 @@ Private Sub cmdCancel_Click()
 4389      ActiveCell.Select ' Just select one cell, choosing a cell that should be visible to avoid scrolling
 4390      Application.ScreenUpdating = True
           Me.Hide
+End Sub
+
+' Make the [x] hide the form rather than unload
+Private Sub UserForm_QueryClose(Cancel As Integer, CloseMode As Integer)
+    ' If CloseMode = vbFormControlMenu then we know the user
+    ' clicked the [x] close button or Alt+F4 to close the form.
+    If CloseMode = vbFormControlMenu Then
+        cmdCancel_Click
+        Cancel = True
+    End If
 End Sub
 
 Private Sub cmdRunAutoModel_Click()
@@ -490,7 +503,7 @@ ExitSub:
           Exit Sub
 
 ErrorHandler:
-          ReportError "frmModel", "cmdBuild_Click", True
+          ReportError "FModel", "cmdBuild_Click", True
           GoTo ExitSub
 End Sub
 
@@ -633,7 +646,7 @@ Private Sub cmdAddCon_Click()
 4605          End If
 4606      End With
 
-4608      If Not DontRepop Then model.PopulateConstraintListBox lstConstraints
+4608      If Not DontRepop Then model.PopulateConstraintListBox lstConstraints, chkNameRange.value
 4609      Exit Sub
 
 ErrorHandler_CannotInterpretRHS:
@@ -647,7 +660,7 @@ ErrorHandler_CannotInterpretRHS:
 ErrorHandler:
 4620      Application.DisplayAlerts = True
 4621      OpenSolverSheet.Range("A1").FormulaLocal = "" ' This must be blank to ensure no risk of dialogs being shown trying to locate a sheet
-4622      MsgBox "While constructing the model, OpenSolver encountered error " & Err.Number & ":" & vbCrLf & Err.Description & IIf(Erl = 0, "", " (at line " & Erl & ")") & vbCrLf & "Source = " & Err.Source & " (frmModel::cmdBuild_Click)", , "OpenSolver Code Error"
+4622      MsgBox "While constructing the model, OpenSolver encountered error " & Err.Number & ":" & vbCrLf & Err.Description & IIf(Erl = 0, "", " (at line " & Erl & ")") & vbCrLf & "Source = " & Err.Source & " (FModel::cmdBuild_Click)", , "OpenSolver Code Error"
 4623      DoEvents ' Try to stop RefEdit bugs
 4624      Exit Sub
 
@@ -663,7 +676,7 @@ Private Sub cmdDelSelCon_Click()
 4630      model.Constraints.Remove lstConstraints.ListIndex
 
           ' Update form
-4631      model.PopulateConstraintListBox lstConstraints
+4631      model.PopulateConstraintListBox lstConstraints, chkNameRange.value
 End Sub
 
 Private Sub lstConstraints_Change()
@@ -682,7 +695,7 @@ Private Sub lstConstraints_Change()
 4644              DontRepop = False
               End If
 4647          AlterConstraints True
-4650          model.PopulateConstraintListBox lstConstraints
+4650          model.PopulateConstraintListBox lstConstraints, chkNameRange.value
 4651      End If
 
 4652      ListItem = lstConstraints.ListIndex
@@ -791,6 +804,7 @@ End Sub
 
 Private Sub UserForm_Initialize()
     AutoLayout
+    CenterForm
 End Sub
 
 Private Sub AutoLayout()
@@ -1151,4 +1165,9 @@ Private Sub lblResizer_MouseMove(ByVal Button As Integer, ByVal Shift As Integer
             UpdateLayout (Y - ResizeStartY)
         #End If
     End If
+End Sub
+
+Private Sub CenterForm()
+    Me.top = CenterFormTop(Me.height)
+    Me.left = CenterFormLeft(Me.width)
 End Sub

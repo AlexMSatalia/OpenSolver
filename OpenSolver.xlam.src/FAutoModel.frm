@@ -1,14 +1,13 @@
 VERSION 5.00
-Begin {C62A69F0-16DC-11CE-9E98-00AA00574A4F} frmAutoModel 
+Begin {C62A69F0-16DC-11CE-9E98-00AA00574A4F} FAutoModel 
    Caption         =   "OpenSolver - AutoModel"
-   ClientHeight    =   4485
+   ClientHeight    =   4480
    ClientLeft      =   45
    ClientTop       =   375
    ClientWidth     =   8805
-   OleObjectBlob   =   "frmAutoModel.frx":0000
-   StartUpPosition =   1  'CenterOwner
+   OleObjectBlob   =   "FAutoModel.frx":0000
 End
-Attribute VB_Name = "frmAutoModel"
+Attribute VB_Name = "FAutoModel"
 Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = True
@@ -30,7 +29,18 @@ Private Sub cmdCancel_Click()
 4047      Me.Hide
 End Sub
 
+' Make the [x] hide the form rather than unload
+Private Sub UserForm_QueryClose(Cancel As Integer, CloseMode As Integer)
+          ' If CloseMode = vbFormControlMenu then we know the user
+          ' clicked the [x] close button or Alt+F4 to close the form.
+          If CloseMode = vbFormControlMenu Then
+              cmdCancel_Click
+              Cancel = True
+          End If
+End Sub
+
 Private Sub UserForm_Activate()
+          CenterForm
           ' Make sure sheet is up to date
 4050      On Error Resume Next
 4051      Application.Calculate
@@ -111,6 +121,7 @@ End Sub
 Private Sub UserForm_Initialize()
     AutoLayout
     ResetEverything
+    CenterForm
 End Sub
 
 Private Sub AutoLayout()
@@ -238,4 +249,9 @@ Private Sub AutoLayout()
     
     Me.BackColor = FormBackColor
     Me.Caption = "OpenSolver - AutoModel"
+End Sub
+
+Private Sub CenterForm()
+    Me.top = CenterFormTop(Me.height)
+    Me.left = CenterFormLeft(Me.width)
 End Sub

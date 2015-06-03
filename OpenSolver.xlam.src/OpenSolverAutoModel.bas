@@ -21,7 +21,8 @@ Public Function RunAutoModel(Optional MinimiseUserInteraction As Boolean = False
     model.FindObjective ActiveSheet
     If model.ObjectiveFunctionCell Is Nothing Then
         If Not MinimiseUserInteraction Then
-            Load frmAutoModel
+            Dim frmAutoModel As FAutoModel
+            Set frmAutoModel = New FAutoModel
             Set frmAutoModel.ObjectiveCell = model.ObjectiveFunctionCell
             frmAutoModel.ObjectiveSense = model.ObjectiveSense
             frmAutoModel.chkShow.value = DoBuild
@@ -29,7 +30,10 @@ Public Function RunAutoModel(Optional MinimiseUserInteraction As Boolean = False
             
             frmAutoModel.Show
             
-            If frmAutoModel.Tag = "Cancelled" Then GoTo ExitFunction
+            If frmAutoModel.Tag = "Cancelled" Then
+                Unload frmAutoModel
+                GoTo ExitFunction
+            End If
             
             Set model.ObjectiveFunctionCell = frmAutoModel.ObjectiveCell
             model.ObjectiveSense = frmAutoModel.ObjectiveSense

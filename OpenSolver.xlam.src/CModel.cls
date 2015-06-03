@@ -610,7 +610,7 @@ ErrorHandler:
           
 End Sub
 
-Public Sub PopulateConstraintListBox(ByRef lst As Object)
+Public Sub PopulateConstraintListBox(ByRef lst As Object, showNameRange As Boolean)
           Dim RaiseError As Boolean
           RaiseError = False
           On Error GoTo ErrorHandler
@@ -618,8 +618,6 @@ Public Sub PopulateConstraintListBox(ByRef lst As Object)
           Dim CS As String, c As Long
           Dim oldLI As Long
           
-          Dim showNameRange As Boolean
-3983      showNameRange = frmModel.chkNameRange.value
 3984      If showNameRange Then SearchRangeName_DestroyCache
           
 3985      oldLI = lst.ListIndex

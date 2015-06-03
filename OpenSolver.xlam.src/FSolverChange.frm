@@ -1,14 +1,13 @@
 VERSION 5.00
-Begin {C62A69F0-16DC-11CE-9E98-00AA00574A4F} frmSolverChange 
+Begin {C62A69F0-16DC-11CE-9E98-00AA00574A4F} FSolverChange 
    Caption         =   "Choose Solver"
    ClientHeight    =   4648
    ClientLeft      =   45
    ClientTop       =   375
    ClientWidth     =   5010
-   OleObjectBlob   =   "frmSolverChange.frx":0000
-   StartUpPosition =   1  'CenterOwner
+   OleObjectBlob   =   "FSolverChange.frx":0000
 End
-Attribute VB_Name = "frmSolverChange"
+Attribute VB_Name = "FSolverChange"
 Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = True
@@ -42,6 +41,8 @@ Private Sub lblHyperlink_Click()
 End Sub
 
 Private Sub UserForm_Activate()
+          CenterForm
+
 4744      cboSolver.Clear
 4745      cboSolver.MatchRequired = True
 4746      cboSolver.Style = fmStyleDropDownList
@@ -68,17 +69,26 @@ End Sub
 Private Sub cmdOk_Click()
          'Add the chosen solver as a hidden name in the workbook
 4758      SetChosenSolver Solvers(cboSolver.ListIndex).ShortName
-4761      frmModel.FormatCurrentSolver
-4762      frmModel.Disabler True
-4763      Unload Me
+4763      Me.Hide
 End Sub
 
 Private Sub cmdCancel_Click()
-4764      Unload Me
+4764      Me.Hide
+End Sub
+
+' Make the [x] hide the form rather than unload
+Private Sub UserForm_QueryClose(Cancel As Integer, CloseMode As Integer)
+    ' If CloseMode = vbFormControlMenu then we know the user
+    ' clicked the [x] close button or Alt+F4 to close the form.
+    If CloseMode = vbFormControlMenu Then
+        cmdCancel_Click
+        Cancel = True
+    End If
 End Sub
 
 Private Sub UserForm_Initialize()
     AutoLayout
+    CenterForm
 End Sub
 
 Private Sub AutoLayout()
@@ -138,4 +148,9 @@ Private Sub AutoLayout()
     
     Me.BackColor = FormBackColor
     Me.Caption = "OpenSolver - Choose Solver"
+End Sub
+
+Private Sub CenterForm()
+    Me.top = CenterFormTop(Me.height)
+    Me.left = CenterFormLeft(Me.width)
 End Sub

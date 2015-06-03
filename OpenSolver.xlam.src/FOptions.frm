@@ -1,14 +1,13 @@
 VERSION 5.00
-Begin {C62A69F0-16DC-11CE-9E98-00AA00574A4F} frmOptions 
+Begin {C62A69F0-16DC-11CE-9E98-00AA00574A4F} FOptions 
    Caption         =   "OpenSolver - Solve Options"
-   ClientHeight    =   3855
+   ClientHeight    =   3850
    ClientLeft      =   45
    ClientTop       =   375
    ClientWidth     =   4140
-   OleObjectBlob   =   "frmOptions.frx":0000
-   StartUpPosition =   1  'CenterOwner
+   OleObjectBlob   =   "FOptions.frx":0000
 End
-Attribute VB_Name = "frmOptions"
+Attribute VB_Name = "FOptions"
 Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = True
@@ -22,7 +21,17 @@ Option Explicit
 #End If
 
 Private Sub cmdCancel_Click()
-4089      Unload Me
+4089      Me.Hide
+End Sub
+
+' Make the [x] hide the form rather than unload
+Private Sub UserForm_QueryClose(Cancel As Integer, CloseMode As Integer)
+    ' If CloseMode = vbFormControlMenu then we know the user
+    ' clicked the [x] close button or Alt+F4 to close the form.
+    If CloseMode = vbFormControlMenu Then
+        cmdCancel_Click
+        Cancel = True
+    End If
 End Sub
 
 Private Sub cmdOk_Click()
@@ -34,10 +43,12 @@ Private Sub cmdOk_Click()
 4106      SetToleranceAsPercentage CDbl(Replace(txtTol.Text, "%", ""))
 4107      SetLinearityCheck chkPerformLinearityCheck.value
                                                                       
-4112      Unload Me
+4112      Me.Hide
 End Sub
 
 Private Sub UserForm_Activate()
+          CenterForm
+          
 4114      SetAnyMissingDefaultSolverOptions
 
 4129      chkNonNeg.value = GetNonNegativity()
@@ -62,6 +73,7 @@ End Sub
 
 Private Sub UserForm_Initialize()
     AutoLayout
+    CenterForm
 End Sub
 
 Private Sub AutoLayout()
@@ -168,4 +180,9 @@ Private Sub AutoLayout()
     
     Me.BackColor = FormBackColor
     Me.Caption = "OpenSolver - Solve Options"
+End Sub
+
+Private Sub CenterForm()
+    Me.top = CenterFormTop(Me.height)
+    Me.left = CenterFormLeft(Me.width)
 End Sub

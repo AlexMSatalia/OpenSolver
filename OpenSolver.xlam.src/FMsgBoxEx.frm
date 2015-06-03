@@ -1,14 +1,13 @@
 VERSION 5.00
-Begin {C62A69F0-16DC-11CE-9E98-00AA00574A4F} frmMsgBoxEx 
+Begin {C62A69F0-16DC-11CE-9E98-00AA00574A4F} FMsgBoxEx 
    Caption         =   "OpenSolver - Message"
-   ClientHeight    =   4275
+   ClientHeight    =   4270
    ClientLeft      =   45
    ClientTop       =   375
    ClientWidth     =   9720
-   OleObjectBlob   =   "frmMsgBoxEx.frx":0000
-   StartUpPosition =   1  'CenterOwner
+   OleObjectBlob   =   "FMsgBoxEx.frx":0000
 End
-Attribute VB_Name = "frmMsgBoxEx"
+Attribute VB_Name = "FMsgBoxEx"
 Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = True
@@ -34,6 +33,16 @@ End Sub
 Private Sub cmdButton3_Click()
     Me.Tag = cmdButton3.Tag
     Me.Hide
+End Sub
+
+' Make the [x] hide the form rather than unload
+Private Sub UserForm_QueryClose(Cancel As Integer, CloseMode As Integer)
+    ' If CloseMode = vbFormControlMenu then we know the user
+    ' clicked the [x] close button or Alt+F4 to close the form.
+    If CloseMode = vbFormControlMenu Then
+        Me.Hide
+        Cancel = True
+    End If
 End Sub
 
 Private Sub cmdMoreDetails_Click()
@@ -76,10 +85,10 @@ Private Sub lblLink_Click()
 End Sub
 
 Private Sub UserForm_Activate()
-    AutoLayout
+    CenterForm
 End Sub
 
-Private Sub AutoLayout()
+Public Sub AutoLayout()
     AutoFormat Me.Controls
     
     cmdButton1.Visible = cmdButton1.Caption <> ""
@@ -150,3 +159,7 @@ Private Sub AutoLayout()
     Me.BackColor = FormBackColor
 End Sub
 
+Private Sub CenterForm()
+    Me.top = CenterFormTop(Me.height)
+    Me.left = CenterFormLeft(Me.width)
+End Sub

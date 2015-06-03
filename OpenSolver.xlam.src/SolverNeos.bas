@@ -29,9 +29,12 @@ Function CallNEOS(s As COpenSolver, OutgoingMessage As String) As String
           If s.MinimiseUserInteraction Then
               CallNEOS = SolveOnNeos(FinalMessage, errorString)
           Else
+              Dim frmCallingNeos As FCallingNeos
+              Set frmCallingNeos = New FCallingNeos
               frmCallingNeos.Show
               CallNEOS = NeosResult
               errorString = frmCallingNeos.Tag
+              Unload frmCallingNeos
           End If
           If Len(errorString) > 0 Then
               If errorString = "Aborted" Then
@@ -59,7 +62,7 @@ ErrorHandler:
           GoTo ExitFunction
 End Function
 
-Public Function SolveOnNeos(message As String, errorString As String) As String
+Public Function SolveOnNeos(message As String, errorString As String, Optional frmCallingNeos As FCallingNeos = Nothing) As String
           On Error GoTo ErrorHandler
 
           Dim result As String, jobNumber As String, Password As String
@@ -67,14 +70,16 @@ Public Function SolveOnNeos(message As String, errorString As String) As String
           
 6825      If jobNumber = "0" Then Err.Raise OpenSolver_NeosError, Description:="An error occured when sending file to NEOS."
           
-          frmCallingNeos.Tag = "Running"
+          If Not frmCallingNeos Is Nothing Then frmCallingNeos.Tag = "Running"
           
           ' Loop until job is done
           Dim time As Long, Done As Boolean
 6835      time = 0
           Done = False
 6836      While Done = False
-              If frmCallingNeos.Tag = "Cancelled" Then GoTo Aborted
+              If Not frmCallingNeos Is Nothing Then
+                  If frmCallingNeos.Tag = "Cancelled" Then GoTo Aborted
+              End If
               
               UpdateStatusBar "OpenSolver: Solving model on NEOS... Time Elapsed: " & time & " seconds"
               

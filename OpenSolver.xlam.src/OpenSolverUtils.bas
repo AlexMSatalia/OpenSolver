@@ -907,7 +907,7 @@ Public Function MsgBoxEx(ByVal prompt As String, _
         Value2 = vbCancel
     End Select
     
-    With New frmMsgBoxEx
+    With New FMsgBoxEx
         .cmdMoreDetails.Visible = MoreDetailsButton
         .cmdReportIssue.Visible = ReportIssueButton
     
@@ -941,6 +941,7 @@ Public Function MsgBoxEx(ByVal prompt As String, _
     
         .Caption = Title
         
+        .AutoLayout
         .Show
      
         ' If form was closed using [X], then it was also unloaded, so we set the default to vbCancel

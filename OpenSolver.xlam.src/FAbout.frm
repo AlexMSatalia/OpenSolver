@@ -1,14 +1,13 @@
 VERSION 5.00
-Begin {C62A69F0-16DC-11CE-9E98-00AA00574A4F} frmAbout 
+Begin {C62A69F0-16DC-11CE-9E98-00AA00574A4F} FAbout 
    Caption         =   "About OpenSolver"
    ClientHeight    =   7140
    ClientLeft      =   45
    ClientTop       =   345
    ClientWidth     =   8880
-   OleObjectBlob   =   "frmAbout.frx":0000
-   StartUpPosition =   1  'CenterOwner
+   OleObjectBlob   =   "FAbout.frx":0000
 End
-Attribute VB_Name = "frmAbout"
+Attribute VB_Name = "FAbout"
 Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = True
@@ -36,6 +35,16 @@ End Function
 
 Private Sub cmdOk_Click()
 3478      Me.Hide
+End Sub
+
+' Make the [x] hide the form rather than unload
+Private Sub UserForm_QueryClose(Cancel As Integer, CloseMode As Integer)
+          ' If CloseMode = vbFormControlMenu then we know the user
+          ' clicked the [x] close button or Alt+F4 to close the form.
+          If CloseMode = vbFormControlMenu Then
+              cmdOk_Click
+              Cancel = True
+          End If
 End Sub
 
 Public Sub ReflectOpenSolverStatus()
@@ -111,7 +120,10 @@ Private Sub cmdUpdate_Click()
 End Sub
 
 Private Sub cmdUpdateSettings_Click()
+    Dim frmUpdateSettings As FUpdateSettings
+    Set frmUpdateSettings = New FUpdateSettings
     frmUpdateSettings.Show
+    Unload frmUpdateSettings
 End Sub
 
 Private Sub lblUrl_Click()
@@ -119,6 +131,8 @@ Private Sub lblUrl_Click()
 End Sub
 
 Private Sub UserForm_Activate()
+          CenterForm
+    
 3514      UpdateStatusBar "OpenSolver: Fetching solver information...", True
 3515      Application.Cursor = xlWait
 
@@ -274,4 +288,10 @@ End Sub
 
 Private Sub UserForm_Initialize()
     AutoLayout
+    CenterForm
+End Sub
+
+Private Sub CenterForm()
+    Me.top = CenterFormTop(Me.height)
+    Me.left = CenterFormLeft(Me.width)
 End Sub

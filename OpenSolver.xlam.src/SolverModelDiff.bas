@@ -159,12 +159,15 @@ Sub CheckLinearityOfModel(s As COpenSolver)
           End If
           
           'display dialog to user
+          Dim frmNonlinear As FNonlinear
+          Set frmNonlinear = New FNonlinear
           frmNonlinear.SetLinearityResult NonLinearInformation, False
 2139      frmNonlinear.Show
           
 2140      If frmNonlinear.chkHighlight.value = True Then
 2141          HighlightNonLinearities RowIsNonLinear, ObjectiveIsNonLinear, s
 2142      End If
+          Unload frmNonlinear
 
 ExitSub:
           If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
@@ -353,6 +356,8 @@ Sub QuickLinearityCheck(fullLinearityCheckWasPerformed As Boolean, s As COpenSol
 2242          s.SolveStatus = NotLinear
 2243          If Not s.MinimiseUserInteraction Then
                   NonLinearInfo = "WARNING : " & vbNewLine & TrimBlankLines(NonLinearInfo)
+                  Dim frmNonlinear As FNonlinear
+                  Set frmNonlinear = New FNonlinear
                   frmNonlinear.SetLinearityResult NonLinearInfo, True
 2263              frmNonlinear.Show
               
@@ -365,6 +370,7 @@ Sub QuickLinearityCheck(fullLinearityCheckWasPerformed As Boolean, s As COpenSol
 2268                  CheckLinearityOfModel s
 2269                  fullLinearityCheckWasPerformed = True
 2270              End If
+                  Unload frmNonlinear
 2271          End If
 2272      End If
 

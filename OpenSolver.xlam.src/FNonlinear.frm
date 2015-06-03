@@ -1,14 +1,13 @@
 VERSION 5.00
-Begin {C62A69F0-16DC-11CE-9E98-00AA00574A4F} frmNonlinear 
+Begin {C62A69F0-16DC-11CE-9E98-00AA00574A4F} FNonlinear 
    Caption         =   "UserForm1"
    ClientHeight    =   6405
    ClientLeft      =   45
    ClientTop       =   435
    ClientWidth     =   11310
-   OleObjectBlob   =   "frmNonlinear.frx":0000
-   StartUpPosition =   1  'CenterOwner
+   OleObjectBlob   =   "FNonlinear.frx":0000
 End
-Attribute VB_Name = "frmNonlinear"
+Attribute VB_Name = "FNonlinear"
 Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = True
@@ -25,10 +24,25 @@ Private Sub cmdContinue_Click()
 3585      Me.Hide
 End Sub
 
+' Make the [x] hide the form rather than unload
+Private Sub UserForm_QueryClose(Cancel As Integer, CloseMode As Integer)
+    ' If CloseMode = vbFormControlMenu then we know the user
+    ' clicked the [x] close button or Alt+F4 to close the form.
+    If CloseMode = vbFormControlMenu Then
+        cmdContinue_Click
+        Cancel = True
+    End If
+End Sub
+
 Public Sub SetLinearityResult(resultString As String, IsQuickCheck As Boolean)
     txtNonLinearInfo.Caption = resultString
     chkFullCheck.Visible = IsQuickCheck
     AutoLayout
+    CenterForm
+End Sub
+
+Private Sub UserForm_Activate()
+    CenterForm
 End Sub
 
 Private Sub AutoLayout()
@@ -74,4 +88,9 @@ Private Sub AutoLayout()
     
     Me.BackColor = FormBackColor
     Me.Caption = "OpenSolver - Linearity Check"
+End Sub
+
+Private Sub CenterForm()
+    Me.top = CenterFormTop(Me.height)
+    Me.left = CenterFormLeft(Me.width)
 End Sub
