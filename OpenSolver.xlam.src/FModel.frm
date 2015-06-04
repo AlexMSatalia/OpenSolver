@@ -130,7 +130,7 @@ Sub UpdateFormFromMemory()
 4222      model.PopulateConstraintListBox lstConstraints, chkNameRange.value
 4223      lstConstraints_Change
 
-          chkGetDuals2.value = GetDualsNewSheet()
+          chkGetDuals2.value = GetDualsOnSheet()
 4237      chkGetDuals2_Click
 
           optUpdate.value = GetUpdateSensitivity()
@@ -452,7 +452,7 @@ Private Sub cmdBuild_Click()
 4448      If Not model.BuildModel Then GoTo ExitSub
 
           ' We know the save is confirmed now, so we can update values that aren't stored in the model
-4252      SetDualsNewSheet chkGetDuals2.value
+4252      SetDualsOnSheet chkGetDuals2.value
           SetUpdateSensitivity optUpdate.value
 
           ' Display on screen

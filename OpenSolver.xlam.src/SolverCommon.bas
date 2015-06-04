@@ -69,7 +69,7 @@ Sub SolveModel(s As COpenSolver, ShouldSolveRelaxation As Boolean, ShouldMinimis
             Set LinearSolver = s.Solver
             Set s.rConstraintList = GetDuals()
             s.DualsOnSameSheet = (Not s.rConstraintList Is Nothing)
-            s.DualsOnNewSheet = GetDualsNewSheet()
+            s.DualsOnNewSheet = GetDualsOnSheet()
             s.bGetDuals = ((s.IntegerCellsRange Is Nothing And s.BinaryCellsRange Is Nothing) Or s.SolveRelaxation) And _
                           (s.DualsOnNewSheet Or s.DualsOnSameSheet) And LinearSolver.SensitivityAnalysisAvailable
         End If
