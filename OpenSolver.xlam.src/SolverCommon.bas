@@ -257,6 +257,10 @@ Function AboutLocalSolver(LocalSolver As ISolverLocal) As String
             Dim LocalLibSolver As ISolverLocalLib
             Set LocalLibSolver = Solver
             LibVersion = "using " & LocalLibSolver.LibName & " v" & LocalLibSolver.LibVersion & " "
+        ElseIf TypeOf Solver Is CSolverGurobi Then
+            Dim GurobiSolver As CSolverGurobi
+            Set GurobiSolver = Solver
+            SolverPath = GurobiSolver.ExecFilePath()
         End If
     
         AboutLocalSolver = Solver.Name & " " & _

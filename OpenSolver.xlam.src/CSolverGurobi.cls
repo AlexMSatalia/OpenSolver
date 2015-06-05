@@ -156,7 +156,7 @@ Function SensitivityFilePath() As String
     GetTempFilePath pSensitivityFile, SensitivityFilePath
 End Function
 
-Private Function ExecFilePath() As String
+Function ExecFilePath() As String
     ExecFilePath = JoinPaths(GetBinDir(), pExecName)
 End Function
 
