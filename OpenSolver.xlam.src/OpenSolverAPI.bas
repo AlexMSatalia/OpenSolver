@@ -362,8 +362,17 @@ End Sub
 '/**
 ' * Gets a list of short names for all solvers that can be set
 ' */
-Public Function GetAvailableSolvers() As Variant()
-    GetAvailableSolvers = Array("CBC", "Gurobi", "NeosCBC", "Bonmin", "Couenne", "NOMAD", "NeosBon", "NeosCou")
+Public Function GetAvailableSolvers() As String()
+    Dim AvailableSolvers() As Variant
+    AvailableSolvers = Array("CBC", "Gurobi", "NeosCBC", "Bonmin", "Couenne", "NOMAD", "NeosBon", "NeosCou")
+    
+    Dim AvailableSolversString() As String
+    ReDim AvailableSolversString(LBound(AvailableSolvers) To UBound(AvailableSolvers))
+    Dim i As Long
+    For i = LBound(AvailableSolvers) To UBound(AvailableSolvers)
+        AvailableSolversString(i) = CStr(AvailableSolvers(i))
+    Next i
+    GetAvailableSolvers = AvailableSolversString
 End Function
 
 '/**
@@ -383,7 +392,7 @@ Public Function GetChosenSolver(Optional book As Workbook, Optional sheet As Wor
     Exit Function
     
 SetDefault:
-    GetChosenSolver = GetAvailableSolvers()(0)
+    GetChosenSolver = GetAvailableSolvers()(LBound(GetAvailableSolvers))
     SetChosenSolver GetChosenSolver, book, sheet
 End Function
 
