@@ -1,7 +1,7 @@
 VERSION 5.00
 Begin {C62A69F0-16DC-11CE-9E98-00AA00574A4F} FOptions 
    Caption         =   "OpenSolver - Solve Options"
-   ClientHeight    =   3850
+   ClientHeight    =   4753
    ClientLeft      =   45
    ClientTop       =   375
    ClientWidth     =   4140
@@ -19,6 +19,8 @@ Option Explicit
 #Else
     Const FormWidthOptions = 212
 #End If
+
+Private SolverString As String
 
 Private Sub cmdCancel_Click()
 4089      Me.Hide
@@ -42,6 +44,7 @@ Private Sub cmdOk_Click()
 4104      SetPrecision CDbl(txtPre.Text)
 4106      SetToleranceAsPercentage CDbl(Replace(txtTol.Text, "%", ""))
 4107      SetLinearityCheck chkPerformLinearityCheck.value
+          SetSolverParameters SolverString, Range(refExtraParameters.Text)
                                                                       
 4112      Me.Hide
 End Sub
@@ -59,9 +62,9 @@ Private Sub UserForm_Activate()
 4134      txtPre = CStr(GetPrecision())
 4135      chkPerformLinearityCheck.value = GetLinearityCheck()
 
-          Dim SolverString As String, Solver As ISolver
+          Dim Solver As ISolver
 4136      SolverString = GetChosenSolver()
-          Set Solver = CreateSolver(GetChosenSolver())
+          Set Solver = CreateSolver(SolverString)
 
           chkPerformLinearityCheck.Enabled = (SolverLinearity(Solver) = Linear) And _
                                              Solver.ModelType = Diff
@@ -69,6 +72,8 @@ Private Sub UserForm_Activate()
           txtPre.Enabled = PrecisionAvailable(Solver)
           txtMaxTime.Enabled = TimeLimitAvailable(Solver)
           txtTol.Enabled = ToleranceAvailable(Solver)
+          
+          refExtraParameters.Text = GetDisplayAddress(GetSolverParameters(SolverString), False)
 End Sub
 
 Private Sub UserForm_Initialize()
@@ -154,9 +159,22 @@ Private Sub AutoLayout()
         .top = txtPre.top
     End With
     
+    With lblExtraParameters
+        .Caption = "Extra Solver Parameters:"
+        .left = chkNonNeg.left
+        .width = chkNonNeg.width
+        .top = Below(txtPre, False)
+    End With
+    
+    With refExtraParameters
+        .width = chkNonNeg.width
+        .left = chkNonNeg.left
+        .top = Below(lblExtraParameters, False) - FormSpacing
+    End With
+    
     With lblFootnote
         .Caption = "Note: Only options that are used by the currently selected solver can be changed"
-        .top = Below(txtPre)
+        .top = Below(refExtraParameters)
         .left = chkNonNeg.left
         AutoHeight lblFootnote, chkNonNeg.width
     End With

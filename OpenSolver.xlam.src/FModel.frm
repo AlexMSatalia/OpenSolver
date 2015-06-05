@@ -184,13 +184,21 @@ Private Sub cmdOptions_Click()
 4267      SetNonNegativity chkNonNeg.value
           Dim frmOptions As FOptions
           Set frmOptions = New FOptions
-#If Mac Then
-4268      frmOptions.Show
-#Else
-4269      frmOptions.Show vbModal
-#End If
+          #If Mac Then
+              Me.Hide  ' Hide the model form so the refedit on the options form works
+4268          frmOptions.Show
+          #Else
+4269          frmOptions.Show vbModal
+          #End If
           Unload frmOptions
 4270      chkNonNeg.value = GetNonNegativity
+
+          #If Mac Then
+              ' Restore the original model form
+              model.NonNegativityAssumption = chkNonNeg.value
+              PreserveModel = True
+              Me.Show
+          #End If
 End Sub
 
 '--------------------------------------------------------------------------------------
