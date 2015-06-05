@@ -251,9 +251,7 @@ Sub PopulateSolverParameters(Solver As ISolver, sheet As Worksheet, SolverParame
           Dim ParametersRange As Range, i As Long
 6104      Set ParametersRange = GetSolverParameters(Solver.ShortName, sheet:=sheet)
           If Not ParametersRange Is Nothing Then
-6105          If ParametersRange.Columns.Count <> 2 Then
-6106              Err.Raise OpenSolver_SolveError, Description:="The range OpenSolver_" & Solver.ShortName & "Parameters must be a two-column table."
-6108          End If
+6105          ValidateParametersRange ParametersRange
 6109          For i = 1 To ParametersRange.Rows.Count
                   Dim ParamName As String, ParamValue As String
 6110              ParamName = Trim(ParametersRange.Cells(i, 1))

@@ -182,6 +182,8 @@ End Sub
 ' * @param {} sheet The worksheet containing the model (defaults to active worksheet)
 ' */
 Public Sub UpdateConstraint(Index As Long, LHSRange As Range, Relation As RelationConsts, Optional RHSRange As Range, Optional RHSFormula As String, Optional book As Workbook, Optional sheet As Worksheet)
+    ValidateConstraint LHSRange, Relation, RHSRange, RHSFormula
+    
     SetConstraintLhs Index, LHSRange, book, sheet
     SetConstraintRel Index, Relation, book, sheet
     
@@ -585,6 +587,7 @@ End Function
 ' * @param {} sheet The worksheet containing the model (defaults to active worksheet)
 ' */
 Public Sub SetSolverParameters(SolverShortName As String, SolverParameters As Range, Optional book As Workbook, Optional sheet As Worksheet)
+    ValidateParametersRange SolverParameters
     SetNamedRangeIfExists "OpenSolver_" & SolverShortName & "Parameters", SolverParameters, book, sheet
 End Sub
 

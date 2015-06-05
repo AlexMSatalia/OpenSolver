@@ -287,3 +287,55 @@ ErrorHandler:
           GoTo ExitSub
 End Sub
 
+Public Sub ValidateConstraint(LHSRange As Range, Relation As RelationConsts, Optional RHSRange As Range, Optional RHSFormula As String)
+    If LHSRange.Areas.Count > 1 Then
+        Err.Raise OpenSolver_ModelError, Description:="Left-hand-side of constraint must have only one area."
+    End If
+    
+    Select Case Relation
+    Case RelationConsts.RelationLE, RelationConsts.RelationEQ, RelationConsts.RelationGE
+        If Not RHSRange Is Nothing Then
+            If RHSRange.Count > 1 And RHSRange.Count <> LHSRange.Count Then
+                Err.Raise OpenSolver_ModelError, Description:="Right-hand-side of constraint has more than one cell, and does not match the number of cells on the left-hand-side."
+            End If
+        Else
+            ' Try to convert it to a US locale string internally
+            Dim internalRHS As String
+            internalRHS = ConvertFromCurrentLocale(RHSFormula)
+
+            ' Can we evaluate this function or constant?
+            Dim varReturn As Variant
+            varReturn = ActiveSheet.Evaluate(internalRHS) ' Must be worksheet.evaluate to get references to names local to the sheet
+            If VBA.VarType(varReturn) = vbError Then
+                Err.Raise OpenSolver_ModelError, Description:="The formula or value for the RHS is not valid. Please check and try again."
+            End If
+
+            ' Convert any cell references to absolute
+            If left(internalRHS, 1) <> "=" Then internalRHS = "=" & internalRHS
+            varReturn = Application.ConvertFormula(internalRHS, FromReferenceStyle:=xlA1, ToReferenceStyle:=xlA1, ToAbsolute:=xlAbsolute)
+
+            If (VBA.VarType(varReturn) = vbError) Then
+                ' Its valid, but couldn't convert to standard form, probably because not A1... just leave it
+            Else
+                ' Always comes back with a = at the start
+                ' Unfortunately, return value will have wrong locale...
+                ' But not much can be done with that?
+                internalRHS = Mid(varReturn, 2, Len(varReturn))
+            End If
+            RHSFormula = internalRHS
+        End If
+        
+    Case RelationConsts.RelationINT, RelationConsts.RelationBIN, RelationConsts.RelationAllDiff
+        If Not RHSRange Is Nothing Or _
+           (RHSFormula <> "" And RHSFormula <> "integer" And RHSFormula <> "binary" And RHSFormula <> "alldiff") Then
+            Err.Raise OpenSolver_ModelError, Description:="No right-hand-side is permitted for this relation"
+        End If
+    End Select
+End Sub
+
+Sub ValidateParametersRange(ParametersRange As Range)
+    If ParametersRange.Areas.Count > 1 Or ParametersRange.Columns.Count <> 2 Then
+        Err.Raise OpenSolver_SolveError, Description:="The Extra Solver Parameters range must be a single two-column table of keys and values."
+    End If
+End Sub
+

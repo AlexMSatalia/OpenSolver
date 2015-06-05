@@ -37,6 +37,14 @@ Private Sub UserForm_QueryClose(Cancel As Integer, CloseMode As Integer)
 End Sub
 
 Private Sub cmdOk_Click()
+          On Error GoTo ErrorHandler
+          
+          Dim ParametersRange As Range
+          If Len(refExtraParameters.Text) <> 0 Then
+              Set ParametersRange = Range(refExtraParameters.Text)
+              ValidateParametersRange ParametersRange
+          End If
+
 4092      SetNonNegativity chkNonNeg.value
 4098      SetShowSolverProgress chkShowSolverProgress.value
 4102      SetMaxTime CDbl(txtMaxTime.Text)
@@ -44,9 +52,13 @@ Private Sub cmdOk_Click()
 4104      SetPrecision CDbl(txtPre.Text)
 4106      SetToleranceAsPercentage CDbl(Replace(txtTol.Text, "%", ""))
 4107      SetLinearityCheck chkPerformLinearityCheck.value
-          SetSolverParameters SolverString, Range(refExtraParameters.Text)
+          SetSolverParameters SolverString, ParametersRange
                                                                       
 4112      Me.Hide
+          Exit Sub
+
+ErrorHandler:
+          MsgBox Err.Description
 End Sub
 
 Private Sub UserForm_Activate()

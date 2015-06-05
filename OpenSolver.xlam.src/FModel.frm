@@ -531,10 +531,7 @@ End Sub
 Private Sub cmdAddCon_Click()
 4496      On Error GoTo ErrorHandler
 
-          Dim rngLHS As Range, rngRHS As Range
-          Dim IsRestrict As Boolean
-
-          'TODO: This needs tidying up to handle locales properly.
+          Dim rngLHS As Range
           
           ' LEFT HAND SIDE
           Dim LHSisRange As Boolean, LHSisFormula As Boolean, LHSIsValueWithEqual As Boolean, LHSIsValueWithoutEqual As Boolean
@@ -544,15 +541,10 @@ Private Sub cmdAddCon_Click()
 4499          MsgBox "Left-hand-side of constraint must be a range."
 4500          Exit Sub
 4501      End If
-4502      If Range(Trim(refConLHS.Text)).Areas.Count > 1 Then
-4503          MsgBox "Left-hand-side of constraint must have only one area."
-4504          Exit Sub
-4505      End If
 4506      Set rngLHS = Range(Trim(refConLHS.Text))
 
-          ' RIGHT HAND SIDE
-          Dim RHSisRange As Boolean, RHSIsFormula As Boolean, RHSIsValueWithEqual As Boolean, RHSIsValueWithoutEqual As Boolean
-          Dim strRel As String
+          ' RELATION
+          Dim strRel As String, IsRestrict As Boolean
 4507      strRel = cboConRel.Text
 4508      If strRel = "" Then ' Should not happen
 4509          MsgBox "Please select a relation such as = or <="
@@ -566,12 +558,16 @@ Private Sub cmdAddCon_Click()
               IsRestrict = True
           End Select
           
+          ' RIGHT HAND SIDE
+          
+          Dim internalRHS As String, rngRHS As Range
 4513      If Not IsRestrict Then
 4514          If Trim(refConRHS.Text) = "" Then
 4515              MsgBox "Please enter a right-hand-side!"
 4516              Exit Sub
 4517          End If
 
+              Dim RHSisRange As Boolean, RHSIsFormula As Boolean, RHSIsValueWithEqual As Boolean, RHSIsValueWithoutEqual As Boolean
 4518          TestStringForConstraint refConRHS.Text, RHSisRange, RHSIsFormula, RHSIsValueWithEqual, RHSIsValueWithoutEqual
 
 4519          If Not RHSisRange And Not RHSIsFormula _
@@ -584,45 +580,14 @@ Private Sub cmdAddCon_Click()
 4521              Exit Sub
 4522          End If
 
-              Dim internalRHS As String
 4523          If RHSisRange Then
 4524              Set rngRHS = Range(Trim(refConRHS.Text))
-                  ' If it is multi cell, it must match cell count for LHS
-4525              If rngRHS.Count > 1 Then
-4526                  If rngRHS.Count <> rngLHS.Count Then
-4527                      MsgBox "Right-hand-side of constraint has more than one cell, and does not match the number of cells on the left-hand-side."
-4528                      Exit Sub
-4529                  End If
-4530              End If
 4531          Else
-                  ' Try to convert it to a US locale string internally
-4532              internalRHS = ConvertFromCurrentLocale(Trim(refConRHS.Text))
-
-                  ' Can we evaluate this function or constant?
-                  Dim varReturn As Variant
-4540              varReturn = ActiveSheet.Evaluate(internalRHS) ' Must be worksheet.evaluate to get references to names local to the sheet
-4541              If VBA.VarType(varReturn) = vbError Then
-4542                  MsgBox "The formula or value for the RHS is not valid. Please check and try again."
-4543                  refConRHS.SetFocus
-4544                  DoEvents
-4545                  Exit Sub
-4546              End If
-
-                  ' If it isn't a range, lets convert any cell references to absolute
-                  ' Will fail if refConRHS has a non-English locale number
-4548              If left(internalRHS, 1) <> "=" Then internalRHS = "=" & internalRHS
-                  varReturn = Application.ConvertFormula(internalRHS, FromReferenceStyle:=xlA1, ToReferenceStyle:=xlA1, ToAbsolute:=xlAbsolute)
-
-4553              If (VBA.VarType(varReturn) = vbError) Then
-                      ' Its valid, but couldn't convert to standard form, probably because not A1... just leave it
-4554              Else
-                      ' Always comes back with a = at the start
-                      ' Unfortunately, return value will have wrong locale...
-                      ' But not much can be done with that?
-4555                  internalRHS = Mid(varReturn, 2, Len(varReturn))
-4556              End If
+4532              internalRHS = refConRHS.Text
               End If
 4557      End If
+
+          ValidateConstraint rngLHS, RelationStringToEnum(strRel), rngRHS, internalRHS
 
 4558      AlterConstraints True
 
@@ -640,35 +605,17 @@ Private Sub cmdAddCon_Click()
 4587          Set .LHS = rngLHS
 4588          Set .Relation = Nothing
 4589          .ConstraintType = strRel
-4590          If IsRestrict Then
-4591              Set .RHS = Nothing
-4592              .RHSstring = ""
-4593          Else
-4594              If RHSisRange Then
-4595                  Set .RHS = rngRHS
-4596                  .RHSstring = ""
-4597              Else
-4598                  Set .RHS = Nothing
-4599                  .RHSstring = internalRHS ' This has been converted above into a US-locale formula, value or reference
-4604              End If
-4605          End If
+4590          Set .RHS = rngRHS
+4592          .RHSstring = internalRHS
 4606      End With
 
 4608      If Not DontRepop Then model.PopulateConstraintListBox lstConstraints, chkNameRange.value
 4609      Exit Sub
 
-ErrorHandler_CannotInterpretRHS:
-4614      Application.DisplayAlerts = True
-4615      OpenSolverSheet.Range("A1").Clear ' This must be blank to ensure no risk of dialogs being shown trying to locate a sheet
-          ' Couldn't turn the RHS into a formula
-4616      MsgBox "The formula or value for the RHS is not valid. Please check and try again."
-4617      refConRHS.SetFocus
-4618      DoEvents ' Try to stop RefEdit bugs
-4619      Exit Sub
 ErrorHandler:
 4620      Application.DisplayAlerts = True
 4621      OpenSolverSheet.Range("A1").FormulaLocal = "" ' This must be blank to ensure no risk of dialogs being shown trying to locate a sheet
-4622      MsgBox "While constructing the model, OpenSolver encountered error " & Err.Number & ":" & vbCrLf & Err.Description & IIf(Erl = 0, "", " (at line " & Erl & ")") & vbCrLf & "Source = " & Err.Source & " (FModel::cmdBuild_Click)", , "OpenSolver Code Error"
+4622      MsgBox Err.Description
 4623      DoEvents ' Try to stop RefEdit bugs
 4624      Exit Sub
 
