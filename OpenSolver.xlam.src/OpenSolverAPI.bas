@@ -239,7 +239,7 @@ Public Function GetNumConstraints(Optional book As Workbook, Optional sheet As W
 End Function
 
 '/**
-' * Sets the number of constraints in an OpenSolver model. Using this method is dangerous, it is best to use Add/Delete/UpdateConstraint.
+' * Sets the number of constraints in an OpenSolver model. Using Set methods to modify constraints is dangerous, it is best to use Add/Delete/UpdateConstraint.
 ' * @param {} NumConstraints The number of constraints to set
 ' * @param {} book The workbook containing the model (defaults to active workbook)
 ' * @param {} sheet The worksheet containing the model (defaults to active worksheet)
@@ -277,7 +277,7 @@ Public Function GetConstraintLhs(Index As Long, Optional book As Workbook, Optio
 End Function
 
 '/**
-' * Sets the constraint LHS for a specified constraint in an OpenSolver model. Using this method is dangerous, it is best to use Add/Delete/UpdateConstraint.
+' * Sets the constraint LHS for a specified constraint in an OpenSolver model. Using Set methods to modify constraints is dangerous, it is best to use Add/Delete/UpdateConstraint.
 ' * @param {} Index The index of the constraint to modify
 ' * @param {} ConstraintLhs The cell range to set as the constraint LHS
 ' * @param {} book The workbook containing the model (defaults to active workbook)
@@ -307,7 +307,7 @@ Public Function GetConstraintRel(Index As Long, Optional book As Workbook, Optio
 End Function
 
 '/**
-' * Sets the constraint relation for a specified constraint in an OpenSolver model. Using this method is dangerous, it is best to use Add/Delete/UpdateConstraint.
+' * Sets the constraint relation for a specified constraint in an OpenSolver model. Using Set methods to modify constraints is dangerous, it is best to use Add/Delete/UpdateConstraint.
 ' * @param {} Index The index of the constraint to modify
 ' * @param {} ConstraintRel The constraint relation to set
 ' * @param {} book The workbook containing the model (defaults to active workbook)
@@ -344,7 +344,7 @@ Public Function GetConstraintRhs(Index As Long, Formula As String, value As Doub
 End Function
 
 '/**
-' * Sets the constraint RHS for a specified constraint in an OpenSolver model. Only one of ConstraintRhsRange and ConstraintRhsFormula should be set, depending on whether the RHS is a range or a string formula. Using this method is dangerous, it is best to use Add/Delete/UpdateConstraint.
+' * Sets the constraint RHS for a specified constraint in an OpenSolver model. Only one of ConstraintRhsRange and ConstraintRhsFormula should be set, depending on whether the RHS is a range or a string formula. Using Set methods to modify constraints is dangerous, it is best to use Add/Delete/UpdateConstraint.
 ' * @param {} Index The index of the constraint to modify
 ' * @param {} ConstraintRhsRange Set if the constraint RHS is a cell range
 ' * @param {} ConstraintRhsFormula Set if the constraint RHS is a string formula
