@@ -780,7 +780,7 @@ ErrorHandler:
 End Sub
 
 '/**
-' * Runs a QuickSolve for the OpenSolver model on the current sheet. The QuickSolve must be initialized before it can be run.
+' * Runs a QuickSolve for currently initialized QuickSolve model.
 ' * @param {} MinimiseUserInteraction If True, all dialogs and messages will be suppressed. Use this when automating a lot of solves so that there are no interruptions. Defaults to False
 ' */
 Public Function RunQuickSolve(Optional MinimiseUserInteraction As Boolean = False) As OpenSolverResult
