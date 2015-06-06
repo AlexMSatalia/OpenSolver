@@ -42,34 +42,7 @@ ExitFunction:
           Exit Function
 
 ErrorHandler:
-          If Not ReportError("OpenSolverMain", "SetQuickSolveParameterRange") Then Resume
-          RaiseError = True
-          GoTo ExitFunction
-End Function
-
-Function CheckModelHasParameterRange() As Boolean
-          Dim RaiseError As Boolean
-          RaiseError = False
-          On Error GoTo ErrorHandler
-
-395       If Application.Workbooks.Count = 0 Then
-396           Err.Raise OpenSolver_BuildError, Description:="No active workbook available"
-398       End If
-          
-          ' Find the Parameter range
-          Dim ParamRange As Range
-408       Set ParamRange = GetQuickSolveParameters()
-409       If ParamRange Is Nothing Then
-411           Err.Raise OpenSolver_BuildError, Description:="No parameter range could be found on the worksheet. Please use the Initialize Quick Solve Parameters menu item to define the cells that you wish to change between successive OpenSolver solves. Note that changes to these cells must lead to changes in the underlying model's right hand side values for its constraints."
-413       End If
-406       CheckModelHasParameterRange = True
-
-ExitFunction:
-          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
-          Exit Function
-
-ErrorHandler:
-          If Not ReportError("OpenSolverMain", "CheckModelHasParameterRange") Then Resume
+          If Not ReportError("OpenSolverQuickSolve", "SetQuickSolveParameterRange") Then Resume
           RaiseError = True
           GoTo ExitFunction
 End Function

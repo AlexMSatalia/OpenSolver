@@ -23,7 +23,7 @@ End Sub
 ' Menu/ribbon click handlers
 Sub OpenSolver_SolveClickHandler(Optional Control)
 2754      If Not CheckWorksheetAvailable Then Exit Sub
-2755      RunOpenSolver False
+2755      RunOpenSolver False, False, 0
           AutoUpdateCheck
 End Sub
 
@@ -47,7 +47,7 @@ End Sub
 
 Sub OpenSolver_SolveRelaxationClickHandler(Optional Control)
 2762      If Not CheckWorksheetAvailable Then Exit Sub
-2763      RunOpenSolver True
+2763      RunOpenSolver True, False, 0
           AutoUpdateCheck
 End Sub
 
@@ -181,7 +181,7 @@ End Sub
 
 Sub OpenSolver_AutoModelAndSolveClick(Optional Control)
           If Not RunAutoModel(False) Then Exit Sub
-2882      RunOpenSolver False
+2882      RunOpenSolver False, False, 0
           AutoUpdateCheck
 End Sub
 

@@ -9,16 +9,24 @@ Public Const sOpenSolverDate As String = "2015.02.15"
 ' * @param {} SolveRelaxation If True, all integer and boolean constraints will be relaxed to allow continuous values for these variables. Defaults to False
 ' * @param {} MinimiseUserInteraction If True, all dialogs and messages will be suppressed. Use this when automating a lot of solves so that there are no interruptions. Defaults to False
 ' * @param {} LinearityCheckOffset Sets the base value used for checking if the model is linear. Change this if a non-linear model is not being detected as non-linear. Defaults to 0
+' * @param {} book The workbook containing the model (defaults to active workbook)
+' * @param {} sheet The worksheet containing the model (defaults to active worksheet)
 ' */
-Public Function RunOpenSolver(Optional SolveRelaxation As Boolean = False, Optional MinimiseUserInteraction As Boolean = False, Optional LinearityCheckOffset As Double = 0) As OpenSolverResult
+Public Function RunOpenSolver(Optional SolveRelaxation As Boolean = False, _
+                              Optional MinimiseUserInteraction As Boolean = False, _
+                              Optional LinearityCheckOffset As Double = 0, _
+                              Optional book As Workbook, _
+                              Optional sheet As Worksheet) As OpenSolverResult
     ClearError
     On Error GoTo ErrorHandler
+    
+    GetActiveBookAndSheetIfMissing book, sheet
 
     RunOpenSolver = OpenSolverResult.Unsolved
     Dim OpenSolver As COpenSolver
     Set OpenSolver = New COpenSolver
 
-    OpenSolver.BuildModelFromSolverData LinearityCheckOffset, MinimiseUserInteraction, SolveRelaxation
+    OpenSolver.BuildModelFromSolverData LinearityCheckOffset, MinimiseUserInteraction, SolveRelaxation, book, sheet
     ' Only proceed with solve if nothing detected while building model
     If OpenSolver.SolveStatus = OpenSolverResult.Unsolved Then
         SolveModel OpenSolver, SolveRelaxation, MinimiseUserInteraction
@@ -32,7 +40,7 @@ ExitFunction:
     Exit Function
 
 ErrorHandler:
-    ReportError "OpenSolverMain", "RunOpenSolver", True, MinimiseUserInteraction
+    ReportError "OpenSolverAPI", "RunOpenSolver", True, MinimiseUserInteraction
     If OpenSolverErrorHandler.ErrNum = OpenSolver_UserCancelledError Then
         RunOpenSolver = AbortedThruUserAction
     Else
@@ -739,9 +747,15 @@ End Sub
 ' * Gets the QuickSolve parameter range for an OpenSolver model.
 ' * @param {} book The workbook containing the model (defaults to active workbook)
 ' * @param {} sheet The worksheet containing the model (defaults to active worksheet)
+' * @param {} ValidateRange If True, an error will be thrown if no range is set
 ' */
-Public Function GetQuickSolveParameters(Optional book As Workbook, Optional sheet As Worksheet) As Range
+Public Function GetQuickSolveParameters(Optional book As Workbook, Optional sheet As Worksheet, Optional ValidateRange As Boolean = False) As Range
     If Not GetNamedRangeIfExistsOnSheet(sheet, "OpenSolverModelParameters", GetQuickSolveParameters) Then Set GetQuickSolveParameters = Nothing
+    If ValidateRange And GetQuickSolveParameters Is Nothing Then
+        Err.Raise OpenSolver_BuildError, Description:="No parameter range could be found on the worksheet. Please use ""Initialize Quick Solve Parameters""" & _
+                                                      "to define the cells that you wish to change between successive OpenSolver solves. Note that changes " & _
+                                                      "to these cells must lead to changes in the underlying model's right hand side values for its constraints."
+    End If
 End Function
 
 '/**
@@ -755,27 +769,34 @@ Public Sub SetQuickSolveParameters(QuickSolveParameters As Range, Optional book 
 End Sub
 
 '/**
-' * Initializes QuickSolve procedure for the OpenSolver model on the current sheet.
+' * Initializes QuickSolve procedure for an OpenSolver model.
+' * @param {} SolveRelaxation If True, all integer and boolean constraints will be relaxed to allow continuous values for these variables. Defaults to False
+' * @param {} MinimiseUserInteraction If True, all dialogs and messages will be suppressed. Use this when automating a lot of solves so that there are no interruptions. Defaults to False
+' * @param {} LinearityCheckOffset Sets the base value used for checking if the model is linear. Change this if a non-linear model is not being detected as non-linear. Defaults to 0
+' * @param {} book The workbook containing the model (defaults to active workbook)
+' * @param {} sheet The worksheet containing the model (defaults to active worksheet)
 ' */
-Public Sub InitializeQuickSolve()
+Public Sub InitializeQuickSolve(Optional SolveRelaxation As Boolean = False, Optional MinimiseUserInteraction As Boolean = False, Optional LinearityCheckOffset As Double = 0, Optional book As Workbook, Optional sheet As Worksheet)
     ClearError
     On Error GoTo ErrorHandler
+    
+    GetActiveBookAndSheetIfMissing book, sheet
 
-    If Not CreateSolver(GetChosenSolver()).ModelType = Diff Then
+    If Not CreateSolver(GetChosenSolver(book, sheet)).ModelType = Diff Then
         Err.Raise OpenSolver_ModelError, Description:="The selected solver does not support QuickSolve"
     End If
 
-    If CheckModelHasParameterRange Then
-        Set QuickSolver = New COpenSolver
-        QuickSolver.BuildModelFromSolverData
-        QuickSolver.InitializeQuickSolve
-    End If
+    Dim ParamRange As Range
+    Set ParamRange = GetQuickSolveParameters(book, sheet, True)  ' Throws error if missing
+    Set QuickSolver = New COpenSolver
+    QuickSolver.BuildModelFromSolverData LinearityCheckOffset, MinimiseUserInteraction, SolveRelaxation, book, sheet
+    QuickSolver.InitializeQuickSolve ParamRange
 
 ExitSub:
     Exit Sub
 
 ErrorHandler:
-    ReportError "OpenSolverMain", "InitializeQuickSolve", True
+    ReportError "OpenSolverAPI", "InitializeQuickSolve", True, MinimiseUserInteraction
     GoTo ExitSub
 End Sub
 
@@ -783,14 +804,14 @@ End Sub
 ' * Runs a QuickSolve for currently initialized QuickSolve model.
 ' * @param {} MinimiseUserInteraction If True, all dialogs and messages will be suppressed. Use this when automating a lot of solves so that there are no interruptions. Defaults to False
 ' */
-Public Function RunQuickSolve(Optional MinimiseUserInteraction As Boolean = False) As OpenSolverResult
+Public Function RunQuickSolve(Optional SolveRelaxation As Boolean = False, Optional MinimiseUserInteraction As Boolean = False) As OpenSolverResult
     ClearError
     On Error GoTo ErrorHandler
 
     If QuickSolver Is Nothing Then
         Err.Raise OpenSolver_SolveError, Description:="There is no model to solve, and so the quick solve cannot be completed. Please select the Initialize Quick Solve command."
-    ElseIf QuickSolver.CanDoQuickSolveForActiveSheet Then    ' This will report any errors
-        QuickSolver.DoQuickSolve MinimiseUserInteraction
+    Else
+        QuickSolver.DoQuickSolve SolveRelaxation, MinimiseUserInteraction
         RunQuickSolve = QuickSolver.SolveStatus
     End If
 

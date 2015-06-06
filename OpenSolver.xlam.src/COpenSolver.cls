@@ -337,11 +337,6 @@ End Property
 ' End of getters and setters
 '===============================================================================
 
-
-Public Function GetNumRows() As Long
-824       GetNumRows = NumRows
-End Function
-
 Public Function GetSparseACount(Index As Long) As Long
 825       GetSparseACount = SparseA(Index).Count
 End Function
@@ -477,7 +472,7 @@ Sub GetCurrentConstraintValues(constraint As Long, LHSValues As Variant, RHSValu
 896       ElseIf RHSType(constraint) = SolverInputType.MultiCellRange Then
 897           RHSValues = RHSRange(constraint).Value2   ' Copy all the values into a variant, which will then be an array of doubles (or an array of variants?)
 898       ElseIf RHSType(constraint) = SolverInputType.Formula Then
-899           RHSValues = ActiveSheet.Evaluate("=" & RHSFormula(constraint)) ' Will not throw an error, but may put an error value in RHSValues
+899           RHSValues = sheet.Evaluate("=" & RHSFormula(constraint)) ' Will not throw an error, but may put an error value in RHSValues
 900       Else        'if the rhs value is a constant
 901           RHSValues = RHSOriginalValues(constraint)
 902       End If
@@ -583,7 +578,8 @@ End Function
 
 Sub BuildModelFromSolverData(Optional LinearityCheckOffset As Double = 0, _
                              Optional ShouldMinimiseUserInteraction As Boolean = False, _
-                             Optional ShouldSolveRelaxation As Boolean = False)
+                             Optional ShouldSolveRelaxation As Boolean = False, _
+                             Optional modelBook As Workbook, Optional modelSheet As Worksheet)
           Dim RaiseError As Boolean
           RaiseError = False
           On Error GoTo ErrorHandler
@@ -613,9 +609,9 @@ Sub BuildModelFromSolverData(Optional LinearityCheckOffset As Double = 0, _
 
 947       Application.EnableCancelKey = xlErrorHandler
           
-958       Set book = ActiveWorkbook
+          Set book = modelBook
+          Set sheet = modelSheet
 959       RawWorkBookName = book.Name
-950       Set sheet = book.ActiveSheet
 956       RawSheetName = sheet.Name
 957       sheetName = EscapeSheetName(sheet)
           
@@ -844,7 +840,7 @@ ModelOptions:
 1138              ElseIf RHSRefersToFormula Then
 1139                  RHSFormula(constraint) = sRefersToRHS
 1140                  RHSType(constraint) = SolverInputType.Formula
-1141                  RHSOriginalValues(constraint) = ActiveSheet.Evaluate("=" & sRefersToRHS)
+1141                  RHSOriginalValues(constraint) = sheet.Evaluate("=" & sRefersToRHS)
                   ' Its a constant
 1142              Else
                       RHSFormula(constraint) = sRefersToRHS
@@ -1290,19 +1286,18 @@ Sub ClearQuickSolve()
 1992      Set QuickSolve = Nothing
 End Sub
 
-Function InitializeQuickSolve() As Boolean
+Function InitializeQuickSolve(ParamRange As Range) As Boolean
           Dim RaiseError As Boolean
           RaiseError = False
           On Error GoTo ErrorHandler
 
 1993      InitializeQuickSolve = False
 1994      If ModelStatus <> Built Then
-1995          MsgBox "QuickSolve Initialisation Failed: The model cannot be solved as it has not yet been built.", , "OpenSolver" & sOpenSolverVersion & " Error"
-1996          GoTo ExitFunction
+1995          Err.Raise OpenSolver_BuildError, Description:="QuickSolve Initialisation Failed: The model cannot be solved as it has not yet been built."
 1997      End If
 
 1998      Set QuickSolve = New CQuickSolve
-1999      If QuickSolve.AnalyseParameters(Me, sheet, NumConstraints, pRHS, pLHSRange, pRHSRange, pRHSFormula, pRHSType, pLHSOriginalValues, pRHSOriginalValues) Then
+1999      If QuickSolve.AnalyseParameters(Me, ParamRange) Then
 2000          InitializeQuickSolve = True
 2001      Else
 2002          Set QuickSolve = Nothing
@@ -1318,41 +1313,16 @@ ErrorHandler:
           GoTo ExitFunction
 End Function
 
-Function CanDoQuickSolveForActiveSheet() As Boolean
-          ' Confirms that we can do a quicksolve for the active sheet because that is the sheet we are set up for
-          Dim RaiseError As Boolean
-          RaiseError = False
-          On Error GoTo ErrorHandler
-
-2004      CanDoQuickSolveForActiveSheet = False
-2005      If QuickSolve Is Nothing Then
-2006          MsgBox "Error: The quick solve data has not been initialized. Please choose Intialize Quick Solve, and then try again.", , "OpenSolver" & sOpenSolverVersion & " Error"
-2007      ElseIf (ActiveWorkbook.Name <> RawWorkBookName) Or (ActiveSheet.Name <> RawSheetName) Then
-2008          MsgBox "Error: The quick solve data has not been initialized for this worksheet. Please choose Intialize Quick Solve, and then try again.", , "OpenSolver" & sOpenSolverVersion & " Error"
-2009      Else
-2010          CanDoQuickSolveForActiveSheet = True
-2011      End If
-
-ExitFunction:
-          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
-          Exit Function
-
-ErrorHandler:
-          If Not ReportError("COpenSolver", "CanDoQuickSolveForActiveSheet") Then Resume
-          RaiseError = True
-          GoTo ExitFunction
-End Function
-
-Sub DoQuickSolve(Optional MinimiseUserInteraction As Boolean = False)
+Sub DoQuickSolve(Optional SolveRelaxation As Boolean = False, Optional MinimiseUserInteraction As Boolean = False)
           Dim RaiseError As Boolean
           RaiseError = False
           On Error GoTo ErrorHandler
           
 2013      If QuickSolve Is Nothing Then
-2014          MsgBox "Error: The quick solve data has not been initialized. Please choose Intialize Quick Solve, and then try again.", , "OpenSolver" & sOpenSolverVersion & " Error"
+2014          Err.Raise OpenSolver_ModelError, Description:="Quick Solve has not been initialized. Please choose Intialize Quick Solve, and then try again."
 2015      Else
-2016          If QuickSolve.UpdateModelRHS(sheet, pRHS) Then
-2017              SolveModel Me, False, MinimiseUserInteraction
+2016          If QuickSolve.UpdateModelRHS(book, sheet, pRHS) Then
+2017              SolveModel Me, SolveRelaxation, MinimiseUserInteraction
 2018          End If
 2019      End If
 
