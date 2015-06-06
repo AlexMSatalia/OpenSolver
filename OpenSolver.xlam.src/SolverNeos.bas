@@ -87,7 +87,7 @@ Public Function SolveOnNeos(message As String, errorString As String, Optional f
 6843          If result = "Done" Then
 6844              Done = True
 6845          ElseIf result <> "Waiting" And result <> "Running" Then
-6846              Err.Raise OpenSolver_NeosError, Description:="An error occured when sending file to NEOS. Neos returned: " & result
+6846              Err.Raise OpenSolver_NeosError, Description:="An error occured while waiting for NEOS. NEOS returned: " & result
 6848          Else
 6849              SleepSeconds 1
 6850              time = time + 1
@@ -115,7 +115,7 @@ Aborted:
 End Function
 
 #If Mac Then  ' Define on Mac only
-Private Function SendToNeos_Mac(method As String, param1 As String, Optional param2 As String) As String
+Private Function SendToNeos_Mac(method As String, Optional param1 As String, Optional param2 As String) As String
 ' Mac doesn't have ActiveX so can't use MSXML.
 ' It does have python by default, so we can use python's xmlrpclib to contact NEOS instead.
 ' We delegate all interaction to the NeosClient.py script file.
@@ -137,13 +137,17 @@ Private Function SendToNeos_Mac(method As String, param1 As String, Optional par
     If GetLogFilePath(LogFilePathName) Then DeleteFileAndVerify LogFilePathName
     
     If Not RunExternalCommand(SolverPath & " " & method & " " & MakePathSafe(SolutionFilePathName) & " " & param1 & " " & param2, LogFilePathName, Hide, True) Then
-        Err.Raise OpenSolver_NeosError, Description:="Error while contacting NEOS"
+        Err.Raise OpenSolver_NeosError, Description:="Unknown error while contacting NEOS"
     End If
     
     ' Read in results from file
     Open SolutionFilePathName For Input As #1
     SendToNeos_Mac = Input$(LOF(1), 1)
     Close #1
+    
+    If left(SendToNeos_Mac, 6) = "Error:" And method <> "ping" Then
+        Err.Raise OpenSolver_NeosError, Description:="An error occured while solving on NEOS. NEOS returned: " & SendToNeos_Mac
+    End If
 
 ExitFunction:
     Close #1
@@ -151,6 +155,10 @@ ExitFunction:
     Exit Function
 
 ErrorHandler:
+    If Not PingNeos() Then
+        Err.Description = "OpenSolver could not establish a connection to NEOS. Check your internet connection and try again. If this error message persists, NEOS may be down."
+        Err.Number = OpenSolver_NeosError
+    End If
     If Not ReportError("SolverNeos", "SendToNeos_Mac") Then Resume
     RaiseError = True
     GoTo ExitFunction
@@ -175,7 +183,13 @@ ExitFunction:
     Exit Function
 
 ErrorHandler:
-    If Not ReportError("SolverNeos", "SendToNeos_Windows") Then Resume
+    If GetXmlTagValue(message, "methodName") <> "ping" Then
+        If Not PingNeos() Then
+            Err.Description = "OpenSolver could not establish a connection to NEOS. Check your internet connection and try again. If this error message persists, NEOS may be down."
+            Err.Number = OpenSolver_NeosError
+        End If
+        If Not ReportError("SolverNeos", "SendToNeos_Windows") Then Resume
+    End If
     RaiseError = True
     GoTo ExitFunction
 End Function
@@ -188,9 +202,6 @@ Private Function GetNeosResult(jobNumber As String, Password As String) As Strin
 
     #If Mac Then
         GetNeosResult = SendToNeos_Mac("read", jobNumber, Password)
-        If left(GetNeosResult, 6) = "Error:" Then
-            Err.Raise OpenSolver_NeosError, Description:="An error occured when sending file to NEOS. Neos returned: " & GetNeosResult
-        End If
     #Else
         GetNeosResult = DecodeBase64(GetXmlTagValue(SendToNeos_Windows(MakeNeosMethodCall("getFinalResults", jobNumber, Password)), "base64"))
     #End If
@@ -431,4 +442,21 @@ Private Function GetInputType(Solver As ISolver)
     If TypeOf Solver Is ISolverFileAMPL Then
         GetInputType = "AMPL"
     End If
+End Function
+
+Function PingNeos() As Boolean
+    On Error GoTo CantAccess
+    
+    Dim status As String
+    #If Mac Then
+        status = SendToNeos_Mac("ping")
+    #Else
+        status = GetXmlTagValue(SendToNeos_Windows(MakeNeosMethodCall("ping")), "string")
+    #End If
+    Const AliveMessage As String = "NeosServer is alive"
+    PingNeos = (left(status, Len(AliveMessage)) = AliveMessage)
+    Exit Function
+    
+CantAccess:
+    PingNeos = False
 End Function

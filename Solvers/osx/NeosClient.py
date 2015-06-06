@@ -12,8 +12,16 @@ import time
 NEOS_HOST="www.neos-server.org"
 NEOS_PORT=3332
 
-if len(sys.argv) < 4 or (sys.argv[1] != "send" and len(sys.argv) != 5):
-  sys.stderr.write("Usage: NeosClient <send|check|read> <resultfilename>  extra parameters\n")
+numargs = {
+  "ping":  3,
+  "send":  4,
+  "check": 5,
+  "read":  5,
+}
+
+if (len(sys.argv) != numargs[sys.argv[1]]):
+  sys.stderr.write("Usage: NeosClient <send|check|read|ping> <resultfilename>  extra parameters\n")
+  sys.stderr.write("If 'ping' is selected, no extra parameters are required\n")
   sys.stderr.write("If 'send' is selected, 3rd parameter must be path to the job.xml file\n")
   sys.stderr.write("If 'check' or 'read' is selected, 3rd and 4th parameter must be the job number and password on NEOS\n")
   sys.exit(1)
@@ -58,6 +66,15 @@ elif sys.argv[1] == "read":
     # Output results
     msg = neos.getFinalResults(jobNumber, password).data
     resultfile.write(msg)
+    resultfile.close()
+  # Catch any error and write to file
+  except Exception as e:
+    resultfile.write("Error: %s" % e.message)
+    resultfile.close()
+	
+elif sys.argv[1] == "ping":
+  try:
+    resultfile.write(neos.ping())
     resultfile.close()
   # Catch any error and write to file
   except Exception as e:
