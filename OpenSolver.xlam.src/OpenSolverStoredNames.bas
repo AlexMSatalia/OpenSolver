@@ -334,6 +334,7 @@ Public Sub ValidateConstraint(LHSRange As Range, Relation As RelationConsts, Opt
 End Sub
 
 Sub ValidateParametersRange(ParametersRange As Range)
+    If ParametersRange Is Nothing Then Exit Sub
     If ParametersRange.Areas.Count > 1 Or ParametersRange.Columns.Count <> 2 Then
         Err.Raise OpenSolver_SolveError, Description:="The Extra Solver Parameters range must be a single two-column table of keys and values."
     End If

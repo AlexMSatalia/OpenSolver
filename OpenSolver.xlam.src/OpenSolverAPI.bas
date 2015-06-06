@@ -1,6 +1,102 @@
 Attribute VB_Name = "OpenSolverAPI"
 Option Explicit
 
+Public Const sOpenSolverVersion As String = "2.6.1"
+Public Const sOpenSolverDate As String = "2015.02.15"
+
+'/**
+' * Solves the OpenSolver model on the current sheet.
+' * @param {} SolveRelaxation If True, all integer and boolean constraints will be relaxed to allow continuous values for these variables. Defaults to False
+' * @param {} MinimiseUserInteraction If True, all dialogs and messages will be suppressed. Use this when automating a lot of solves so that there are no interruptions. Defaults to False
+' * @param {} LinearityCheckOffset Sets the base value used for checking if the model is linear. Change this if a non-linear model is not being detected as non-linear. Defaults to 0
+' */
+Public Function RunOpenSolver(Optional SolveRelaxation As Boolean = False, Optional MinimiseUserInteraction As Boolean = False, Optional LinearityCheckOffset As Double = 0) As OpenSolverResult
+    ClearError
+    On Error GoTo ErrorHandler
+
+    RunOpenSolver = OpenSolverResult.Unsolved
+    Dim OpenSolver As COpenSolver
+    Set OpenSolver = New COpenSolver
+
+    OpenSolver.BuildModelFromSolverData LinearityCheckOffset, MinimiseUserInteraction, SolveRelaxation
+    ' Only proceed with solve if nothing detected while building model
+    If OpenSolver.SolveStatus = OpenSolverResult.Unsolved Then
+        SolveModel OpenSolver, SolveRelaxation, MinimiseUserInteraction
+    End If
+    
+    RunOpenSolver = OpenSolver.SolveStatus
+    If Not MinimiseUserInteraction Then OpenSolver.ReportAnySolutionSubOptimality
+
+ExitFunction:
+    Set OpenSolver = Nothing    ' Free any OpenSolver memory used
+    Exit Function
+
+ErrorHandler:
+    ReportError "OpenSolverMain", "RunOpenSolver", True, MinimiseUserInteraction
+    If OpenSolverErrorHandler.ErrNum = OpenSolver_UserCancelledError Then
+        RunOpenSolver = AbortedThruUserAction
+    Else
+        RunOpenSolver = OpenSolverResult.ErrorOccurred
+    End If
+    GoTo ExitFunction
+End Function
+
+'/**
+' * Gets a list of short names for all solvers that can be set
+' */
+Public Function GetAvailableSolvers() As String()
+    Dim AvailableSolvers() As Variant
+    AvailableSolvers = Array("CBC", "Gurobi", "NeosCBC", "Bonmin", "Couenne", "NOMAD", "NeosBon", "NeosCou")
+    
+    Dim AvailableSolversString() As String
+    ReDim AvailableSolversString(LBound(AvailableSolvers) To UBound(AvailableSolvers))
+    Dim i As Long
+    For i = LBound(AvailableSolvers) To UBound(AvailableSolvers)
+        AvailableSolversString(i) = CStr(AvailableSolvers(i))
+    Next i
+    GetAvailableSolvers = AvailableSolversString
+End Function
+
+'/**
+' * Gets the short name of the currently selected solver for an OpenSolver model
+' * @param {} book The workbook containing the model (defaults to active workbook)
+' * @param {} sheet The worksheet containing the model (defaults to active worksheet)
+' */
+Public Function GetChosenSolver(Optional book As Workbook, Optional sheet As Worksheet) As String
+    GetActiveBookAndSheetIfMissing book, sheet
+    If Not GetNameValueIfExists(book, EscapeSheetName(sheet) & "OpenSolver_ChosenSolver", GetChosenSolver) Then
+        GoTo SetDefault
+    End If
+    
+    ' Check solver is an allowed solver
+    On Error GoTo SetDefault
+    WorksheetFunction.Match GetChosenSolver, GetAvailableSolvers, 0
+    Exit Function
+    
+SetDefault:
+    GetChosenSolver = GetAvailableSolvers()(LBound(GetAvailableSolvers))
+    SetChosenSolver GetChosenSolver, book, sheet
+End Function
+
+'/**
+' * Sets the solver for an OpenSolver model
+' * @param {} SolverShortName The short name of the solver to be set
+' * @param {} book The workbook containing the model (defaults to active workbook)
+' * @param {} sheet The worksheet containing the model (defaults to active worksheet)
+' */
+Public Sub SetChosenSolver(SolverShortName As String, Optional book As Workbook, Optional sheet As Worksheet)
+    ' Check that a valid solver has been specified
+    On Error GoTo SolverNotAllowed
+    WorksheetFunction.Match SolverShortName, GetAvailableSolvers, 0
+        
+    SetNameOnSheet "OpenSolver_ChosenSolver", "=" & SolverShortName, book, sheet
+    Exit Sub
+    
+SolverNotAllowed:
+    Err.Raise OpenSolver_ModelError, Description:="The specified solver (" & SolverShortName & ") is not in the list of available solvers. " & _
+                                                  "Please see the OpenSolverAPI module for the list of available solvers."
+End Sub
+
 '/**
 ' * Returns the objective cell in an OpenSolver model.
 ' * @param {} book The workbook containing the model (defaults to active workbook)
@@ -232,6 +328,24 @@ Public Sub DeleteConstraint(Index As Long, Optional book As Workbook, Optional s
 End Sub
 
 '/**
+' * Clears an entire OpenSolver model.
+' * @param {} book The workbook containing the model (defaults to active workbook)
+' * @param {} sheet The worksheet containing the model (defaults to active worksheet)
+' */
+Public Sub ResetModel(Optional book As Workbook, Optional sheet As Worksheet)
+    Dim SolverNames() As Variant, OpenSolverNames() As Variant, Name As Variant
+    SolverNames = Array("opt", "typ", "adj", "neg", "sho", "rlx", "tol", "tim", "pre", "itr", "num", "val")
+    OpenSolverNames = Array("ChosenSolver", "DualsNewSheet", "UpdateSensitivity", "LinearityCheck", "Duals")
+    
+    For Each Name In SolverNames
+        DeleteNameOnSheet CStr(Name), book, sheet, True
+    Next Name
+    For Each Name In OpenSolverNames
+        DeleteNameOnSheet "OpenSolver_" & CStr(Name), book, sheet
+    Next Name
+End Sub
+
+'/**
 ' * Returns the number of constraints in an OpenSolver model.
 ' * @param {} book The workbook containing the model (defaults to active workbook)
 ' * @param {} sheet The worksheet containing the model (defaults to active worksheet)
@@ -359,62 +473,6 @@ Public Sub SetConstraintRhs(Index As Long, ConstraintRhsRange As Range, Constrai
     Else
         SetNamedRangeIfExists "rhs" & Index, ConstraintRhsRange, book, sheet, True
     End If
-End Sub
-
-'/**
-' * Gets a list of short names for all solvers that can be set
-' */
-Public Function GetAvailableSolvers() As String()
-    Dim AvailableSolvers() As Variant
-    AvailableSolvers = Array("CBC", "Gurobi", "NeosCBC", "Bonmin", "Couenne", "NOMAD", "NeosBon", "NeosCou")
-    
-    Dim AvailableSolversString() As String
-    ReDim AvailableSolversString(LBound(AvailableSolvers) To UBound(AvailableSolvers))
-    Dim i As Long
-    For i = LBound(AvailableSolvers) To UBound(AvailableSolvers)
-        AvailableSolversString(i) = CStr(AvailableSolvers(i))
-    Next i
-    GetAvailableSolvers = AvailableSolversString
-End Function
-
-'/**
-' * Gets the short name of the currently selected solver for an OpenSolver model
-' * @param {} book The workbook containing the model (defaults to active workbook)
-' * @param {} sheet The worksheet containing the model (defaults to active worksheet)
-' */
-Public Function GetChosenSolver(Optional book As Workbook, Optional sheet As Worksheet) As String
-    GetActiveBookAndSheetIfMissing book, sheet
-    If Not GetNameValueIfExists(book, EscapeSheetName(sheet) & "OpenSolver_ChosenSolver", GetChosenSolver) Then
-        GoTo SetDefault
-    End If
-    
-    ' Check solver is an allowed solver
-    On Error GoTo SetDefault
-    WorksheetFunction.Match GetChosenSolver, GetAvailableSolvers, 0
-    Exit Function
-    
-SetDefault:
-    GetChosenSolver = GetAvailableSolvers()(LBound(GetAvailableSolvers))
-    SetChosenSolver GetChosenSolver, book, sheet
-End Function
-
-'/**
-' * Sets the solver for an OpenSolver model
-' * @param {} SolverShortName The short name of the solver to be set
-' * @param {} book The workbook containing the model (defaults to active workbook)
-' * @param {} sheet The worksheet containing the model (defaults to active worksheet)
-' */
-Public Sub SetChosenSolver(SolverShortName As String, Optional book As Workbook, Optional sheet As Worksheet)
-    ' Check that a valid solver has been specified
-    On Error GoTo SolverNotAllowed
-    WorksheetFunction.Match SolverShortName, GetAvailableSolvers, 0
-        
-    SetNameOnSheet "OpenSolver_ChosenSolver", "=" & SolverShortName, book, sheet
-    Exit Sub
-    
-SolverNotAllowed:
-    Err.Raise OpenSolver_ModelError, Description:="The specified solver (" & SolverShortName & ") is not in the list of available solvers. " & _
-                                                  "Please see the OpenSolverAPI module for the list of available solvers."
 End Sub
 
 '/**
@@ -678,24 +736,6 @@ Public Sub SetUpdateSensitivity(UpdateSensitivity As Boolean, Optional book As W
 End Sub
 
 '/**
-' * Clears an entire OpenSolver model.
-' * @param {} book The workbook containing the model (defaults to active workbook)
-' * @param {} sheet The worksheet containing the model (defaults to active worksheet)
-' */
-Public Sub ResetModel(Optional book As Workbook, Optional sheet As Worksheet)
-    Dim SolverNames() As Variant, OpenSolverNames() As Variant, Name As Variant
-    SolverNames = Array("opt", "typ", "adj", "neg", "sho", "rlx", "tol", "tim", "pre", "itr", "num", "val")
-    OpenSolverNames = Array("ChosenSolver", "DualsNewSheet", "UpdateSensitivity", "LinearityCheck", "Duals")
-    
-    For Each Name In SolverNames
-        DeleteNameOnSheet CStr(Name), book, sheet, True
-    Next Name
-    For Each Name In OpenSolverNames
-        DeleteNameOnSheet "OpenSolver_" & CStr(Name), book, sheet
-    Next Name
-End Sub
-
-'/**
 ' * Gets the QuickSolve parameter range for an OpenSolver model.
 ' * @param {} book The workbook containing the model (defaults to active workbook)
 ' * @param {} sheet The worksheet containing the model (defaults to active worksheet)
@@ -712,5 +752,67 @@ End Function
 ' */
 Public Sub SetQuickSolveParameters(QuickSolveParameters As Range, Optional book As Workbook, Optional sheet As Worksheet)
     SetNamedRangeIfExists "OpenSolverModelParameters", QuickSolveParameters, book, sheet
+End Sub
+
+'/**
+' * Initializes QuickSolve procedure for the OpenSolver model on the current sheet.
+' */
+Public Sub InitializeQuickSolve()
+    ClearError
+    On Error GoTo ErrorHandler
+
+    If Not CreateSolver(GetChosenSolver()).ModelType = Diff Then
+        Err.Raise OpenSolver_ModelError, Description:="The selected solver does not support QuickSolve"
+    End If
+
+    If CheckModelHasParameterRange Then
+        Set QuickSolver = New COpenSolver
+        QuickSolver.BuildModelFromSolverData
+        QuickSolver.InitializeQuickSolve
+    End If
+
+ExitSub:
+    Exit Sub
+
+ErrorHandler:
+    ReportError "OpenSolverMain", "InitializeQuickSolve", True
+    GoTo ExitSub
+End Sub
+
+'/**
+' * Runs a QuickSolve for the OpenSolver model on the current sheet. The QuickSolve must be initialized before it can be run.
+' * @param {} MinimiseUserInteraction If True, all dialogs and messages will be suppressed. Use this when automating a lot of solves so that there are no interruptions. Defaults to False
+' */
+Public Function RunQuickSolve(Optional MinimiseUserInteraction As Boolean = False) As OpenSolverResult
+    ClearError
+    On Error GoTo ErrorHandler
+
+    If QuickSolver Is Nothing Then
+        Err.Raise OpenSolver_SolveError, Description:="There is no model to solve, and so the quick solve cannot be completed. Please select the Initialize Quick Solve command."
+    ElseIf QuickSolver.CanDoQuickSolveForActiveSheet Then    ' This will report any errors
+        QuickSolver.DoQuickSolve MinimiseUserInteraction
+        RunQuickSolve = QuickSolver.SolveStatus
+    End If
+
+    If Not MinimiseUserInteraction Then QuickSolver.ReportAnySolutionSubOptimality
+
+ExitFunction:
+    Exit Function
+
+ErrorHandler:
+    ReportError "OpenSolverMain", "RunQuickSolve", True, MinimiseUserInteraction
+    If OpenSolverErrorHandler.ErrNum = OpenSolver_UserCancelledError Then
+        RunQuickSolve = AbortedThruUserAction
+    Else
+        RunQuickSolve = OpenSolverResult.ErrorOccurred
+    End If
+    GoTo ExitFunction
+End Function
+
+'/**
+' * Clears any initialized QuickSolve.
+' */
+Public Sub ClearQuickSolve()
+    Set QuickSolver = Nothing
 End Sub
 
