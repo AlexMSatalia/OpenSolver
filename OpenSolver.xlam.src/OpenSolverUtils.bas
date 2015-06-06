@@ -386,6 +386,17 @@ Function Max(ParamArray Vals() As Variant) As Variant
           Next i
 End Function
 
+Function Min(ParamArray Vals() As Variant) As Variant
+          Min = Vals(LBound(Vals))
+          
+          Dim i As Long
+          For i = LBound(Vals) + 1 To UBound(Vals)
+482           If Vals(i) < Min Then
+483               Min = Vals(i)
+486           End If
+          Next i
+End Function
+
 Function Create1x1Array(X As Variant) As Variant
           ' Create a 1x1 array containing the value x
           Dim v(1, 1) As Variant
@@ -956,3 +967,15 @@ Function ShowEscapeCancelMessage() As VbMsgBoxResult
                                      "OpenSolver - User Interrupt Occured...")
 End Function
 
+Function StringHasUnicode(TestString As String) As Boolean
+' Quickly check for any characters that aren't ASCII
+    Dim i As Long, CharCode As Long
+    For i = 1 To Len(TestString)
+        CharCode = AscW(Mid(TestString, i, 1))
+        If CharCode > 127 Or CharCode < 0 Then
+            StringHasUnicode = True
+            Exit Function
+        End If
+    Next i
+    StringHasUnicode = False
+End Function

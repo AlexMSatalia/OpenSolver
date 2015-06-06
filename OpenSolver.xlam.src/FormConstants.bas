@@ -99,27 +99,58 @@ Public Sub AutoHeight(NewControl As Control, width As Long, Optional ShrinkWidth
 End Sub
 
 Public Function CenterFormTop(FormHeight As Long)
-    Dim BaseTop As Long
+    Dim BaseTop As Long, BaseHeight As Long
+    
+    On Error GoTo NoWindow
     BaseTop = Application.ActiveWindow.top
+    BaseHeight = Application.ActiveWindow.height
+    
     ' Excel 2010 needs Application.top instead?
     #If Win32 Then
         If Val(Application.Version) < 15 Then
-            BaseTop = Application.top - Application.ActiveWindow.top
+            BaseTop = Application.top - BaseTop
         End If
     #End If
     
-    CenterFormTop = BaseTop + Application.ActiveWindow.height / 2 - FormHeight / 2
+Calculate:
+    CenterFormTop = BaseTop + Max(BaseHeight / 2 - FormHeight / 2, 0)
+    Exit Function
+    
+NoWindow:
+    BaseTop = Application.top
+    #If Mac Then
+        BaseHeight = Application.UsableHeight
+    #Else
+        BaseHeight = Application.height
+    #End If
+    Resume Calculate
 End Function
 
 Public Function CenterFormLeft(FormWidth As Long)
-    Dim BaseLeft As Long
+    Dim BaseLeft As Long, BaseWidth As Long
+    
+    On Error GoTo NoWindow
     BaseLeft = Application.ActiveWindow.left
+    BaseWidth = Application.ActiveWindow.width
+    
     ' Excel 2010 needs Application.left instead?
     #If Win32 Then
         If Val(Application.Version) < 15 Then
             BaseLeft = Application.left
         End If
     #End If
-    CenterFormLeft = BaseLeft + Application.ActiveWindow.width / 2 - FormWidth / 2
+    
+Calculate:
+    CenterFormLeft = BaseLeft + Max(BaseWidth / 2 - FormWidth / 2, 0)
+    Exit Function
+    
+NoWindow:
+    BaseLeft = Application.left
+    #If Mac Then
+        BaseWidth = Application.UsableWidth
+    #Else
+        BaseWidth = Application.width
+    #End If
+    Resume Calculate
 End Function
 
