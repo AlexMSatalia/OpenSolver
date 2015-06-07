@@ -123,14 +123,21 @@ End Enum
     Public Const NBSP = 160 ' ascii char code for non-breaking space on Windows
 #End If
 
-Function RelationStringToEnum(rel As String) As RelationConsts
+Function ObjectiveSenseStringToEnum(ByVal sense As String) As ObjectiveSenseType
+    Select Case sense
+    Case "min", "minimize", "minimise": ObjectiveSenseStringToEnum = MinimiseObjective
+    Case "max", "maximize", "maximise": ObjectiveSenseStringToEnum = MaximiseObjective
+    End Select
+End Function
+
+Function RelationStringToEnum(ByVal rel As String) As RelationConsts
     Select Case rel
-    Case "<", "<=": RelationStringToEnum = RelationLE
-    Case "=", "'=": RelationStringToEnum = RelationEQ
-    Case ">", ">=": RelationStringToEnum = RelationGE
-    Case "int":     RelationStringToEnum = RelationINT
-    Case "bin":     RelationStringToEnum = RelationBIN
-    Case "alldiff": RelationStringToEnum = RelationAllDiff
+    Case "<", "<=":             RelationStringToEnum = RelationLE
+    Case "=", "'=":             RelationStringToEnum = RelationEQ
+    Case ">", ">=":             RelationStringToEnum = RelationGE
+    Case "integer", "int", "i": RelationStringToEnum = RelationINT
+    Case "binary", "bin", "b":  RelationStringToEnum = RelationBIN
+    Case "alldiff":             RelationStringToEnum = RelationAllDiff
     End Select
 End Function
 
@@ -146,15 +153,22 @@ Function RelationEnumToString(rel As RelationConsts) As String
 End Function
 
 Function SolverRelationAsUnicodeChar(rel As RelationConsts) As String
-343       Select Case rel
-              Case RelationGE: SolverRelationAsUnicodeChar = ChrW(&H2265) ' ">" gg
-345           Case RelationEQ: SolverRelationAsUnicodeChar = "="
-347           Case RelationLE: SolverRelationAsUnicodeChar = ChrW(&H2264) ' "<"
-349           Case Else:       SolverRelationAsUnicodeChar = "(unknown)"
-351       End Select
+    Select Case rel
+    Case RelationGE: SolverRelationAsUnicodeChar = ChrW(&H2265) ' ">" gg
+    Case RelationEQ: SolverRelationAsUnicodeChar = "="
+    Case RelationLE: SolverRelationAsUnicodeChar = ChrW(&H2264) ' "<"
+    Case Else:       SolverRelationAsUnicodeChar = "(unknown)"
+    End Select
 End Function
 
 Function ReverseRelation(rel As Long) As Long
-361       ReverseRelation 4 - rel
+    ReverseRelation 4 - rel
+End Function
+
+Function RelationHasRHS(rel As RelationConsts) As Boolean
+    Select Case rel
+    Case RelationLE, RelationEQ, RelationGE:        RelationHasRHS = True
+    Case RelationINT, RelationBIN, RelationAllDiff: RelationHasRHS = False
+    End Select
 End Function
 

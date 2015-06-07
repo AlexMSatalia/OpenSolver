@@ -207,8 +207,6 @@ End Sub
 '---------------------------------------------------------------------------------------
 
 Private Sub cmdReset_Click()
-          Dim NumConstraints As Single, i As Long
-
           'Check the user wants to reset the model
 4274      If MsgBox("This will reset the objective function, decision variables and constraints." _
                   & vbCrLf & " Are you sure you want to do this?", vbYesNo, "OpenSolver") = vbNo Then
@@ -219,15 +217,8 @@ Private Sub cmdReset_Click()
 4277      refObj.Text = ""
 4278      refDecision.Text = ""
 
-          'Find the number of constraints in model
-4279      NumConstraints = model.Constraints.Count
-
           ' Remove the constraints
-4280      For i = 1 To NumConstraints
-4281          model.Constraints.Remove 1
-4282      Next i
-
-          ' Update constraints form
+4280      Set model.Constraints = New Collection
 4283      model.PopulateConstraintListBox lstConstraints, chkNameRange.value
 
 End Sub
@@ -516,12 +507,7 @@ ErrorHandler:
 End Sub
 
 Private Sub cboConRel_Change()
-4477      Select Case cboConRel.Text
-          Case "=", "<=", ">="
-              refConRHS.Enabled = True
-4480      Case Else
-4481          refConRHS.Enabled = False
-4482      End Select
+          refConRHS.Enabled = RelationHasRHS(RelationStringToEnum(cboConRel.Text))
 
 4483      If ListItem >= 1 And Not model.Constraints Is Nothing Then
 4485          AlterConstraints (cboConRel.Text = model.Constraints(ListItem).ConstraintType)
@@ -544,24 +530,18 @@ Private Sub cmdAddCon_Click()
 4506      Set rngLHS = Range(Trim(refConLHS.Text))
 
           ' RELATION
-          Dim strRel As String, IsRestrict As Boolean
-4507      strRel = cboConRel.Text
-4508      If strRel = "" Then ' Should not happen
+4508      If Len(cboConRel.Text) = 0 Then ' Should not happen
 4509          MsgBox "Please select a relation such as = or <="
 4510          Exit Sub
 4511      End If
 
-4512      Select Case strRel
-          Case "=", "<=", ">="
-              IsRestrict = False
-          Case Else
-              IsRestrict = True
-          End Select
+          Dim rel As RelationConsts
+          rel = RelationStringToEnum(cboConRel.Text)
           
           ' RIGHT HAND SIDE
           
           Dim internalRHS As String, rngRHS As Range
-4513      If Not IsRestrict Then
+4513      If RelationHasRHS(rel) Then
 4514          If Trim(refConRHS.Text) = "" Then
 4515              MsgBox "Please enter a right-hand-side!"
 4516              Exit Sub
@@ -587,7 +567,7 @@ Private Sub cmdAddCon_Click()
               End If
 4557      End If
 
-          ValidateConstraint rngLHS, RelationStringToEnum(strRel), rngRHS, internalRHS
+          ValidateConstraint rngLHS, rel, rngRHS, internalRHS
 
 4558      AlterConstraints True
 
@@ -601,13 +581,7 @@ Private Sub cmdAddCon_Click()
 4607          model.Constraints.Add curCon
           End If
           
-4586      With curCon
-4587          Set .LHS = rngLHS
-4588          Set .Relation = Nothing
-4589          .ConstraintType = strRel
-4590          Set .RHS = rngRHS
-4592          .RHSstring = internalRHS
-4606      End With
+4586      curCon.Init rngLHS, rel, Nothing, rngRHS, internalRHS
 
 4608      If Not DontRepop Then model.PopulateConstraintListBox lstConstraints, chkNameRange.value
 4609      Exit Sub

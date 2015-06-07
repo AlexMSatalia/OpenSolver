@@ -143,10 +143,7 @@ Private Function ParseFormulae() As Boolean
               
               Dim rel As RelationConsts
 4852          rel = s.RELs(i)
-4854          Select Case rel
-              Case RelationINT, RelationBIN, RelationAllDiff
-4855              GoTo NextCons
-4856          End Select
+              If Not RelationHasRHS(rel) Then GoTo NextCons
 
               Dim strRHS As String, rngRHS As Range
               Set rngRHS = s.RHSRange(i)

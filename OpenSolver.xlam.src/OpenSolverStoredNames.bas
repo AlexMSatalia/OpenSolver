@@ -292,8 +292,7 @@ Public Sub ValidateConstraint(LHSRange As Range, Relation As RelationConsts, Opt
         Err.Raise OpenSolver_ModelError, Description:="Left-hand-side of constraint must have only one area."
     End If
     
-    Select Case Relation
-    Case RelationConsts.RelationLE, RelationConsts.RelationEQ, RelationConsts.RelationGE
+    If RelationHasRHS(Relation) Then
         If Not RHSRange Is Nothing Then
             If RHSRange.Count > 1 And RHSRange.Count <> LHSRange.Count Then
                 Err.Raise OpenSolver_ModelError, Description:="Right-hand-side of constraint has more than one cell, and does not match the number of cells on the left-hand-side."
@@ -325,12 +324,12 @@ Public Sub ValidateConstraint(LHSRange As Range, Relation As RelationConsts, Opt
             RHSFormula = internalRHS
         End If
         
-    Case RelationConsts.RelationINT, RelationConsts.RelationBIN, RelationConsts.RelationAllDiff
+    Else
         If Not RHSRange Is Nothing Or _
            (RHSFormula <> "" And RHSFormula <> "integer" And RHSFormula <> "binary" And RHSFormula <> "alldiff") Then
             Err.Raise OpenSolver_ModelError, Description:="No right-hand-side is permitted for this relation"
         End If
-    End Select
+    End If
 End Sub
 
 Sub ValidateParametersRange(ParametersRange As Range)

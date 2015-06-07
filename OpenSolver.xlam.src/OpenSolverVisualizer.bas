@@ -327,7 +327,7 @@ ErrorHandler:
 End Function
 
 Sub HighlightConstraint(myDocument As Worksheet, LHSRange As Range, _
-                        RHSRange As Range, ByVal RHSValue As String, ByVal Sense As Long, _
+                        RHSRange As Range, ByVal RHSValue As String, ByVal sense As Long, _
                         ByVal Color As Long)
           Dim RaiseError As Boolean
           RaiseError = False
@@ -344,7 +344,7 @@ Sub HighlightConstraint(myDocument As Worksheet, LHSRange As Range, _
 3216      Reversed = False
 3217      If RHSRange Is Nothing And RHSValue <> "" Then
               ' We have a constant or formula in the constraint. Put into form RHS <|=|> Range1 (reversing the sense)
-3218          Set s1 = HighlightRange(LHSRange, RHSValue & SolverRelationAsUnicodeChar(4 - Sense), Color, , , True)
+3218          Set s1 = HighlightRange(LHSRange, RHSValue & SolverRelationAsUnicodeChar(4 - sense), Color, , , True)
 3219      ElseIf Not RHSRange Is Nothing Then
               ' If ranges overlaps on rows, then the top one becomes Range1
 3220          If ((RHSRange.top >= LHSRange.top And RHSRange.top < LHSRange.top + LHSRange.height) _
@@ -377,7 +377,7 @@ Sub HighlightConstraint(myDocument As Worksheet, LHSRange As Range, _
 3240          Set s1 = HighlightRange(Range1, "", Color)
           
               ' Reverse the sense if the objects are shown in the reverse order
-3241          Set s2 = HighlightRange(Range2, SolverRelationAsUnicodeChar(IIf(Reversed, 4 - Sense, Sense)), Color)
+3241          Set s2 = HighlightRange(Range2, SolverRelationAsUnicodeChar(IIf(Reversed, 4 - sense, sense)), Color)
               
 3242          If Range1.Worksheet.Name = Range2.Worksheet.Name And Range1.Worksheet.Name = ActiveSheet.Name Then
 3243              AddLabelledConnector Range1.Worksheet, s1(1), s2(1), ""
@@ -654,10 +654,10 @@ End Sub
 
 
 Sub AddDecisionVariableHighlighting(DecisionVariableRange As Range)
-          Dim area As Range
-3471      For Each area In DecisionVariableRange.Areas
-3472          HighlightRange area, "", RGB(255, 0, 255), True ' Magenta highlight
-3473      Next area
+          Dim Area As Range
+3471      For Each Area In DecisionVariableRange.Areas
+3472          HighlightRange Area, "", RGB(255, 0, 255), True ' Magenta highlight
+3473      Next Area
           
 End Sub
 

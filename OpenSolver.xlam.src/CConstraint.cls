@@ -8,15 +8,27 @@ Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = False
 Attribute VB_Exposed = False
 Option Explicit
-'-----------------------------------------
-' CConstraint
-'-----------------------------------------
-
-' Defines a constraint This was originally a user-defined type,
-' but apparently they can't be added to collections
 
 Public LHS As Range
 Public RHS As Range
 Public RHSstring As String
-Public ConstraintType As String
-Public Relation As Range
+Public RelationType As RelationConsts
+Public RelationCell As Range  ' Used during AutoModel: The cell on the sheet containing the relation information
+
+Public Sub Init(newLHS As Range, newRelationType As RelationConsts, Optional newRelationCell As Range, Optional newRHS As Range, Optional newRHSstring As String)
+    Set LHS = newLHS
+    Set RHS = newRHS
+    RHSstring = newRHSstring
+    RelationType = newRelationType
+    Set RelationCell = newRelationCell
+End Sub
+
+Public Property Get KeyCell() As Range
+   Set KeyCell = IIf(RelationHasRHS(RelationType), RelationCell, LHS)
+End Property
+
+Public Property Get Key() As String
+   Key = KeyCell.Address
+End Property
+
+

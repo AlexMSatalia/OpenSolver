@@ -404,6 +404,17 @@ Function Create1x1Array(X As Variant) As Variant
 493       Create1x1Array = v
 End Function
 
+Function StringArray(ParamArray Vals() As Variant) As String()
+          ' Creates a string array from the input args
+          Dim TempArray() As String
+          ReDim TempArray(LBound(Vals) To UBound(Vals))
+          Dim i As Long
+          For i = LBound(Vals) To UBound(Vals)
+              TempArray(i) = CStr(Vals(i))
+          Next i
+          StringArray = TempArray
+End Function
+
 Function ForceCalculate(prompt As String, Optional MinimiseUserInteraction As Boolean = False) As Boolean
           Dim RaiseError As Boolean
           RaiseError = False
