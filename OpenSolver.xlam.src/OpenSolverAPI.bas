@@ -17,6 +17,8 @@ Public Function RunOpenSolver(Optional SolveRelaxation As Boolean = False, _
                               Optional LinearityCheckOffset As Double = 0, _
                               Optional book As Workbook, _
                               Optional sheet As Worksheet) As OpenSolverResult
+    CheckLocationValid  ' Check for unicode in path
+    
     ClearError
     On Error GoTo ErrorHandler
     

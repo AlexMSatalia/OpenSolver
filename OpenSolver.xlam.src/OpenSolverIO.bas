@@ -13,6 +13,16 @@ Option Explicit
     #End If
 #End If
 
+Sub CheckLocationValid()
+          If StringHasUnicode(ThisWorkbook.Path) Then
+              MsgBoxEx "The path that OpenSolver is being loaded from contains unicode characters. " & _
+                       "This means the solvers are very unlikely to work. " & _
+                       "Please move the OpenSolver folder so that there are no unicode characters in the complete path to the folder " & vbNewLine & vbNewLine & _
+                       "The OpenSolver folder is currently located at: " & vbNewLine & _
+                       ThisWorkbook.Path
+          End If
+End Sub
+
 Function CheckWorksheetAvailable(Optional SuppressDialogs As Boolean = False, Optional ThrowError As Boolean = False) As Boolean
           Dim RaiseError As Boolean
           RaiseError = False
