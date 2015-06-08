@@ -18,7 +18,7 @@ Private pISolver As ISolver  ' Couenne solver to inherit properties from
 
 Private Const pTitle = "NEOS using Couenne (Non-linear solver)"
 Private Const pDesc = "The NEOS (Network-Enabled Optimization System) Server is a free Internet-based service for solving optimization problems. Couenne (Convex Over and Under ENvelopes for Nonlinear Estimation) is a branch & bound algorithm to solve Mixed-Integer Nonlinear Programming (MINLP) problems of specific forms."
-Private Const pLink = "https://projects.coin-or.org/Couenne"
+Private Const pLink = NeosTermsAndConditionsLink
 Private Const pShortName = "NeosCou"
 
 Private Const pNeosSolverName = "Couenne"

@@ -26,6 +26,7 @@ Private Sub cboSolver_Change()
           Dim Solver As ISolver
 4724      Set Solver = Solvers(cboSolver.ListIndex)
 4725      lblDesc.Caption = Solver.Desc
+          If TypeOf Solver Is ISolverNeos Then lblDesc.Caption = lblDesc.Caption & vbNewLine & vbNewLine & NeosAdditionalSolverText
 
           lblHyperlink.Caption = Solver.Link
                 

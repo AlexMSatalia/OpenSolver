@@ -18,7 +18,7 @@ Private pISolver As ISolver ' Bonmin solver to inherit properties from
 
 Private Const pTitle = "NEOS using Bonmin (Non-linear solver)"
 Private Const pDesc = "The NEOS (Network-Enabled Optimization System) Server is a free Internet-based service for solving optimization problems. Bonmin (Basic Open-source Nonlinear Mixed INteger programming) is an experimental open-source C++ code for solving general MINLP (Mixed Integer NonLinear Programming) problems."
-Private Const pLink = "https://projects.coin-or.org/Bonmin"
+Private Const pLink = NeosTermsAndConditionsLink
 Private Const pShortName = "NeosBon"
 
 Private Const pNeosSolverName = "Bonmin"
