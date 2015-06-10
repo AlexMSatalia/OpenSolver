@@ -24,15 +24,6 @@ Option Explicit
 
 Public EventsEnabled As Boolean
 
-Private Function GetAddInIfExists(AddIn As Variant, Title As String) As Boolean
-          ' See http://msdn.microsoft.com/en-us/library/microsoft.office.interop.excel.addins.aspx
-          ' http://msdn.microsoft.com/en-us/library/microsoft.office.interop.excel.addin.aspx
-3474      Set AddIn = Nothing
-3475      On Error Resume Next
-3476      Set AddIn = Application.AddIns.Item(Title)
-3477      GetAddInIfExists = Err = 0
-End Function
-
 Private Sub cmdOk_Click()
 3478      Me.Hide
 End Sub
@@ -49,31 +40,16 @@ End Sub
 
 Public Sub ReflectOpenSolverStatus()
           ' Update buttons to reflect install status of OpenSolver
-3479      On Error GoTo ErrorHandler
+          
           Dim InstalledAndActive As Boolean
 3480      InstalledAndActive = False
+          
+          Dim OpenSolverAddIn As Excel.AddIn
+3484      If GetOpenSolverAddInIfExists(OpenSolverAddIn) Then InstalledAndActive = OpenSolverAddIn.Installed
 
-          Dim Title As String
-3481      Title = "OpenSolver"
-#If Mac Then
-          ' On Mac, the Application.AddIns collection is indexed by filename.ext rather than just filename as on Windows
-3482      Title = Title & ".xlam"
-#End If
-          Dim AddIn As Variant
-3483      Set AddIn = Nothing
-3484      If GetAddInIfExists(AddIn, Title) Then
-3485          Set AddIn = Application.AddIns(Title)
-3486          InstalledAndActive = AddIn.Installed
-3487      End If
-ErrorHandler:
 3488      EventsEnabled = False
 3489      chkAutoLoad.value = InstalledAndActive
-3490      chkAutoLoad.Enabled = Not InstalledAndActive
 3491      EventsEnabled = True
-End Sub
-
-Private Sub cmdCancelLoad_Click()
-3492      ChangeAutoloadStatus False
 End Sub
 
 Private Sub chkAutoLoad_Change()
@@ -81,38 +57,18 @@ Private Sub chkAutoLoad_Change()
 3494      ChangeAutoloadStatus chkAutoLoad.value
 End Sub
 
-Public Sub ChangeAutoloadStatus(loadAtStartup As Boolean)
-          ' See http://www.jkp-ads.com/articles/AddinsAndSetupFactory.asp
-          ' HKEY_CURRENT_USER\Software\Microsoft\Office\11.0\Excel\Add-in Manager
-          ' HKEY_CURRENT_USER\Software\Microsoft\Office\10.0\Excel\Add-in Manager
-          ' The name of the Entry is the path
-3495      If loadAtStartup Then  ' User is changing from True to False
-3496          If MsgBox("This will configure Excel to automatically load the OpenSolver add-in (from its current location) when Excel starts.  Continue?", vbOKCancel) <> vbOK Then GoTo ExitSub
-3497      Else ' User is turning off auto load
-3498          If MsgBox("This will re-configure Excel's Add-In settings so that OpenSolver does not load automatically at startup. You will need to re-load OpenSolver when you wish to use it next, or re-enable it using Excel's Add-In settings." & vbCrLf & vbCrLf _
-                        & "WARNING: If you continue, OpenSolver will also be shut down right now by Excel, and so will disappear immediately. No data will be lost." & vbCrLf & vbCrLf _
-                        & "Continue?", vbOKCancel) <> vbOK Then GoTo ExitSub
-3499      End If
-          Dim AddIn As Variant
-3500      Set AddIn = Nothing
-          
-          ' Add-ins can only be added if we have at least one workbook open; see http://vbadud.blogspot.com/2007/06/excel-vba-install-excel-add-in-xla-or.html
-          Dim TempBook As Workbook
-3501      If Workbooks.Count = 0 Then Set TempBook = Workbooks.Add
-
-3502      If Not GetAddInIfExists(AddIn, "OpenSolver") Then
-3503          Set AddIn = Application.AddIns.Add(ThisWorkbook.FullName, False)
-3504      End If
-          
-3505      If Not TempBook Is Nothing Then TempBook.Close
-          
-3506      If AddIn Is Nothing Then
-3507          MsgBox "Unable to load or access addin " & ThisWorkbook.FullName
-3508      Else
-3509          AddIn.Installed = loadAtStartup ' OpenSolver will quit immediately when this is set to false
-3510      End If
-ExitSub:
-3511      ReflectOpenSolverStatus
+Private Sub ChangeAutoloadStatus(loadAtStartup As Boolean)
+    Dim Changed As Boolean
+    Changed = ChangeOpenSolverAutoload(loadAtStartup)
+    
+    ' Mac doesn't close the userform when it unloads OpenSolver
+    #If Mac Then
+        If Not loadAtStartup And Changed Then
+            Me.Hide
+            Exit Sub
+        End If
+    #End If
+    ReflectOpenSolverStatus
 End Sub
 
 Private Sub cmdUpdate_Click()
@@ -120,10 +76,9 @@ Private Sub cmdUpdate_Click()
 End Sub
 
 Private Sub cmdUpdateSettings_Click()
-    Dim frmUpdateSettings As FUpdateSettings
-    Set frmUpdateSettings = New FUpdateSettings
-    frmUpdateSettings.Show
-    Unload frmUpdateSettings
+    With New FUpdateSettings
+        .Show
+    End With
 End Sub
 
 Private Sub lblUrl_Click()
@@ -139,8 +94,10 @@ Private Sub UserForm_Activate()
           With txtFilePath
               .Locked = False
               .value = "OpenSolver file: " & MakeSpacesNonBreaking(MakePathSafe(ThisWorkbook.FullName))
+              AutoHeight txtFilePath, .width, False
               .Locked = True
           End With
+          LayoutBottom
           
           With txtVersion
               .Locked = False
@@ -252,38 +209,36 @@ Private Sub AutoLayout()
         .Locked = True
         .left = lblHeading.left
         .top = Below(txtAbout)
-        .height = 2 * FormTextHeight + 2 ' Stop the text becoming smaller
+        .height = FormTextHeight + 2 ' Stop the text becoming smaller
         .width = lblHeading.width
         .BackStyle = fmBackStyleTransparent
         .MultiLine = True
     End With
     
+    LayoutBottom
+    
+    Me.width = Me.width + FormWindowMargin
+    
+    Me.BackColor = FormBackColor
+    Me.Caption = "OpenSolver - About"
+End Sub
+
+Private Sub LayoutBottom()
     With chkAutoLoad
         .Caption = "Load OpenSolver when Excel starts"
-        AutoHeight chkAutoLoad, Me.width, True
+        AutoHeight chkAutoLoad, FormWidthAbout, True
         .left = lblHeading.left
         .top = Below(txtFilePath, False)
-    End With
-    
-    With cmdCancelLoad
-        .Caption = "Cancel loading at startup..."
-        .width = FormButtonWidth * 2
-        .left = RightOf(chkAutoLoad)
-        .top = chkAutoLoad.top
     End With
     
     With cmdOk
         .Caption = "OK"
         .width = FormButtonWidth
-        .left = LeftOfForm(Me.width, .width)
+        .left = LeftOfForm(FormWidthAbout, .width)
         .top = chkAutoLoad.top
     End With
     
     Me.height = FormHeight(cmdOk)
-    Me.width = Me.width + FormWindowMargin
-    
-    Me.BackColor = FormBackColor
-    Me.Caption = "OpenSolver - About"
 End Sub
 
 Private Sub UserForm_Initialize()

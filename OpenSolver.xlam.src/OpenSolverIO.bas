@@ -373,3 +373,56 @@ ErrorHandler:
           GoTo ExitSub
 End Sub
 
+Function GetAddInIfExists(AddInObj As Excel.AddIn, Title As String) As Boolean
+          ' See http://msdn.microsoft.com/en-us/library/microsoft.office.interop.excel.addins.aspx
+3474      Set AddInObj = Nothing
+3475      On Error Resume Next
+3476      Set AddInObj = Application.AddIns.Item(Title)
+3477      GetAddInIfExists = (Err = 0)
+End Function
+
+Function GetOpenSolverAddInIfExists(OpenSolverAddIn As Excel.AddIn) As Boolean
+          Dim Title As String
+3481      Title = "OpenSolver"
+          #If Mac Then
+              ' On Mac, the Application.AddIns collection is indexed by filename.ext rather than just filename as on Windows
+3482          Title = Title & ".xlam"
+          #End If
+          GetOpenSolverAddInIfExists = GetAddInIfExists(OpenSolverAddIn, Title)
+End Function
+
+Function ChangeOpenSolverAutoload(loadAtStartup As Boolean) As Boolean
+          ' NOTE: If Mac and no workbooks are open, this will crash
+          ChangeOpenSolverAutoload = False
+
+3495      If loadAtStartup Then  ' User is changing from True to False
+3496          If MsgBox("This will configure Excel to automatically load the OpenSolver add-in (from its current location) when Excel starts.  Continue?", vbOKCancel) <> vbOK Then GoTo ExitSub
+3497      Else ' User is turning off auto load
+3498          If MsgBox("This will re-configure Excel's Add-In settings so that OpenSolver does not load automatically at startup. You will need to re-load OpenSolver when you wish to use it next, or re-enable it using Excel's Add-In settings." & vbCrLf & vbCrLf _
+                        & "WARNING: OpenSolver will also be shut down right now by Excel, and so will disappear immediately. No data will be lost." & vbCrLf & vbCrLf _
+                        & "Continue?", vbOKCancel) <> vbOK Then GoTo ExitSub
+3499      End If
+          
+          ' On older versions of Excel, Add-ins can only be added if we have at least one workbook open; see http://vbadud.blogspot.com/2007/06/excel-vba-install-excel-add-in-xla-or.html
+          Dim TempBook As Workbook
+3501      If Workbooks.Count = 0 Then Set TempBook = Workbooks.Add
+          
+          Dim OpenSolverAddIn As Excel.AddIn
+3502      If Not GetOpenSolverAddInIfExists(OpenSolverAddIn) Then
+3503          Set OpenSolverAddIn = Application.AddIns.Add(ThisWorkbook.FullName, False)
+3504      End If
+          
+          ' Closing the temp book can throw an error on Mac, we just ignore
+          On Error Resume Next
+3505      If Not TempBook Is Nothing Then TempBook.Close
+          On Error GoTo 0
+          
+3506      If OpenSolverAddIn Is Nothing Then
+3507          MsgBox "Unable to load or access addin " & ThisWorkbook.FullName
+3508      Else
+3509          OpenSolverAddIn.Installed = loadAtStartup ' OpenSolver will quit immediately when this is set to false, unless a reference is set to OpenSolver
+              ChangeOpenSolverAutoload = True
+          End If
+ExitSub:
+End Function
+
