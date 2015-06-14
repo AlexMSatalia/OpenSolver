@@ -1,12 +1,11 @@
 Attribute VB_Name = "OpenSolverAutoModel"
 Option Explicit
 
-Public Function RunAutoModel(Optional MinimiseUserInteraction As Boolean = False, Optional ByRef InputModel As CModel) As Boolean
+Public Function RunAutoModel(sheet As Worksheet, Optional MinimiseUserInteraction As Boolean = False, Optional ByRef InputModel As CModel) As Boolean
     Dim RaiseError As Boolean
     RaiseError = False
     On Error GoTo ErrorHandler
 
-    If Not CheckWorksheetAvailable Then GoTo ExitFunction
     Dim model As CModel, AskedToShow As Boolean, ShowModel As Boolean, DoBuild As Boolean
     If InputModel Is Nothing Then
         Set model = New CModel
@@ -19,7 +18,7 @@ Public Function RunAutoModel(Optional MinimiseUserInteraction As Boolean = False
     AskedToShow = False
     
     Dim ObjectiveSense As ObjectiveSenseType, ObjectiveFunctionCell As Range
-    FindObjective ActiveSheet, ObjectiveSense, ObjectiveFunctionCell
+    FindObjective sheet, ObjectiveSense, ObjectiveFunctionCell
     Set model.ObjectiveFunctionCell = ObjectiveFunctionCell
     model.ObjectiveSense = ObjectiveSense
     
@@ -47,15 +46,15 @@ Public Function RunAutoModel(Optional MinimiseUserInteraction As Boolean = False
         End If
     End If
     
-    Dim SearchSheet As Worksheet
+    Dim searchSheet As Worksheet
     If Not model.ObjectiveFunctionCell Is Nothing Then
-        Set SearchSheet = model.ObjectiveFunctionCell.Parent
+        Set searchSheet = model.ObjectiveFunctionCell.Parent
     Else
-        Set SearchSheet = ActiveSheet
+        Set searchSheet = sheet
     End If
     
     Dim DecisionVariables As Range, Constraints As Collection
-    If Not FindVarsAndCons(SearchSheet, model.ObjectiveFunctionCell, DecisionVariables, Constraints, True) Then
+    If Not FindVarsAndCons(searchSheet, sheet, model.ObjectiveFunctionCell, DecisionVariables, Constraints, True) Then
         If Not MinimiseUserInteraction Then MsgBox "Error while looking for variables and constraints"
         RunAutoModel = False
         GoTo ExitFunction
@@ -66,7 +65,7 @@ Public Function RunAutoModel(Optional MinimiseUserInteraction As Boolean = False
     model.NonNegativityAssumption = True
     
     If DoBuild Then
-        model.BuildModel
+        model.BuildModel sheet
         
         If MinimiseUserInteraction Then
             ShowModel = True
@@ -75,9 +74,9 @@ Public Function RunAutoModel(Optional MinimiseUserInteraction As Boolean = False
         End If
     
         If ShowModel Then
-            OpenSolverVisualizer.ShowSolverModel
+            OpenSolverVisualizer.ShowSolverModel sheet
         Else
-            OpenSolverVisualizer.HideSolverModel
+            OpenSolverVisualizer.HideSolverModel sheet
         End If
     End If
     
@@ -159,7 +158,7 @@ Private Sub FindObjCell(ByRef s As Worksheet, ByVal rowNum As Long, ByVal search
 End Sub
 
 ' We have objective, now find all constraints.
-Public Function FindVarsAndCons(ByRef SearchSheet As Worksheet, ByRef ObjectiveFunctionCell As Range, ByRef DecisionVariables As Range, ByRef Constraints As Collection, IsFirstTime As Boolean) As Boolean
+Public Function FindVarsAndCons(ByRef searchSheet As Worksheet, outputSheet As Worksheet, ByRef ObjectiveFunctionCell As Range, ByRef DecisionVariables As Range, ByRef Constraints As Collection, IsFirstTime As Boolean) As Boolean
           Dim RaiseError As Boolean
           RaiseError = False
           On Error GoTo ErrorHandler
@@ -175,9 +174,9 @@ Public Function FindVarsAndCons(ByRef SearchSheet As Worksheet, ByRef ObjectiveF
 3658      On Error GoTo ConstraintErr
 
           Dim FoundLEQ As Range, FoundGEQ As Range, FoundEQ As Range
-          FindAllCells "<=", FoundLEQ, SearchSheet
-          FindAllCells ">=", FoundGEQ, SearchSheet
-          FindAllCells "=", FoundEQ, SearchSheet
+          FindAllCells "<=", FoundLEQ, searchSheet
+          FindAllCells ">=", FoundGEQ, searchSheet
+          FindAllCells "=", FoundEQ, searchSheet
               
           ' Combine them as much as possible
           Dim AllCompOps As Range
@@ -241,7 +240,7 @@ NextArea:
           Dim addressKey As Variant
 3754      For Each addressKey In DecRefCount.Keys
 3755          If DecRefCount.Item(CStr(addressKey)) >= 2 Then
-3756              Set DecisionVariables = ProperUnion(DecisionVariables, ActiveSheet.Range(CStr(addressKey)))
+3756              Set DecisionVariables = ProperUnion(DecisionVariables, outputSheet.Range(CStr(addressKey)))
 3757          End If
 3758      Next
               
@@ -392,10 +391,7 @@ Sub AddRangeToConstraints(ByRef LHSs As Range, ByRef RelRange As Range, ByRef RH
           Dim CellCount As Long
 3817      CellCount = LHSs.Count
           
-          Dim i As Long
-          Dim LHSi As Range, RELi As Range, RHSi As Range
-          Dim NewConstraint As CConstraint
-          
+          Dim i As Long, LHSi As Range, RELi As Range, RHSi As Range
 3818      For i = 1 To CellCount
 3819          If IsVertical Then
 3820              Set LHSi = LHSs(RowIndex:=i)

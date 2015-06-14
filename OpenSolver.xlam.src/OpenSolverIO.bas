@@ -23,77 +23,65 @@ Sub CheckLocationValid()
           End If
 End Sub
 
-Function CheckWorksheetAvailable(Optional SuppressDialogs As Boolean = False, Optional ThrowError As Boolean = False) As Boolean
+Function ActiveSheetWithValidation() As Worksheet
           Dim RaiseError As Boolean
           RaiseError = False
           On Error GoTo ErrorHandler
 
-464       CheckWorksheetAvailable = False
           ' Check there is a workbook
-465       If Application.Workbooks.Count = 0 Then
-466           If ThrowError Then Err.Raise Number:=OpenSolver_NoWorkbook, Description:="No active workbook available."
-467           If Not SuppressDialogs Then MsgBox "Error: No active workbook available", , "OpenSolver" & sOpenSolverVersion & " Error"
-468           GoTo ExitFunction
-469       End If
+465       If Application.Workbooks.Count = 0 Then Err.Raise Number:=OpenSolver_NoWorkbook, Description:="No active workbook available."
+
           ' Check we can access the worksheet
-          Dim w As Worksheet
 470       On Error Resume Next
-471       Set w = ActiveWorkbook.ActiveSheet
+471       Set ActiveSheetWithValidation = ActiveSheet
 472       If Err.Number <> 0 Then
               On Error GoTo ErrorHandler
-473           If ThrowError Then Err.Raise Number:=OpenSolver_NoWorksheet, Description:="The active sheet is not a worksheet."
-474           If Not SuppressDialogs Then MsgBox "Error: The active sheet is not a worksheet.", , "OpenSolver" & sOpenSolverVersion & " Error"
-475           GoTo ExitFunction
+473           Err.Raise Number:=OpenSolver_NoWorksheet, Description:="The active sheet is not a worksheet."
 476       End If
-
-477       CheckWorksheetAvailable = True
 
 ExitFunction:
           If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
           Exit Function
 
 ErrorHandler:
-          If Not ReportError("OpenSolverIO", "CheckWorksheetAvailable") Then Resume
+          If Not ReportError("OpenSolverIO", "CheckActiveWorksheetAvailable") Then Resume
           RaiseError = True
           GoTo ExitFunction
 End Function
 
-Sub GetActiveBookAndSheetIfMissing(book As Workbook, Optional sheet As Worksheet)
-    If book Is Nothing Then Set book = ActiveWorkbook
-    If sheet Is Nothing Then Set sheet = book.ActiveSheet
+Sub GetActiveSheetIfMissing(sheet As Worksheet)
+    If sheet Is Nothing Then Set sheet = ActiveSheetWithValidation
 End Sub
 
-Function MakeNewSheet(namePrefix As String, OverwriteExisting As Boolean) As String
-          Dim NeedSheet As Boolean, newSheet As Worksheet, nameSheet As String, i As Long
+Function MakeNewSheet(namePrefix As String, OverwriteExisting As Boolean) As Worksheet
           Dim ScreenStatus As Boolean
           ScreenStatus = Application.ScreenUpdating
 668       Application.ScreenUpdating = False
-          Dim s As String
+
+          Dim newSheet As Worksheet
           On Error Resume Next
-669       s = Sheets(namePrefix).Name
+669       Set newSheet = Sheets(namePrefix)
 670       If Err.Number <> 0 Then
 671           Set newSheet = Sheets.Add
 672           newSheet.Name = namePrefix
-673           nameSheet = namePrefix
 675       Else
 677           If OverwriteExisting Then
-678               Sheets(namePrefix).Cells.Delete
-679               nameSheet = namePrefix
+                  newSheet.Cells.Delete
 680           Else
-681               i = 1
 682               Set newSheet = Sheets.Add
+                  Dim i As Long, NeedSheet As Boolean
+681               i = 1
 683               NeedSheet = True
 684               On Error Resume Next
 685               While NeedSheet
-686                   nameSheet = namePrefix & " " & i
-687                   newSheet.Name = nameSheet
+686                   newSheet.Name = namePrefix & " " & i
 688                   If Err.Number = 0 Then NeedSheet = False
 689                   i = i + 1
 690                   Err.Number = 0
 691               Wend
 693           End If
 694       End If
-695       MakeNewSheet = nameSheet
+695       Set MakeNewSheet = newSheet
 696       Application.ScreenUpdating = ScreenStatus
 End Function
 

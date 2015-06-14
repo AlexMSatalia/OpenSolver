@@ -60,8 +60,8 @@ Private Sub SearchRangeName_LoadCache(sheet As Worksheet)
 714       End If
 
           'Here the Cache will be filled with visible range names only
-715       For i = 1 To ActiveWorkbook.Names.Count
-716           Set TestName = ActiveWorkbook.Names(i)
+715       For i = 1 To sheet.Parent.Names.Count
+716           Set TestName = sheet.Parent.Names(i)
               
 717           If TestName.Visible = True Then  'Iterate through the visible names only
                       ' Skip any references to external workbooks

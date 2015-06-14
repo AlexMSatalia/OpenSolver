@@ -12,8 +12,6 @@ Option Base 1
 
 Public sheetName As String ' Sheetname in quotes as used for prefixing
 Dim RawSheetName As String ' Just the worksheet name
-Dim RawWorkBookName As String ' Just the workbook name
-Public book As Workbook
 Public sheet As Worksheet
 
 ' Whether to show user alerts
@@ -579,7 +577,7 @@ End Function
 Sub BuildModelFromSolverData(Optional LinearityCheckOffset As Double = 0, _
                              Optional ShouldMinimiseUserInteraction As Boolean = False, _
                              Optional ShouldSolveRelaxation As Boolean = False, _
-                             Optional modelBook As Workbook, Optional modelSheet As Worksheet)
+                             Optional modelSheet As Worksheet)
           Dim RaiseError As Boolean
           RaiseError = False
           On Error GoTo ErrorHandler
@@ -604,21 +602,18 @@ Sub BuildModelFromSolverData(Optional LinearityCheckOffset As Double = 0, _
           Dim EndTimeOfBuild As Single, EndDateTimeOfBuild As Date
 944       StartTimeOfBuild = Timer    ' Warning: This goes back to zero at midnight!
 945       StartDateTimeOfBuild = Now()
-          
-946       CheckWorksheetAvailable SuppressDialogs:=True, ThrowError:=True ' Will throw if there is no workbook or worksheet
 
 947       Application.EnableCancelKey = xlErrorHandler
           
-          Set book = modelBook
+          GetActiveSheetIfMissing modelSheet
           Set sheet = modelSheet
-959       RawWorkBookName = book.Name
 956       RawSheetName = sheet.Name
 957       sheetName = EscapeSheetName(sheet)
           
         
           '----------------------------------------------------------------------------------------------------------
           'Find the solver
-960       Set Solver = CreateSolver(GetChosenSolver(book, sheet))
+960       Set Solver = CreateSolver(GetChosenSolver(sheet))
           OpenSolverErrorHandler.SolverInUse = Solver.ShortName
 
           '--------------------------------------------------------------------------
@@ -627,7 +622,7 @@ Sub BuildModelFromSolverData(Optional LinearityCheckOffset As Double = 0, _
 
           ' Raises an error if we can't determine a range or the name is missing.
           ' Remove any overlap
-980       Set AdjustableCells = GetDecisionVariablesNoOverlap(book, sheet)
+980       Set AdjustableCells = GetDecisionVariablesNoOverlap(sheet)
           ' Handle any merged ranges
           Dim BadCell As Range
 981       If Not CheckRangeContainsNoAmbiguousMergedCells(AdjustableCells, BadCell) Then
@@ -672,10 +667,10 @@ Sub BuildModelFromSolverData(Optional LinearityCheckOffset As Double = 0, _
           ' OBJECTIVE SETUP
           '--------------------------------------------------------------------------
 
-1011      ObjectiveSense = GetObjectiveSense(book, sheet)
-1013      ObjectiveTargetValue = GetObjectiveTargetValue(book, sheet)
+1011      ObjectiveSense = GetObjectiveSense(sheet)
+1013      ObjectiveTargetValue = GetObjectiveTargetValue(sheet)
 
-          Set ObjRange = GetObjectiveFunctionCellWithValidation(book, sheet)
+          Set ObjRange = GetObjectiveFunctionCellWithValidation(sheet)
 1016      If Not ObjRange Is Nothing Then
               ' Store the value currently in the objective cell
 1038          ObjRange.Calculate ' This does not always seem to work in that it doesn't track back predecessors; we now do a full re-calc above anyway
@@ -685,7 +680,7 @@ Sub BuildModelFromSolverData(Optional LinearityCheckOffset As Double = 0, _
 
 ModelOptions:
 
-1041      AssumeNonNegativeVars = GetNonNegativity()
+1041      AssumeNonNegativeVars = GetNonNegativity(sheet)
 
 1045      If Not BuildModelOptions(ShouldSolveRelaxation, ShouldMinimiseUserInteraction) Then GoTo ExitSub
 
@@ -703,7 +698,7 @@ ModelOptions:
           '--------------------------------------------------------------------------
           ' Count the correct number of constraints - not necessarily the number of
           ' rows though.
-1048      NumConstraints = GetNumConstraints(book, sheet)
+1048      NumConstraints = GetNumConstraints(sheet)
 1049      UpdateStatusBar "OpenSolver: Setting Up Problem... " & numVars & " vars, " & NumConstraints & " Solver constraints", True
           'Set up arrays to be the correct size. We allow no constraints!
 1050      If NumConstraints > 0 Then
@@ -743,14 +738,14 @@ ModelOptions:
               ' LEFT HAND SIDE
               '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
               Dim rangeLHS As Range, sRefersToLHS As String
-              Set rangeLHS = GetConstraintLhs(constraint, book, sheet, sRefersToLHS)
+              Set rangeLHS = GetConstraintLhs(constraint, sheet, sRefersToLHS)
               
               '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
               ' RELATIONSHIP
               '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
               Dim rel As Long
               ' Either <=, = or >=, or int or bin (or 'alldif' in Excel 2010)
-1081          rel = GetConstraintRel(constraint, book, sheet)
+1081          rel = GetConstraintRel(constraint, sheet)
               RELs(constraint) = rel
                       
               Dim RHSCount As Long, RowCount As Long
@@ -791,7 +786,7 @@ ModelOptions:
 1100          Case RelationGE, RelationLE, RelationEQ
                   ' ... then the constraint is a full equation with a RHS
                   Dim valRHS As Double, rangeRHS As Range, sRefersToRHS As String, RHSRefersToFormula As Boolean
-1101              Set rangeRHS = GetConstraintRhs(constraint, sRefersToRHS, valRHS, RHSRefersToFormula, book, sheet)
+1101              Set rangeRHS = GetConstraintRhs(constraint, sRefersToRHS, valRHS, RHSRefersToFormula, sheet)
                   
                   ' Track the constraints
                   Dim summary As String
@@ -1051,10 +1046,10 @@ Function BuildModelOptions(Optional ShouldSolveRelaxation As Boolean = False, Op
               ' If we are in Excel 2010 or newer, and the user has set "Solve Relaxtion", then we report an error
               Dim IngoreIntConstraints As Boolean
 1265          IngoreIntConstraints = False
-1266          If Val(Application.Version) >= 14 And GetIgnoreIntegerConstraints(book, sheet) Then
+1266          If Val(Application.Version) >= 14 And GetIgnoreIntegerConstraints(sheet) Then
                    If ShouldMinimiseUserInteraction Then GoTo RaiseError
                    If Not MsgBox("You have the 'Ignore integer constraints' option enabled in Solver, so OpenSolver cannot proceed with solving. You can either disable this option, or use the 'Solve Relaxation' option in the OpenSolver menu. Would you like OpenSolver to disable this option and proceed?", vbCritical + vbYesNo + vbDefaultButton1, "OpenSolver Warning") = vbNo Then
-                       SetIgnoreIntegerConstraints False, book, sheet
+                       SetIgnoreIntegerConstraints False, sheet
                    Else
 RaiseError:
                        ' Set UserCancelledError because the user has already confirmed the abort if not in silent mode
@@ -1321,7 +1316,7 @@ Sub DoQuickSolve(Optional SolveRelaxation As Boolean = False, Optional MinimiseU
 2013      If QuickSolve Is Nothing Then
 2014          Err.Raise OpenSolver_ModelError, Description:="Quick Solve has not been initialized. Please choose Intialize Quick Solve, and then try again."
 2015      Else
-2016          If QuickSolve.UpdateModelRHS(book, sheet, pRHS) Then
+2016          If QuickSolve.UpdateModelRHS(sheet, pRHS) Then
 2017              SolveModel Me, SolveRelaxation, MinimiseUserInteraction
 2018          End If
 2019      End If

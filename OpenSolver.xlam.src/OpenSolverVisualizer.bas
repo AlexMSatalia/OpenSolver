@@ -34,7 +34,9 @@ Function InitialiseHighlighting()
 3030      HighlightColorIndex = 0 ' Used to rotate thru colours on different constraints
 End Function
 
-Function SheetHasOpenSolverHighlighting(w As Worksheet)
+Function SheetHasOpenSolverHighlighting(Optional w As Worksheet)
+          GetActiveSheetIfMissing w
+
           ' If we have a shape called OpenSolver1 then we are displaying highlighted data
 3031      If w.Shapes.Count = 0 Then GoTo NoHighlighting
           Dim s As Shape
@@ -405,17 +407,12 @@ Sub DeleteOpenSolverShapes(w As Worksheet)
 3252      Next s
 End Sub
 
-Function HideSolverModel() As Boolean
+Function HideSolverModel(Optional sheet As Worksheet) As Boolean
           Dim RaiseError As Boolean
           RaiseError = False
           On Error GoTo ErrorHandler
 
 3253      HideSolverModel = False
-          
-3254      If Application.Workbooks.Count = 0 Then
-3255          MsgBox "Error: No active workbook available", , "OpenSolver" & sOpenSolverVersion & " Error"
-3256          GoTo ExitFunction
-3257      End If
           
 3258      Application.EnableCancelKey = xlErrorHandler
           
@@ -423,31 +420,19 @@ Function HideSolverModel() As Boolean
           ScreenStatus = Application.ScreenUpdating
 3260      Application.ScreenUpdating = False
           
-          Dim sheet As Worksheet
-3261      On Error Resume Next
-          
-3262      Set sheet = ActiveWorkbook.ActiveSheet
-3263      If Err.Number <> 0 Then
-3264          MsgBox "Error: Unable to access the active sheet", , "OpenSolver" & sOpenSolverVersion & " Error"
-3265          GoTo ExitFunction
-3266      End If
-3267      On Error GoTo ErrorHandler
-          
+          GetActiveSheetIfMissing sheet
 3268      DeleteOpenSolverShapes sheet
-          Dim i As Long
-          Dim NumOfConstraints As Long
-          Dim sheetName As String
-3269      sheetName = EscapeSheetName(ActiveWorkbook.ActiveSheet)
-          
+
           ' Delete constraints on other sheets
-          Dim b As Boolean, rLHS As Range
-3273      For i = 1 To GetNumConstraints()
+3273      Dim i As Long
+          For i = 1 To GetNumConstraints(sheet)
+              Dim b As Boolean, rLHS As Range
 3274          b = False
               Set rLHS = Nothing
               ' Set b to be true only if there is no error
 3275          On Error Resume Next
-              Set rLHS = GetConstraintLhs(i)
-3276          b = rLHS.Worksheet.Name <> ActiveWorkbook.ActiveSheet.Name
+              Set rLHS = GetConstraintLhs(i, sheet)
+3276          b = rLHS.Worksheet.Name <> sheet.Name
 3277          If b Then
 3278              DeleteOpenSolverShapes rLHS.Worksheet
 3279          End If
@@ -470,47 +455,27 @@ ErrorHandler:
           
 End Function
 
-Function ShowSolverModel() As Boolean
-          
+Function ShowSolverModel(Optional sheet As Worksheet) As Boolean
           Dim RaiseError As Boolean
           RaiseError = False
           On Error GoTo ErrorHandler
 
 3295      ShowSolverModel = False
-          
-3296      If Application.Workbooks.Count = 0 Then
-3297          MsgBox "Error: No active workbook available", , "OpenSolver" & sOpenSolverVersion & " Error"
-3298          GoTo ExitFunction
-3299      End If
 
-          ' Trap the Escape key
 3300      Application.EnableCancelKey = xlErrorHandler
           
           Dim ScreenStatus As Boolean
           ScreenStatus = Application.ScreenUpdating
 3302      Application.ScreenUpdating = False
-          
-          Dim sheetName As String, book As Workbook, sheet As Worksheet
-          Dim NumConstraints  As Long
 
-3303      On Error Resume Next
-3304      sheetName = EscapeSheetName(ActiveWorkbook.ActiveSheet)
-3305      If Err.Number <> 0 Then
-3306          MsgBox "Error: Unable to access the active sheet", , "OpenSolver" & sOpenSolverVersion & " Error"
-3307          GoTo ExitFunction
-3308      End If
-3309      On Error GoTo ErrorHandler
-          
-3310      Set book = ActiveWorkbook
-          Set sheet = book.ActiveSheet
-          
-3311      DeleteOpenSolverShapes ActiveSheet
+          GetActiveSheetIfMissing sheet
+3311      DeleteOpenSolverShapes sheet
 3312      InitialiseHighlighting
           
           ' Checks to see if a model exists internally
 3316      Dim AdjustableCells As Range
           On Error Resume Next
-          Set AdjustableCells = GetDecisionVariablesNoOverlap(book, sheet)
+          Set AdjustableCells = GetDecisionVariablesNoOverlap(sheet)
           ' Don't try to highlight if we have no vars
           If AdjustableCells Is Nothing Then
               ShowSolverModel = False
@@ -524,15 +489,16 @@ Function ShowSolverModel() As Boolean
           
           ' Highlight the objective cell, if there is one
           Dim ObjRange As Range
-3323      Set ObjRange = GetObjectiveFunctionCell(book, sheet)
+3323      Set ObjRange = GetObjectiveFunctionCell(sheet)
           If Not ObjRange Is Nothing Then
               Dim ObjType As ObjectiveSenseType, ObjectiveTargetValue As Double
-3325          ObjType = GetObjectiveSense(book, sheet)
-3327          If ObjType = TargetObjective Then ObjectiveTargetValue = GetObjectiveTargetValue(book, sheet)
+3325          ObjType = GetObjectiveSense(sheet)
+3327          If ObjType = TargetObjective Then ObjectiveTargetValue = GetObjectiveTargetValue(sheet)
 3328          AddObjectiveHighlighting ObjRange, ObjType, ObjectiveTargetValue
 3330      End If
           
           ' Count the correct number of constraints, and form the constraint
+          Dim NumConstraints As Long
 3331      NumConstraints = GetNumConstraints()  ' Number of constraints entered in excel; can include ranges covering many constraints
           ' Note: Solver leaves around old constraints; the name <sheet>!solver_num gives the correct number of constraints (eg "=4")
           
@@ -552,7 +518,7 @@ Function ShowSolverModel() As Boolean
               Dim rLHS As Range
               Set rLHS = Nothing
               On Error Resume Next
-              Set rLHS = GetConstraintLhs(constraint, book, sheet)
+              Set rLHS = GetConstraintLhs(constraint, sheet)
               If Err.Number <> 0 Then
                   Errors = Error & "Error: " & Err.Description & vbNewLine
                   GoTo NextConstraint
@@ -561,7 +527,7 @@ Function ShowSolverModel() As Boolean
 
               Dim rel As Long
 
-3345          rel = GetConstraintRel(constraint, book, sheet)
+3345          rel = GetConstraintRel(constraint, sheet)
                       
               Dim LHSCount As Double, Count As Double
 3346          LHSCount = rLHS.Count
@@ -583,17 +549,17 @@ Function ShowSolverModel() As Boolean
                   Dim valRHS As Double, rRHS As Range, sRefersToRHS As String, RefersToFormula As Boolean
 3374              Set rRHS = Nothing
                   On Error Resume Next
-                  Set rRHS = GetConstraintRhs(constraint, sRefersToRHS, valRHS, RefersToFormula, book, sheet)
+                  Set rRHS = GetConstraintRhs(constraint, sRefersToRHS, valRHS, RefersToFormula, sheet)
                   If Err.Number <> 0 Then
                       Errors = Error & "Error: " & Err.Description & vbNewLine
                       GoTo NextConstraint
                   End If
                   On Error GoTo ErrorHandler
                   
-3384              If rLHS.Worksheet.Name <> ActiveWorkbook.ActiveSheet.Name Then
+3384              If rLHS.Worksheet.Name <> sheet.Name Then
 3385                  Set currentSheet = rLHS.Worksheet
 3386              Else
-3387                  Set currentSheet = ActiveSheet
+3387                  Set currentSheet = sheet
 3388              End If
                   
 3389              If rRHS Is Nothing Then

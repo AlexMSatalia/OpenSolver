@@ -216,7 +216,7 @@ Private Function ParseFormulae() As Boolean
 4894                          If strRHSCell = "" Then
 4895                              RHSValue = 0
 4896                          Else
-4897                              RHSValue = Application.Evaluate(strRHSCell)
+4897                              RHSValue = s.sheet.Evaluate(strRHSCell)
 4898                          End If
                               
                               ' Test LHS and RHS in the constraint
@@ -381,7 +381,7 @@ Function StringFormulaIsConstant(strFormula As String) As Boolean
 4979              LookingForEndOfRef = False
 4980              CheckForColon = False
 4981              If strSheetPrefix <> "" Then BuildingRef = strSheetPrefix + "!" + BuildingRef
-4982              Set rngBuildingRef = Range(BuildingRef)
+4982              Set rngBuildingRef = s.sheet.Range(BuildingRef)
                   
                   ' Cell reference found, check if constant
 4983              If rngBuildingRef.Count > 1 Then
@@ -415,7 +415,7 @@ Function StringFormulaIsConstant(strFormula As String) As Boolean
 4999                      If strSheetPrefix <> "" Then BuildingRef = strSheetPrefix + "!" + BuildingRef
                           
                           ' Cell reference found, check if constant
-5000                      Set rngBuildingRef = Range(BuildingRef)
+5000                      Set rngBuildingRef = s.sheet.Range(BuildingRef)
 5001                      For Each c In rngBuildingRef
 5002                          If Not Intersect(c.Precedents, s.AdjustableCells) Is Nothing Then GoTo NotConstant
 5003                      Next c
@@ -450,7 +450,7 @@ Function StringFormulaIsConstant(strFormula As String) As Boolean
               ' It never came - probably a solitary cell reference at the end
               ' of a formula. Check if we need a new node, add token to parsed string
 5019          If strSheetPrefix <> "" Then BuildingRef = strSheetPrefix + "!" + BuildingRef
-5020          Set rngBuildingRef = Range(BuildingRef)
+5020          Set rngBuildingRef = s.sheet.Range(BuildingRef)
               
               ' Cell reference found, check if constant
 5021          If rngBuildingRef.Count > 1 Then
@@ -611,7 +611,7 @@ Function ExpandFormula(ByVal strFormula As String, _
 5093                  LookingForEndOfRef = False
 5094                  CheckForColon = False
 5095                  If strSheetPrefix <> "" Then BuildingRef = strSheetPrefix + "!" + BuildingRef
-5096                  Set rngBuildingRef = Range(BuildingRef)
+5096                  Set rngBuildingRef = s.sheet.Range(BuildingRef)
 5097                  If rngBuildingRef.Count > 1 Then
 5098                      strParsed = strParsed + "["
 5099                      For Each c In rngBuildingRef
@@ -654,7 +654,7 @@ Function ExpandFormula(ByVal strFormula As String, _
                               ' Make sure this range is on the right sheet
 5121                          If strSheetPrefix <> "" Then BuildingRef = strSheetPrefix + "!" + BuildingRef
                               
-5122                          Set rngBuildingRef = Range(BuildingRef)
+5122                          Set rngBuildingRef = s.sheet.Range(BuildingRef)
                               
                               'Replace preceding comma with + if summing a second argument
 5123                          If FunctionName = "SUM" And FunctionCount > 0 Then
@@ -682,7 +682,7 @@ Function ExpandFormula(ByVal strFormula As String, _
                                       End Select
                                   End If
                                   If NewToken.TokenType = TokenType.Reference Then
-                                      IfOperator = IfOperator + AddNodeIfNew(objCurNode, Range(NewToken.Text))
+                                      IfOperator = IfOperator + AddNodeIfNew(objCurNode, s.sheet.Range(NewToken.Text))
                                   Else
                                       IfOperator = IfOperator + CStr(NewToken.Text)
                                   End If
@@ -821,7 +821,7 @@ Function ExpandFormula(ByVal strFormula As String, _
                   ' It never came - probably a solitary cell reference at the end
                   ' of a formula. Check if we need a new node, add token to parsed string
 5211              If strSheetPrefix <> "" Then BuildingRef = strSheetPrefix + "!" + BuildingRef
-5212              Set rngBuildingRef = Range(BuildingRef)
+5212              Set rngBuildingRef = s.sheet.Range(BuildingRef)
 5213              If rngBuildingRef.Count > 1 Then
 5214                  strParsed = strParsed + "["
 5215                  For Each c In rngBuildingRef
@@ -923,7 +923,7 @@ Sub CleanFormulae(ByVal lngFStart As Long, ByVal lngFEnd As Long, Optional Const
 5273                          objCurNode.boolCanEval = True
                               ' NOTE: Application.Evaluate has a 255 character limit
                               ' See also: http://dutchgemini.wordpress.com/2009/08/07/error-2015-using-application-evaluate-in-excel-vba/
-5274                          varReturn = Application.Evaluate(objCurNode.strFormula)
+5274                          varReturn = s.sheet.Evaluate(objCurNode.strFormula)
 5275                          If (VBA.VarType(varReturn) = vbError) Then
                                   ' Fall back to calculating the cell
 5276                              objCurNode.rngAddress.Calculate
@@ -1106,7 +1106,7 @@ Function AddNodeIfNew(ByRef objCurNode As CFormula, ByRef c As Range) As String
                   ' it earlier
                   ' NOTE: Application.Evaluate has a 255 character limit
                   
-5382              varReturn = Application.Evaluate(strCFormula)
+5382              varReturn = s.sheet.Evaluate(strCFormula)
 5383              If (VBA.VarType(varReturn) = vbError) Then
                       ' Fall back to calculating the cell
 5384                  c.Calculate
@@ -1128,7 +1128,7 @@ Function AddNodeIfNew(ByRef objCurNode As CFormula, ByRef c As Range) As String
               'objNewNode.boolCanEval = False
               'objNewNode.boolIsConstant = False
               'objNewNode.intRefsAdjCell = AdjCellUnknown
-5393          varReturn = Application.Evaluate(strCFormula)
+5393          varReturn = s.sheet.Evaluate(strCFormula)
 5394              If (VBA.VarType(varReturn) = vbError) Then
                       ' Fall back to calculating the cell
 5395                  c.Calculate

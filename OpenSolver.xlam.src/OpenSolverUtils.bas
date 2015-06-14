@@ -44,7 +44,7 @@ Function RemoveSheetNameFromString(s As String, sheet As Worksheet) As String
 
           ' Try with workbook name first
           Dim sheetName As String
-          sheetName = "'[" & ActiveWorkbook.Name & "]" & Mid(EscapeSheetName(sheet, True), 2)
+          sheetName = "'[" & sheet.Parent.Name & "]" & Mid(EscapeSheetName(sheet, True), 2)
           If InStr(s, sheetName) Then
               RemoveSheetNameFromString = Replace(s, sheetName, "")
               GoTo ExitFunction

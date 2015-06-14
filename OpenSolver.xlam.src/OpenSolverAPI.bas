@@ -9,26 +9,24 @@ Public Const sOpenSolverDate As String = "2015.02.15"
 ' * @param {} SolveRelaxation If True, all integer and boolean constraints will be relaxed to allow continuous values for these variables. Defaults to False
 ' * @param {} MinimiseUserInteraction If True, all dialogs and messages will be suppressed. Use this when automating a lot of solves so that there are no interruptions. Defaults to False
 ' * @param {} LinearityCheckOffset Sets the base value used for checking if the model is linear. Change this if a non-linear model is not being detected as non-linear. Defaults to 0
-' * @param {} book The workbook containing the model (defaults to active workbook)
 ' * @param {} sheet The worksheet containing the model (defaults to active worksheet)
 ' */
 Public Function RunOpenSolver(Optional SolveRelaxation As Boolean = False, _
                               Optional MinimiseUserInteraction As Boolean = False, _
                               Optional LinearityCheckOffset As Double = 0, _
-                              Optional book As Workbook, _
                               Optional sheet As Worksheet) As OpenSolverResult
     CheckLocationValid  ' Check for unicode in path
     
     ClearError
     On Error GoTo ErrorHandler
     
-    GetActiveBookAndSheetIfMissing book, sheet
+    GetActiveSheetIfMissing sheet
 
     RunOpenSolver = OpenSolverResult.Unsolved
     Dim OpenSolver As COpenSolver
     Set OpenSolver = New COpenSolver
 
-    OpenSolver.BuildModelFromSolverData LinearityCheckOffset, MinimiseUserInteraction, SolveRelaxation, book, sheet
+    OpenSolver.BuildModelFromSolverData LinearityCheckOffset, MinimiseUserInteraction, SolveRelaxation, sheet
     ' Only proceed with solve if nothing detected while building model
     If OpenSolver.SolveStatus = OpenSolverResult.Unsolved Then
         SolveModel OpenSolver, SolveRelaxation, MinimiseUserInteraction
@@ -59,13 +57,12 @@ Public Function GetAvailableSolvers() As String()
 End Function
 
 '/**
-' * Gets the short name of the currently selected solver for an OpenSolver model
-' * @param {} book The workbook containing the model (defaults to active workbook)
+' * Gets the short name of the currently selected solver for an OpenSolver model.
 ' * @param {} sheet The worksheet containing the model (defaults to active worksheet)
 ' */
-Public Function GetChosenSolver(Optional book As Workbook, Optional sheet As Worksheet) As String
-    GetActiveBookAndSheetIfMissing book, sheet
-    If Not GetNameValueIfExists(book, EscapeSheetName(sheet) & "OpenSolver_ChosenSolver", GetChosenSolver) Then
+Public Function GetChosenSolver(Optional sheet As Worksheet) As String
+    GetActiveSheetIfMissing sheet
+    If Not GetSheetNameValueIfExists(sheet, "OpenSolver_ChosenSolver", GetChosenSolver) Then
         GoTo SetDefault
     End If
     
@@ -76,21 +73,20 @@ Public Function GetChosenSolver(Optional book As Workbook, Optional sheet As Wor
     
 SetDefault:
     GetChosenSolver = GetAvailableSolvers()(LBound(GetAvailableSolvers))
-    SetChosenSolver GetChosenSolver, book, sheet
+    SetChosenSolver GetChosenSolver, sheet
 End Function
 
 '/**
-' * Sets the solver for an OpenSolver model
+' * Sets the solver for an OpenSolver model.
 ' * @param {} SolverShortName The short name of the solver to be set
-' * @param {} book The workbook containing the model (defaults to active workbook)
 ' * @param {} sheet The worksheet containing the model (defaults to active worksheet)
 ' */
-Public Sub SetChosenSolver(SolverShortName As String, Optional book As Workbook, Optional sheet As Worksheet)
+Public Sub SetChosenSolver(SolverShortName As String, Optional sheet As Worksheet)
     ' Check that a valid solver has been specified
     On Error GoTo SolverNotAllowed
     WorksheetFunction.Match SolverShortName, GetAvailableSolvers, 0
         
-    SetNameOnSheet "OpenSolver_ChosenSolver", "=" & SolverShortName, book, sheet
+    SetNameOnSheet "OpenSolver_ChosenSolver", "=" & SolverShortName, sheet
     Exit Sub
     
 SolverNotAllowed:
@@ -100,16 +96,15 @@ End Sub
 
 '/**
 ' * Returns the objective cell in an OpenSolver model.
-' * @param {} book The workbook containing the model (defaults to active workbook)
 ' * @param {} sheet The worksheet containing the model (defaults to active worksheet)
 ' * @param {} ValidateObjective If True, throws an error if the model is invalid. Defaults to False
 ' */
-Public Function GetObjectiveFunctionCell(Optional book As Workbook, Optional sheet As Worksheet, Optional ValidateObjective As Boolean = False) As Range
-    GetActiveBookAndSheetIfMissing book, sheet
+Public Function GetObjectiveFunctionCell(Optional sheet As Worksheet, Optional ValidateObjective As Boolean = False) As Range
+    GetActiveSheetIfMissing sheet
     
     ' Get and check the objective function
     Dim isRangeObj As Boolean, valObj As Double, ObjRefersToError As Boolean, ObjRefersToFormula As Boolean, sRefersToObj As String, objIsMissing As Boolean
-    GetNameAsValueOrRange book, EscapeSheetName(sheet) & "solver_opt", objIsMissing, isRangeObj, GetObjectiveFunctionCell, ObjRefersToFormula, ObjRefersToError, sRefersToObj, valObj
+    GetSheetNameAsValueOrRange sheet, "solver_opt", objIsMissing, isRangeObj, GetObjectiveFunctionCell, ObjRefersToFormula, ObjRefersToError, sRefersToObj, valObj
 
     If Not ValidateObjective Then Exit Function
 
@@ -136,30 +131,27 @@ End Function
 
 '/**
 ' * Returns the objective cell in an OpenSolver model. Throws error if invalid.
-' * @param {} book The workbook containing the model (defaults to active workbook)
 ' * @param {} sheet The worksheet containing the model (defaults to active worksheet)
 ' */
-Public Function GetObjectiveFunctionCellWithValidation(Optional book As Workbook, Optional sheet As Worksheet) As Range
-    Set GetObjectiveFunctionCellWithValidation = GetObjectiveFunctionCell(book, sheet, True)
+Public Function GetObjectiveFunctionCellWithValidation(Optional sheet As Worksheet) As Range
+    Set GetObjectiveFunctionCellWithValidation = GetObjectiveFunctionCell(sheet, True)
 End Function
 
 '/**
 ' * Sets the objective cell in an OpenSolver model.
 ' * @param {} ObjectiveFunctionCell The cell to set
-' * @param {} book The workbook containing the model (defaults to active workbook)
 ' * @param {} sheet The worksheet containing the model (defaults to active worksheet)
 ' */
-Public Sub SetObjectiveFunctionCell(ObjectiveFunctionCell As Range, Optional book As Workbook, Optional sheet As Worksheet)
-    SetNamedRangeIfExists "solver_opt", ObjectiveFunctionCell, book, sheet
+Public Sub SetObjectiveFunctionCell(ObjectiveFunctionCell As Range, Optional sheet As Worksheet)
+    SetNamedRangeIfExists "solver_opt", ObjectiveFunctionCell, sheet
 End Sub
 
 '/**
 ' * Returns the objective sense type for an OpenSolver model. Defaults to Minimize if an invalid value is saved.
-' * @param {} book The workbook containing the model (defaults to active workbook)
 ' * @param {} sheet The worksheet containing the model (defaults to active worksheet)
 ' */
-Public Function GetObjectiveSense(Optional book As Workbook, Optional sheet As Worksheet) As ObjectiveSenseType
-    GetObjectiveSense = GetNamedIntegerWithDefault("solver_typ", book, sheet, ObjectiveSenseType.MinimiseObjective)
+Public Function GetObjectiveSense(Optional sheet As Worksheet) As ObjectiveSenseType
+    GetObjectiveSense = GetNamedIntegerWithDefault("solver_typ", sheet, ObjectiveSenseType.MinimiseObjective)
     
     ' Check that our integer is a valid value for the enum
     Dim i As Integer
@@ -168,49 +160,45 @@ Public Function GetObjectiveSense(Optional book As Workbook, Optional sheet As W
     Next i
     ' It wasn't in the enum - set default
     GetObjectiveSense = ObjectiveSenseType.MinimiseObjective
-    SetObjectiveSense GetObjectiveSense, book, sheet
+    SetObjectiveSense GetObjectiveSense, sheet
 End Function
 
 '/**
 ' * Sets the objective sense for an OpenSolver model.
 ' * @param {} ObjectiveSense The objective sense to set
-' * @param {} book The workbook containing the model (defaults to active workbook)
 ' * @param {} sheet The worksheet containing the model (defaults to active worksheet)
 ' */
-Public Sub SetObjectiveSense(ObjectiveSense As ObjectiveSenseType, Optional book As Workbook, Optional sheet As Worksheet)
-    SetIntegerNameOnSheet "solver_typ", ObjectiveSense, book, sheet
+Public Sub SetObjectiveSense(ObjectiveSense As ObjectiveSenseType, Optional sheet As Worksheet)
+    SetIntegerNameOnSheet "solver_typ", ObjectiveSense, sheet
 End Sub
 
 '/**
 ' * Returns the target objective value in an OpenSolver model.
-' * @param {} book The workbook containing the model (defaults to active workbook)
 ' * @param {} sheet The worksheet containing the model (defaults to active worksheet)
 ' */
-Public Function GetObjectiveTargetValue(Optional book As Workbook, Optional sheet As Worksheet) As Double
-    GetObjectiveTargetValue = GetNamedDoubleWithDefault("solver_val", book, sheet, 0)
+Public Function GetObjectiveTargetValue(Optional sheet As Worksheet) As Double
+    GetObjectiveTargetValue = GetNamedDoubleWithDefault("solver_val", sheet, 0)
 End Function
 
 '/**
 ' * Sets the target objective value in an OpenSolver model.
 ' * @param {} ObjectiveTargetValue The target value to set
-' * @param {} book The workbook containing the model (defaults to active workbook)
 ' * @param {} sheet The worksheet containing the model (defaults to active worksheet)
 ' */
-Public Sub SetObjectiveTargetValue(ObjectiveTargetValue As Double, Optional book As Workbook, Optional sheet As Worksheet)
-    SetDoubleNameOnSheet "solver_val", ObjectiveTargetValue, book, sheet
+Public Sub SetObjectiveTargetValue(ObjectiveTargetValue As Double, Optional sheet As Worksheet)
+    SetDoubleNameOnSheet "solver_val", ObjectiveTargetValue, sheet
 End Sub
 
 '/**
 ' * Gets the adjustable cells for an OpenSolver model, throwing an error if unset/invalid.
-' * @param {} book The workbook containing the model (defaults to active workbook)
 ' * @param {} sheet The worksheet containing the model (defaults to active worksheet)
 ' */
-Public Function GetDecisionVariables(Optional book As Workbook, Optional sheet As Worksheet) As Range
+Public Function GetDecisionVariables(Optional sheet As Worksheet) As Range
 ' We check to see if a model exists by getting the adjustable cells. We check for a name first, as this may contain =Sheet1!$C$2:$E$2,Sheet1!#REF!
-    GetActiveBookAndSheetIfMissing book, sheet
+    GetActiveSheetIfMissing sheet
     
     Dim n As Name
-    If Not NameExistsInWorkbook(book, EscapeSheetName(sheet) & "solver_adj", n) Then
+    If Not SheetNameExistsInWorkbook(sheet, "solver_adj", n) Then
         Err.Raise Number:=OpenSolver_ModelError, Description:="No Solver model with decision variables was found on sheet " & sheet.Name
     End If
     
@@ -222,12 +210,11 @@ End Function
 
 '/**
 ' * Gets the adjustable cells range (returning Nothing if invalid) for an OpenSolver model.
-' * @param {} book The workbook containing the model (defaults to active workbook)
 ' * @param {} sheet The worksheet containing the model (defaults to active worksheet)
 ' */
-Public Function GetDecisionVariablesWithDefault(Optional book As Workbook, Optional sheet As Worksheet) As Range
+Public Function GetDecisionVariablesWithDefault(Optional sheet As Worksheet) As Range
     On Error GoTo SetDefault:
-    Set GetDecisionVariablesWithDefault = GetDecisionVariables(book, sheet)
+    Set GetDecisionVariablesWithDefault = GetDecisionVariables(sheet)
     Exit Function
     
 SetDefault:
@@ -236,21 +223,19 @@ End Function
 
 '/**
 ' * Gets the adjustable cells range (with overlap removed) for an OpenSolver model.
-' * @param {} book The workbook containing the model (defaults to active workbook)
 ' * @param {} sheet The worksheet containing the model (defaults to active worksheet)
 ' */
-Public Function GetDecisionVariablesNoOverlap(Optional book As Workbook, Optional sheet As Worksheet) As Range
-    Set GetDecisionVariablesNoOverlap = RemoveRangeOverlap(GetDecisionVariables(book, sheet))
+Public Function GetDecisionVariablesNoOverlap(Optional sheet As Worksheet) As Range
+    Set GetDecisionVariablesNoOverlap = RemoveRangeOverlap(GetDecisionVariables(sheet))
 End Function
 
 '/**
 ' * Sets the adjustable cells range for an OpenSolver model.
 ' * @param {} DecisionVariables The range to set
-' * @param {} book The workbook containing the model (defaults to active workbook)
 ' * @param {} sheet The worksheet containing the model (defaults to active worksheet)
 ' */
-Public Sub SetDecisionVariables(DecisionVariables As Range, Optional book As Workbook, Optional sheet As Worksheet)
-    SetNamedRangeIfExists "adj", DecisionVariables, book, sheet, True
+Public Sub SetDecisionVariables(DecisionVariables As Range, Optional sheet As Worksheet)
+    SetNamedRangeIfExists "adj", DecisionVariables, sheet, True
 End Sub
 
 '/**
@@ -259,13 +244,12 @@ End Sub
 ' * @param {} Relation The relation to set for the constraint. If Int/Bin, neither RHSRange nor RHSFormula should be set.
 ' * @param {} RHSRange Set if the constraint RHS is a cell/range
 ' * @param {} RHSFormula Set if the constraint RHS is a string formula
-' * @param {} book The workbook containing the model (defaults to active workbook)
 ' * @param {} sheet The worksheet containing the model (defaults to active worksheet)
 ' */
-Public Sub AddConstraint(LHSRange As Range, Relation As RelationConsts, Optional RHSRange As Range, Optional RHSFormula As String, Optional book As Workbook, Optional sheet As Worksheet)
+Public Sub AddConstraint(LHSRange As Range, Relation As RelationConsts, Optional RHSRange As Range, Optional RHSFormula As String, Optional sheet As Worksheet)
     Dim NewIndex As Long
-    NewIndex = GetNumConstraints(book, sheet) + 1
-    UpdateConstraint NewIndex, LHSRange, Relation, RHSRange, RHSFormula, book, sheet
+    NewIndex = GetNumConstraints(sheet) + 1
+    UpdateConstraint NewIndex, LHSRange, Relation, RHSRange, RHSFormula, sheet
 End Sub
 
 '/**
@@ -275,14 +259,13 @@ End Sub
 ' * @param {} Relation The new relation to set for the constraint. If Int/Bin, neither RHSRange nor RHSFormula should be set.
 ' * @param {} RHSRange Set if the new constraint RHS is a cell/range
 ' * @param {} RHSFormula Set if the new constraint RHS is a string formula
-' * @param {} book The workbook containing the model (defaults to active workbook)
 ' * @param {} sheet The worksheet containing the model (defaults to active worksheet)
 ' */
-Public Sub UpdateConstraint(Index As Long, LHSRange As Range, Relation As RelationConsts, Optional RHSRange As Range, Optional RHSFormula As String, Optional book As Workbook, Optional sheet As Worksheet)
-    ValidateConstraint LHSRange, Relation, RHSRange, RHSFormula
+Public Sub UpdateConstraint(Index As Long, LHSRange As Range, Relation As RelationConsts, Optional RHSRange As Range, Optional RHSFormula As String, Optional sheet As Worksheet)
+    ValidateConstraint LHSRange, Relation, RHSRange, RHSFormula, sheet
     
-    SetConstraintLhs Index, LHSRange, book, sheet
-    SetConstraintRel Index, Relation, book, sheet
+    SetConstraintLhs Index, LHSRange, sheet
+    SetConstraintRel Index, Relation, sheet
     
     Select Case Relation
     Case RelationINT
@@ -294,20 +277,19 @@ Public Sub UpdateConstraint(Index As Long, LHSRange As Range, Relation As Relati
     End Select
     If left(RHSFormula, 1) <> "=" Then RHSFormula = "=" & RHSFormula
     
-    SetConstraintRhs Index, RHSRange, RHSFormula, book, sheet
+    SetConstraintRhs Index, RHSRange, RHSFormula, sheet
     
-    If Index > GetNumConstraints(book, sheet) Then SetNumConstraints Index, book, sheet
+    If Index > GetNumConstraints(sheet) Then SetNumConstraints Index, sheet
 End Sub
 
 '/**
 ' * Deletes a constraint in an OpenSolver model.
 ' * @param {} Index The index of the constraint to delete
-' * @param {} book The workbook containing the model (defaults to active workbook)
 ' * @param {} sheet The worksheet containing the model (defaults to active worksheet)
 ' */
-Public Sub DeleteConstraint(Index As Long, Optional book As Workbook, Optional sheet As Worksheet)
+Public Sub DeleteConstraint(Index As Long, Optional sheet As Worksheet)
     Dim NumConstraints As Long
-    NumConstraints = GetNumConstraints(book, sheet)
+    NumConstraints = GetNumConstraints(sheet)
     
     If Index > NumConstraints Or Index < 1 Then Exit Sub
     
@@ -315,70 +297,66 @@ Public Sub DeleteConstraint(Index As Long, Optional book As Workbook, Optional s
     Dim i As Long
     For i = Index To NumConstraints - 1
         Dim LHSRange As Range, Relation As RelationConsts, RHSFormula As String, RHSRange As Range, RHSValue As Double, RHSRefersToFormula As Boolean
-        Set LHSRange = GetConstraintLhs(i + 1, book, sheet)
-        Relation = GetConstraintRel(i + 1, book, sheet)
-        Set RHSRange = GetConstraintRhs(i + 1, RHSFormula, RHSValue, RHSRefersToFormula, book, sheet)
-        UpdateConstraint i, LHSRange, Relation, RHSRange, RHSFormula, book, sheet
+        Set LHSRange = GetConstraintLhs(i + 1, sheet)
+        Relation = GetConstraintRel(i + 1, sheet)
+        Set RHSRange = GetConstraintRhs(i + 1, RHSFormula, RHSValue, RHSRefersToFormula, sheet)
+        UpdateConstraint i, LHSRange, Relation, RHSRange, RHSFormula, sheet
     Next i
     
-    DeleteNameOnSheet "lhs" & NumConstraints, book, sheet, True
-    DeleteNameOnSheet "rel" & NumConstraints, book, sheet, True
-    DeleteNameOnSheet "rhs" & NumConstraints, book, sheet, True
+    DeleteNameOnSheet "lhs" & NumConstraints, sheet, True
+    DeleteNameOnSheet "rel" & NumConstraints, sheet, True
+    DeleteNameOnSheet "rhs" & NumConstraints, sheet, True
     
-    SetNumConstraints NumConstraints - 1, book, sheet
+    SetNumConstraints NumConstraints - 1, sheet
 End Sub
 
 '/**
 ' * Clears an entire OpenSolver model.
-' * @param {} book The workbook containing the model (defaults to active workbook)
 ' * @param {} sheet The worksheet containing the model (defaults to active worksheet)
 ' */
-Public Sub ResetModel(Optional book As Workbook, Optional sheet As Worksheet)
+Public Sub ResetModel(Optional sheet As Worksheet)
     Dim SolverNames() As Variant, OpenSolverNames() As Variant, Name As Variant
     SolverNames = Array("opt", "typ", "adj", "neg", "sho", "rlx", "tol", "tim", "pre", "itr", "num", "val")
     OpenSolverNames = Array("ChosenSolver", "DualsNewSheet", "UpdateSensitivity", "LinearityCheck", "Duals")
     
     For Each Name In SolverNames
-        DeleteNameOnSheet CStr(Name), book, sheet, True
+        DeleteNameOnSheet CStr(Name), sheet, True
     Next Name
     For Each Name In OpenSolverNames
-        DeleteNameOnSheet "OpenSolver_" & CStr(Name), book, sheet
+        DeleteNameOnSheet "OpenSolver_" & CStr(Name), sheet
     Next Name
 End Sub
 
 '/**
 ' * Returns the number of constraints in an OpenSolver model.
-' * @param {} book The workbook containing the model (defaults to active workbook)
 ' * @param {} sheet The worksheet containing the model (defaults to active worksheet)
 ' */
-Public Function GetNumConstraints(Optional book As Workbook, Optional sheet As Worksheet) As Long
-    GetNumConstraints = GetNamedIntegerWithDefault("solver_num", book, sheet, 0)
+Public Function GetNumConstraints(Optional sheet As Worksheet) As Long
+    GetNumConstraints = GetNamedIntegerWithDefault("solver_num", sheet, 0)
 End Function
 
 '/**
 ' * Sets the number of constraints in an OpenSolver model. Using Set methods to modify constraints is dangerous, it is best to use Add/Delete/UpdateConstraint.
 ' * @param {} NumConstraints The number of constraints to set
-' * @param {} book The workbook containing the model (defaults to active workbook)
 ' * @param {} sheet The worksheet containing the model (defaults to active worksheet)
 ' */
-Public Sub SetNumConstraints(NumConstraints As Long, Optional book As Workbook, Optional sheet As Worksheet)
-    SetIntegerNameOnSheet "solver_num", NumConstraints, book, sheet
+Public Sub SetNumConstraints(NumConstraints As Long, Optional sheet As Worksheet)
+    SetIntegerNameOnSheet "solver_num", NumConstraints, sheet
 End Sub
 
 '/**
 ' * Returns the LHS range for a specified constraint in an OpenSolver model.
 ' * @param {} Index The index of the constraint
-' * @param {} book The workbook containing the model (defaults to active workbook)
 ' * @param {} sheet The worksheet containing the model (defaults to active worksheet)
 ' * @param {} RefersTo Optional. Returns a string representation of the LHS range
 ' */
-Public Function GetConstraintLhs(Index As Long, Optional book As Workbook, Optional sheet As Worksheet, Optional RefersTo As String) As Range
-    GetActiveBookAndSheetIfMissing book, sheet
+Public Function GetConstraintLhs(Index As Long, Optional sheet As Worksheet, Optional RefersTo As String) As Range
+    GetActiveSheetIfMissing sheet
     
     Set GetConstraintLhs = Nothing
     
     Dim IsRange As Boolean, value As Double, RefersToError As Boolean, RefersToFormula As Boolean, IsMissing As Boolean
-    GetNameAsValueOrRange book, EscapeSheetName(sheet) & "solver_lhs" & Index, IsMissing, IsRange, GetConstraintLhs, RefersToFormula, RefersToError, RefersTo, value
+    GetSheetNameAsValueOrRange sheet, "solver_lhs" & Index, IsMissing, IsRange, GetConstraintLhs, RefersToFormula, RefersToError, RefersTo, value
     ' Must have a left hand side defined
     If IsMissing Then
         Err.Raise Number:=OpenSolver_BuildError, Description:="The left hand side for a constraint does not appear to be defined ('solver_lhs" & Index & " is missing). Please fix this, and try again."
@@ -397,21 +375,19 @@ End Function
 ' * Sets the constraint LHS for a specified constraint in an OpenSolver model. Using Set methods to modify constraints is dangerous, it is best to use Add/Delete/UpdateConstraint.
 ' * @param {} Index The index of the constraint to modify
 ' * @param {} ConstraintLhs The cell range to set as the constraint LHS
-' * @param {} book The workbook containing the model (defaults to active workbook)
 ' * @param {} sheet The worksheet containing the model (defaults to active worksheet)
 ' */
-Public Sub SetConstraintLhs(Index As Long, ConstraintLhs As Range, Optional book As Workbook, Optional sheet As Worksheet)
-    SetNamedRangeIfExists "solver_lhs" & Index, ConstraintLhs, book, sheet
+Public Sub SetConstraintLhs(Index As Long, ConstraintLhs As Range, Optional sheet As Worksheet)
+    SetNamedRangeIfExists "solver_lhs" & Index, ConstraintLhs, sheet
 End Sub
 
 '/**
 ' * Returns the relation for a specified constraint in an OpenSolver model.
 ' * @param {} Index The index of the constraint
-' * @param {} book The workbook containing the model (defaults to active workbook)
 ' * @param {} sheet The worksheet containing the model (defaults to active worksheet)
 ' */
-Public Function GetConstraintRel(Index As Long, Optional book As Workbook, Optional sheet As Worksheet) As RelationConsts
-    GetConstraintRel = GetNamedIntegerWithDefault("solver_rel" & Index, book, sheet, RelationConsts.RelationLE)
+Public Function GetConstraintRel(Index As Long, Optional sheet As Worksheet) As RelationConsts
+    GetConstraintRel = GetNamedIntegerWithDefault("solver_rel" & Index, sheet, RelationConsts.RelationLE)
     
     ' Check that our integer is a valid value for the enum
     Dim i As Integer
@@ -420,18 +396,17 @@ Public Function GetConstraintRel(Index As Long, Optional book As Workbook, Optio
     Next i
     ' It wasn't in the enum - set default
     GetConstraintRel = RelationConsts.RelationLE
-    SetConstraintRel Index, GetConstraintRel, book, sheet
+    SetConstraintRel Index, GetConstraintRel, sheet
 End Function
 
 '/**
 ' * Sets the constraint relation for a specified constraint in an OpenSolver model. Using Set methods to modify constraints is dangerous, it is best to use Add/Delete/UpdateConstraint.
 ' * @param {} Index The index of the constraint to modify
 ' * @param {} ConstraintRel The constraint relation to set
-' * @param {} book The workbook containing the model (defaults to active workbook)
 ' * @param {} sheet The worksheet containing the model (defaults to active worksheet)
 ' */
-Public Sub SetConstraintRel(Index As Long, ConstraintRel As RelationConsts, Optional book As Workbook, Optional sheet As Worksheet)
-    SetIntegerNameOnSheet "solver_rel" & Index, ConstraintRel, book, sheet
+Public Sub SetConstraintRel(Index As Long, ConstraintRel As RelationConsts, Optional sheet As Worksheet)
+    SetIntegerNameOnSheet "solver_rel" & Index, ConstraintRel, sheet
 End Sub
 
 '/**
@@ -440,16 +415,15 @@ End Sub
 ' * @param {} Formula Returns the value of the RHS if it is a string formula
 ' * @param {} value Returns the value of the RHS if it is a constant value
 ' * @param {} RefersToFormula Set to true if the RHS is a string formula
-' * @param {} book The workbook containing the model (defaults to active workbook)
 ' * @param {} sheet The worksheet containing the model (defaults to active worksheet)
 ' */
-Public Function GetConstraintRhs(Index As Long, Formula As String, value As Double, RefersToFormula As Boolean, Optional book As Workbook, Optional sheet As Worksheet) As Range
-    GetActiveBookAndSheetIfMissing book, sheet
+Public Function GetConstraintRhs(Index As Long, Formula As String, value As Double, RefersToFormula As Boolean, Optional sheet As Worksheet) As Range
+    GetActiveSheetIfMissing sheet
     
     Set GetConstraintRhs = Nothing
     
     Dim IsRange As Boolean, RefersToError As Boolean, IsMissing As Boolean
-    GetNameAsValueOrRange book, EscapeSheetName(sheet) & "solver_rhs" & Index, IsMissing, IsRange, GetConstraintRhs, RefersToFormula, RefersToError, Formula, value
+    GetSheetNameAsValueOrRange sheet, "solver_rhs" & Index, IsMissing, IsRange, GetConstraintRhs, RefersToFormula, RefersToError, Formula, value
     ' Must have a right hand side defined
     If IsMissing Then
         Err.Raise Number:=OpenSolver_BuildError, Description:="The right hand side for a constraint does not appear to be defined ('solver_rhs" & Index & " is missing). Please fix this, and try again."
@@ -465,176 +439,158 @@ End Function
 ' * @param {} Index The index of the constraint to modify
 ' * @param {} ConstraintRhsRange Set if the constraint RHS is a cell range
 ' * @param {} ConstraintRhsFormula Set if the constraint RHS is a string formula
-' * @param {} book The workbook containing the model (defaults to active workbook)
 ' * @param {} sheet The worksheet containing the model (defaults to active worksheet)
 ' */
-Public Sub SetConstraintRhs(Index As Long, ConstraintRhsRange As Range, ConstraintRhsFormula As String, Optional book As Workbook, Optional sheet As Worksheet)
+Public Sub SetConstraintRhs(Index As Long, ConstraintRhsRange As Range, ConstraintRhsFormula As String, Optional sheet As Worksheet)
     If ConstraintRhsRange Is Nothing Then
-        SetNameOnSheet "rhs" & Index, ConstraintRhsFormula, book, sheet, True
+        SetNameOnSheet "rhs" & Index, ConstraintRhsFormula, sheet, True
     Else
-        SetNamedRangeIfExists "rhs" & Index, ConstraintRhsRange, book, sheet, True
+        SetNamedRangeIfExists "rhs" & Index, ConstraintRhsRange, sheet, True
     End If
 End Sub
 
 '/**
 ' * Returns whether unconstrained variables are non-negative for an OpenSolver model.
-' * @param {} book The workbook containing the model (defaults to active workbook)
 ' * @param {} sheet The worksheet containing the model (defaults to active worksheet)
 ' */
-Public Function GetNonNegativity(Optional book As Workbook, Optional sheet As Worksheet) As Boolean
-    GetNonNegativity = GetNamedIntegerAsBooleanWithDefault("solver_neg", book, sheet, True)
+Public Function GetNonNegativity(Optional sheet As Worksheet) As Boolean
+    GetNonNegativity = GetNamedIntegerAsBooleanWithDefault("solver_neg", sheet, True)
 End Function
 
 '/**
 ' * Sets whether unconstrained variables are non-negative for an OpenSolver model.
 ' * @param {} NonNegativity True if unconstrained variables should be non-negative
-' * @param {} book The workbook containing the model (defaults to active workbook)
 ' * @param {} sheet The worksheet containing the model (defaults to active worksheet)
 ' */
-Public Sub SetNonNegativity(NonNegativity As Boolean, Optional book As Workbook, Optional sheet As Worksheet)
-    SetBooleanAsIntegerNameOnSheet "solver_neg", NonNegativity, book, sheet
+Public Sub SetNonNegativity(NonNegativity As Boolean, Optional sheet As Worksheet)
+    SetBooleanAsIntegerNameOnSheet "solver_neg", NonNegativity, sheet
 End Sub
 
 '/**
 ' * Returns whether a post-solve linearity check will be run for an OpenSolver model
-' * @param {} book The workbook containing the model (defaults to active workbook)
 ' * @param {} sheet The worksheet containing the model (defaults to active worksheet)
 ' */
-Public Function GetLinearityCheck(Optional book As Workbook, Optional sheet As Worksheet) As Boolean
-    GetLinearityCheck = GetNamedIntegerAsBooleanWithDefault("OpenSolver_LinearityCheck", book, sheet, True)
+Public Function GetLinearityCheck(Optional sheet As Worksheet) As Boolean
+    GetLinearityCheck = GetNamedIntegerAsBooleanWithDefault("OpenSolver_LinearityCheck", sheet, True)
 End Function
 
 '/**
 ' * Sets the whether to run a post-solve linearity check for an OpenSolver model.
 ' * @param {} LinearityCheck True to run linearity check
-' * @param {} book The workbook containing the model (defaults to active workbook)
 ' * @param {} sheet The worksheet containing the model (defaults to active worksheet)
 ' */
-Public Sub SetLinearityCheck(LinearityCheck As Boolean, Optional book As Workbook, Optional sheet As Worksheet)
-    SetBooleanAsIntegerNameOnSheet "OpenSolver_LinearityCheck", LinearityCheck, book, sheet
+Public Sub SetLinearityCheck(LinearityCheck As Boolean, Optional sheet As Worksheet)
+    SetBooleanAsIntegerNameOnSheet "OpenSolver_LinearityCheck", LinearityCheck, sheet
 End Sub
 
 '/**
 ' * Returns whether to show solve progress for an OpenSolver model.
-' * @param {} book The workbook containing the model (defaults to active workbook)
 ' * @param {} sheet The worksheet containing the model (defaults to active worksheet)
 ' */
-Public Function GetShowSolverProgress(Optional book As Workbook, Optional sheet As Worksheet) As Boolean
-    GetShowSolverProgress = GetNamedIntegerAsBooleanWithDefault("solver_sho", book, sheet, False)
+Public Function GetShowSolverProgress(Optional sheet As Worksheet) As Boolean
+    GetShowSolverProgress = GetNamedIntegerAsBooleanWithDefault("solver_sho", sheet, False)
 End Function
 
 '/**
 ' * Sets whether to show solve progress for an OpenSolver model.
 ' * @param {} ShowSolverProgress True to show progress while solving
-' * @param {} book The workbook containing the model (defaults to active workbook)
 ' * @param {} sheet The worksheet containing the model (defaults to active worksheet)
 ' */
-Public Sub SetShowSolverProgress(ShowSolverProgress As Boolean, Optional book As Workbook, Optional sheet As Worksheet)
-    SetBooleanAsIntegerNameOnSheet "solver_sho", ShowSolverProgress, book, sheet
+Public Sub SetShowSolverProgress(ShowSolverProgress As Boolean, Optional sheet As Worksheet)
+    SetBooleanAsIntegerNameOnSheet "solver_sho", ShowSolverProgress, sheet
 End Sub
 
 '/**
 ' * Returns the max solve time for an OpenSolver model.
-' * @param {} book The workbook containing the model (defaults to active workbook)
 ' * @param {} sheet The worksheet containing the model (defaults to active worksheet)
 ' */
-Public Function GetMaxTime(Optional book As Workbook, Optional sheet As Worksheet) As Long
-    GetMaxTime = GetNamedIntegerWithDefault("solver_tim", book, sheet, 999999999)
+Public Function GetMaxTime(Optional sheet As Worksheet) As Long
+    GetMaxTime = GetNamedIntegerWithDefault("solver_tim", sheet, 999999999)
 End Function
 
 '/**
 ' * Sets the max solve time for an OpenSolver model.
 ' * @param {} MaxTime The max solve time in seconds
-' * @param {} book The workbook containing the model (defaults to active workbook)
 ' * @param {} sheet The worksheet containing the model (defaults to active worksheet)
 ' */
-Public Sub SetMaxTime(MaxTime As Long, Optional book As Workbook, Optional sheet As Worksheet)
-    SetIntegerNameOnSheet "solver_tim", MaxTime, book, sheet
+Public Sub SetMaxTime(MaxTime As Long, Optional sheet As Worksheet)
+    SetIntegerNameOnSheet "solver_tim", MaxTime, sheet
 End Sub
 
 '/**
 ' * Returns solver tolerance (as a double) for an OpenSolver model.
-' * @param {} book The workbook containing the model (defaults to active workbook)
 ' * @param {} sheet The worksheet containing the model (defaults to active worksheet)
 ' */
-Public Function GetTolerance(Optional book As Workbook, Optional sheet As Worksheet) As Double
-    GetTolerance = GetNamedDoubleWithDefault("solver_tol", book, sheet, 0.05)
+Public Function GetTolerance(Optional sheet As Worksheet) As Double
+    GetTolerance = GetNamedDoubleWithDefault("solver_tol", sheet, 0.05)
 End Function
 
 '/**
 ' * Returns solver tolerance (as a percentage) for an OpenSolver model.
-' * @param {} book The workbook containing the model (defaults to active workbook)
 ' * @param {} sheet The worksheet containing the model (defaults to active worksheet)
 ' */
-Public Function GetToleranceAsPercentage(Optional book As Workbook, Optional sheet As Worksheet) As Double
-    GetToleranceAsPercentage = GetTolerance(book, sheet) * 100
+Public Function GetToleranceAsPercentage(Optional sheet As Worksheet) As Double
+    GetToleranceAsPercentage = GetTolerance(sheet) * 100
 End Function
 
 '/**
 ' * Sets solver tolerance for an OpenSolver model.
 ' * @param {} Tolerance The tolerance to set (between 0 and 1)
-' * @param {} book The workbook containing the model (defaults to active workbook)
 ' * @param {} sheet The worksheet containing the model (defaults to active worksheet)
 ' */
-Public Sub SetTolerance(Tolerance As Double, Optional book As Workbook, Optional sheet As Worksheet)
-    SetDoubleNameOnSheet "solver_tol", Tolerance, book, sheet
+Public Sub SetTolerance(Tolerance As Double, Optional sheet As Worksheet)
+    SetDoubleNameOnSheet "solver_tol", Tolerance, sheet
 End Sub
 
 '/**
 ' * Sets the solver tolerance (as a percentage) for an OpenSolver model.
 ' * @param {} Tolerance The tolerance to set as a percentage (between 0 and 100)
-' * @param {} book The workbook containing the model (defaults to active workbook)
 ' * @param {} sheet The worksheet containing the model (defaults to active worksheet)
 ' */
-Public Sub SetToleranceAsPercentage(Tolerance As Double, Optional book As Workbook, Optional sheet As Worksheet)
-    SetTolerance Tolerance / 100, book, sheet
+Public Sub SetToleranceAsPercentage(Tolerance As Double, Optional sheet As Worksheet)
+    SetTolerance Tolerance / 100, sheet
 End Sub
 
 '/**
 ' * Returns the solver iteration limit for an OpenSolver model.
-' * @param {} book The workbook containing the model (defaults to active workbook)
 ' * @param {} sheet The worksheet containing the model (defaults to active worksheet)
 ' */
-Public Function GetMaxIterations(Optional book As Workbook, Optional sheet As Worksheet) As Long
-    GetMaxIterations = GetNamedIntegerWithDefault("solver_itr", book, sheet, 999999999)
+Public Function GetMaxIterations(Optional sheet As Worksheet) As Long
+    GetMaxIterations = GetNamedIntegerWithDefault("solver_itr", sheet, 999999999)
 End Function
 
 '/**
 ' * Sets the solver iteration limit for an OpenSolver model.
 ' * @param {} MaxIterations The iteration limit to set
-' * @param {} book The workbook containing the model (defaults to active workbook)
 ' * @param {} sheet The worksheet containing the model (defaults to active worksheet)
 ' */
-Public Sub SetMaxIterations(MaxIterations As Long, Optional book As Workbook, Optional sheet As Worksheet)
-    SetIntegerNameOnSheet "solver_itr", MaxIterations, book, sheet
+Public Sub SetMaxIterations(MaxIterations As Long, Optional sheet As Worksheet)
+    SetIntegerNameOnSheet "solver_itr", MaxIterations, sheet
 End Sub
 
 '/**
 ' * Returns the solver precision for an OpenSolver model.
-' * @param {} book The workbook containing the model (defaults to active workbook)
 ' * @param {} sheet The worksheet containing the model (defaults to active worksheet)
 ' */
-Public Function GetPrecision(Optional book As Workbook, Optional sheet As Worksheet) As Double
-    GetPrecision = GetNamedDoubleWithDefault("solver_pre", book, sheet, 0.000001)
+Public Function GetPrecision(Optional sheet As Worksheet) As Double
+    GetPrecision = GetNamedDoubleWithDefault("solver_pre", sheet, 0.000001)
 End Function
 
 '/**
 ' * Sets the solver precision for an OpenSolver model.
 ' * @param {} Precision The solver precision to set
-' * @param {} book The workbook containing the model (defaults to active workbook)
 ' * @param {} sheet The worksheet containing the model (defaults to active worksheet)
 ' */
-Public Sub SetPrecision(Precision As Double, Optional book As Workbook, Optional sheet As Worksheet)
-    SetDoubleNameOnSheet "solver_pre", Precision, book, sheet
+Public Sub SetPrecision(Precision As Double, Optional sheet As Worksheet)
+    SetDoubleNameOnSheet "solver_pre", Precision, sheet
 End Sub
 
 '/**
 ' * Returns 'Extra Solver Parameters' range for specified solver in an OpenSolver model.
 ' * @param {} SolverShortName The short name of the solver for which parameters are being returned
-' * @param {} book The workbook containing the model (defaults to active workbook)
 ' * @param {} sheet The worksheet containing the model (defaults to active worksheet)
 ' */
-Public Function GetSolverParameters(SolverShortName As String, Optional book As Workbook, Optional sheet As Worksheet) As Range
+Public Function GetSolverParameters(SolverShortName As String, Optional sheet As Worksheet) As Range
     If Not GetNamedRangeIfExistsOnSheet(sheet, "OpenSolver_" & SolverShortName & "Parameters", GetSolverParameters) Then Set GetSolverParameters = Nothing
 End Function
 
@@ -642,107 +598,96 @@ End Function
 ' * Sets 'Extra Parameters' range for a specified solver in an OpenSolver model.
 ' * @param {} SolverShortName The short name of the solver for which parameters are being set
 ' * @param {} SolverParameters The range containing the parameters (must be a range with two columns: keys and parameters)
-' * @param {} book The workbook containing the model (defaults to active workbook)
 ' * @param {} sheet The worksheet containing the model (defaults to active worksheet)
 ' */
-Public Sub SetSolverParameters(SolverShortName As String, SolverParameters As Range, Optional book As Workbook, Optional sheet As Worksheet)
+Public Sub SetSolverParameters(SolverShortName As String, SolverParameters As Range, Optional sheet As Worksheet)
     ValidateParametersRange SolverParameters
-    SetNamedRangeIfExists "OpenSolver_" & SolverShortName & "Parameters", SolverParameters, book, sheet
+    SetNamedRangeIfExists "OpenSolver_" & SolverShortName & "Parameters", SolverParameters, sheet
 End Sub
 
 '/**
 ' * Deletes 'Extra Parameters' range for a specified solver in an OpenSolver model.
 ' * @param {} SolverShortName The short name of the solver for which parameters are deleted
-' * @param {} book The workbook containing the model (defaults to active workbook)
 ' * @param {} sheet The worksheet containing the model (defaults to active worksheet)
 ' */
-Public Sub DeleteSolverParameters(SolverShortName As String, Optional book As Workbook, Optional sheet As Worksheet)
-    SetSolverParameters SolverShortName, Nothing, book, sheet
+Public Sub DeleteSolverParameters(SolverShortName As String, Optional sheet As Worksheet)
+    SetSolverParameters SolverShortName, Nothing, sheet
 End Sub
 
 '/**
 ' * Returns whether Solver's 'ignore integer constraints' option is set for an OpenSolver model. OpenSolver cannot solve while this option is enabled.
-' * @param {} book The workbook containing the model (defaults to active workbook)
 ' * @param {} sheet The worksheet containing the model (defaults to active worksheet)
 ' */
-Public Function GetIgnoreIntegerConstraints(Optional book As Workbook, Optional sheet As Worksheet) As Boolean
-    GetIgnoreIntegerConstraints = GetNamedIntegerAsBooleanWithDefault("solver_rlx", book, sheet, False)
+Public Function GetIgnoreIntegerConstraints(Optional sheet As Worksheet) As Boolean
+    GetIgnoreIntegerConstraints = GetNamedIntegerAsBooleanWithDefault("solver_rlx", sheet, False)
 End Function
 
 '/**
 ' * Sets Solver's 'ignore integer constraints' option for an OpenSolver model. OpenSolver cannot solve while this option is enabled.
 ' * @param {} IgnoreIntegerConstraints True to turn on 'ignore integer constraints'
-' * @param {} book The workbook containing the model (defaults to active workbook)
 ' * @param {} sheet The worksheet containing the model (defaults to active worksheet)
 ' */
-Public Sub SetIgnoreIntegerConstraints(IgnoreIntegerConstraints As Boolean, Optional book As Workbook, Optional sheet As Worksheet)
-    SetBooleanAsIntegerNameOnSheet "solver_rlx", IgnoreIntegerConstraints, book, sheet
+Public Sub SetIgnoreIntegerConstraints(IgnoreIntegerConstraints As Boolean, Optional sheet As Worksheet)
+    SetBooleanAsIntegerNameOnSheet "solver_rlx", IgnoreIntegerConstraints, sheet
 End Sub
 
 '/**
 ' * Returns target range for sensitivity analysis output for an OpenSolver model.
-' * @param {} book The workbook containing the model (defaults to active workbook)
 ' * @param {} sheet The worksheet containing the model (defaults to active worksheet)
 ' */
-Public Function GetDuals(Optional book As Workbook, Optional sheet As Worksheet) As Range
+Public Function GetDuals(Optional sheet As Worksheet) As Range
     If Not GetNamedRangeIfExistsOnSheet(sheet, "OpenSolver_Duals", GetDuals) Then Set GetDuals = Nothing
 End Function
 
 '/**
 ' * Sets target range for sensitivity analysis output for an OpenSolver model.
 ' * @param {} Duals The target range for output (Nothing for no sensitivity analysis)
-' * @param {} book The workbook containing the model (defaults to active workbook)
 ' * @param {} sheet The worksheet containing the model (defaults to active worksheet)
 ' */
-Public Sub SetDuals(Duals As Range, Optional book As Workbook, Optional sheet As Worksheet)
-    SetNamedRangeIfExists "OpenSolver_Duals", Duals, book, sheet
+Public Sub SetDuals(Duals As Range, Optional sheet As Worksheet)
+    SetNamedRangeIfExists "OpenSolver_Duals", Duals, sheet
 End Sub
 
 '/**
 ' * Returns whether 'Output sensitivity analysis' is set for an OpenSolver model.
-' * @param {} book The workbook containing the model (defaults to active workbook)
 ' * @param {} sheet The worksheet containing the model (defaults to active worksheet)
 ' */
-Public Function GetDualsOnSheet(Optional book As Workbook, Optional sheet As Worksheet) As Boolean
-    GetDualsOnSheet = GetNamedBooleanWithDefault("OpenSolver_DualsNewSheet", book, sheet, False)
+Public Function GetDualsOnSheet(Optional sheet As Worksheet) As Boolean
+    GetDualsOnSheet = GetNamedBooleanWithDefault("OpenSolver_DualsNewSheet", sheet, False)
 End Function
 
 '/**
 ' * Sets the value of 'Output sensitivity analysis' for an OpenSolver model.
 ' * @param {} DualsOnSheet True to set 'Output sensitivity analysis'
-' * @param {} book The workbook containing the model (defaults to active workbook)
 ' * @param {} sheet The worksheet containing the model (defaults to active worksheet)
 ' */
-Public Sub SetDualsOnSheet(DualsOnSheet As Boolean, Optional book As Workbook, Optional sheet As Worksheet)
-    SetBooleanNameOnSheet "OpenSolver_DualsNewSheet", DualsOnSheet, book, sheet
+Public Sub SetDualsOnSheet(DualsOnSheet As Boolean, Optional sheet As Worksheet)
+    SetBooleanNameOnSheet "OpenSolver_DualsNewSheet", DualsOnSheet, sheet
 End Sub
 
 '/**
 ' * Returns True if 'Output sensitivity analysis' destination is set to 'updating any previous sheet' for an OpenSolver model, and False if set to 'on a new sheet'.
-' * @param {} book The workbook containing the model (defaults to active workbook)
 ' * @param {} sheet The worksheet containing the model (defaults to active worksheet)
 ' */
-Public Function GetUpdateSensitivity(Optional book As Workbook, Optional sheet As Worksheet) As Boolean
-    GetUpdateSensitivity = GetNamedBooleanWithDefault("OpenSolver_UpdateSensitivity", book, sheet, True)
+Public Function GetUpdateSensitivity(Optional sheet As Worksheet) As Boolean
+    GetUpdateSensitivity = GetNamedBooleanWithDefault("OpenSolver_UpdateSensitivity", sheet, True)
 End Function
 
 '/**
 ' * Sets the destination option for 'Output sensitivity analysis' for an OpenSolver model.
 ' * @param {} UpdateSensitivity True to set 'updating any previous sheet'. False to set 'on a new sheet'
-' * @param {} book The workbook containing the model (defaults to active workbook)
 ' * @param {} sheet The worksheet containing the model (defaults to active worksheet)
 ' */
-Public Sub SetUpdateSensitivity(UpdateSensitivity As Boolean, Optional book As Workbook, Optional sheet As Worksheet)
-    SetBooleanNameOnSheet "OpenSolver_UpdateSensitivity", UpdateSensitivity, book, sheet
+Public Sub SetUpdateSensitivity(UpdateSensitivity As Boolean, Optional sheet As Worksheet)
+    SetBooleanNameOnSheet "OpenSolver_UpdateSensitivity", UpdateSensitivity, sheet
 End Sub
 
 '/**
 ' * Gets the QuickSolve parameter range for an OpenSolver model.
-' * @param {} book The workbook containing the model (defaults to active workbook)
 ' * @param {} sheet The worksheet containing the model (defaults to active worksheet)
 ' * @param {} ValidateRange If True, an error will be thrown if no range is set
 ' */
-Public Function GetQuickSolveParameters(Optional book As Workbook, Optional sheet As Worksheet, Optional ValidateRange As Boolean = False) As Range
+Public Function GetQuickSolveParameters(Optional sheet As Worksheet, Optional ValidateRange As Boolean = False) As Range
     If Not GetNamedRangeIfExistsOnSheet(sheet, "OpenSolverModelParameters", GetQuickSolveParameters) Then Set GetQuickSolveParameters = Nothing
     If ValidateRange And GetQuickSolveParameters Is Nothing Then
         Err.Raise OpenSolver_BuildError, Description:="No parameter range could be found on the worksheet. Please use ""Initialize Quick Solve Parameters""" & _
@@ -754,11 +699,10 @@ End Function
 '/**
 ' * Sets the QuickSolve parameter range for an OpenSolver model.
 ' * @param {} QuickSolveParameters The parameter range to set
-' * @param {} book The workbook containing the model (defaults to active workbook)
 ' * @param {} sheet The worksheet containing the model (defaults to active worksheet)
 ' */
-Public Sub SetQuickSolveParameters(QuickSolveParameters As Range, Optional book As Workbook, Optional sheet As Worksheet)
-    SetNamedRangeIfExists "OpenSolverModelParameters", QuickSolveParameters, book, sheet
+Public Sub SetQuickSolveParameters(QuickSolveParameters As Range, Optional sheet As Worksheet)
+    SetNamedRangeIfExists "OpenSolverModelParameters", QuickSolveParameters, sheet
 End Sub
 
 '/**
@@ -766,23 +710,22 @@ End Sub
 ' * @param {} SolveRelaxation If True, all integer and boolean constraints will be relaxed to allow continuous values for these variables. Defaults to False
 ' * @param {} MinimiseUserInteraction If True, all dialogs and messages will be suppressed. Use this when automating a lot of solves so that there are no interruptions. Defaults to False
 ' * @param {} LinearityCheckOffset Sets the base value used for checking if the model is linear. Change this if a non-linear model is not being detected as non-linear. Defaults to 0
-' * @param {} book The workbook containing the model (defaults to active workbook)
 ' * @param {} sheet The worksheet containing the model (defaults to active worksheet)
 ' */
-Public Sub InitializeQuickSolve(Optional SolveRelaxation As Boolean = False, Optional MinimiseUserInteraction As Boolean = False, Optional LinearityCheckOffset As Double = 0, Optional book As Workbook, Optional sheet As Worksheet)
+Public Sub InitializeQuickSolve(Optional SolveRelaxation As Boolean = False, Optional MinimiseUserInteraction As Boolean = False, Optional LinearityCheckOffset As Double = 0, Optional sheet As Worksheet)
     ClearError
     On Error GoTo ErrorHandler
     
-    GetActiveBookAndSheetIfMissing book, sheet
+    GetActiveSheetIfMissing sheet
 
-    If Not CreateSolver(GetChosenSolver(book, sheet)).ModelType = Diff Then
+    If Not CreateSolver(GetChosenSolver(sheet)).ModelType = Diff Then
         Err.Raise OpenSolver_ModelError, Description:="The selected solver does not support QuickSolve"
     End If
 
     Dim ParamRange As Range
-    Set ParamRange = GetQuickSolveParameters(book, sheet, True)  ' Throws error if missing
+    Set ParamRange = GetQuickSolveParameters(sheet, True)  ' Throws error if missing
     Set QuickSolver = New COpenSolver
-    QuickSolver.BuildModelFromSolverData LinearityCheckOffset, MinimiseUserInteraction, SolveRelaxation, book, sheet
+    QuickSolver.BuildModelFromSolverData LinearityCheckOffset, MinimiseUserInteraction, SolveRelaxation, sheet
     QuickSolver.InitializeQuickSolve ParamRange
 
 ExitSub:

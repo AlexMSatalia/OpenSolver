@@ -5,9 +5,16 @@ Sub LaunchCommandLine_CBC()
 ' Open the CBC solver with our last model loaded.
 ' If we have a worksheet open with a model, then we pass the solver options (max runtime etc) from this model to CBC. Otherwise, we don't pass any options.
 6347      On Error GoTo ErrorHandler
+
+          Dim ModelFilePathName As String
+6353      GetLPFilePath ModelFilePathName
+
+          Dim SolverParametersString As String
             
-          Dim WorksheetAvailable As Boolean
-6349      WorksheetAvailable = CheckWorksheetAvailable(SuppressDialogs:=True)
+          Dim sheet As Worksheet
+          On Error GoTo NoSheet
+6349      GetActiveSheetIfMissing sheet
+          On Error GoTo ErrorHandler
 
           Dim Solver As ISolver
           Set Solver = CreateSolver("CBC")
@@ -17,17 +24,14 @@ Sub LaunchCommandLine_CBC()
 6351          Err.Raise OpenSolver_CBCError, Description:=errorString
 6352      End If
           
-          Dim ModelFilePathName As String
-6353      GetLPFilePath ModelFilePathName
           
-          Dim SolveOptions As SolveOptionsType
-          Dim SolverParametersString As String, SolverParameters As New Dictionary
-6360      If WorksheetAvailable Then
-              GetSolveOptions ActiveSheet, SolveOptions
-              PopulateSolverParameters Solver, ActiveSheet, SolverParameters, SolveOptions
-              SolverParametersString = ParametersToFlags(SolverParameters)
-6363      End If
+          Dim SolveOptions As SolveOptionsType, SolverParameters As New Dictionary
+          GetSolveOptions sheet, SolveOptions
+          Set SolverParameters = New Dictionary
+          PopulateSolverParameters Solver, sheet, SolverParameters, SolveOptions
+          SolverParametersString = ParametersToFlags(SolverParameters)
              
+NoSheet:
           Dim CBCRunString As String
 6364      CBCRunString = " -directory " & MakePathSafe(left(GetTempFolder, Len(GetTempFolder) - 1)) _
                            & " -import " & MakePathSafe(ModelFilePathName) _

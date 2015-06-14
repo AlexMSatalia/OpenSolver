@@ -713,7 +713,7 @@ Private Sub ProcessSingleFormula(RHSExpression As String, LHSVariable As String,
               ' We must have a constant formula as the LHS, we can evaluate and merge with the constant
               ' We are bringing the constant to the RHS so must subtract
 7807          If Not left(LHSVariable, 1) = "=" Then LHSVariable = "=" & LHSVariable
-7808          constant = constant - Application.Evaluate(LHSVariable)
+7808          constant = constant - s.sheet.Evaluate(LHSVariable)
 7809      Else
               ' Our constraint has a single term on the LHS and a formulae on the right.
               ' The single LHS term needs to be included in the expression as a linear term with coefficient 1

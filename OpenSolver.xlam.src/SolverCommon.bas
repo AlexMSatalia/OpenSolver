@@ -67,9 +67,9 @@ Sub SolveModel(s As COpenSolver, ShouldSolveRelaxation As Boolean, ShouldMinimis
         ' Check if we need to request duals from the solver
         If TypeOf s.Solver Is ISolverLinear Then
             Set LinearSolver = s.Solver
-            Set s.rConstraintList = GetDuals()
+            Set s.rConstraintList = GetDuals(s.sheet)
             s.DualsOnSameSheet = (Not s.rConstraintList Is Nothing)
-            s.DualsOnNewSheet = GetDualsOnSheet()
+            s.DualsOnNewSheet = GetDualsOnSheet(s.sheet)
             s.bGetDuals = ((s.IntegerCellsRange Is Nothing And s.BinaryCellsRange Is Nothing) Or s.SolveRelaxation) And _
                           (s.DualsOnNewSheet Or s.DualsOnSameSheet) And LinearSolver.SensitivityAnalysisAvailable
         End If
@@ -109,10 +109,15 @@ Sub SolveModel(s As COpenSolver, ShouldSolveRelaxation As Boolean, ShouldMinimis
                 If s.DualsOnSameSheet Then WriteConstraintListToSheet s.rConstraintList, s
                 'If the user wants a new sheet with the sensitivity data then call the functions that write this
                 If s.DualsOnNewSheet Then
-                    Dim nameSheet As String
-                    nameSheet = MakeNewSheet(s.sheet.Name & " Sensitivity", GetUpdateSensitivity(s.book, s.sheet))
-                    s.sheet.Select
-                    WriteConstraintSensitivityTable nameSheet, s
+                    Dim newSheet As Worksheet, currentSheet As Worksheet
+                    ' Save sheet selection
+                    GetActiveSheetIfMissing currentSheet
+                    
+                    Set newSheet = MakeNewSheet(s.sheet.Name & " Sensitivity", GetUpdateSensitivity(s.sheet))
+                    
+                    ' Restore old sheet selection
+                    currentSheet.Select
+                    WriteConstraintSensitivityTable newSheet, s
                 End If
             ElseIf Not s.bGetDuals And (s.DualsOnNewSheet Or s.DualsOnSameSheet) And LinearSolver.SensitivityAnalysisAvailable Then
                 Err.Raise Number:=OpenSolver_SolveError, Description:= _

@@ -278,7 +278,8 @@ Private Sub UserForm_Activate()
           On Error GoTo ErrorHandler
 
           ' Check we can even start
-4345      If Not CheckWorksheetAvailable Then Exit Sub
+4345      Dim sheet As Worksheet
+          GetActiveSheetIfMissing sheet
 
           UpdateStatusBar "Loading model...", True
           Application.Cursor = xlWait
@@ -286,7 +287,7 @@ Private Sub UserForm_Activate()
 
           cmdCancel.SetFocus
 
-4349      SetAnyMissingDefaultSolverOptions
+4349      SetAnyMissingDefaultSolverOptions sheet
 
           ' Check if we have indicated to keep the model from the last time form was shown
 4350      If PreserveModel Then
@@ -298,7 +299,7 @@ Private Sub UserForm_Activate()
 
           IsLoadingModel = True
 
-4351      If SheetHasOpenSolverHighlighting(ActiveSheet) Then HideSolverModel
+4351      If SheetHasOpenSolverHighlighting(sheet) Then HideSolverModel sheet
           ' Make sure sheet is up to date
 4352      Application.Calculate
           ' Remove the 'marching ants' showing if a range is copied.
@@ -377,9 +378,10 @@ Private Sub cmdRunAutoModel_Click()
     Me.Hide
 #End If
 
-    Dim NewModel As CModel
+    Dim NewModel As CModel, sheet As Worksheet
     Set NewModel = New CModel
-    If RunAutoModel(False, NewModel) Then Set model = NewModel
+    GetActiveSheetIfMissing sheet
+    If RunAutoModel(sheet, False, NewModel) Then Set model = NewModel
     
 #If Mac Then
     PreserveModel = True
@@ -393,6 +395,9 @@ End Sub
 
 Private Sub cmdBuild_Click()
           On Error GoTo ErrorHandler
+          
+          Dim sheet As Worksheet
+          GetActiveSheetIfMissing sheet
 
 4408      DoEvents
 4409      On Error Resume Next
@@ -410,7 +415,7 @@ Private Sub cmdBuild_Click()
 4415      If Trim(refObj.Text) = "" Then
 4416          Set model.ObjectiveFunctionCell = Nothing
 4417      Else
-4418          Set model.ObjectiveFunctionCell = Range(refObj.Text)
+4418          Set model.ObjectiveFunctionCell = sheet.Range(refObj.Text)
 4419      End If
 4420      On Error GoTo ErrorHandler
 
@@ -425,7 +430,6 @@ Private Sub cmdBuild_Click()
 4428      End If
 4429      If model.ObjectiveSense = UnknownObjectiveSense Then
 4430          Err.Raise OpenSolver_ModelError, Description:="Please select an objective sense (minimise, maximise or target)."
-4431          GoTo ExitSub
 4432      End If
 
           ' We allow multiple area ranges here, which requires ConvertFromCurrentLocale as delimiter can vary
@@ -433,7 +437,7 @@ Private Sub cmdBuild_Click()
 4434      If Trim(refDecision.Text) = "" Then
 4435          Set model.DecisionVariables = Nothing
 4436      Else
-4437          Set model.DecisionVariables = Range(ConvertFromCurrentLocale(refDecision.Text))
+4437          Set model.DecisionVariables = sheet.Range(ConvertFromCurrentLocale(refDecision.Text))
 4438      End If
 4439      On Error GoTo ErrorHandler
 
@@ -441,21 +445,21 @@ Private Sub cmdBuild_Click()
 4441      If chkGetDuals.value = False Or Trim(refDuals.Text) = "" Then
 4442          Set model.Duals = Nothing
 4443      Else
-4444          Set model.Duals = Range(refDuals.Text)
+4444          Set model.Duals = sheet.Range(refDuals.Text)
 4445      End If
 4446      On Error GoTo ErrorHandler
 
 4447      model.NonNegativityAssumption = chkNonNeg.value
           
           ' BuildModel fails if build is aborted by the user
-4448      If Not model.BuildModel Then GoTo ExitSub
+4448      If Not model.BuildModel(sheet) Then GoTo ExitSub
 
           ' We know the save is confirmed now, so we can update values that aren't stored in the model
-4252      SetDualsOnSheet chkGetDuals2.value
-          SetUpdateSensitivity optUpdate.value
+4252      SetDualsOnSheet chkGetDuals2.value, sheet
+          SetUpdateSensitivity optUpdate.value, sheet
 
           ' Display on screen
-4449      If chkShowModel.value = True Then OpenSolverVisualizer.ShowSolverModel
+4449      If chkShowModel.value = True Then OpenSolverVisualizer.ShowSolverModel sheet
 4450      On Error GoTo CalculateFailed
 4451      Application.Calculate
 4452      On Error GoTo ErrorHandler

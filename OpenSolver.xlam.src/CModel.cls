@@ -21,10 +21,12 @@ Public Duals As Range   ' The range where we store the duals; specific to OpenSo
 
 Public NonNegativityAssumption As Boolean
 
-Function BuildModel() As Boolean
+Function BuildModel(Optional sheet As Worksheet) As Boolean
           Dim RaiseError As Boolean
           RaiseError = False
           On Error GoTo ErrorHandler
+          
+          GetActiveSheetIfMissing sheet
 
           ' Check int/bin constraints not set on non-decision variables before we start saving things
           Dim curCon As CConstraint, ShowWarning As Boolean
@@ -46,26 +48,26 @@ Function BuildModel() As Boolean
 3935      Next curCon
 
 ContinueSaving:
-3906      SetDecisionVariables DecisionVariables
-3911      SetObjectiveFunctionCell ObjectiveFunctionCell
+3906      SetDecisionVariables DecisionVariables, sheet
+3911      SetObjectiveFunctionCell ObjectiveFunctionCell, sheet
           
           ' Objective type
-3916      SetObjectiveSense ObjectiveSense
-3918      If ObjectiveSense = TargetObjective Then SetObjectiveTargetValue ObjectiveTarget
+3916      SetObjectiveSense ObjectiveSense, sheet
+3918      If ObjectiveSense = TargetObjective Then SetObjectiveTargetValue ObjectiveTarget, sheet
           
           ' Constraints
-3936      SetNumConstraints Constraints.Count
+3936      SetNumConstraints Constraints.Count, sheet
           
           Dim c As Long
 3937      For c = 1 To Constraints.Count
               Set curCon = Constraints(c)
               With curCon
-                  UpdateConstraint c, .LHS, .RelationType, .RHS, .RHSstring
+                  UpdateConstraint c, .LHS, .RelationType, .RHS, .RHSstring, sheet
               End With
 3968      Next c
           
-3969      SetDuals Duals
-3974      SetNonNegativity NonNegativityAssumption
+3969      SetDuals Duals, sheet
+3974      SetNonNegativity NonNegativityAssumption, sheet
 
           BuildModel = True
 
@@ -121,36 +123,33 @@ ErrorHandler:
           GoTo ExitSub
 End Sub
 
-Public Sub LoadFromSheet()
+Public Sub LoadFromSheet(Optional sheet As Worksheet)
           Dim RaiseError As Boolean
           RaiseError = False
           On Error GoTo ErrorHandler
 
 4009      Set Constraints = New Collection
 
-          Dim sheetName As String
-4010      sheetName = EscapeSheetName(ActiveWorkbook.ActiveSheet)
-
-          Set DecisionVariables = GetDecisionVariablesWithDefault()
+          Set DecisionVariables = GetDecisionVariablesWithDefault(sheet)
           
-4012      NonNegativityAssumption = GetNonNegativity()
+4012      NonNegativityAssumption = GetNonNegativity(sheet)
            
-4014      ObjectiveSense = GetObjectiveSense()
-4016      ObjectiveTarget = GetObjectiveTargetValue()
-4018      Set ObjectiveFunctionCell = GetObjectiveFunctionCell()
+4014      ObjectiveSense = GetObjectiveSense(sheet)
+4016      ObjectiveTarget = GetObjectiveTargetValue(sheet)
+4018      Set ObjectiveFunctionCell = GetObjectiveFunctionCell(sheet)
           
           Dim constraint As Long, NumConstraints As Long
-4020      NumConstraints = GetNumConstraints()
+4020      NumConstraints = GetNumConstraints(sheet)
+
 4021      For constraint = 1 To NumConstraints
-              
               Dim rLHS As Range
 4022          On Error Resume Next
-              Set rLHS = GetConstraintLhs(constraint)
+              Set rLHS = GetConstraintLhs(constraint, sheet)
               If Err.Number <> 0 Then GoTo SkipCon
               On Error GoTo ErrorHandler
               
               Dim rel As RelationConsts
-4024          rel = GetConstraintRel(constraint)
+4024          rel = GetConstraintRel(constraint, sheet)
                             
 4025          If rel < RelationConsts.[_First] Or rel > RelationConsts.[_Last] Then GoTo SkipCon
               
@@ -159,7 +158,7 @@ Public Sub LoadFromSheet()
               Else
                   Dim valRHS As Double, rRHS As Range, RHSRefersToFormula As Boolean, sRefersToRHS As String
 4030              On Error Resume Next
-                  Set rRHS = GetConstraintRhs(constraint, sRefersToRHS, valRHS, RHSRefersToFormula)
+                  Set rRHS = GetConstraintRhs(constraint, sRefersToRHS, valRHS, RHSRefersToFormula, sheet)
 4031              If Err.Number <> 0 Then GoTo SkipCon
                   On Error GoTo ErrorHandler
 
@@ -168,7 +167,7 @@ Public Sub LoadFromSheet()
 SkipCon:
 4043      Next constraint
           
-          Set Duals = GetDuals()
+          Set Duals = GetDuals(sheet)
           
 ExitSub:
           If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
