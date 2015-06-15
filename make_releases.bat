@@ -21,7 +21,7 @@ set windows=-xr!Solvers\osx %mtee%
 set osx=-xr!Solvers\win32 -xr!Solvers\win64 -xr!Utils
 
 :: All files to be excluded from the linear release
-set linear=-xr!*bonmin* -xr!*couenne* -xr!*libipoptfort* -xr!*NOMAD* -xr!*Nomad*
+set linear=-xr!*bonmin* -xr!*couenne* -xr!*libipoptfort* -xr!*NOMAD* -xr!*Nomad* -xr!*ExcelCallbacks*
 
 :: MAKE COMMANDS
 
