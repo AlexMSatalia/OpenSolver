@@ -152,11 +152,16 @@ Sub CompleteUpdateCheck(Response As String)
     LatestNumbers() = Split(Response, ".")
     CurrentNumbers() = Split(sOpenSolverVersion, ".")
     
-    Dim UpdateAvailable As Boolean
+    Dim UpdateAvailable As Boolean, LatestNumber As Long, CurrentNumber As Long
     UpdateAvailable = False
     For i = 0 To 2
-        If CInt(LatestNumbers(i)) > CInt(CurrentNumbers(i)) Then
+        LatestNumber = CInt(LatestNumbers(i))
+        CurrentNumber = CInt(CurrentNumbers(i))
+        If LatestNumber > CurrentNumber Then
             UpdateAvailable = True
+            Exit For
+        ElseIf LatestNumber < CurrentNumber Then
+            ' No need to check any more
             Exit For
         End If
     Next
