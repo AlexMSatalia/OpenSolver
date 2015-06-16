@@ -393,12 +393,12 @@ Private Function AddLoggingToCommand(CommandString As String, LogPath As String,
     Dim LoggingOperator As String
     If Len(LogPath) <> 0 Then
         If NeedsStdOut Then
-            LoggingOperator = " 2>&1 | " & MakePathSafe(TeePath) & " "
+            LoggingOperator = " 2>&1 | " & TeePath & " "
         Else
             LoggingOperator = " > "
         End If
     End If
-    AddLoggingToCommand = CommandString & LoggingOperator & MakePathSafe(LogPath) & IIf(NeedsStdOut, "", " 2>&1")
+    AddLoggingToCommand = CommandString & LoggingOperator & LogPath & IIf(NeedsStdOut, "", " 2>&1")
 End Function
 
 Private Function TeePath() As String
@@ -406,6 +406,7 @@ Private Function TeePath() As String
         TeePath = "tee"
     #Else
         GetExistingFilePathName JoinPaths(ThisWorkbook.Path, "Utils", "mtee"), "mtee.exe", TeePath
+        TeePath = MakePathSafe(TeePath)
     #End If
 End Function
 
