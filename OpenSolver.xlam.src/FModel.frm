@@ -514,7 +514,9 @@ Private Sub cboConRel_Change()
           refConRHS.Enabled = RelationHasRHS(RelationStringToEnum(cboConRel.Text))
 
 4483      If ListItem >= 1 And Not model.Constraints Is Nothing Then
-4485          AlterConstraints (cboConRel.Text = model.Constraints(ListItem).ConstraintType)
+              Dim con As CConstraint
+              Set con = model.Constraints(ListItem)
+4485          AlterConstraints (cboConRel.Text = RelationEnumToString(con.RelationType))
 4494      End If
 End Sub
 
@@ -668,11 +670,12 @@ Private Sub lstConstraints_Change()
 4681          On Error Resume Next
 4682          ActiveCell.Select   ' We may fail in the next steps, se we cancel any old highlighting
 4683          Application.CutCopyMode = False
-              Dim copyRange As Range
-4684          With model.Constraints(lstConstraints.ListIndex)
+              Dim copyRange As Range, curCon As CConstraint
+              Set curCon = model.Constraints(lstConstraints.ListIndex)
+4684          With curCon
 4685              refConLHS.Text = GetDisplayAddress(.LHS, False)
 4686              Set copyRange = .LHS
-4687              cboConRel.ListIndex = cboPosition(.ConstraintType)
+4687              cboConRel.ListIndex = cboPosition(RelationEnumToString(.RelationType))
 4688              refConRHS.Text = ""
 4689              If Not .RHS Is Nothing Then
 4690                  refConRHS.Text = GetDisplayAddress(.RHS, False)
