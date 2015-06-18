@@ -572,6 +572,7 @@ End Function
 Function StrEx(d As Variant, Optional AddSign As Boolean = True) As String
               If VarType(d) = vbString Then
                   StrEx = d
+                  Exit Function
               End If
 
 ' Convert a double to a string, always with a + or -. Also ensure we have "0.", not just "." for values between -1 and 1
