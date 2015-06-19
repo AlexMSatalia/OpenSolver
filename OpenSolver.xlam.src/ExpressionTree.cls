@@ -956,7 +956,7 @@ Sub CollateLinearTerms()
                   
                   ' If we have a minus node, convert it to a plus and flip the sign on the second operator
 8924              Case "minus"
-8925                  Children(2).CollateLinearNegative
+8925                  Children(2).MultiplyByConstant -1
 8926                  NodeText = "plus"
                       
                   ' Negate the coefficient on the variable node and remove the "neg" node
@@ -1026,31 +1026,6 @@ ExitSub:
 
 ErrorHandler:
           If Not ReportError("ExpressionTree", "MultiplyByConstant") Then Resume
-          RaiseError = True
-          GoTo ExitSub
-End Sub
-
-' Flips the sign on variable or constant
-Public Sub CollateLinearNegative()
-          Dim RaiseError As Boolean
-          RaiseError = False
-          On Error GoTo ErrorHandler
-
-8958      If NodeType = ExpressionTreeVariable Then
-8959          LinearCoefficient = -LinearCoefficient
-8960      Else ' NodeType = ExpressionTreeNumber
-8961          If NodeText <> "0" Then
-8962              LinearValue = -CDbl(NodeText)
-8963              NodeText = LinearValue
-8964          End If
-8965      End If
-
-ExitSub:
-          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
-          Exit Sub
-
-ErrorHandler:
-          If Not ReportError("ExpressionTree", "CollateLinearNegative") Then Resume
           RaiseError = True
           GoTo ExitSub
 End Sub

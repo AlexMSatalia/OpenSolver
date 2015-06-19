@@ -128,7 +128,9 @@ Function NOMAD_GetValues() As Variant
 End Function
 
 Sub NOMAD_RecalculateValues()
+          On Error Resume Next  ' Eat any errors - we can't throw an error while the C++ code is running
 7129      If Not ForceCalculate("Warning: The worksheet calculation did not complete, and so the iteration may not be calculated correctly. Would you like to retry?") Then Exit Sub
+          On Error GoTo 0
 End Sub
 
 Function NOMAD_GetNumVariables() As Variant

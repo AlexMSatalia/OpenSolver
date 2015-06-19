@@ -17,7 +17,7 @@ Dim problem_name As String
 
 Dim WriteComments As Boolean    ' Whether .nl file should include comments
 Const CommentIndent = 4         ' Tracks the level of indenting in comments on nl output
-Const CommentSpacing = 24       ' The column number at which nl comments begin
+Const CommentSpacing = 28       ' The column number at which nl comments begin
 
 ' ==========================================================================
 ' ASL variables
@@ -1420,6 +1420,11 @@ Private Function ConvertFormulaToExpressionTree(strFormula As String) As Express
 8079          Case TokenType.ArithmeticOperator, TokenType.UnaryOperator, TokenType.ComparisonOperator
                   ' The only unary operator '-' is "neg", which is different to "minus"
 8080              If tkn.TokenType = TokenType.UnaryOperator Then
+                      If tkn.Text <> "-" Then
+                          Err.Raise OpenSolver_ModelError, Description:="While parsing formula for .nl output, the following unary operator was encountered: " & tkn.Text & vbNewLine & vbNewLine & _
+                                                                        "The entire formula was: " & vbNewLine & _
+                                                                        "=" & strFormula
+                      End If
 8081                  tkn.Text = "neg"
 8082              Else
 8083                  tkn.Text = ConvertExcelFunctionToNL(tkn.Text)
