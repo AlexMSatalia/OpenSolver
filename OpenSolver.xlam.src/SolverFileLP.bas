@@ -163,10 +163,10 @@ Sub WriteLPFile_Diff(s As COpenSolver, ModelFilePathName As String)
               ' However, we don't make Binary variables free
 1712          If Not BoundedVariables Is Nothing Then
 1714              Print #1, commentStart & "'Assume Non Negative' is TRUE, so default lower bounds of zero are removed only from non-binary variables already given explicit lower bounds."
-                  Dim NonBinaryCellsRange As Range
-                  Set NonBinaryCellsRange = SetDifference(BoundedVariables, s.BinaryCellsRange)
-                  If Not NonBinaryCellsRange Is Nothing Then
-1716                  For Each c In NonBinaryCellsRange
+                  Dim NonBinaryBoundedRange As Range
+                  Set NonBinaryBoundedRange = SetDifference(BoundedVariables, s.BinaryCellsRange)
+                  If Not NonBinaryBoundedRange Is Nothing Then
+1716                  For Each c In NonBinaryBoundedRange
 1717                      Print #1, " " & ValidLPFileVarName(c.Address(RowAbsolute:=False, ColumnAbsolute:=False)) & " FREE"
 1718                  Next c
                   End If
