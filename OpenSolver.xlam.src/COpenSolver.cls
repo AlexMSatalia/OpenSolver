@@ -998,26 +998,33 @@ Sub UpdateBound(row As Long, VarName As String, bound As Double, rel As Long)
           RaiseError = False
           On Error GoTo ErrorHandler
           
+          Dim SetBound As Boolean
+          SetBound = True
+          
           ' Only GE constraints can provide lower bounds
 1246      If rel = RelationGE Then
               ' Remove existing lower bound on variable if our new one is better
 1247          If TestKeyExists(VarLowerBounds, VarName) Then
 1248              If bound > VarLowerBounds(VarName) Then
 1249                  VarLowerBounds.Remove VarName
-1250              End If
+1250              Else
+                      SetBound = False
+                  End If
 1251          End If
               
-1252          VarLowerBounds.Add bound, VarName
+1252          If SetBound Then VarLowerBounds.Add bound, VarName
           ' Only LE constraints can provide upper bounds
 1253      ElseIf rel = RelationLE Then
               ' Remove existing upper bound on variable if our new one is better
 1254          If TestKeyExists(VarUpperBounds, VarName) Then
 1255              If bound < VarUpperBounds(VarName) Then
 1256                  VarUpperBounds.Remove VarName
+                  Else
+                      SetBound = False
 1257              End If
 1258          End If
               
-1259          VarUpperBounds.Add bound, VarName
+1259          If SetBound Then VarUpperBounds.Add bound, VarName
 1260      End If
           
           ' Track that this constraint row applies a bound
