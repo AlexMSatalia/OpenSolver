@@ -138,9 +138,13 @@ Sub WriteLPFile_Diff(s As COpenSolver, ModelFilePathName As String)
 1691      If Not s.AssumeNonNegativeVars Then
               ' We need to make all variables FREE variables (i.e. no lower bounds), except for the Binary variables
 1693          Print #1, commentStart & "'Assume Non Negative' is FALSE, so default lower bounds of zero are removed from all non-binary variables."
-1695          For Each c In SetDifference(s.AdjustableCells, s.BinaryCellsRange)
-1696              Print #1, " " & ValidLPFileVarName(c.Address(RowAbsolute:=False, ColumnAbsolute:=False)) & " FREE"
-1697          Next c
+              Dim NonBinaryCellsRange As Range
+              Set NonBinaryCellsRange = SetDifference(s.AdjustableCells, s.BinaryCellsRange)
+1695          If Not NonBinaryCellsRange Is Nothing Then
+                  For Each c In NonBinaryCellsRange
+1696                  Print #1, " " & ValidLPFileVarName(c.Address(RowAbsolute:=False, ColumnAbsolute:=False)) & " FREE"
+1697              Next c
+              End If
 1705          Print #1,   ' New line
 1706      Else
               ' If AssumeNonNegative, then we need to apply lower bounds to any variables without explicit lower bounds.
@@ -159,9 +163,13 @@ Sub WriteLPFile_Diff(s As COpenSolver, ModelFilePathName As String)
               ' However, we don't make Binary variables free
 1712          If Not BoundedVariables Is Nothing Then
 1714              Print #1, commentStart & "'Assume Non Negative' is TRUE, so default lower bounds of zero are removed only from non-binary variables already given explicit lower bounds."
-1716              For Each c In SetDifference(BoundedVariables, s.BinaryCellsRange)
-1717                  Print #1, " " & ValidLPFileVarName(c.Address(RowAbsolute:=False, ColumnAbsolute:=False)) & " FREE"
-1718              Next c
+                  Dim NonBinaryCellsRange As Range
+                  Set NonBinaryCellsRange = SetDifference(BoundedVariables, s.BinaryCellsRange)
+                  If Not NonBinaryCellsRange Is Nothing Then
+1716                  For Each c In NonBinaryCellsRange
+1717                      Print #1, " " & ValidLPFileVarName(c.Address(RowAbsolute:=False, ColumnAbsolute:=False)) & " FREE"
+1718                  Next c
+                  End If
 1726              Print #1,   ' New line
 1727          End If
 1728      End If
