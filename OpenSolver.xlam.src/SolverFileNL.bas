@@ -1418,14 +1418,20 @@ Private Function ConvertFormulaToExpressionTree(strFormula As String) As Express
               
               ' If the token is an operator
 8079          Case TokenType.ArithmeticOperator, TokenType.UnaryOperator, TokenType.ComparisonOperator
-                  ' The only unary operator '-' is "neg", which is different to "minus"
 8080              If tkn.TokenType = TokenType.UnaryOperator Then
-                      If tkn.Text <> "-" Then
+                      Select Case tkn.Text
+                      Case "-"
+                          ' Mark as unary minus
+8081                      tkn.Text = "neg"
+                      Case "+"
+                          ' Discard unary plus and move to next element
+                          GoTo NextToken
+                      Case Else
+                          ' Unknown unary operator
                           Err.Raise OpenSolver_ModelError, Description:="While parsing formula for .nl output, the following unary operator was encountered: " & tkn.Text & vbNewLine & vbNewLine & _
                                                                         "The entire formula was: " & vbNewLine & _
                                                                         "=" & strFormula
-                      End If
-8081                  tkn.Text = "neg"
+                      End Select
 8082              Else
 8083                  tkn.Text = ConvertExcelFunctionToNL(tkn.Text)
 8084              End If
@@ -1467,6 +1473,7 @@ Private Function ConvertFormulaToExpressionTree(strFormula As String) As Express
 8107                  End If
 8108              End If
 8109          End Select
+NextToken:
 8110      Next i
           
           ' While there are still tokens in the operator stack
@@ -1556,7 +1563,7 @@ ErrorHandler:
           GoTo ExitFunction
 End Function
 
-' Converts common Excel functinos to .nl operators
+' Converts common Excel functions to .nl operators
 Private Function ConvertExcelFunctionToNL(FunctionName As String) As String
           Dim RaiseError As Boolean
           RaiseError = False
