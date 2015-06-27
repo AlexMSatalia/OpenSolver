@@ -570,17 +570,18 @@ Function ZeroIfSmall(value As Double) As Double
 End Function
 
 Function StrEx(d As Variant, Optional AddSign As Boolean = True) As String
-              If VarType(d) = vbString Then
-                  StrEx = d
-                  Exit Function
-              End If
-
 ' Convert a double to a string, always with a + or -. Also ensure we have "0.", not just "." for values between -1 and 1
-              Dim s As String, prependedZero As String
-1912          s = Mid(str(d), 2)  ' remove the initial space (reserved by VB for the sign)
-1913          prependedZero = IIf(left(s, 1) = ".", "0", "")  ' ensure we have "0.", not just "."
-1915          StrEx = prependedZero + s
+              Dim s As String
+              On Error GoTo Abort
+              s = str(d)  ' check d is numeric and convert to string
+1912          s = Mid(s, 2)  ' remove the initial space (reserved by VB for the sign)
+1913          ' ensure we have "0.", not just "."
+1915          StrEx = IIf(left(s, 1) = ".", "0", "") & s
               If AddSign Or d < 0 Then StrEx = IIf(d >= 0, "+", "-") & StrEx
+              Exit Function
+Abort:
+              ' d is not a number
+              StrEx = d
 End Function
 
 Function StrExNoPlus(d As Variant) As String
