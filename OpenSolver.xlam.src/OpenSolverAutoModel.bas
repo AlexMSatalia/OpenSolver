@@ -253,7 +253,7 @@ NextArea:
 3761          PossibleType = LCase(Trim(CurDecVar.Offset(1, 0).value))
               For Each VarTypeKeyword In Array("integer", "int", "i", "binary", "bin", "b")  ' Keywords that indicate variable type
                   If PossibleType = VarTypeKeyword Then
-3763                  AddConstraintToModel Constraints, CurDecVar, RelationStringToEnum(VarTypeKeyword)
+3763                  AddConstraintToModel Constraints, CurDecVar, RelationStringToEnum(VarTypeKeyword), DoingAutoModel:=True
                       Exit For
                   End If
               Next
@@ -404,7 +404,7 @@ Sub AddRangeToConstraints(ByRef LHSs As Range, ByRef RelRange As Range, ByRef RH
 3827          End If
 
 3828          If Not TestKeyExists(Constraints, RELi.Address) Then
-3829              AddConstraintToModel Constraints, LHSi, RelationStringToEnum(RELi.value), RELi, RHSi
+3829              AddConstraintToModel Constraints, LHSi, RelationStringToEnum(RELi.value), RELi, RHSi, DoingAutoModel:=True
 3838          End If
 3839      Next i
 
@@ -419,14 +419,14 @@ ErrorHandler:
 End Sub
 
 ' Adds a single constraint, rather than a block
-Sub AddConstraintToModel(constraintGroup As Collection, newLHS As Range, newType As RelationConsts, Optional newRelationCell As Range, Optional newRHS As Range, Optional newRHSstring As String)
+Sub AddConstraintToModel(constraintGroup As Collection, newLHS As Range, newType As RelationConsts, Optional newRelationCell As Range, Optional newRHS As Range, Optional newRHSstring As String, Optional DoingAutoModel As Boolean = False)
           Dim RaiseError As Boolean
           RaiseError = False
           On Error GoTo ErrorHandler
 
           Dim NewConstraint As New CConstraint
 3975      NewConstraint.Init newLHS, newType, newRelationCell, newRHS, newRHSstring
-          If NewConstraint.KeyCell Is Nothing Then
+          If DoingAutoModel And NewConstraint.KeyCell Is Nothing Then
               constraintGroup.Add NewConstraint
           Else
 3982          constraintGroup.Add NewConstraint, NewConstraint.Key
