@@ -426,7 +426,7 @@ Sub AddConstraintToModel(constraintGroup As Collection, newLHS As Range, newType
 
           Dim NewConstraint As New CConstraint
 3975      NewConstraint.Init newLHS, newType, newRelationCell, newRHS, newRHSstring
-          If DoingAutoModel And NewConstraint.KeyCell Is Nothing Then
+          If Not DoingAutoModel Or NewConstraint.KeyCell Is Nothing Then
               constraintGroup.Add NewConstraint
           Else
 3982          constraintGroup.Add NewConstraint, NewConstraint.Key
