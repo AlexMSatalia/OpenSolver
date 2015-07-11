@@ -1919,7 +1919,7 @@ Sub ReadResults_NL(s As COpenSolver)
         ElseIf InStrText(Line, "interrupted on limit") Then
             s.SolveStatus = OpenSolverResult.LimitedSubOptimal
             s.SolveStatusString = "Stopped on User Limit (Time/Iterations)"
-            s.SolutionWasLoaded = True
+            s.SolutionWasLoaded = True  ' There may or may not be a solution - we try to load one
             ' See if we can find out which limit was hit from the log file
             GetExtraInfoFromLog s
         ElseIf InStrText(Line, "interrupted by user") Then
@@ -1946,6 +1946,12 @@ Sub ReadResults_NL(s As COpenSolver)
         For i = 1 To 8
             Line Input #1, Line ' Skip all options lines
         Next i
+        
+        ' Check there is a solution to load - the solver might not have provided one even if we expect it
+        If EOF(1) Then
+            s.SolutionWasLoaded = False
+            GoTo ExitSub
+        End If
         
         ' Note that the variable values are written to file in .nl format
         ' We need to read in the values and the extract the correct values for the adjustable cells
