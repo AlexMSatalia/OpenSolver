@@ -660,6 +660,11 @@ Function ExpandFormula(ByVal strFormula As String, _
 5123                          If FunctionName = "SUM" And FunctionCount > 0 Then
 5124                              strParsed = left(strParsed, Len(strParsed) - 1) + "+"
 5125                          End If
+                              
+                              'Replace preceding comma with + if summing a second argument
+                              If FunctionName = "PRODUCT" And FunctionCount > 0 Then
+                                  strParsed = left(strParsed, Len(strParsed) - 1) + "*"
+                              End If
 
                               'If we are starting a SUMIF, we need to get the next argument now
                               If FunctionName = "SUMIF" And FunctionCount = 0 Then
@@ -724,6 +729,8 @@ Function ExpandFormula(ByVal strFormula As String, _
                                       End If
 5146                              ElseIf FunctionName = "SUM" Then
 5147                                  strParsed = strParsed + node + "+"
+                                  ElseIf FunctionName = "PRODUCT" Then
+                                      strParsed = strParsed + node + "*"
 5148                              Else
                                       ' Check if we need a new node, add token to parsed string
 5149                                  strParsed = strParsed + node + ","
@@ -790,7 +797,7 @@ Function ExpandFormula(ByVal strFormula As String, _
 5190                      Select Case output
                           Case "SUMPRODUCT"
 5191                          output = "("
-5192                      Case "SUM"
+5192                      Case "SUM", "PRODUCT"
 5193                          output = "("
 5194                      Case Else
                               ' Delegate to solver specific conversion code
