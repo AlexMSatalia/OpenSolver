@@ -20,10 +20,9 @@ Function SetQuickSolveParameterRange() As Boolean
           ' Get a range from the user
           Dim DefaultValue As String
           Dim NewRange As Range
-377       On Error Resume Next
 378       If Not ParamRange Is Nothing Then DefaultValue = ParamRange.Address
-379       Set NewRange = Application.InputBox(prompt:="Please select the 'parameter' cells that you will be changing between successsive solves of the model.", Type:=8, Default:=ParamRange.Address, Title:="OpenSolver Quick Solve Parameters")
-382       On Error GoTo ErrorHandler
+379       Set NewRange = Application.InputBox(prompt:="Please select the 'parameter' cells that you will be changing between successsive solves of the model.", Type:=8, Default:=DefaultValue, Title:="OpenSolver Quick Solve Parameters")
+
           
 384       If Not NewRange Is Nothing Then
 385           If NewRange.Worksheet.Name <> sheet.Name Then
