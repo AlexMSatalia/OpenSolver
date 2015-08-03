@@ -724,7 +724,7 @@ Function ExpandFormula(ByVal strFormula As String, _
                                       Else
                                           Dim Position As Long
                                           Count = Count + 1
-                                          Position = FindPosition(strParsed, ",", 2 * Count)
+                                          Position = FindPosition(strParsed, ",", 2 * Count, start)
                                           strParsed = left(strParsed, Position) + node + ",0)+" + Mid(strParsed, Position + 1)
                                       End If
 5146                              ElseIf FunctionName = "SUM" Then
@@ -1050,7 +1050,7 @@ Function AddNodeIfNew(ByRef objCurNode As CFormula, ByRef c As Range) As String
 5349              AddNodeIfNew = strCFormula
 5350          Else
                   ' Not a number, assume text
-5351              AddNodeIfNew = "'" + strCFormula + "'"
+5351              AddNodeIfNew = """" + strCFormula + """"
 5352          End If
 5353          GoTo finishedNode
 5354      End If
