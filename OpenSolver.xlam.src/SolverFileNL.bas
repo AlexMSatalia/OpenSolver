@@ -175,18 +175,16 @@ Function WriteNLFile_Parsed(OpenSolver As COpenSolver, ModelFilePathName As Stri
           ' Write .nl file
 7474      Open ModelFilePathName For Output As #1
           
-7475      WriteToFile 1, MakeHeader(), AbortIfBlank:=True
-7477      WriteToFile 1, MakeCBlocks(), AbortIfBlank:=True
-7480      WriteToFile 1, MakeOBlocks(), AbortIfBlank:=True
-7483      'WriteToFile 1, MakeDBlock(), AbortIfBlank:=True
-7485      WriteToFile 1, MakeXBlock(), AbortIfBlank:=True
-7487      WriteToFile 1, MakeRBlock(), AbortIfBlank:=True
-7489      WriteToFile 1, MakeBBlock(), AbortIfBlank:=True
-7491      WriteToFile 1, MakeKBlock(), AbortIfBlank:=True
-7494      WriteToFile 1, MakeJBlocks(), AbortIfBlank:=True
-7497      WriteToFile 1, MakeGBlocks(), AbortIfBlank:=True
-
-7499      Close #1
+7475      MakeHeader
+7477      MakeCBlocks
+7480      MakeOBlocks
+7483      'MakeDBlock
+7485      MakeXBlock
+7487      MakeRBlock
+7489      MakeBBlock
+7491      MakeKBlock
+7494      MakeJBlocks
+7497      MakeGBlocks
 
 ExitFunction:
 7529      Application.StatusBar = False
@@ -856,143 +854,122 @@ ErrorHandler:
 End Sub
 
 ' Writes header block for .nl file. This contains the model statistics
-Private Function MakeHeader() As String
+Private Sub MakeHeader()
           Dim RaiseError As Boolean
           RaiseError = False
           On Error GoTo ErrorHandler
-
-          Dim Header As String
-7872      Header = ""
           
-7873      AddNewLine Header, "g3 1 1 0", "problem " & problem_name
-7874      AddNewLine Header, " " & n_var & " " & n_con & " " & n_obj & " " & nranges & " " & n_eqn_ & " " & n_lcon, "vars, constraints, objectives, ranges, eqns"
-7875      AddNewLine Header, " " & nlc & " " & nlo, "nonlinear constraints, objectives"
-7876      AddNewLine Header, " " & nlnc & " " & lnc, "network constraints: nonlinear, linear"
-7877      AddNewLine Header, " " & nlvc & " " & nlvo & " " & nlvb, "nonlinear vars in constraints, objectives, both"
-7878      AddNewLine Header, " " & nwv_ & " " & nfunc_ & " " & arith & " " & flags, "linear network variables; functions; arith, flags"
-7879      AddNewLine Header, " " & nbv & " " & niv & " " & nlvbi & " " & nlvci & " " & nlvoi, "discrete variables: binary, integer, nonlinear (b,c,o)"
-7880      AddNewLine Header, " " & nzc & " " & nzo, "nonzeros in Jacobian, gradients"
-7881      AddNewLine Header, " " & maxrownamelen_ & " " & maxcolnamelen_, "max name lengths: constraints, variables"
-7882      AddNewLine Header, " " & comb & " " & comc & " " & como & " " & comc1 & " " & como1, "common exprs: b,c,o,c1,o1"
-          
-7883      MakeHeader = StripTrailingNewline(Header)
+7873      Print #1, "g3 1 1 0"; Tab(CommentSpacing); "# problem " & problem_name
+7874      Print #1, " " & n_var & " " & n_con & " " & n_obj & " " & nranges & " " & n_eqn_ & " " & n_lcon; Tab(CommentSpacing); "# vars, constraints, objectives, ranges, eqns"
+7875      Print #1, " " & nlc & " " & nlo; Tab(CommentSpacing); "# nonlinear constraints, objectives"
+7876      Print #1, " " & nlnc & " " & lnc; Tab(CommentSpacing); "# network constraints: nonlinear, linear"
+7877      Print #1, " " & nlvc & " " & nlvo & " " & nlvb; Tab(CommentSpacing); "# nonlinear vars in constraints, objectives, both"
+7878      Print #1, " " & nwv_ & " " & nfunc_ & " " & arith & " " & flags; Tab(CommentSpacing); "# linear network variables; functions; arith, flags"
+7879      Print #1, " " & nbv & " " & niv & " " & nlvbi & " " & nlvci & " " & nlvoi; Tab(CommentSpacing); "# discrete variables: binary, integer, nonlinear (b,c,o)"
+7880      Print #1, " " & nzc & " " & nzo; Tab(CommentSpacing); "# nonzeros in Jacobian, gradients"
+7881      Print #1, " " & maxrownamelen_ & " " & maxcolnamelen_; Tab(CommentSpacing); "# max name lengths: constraints, variables"
+7882      Print #1, " " & comb & " " & comc & " " & como & " " & comc1 & " " & como1; Tab(CommentSpacing); "# common exprs: b,c,o,c1,o1"
 
-ExitFunction:
+ExitSub:
           If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
-          Exit Function
+          Exit Sub
 
 ErrorHandler:
           If Not ReportError("SolverFileNL", "MakeHeader") Then Resume
           RaiseError = True
-          GoTo ExitFunction
-End Function
+          GoTo ExitSub
+End Sub
 
 ' Writes C blocks for .nl file. These describe the non-linear parts of each constraint.
-Private Function MakeCBlocks() As String
+Private Sub MakeCBlocks()
           Dim RaiseError As Boolean
           RaiseError = False
           On Error GoTo ErrorHandler
-
-          Dim Block As String
-7884      Block = ""
           
           Dim i As Long
 7885      For i = 1 To n_con
 7886          UpdateStatusBar "OpenSolver: Creating .nl file. Writing non-linear constraints " & i & "/" & n_con
 
               ' Add block header for the constraint
-7890          AddNewLine Block, "C" & i - 1, "CONSTRAINT NON-LINEAR SECTION " + ConstraintMapRev(CStr(i - 1))
+7890          Print #1, "C" & i - 1;
+              Print #1, Tab(CommentSpacing); "# CONSTRAINT NON-LINEAR SECTION " + ConstraintMapRev(CStr(i - 1))
               
               ' Add expression tree
-7892          Block = Block + NonLinearConstraintTrees(ConstraintIndexToTreeIndex(i - 1)).ConvertToNL(CommentIndent)
+7892          Print #1, NonLinearConstraintTrees(ConstraintIndexToTreeIndex(i - 1)).ConvertToNL(CommentIndent);
 7893      Next i
-          
-7894      MakeCBlocks = StripTrailingNewline(Block)
 
-ExitFunction:
+ExitSub:
           If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
-          Exit Function
+          Exit Sub
 
 ErrorHandler:
           If Not ReportError("SolverFileNL", "MakeCBlocks") Then Resume
           RaiseError = True
-          GoTo ExitFunction
-End Function
+          GoTo ExitSub
+End Sub
 
 ' Writes O blocks for .nl file. These describe the non-linear parts of each objective.
-Private Function MakeOBlocks() As String
+Private Sub MakeOBlocks()
           Dim RaiseError As Boolean
           RaiseError = False
           On Error GoTo ErrorHandler
-
-          Dim Block As String
-7895      Block = ""
           
           Dim i As Long
 7896      For i = 1 To n_obj
               ' Add block header for the objective
-7897          AddNewLine Block, "O" & i - 1 & " " & ConvertObjectiveSenseToNL(ObjectiveSenses(i)), "OBJECTIVE NON-LINEAR SECTION " & ObjectiveCells(i)
+7897          Print #1, "O" & i - 1 & " " & ConvertObjectiveSenseToNL(ObjectiveSenses(i));
+              Print #1, Tab(CommentSpacing); "# OBJECTIVE NON-LINEAR SECTION " & ObjectiveCells(i)
               
               ' Add expression tree
-7899          Block = Block + NonLinearObjectiveTrees(i).ConvertToNL(CommentIndent)
+7899          Print #1, NonLinearObjectiveTrees(i).ConvertToNL(CommentIndent);
 7900      Next i
-          
-7901      MakeOBlocks = StripTrailingNewline(Block)
 
-ExitFunction:
+ExitSub:
           If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
-          Exit Function
+          Exit Sub
 
 ErrorHandler:
           If Not ReportError("SolverFileNL", "MakeOBlocks") Then Resume
           RaiseError = True
-          GoTo ExitFunction
-End Function
+          GoTo ExitSub
+End Sub
 
 ' Writes D block for .nl file. This contains the initial guess for dual variables.
 ' We don't use this, so just set them all to zero
-Private Function MakeDBlock() As String
+Private Sub MakeDBlock()
           Dim RaiseError As Boolean
           RaiseError = False
           On Error GoTo ErrorHandler
-
-          Dim Block As String
-7902      Block = ""
           
           ' Add block header
-7903      AddNewLine Block, "d" & n_con, "INITIAL DUAL GUESS"
+7903      Print #1, "d" & n_con; Tab(CommentSpacing); "# INITIAL DUAL GUESS"
           
           ' Set duals to zero for all constraints
           Dim i As Long
 7904      For i = 1 To n_con
 7905          UpdateStatusBar "OpenSolver: Creating .nl file. Writing initial duals " & i & "/" & n_con
               
-7909          AddNewLine Block, i - 1 & " 0", "    " & ConstraintMapRev(CStr(i - 1)) & " = " & 0
+7909          Print #1, i - 1 & " 0"; Tab(CommentSpacing); "#     " & ConstraintMapRev(CStr(i - 1)) & " = " & 0
 7910      Next i
-          
-7911      MakeDBlock = StripTrailingNewline(Block)
 
-ExitFunction:
+ExitSub:
           If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
-          Exit Function
+          Exit Sub
 
 ErrorHandler:
           If Not ReportError("SolverFileNL", "MakeDBlock") Then Resume
           RaiseError = True
-          GoTo ExitFunction
-End Function
+          GoTo ExitSub
+End Sub
 
 ' Writes X block for .nl file. This contains the initial guess for primal variables
-Private Function MakeXBlock() As String
+Private Sub MakeXBlock()
           Dim RaiseError As Boolean
           RaiseError = False
           On Error GoTo ErrorHandler
 
-          Dim Block As String
-7912      Block = ""
-          
           ' Add block header
-7913      AddNewLine Block, "x" & n_var, "INITIAL PRIMAL GUESS"
+7913      Print #1, "x" & n_var; Tab(CommentSpacing); "# INITIAL PRIMAL GUESS"
 
           ' Loop through the variables in .nl variable order
           Dim i As Long, initial As Double, VariableIndex As Long
@@ -1009,33 +986,29 @@ Private Function MakeXBlock() As String
                   ' Formulae variables - use the initial value saved in the CFormula instance
 7923              initial = CDbl(m.Formulae(VariableIndex - numActualVars).initialValue)
 7924          End If
-7925          AddNewLine Block, i - 1 & " " & StrExNoPlus(initial), "    " & VariableMapRev(CStr(i - 1)) & " = " & initial
+7925          Print #1, i - 1 & " " & StrExNoPlus(initial); Tab(CommentSpacing); "#     " & VariableMapRev(CStr(i - 1)) & " = " & initial
 7926      Next i
-          
-7927      MakeXBlock = StripTrailingNewline(Block)
 
-ExitFunction:
+ExitSub:
           If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
-          Exit Function
+          Exit Sub
 
 ErrorHandler:
           If Not ReportError("SolverFileNL", "MakeXBlock") Then Resume
           RaiseError = True
-          GoTo ExitFunction
-End Function
+          GoTo ExitSub
+End Sub
 
 ' Writes R block for .nl file. This contains the constant values for each constraint and the relation type
-Private Function MakeRBlock() As String
+Private Sub MakeRBlock()
           Dim RaiseError As Boolean
           RaiseError = False
           On Error GoTo ErrorHandler
 
-          If n_con = 0 Then GoTo ExitFunction
+          If n_con = 0 Then GoTo ExitSub
 
-          Dim Block As String
-7928      Block = ""
            ' Add block header
-7929      AddNewLine Block, "r", "CONSTRAINT BOUNDS"
+7929      Print #1, "r"; Tab(CommentSpacing); "# CONSTRAINT BOUNDS"
           
           ' Apply bounds according to the relation type
           Dim i As Long, BoundType As Long, Comment As String, bound As Double
@@ -1044,39 +1017,34 @@ Private Function MakeRBlock() As String
               
 7935          bound = LinearConstants(ConstraintIndexToTreeIndex(i - 1))
 7936          ConvertConstraintToNL ConstraintRelations(ConstraintIndexToTreeIndex(i - 1)), BoundType, Comment
-7937          AddNewLine Block, BoundType & " " & StrExNoPlus(bound), "    " & ConstraintMapRev(CStr(i - 1)) & Comment & bound
+7937          Print #1, BoundType & " " & StrExNoPlus(bound); Tab(CommentSpacing); "#     " & ConstraintMapRev(CStr(i - 1)) & Comment & bound
 7938      Next i
-          
-7939      MakeRBlock = StripTrailingNewline(Block)
 
-ExitFunction:
+ExitSub:
           If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
-          Exit Function
+          Exit Sub
 
 ErrorHandler:
           If Not ReportError("SolverFileNL", "MakeRBlock") Then Resume
           RaiseError = True
-          GoTo ExitFunction
-End Function
+          GoTo ExitSub
+End Sub
 
 ' Writes B block for .nl file. This contains the variable bounds
-Private Function MakeBBlock() As String
+Private Sub MakeBBlock()
           Dim RaiseError As Boolean
           RaiseError = False
           On Error GoTo ErrorHandler
-
-          Dim Block As String
-7940      Block = ""
           
           ' Write block header
-7941      AddNewLine Block, "b", "VARIABLE BOUNDS"
+7941      Print #1, "b"; Tab(CommentSpacing); "# VARIABLE BOUNDS"
           
           Dim i As Long, bound As String, Comment As String, VariableIndex As Long, VarName As String
 7942      For i = 1 To n_var
 7943          UpdateStatusBar "OpenSolver: Creating .nl file. Writing variable bounds " & i & "/" & n_var
               
 7947          VariableIndex = VariableNLIndexToCollectionIndex(i - 1)
-7948          Comment = "    " & VariableMapRev(CStr(i - 1))
+7948          Comment = "#     " & VariableMapRev(CStr(i - 1))
            
 7949          If VariableIndex <= numActualVars Then
                   If BinaryVars(VariableIndex) Then
@@ -1101,34 +1069,29 @@ Private Function MakeBBlock() As String
 7964              bound = "3"
 7965              Comment = Comment & " FREE"
 7966          End If
-7967          AddNewLine Block, bound, Comment
+7967          Print #1, bound; Tab(CommentSpacing); Comment
 7968      Next i
-          
-7969      MakeBBlock = StripTrailingNewline(Block)
 
-ExitFunction:
+ExitSub:
           If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
-          Exit Function
+          Exit Sub
 
 ErrorHandler:
           If Not ReportError("SolverFileNL", "MakeBBlock") Then Resume
           RaiseError = True
-          GoTo ExitFunction
-End Function
+          GoTo ExitSub
+End Sub
 
 ' Writes K block for .nl file. This contains the cumulative count of non-zero jacobian entries for the first n-1 variables
-Private Function MakeKBlock() As String
+Private Sub MakeKBlock()
           Dim RaiseError As Boolean
           RaiseError = False
           On Error GoTo ErrorHandler
 
-          If n_var = 0 Then GoTo ExitFunction
-
-          Dim Block As String
-7970      Block = ""
+          If n_var = 0 Then GoTo ExitSub
 
           ' Add block header
-7971      AddNewLine Block, "k" & n_var - 1, "NUMBER OF JACOBIAN ENTRIES (CUMULATIVE) FOR FIRST " & n_var - 1 & " VARIABLES"
+7971      Print #1, "k" & n_var - 1; Tab(CommentSpacing); "# NUMBER OF JACOBIAN ENTRIES (CUMULATIVE) FOR FIRST " & n_var - 1 & " VARIABLES"
           
           ' Loop through first n_var - 1 variables and add the non-zero count to the running total
           Dim i As Long, total As Long
@@ -1137,29 +1100,24 @@ Private Function MakeKBlock() As String
 7974          UpdateStatusBar "OpenSolver: Creating .nl file. Writing jacobian counts " & i & "/" & n_var - 1
               
 7978          total = total + NonZeroConstraintCount(VariableNLIndexToCollectionIndex(i - 1))
-7979          AddNewLine Block, CStr(total), "    Up to " & VariableMapRev(CStr(i - 1)) & ": " & CStr(total) & " entries in Jacobian"
+7979          Print #1, CStr(total); Tab(CommentSpacing); "#     Up to " & VariableMapRev(CStr(i - 1)) & ": " & CStr(total) & " entries in Jacobian"
 7980      Next i
-          
-7981      MakeKBlock = StripTrailingNewline(Block)
 
-ExitFunction:
+ExitSub:
           If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
-          Exit Function
+          Exit Sub
 
 ErrorHandler:
           If Not ReportError("SolverFileNL", "MakeKBlock") Then Resume
           RaiseError = True
-          GoTo ExitFunction
-End Function
+          GoTo ExitSub
+End Sub
 
 ' Writes J blocks for .nl file. These contain the linear part of each constraint
-Private Function MakeJBlocks() As String
-          Dim Block As String
+Private Sub MakeJBlocks()
           Dim RaiseError As Boolean
           RaiseError = False
           On Error GoTo ErrorHandler
-
-7982      Block = ""
           
           Dim ConstraintElements() As String
           Dim CommentElements() As String
@@ -1171,7 +1129,7 @@ Private Function MakeJBlocks() As String
 7988          TreeIndex = ConstraintIndexToTreeIndex(i - 1)
           
               ' Make header
-7989          AddNewLine Block, "J" & i - 1 & " " & LinearConstraints(TreeIndex).Count, "CONSTRAINT LINEAR SECTION " & ConstraintMapRev(i)
+7989          Print #1, "J" & i - 1 & " " & LinearConstraints(TreeIndex).Count; Tab(CommentSpacing); "# CONSTRAINT LINEAR SECTION " & ConstraintMapRev(i)
               
 7990          ReDim ConstraintElements(n_var)
 7991          ReDim CommentElements(n_var)
@@ -1183,44 +1141,38 @@ Private Function MakeJBlocks() As String
 7993              If LinearConstraints(TreeIndex).Exists(j) Then
 7994                  VariableIndex = VariableCollectionIndexToNLIndex(j)
 7995                  ConstraintElements(VariableIndex) = VariableIndex & " " & StrExNoPlus(LinearConstraints(TreeIndex).Item(j))
-7996                  CommentElements(VariableIndex) = "    + " & LinearConstraints(TreeIndex).Item(j) & " * " & VariableMapRev(CStr(VariableIndex))
+7996                  CommentElements(VariableIndex) = "#     + " & LinearConstraints(TreeIndex).Item(j) & " * " & VariableMapRev(CStr(VariableIndex))
 7997              End If
 7998          Next j
               
               ' Output the constraint elements to the J Block in .nl variable order
 7999          For j = 0 To n_var - 1
 8000              If ConstraintElements(j) <> "" Then
-8001                  AddNewLine Block, ConstraintElements(j), CommentElements(j)
+8001                  Print #1, ConstraintElements(j); Tab(CommentSpacing); CommentElements(j)
 8002              End If
 8003          Next j
-              
 8004      Next i
-          
-8005      MakeJBlocks = StripTrailingNewline(Block)
 
-ExitFunction:
+ExitSub:
           If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
-          Exit Function
+          Exit Sub
 
 ErrorHandler:
           If Not ReportError("SolverFileNL", "MakeJBlocks") Then Resume
           RaiseError = True
-          GoTo ExitFunction
-End Function
+          GoTo ExitSub
+End Sub
 
 ' Writes the G blocks for .nl file. These contain the linear parts of each objective
-Private Function MakeGBlocks() As String
+Private Sub MakeGBlocks()
           Dim RaiseError As Boolean
           RaiseError = False
           On Error GoTo ErrorHandler
 
-          Dim Block As String
-8006      Block = ""
-          
           Dim i As Long
 8007      For i = 1 To n_obj
               ' Make header
-8008          AddNewLine Block, "G" & i - 1 & " " & LinearObjectives(i).Count, "OBJECTIVE LINEAR SECTION " & ObjectiveCells(i)
+8008          Print #1, "G" & i - 1 & " " & LinearObjectives(i).Count; Tab(CommentSpacing); "# OBJECTIVE LINEAR SECTION " & ObjectiveCells(i)
               
               ' This loop is not in the right order (see J blocks)
               ' Since the objective only containts one variable, the output will still be correct without reordering
@@ -1228,22 +1180,20 @@ Private Function MakeGBlocks() As String
 8009          For j = 1 To n_var
 8010              If LinearObjectives(i).Exists(j) Then
 8011                  VariableIndex = VariableCollectionIndexToNLIndex(j)
-8012                  AddNewLine Block, VariableIndex & " " & StrExNoPlus(LinearObjectives(i).Item(j)), "    + " & LinearObjectives(i).Item(j) & " * " & VariableMapRev(CStr(VariableIndex))
+8012                  Print #1, VariableIndex & " " & StrExNoPlus(LinearObjectives(i).Item(j)); Tab(CommentSpacing); "#     + " & LinearObjectives(i).Item(j) & " * " & VariableMapRev(CStr(VariableIndex))
 8013              End If
 8014          Next j
 8015      Next i
-          
-8016      MakeGBlocks = StripTrailingNewline(Block)
 
-ExitFunction:
+ExitSub:
           If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
-          Exit Function
+          Exit Sub
 
 ErrorHandler:
           If Not ReportError("SolverFileNL", "MakeGBlocks") Then Resume
           RaiseError = True
-          GoTo ExitFunction
-End Function
+          GoTo ExitSub
+End Sub
 
 ' Writes the .col summary file. This contains the variable names listed in .nl order
 Private Sub OutputColFile()
@@ -1608,7 +1558,7 @@ Private Function Precedence(tkn As String) As Long
 8177      Select Case tkn
           Case "eq", "ne", "gt", "ge", "lt", "le"
               Precedence = 1
-          Case "plus", "minus"
+          Case "plus", "minus", "neg"
 8178          Precedence = 2
 8179      Case "mult", "div"
 8180          Precedence = 3
@@ -1660,7 +1610,7 @@ Private Function OperatorIsLeftAssociative(tkn As String) As Boolean
           On Error GoTo ErrorHandler
 
 8201      Select Case tkn
-          Case "plus", "minus", "mult", "div", "eq", "ne", "gt", "ge", "lt", "le"
+          Case "plus", "minus", "mult", "div", "eq", "ne", "gt", "ge", "lt", "le", "neg"
 8202          OperatorIsLeftAssociative = True
 8203      Case "pow"
 8204          OperatorIsLeftAssociative = False
