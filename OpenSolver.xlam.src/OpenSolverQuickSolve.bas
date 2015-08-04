@@ -21,8 +21,13 @@ Function SetQuickSolveParameterRange() As Boolean
           Dim DefaultValue As String
           Dim NewRange As Range
 378       If Not ParamRange Is Nothing Then DefaultValue = ParamRange.Address
+          On Error Resume Next
 379       Set NewRange = Application.InputBox(prompt:="Please select the 'parameter' cells that you will be changing between successsive solves of the model.", Type:=8, Default:=DefaultValue, Title:="OpenSolver Quick Solve Parameters")
-
+          If Err.Number <> 0 And Err.Number <> 424 Then ' Error 424: Object required - happens on cancel press
+              On Error GoTo ErrorHandler
+              Err.Raise Err.Number, Err.Source, Err.Description, Err.HelpFile, Err.HelpContext
+          End If
+          On Error GoTo ErrorHandler
           
 384       If Not NewRange Is Nothing Then
 385           If NewRange.Worksheet.Name <> sheet.Name Then
