@@ -710,7 +710,7 @@ Private Sub ProcessSingleFormula(RHSExpression As String, LHSVariable As String,
 7806      If Not TestKeyExists(VariableIndex, LHSVariable) Then
               ' We must have a constant formula as the LHS, we can evaluate and merge with the constant
               ' We are bringing the constant to the RHS so must subtract
-7807          If Not left(LHSVariable, 1) = "=" Then LHSVariable = "=" & LHSVariable
+7807          If Not Left(LHSVariable, 1) = "=" Then LHSVariable = "=" & LHSVariable
 7808          constant = constant - s.sheet.Evaluate(LHSVariable)
 7809      Else
               ' Our constraint has a single term on the LHS and a formulae on the right.
@@ -1327,7 +1327,7 @@ Private Function ConvertFormulaToExpressionTree(strFormula As String) As Express
               Case TokenType.Number
                   ' Might be a negative number, if so we need to parse out the neg operator
 8060              Set Tree = CreateTree(tkn.Text, ExpressionTreeNumber)
-8061              If left(Tree.NodeText, 1) = "-" Then
+8061              If Left(Tree.NodeText, 1) = "-" Then
 8062                  AddNegToTree Tree
 8063              End If
 8064              Operands.Push Tree

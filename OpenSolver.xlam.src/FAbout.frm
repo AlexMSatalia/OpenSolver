@@ -94,7 +94,7 @@ Private Sub UserForm_Activate()
           With txtFilePath
               .Locked = False
               .value = "OpenSolver file: " & MakeSpacesNonBreaking(MakePathSafe(ThisWorkbook.FullName))
-              AutoHeight txtFilePath, .width, False
+              AutoHeight txtFilePath, .Width, False
               .Locked = True
           End With
           LayoutBottom
@@ -103,10 +103,10 @@ Private Sub UserForm_Activate()
               .Locked = False
 3523          .value = EnvironmentSummary()
               .Locked = True
-              AutoHeight txtVersion, Me.width, True
+              AutoHeight txtVersion, Me.Width, True
               #If Mac Then
                   ' On Mac the autosizing isn't quite wide enough
-                  .width = .width + 10
+                  .Width = .Width + 10
               #End If
           End With
           
@@ -148,76 +148,76 @@ End Function
 Private Sub AutoLayout()
     AutoFormat Me.Controls
     
-    Me.width = FormWidthAbout
+    Me.Width = FormWidthAbout
     
     With lblHeading
         .Font.Size = FormHeadingSize
-        .width = Me.width - 2 * FormMargin
+        .Width = Me.Width - 2 * FormMargin
         .Caption = "OpenSolver"
-        .left = FormMargin
-        .top = FormMargin
-        .height = FormHeadingHeight
+        .Left = FormMargin
+        .Top = FormMargin
+        .Height = FormHeadingHeight
     End With
     
     With txtVersion
         .Locked = False
         .value = "OpenSolver version information"
         .Locked = True
-        .width = lblHeading.width
-        .left = lblHeading.left
-        .top = Below(lblHeading, False)
+        .Width = lblHeading.Width
+        .Left = lblHeading.Left
+        .Top = Below(lblHeading, False)
         .BackStyle = fmBackStyleTransparent
     End With
     
     With lblUrl
         .Caption = "http://www.OpenSolver.org"
         .ForeColor = FormLinkColor
-        .left = lblHeading.left
-        .top = Below(txtVersion, False)
-        AutoHeight lblUrl, Me.width, True
+        .Left = lblHeading.Left
+        .Top = Below(txtVersion, False)
+        AutoHeight lblUrl, Me.Width, True
     End With
     
     With cmdUpdate
         .Caption = "Check for updates"
-        .width = FormButtonWidth * 2
-        .left = LeftOfForm(Me.width, .width)
-        .top = lblHeading.top
+        .Width = FormButtonWidth * 2
+        .Left = LeftOfForm(Me.Width, .Width)
+        .Top = lblHeading.Top
     End With
     
     With cmdUpdateSettings
         .Caption = "Update Check settings..."
-        .width = cmdUpdate.width
-        .left = cmdUpdate.left
-        .top = Below(cmdUpdate)
+        .Width = cmdUpdate.Width
+        .Left = cmdUpdate.Left
+        .Top = Below(cmdUpdate)
     End With
     
     With txtAbout
         .Locked = False
         .Text = "Loading OpenSolver info..."
         .Locked = True
-        .left = lblHeading.left
-        .top = Max(Below(lblUrl), Below(cmdUpdateSettings))
+        .Left = lblHeading.Left
+        .Top = Max(Below(lblUrl), Below(cmdUpdateSettings))
         .BackStyle = fmBackStyleTransparent
         .SpecialEffect = fmSpecialEffectEtched
-        .height = txtAboutHeight
-        .width = lblHeading.width
+        .Height = txtAboutHeight
+        .Width = lblHeading.Width
     End With
     
     With txtFilePath
         .Locked = False
         .Text = "OpenSolver file:"
         .Locked = True
-        .left = lblHeading.left
-        .top = Below(txtAbout)
-        .height = FormTextHeight + 2 ' Stop the text becoming smaller
-        .width = lblHeading.width
+        .Left = lblHeading.Left
+        .Top = Below(txtAbout)
+        .Height = FormTextHeight + 2 ' Stop the text becoming smaller
+        .Width = lblHeading.Width
         .BackStyle = fmBackStyleTransparent
         .MultiLine = True
     End With
     
     LayoutBottom
     
-    Me.width = Me.width + FormWindowMargin
+    Me.Width = Me.Width + FormWindowMargin
     
     Me.BackColor = FormBackColor
     Me.Caption = "OpenSolver - About"
@@ -227,18 +227,18 @@ Private Sub LayoutBottom()
     With chkAutoLoad
         .Caption = "Load OpenSolver when Excel starts"
         AutoHeight chkAutoLoad, FormWidthAbout, True
-        .left = lblHeading.left
-        .top = Below(txtFilePath, False)
+        .Left = lblHeading.Left
+        .Top = Below(txtFilePath, False)
     End With
     
     With cmdOk
         .Caption = "OK"
-        .width = FormButtonWidth
-        .left = LeftOfForm(FormWidthAbout, .width)
-        .top = chkAutoLoad.top
+        .Width = FormButtonWidth
+        .Left = LeftOfForm(FormWidthAbout, .Width)
+        .Top = chkAutoLoad.Top
     End With
     
-    Me.height = FormHeight(cmdOk)
+    Me.Height = FormHeight(cmdOk)
 End Sub
 
 Private Sub UserForm_Initialize()
@@ -247,7 +247,7 @@ Private Sub UserForm_Initialize()
 End Sub
 
 Private Sub CenterForm()
-    Me.top = CenterFormTop(Me.height)
-    Me.left = CenterFormLeft(Me.width)
+    Me.Top = CenterFormTop(Me.Height)
+    Me.Left = CenterFormLeft(Me.Width)
 End Sub
 

@@ -102,7 +102,7 @@ Function GetRootDriveName() As String
               If DriveName = "" Then
                   Dim Path As String
                   Path = GetTempFolder(False)
-                  DriveName = left(Path, InStr(Path, ":") - 1)
+                  DriveName = Left(Path, InStr(Path, ":") - 1)
               End If
               GetRootDriveName = DriveName
           #End If
@@ -133,7 +133,7 @@ Function ConvertHfsPathToPosix(Path As String) As String
 738           If InStr(Path, "/") = 0 Then
                   Dim RootDriveName As String
                   RootDriveName = GetRootDriveName()
-                  If left(Path, Len(RootDriveName)) = RootDriveName Then
+                  If Left(Path, Len(RootDriveName)) = RootDriveName Then
                       ConvertHfsPathToPosix = Mid(Path, Len(RootDriveName) + 1)
                   Else
                       ' Prefix disk name with :Volumes:
@@ -171,7 +171,7 @@ Function ConvertPosixPathToHfs(Path As String) As String
         ' Make sure we have an HFS path
         If InStr(Path, ":") = 0 Then
             Const VolumePrefix = "/Volumes/"
-            If left(Path, Len(VolumePrefix)) = VolumePrefix Then
+            If Left(Path, Len(VolumePrefix)) = VolumePrefix Then
                 ' If the POSIX path starts with /Volumes/, then we keep the drive name after /Volumes/
                 ConvertPosixPathToHfs = Mid(Path, Len(VolumePrefix) + 1)
             Else
@@ -205,7 +205,7 @@ End Function
 Function JoinPaths(ParamArray Paths() As Variant) As String
           Dim i As Long
           For i = LBound(Paths) To UBound(Paths) - 1
-              JoinPaths = JoinPaths & Paths(i) & IIf(right(Paths(i), 1) <> Application.PathSeparator, Application.PathSeparator, "")
+              JoinPaths = JoinPaths & Paths(i) & IIf(Right(Paths(i), 1) <> Application.PathSeparator, Application.PathSeparator, "")
           Next i
           JoinPaths = JoinPaths & Paths(UBound(Paths))
 End Function
@@ -245,7 +245,7 @@ Sub OpenFile(FilePath As String, notFoundMessage As String)
               ' Check that there is no workbook open with the same name
               Dim w As Workbook
 765           On Error Resume Next
-766           Set w = Workbooks(right(FilePath, InStr(FilePath, Application.PathSeparator)))
+766           Set w = Workbooks(Right(FilePath, InStr(FilePath, Application.PathSeparator)))
 767           On Error GoTo ErrorHandler
 768           Workbooks.Open FileName:=FilePath, ReadOnly:=True ' , Format:=Tabs
 769       End If
@@ -277,8 +277,8 @@ Function GetTempFolder(Optional AllowEnvironOverride As Boolean = True) As Strin
 90                TempFolderPath = String$(255, 0)
 91                ret = GetTempPath(255, TempFolderPath)
 92                If ret <> 0 Then
-93                    TempFolderPath = left(TempFolderPath, ret)
-94                    If right(TempFolderPath, 1) <> "\" Then TempFolderPath = TempFolderPath & "\"
+93                    TempFolderPath = Left(TempFolderPath, ret)
+94                    If Right(TempFolderPath, 1) <> "\" Then TempFolderPath = TempFolderPath & "\"
 95                Else
 96                    TempFolderPath = ""
 97                End If

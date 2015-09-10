@@ -55,13 +55,13 @@ Public Sub AutoFormat(ByRef Controls As Controls)
                 End If
                 
                 If ContType = "CommandButton" Then
-                    .height = FormButtonHeight
+                    .Height = FormButtonHeight
                 ElseIf ContType = "CheckBox" Or ContType = "OptionButton" Then
-                    .height = FormCheckBoxHeight
+                    .Height = FormCheckBoxHeight
                 ElseIf ContType = "TextBox" Or ContType = "RefEdit" Or ContType = "ComboBox" Then
-                    .height = FormTextBoxHeight
+                    .Height = FormTextBoxHeight
                 Else
-                    .height = FormTextHeight
+                    .Height = FormTextHeight
                 End If
             End With
         End If
@@ -69,11 +69,11 @@ Public Sub AutoFormat(ByRef Controls As Controls)
 End Sub
 
 Public Function RightOf(OldControl As Control, Optional Spacing As Boolean = True) As Long
-    RightOf = OldControl.left + OldControl.width + IIf(Spacing, FormSpacing, 0)
+    RightOf = OldControl.Left + OldControl.Width + IIf(Spacing, FormSpacing, 0)
 End Function
 
 Public Function LeftOf(OldControl As Control, NewControlWidth As Long, Optional Spacing As Boolean = True) As Long
-    LeftOf = OldControl.left - NewControlWidth - IIf(Spacing, FormSpacing, 0)
+    LeftOf = OldControl.Left - NewControlWidth - IIf(Spacing, FormSpacing, 0)
 End Function
 
 Public Function LeftOfForm(FormWidth As Long, NewControlWidth As Long)
@@ -81,20 +81,20 @@ Public Function LeftOfForm(FormWidth As Long, NewControlWidth As Long)
 End Function
 
 Public Function Below(OldControl As Control, Optional Spacing As Boolean = True) As Long
-    Below = OldControl.top + OldControl.height + IIf(Spacing, FormSpacing, 0)
+    Below = OldControl.Top + OldControl.Height + IIf(Spacing, FormSpacing, 0)
 End Function
 
 Public Function FormHeight(BottomControl As Control) As Long
     FormHeight = Below(BottomControl, False) + FormMargin + FormTitleHeight
 End Function
 
-Public Sub AutoHeight(NewControl As Control, width As Long, Optional ShrinkWidth As Boolean = False)
+Public Sub AutoHeight(NewControl As Control, Width As Long, Optional ShrinkWidth As Boolean = False)
     With NewControl
-        .width = width
+        .Width = Width
         .AutoSize = False
         .AutoSize = True
         .AutoSize = False
-        If Not ShrinkWidth Then .width = width
+        If Not ShrinkWidth Then .Width = Width
     End With
 End Sub
 
@@ -102,13 +102,13 @@ Public Function CenterFormTop(FormHeight As Long)
     Dim BaseTop As Long, BaseHeight As Long
     
     On Error GoTo NoWindow
-    BaseTop = Application.ActiveWindow.top
-    BaseHeight = Application.ActiveWindow.height
+    BaseTop = Application.ActiveWindow.Top
+    BaseHeight = Application.ActiveWindow.Height
     
     ' Excel 2010 needs Application.top instead?
     #If Win32 Then
         If Val(Application.Version) < 15 Then
-            BaseTop = Application.top - BaseTop
+            BaseTop = Application.Top - BaseTop
         End If
     #End If
     
@@ -117,11 +117,11 @@ Calculate:
     Exit Function
     
 NoWindow:
-    BaseTop = Application.top
+    BaseTop = Application.Top
     #If Mac Then
         BaseHeight = Application.UsableHeight
     #Else
-        BaseHeight = Application.height
+        BaseHeight = Application.Height
     #End If
     Resume Calculate
 End Function
@@ -130,13 +130,13 @@ Public Function CenterFormLeft(FormWidth As Long)
     Dim BaseLeft As Long, BaseWidth As Long
     
     On Error GoTo NoWindow
-    BaseLeft = Application.ActiveWindow.left
-    BaseWidth = Application.ActiveWindow.width
+    BaseLeft = Application.ActiveWindow.Left
+    BaseWidth = Application.ActiveWindow.Width
     
     ' Excel 2010 needs Application.left instead?
     #If Win32 Then
         If Val(Application.Version) < 15 Then
-            BaseLeft = Application.left
+            BaseLeft = Application.Left
         End If
     #End If
     
@@ -145,11 +145,11 @@ Calculate:
     Exit Function
     
 NoWindow:
-    BaseLeft = Application.left
+    BaseLeft = Application.Left
     #If Mac Then
         BaseWidth = Application.UsableWidth
     #Else
-        BaseWidth = Application.width
+        BaseWidth = Application.Width
     #End If
     Resume Calculate
 End Function

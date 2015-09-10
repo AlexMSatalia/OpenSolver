@@ -52,14 +52,14 @@ NoHighlighting:
 3041      SheetHasOpenSolverHighlighting = False
 End Function
 
-Function CreateLabelShape(w As Worksheet, left As Long, top As Long, width As Long, height As Long, label As String, HighlightColor As Long) As Shape
+Function CreateLabelShape(w As Worksheet, Left As Long, Top As Long, Width As Long, Height As Long, label As String, HighlightColor As Long) As Shape
 ' Create a label (as a msoShapeRectangle) and give it text. This is used for labelling obj function as min/max, and decision vars as binary or integer
           Dim RaiseError As Boolean
           RaiseError = False
           On Error GoTo ErrorHandler
     
           Dim s1 As Shape
-3042      Set s1 = w.Shapes.AddShape(msoShapeRectangle, left, top, width, height)
+3042      Set s1 = w.Shapes.AddShape(msoShapeRectangle, Left, Top, Width, Height)
 3043      s1.Fill.Visible = True
 3044      s1.Fill.Solid
 3045      s1.Fill.ForeColor.RGB = RGB(255, 255, 255)
@@ -81,7 +81,7 @@ Function CreateLabelShape(w As Worksheet, left As Long, top As Long, width As Lo
 3061      End With
 3062      ShapeIndex = ShapeIndex + 1
 3063      s1.Name = "OpenSolver" & ShapeIndex
-3064      s1.height = height      ' Force the specified height
+3064      s1.Height = Height      ' Force the specified height
 3065      Set CreateLabelShape = s1
 
 ExitFunction:
@@ -94,12 +94,12 @@ ErrorHandler:
           GoTo ExitFunction
 End Function
 
-Function AddLabelToRange(w As Worksheet, r As Range, voffset As Long, height As Long, label As String, HighlightColor As Long) As Shape
-3066      Set AddLabelToRange = CreateLabelShape(w, r.left + 1, r.top + voffset, r.width, height, label, HighlightColor)
+Function AddLabelToRange(w As Worksheet, r As Range, voffset As Long, Height As Long, label As String, HighlightColor As Long) As Shape
+3066      Set AddLabelToRange = CreateLabelShape(w, r.Left + 1, r.Top + voffset, r.Width, Height, label, HighlightColor)
 End Function
 
-Function AddLabelToShape(w As Worksheet, s As Shape, voffset As Long, height As Long, label As String, HighlightColor As Long)
-3067      Set AddLabelToShape = CreateLabelShape(w, s.left - 1, s.top + voffset, s.width, height, label, HighlightColor)
+Function AddLabelToShape(w As Worksheet, s As Shape, voffset As Long, Height As Long, label As String, HighlightColor As Long)
+3067      Set AddLabelToShape = CreateLabelShape(w, s.Left - 1, s.Top + voffset, s.Width, Height, label, HighlightColor)
 End Function
 
 Function HighlightRange(r As Range, label As String, HighlightColor As Long, Optional ShowFill As Boolean = False, Optional ShapeNamePrefix As String = "OpenSolver", Optional Bounds As Boolean = False) As ShapeRange
@@ -127,33 +127,33 @@ Function HighlightRange(r As Range, label As String, HighlightColor As Long, Opt
 3079      On Error GoTo ErrorHandler
           
           ' Handle merged cells
-          Dim l As Single, t As Single, right As Single, bottom As Single, R2 As Range, c As Range
+          Dim l As Single, t As Single, Right As Single, bottom As Single, R2 As Range, c As Range
 3080      If Not r.MergeCells Then
-3081          l = r.left
-3082          t = r.top
-3083          right = l + r.width
-3084          bottom = t + r.height
+3081          l = r.Left
+3082          t = r.Top
+3083          Right = l + r.Width
+3084          bottom = t + r.Height
 3085      Else
               ' This range contains merged cells. We use MergeArea to to find the area to highlight
               ' But, this only works for one cell, so we expand our size based on all cells
 3086          If r.Count = 1 Then
 3087              Set R2 = r.MergeArea
-3088              l = R2.left
-3089              t = R2.top
-3090              right = l + R2.width
-3091              bottom = t + R2.height
+3088              l = R2.Left
+3089              t = R2.Top
+3090              Right = l + R2.Width
+3091              bottom = t + R2.Height
 3092          Else
-3093              l = r.left
-3094              t = r.top
-3095              right = l + r.width
-3096              bottom = t + r.height
+3093              l = r.Left
+3094              t = r.Top
+3095              Right = l + r.Width
+3096              bottom = t + r.Height
 3097              For Each c In r
 3098                  If c.MergeCells Then
 3099                      Set R2 = c.MergeArea
-3100                      If R2.left < l Then l = R2.left
-3101                      If R2.top < t Then t = R2.top
-3102                      If R2.left + R2.width > right Then right = R2.left + R2.width
-3103                      If R2.top + R2.height > bottom Then bottom = R2.top + R2.height
+3100                      If R2.Left < l Then l = R2.Left
+3101                      If R2.Top < t Then t = R2.Top
+3102                      If R2.Left + R2.Width > Right Then Right = R2.Left + R2.Width
+3103                      If R2.Top + R2.Height > bottom Then bottom = R2.Top + R2.Height
 3104                  End If
 3105              Next c
 3106          End If
@@ -161,7 +161,7 @@ Function HighlightRange(r As Range, label As String, HighlightColor As Long, Opt
           
           
           ' Use doubles here for more accuracy as we are summing terms, and so accummulating errors
-          Dim left2 As Double, top2 As Double, right2 As Double, bottom2 As Double, height As Double, width As Double
+          Dim left2 As Double, top2 As Double, right2 As Double, bottom2 As Double, Height As Double, Width As Double
 3108      left2 = l + Offset
 3109      top2 = t + Offset
           
@@ -172,12 +172,12 @@ Function HighlightRange(r As Range, label As String, HighlightColor As Long, Opt
 3111      firstShapeIndex = ShapeIndex + 1
 3112      Do
           ' The height cannot exceed 169056.0; we allow some tolerance
-3113      height = bottom - top2
-3114      If height > 160000# Then
-3115          height = 150000  ' This difference ensures we never end up with very small rectangle
+3113      Height = bottom - top2
+3114      If Height > 160000# Then
+3115          Height = 150000  ' This difference ensures we never end up with very small rectangle
 3116      End If
-3117      If isFirstShape And height > 9500 Then
-3118          height = 9000   ' The first shape we create has a height of 9000 to ensure we can rotate the text and have it show
+3117      If isFirstShape And Height > 9500 Then
+3118          Height = 9000   ' The first shape we create has a height of 9000 to ensure we can rotate the text and have it show
                             ' correctly; this works around and Excel 2007 bug
 3119      End If
 3120      isFirstShape = False
@@ -187,7 +187,7 @@ Function HighlightRange(r As Range, label As String, HighlightColor As Long, Opt
           'If the constraint is not a bound then make a box for it
 3122      If Not Bounds Then
 3123          shapeName = ShapeNamePrefix & ShapeIndex
-3124          r.Worksheet.Shapes.AddShape(msoShapeRectangle, l + Offset, top2, right - l, height).Name = shapeName
+3124          r.Worksheet.Shapes.AddShape(msoShapeRectangle, l + Offset, top2, Right - l, Height).Name = shapeName
 3125      Else
               'If the box is a bound we name it after the cell that it is in
 3126          shapeName = ShapeNamePrefix & Key
@@ -197,7 +197,7 @@ Function HighlightRange(r As Range, label As String, HighlightColor As Long, Opt
               On Error GoTo ErrorHandler
               'If there hasn't been a bound on that cell then make a new cell
 3129          If tmpName = "" Then
-3130              r.Worksheet.Shapes.AddShape(msoShapeRectangle, l + Offset, top2, right - l, height).Name = shapeName
+3130              r.Worksheet.Shapes.AddShape(msoShapeRectangle, l + Offset, top2, Right - l, Height).Name = shapeName
 3131          Else
                   'If there has already been a bound then just add new text to it rather then making a new box
 3132              Set s1 = r.Worksheet.Shapes(shapeName)
@@ -230,7 +230,7 @@ Function HighlightRange(r As Range, label As String, HighlightColor As Long, Opt
 3154          .Characters.Font.Color = HighlightColor
 3155          .HorizontalAlignment = xlHAlignLeft ' xlHAlignCenter
               ' "=", "<=", & ">=" will be centered
-3156          If ((height < 500) Or (label = "=") Or (label = ChrW(&H2265)) Or (label = ChrW(&H2264))) Then
+3156          If ((Height < 500) Or (label = "=") Or (label = ChrW(&H2265)) Or (label = ChrW(&H2264))) Then
 3157              .VerticalAlignment = xlVAlignCenter  ' Shape is small enought to have text fit on the screen when centered, so we center text
 3158          Else
 3159              .VerticalAlignment = xlVAlignTop   ' So we can see the name when scrolled to the top
@@ -242,7 +242,7 @@ Function HighlightRange(r As Range, label As String, HighlightColor As Long, Opt
 3165          .Characters.Font.Bold = True
 3166      End With
 endLoop:
-3167      top2 = top2 + height
+3167      top2 = top2 + Height
 3168      Loop While bottom - top2 > 0.01  ' handle float rounding
           
           ' Create & return the shapeRange containing all the shapes we added
@@ -295,7 +295,7 @@ Function AddLabelledConnector(w As Worksheet, s1 As Shape, s2 As Shape, label As
 3195      c.Name = "OpenSolver" & ShapeIndex
           
           Dim s3 As Shape
-3196      Set s3 = t.AddShape(msoShapeRectangle, c.left + c.width / 2# - 30 / 2, c.top + c.height / 2# - 20 / 2, 30, 20)
+3196      Set s3 = t.AddShape(msoShapeRectangle, c.Left + c.Width / 2# - 30 / 2, c.Top + c.Height / 2# - 20 / 2, 30, 20)
                   
 3197      s3.Line.Visible = False
 3198      s3.Fill.Visible = False
@@ -349,21 +349,21 @@ Sub HighlightConstraint(myDocument As Worksheet, LHSRange As Range, _
 3218          Set s1 = HighlightRange(LHSRange, RHSValue & SolverRelationAsUnicodeChar(4 - sense), Color, , , True)
 3219      ElseIf Not RHSRange Is Nothing Then
               ' If ranges overlaps on rows, then the top one becomes Range1
-3220          If ((RHSRange.top >= LHSRange.top And RHSRange.top < LHSRange.top + LHSRange.height) _
-              Or (LHSRange.top >= RHSRange.top And LHSRange.top < RHSRange.top + RHSRange.height)) Then
+3220          If ((RHSRange.Top >= LHSRange.Top And RHSRange.Top < LHSRange.Top + LHSRange.Height) _
+              Or (LHSRange.Top >= RHSRange.Top And LHSRange.Top < RHSRange.Top + RHSRange.Height)) Then
                   ' Ranges over lap in rows. Range1 becomes the left most one
-3221              If LHSRange.left > RHSRange.left Then
+3221              If LHSRange.Left > RHSRange.Left Then
 3222                  Reversed = True
 3223              End If
-3224          ElseIf ((RHSRange.left >= LHSRange.left And RHSRange.left < LHSRange.left + LHSRange.width) _
-              Or (LHSRange.left >= RHSRange.left And LHSRange.left < RHSRange.left + RHSRange.width)) Then
+3224          ElseIf ((RHSRange.Left >= LHSRange.Left And RHSRange.Left < LHSRange.Left + LHSRange.Width) _
+              Or (LHSRange.Left >= RHSRange.Left And LHSRange.Left < RHSRange.Left + RHSRange.Width)) Then
                   ' Ranges overlap in columns. Range1 becomes the top most one
-3225              If LHSRange.top > RHSRange.top Then
+3225              If LHSRange.Top > RHSRange.Top Then
 3226                  Reversed = True
 3227              End If
 3228          Else
                   ' Ranges are in different rows with no overlap; top one becomes Range1
-3229              If LHSRange.left >= RHSRange.left + RHSRange.width Then
+3229              If LHSRange.Left >= RHSRange.Left + RHSRange.Width Then
 3230                  Reversed = True
 3231              End If
 3232          End If

@@ -331,7 +331,7 @@ Sub ReadResults(s As COpenSolver)
     ' Check for python exception while running Gurobi
     Dim GurobiError As String ' The string that identifies a gurobi error in the model file
     GurobiError = "Gurobi Error: "
-    If left(Line, Len(GurobiError)) = GurobiError Then
+    If Left(Line, Len(GurobiError)) = GurobiError Then
         Err.Raise OpenSolver_GurobiError, Description:=Line
     End If
     'Get the returned status code from gurobi.
@@ -392,13 +392,13 @@ Sub ReadResults(s As COpenSolver)
                 If Index > 0 Then
                     ' Trim the final digit if the exponent has 3 digits
                     If Len(FinalValue) - Index - 1 > 2 Then
-                        FinalValue = left(FinalValue, Len(FinalValue) - 1)
+                        FinalValue = Left(FinalValue, Len(FinalValue) - 1)
                     End If
                 End If
                 
                 s.FinalVarValue(i) = Val(FinalValue)
                 s.VarCell(i) = SplitLine(0)
-                If left(s.VarCell(i), 1) = "_" Then
+                If Left(s.VarCell(i), 1) = "_" Then
                     ' Strip any _ character added to make a valid name
                     s.VarCell(i) = Mid(s.VarCell(i), 2)
                 End If

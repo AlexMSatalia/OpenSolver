@@ -534,7 +534,7 @@ Function ExpandFormula(ByVal strFormula As String, _
 5050      If Len(strFormula) = 0 Then
 5051          ExpandFormula = "0": GoTo ExitFunction
 5052      End If
-5053      If left(strFormula, 1) <> "=" Then
+5053      If Left(strFormula, 1) <> "=" Then
 5054          If IsAmericanNumber(strFormula) Then
 5055              ExpandFormula = strFormula
 5056          Else
@@ -617,7 +617,7 @@ Function ExpandFormula(ByVal strFormula As String, _
 5099                      For Each c In rngBuildingRef
 5100                          strParsed = strParsed + AddNodeIfNew(objCurNode, c) + ","
 5101                      Next c
-5102                      strParsed = left(strParsed, Len(strParsed) - 1) + "]"
+5102                      strParsed = Left(strParsed, Len(strParsed) - 1) + "]"
 5103                  Else
 5104                      strParsed = strParsed + AddNodeIfNew(objCurNode, rngBuildingRef)
 5105                  End If
@@ -658,12 +658,12 @@ Function ExpandFormula(ByVal strFormula As String, _
                               
                               'Replace preceding comma with + if summing a second argument
 5123                          If FunctionName = "SUM" And FunctionCount > 0 Then
-5124                              strParsed = left(strParsed, Len(strParsed) - 1) + "+"
+5124                              strParsed = Left(strParsed, Len(strParsed) - 1) + "+"
 5125                          End If
                               
                               'Replace preceding comma with + if summing a second argument
                               If FunctionName = "PRODUCT" And FunctionCount > 0 Then
-                                  strParsed = left(strParsed, Len(strParsed) - 1) + "*"
+                                  strParsed = Left(strParsed, Len(strParsed) - 1) + "*"
                               End If
 
                               'If we are starting a SUMIF, we need to get the next argument now
@@ -677,11 +677,11 @@ Function ExpandFormula(ByVal strFormula As String, _
                                   Set NewToken = tksFormula.Item(i + 2)
                                   IfOperator = "="
                                   If NewToken.TokenType = Text Then
-                                      Select Case left(NewToken.Text, 2)
+                                      Select Case Left(NewToken.Text, 2)
                                           Case "<=", ">=", "<>"
                                               IfOperator = ""
                                       End Select
-                                      Select Case left(NewToken.Text, 1)
+                                      Select Case Left(NewToken.Text, 1)
                                           Case "<", ">", "="
                                               IfOperator = ""
                                       End Select
@@ -725,7 +725,7 @@ Function ExpandFormula(ByVal strFormula As String, _
                                           Dim Position As Long
                                           Count = Count + 1
                                           Position = FindPosition(strParsed, ",", 2 * Count, start)
-                                          strParsed = left(strParsed, Position) + node + ",0)+" + Mid(strParsed, Position + 1)
+                                          strParsed = Left(strParsed, Position) + node + ",0)+" + Mid(strParsed, Position + 1)
                                       End If
 5146                              ElseIf FunctionName = "SUM" Then
 5147                                  strParsed = strParsed + node + "+"
@@ -740,7 +740,7 @@ Function ExpandFormula(ByVal strFormula As String, _
                               ' Reset the sheet we are tracking
 5153                          strSheetPrefix = ""
                               ' Kill the extra char added by last cell in range
-5154                          strParsed = left(strParsed, Len(strParsed) - 1)
+5154                          strParsed = Left(strParsed, Len(strParsed) - 1)
                               
 5155                      Else
                               ' This is a new range, look for : and another cell ref
@@ -834,7 +834,7 @@ Function ExpandFormula(ByVal strFormula As String, _
 5215                  For Each c In rngBuildingRef
 5216                      strParsed = strParsed + AddNodeIfNew(objCurNode, c) + ","
 5217                  Next c
-5218                  strParsed = left(strParsed, Len(strParsed) - 1) + "]"
+5218                  strParsed = Left(strParsed, Len(strParsed) - 1) + "]"
 5219              Else
 5220                  strParsed = strParsed + AddNodeIfNew(objCurNode, rngBuildingRef)
 5221              End If
@@ -846,7 +846,7 @@ Function ExpandFormula(ByVal strFormula As String, _
               ' STEP 2.C. Store parsed formula in the DAG
 skipTokenising:
 5224          If objCurNode.boolIsConstant = False Then objCurNode.strFormulaParsed = strParsed
-5225          If left(objCurNode.strAddress, 1) = "_" Then
+5225          If Left(objCurNode.strAddress, 1) = "_" Then
                   ' Root node is actually a formula or constant, so return the parsed formula
 5226              ExpandFormula = strParsed
 5227          End If
@@ -1044,7 +1044,7 @@ Function AddNodeIfNew(ByRef objCurNode As CFormula, ByRef c As Range) As String
 5345          GoTo finishedNode
 5346      End If
           ' 0.3 Is constant?
-5347      If left(strCFormula, 1) <> "=" Then
+5347      If Left(strCFormula, 1) <> "=" Then
               ' Number?
 5348          If IsAmericanNumber(strCFormula) Then
 5349              AddNodeIfNew = strCFormula

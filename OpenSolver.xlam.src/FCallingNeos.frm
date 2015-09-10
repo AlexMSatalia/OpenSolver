@@ -60,28 +60,28 @@ Private Sub AutoLayout()
     ' Make the label wide enough so that the message is on one line, then use autosize to shrink the width.
     With lblMessage
         .Caption = "OpenSolver is busy running your optimisation model..."
-        .left = FormMargin
-        .top = FormMargin
+        .Left = FormMargin
+        .Top = FormMargin
         AutoHeight lblMessage, FormWidthCallingNeos, True
     End With
     
-    Me.width = lblMessage.width + 2 * FormMargin
+    Me.Width = lblMessage.Width + 2 * FormMargin
     
     With cmdCancel
         .Caption = "Cancel"
-        .width = FormButtonWidth
-        .left = (lblMessage.width - .width) / 2 + lblMessage.left
-        .top = Below(lblMessage)
+        .Width = FormButtonWidth
+        .Left = (lblMessage.Width - .Width) / 2 + lblMessage.Left
+        .Top = Below(lblMessage)
     End With
     
-    Me.height = FormHeight(cmdCancel)
-    Me.width = Me.width + FormWindowMargin
+    Me.Height = FormHeight(cmdCancel)
+    Me.Width = Me.Width + FormWindowMargin
     
     Me.BackColor = FormBackColor
     Me.Caption = "OpenSolver - Optimisation Running"
 End Sub
 
 Private Sub CenterForm()
-    Me.top = CenterFormTop(Me.height)
-    Me.left = CenterFormLeft(Me.width)
+    Me.Top = CenterFormTop(Me.Height)
+    Me.Left = CenterFormLeft(Me.Width)
 End Sub

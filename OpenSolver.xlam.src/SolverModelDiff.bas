@@ -698,7 +698,7 @@ Function findName(searchSheet As Worksheet, cell As String) As String
 2428          If i > 0 And NotFoundStringLeft Then
 2429              CellValue = CStr(searchSheet.Cells(row, i).value)
                   'x = IsAmericanNumber(CellValue)
-2430              If Not (IsNumeric(CellValue) Or (left(CellValue, 1) = "=") Or (CellValue = "")) Then
+2430              If Not (IsNumeric(CellValue) Or (Left(CellValue, 1) = "=") Or (CellValue = "")) Then
 2431                  NotFoundStringLeft = False
 2432              End If
 2433              i = i - 1
@@ -706,7 +706,7 @@ Function findName(searchSheet As Worksheet, cell As String) As String
               'Find the nearest name above the variable or constraint if it exists
 2435          If j > 0 And NotFoundStringTop Then
 2436              CellValue = searchSheet.Cells(j, col)
-2437              If Not (IsNumeric(CellValue) Or (left(CellValue, 1) = "=") Or (CellValue = "")) Then
+2437              If Not (IsNumeric(CellValue) Or (Left(CellValue, 1) = "=") Or (CellValue = "")) Then
 2438                  NotFoundStringTop = False
 2439              End If
 2440              j = j - 1

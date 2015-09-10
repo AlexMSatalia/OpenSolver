@@ -96,123 +96,123 @@ End Sub
 Private Sub AutoLayout()
     AutoFormat Me.Controls
 
-    Me.width = FormWidthOptions
+    Me.Width = FormWidthOptions
        
     With chkNonNeg
         .Caption = "Make unconstrained variable cells non-negative"
-        .left = FormMargin
-        .top = FormMargin
-        .width = Me.width - 2 * FormMargin
+        .Left = FormMargin
+        .Top = FormMargin
+        .Width = Me.Width - 2 * FormMargin
     End With
        
     With chkPerformLinearityCheck
         .Caption = "Perform a quick linearity check on the solution"
-        .left = chkNonNeg.left
-        .top = Below(chkNonNeg, False)
-        .width = chkNonNeg.width
+        .Left = chkNonNeg.Left
+        .Top = Below(chkNonNeg, False)
+        .Width = chkNonNeg.Width
     End With
         
     With chkShowSolverProgress
         .Caption = "Show optimisation progress while solving"
-        .left = chkNonNeg.left
-        .top = Below(chkPerformLinearityCheck, False)
-        .width = chkNonNeg.width
+        .Left = chkNonNeg.Left
+        .Top = Below(chkPerformLinearityCheck, False)
+        .Width = chkNonNeg.Width
     End With
     
     With txtMaxTime
-        .width = FormButtonWidth
-        .left = LeftOfForm(Me.width, .width)
-        .top = Below(chkShowSolverProgress)
+        .Width = FormButtonWidth
+        .Left = LeftOfForm(Me.Width, .Width)
+        .Top = Below(chkShowSolverProgress)
     End With
     
     With lblMaxTime
         .Caption = "Maximum Solution Time (seconds):"
-        .left = chkNonNeg.left
-        .width = LeftOf(txtMaxTime, .left)
-        .top = txtMaxTime.top
+        .Left = chkNonNeg.Left
+        .Width = LeftOf(txtMaxTime, .Left)
+        .Top = txtMaxTime.Top
     End With
     
     With txtTol
-        .width = txtMaxTime.width
-        .left = txtMaxTime.left
-        .top = Below(txtMaxTime)
+        .Width = txtMaxTime.Width
+        .Left = txtMaxTime.Left
+        .Top = Below(txtMaxTime)
     End With
     
     With lblTol
         .Caption = "Branch and Bound Tolerance (%):"
-        .left = lblMaxTime.left
-        .width = lblMaxTime.width
-        .top = txtTol.top
+        .Left = lblMaxTime.Left
+        .Width = lblMaxTime.Width
+        .Top = txtTol.Top
     End With
     
     With txtMaxIter
-        .width = txtMaxTime.width
-        .left = txtMaxTime.left
-        .top = Below(txtTol)
+        .Width = txtMaxTime.Width
+        .Left = txtMaxTime.Left
+        .Top = Below(txtTol)
     End With
     
     With lblMaxIter
         .Caption = "Maximum Number of Iterations:"
-        .left = lblMaxTime.left
-        .width = lblMaxTime.width
-        .top = txtMaxIter.top
+        .Left = lblMaxTime.Left
+        .Width = lblMaxTime.Width
+        .Top = txtMaxIter.Top
     End With
     
     With txtPre
-        .width = txtMaxTime.width
-        .left = txtMaxTime.left
-        .top = Below(txtMaxIter)
+        .Width = txtMaxTime.Width
+        .Left = txtMaxTime.Left
+        .Top = Below(txtMaxIter)
     End With
     
     With lblPre
         .Caption = "Precision:"
-        .left = lblMaxTime.left
-        .width = lblMaxTime.width
-        .top = txtPre.top
+        .Left = lblMaxTime.Left
+        .Width = lblMaxTime.Width
+        .Top = txtPre.Top
     End With
     
     With lblExtraParameters
         .Caption = "Extra Solver Parameters:"
-        .left = chkNonNeg.left
-        .width = chkNonNeg.width
-        .top = Below(txtPre, False)
+        .Left = chkNonNeg.Left
+        .Width = chkNonNeg.Width
+        .Top = Below(txtPre, False)
     End With
     
     With refExtraParameters
-        .width = chkNonNeg.width
-        .left = chkNonNeg.left
-        .top = Below(lblExtraParameters, False) - FormSpacing
+        .Width = chkNonNeg.Width
+        .Left = chkNonNeg.Left
+        .Top = Below(lblExtraParameters, False) - FormSpacing
     End With
     
     With lblFootnote
         .Caption = "Note: Only options that are used by the currently selected solver can be changed"
-        .top = Below(refExtraParameters)
-        .left = chkNonNeg.left
-        AutoHeight lblFootnote, chkNonNeg.width
+        .Top = Below(refExtraParameters)
+        .Left = chkNonNeg.Left
+        AutoHeight lblFootnote, chkNonNeg.Width
     End With
     
     With cmdCancel
         .Caption = "Cancel"
-        .left = txtMaxTime.left
-        .width = txtMaxTime.width
-        .top = Below(lblFootnote)
+        .Left = txtMaxTime.Left
+        .Width = txtMaxTime.Width
+        .Top = Below(lblFootnote)
     End With
     
     With cmdOk
         .Caption = "OK"
-        .width = txtMaxTime.width
-        .left = LeftOf(cmdCancel, .width)
-        .top = cmdCancel.top
+        .Width = txtMaxTime.Width
+        .Left = LeftOf(cmdCancel, .Width)
+        .Top = cmdCancel.Top
     End With
     
-    Me.height = FormHeight(cmdCancel)
-    Me.width = Me.width + FormWindowMargin
+    Me.Height = FormHeight(cmdCancel)
+    Me.Width = Me.Width + FormWindowMargin
     
     Me.BackColor = FormBackColor
     Me.Caption = "OpenSolver - Solve Options"
 End Sub
 
 Private Sub CenterForm()
-    Me.top = CenterFormTop(Me.height)
-    Me.left = CenterFormLeft(Me.width)
+    Me.Top = CenterFormTop(Me.Height)
+    Me.Left = CenterFormLeft(Me.Width)
 End Sub

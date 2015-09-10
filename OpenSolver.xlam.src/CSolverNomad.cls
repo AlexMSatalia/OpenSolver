@@ -153,7 +153,7 @@ Private Function Version_Win() As String
     ' Save to a new string first - modifying the string from the DLL can sometimes crash Excel
     Dim sNomadVersion As String
     sNomadVersion = NomadVersion()
-    sNomadVersion = left(Replace(sNomadVersion, vbNullChar, ""), 5)
+    sNomadVersion = Left(Replace(sNomadVersion, vbNullChar, ""), 5)
     
     SetCurrentDirectory currentDir
     
@@ -190,7 +190,7 @@ Private Function LibVersion_Win() As String
     ' Save to a new string first - modifying the string from the DLL can sometimes crash Excel
     Dim sLibVersion As String
     sLibVersion = NomadLibVersion()
-    sLibVersion = left(Replace(sLibVersion, vbNullChar, ""), 5)
+    sLibVersion = Left(Replace(sLibVersion, vbNullChar, ""), 5)
     
     SetCurrentDirectory currentDir
     

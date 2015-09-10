@@ -184,7 +184,7 @@ Private Function CreateSolveScript(ModelFilePathName As String, s As COpenSolver
     Dim CommandLineRunString As String, SolverParametersString As String
     SolverParametersString = ParametersToFlags(s.SolverParameters)
     
-    CommandLineRunString = " -directory " & MakePathSafe(left(GetTempFolder, Len(GetTempFolder) - 1)) & _
+    CommandLineRunString = " -directory " & MakePathSafe(Left(GetTempFolder, Len(GetTempFolder) - 1)) & _
                            " -import " & MakePathSafe(ModelFilePathName) & _
                            " " & SolverParametersString & _
                            " -solve " & _
@@ -345,7 +345,7 @@ Private Sub ReadResults(s As COpenSolver)
             
             Index = CInt(SplitLine(StartOffset))
             NameValue = SplitLine(StartOffset + 1)
-            If left(NameValue, 1) = "_" Then NameValue = Mid(NameValue, 2) ' Strip any _ character added to make a valid name
+            If Left(NameValue, 1) = "_" Then NameValue = Mid(NameValue, 2) ' Strip any _ character added to make a valid name
             s.VarCell(j) = NameValue
             s.FinalVarValue(j) = Val(SplitLine(StartOffset + 2))
            

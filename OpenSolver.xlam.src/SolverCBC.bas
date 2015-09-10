@@ -33,7 +33,7 @@ Sub LaunchCommandLine_CBC()
              
 NoSheet:
           Dim CBCRunString As String
-6364      CBCRunString = " -directory " & MakePathSafe(left(GetTempFolder, Len(GetTempFolder) - 1)) _
+6364      CBCRunString = " -directory " & MakePathSafe(Left(GetTempFolder, Len(GetTempFolder) - 1)) _
                            & " -import " & MakePathSafe(ModelFilePathName) _
                            & " " & SolverParametersString _
                            & " -" ' Force CBC to accept commands from the command line

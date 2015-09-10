@@ -103,63 +103,63 @@ Public Sub AutoLayout()
     NumButtonWidths = NumButtonWidths - (cmdButton1.Visible + cmdButton2.Visible + cmdButton3.Visible)
     
     ' Calculate the width, and set to minimum constant width if button width is less than this.
-    Me.width = Max(FormWidthMessageBox, NumButtonWidths * FormButtonWidth + (NumButtonWidths - 1) * FormSpacing + 2 * FormMargin)
+    Me.Width = Max(FormWidthMessageBox, NumButtonWidths * FormButtonWidth + (NumButtonWidths - 1) * FormSpacing + 2 * FormMargin)
     
     With txtMessage
         .BackColor = FormBackColor
-        .left = FormMargin
-        .top = FormMargin
-        AutoHeight txtMessage, Me.width - 2 * FormMargin
+        .Left = FormMargin
+        .Top = FormMargin
+        AutoHeight txtMessage, Me.Width - 2 * FormMargin
     End With
     
     With lblLink
         If .Caption = "" Then
             .Visible = False
         Else
-            AutoHeight lblLink, Me.width, True
-            .left = (Me.width - .width) / 2
+            AutoHeight lblLink, Me.Width, True
+            .Left = (Me.Width - .Width) / 2
             .Font.Underline = True
         End If
-        .top = Below(txtMessage)
+        .Top = Below(txtMessage)
     End With
     
     With cmdButton3
-        .top = Below(IIf(lblLink.Visible, lblLink, txtMessage))
-        .width = FormButtonWidth
-        .left = LeftOfForm(Me.width, .width)
+        .Top = Below(IIf(lblLink.Visible, lblLink, txtMessage))
+        .Width = FormButtonWidth
+        .Left = LeftOfForm(Me.Width, .Width)
     End With
     
     With cmdButton2
-        .top = cmdButton3.top
-        .width = FormButtonWidth
-        .left = cmdButton3.left + IIf(cmdButton3.Visible, -FormSpacing - .width, 0)
+        .Top = cmdButton3.Top
+        .Width = FormButtonWidth
+        .Left = cmdButton3.Left + IIf(cmdButton3.Visible, -FormSpacing - .Width, 0)
     End With
     
     With cmdButton1
-        .top = cmdButton2.top
-        .width = FormButtonWidth
-        .left = cmdButton2.left + IIf(cmdButton2.Visible, -FormSpacing - .width, 0)
+        .Top = cmdButton2.Top
+        .Width = FormButtonWidth
+        .Left = cmdButton2.Left + IIf(cmdButton2.Visible, -FormSpacing - .Width, 0)
     End With
     
     With cmdMoreDetails
-        .left = txtMessage.left
-        .top = cmdButton3.top
-        .width = FormButtonWidth
+        .Left = txtMessage.Left
+        .Top = cmdButton3.Top
+        .Width = FormButtonWidth
     End With
     
     With cmdReportIssue
-        .top = cmdButton3.top
-        .width = FormButtonWidth
-        .left = cmdMoreDetails.left + IIf(cmdMoreDetails.Visible, FormSpacing + .width, 0)
+        .Top = cmdButton3.Top
+        .Width = FormButtonWidth
+        .Left = cmdMoreDetails.Left + IIf(cmdMoreDetails.Visible, FormSpacing + .Width, 0)
     End With
     
-    Me.height = FormHeight(cmdButton1)
-    Me.width = Me.width + FormWindowMargin
+    Me.Height = FormHeight(cmdButton1)
+    Me.Width = Me.Width + FormWindowMargin
     
     Me.BackColor = FormBackColor
 End Sub
 
 Private Sub CenterForm()
-    Me.top = CenterFormTop(Me.height)
-    Me.left = CenterFormLeft(Me.width)
+    Me.Top = CenterFormTop(Me.Height)
+    Me.Left = CenterFormLeft(Me.Width)
 End Sub

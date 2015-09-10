@@ -148,7 +148,7 @@ Private Function SendToNeos_Mac(method As String, Optional param1 As String, Opt
     SendToNeos_Mac = Input$(LOF(1), 1)
     Close #1
     
-    If left(SendToNeos_Mac, 6) = "Error:" And method <> "ping" Then
+    If Left(SendToNeos_Mac, 6) = "Error:" And method <> "ping" Then
         Err.Raise OpenSolver_NeosError, Description:="An error occured while solving on NEOS. NEOS returned: " & SendToNeos_Mac
     End If
 
@@ -457,7 +457,7 @@ Function PingNeos() As Boolean
         status = GetXmlTagValue(SendToNeos_Windows(MakeNeosMethodCall("ping")), "string")
     #End If
     Const AliveMessage As String = "NeosServer is alive"
-    PingNeos = (left(status, Len(AliveMessage)) = AliveMessage)
+    PingNeos = (Left(status, Len(AliveMessage)) = AliveMessage)
     Exit Function
     
 CantAccess:

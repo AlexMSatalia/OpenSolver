@@ -275,7 +275,7 @@ Public Sub UpdateConstraint(Index As Long, LHSRange As Range, Relation As Relati
     Case RelationAllDiff
         RHSFormula = "alldiff"
     End Select
-    If left(RHSFormula, 1) <> "=" Then RHSFormula = "=" & RHSFormula
+    If Left(RHSFormula, 1) <> "=" Then RHSFormula = "=" & RHSFormula
     
     SetConstraintRhs Index, RHSRange, RHSFormula, sheet
     

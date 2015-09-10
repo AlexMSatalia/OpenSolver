@@ -48,49 +48,49 @@ End Sub
 Private Sub AutoLayout()
     AutoFormat Me.Controls
     
-    Me.width = FormWidthNonLinear
+    Me.Width = FormWidthNonLinear
     
     With txtNonLinearInfo
-        .left = FormMargin
-        .top = FormMargin
-        AutoHeight txtNonLinearInfo, Me.width - 2 * FormMargin, True
+        .Left = FormMargin
+        .Top = FormMargin
+        AutoHeight txtNonLinearInfo, Me.Width - 2 * FormMargin, True
     End With
     
     With cmdContinue
-        .left = txtNonLinearInfo.left
-        .top = Below(txtNonLinearInfo)
-        If chkFullCheck.Visible Then .top = .top + chkHighlight.height - .height / 2
-        .width = FormButtonWidth
+        .Left = txtNonLinearInfo.Left
+        .Top = Below(txtNonLinearInfo)
+        If chkFullCheck.Visible Then .Top = .Top + chkHighlight.Height - .Height / 2
+        .Width = FormButtonWidth
         .Caption = "Continue"
     End With
     
     With chkHighlight
         .Caption = "Highlight the nonlinearities"
-        .left = RightOf(cmdContinue)
-        .top = Below(txtNonLinearInfo)
-        AutoHeight chkHighlight, LeftOfForm(Me.width, .left), True
+        .Left = RightOf(cmdContinue)
+        .Top = Below(txtNonLinearInfo)
+        AutoHeight chkHighlight, LeftOfForm(Me.Width, .Left), True
     End With
     
     With chkFullCheck
         .Caption = "Run a full linearity check. (This will destroy the current solution)"
-        .left = chkHighlight.left
-        .top = Below(chkHighlight, False)
-        AutoHeight chkFullCheck, LeftOfForm(Me.width, .left), True
+        .Left = chkHighlight.Left
+        .Top = Below(chkHighlight, False)
+        AutoHeight chkFullCheck, LeftOfForm(Me.Width, .Left), True
     End With
     
     ' Adjust width to rightmost element
-    Me.width = RightOf(chkFullCheck, False)
-    If Me.width < txtNonLinearInfo.width + FormMargin Then Me.width = txtNonLinearInfo.width + FormMargin
-    Me.width = Me.width + FormMargin + FormWindowMargin
+    Me.Width = RightOf(chkFullCheck, False)
+    If Me.Width < txtNonLinearInfo.Width + FormMargin Then Me.Width = txtNonLinearInfo.Width + FormMargin
+    Me.Width = Me.Width + FormMargin + FormWindowMargin
     
     ' Adjust heights based on visible elements
-    Me.height = FormHeight(IIf(chkFullCheck.Visible, chkFullCheck, cmdContinue))
+    Me.Height = FormHeight(IIf(chkFullCheck.Visible, chkFullCheck, cmdContinue))
     
     Me.BackColor = FormBackColor
     Me.Caption = "OpenSolver - Linearity Check"
 End Sub
 
 Private Sub CenterForm()
-    Me.top = CenterFormTop(Me.height)
-    Me.left = CenterFormLeft(Me.width)
+    Me.Top = CenterFormTop(Me.Height)
+    Me.Left = CenterFormLeft(Me.Width)
 End Sub

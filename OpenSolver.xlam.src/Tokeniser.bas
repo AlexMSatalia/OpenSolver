@@ -143,7 +143,7 @@ Public Function ParseFormula(strFormula As String) As Tokens
 5517      lngFormulaLen = Len(strFormula)
 
 5518      If lngFormulaLen <= 1 Then GoTo e
-5519      If left(strFormula, 1) <> "=" Then GoTo e
+5519      If Left(strFormula, 1) <> "=" Then GoTo e
 
 5520      varState = ParsingState.Expression1
 5521      i = 2
@@ -263,7 +263,7 @@ Public Function ParseFormula(strFormula As String) As Tokens
 5604                              objToken.Text = " "
 5605                              objToken.FormulaLength = 1
 5606                          Else
-5607                              objToken.Text = left(objToken.Text, lng - 1)
+5607                              objToken.Text = Left(objToken.Text, lng - 1)
 5608                              objToken.FormulaLength = lng - 1
 5609                              objTokens.Add objTokens.NewToken(" ", TokenType.RangeOperator, objToken.FormulaIndex + lng - 1, 1)
 5610                          End If
@@ -488,7 +488,7 @@ Public Function ParseFormula(strFormula As String) As Tokens
       ''' Function
 
 5772          ElseIf varState = ParsingState.FunctionX Then
-5773              If left(str, 1) = "@" Then str = Mid(str, 2)
+5773              If Left(str, 1) = "@" Then str = Mid(str, 2)
 5774              Set objToken = objTokens.NewToken(str, TokenType.FunctionOpen, lngTokenIndex, i - lngTokenIndex + 1)
 5775              objTokens.Add objToken
 5776              objTokenStack.Push objToken
@@ -560,7 +560,7 @@ Public Function ParseFormula(strFormula As String) As Tokens
 
 5826          ElseIf varState = ParsingState.Table5 Then
 5827              If c = "]" Then                             'todo, possibly use international bracket
-5828                  If left(str, 1) = "#" Then
+5828                  If Left(str, 1) = "#" Then
 5829                      objTokens.Add objTokens.NewToken(str, TokenType.TableSection, lngTokenIndex, i - lngTokenIndex)
 5830                  Else
 5831                      objTokens.Add objTokens.NewToken(str, TokenType.TableColumn, lngTokenIndex, i - lngTokenIndex)
@@ -579,7 +579,7 @@ Public Function ParseFormula(strFormula As String) As Tokens
 5843          ElseIf varState = ParsingState.Table6 Then
 5844              If c = "]" Then                             'todo, possibly use international bracket
 5845                  i = i + 1
-5846                  If left(str, 1) = "#" Then
+5846                  If Left(str, 1) = "#" Then
 5847                      objTokens.Add objTokens.NewToken(str, TokenType.TableSection, lngTokenIndex, i - lngTokenIndex)
 5848                  Else
 5849                      objTokens.Add objTokens.NewToken(str, TokenType.TableColumn, lngTokenIndex, i - lngTokenIndex)

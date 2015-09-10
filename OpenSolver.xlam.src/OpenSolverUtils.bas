@@ -78,8 +78,8 @@ Function StripTrailingNewline(Block As String) As String
           RaiseError = False
           On Error GoTo ErrorHandler
           
-          If right(Block, Len(vbNewLine)) = vbNewLine Then
-              Block = left(Block, Len(Block) - Len(vbNewLine))
+          If Right(Block, Len(vbNewLine)) = vbNewLine Then
+              Block = Left(Block, Len(Block) - Len(vbNewLine))
           End If
           StripTrailingNewline = Block
 
@@ -187,7 +187,7 @@ Private Function ConvertLocale(ByVal s As String, ConvertToUS As Boolean) As Str
 
 294       s = Trim(s)
           Dim equalsAdded As Boolean
-295       If left(s, 1) <> "=" Then
+295       If Left(s, 1) <> "=" Then
 296           s = "=" & s
 297           equalsAdded = True
 298       End If
@@ -206,7 +206,7 @@ Private Function ConvertLocale(ByVal s As String, ConvertToUS As Boolean) As Str
           End If
           
 303       If equalsAdded Then
-304           If left(s, 1) = "=" Then s = Mid(s, 2)
+304           If Left(s, 1) = "=" Then s = Mid(s, 2)
 305       End If
 306       ConvertLocale = s
 
@@ -301,7 +301,7 @@ Function ParametersToFlags(SolverParameters As Dictionary) As String
 
           Dim Key As Variant, result As String
           For Each Key In SolverParameters.Keys
-              result = result & IIf(left(Key, 1) <> "-", "-", "") & Key & " " & StrExNoPlus(SolverParameters.Item(Key)) & " "
+              result = result & IIf(Left(Key, 1) <> "-", "-", "") & Key & " " & StrExNoPlus(SolverParameters.Item(Key)) & " "
           Next Key
           ParametersToFlags = Trim(result)
 
@@ -368,7 +368,7 @@ End Sub
 Function ValidLPFileVarName(s As String)
 ' http://lpsolve.sourceforge.net/5.5/CPLEX-format.htm
 ' The letter E or e, alone or followed by other valid symbols, or followed by another E or e, should be avoided as this notation is reserved for exponential entries. Thus, variables cannot be named e9, E-24, E8cats, or other names that could be interpreted as an exponent. Even variable names such as eels or example can cause a read error, depending on their placement in an input line.
-338       If left(s, 1) = "E" Then
+338       If Left(s, 1) = "E" Then
 339           ValidLPFileVarName = "_" & s
 340       Else
 341           ValidLPFileVarName = s
@@ -532,7 +532,7 @@ Function TrimBlankLines(s As String) As String
 611       While Not Done
 612           If Len(s) < NewLineSize Then
 613               Done = True
-614           ElseIf left(s, NewLineSize) = vbNewLine Then
+614           ElseIf Left(s, NewLineSize) = vbNewLine Then
 615              s = Mid(s, NewLineSize + 1)
 616           Else
 617               Done = True
@@ -542,8 +542,8 @@ Function TrimBlankLines(s As String) As String
 621       While Not Done
 622           If Len(s) < NewLineSize Then
 623               Done = True
-624           ElseIf right(s, NewLineSize) = vbNewLine Then
-625              s = left(s, Len(s) - NewLineSize)
+624           ElseIf Right(s, NewLineSize) = vbNewLine Then
+625              s = Left(s, Len(s) - NewLineSize)
 626           Else
 627               Done = True
 628           End If
@@ -576,7 +576,7 @@ Function StrEx(d As Variant, Optional AddSign As Boolean = True) As String
               s = str(d)  ' check d is numeric and convert to string
 1912          s = Mid(s, 2)  ' remove the initial space (reserved by VB for the sign)
 1913          ' ensure we have "0.", not just "."
-1915          StrEx = IIf(left(s, 1) = ".", "0", "") & s
+1915          StrEx = IIf(Left(s, 1) = ".", "0", "") & s
               If AddSign Or d < 0 Then StrEx = IIf(d >= 0, "+", "-") & StrEx
               Exit Function
 Abort:

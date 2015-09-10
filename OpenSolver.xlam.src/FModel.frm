@@ -175,7 +175,7 @@ End Sub
 Sub FormatCurrentSolver()
     Dim Solver As String
     Solver = GetChosenSolver()
-    lblSolver.Caption = "Current Solver Engine: " & UCase(left(Solver, 1)) & Mid(Solver, 2)
+    lblSolver.Caption = "Current Solver Engine: " & UCase(Left(Solver, 1)) & Mid(Solver, 2)
 End Sub
 
 Private Sub cmdOptions_Click()
@@ -746,285 +746,285 @@ End Sub
 Private Sub AutoLayout()
     AutoFormat Me.Controls
     
-    Me.width = FormWidthModel
+    Me.Width = FormWidthModel
     
     With cmdRunAutoModel
         .Caption = "AutoModel"
-        .width = FormButtonWidth * 1.3
-        .top = FormMargin
-        .left = LeftOfForm(Me.width, .width)
+        .Width = FormButtonWidth * 1.3
+        .Top = FormMargin
+        .Left = LeftOfForm(Me.Width, .Width)
     End With
     
     With lblDescHeader
-        .left = FormMargin
-        .top = cmdRunAutoModel.top + FormSpacing
+        .Left = FormMargin
+        .Top = cmdRunAutoModel.Top + FormSpacing
         .Caption = "What is AutoModel?"
     End With
     
     With lblDesc
-        .left = lblDescHeader.left
-        .top = Below(cmdRunAutoModel)
+        .Left = lblDescHeader.Left
+        .Top = Below(cmdRunAutoModel)
         .Caption = "AutoModel is a feature of OpenSolver that tries to automatically determine " & _
                    "the problem you are trying to optimise by observing the structure of the " & _
                    "spreadsheet. It will turn its best guess into a Solver model, which you can " & _
                    "then edit in this window."
-        AutoHeight lblDesc, Me.width - 2 * FormMargin
+        AutoHeight lblDesc, Me.Width - 2 * FormMargin
     End With
     
     With lblDiv1
-        .left = lblDescHeader.left
-        .top = Below(lblDesc)
-        .width = lblDesc.width
-        .height = FormDivHeight
+        .Left = lblDescHeader.Left
+        .Top = Below(lblDesc)
+        .Width = lblDesc.Width
+        .Height = FormDivHeight
         .BackColor = FormDivBackColor
     End With
     
     With lblStep1
         .Caption = "Objective Cell:"
-        .left = lblDescHeader.left
-        .top = Below(lblDiv1)
-        AutoHeight lblStep1, Me.width, True
+        .Left = lblDescHeader.Left
+        .Top = Below(lblDiv1)
+        AutoHeight lblStep1, Me.Width, True
     End With
     
     With txtObjTarget
-        .width = cmdRunAutoModel.width
-        .top = lblStep1.top
-        .left = LeftOfForm(Me.width, .width)
+        .Width = cmdRunAutoModel.Width
+        .Top = lblStep1.Top
+        .Left = LeftOfForm(Me.Width, .Width)
     End With
     
     With optTarget
         .Caption = "target value:"
-        AutoHeight optTarget, Me.width, True
-        .top = lblStep1.top
-        .left = LeftOf(txtObjTarget, .width)
+        AutoHeight optTarget, Me.Width, True
+        .Top = lblStep1.Top
+        .Left = LeftOf(txtObjTarget, .Width)
     End With
     
     With optMin
         .Caption = "minimise"
-        AutoHeight optMin, Me.width, True
-        .top = lblStep1.top
-        .left = LeftOf(optTarget, .width)
+        AutoHeight optMin, Me.Width, True
+        .Top = lblStep1.Top
+        .Left = LeftOf(optTarget, .Width)
     End With
     
     With optMax
         .Caption = "maximise"
-        AutoHeight optMax, Me.width, True
-        .top = lblStep1.top
-        .left = LeftOf(optMin, .width)
+        AutoHeight optMax, Me.Width, True
+        .Top = lblStep1.Top
+        .Left = LeftOf(optMin, .Width)
     End With
     
     With refObj
-        .left = RightOf(lblStep1)
-        .top = lblStep1.top
-        .width = LeftOf(optMax, .left)
+        .Left = RightOf(lblStep1)
+        .Top = lblStep1.Top
+        .Width = LeftOf(optMax, .Left)
     End With
     
     With lblDiv2
-        .left = lblDescHeader.left
-        .top = Below(optMax)
-        .width = lblDesc.width
-        .height = FormDivHeight
+        .Left = lblDescHeader.Left
+        .Top = Below(optMax)
+        .Width = lblDesc.Width
+        .Height = FormDivHeight
         .BackColor = FormDivBackColor
     End With
     
     With lblStep2
         .Caption = "Variable Cells:"
-        .left = lblDescHeader.left
-        .top = Below(lblDiv2)
-        AutoHeight lblStep2, Me.width, True
+        .Left = lblDescHeader.Left
+        .Top = Below(lblDiv2)
+        AutoHeight lblStep2, Me.Width, True
     End With
     
     With refDecision
-        .height = 2 * refObj.height
-        .left = refObj.left
-        .top = lblStep2.top
-        .width = LeftOfForm(Me.width, .left)
+        .Height = 2 * refObj.Height
+        .Left = refObj.Left
+        .Top = lblStep2.Top
+        .Width = LeftOfForm(Me.Width, .Left)
     End With
     
     With lblDiv3
-        .left = lblDescHeader.left
-        .top = Below(refDecision)
-        .width = lblDesc.width
-        .height = FormDivHeight
+        .Left = lblDescHeader.Left
+        .Top = Below(refDecision)
+        .Width = lblDesc.Width
+        .Height = FormDivHeight
         .BackColor = FormDivBackColor
     End With
     
     With lblStep3
         .Caption = "Constraints:"
-        .left = lblDescHeader.left
-        .top = Below(lblDiv3)
-        .width = lblDesc.width
+        .Left = lblDescHeader.Left
+        .Top = Below(lblDiv3)
+        .Width = lblDesc.Width
     End With
     
-    lblConstraintGroup.top = Below(lblStep3, False)
+    lblConstraintGroup.Top = Below(lblStep3, False)
     
     With cboConRel
-        .width = cmdRunAutoModel.width / 2
-        .height = refObj.height
-        .top = lblConstraintGroup.top + FormSpacing
-        .left = LeftOfForm(Me.width, .width) - FormSpacing
+        .Width = cmdRunAutoModel.Width / 2
+        .Height = refObj.Height
+        .Top = lblConstraintGroup.Top + FormSpacing
+        .Left = LeftOfForm(Me.Width, .Width) - FormSpacing
     End With
     
     With refConLHS
-        .width = cboConRel.width * 3
-        .height = refObj.height
-        .top = cboConRel.top
-        .left = LeftOf(cboConRel, .width)
+        .Width = cboConRel.Width * 3
+        .Height = refObj.Height
+        .Top = cboConRel.Top
+        .Left = LeftOf(cboConRel, .Width)
     End With
     
     With refConRHS
-        .width = refConLHS.width
-        .left = refConLHS.left
-        .height = refObj.height
-        .top = Below(refConLHS)
+        .Width = refConLHS.Width
+        .Left = refConLHS.Left
+        .Height = refObj.Height
+        .Top = Below(refConLHS)
     End With
     
     With cmdAddCon
         .Caption = "Add constraint"
-        .left = refConLHS.left
-        .top = Below(refConRHS)
-        .width = cboConRel.width * 2
+        .Left = refConLHS.Left
+        .Top = Below(refConRHS)
+        .Width = cboConRel.Width * 2
     End With
     
     With cmdCancelCon
         .Caption = "Cancel"
-        .left = RightOf(cmdAddCon)
-        .top = cmdAddCon.top
-        .width = cmdAddCon.width
+        .Left = RightOf(cmdAddCon)
+        .Top = cmdAddCon.Top
+        .Width = cmdAddCon.Width
     End With
     
     With lblConstraintGroup
-        .left = refConLHS.left - FormSpacing
-        .width = FormSpacing * 3 + cmdAddCon.width + cmdCancelCon.width
-        .height = FormSpacing * 4 + refConLHS.height + refConRHS.height + cmdAddCon.height
+        .Left = refConLHS.Left - FormSpacing
+        .Width = FormSpacing * 3 + cmdAddCon.Width + cmdCancelCon.Width
+        .Height = FormSpacing * 4 + refConLHS.Height + refConRHS.Height + cmdAddCon.Height
     End With
     
     With cmdDelSelCon
         .Caption = "Delete selected constraint"
-        .left = lblConstraintGroup.left
-        .top = Below(lblConstraintGroup)
-        .width = lblConstraintGroup.width
+        .Left = lblConstraintGroup.Left
+        .Top = Below(lblConstraintGroup)
+        .Width = lblConstraintGroup.Width
     End With
     
     With chkNonNeg
         .Caption = "Make unconstrainted variable cells non-negative"
-        .left = lblConstraintGroup.left
-        .top = Below(cmdDelSelCon)
-        .width = lblConstraintGroup.width
+        .Left = lblConstraintGroup.Left
+        .Top = Below(cmdDelSelCon)
+        .Width = lblConstraintGroup.Width
     End With
     
     With lstConstraints
-        .left = lblDescHeader.left
-        .top = lblConstraintGroup.top
-        .height = MinHeight
-        .width = LeftOf(lblConstraintGroup, .left)
+        .Left = lblDescHeader.Left
+        .Top = lblConstraintGroup.Top
+        .Height = MinHeight
+        .Width = LeftOf(lblConstraintGroup, .Left)
     End With
     
     With chkNameRange
-        .left = lblDescHeader.left
-        .width = lstConstraints.width
+        .Left = lblDescHeader.Left
+        .Width = lstConstraints.Width
         .Caption = "Show named ranges"
     End With
     
     With lblDiv4
-        .left = lblDescHeader.left
-        .width = lblDesc.width
-        .height = FormDivHeight
+        .Left = lblDescHeader.Left
+        .Width = lblDesc.Width
+        .Height = FormDivHeight
         .BackColor = FormDivBackColor
     End With
     
     With lblStep4
         .Caption = "Sensitivity Analysis"
-        .left = lblDescHeader.left
-        AutoHeight lblStep4, Me.width, True
+        .Left = lblDescHeader.Left
+        AutoHeight lblStep4, Me.Width, True
     End With
     
     With chkGetDuals
         .Caption = "List sensitivity analysis on the same sheet with top left cell:"
-        .left = RightOf(lblStep4)
-        AutoHeight chkGetDuals, Me.width, True
+        .Left = RightOf(lblStep4)
+        AutoHeight chkGetDuals, Me.Width, True
     End With
     
     With refDuals
-        .left = RightOf(chkGetDuals)
-        .width = LeftOfForm(Me.width, .left)
-        .height = refObj.height
+        .Left = RightOf(chkGetDuals)
+        .Width = LeftOfForm(Me.Width, .Left)
+        .Height = refObj.Height
     End With
     
     With chkGetDuals2
         .Caption = "Output sensitivity analysis:"
-        .left = chkGetDuals.left
-        AutoHeight chkGetDuals2, Me.width, True
+        .Left = chkGetDuals.Left
+        AutoHeight chkGetDuals2, Me.Width, True
     End With
     
     With optUpdate
         .Caption = "updating any previous output sheet"
-        .left = RightOf(chkGetDuals2)
-        AutoHeight optUpdate, Me.width, True
+        .Left = RightOf(chkGetDuals2)
+        AutoHeight optUpdate, Me.Width, True
     End With
     
     With optNew
         .Caption = "on a new sheet"
-        .left = RightOf(optUpdate)
-        AutoHeight optNew, Me.width, True
+        .Left = RightOf(optUpdate)
+        AutoHeight optNew, Me.Width, True
     End With
     
     With lblDiv5
-        .left = lblDescHeader.left
-        .width = lblDesc.width
-        .height = FormDivHeight
+        .Left = lblDescHeader.Left
+        .Width = lblDesc.Width
+        .Height = FormDivHeight
         .BackColor = FormDivBackColor
     End With
     
     With lblStep5
-        .left = lblDescHeader.left
+        .Left = lblDescHeader.Left
         .Caption = "Solver Engine:"
     End With
     
     With cmdChange
-        .width = cmdRunAutoModel.width
-        .left = LeftOfForm(Me.width, .width)
+        .Width = cmdRunAutoModel.Width
+        .Left = LeftOfForm(Me.Width, .Width)
         .Caption = "Solver Engine..."
     End With
     
     With lblSolver
-        .width = LeftOf(cmdChange, .left)
+        .Width = LeftOf(cmdChange, .Left)
     End With
     
     With lblDiv6
-        .left = lblDescHeader.left
-        .width = lblDesc.width
-        .height = FormDivHeight
+        .Left = lblDescHeader.Left
+        .Width = lblDesc.Width
+        .Height = FormDivHeight
         .BackColor = FormDivBackColor
     End With
         
     With chkShowModel
-        .left = lblDescHeader.left
-        AutoHeight chkShowModel, Me.width, True
+        .Left = lblDescHeader.Left
+        AutoHeight chkShowModel, Me.Width, True
     End With
     
     With cmdCancel
-        .width = cmdRunAutoModel.width
+        .Width = cmdRunAutoModel.Width
         .Caption = "Cancel"
-        .left = LeftOfForm(Me.width, .width)
+        .Left = LeftOfForm(Me.Width, .Width)
     End With
     
     With cmdBuild
-        .width = cmdRunAutoModel.width
+        .Width = cmdRunAutoModel.Width
         .Caption = "Save Model"
-        .left = LeftOf(cmdCancel, .width)
+        .Left = LeftOf(cmdCancel, .Width)
     End With
     
     With cmdOptions
-        .width = cmdRunAutoModel.width
+        .Width = cmdRunAutoModel.Width
         .Caption = "Options..."
-        .left = LeftOf(cmdBuild, .width)
+        .Left = LeftOf(cmdBuild, .Width)
     End With
     
     With cmdReset
-        .width = cmdRunAutoModel.width
+        .Width = cmdRunAutoModel.Width
         .Caption = "Clear Model"
-        .left = LeftOf(cmdOptions, .width)
+        .Left = LeftOf(cmdOptions, .Width)
     End With
     
     ' Add resizer
@@ -1040,7 +1040,7 @@ Private Sub AutoLayout()
             .Size = 10
         End With
         .AutoSize = True
-        .left = Me.width - .width
+        .Left = Me.Width - .Width
         .MousePointer = fmMousePointerSizeNWSE
         .BackStyle = fmBackStyleTransparent
     End With
@@ -1049,7 +1049,7 @@ Private Sub AutoLayout()
     ' Set the vertical positions of the lower half of the form
     UpdateLayout
     
-    Me.width = Me.width + FormWindowMargin
+    Me.Width = Me.Width + FormWindowMargin
     
     Me.BackColor = FormBackColor
     Me.Caption = "OpenSolver - Model"
@@ -1058,32 +1058,32 @@ End Sub
 Private Sub UpdateLayout(Optional ChangeY As Single = 0)
 ' Do the layout of the lower half of the form, changing the height of the list box by ChangeY
     Dim NewHeight As Double
-    NewHeight = lstConstraints.height + ChangeY
+    NewHeight = lstConstraints.Height + ChangeY
     If NewHeight < MinHeight Then NewHeight = MinHeight
     
-    lstConstraints.height = NewHeight
+    lstConstraints.Height = NewHeight
         
     ' Cascade the updated height
-    chkNameRange.top = Below(lstConstraints)
-    lblDiv4.top = Below(chkNameRange)
-    lblStep4.top = Below(lblDiv4)
-    chkGetDuals.top = lblStep4.top
-    refDuals.top = lblStep4.top
-    chkGetDuals2.top = Below(chkGetDuals, False)
-    optUpdate.top = chkGetDuals2.top
-    optNew.top = chkGetDuals2.top
-    lblDiv5.top = Below(optNew, False)
-    lblStep5.top = Below(lblDiv5)
-    cmdChange.top = lblStep5.top
-    lblSolver.top = lblStep5.top + FormButtonHeight - FormTextHeight
-    lblDiv6.top = Below(cmdChange)
-    chkShowModel.top = Below(lblDiv6)
-    cmdCancel.top = chkShowModel.top
-    cmdBuild.top = chkShowModel.top
-    cmdOptions.top = chkShowModel.top
-    cmdReset.top = chkShowModel.top
-    Me.height = FormHeight(cmdCancel)
-    lblResizer.top = Me.InsideHeight - lblResizer.height
+    chkNameRange.Top = Below(lstConstraints)
+    lblDiv4.Top = Below(chkNameRange)
+    lblStep4.Top = Below(lblDiv4)
+    chkGetDuals.Top = lblStep4.Top
+    refDuals.Top = lblStep4.Top
+    chkGetDuals2.Top = Below(chkGetDuals, False)
+    optUpdate.Top = chkGetDuals2.Top
+    optNew.Top = chkGetDuals2.Top
+    lblDiv5.Top = Below(optNew, False)
+    lblStep5.Top = Below(lblDiv5)
+    cmdChange.Top = lblStep5.Top
+    lblSolver.Top = lblStep5.Top + FormButtonHeight - FormTextHeight
+    lblDiv6.Top = Below(cmdChange)
+    chkShowModel.Top = Below(lblDiv6)
+    cmdCancel.Top = chkShowModel.Top
+    cmdBuild.Top = chkShowModel.Top
+    cmdOptions.Top = chkShowModel.Top
+    cmdReset.Top = chkShowModel.Top
+    Me.Height = FormHeight(cmdCancel)
+    lblResizer.Top = Me.InsideHeight - lblResizer.Height
 End Sub
 
 Private Sub lblResizer_MouseDown(ByVal Button As Integer, ByVal Shift As Integer, ByVal X As Single, ByVal Y As Single)
@@ -1104,6 +1104,6 @@ Private Sub lblResizer_MouseMove(ByVal Button As Integer, ByVal Shift As Integer
 End Sub
 
 Private Sub CenterForm()
-    Me.top = CenterFormTop(Me.height)
-    Me.left = CenterFormLeft(Me.width)
+    Me.Top = CenterFormTop(Me.Height)
+    Me.Left = CenterFormLeft(Me.Width)
 End Sub

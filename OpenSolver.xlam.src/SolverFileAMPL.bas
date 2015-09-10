@@ -339,7 +339,7 @@ Sub ReadResults_AMPL(s As COpenSolver, solution As String)
     SolutionStatus = Mid(solution, openingParen + 1 + Len("solve_result ="))
     
     ' Trim to end of line - marked by line feed char
-    SolutionStatus = left(SolutionStatus, InStr(SolutionStatus, Chr(10)))
+    SolutionStatus = Left(SolutionStatus, InStr(SolutionStatus, Chr(10)))
 
     ' Determine Feasibility
     If SolutionStatus Like "unbounded*" Then

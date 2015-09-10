@@ -54,7 +54,7 @@ Private Sub ImportModules(importFolder As String)
                     cmpComponents.Import objFile.Path
                     
                     ' VBA sometimes inserts newlines on import, so we look for this and trim them
-                    Set c = cmpComponents(left(CStr(FileName), Len(FileName) - 4)).CodeModule
+                    Set c = cmpComponents(Left(CStr(FileName), Len(FileName) - 4)).CodeModule
                     If c.CountOfLines > 0 Then
                         Do While c.lines(1, 1) = ""
                             c.DeleteLines 1, 1

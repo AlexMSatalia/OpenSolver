@@ -90,7 +90,7 @@ Sub GetNameAsValueOrRange(book As Workbook, theName As String, IsMissing As Bool
 185       Else
 186           IsRange = False
 187           ' String will be of form: "=5", or "=Sheet1!#REF!" or "=Test4!$M$11/4+Test4!$A$3"
-189           If right(RefersTo, 6) = "!#REF!" Then
+189           If Right(RefersTo, 6) = "!#REF!" Then
 191               RangeRefersToError = True
 192           Else
               ' If StrComp(Mid(S, 2, 1), Chr(34), vbBinaryCompare) = 0 Then
@@ -208,9 +208,9 @@ End Function
 Function GetNamedStringIfExists(book As Workbook, Name As String, value As String) As Boolean
 ' Get a named range that must contain a string value (probably with quotes)
 162       If GetNameRefersToIfExists(book, Name, value) Then
-163           If left(value, 2) = "=""" Then ' Remove delimiters and equals in: ="...."
+163           If Left(value, 2) = "=""" Then ' Remove delimiters and equals in: ="...."
 164               value = Mid(value, 3, Len(value) - 3)
-165           ElseIf left(value, 1) = "=" Then
+165           ElseIf Left(value, 1) = "=" Then
 166               value = Mid(value, 2)
 167           End If
 168           GetNamedStringIfExists = True
@@ -316,7 +316,7 @@ Public Sub ValidateConstraint(LHSRange As Range, Relation As RelationConsts, Opt
             End If
 
             ' Convert any cell references to absolute
-            If left(internalRHS, 1) <> "=" Then internalRHS = "=" & internalRHS
+            If Left(internalRHS, 1) <> "=" Then internalRHS = "=" & internalRHS
             varReturn = Application.ConvertFormula(internalRHS, FromReferenceStyle:=xlA1, ToReferenceStyle:=xlA1, ToAbsolute:=xlAbsolute)
 
             If (VBA.VarType(varReturn) = vbError) Then

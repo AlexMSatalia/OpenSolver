@@ -57,61 +57,61 @@ End Sub
 Private Sub AutoLayout()
     AutoFormat Me.Controls
     
-    Me.width = FormWidthUpdateNotification
+    Me.Width = FormWidthUpdateNotification
     
     With lblDesc
         .Caption = "A newer version of OpenSolver is available. Please follow the link below for more information and to download the update:"
-        .left = FormMargin
-        .top = FormMargin
-        AutoHeight lblDesc, Me.width - 2 * FormMargin
+        .Left = FormMargin
+        .Top = FormMargin
+        AutoHeight lblDesc, Me.Width - 2 * FormMargin
     End With
     
     With lblLatestVersion
-        .width = lblDesc.width / 2
-        .left = lblDesc.left
-        .top = Below(lblDesc)
+        .Width = lblDesc.Width / 2
+        .Left = lblDesc.Left
+        .Top = Below(lblDesc)
     End With
     
     With lblCurrentVersion
-        .width = lblLatestVersion.width
-        .left = RightOf(lblLatestVersion, False)
-        .top = lblLatestVersion.top
+        .Width = lblLatestVersion.Width
+        .Left = RightOf(lblLatestVersion, False)
+        .Top = lblLatestVersion.Top
     End With
     
     With lblLink
         .Caption = "http://OpenSolver.org"
         .ForeColor = FormLinkColor
         .Font.Underline = True
-        .left = lblDesc.left
-        .top = Below(lblLatestVersion, False)
-        .width = lblDesc.width
+        .Left = lblDesc.Left
+        .Top = Below(lblLatestVersion, False)
+        .Width = lblDesc.Width
         .TextAlign = fmTextAlignCenter
     End With
     
     With cmdSettings
         .Caption = "Update Settings..."
-        .width = (lblDesc.width - FormSpacing) / 2
-        .left = lblDesc.left
-        .top = Below(lblLink)
+        .Width = (lblDesc.Width - FormSpacing) / 2
+        .Left = lblDesc.Left
+        .Top = Below(lblLink)
     End With
     
     With cmdOk
         .Caption = "OK"
-        .left = RightOf(cmdSettings)
-        .width = cmdSettings.width
-        .top = cmdSettings.top
+        .Left = RightOf(cmdSettings)
+        .Width = cmdSettings.Width
+        .Top = cmdSettings.Top
     End With
         
-    Me.height = FormHeight(cmdOk)
-    Me.width = Me.width + FormWindowMargin
+    Me.Height = FormHeight(cmdOk)
+    Me.Width = Me.Width + FormWindowMargin
     
     Me.BackColor = FormBackColor
     Me.Caption = "OpenSolver - Update Available"
 End Sub
 
 Private Sub CenterForm()
-    Me.top = CenterFormTop(Me.height)
-    Me.left = CenterFormLeft(Me.width)
+    Me.Top = CenterFormTop(Me.Height)
+    Me.Left = CenterFormLeft(Me.Width)
 End Sub
 
 Sub ShowUpdate(LatestVersion As String)

@@ -103,7 +103,7 @@ Public Sub PopulateConstraintListBox(ByRef lst As MSForms.ListBox, showNameRange
 3993              ElseIf .RHSstring <> "" Then
                       Dim DisplayStringRHS As String
                       DisplayStringRHS = ConvertToCurrentLocale(.RHSstring)
-3994                  If left(DisplayStringRHS, 1) = "=" Then DisplayString = Mid(DisplayStringRHS, 2)
+3994                  If Left(DisplayStringRHS, 1) = "=" Then DisplayString = Mid(DisplayStringRHS, 2)
 3995                  DisplayString = DisplayString + " " + RemoveActiveSheetNameFromString(DisplayStringRHS)
 3999              End If
 4000          End With

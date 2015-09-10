@@ -226,7 +226,7 @@ Public Function ReadExternalCommandOutput(CommandString As String, Optional LogP
             chunk = Space(50)
             read = fread(chunk, 1, Len(chunk) - 1, file)
             If read > 0 Then
-                chunk = left$(chunk, read)
+                chunk = Left$(chunk, read)
                 ReadExternalCommandOutput = ReadExternalCommandOutput & chunk
             End If
         Wend
@@ -419,6 +419,6 @@ Private Function DLLErrorText(ByVal lLastDLLError As Long) As String
 
     lCount = FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM Or FORMAT_MESSAGE_IGNORE_INSERTS, 0, lLastDLLError, 0&, sBuff, Len(sBuff), ByVal 0)
     If lCount Then
-        DLLErrorText = left$(sBuff, lCount - 2) ' Remove line feeds
+        DLLErrorText = Left$(sBuff, lCount - 2) ' Remove line feeds
     End If
 End Function
