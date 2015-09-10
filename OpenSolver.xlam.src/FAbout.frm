@@ -1,12 +1,11 @@
 VERSION 5.00
 Begin {C62A69F0-16DC-11CE-9E98-00AA00574A4F} FAbout 
    Caption         =   "About OpenSolver"
-   ClientHeight    =   8700
+   ClientHeight    =   7140
    ClientLeft      =   45
    ClientTop       =   345
-   ClientWidth     =   14505
+   ClientWidth     =   8880
    OleObjectBlob   =   "FAbout.frx":0000
-   StartUpPosition =   1  'CenterOwner
 End
 Attribute VB_Name = "FAbout"
 Attribute VB_GlobalNameSpace = False
@@ -104,7 +103,7 @@ Private Sub UserForm_Activate()
               .Locked = False
 3523          .value = EnvironmentSummary()
               .Locked = True
-              AutoHeight txtVersion, FormWidthAbout, True
+              AutoHeight txtVersion, Me.width, True
               #If Mac Then
                   ' On Mac the autosizing isn't quite wide enough
                   .width = .width + 10
@@ -149,9 +148,11 @@ End Function
 Private Sub AutoLayout()
     AutoFormat Me.Controls
     
+    Me.width = FormWidthAbout
+    
     With lblHeading
         .Font.Size = FormHeadingSize
-        .width = FormWidthAbout - 2 * FormMargin
+        .width = Me.width - 2 * FormMargin
         .Caption = "OpenSolver"
         .left = FormMargin
         .top = FormMargin
@@ -173,13 +174,13 @@ Private Sub AutoLayout()
         .ForeColor = FormLinkColor
         .left = lblHeading.left
         .top = Below(txtVersion, False)
-        AutoHeight lblUrl, FormWidthAbout, True
+        AutoHeight lblUrl, Me.width, True
     End With
     
     With cmdUpdate
         .Caption = "Check for updates"
         .width = FormButtonWidth * 2
-        .left = LeftOfForm(FormWidthAbout, .width)
+        .left = LeftOfForm(Me.width, .width)
         .top = lblHeading.top
     End With
     
@@ -216,9 +217,7 @@ Private Sub AutoLayout()
     
     LayoutBottom
     
-    #If Win32 Then
-        Me.width = FormWidthAbout + FormWindowMargin
-    #End If
+    Me.width = Me.width + FormWindowMargin
     
     Me.BackColor = FormBackColor
     Me.Caption = "OpenSolver - About"
@@ -239,10 +238,7 @@ Private Sub LayoutBottom()
         .top = chkAutoLoad.top
     End With
     
-    #If Win32 Then
-        Me.height = FormHeight(cmdOk)
-    #End If
-    
+    Me.height = FormHeight(cmdOk)
 End Sub
 
 Private Sub UserForm_Initialize()
@@ -251,9 +247,7 @@ Private Sub UserForm_Initialize()
 End Sub
 
 Private Sub CenterForm()
-    #If Win32 Then
-        Me.StartUpPosition = 0  ' Manual
-        Me.top = CenterFormTop(Me.height)
-        Me.left = CenterFormLeft(Me.width)
-    #End If
+    Me.top = CenterFormTop(Me.height)
+    Me.left = CenterFormLeft(Me.width)
 End Sub
+
