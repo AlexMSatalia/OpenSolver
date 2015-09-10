@@ -1846,7 +1846,7 @@ Sub ReadResults_NL(s As COpenSolver)
     GetNLSolutionFilePath SolutionFilePathName
     
     If Not FileOrDirExists(SolutionFilePathName) Then
-        Err.Raise OpenSolver_SolveError = _
+        Err.Raise OpenSolver_SolveError, Description:= _
             "The solver did not create a solution file. No new solution is available." & vbNewLine & vbNewLine & _
             "This can happen when the initial conditions are invalid. " & _
             "Check the log file for more information."
