@@ -166,40 +166,35 @@ Function DisplayLinearity() As String
 End Function
 
 ' Converts the tree to .nl expression tree format
-Public Function ConvertToNL(Optional CommentIndent As Integer = 0) As String
+Public Sub ConvertToNL(FileNum As Long, Optional CommentIndent As Integer = 0)
           Dim RaiseError As Boolean
           RaiseError = False
           On Error GoTo ErrorHandler
-
-          ' Construct comment
-          Dim Comment As String, i As Long
-8560      Comment = Space(CommentIndent) + NodeText + " " + DisplayLinearity()
           
           ' Add current node to output
-          Dim output As String
-8561      AddNewLine output, FormatNL(NodeText, NodeType), Comment
+8561      Print #FileNum, FormatNL(NodeText, NodeType);
+          Print #FileNum, Space(CommentIndent) + NodeText + " " + DisplayLinearity()
           
           ' If n-ary operator, we need the number of operators on a newline
 8562      If IsNAry(NodeText) Then
-8568          AddNewLine output, CStr(NumChildren), Space(CommentIndent + 2) & NumChildren & " arguments"
+8568          Print #FileNum, CStr(NumChildren); Space(CommentIndent + 2) & NumChildren & " arguments"
 8570      End If
           
           ' Add children nodes to output
+          Dim i As Long
 8572      For i = 1 To NumChildren
-8573          output = output + Children(i).ConvertToNL(CommentIndent + 4)
+8573          Children(i).ConvertToNL FileNum, CommentIndent + 4
 8574      Next i
-          
-8576      ConvertToNL = output
 
 ExitFunction:
           If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
-          Exit Function
+          Exit Sub
 
 ErrorHandler:
           If Not ReportError("ExpressionTree", "ConvertToNL") Then Resume
           RaiseError = True
           GoTo ExitFunction
-End Function
+End Sub
 
 ' Extract all variables from the ExpressionTree into a Dictionary
 Sub ExtractVariables(constraint As Dictionary)
@@ -1071,3 +1066,4 @@ ErrorHandler:
           RaiseError = True
           GoTo ExitSub
 End Sub
+

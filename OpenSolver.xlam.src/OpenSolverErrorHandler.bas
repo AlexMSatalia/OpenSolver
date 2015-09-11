@@ -41,7 +41,7 @@ Function ReportError(ModuleName As String, ProcedureName As String, Optional IsE
     Dim NewLogFile
     NewLogFile = (ErrNum = 0)
     
-    ' Grab the error info before it’s cleared by On Error Resume Next below.
+    ' Grab the error info before it's cleared by On Error Resume Next below.
     Dim ErrLine As Long
     ErrNum = Err.Number
     ErrLine = Erl

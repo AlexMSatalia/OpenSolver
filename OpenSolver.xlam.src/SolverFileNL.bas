@@ -895,7 +895,9 @@ Private Sub MakeCBlocks()
               Print #1, Tab(CommentSpacing); "# CONSTRAINT NON-LINEAR SECTION " + ConstraintMapRev(CStr(i - 1))
               
               ' Add expression tree
-7892          Print #1, NonLinearConstraintTrees(ConstraintIndexToTreeIndex(i - 1)).ConvertToNL(CommentIndent);
+              Dim Tree As ExpressionTree
+              Set Tree = NonLinearConstraintTrees(ConstraintIndexToTreeIndex(i - 1))
+7892          Tree.ConvertToNL 1, CommentIndent
 7893      Next i
 
 ExitSub:
@@ -921,7 +923,9 @@ Private Sub MakeOBlocks()
               Print #1, Tab(CommentSpacing); "# OBJECTIVE NON-LINEAR SECTION " & ObjectiveCells(i)
               
               ' Add expression tree
-7899          Print #1, NonLinearObjectiveTrees(i).ConvertToNL(CommentIndent);
+              Dim Tree As ExpressionTree
+              Set Tree = NonLinearObjectiveTrees(i)
+7899          Tree.ConvertToNL 1, CommentIndent
 7900      Next i
 
 ExitSub:
