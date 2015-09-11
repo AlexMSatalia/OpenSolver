@@ -45,15 +45,21 @@ except GurobiError as e:
 with open(path,'w') as File:
     File.write(str(m.status)+ '\n')
     if m.status != 3 and m.status != 4 and m.status != 5:
-		m.write (path)
-		Vars = m.getVars()
-		Cons = m.getConstrs()
-		with open (os.path.join(tFile, 'sensitivityData.sol'),'w') as destFile:
-			for i in range(len(Vars)):
-				try:
-					destFile.write(str(Vars[i].rc)+','+str(Vars[i].SAObjLow)+','+str(Vars[i].SAObjUp)+'\n')
-				except: pass
-			for j in range(len(Cons)):
-				try:
-					destFile.write(str(Cons[j].pi)+',' + str(Cons[j].rhs)+','+ str(Cons[j].slack)+ ','  + str(Cons[j].SARHSLow) + ',' + str(Cons[j].SARHSUp) +'\n')
-				except: pass
+        m.write (path)
+        Vars = m.getVars()
+        Cons = m.getConstrs()
+        with open (os.path.join(tFile, 'sensitivityData.sol'),'w') as destFile:
+            try:
+                vals = [map(str, m.getAttr(t, Vars))
+                        for t in ['RC','SAObjLow','SAObjUp']]
+                for k in zip(*vals):
+                    destFile.write(','.join(k)+'\n')
+            except:
+                pass
+            try:
+                vals = [map(str, m.getAttr(t, Cons))
+                        for t in ['Pi','RHS','Slack','SARHSLow','SARHSUp']]
+                for k in zip(*vals):
+                    destFile.write(','.join(k)+'\n')
+            except:
+                pass
