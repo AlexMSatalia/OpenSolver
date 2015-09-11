@@ -10,6 +10,8 @@ Private Const NEOS_ADDRESS = "http://www.neos-server.org:3332"
 Private Const NEOS_RESULT_FILE = "neosresult.txt"
 Private Const NEOS_SCRIPT_FILE = "NeosClient.py"
 
+Public SOLVE_LOCAL As Boolean  ' Whether to use local AMPL to solve. Defaults to false
+
 Function NeosClientScriptPath() As String
           NeosClientScriptPath = JoinPaths(ThisWorkbook.Path, SolverDir, SolverDirMac, NEOS_SCRIPT_FILE)
 End Function
@@ -19,23 +21,84 @@ Function CallNEOS(s As COpenSolver, OutgoingMessage As String) As String
           RaiseError = False
           On Error GoTo ErrorHandler
           
-          Dim NeosSolver As ISolverNeos, OptionsFileString As String
+          If SOLVE_LOCAL Then
+              CallNEOS = CallNeos_Local(s)
+          Else
+              CallNEOS = CallNeos_Remote(s, OutgoingMessage)
+          End If
+          
+ExitFunction:
+          Close #1
+          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          Exit Function
+
+ErrorHandler:
+          If Not ReportError("SolverNeos", "CallNeos") Then Resume
+          RaiseError = True
+          GoTo ExitFunction
+End Function
+
+Function CallNeos_Local(s As COpenSolver) As String
+          Dim RaiseError As Boolean
+          RaiseError = False
+          On Error GoTo ErrorHandler
+          
+          Dim NeosSolver As ISolverNeos
           Set NeosSolver = s.Solver
-          If NeosSolver.UsesOptionFile Then
+          If Len(NeosSolver.OptionFile) <> 0 Then
+              Dim OptionsFilePath As String
+              GetTempFilePath NeosSolver.OptionFile, OptionsFilePath
+              ParametersToOptionsFile OptionsFilePath, s.SolverParameters
+          End If
+       
+          Dim scriptFileContents As String
+          Dim ScriptFilePathName As String
+          GetTempFilePath "ampl_local" & ScriptExtension, ScriptFilePathName
+          Dim FileSolver As ISolverFile
+          Set FileSolver = s.Solver
+          scriptFileContents = "cd " & MakePathSafe(GetTempFolder()) & " && " & _
+                               "ampl " & MakePathSafe(GetModelFilePath(FileSolver))
+          CreateScriptFile ScriptFilePathName, scriptFileContents
+          
+          RunExternalCommand MakePathSafe(ScriptFilePathName), MakePathSafe(s.LogFilePathName)
+          Open s.LogFilePathName For Input As #1
+              CallNeos_Local = Input$(LOF(1), 1)
+          Close #1
+          
+ExitFunction:
+          Close #1
+          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          Exit Function
+
+ErrorHandler:
+          If Not ReportError("SolverNeos", "CallNeos_Local") Then Resume
+          RaiseError = True
+          GoTo ExitFunction
+End Function
+
+Function CallNeos_Remote(s As COpenSolver, OutgoingMessage As String) As String
+          Dim RaiseError As Boolean
+          RaiseError = False
+          On Error GoTo ErrorHandler
+          
+          Dim NeosSolver As ISolverNeos
+          Set NeosSolver = s.Solver
+          Dim OptionsFileString As String
+          If Len(NeosSolver.OptionFile) <> 0 Then
               OptionsFileString = ParametersToOptionsFileString(s.SolverParameters)
           End If
-           
+             
           ' Wrap in XML for AMPL on NEOS
 6809      FinalMessage = WrapMessageForNEOS(OutgoingMessage, NeosSolver, OptionsFileString)
-           
+          
           Dim errorString As String
           If s.MinimiseUserInteraction Then
-              CallNEOS = SolveOnNeos(FinalMessage, errorString)
+              CallNeos_Remote = SolveOnNeos(FinalMessage, errorString)
           Else
               Dim frmCallingNeos As FCallingNeos
               Set frmCallingNeos = New FCallingNeos
               frmCallingNeos.Show
-              CallNEOS = NeosResult
+              CallNeos_Remote = NeosResult
               errorString = frmCallingNeos.Tag
               Unload frmCallingNeos
           End If
@@ -46,12 +109,10 @@ Function CallNEOS(s As COpenSolver, OutgoingMessage As String) As String
                   Err.Raise OpenSolver_NeosError, Description:=errorString
               End If
           End If
-   
+              
           ' Dump the whole NEOS response to log file
-          Dim LogPath As String
-          GetLogFilePath LogPath
-          Open LogPath For Output As #1
-              Print #1, CallNEOS
+          Open s.LogFilePathName For Output As #1
+              Print #1, CallNeos_Remote
           Close #1
 
 ExitFunction:
@@ -60,7 +121,7 @@ ExitFunction:
           Exit Function
 
 ErrorHandler:
-          If Not ReportError("SolverNeos", "CallNEOS") Then Resume
+          If Not ReportError("SolverNeos", "CallNeos_Remote") Then Resume
           RaiseError = True
           GoTo ExitFunction
 End Function
@@ -399,7 +460,7 @@ Function WrapMessageForNEOS(message As String, NeosSolver As ISolverNeos, Option
             WrapInTag(message, "model", True) & _
             WrapInTag("", "data", True) & _
             WrapInTag("", "commands", True) & _
-            IIf(NeosSolver.UsesOptionFile, WrapInTag(OptionsFileString & vbNewLine, "options", True), "") & _
+            IIf(Len(OptionsFileString) > 0, WrapInTag(OptionsFileString & vbNewLine, "options", True), "") & _
             WrapInTag("", "comments", True), _
         "document")
 

@@ -26,7 +26,7 @@ Private Const pSensitivityAnalysisAvailable As Boolean = False
 
 Private Const pNeosSolverName As String = "cbc"
 Private Const pNeosSolverCategory As String = "milp"
-Private Const pUsesOptionFile As Boolean = False
+Private Const pOptionFile As String = ""
 Private Const pFileType = OpenSolver_FileType.AMPL
 Private Const pModelType = OpenSolver_ModelType.Diff
 
@@ -97,8 +97,8 @@ Private Property Get ISolverNeos_NeosSolverCategory() As String
     ISolverNeos_NeosSolverCategory = pNeosSolverCategory
 End Property
 
-Private Property Get ISolverNeos_UsesOptionFile() As Boolean
-    ISolverNeos_UsesOptionFile = pUsesOptionFile
+Private Property Get ISolverNeos_OptionFile() As String
+    ISolverNeos_OptionFile = pOptionFile
 End Property
 
 ' ISolverLinear

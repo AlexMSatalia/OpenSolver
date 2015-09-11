@@ -15,5 +15,5 @@ End Property
 Public Property Get NeosSolverCategory() As String
 End Property
 
-Public Property Get UsesOptionFile() As Boolean
+Public Property Get OptionFile() As String
 End Property

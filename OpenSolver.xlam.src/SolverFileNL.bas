@@ -1260,26 +1260,6 @@ ErrorHandler:
           GoTo ExitSub
 End Sub
 
-Private Sub OutputOptionsFile(OptionsFilePath As String, SolverParameters As Dictionary)
-          Dim RaiseError As Boolean
-          RaiseError = False
-          On Error GoTo ErrorHandler
-
-          DeleteFileAndVerify OptionsFilePath
-          
-          Open OptionsFilePath For Output As #4
-          Print #4, ParametersToOptionsFileString(SolverParameters)
-
-ExitSub:
-          Close #4
-          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
-          Exit Sub
-
-ErrorHandler:
-          If Not ReportError("SolverFileNL", "OutputOptionsFile") Then Resume
-          RaiseError = True
-          GoTo ExitSub
-End Sub
 
 ' Adds a new line to the current string, appending LineText at position 0 and CommentText at position CommentSpacing
 Sub AddNewLine(CurText As String, LineText As String, Optional CommentText As String = "")
@@ -2068,7 +2048,7 @@ Function CreateSolveScript_NL(ModelFilePathName As String, s As COpenSolver, Scr
     CreateSolveScript_NL = ScriptFilePathName
     
     ' Create the options file in the temp folder
-    OutputOptionsFile OptionsFilePathName, s.SolverParameters
+    ParametersToOptionsFile OptionsFilePathName, s.SolverParameters
 
 ExitFunction:
     If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg

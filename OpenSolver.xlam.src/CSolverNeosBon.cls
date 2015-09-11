@@ -23,7 +23,7 @@ Private Const pShortName = "NeosBon"
 
 Private Const pNeosSolverName = "Bonmin"
 Private Const pNeosSolverCategory = "minco"
-Private Const pUsesOptionFile = True
+Private Const pOptionFile = "bonmin.opt"
 Private Const pFileType = OpenSolver_FileType.AMPL
 Private Const pModelType = OpenSolver_ModelType.Parsed
 
@@ -94,8 +94,8 @@ Private Property Get ISolverNeos_NeosSolverCategory() As String
     ISolverNeos_NeosSolverCategory = pNeosSolverCategory
 End Property
 
-Private Property Get ISolverNeos_UsesOptionFile() As Boolean
-    ISolverNeos_UsesOptionFile = pUsesOptionFile
+Private Property Get ISolverNeos_OptionFile() As String
+    ISolverNeos_OptionFile = pOptionFile
 End Property
 
 ' ISolverFile

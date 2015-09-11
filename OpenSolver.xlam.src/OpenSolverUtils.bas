@@ -337,6 +337,29 @@ ErrorHandler:
           GoTo ExitFunction
 End Function
 
+Sub ParametersToOptionsFile(OptionsFilePath As String, SolverParameters As Dictionary)
+          Dim RaiseError As Boolean
+          RaiseError = False
+          On Error GoTo ErrorHandler
+
+          DeleteFileAndVerify OptionsFilePath
+          
+          Dim FileNum As Integer
+          FileNum = FreeFile()
+          Open OptionsFilePath For Output As #FileNum
+          Print #FileNum, ParametersToOptionsFileString(SolverParameters)
+
+ExitSub:
+          Close #FileNum
+          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          Exit Sub
+
+ErrorHandler:
+          If Not ReportError("SolverFileNL", "OutputOptionsFile") Then Resume
+          RaiseError = True
+          GoTo ExitSub
+End Sub
+
 Sub GetSolveOptions(sheet As Worksheet, SolveOptions As SolveOptionsType)
           ' Get the Solver Options, stored in named ranges with values such as "=0.12"
           ' Because these are NAMEs, they are always in English, not the local language, so get their value using Val
