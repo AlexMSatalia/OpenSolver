@@ -1,17 +1,15 @@
 :: Makes all releases for OpenSolver
-:: Call using: make_releases.bat <version number>
 :: Needs 7-zip installed and the 7-zip folder on the system path
 @echo off
 
-:: Empty the Release folder
-del Release\*
+set /p version="Enter version string (e.g. 2.7.0): "
 
-:: Get version number for release from the first parameter
-set version=%1
+:: Empty the Release folder
+del /Q Release\*
 
 :: Common elements of the 7-zip command
 set start=7z a Release\
-set end=. -xr!.git* -xr!OpenSolver.xlam.src -xr!Release -x!make_releases.* -x!upload_releases.* -xr!*~$* -xr!*._.DS_Store*
+set end=. -xr!.git* -xr!OpenSolver.xlam.src -xr!Release -x!make_releases.* -x!upload_releases.* -xr!*~$* -xr!*._.DS_Store* -xr!RibbonX
 
 :: Ignore mtee source files
 set mtee=-xr!Utils\mtee\*.cpp -xr!Utils\mtee\*.h -xr!Utils\mtee\*.ico 
