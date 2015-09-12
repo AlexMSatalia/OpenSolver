@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<customUI xmlns="http://schemas.microsoft.com/office/2006/01/customui">
+  <ribbon startFromScratch="false">
+    <tabs>
+	<tab idMso="TabData" >
+	  <group id="GroupOpenSolver" label="OpenSolver">
+	  
+		<splitButton id="OpenSolverAutoModelMenuSB" size="large">
+			<button id="OpenSolverAutoModel" 
+					label="Model" 
+					image="model" 
+					screentip="Build and edit Solver models" 
+					supertip="Build or edit your optimisation model. Will detect and load any pre-existing model built with Solver, and will save the results to the sheet in a Solver-friendly way."
+					onAction="OpenSolver_ModelClick" />
+			<menu id="OpenSolverAutoModelMenu" itemSize="normal">
+				<button id="OpenSolverModel2"
+					label="Model..."
+					screentip="Build and edit Solver models"
+					supertip="Build or edit your optimisation model. Will detect and load any pre-existing model built with Solver, and will save the results to the sheet in a Solver-friendly way."
+					onAction="OpenSolver_ModelClick" />
+				<button id="OpenSolverQuickAutomodel"
+					label="Quick AutoModel"
+					screentip="Run AutoModel with default options"
+					supertip="Run AutoModel with default options. No dialog menu will appear, so for well-structured sheets it is unnecessary to run through
+					the full AutoModel procedure step-by-step for small changes."
+					onAction="OpenSolver_QuickAutoModelClick" />
+				<button id="OpenSolverAutomodelAndBuild"
+					label="AutoModel And Solve"
+					screentip="Run AutoModel with default options and then solve problem"
+					supertip="Run AutoModel with default options and then solve the problem. No dialog menu will appear, so for well-structured sheets it is unnecessary to run through the full AutoModel procedure step-by-step for small changes."
+					onAction="OpenSolver_AutoModelAndSolveClick" />
+				<button id="OpenSolverChosenSolver"
+					label="Solver Engine..."
+					screentip="Choose your solver: CBC (default), Gurobi, or NOMAD (non-linear)."
+					supertip="Choose your solver: CBC (default), Gurobi, or NOMAD (non-linear)."
+					onAction="OpenSolver_SolverOptions" />
+				<button id="OpenSolverModelOptions"
+					label="Options..."
+					screentip="Set options: linearity, non-negativity, max solve time, tolerance."
+					supertip="Set options: linearity, non-negativity, max solve time, tolerance."
+					onAction="OpenSolver_ModelOptions" />
+
+			</menu>
+		</splitButton>
+
+	   	<button id="OpenSolverSolve" 
+           		label="Solve" image="solve" 
+           		size="large" 
+           		screentip="Solve optimization model" 
+	     		supertip="Solve an existing Solver model on the active worksheet by constructing the model's equations and then calling the current chosen optimization engine."
+           		onAction="OpenSolver_SolveClickHandler"/>
+		   
+	    <button id="OpenSolverShowModel" label="Show/Hide Model"  
+           screentip="Show or hide the optimization model on this sheet" 
+	     supertip="OpenSolver will analyse an existing model on the active sheet, and add coloured annotations to the sheet that indicate the variable cells, the objective cell, and the constraints."
+           onAction="OpenSolver_ShowHideModelClickHandler"/>
+	    <button id="OpenSolverQuickSolve" label="Quick Solve"  
+           screentip="Quickly re-solve a model after changing the parameter values"
+	     supertip="OpenSolver can re-solve problems very quickly if it is first told about the cells (termed parameters) that change between solves. The Quick Solve menu items below can be used to set this up for your model." 
+           onAction="OpenSolver_QuickSolveClickHandler"/>
+          <menu id="menu" label="OpenSolver " >
+            	<button id="OpenSolverInitParameters" label="Set Quick Solve Parameters..."  
+                   screentip="Define the parameter cells for Quick Solves" 
+       	       supertip="OpenSolver can re-solve problems very quickly if it is first told about the cells (termed parameters) that change between solves. This menu item lets you define the parameter cells. Note that OpenSolver assumes these parameters change the model's constraint right hand sides in a linear fashion." 
+                   onAction="OpenSolver_SetQuickSolveParametersClickHandler"/>
+            	<button id="OpenSolverInitQuicksolve" label="Initialize Quick Solve"
+                   screentip="Construct the model's equations and prepare for Quck Solves" 
+       	       supertip="OpenSolver can re-solve problems very quickly if it is first told about the cells (termed parameters) that change between solves. After you have defined the parameter cells, this menu item constructs the model's equations ready for quick solving." 
+                   onAction="OpenSolver_InitQuickSolveClickHandler"/>
+                   <menuSeparator id="separator0" /> 
+            	<button id="OpenSolverSolveRelaxation" label="Solve Relaxation"  
+                   screentip="Solve a modified problem without any integer or binary constraints" 
+       	       supertip="Relaxes any integer or binary requirements on the variables, and solves the resulting linear program, typically giving an answer with fractional variables." 
+                   onAction="OpenSolver_SolveRelaxationClickHandler"/>
+			<button id="OpenSolverViewModelAMPL" label="View Last Model .lp File"  
+                   screentip="View the .lp file created when OpenSolver last solved a model" 
+       	       supertip="OpenSolver writes the model to a temporary text file that is read by the CBC optimization engine. It is often useful to load and view this file." 
+                   onAction="OpenSolver_ViewLastModelClickHandler"/>
+            	<button id="OpenSolverViewModel" label="View Last AMPL File"  
+                   screentip="View the AMPL file created when OpenSolver last solved a model" 
+       	       supertip="OpenSolver writes the AMPL model to a temporary text file that is sent to the NEOS optimization engine servers. It is often useful to load and view this file." 
+                   onAction="OpenSolver_ViewLastAmplClickHandler"/>
+			<button id="OpenSolverViewLogFile" label="View Last Log File"  
+                   screentip="View the last log file." 
+       	       supertip="Linear: For the linear solvers the log file shows you the command line output, which can give you more information about your model. Non-Linear: When a nomad model is solved a temporary log file is created by the Nomad optimization engine which has information on the parameters passed to Nomad as well as information on some of the iterations of the solver." 
+                   onAction="OpenSolver_ViewLogFile"/>
+ 			<menuSeparator id="separator1" />            	
+			<button id="OpenSolverViewSolution" label="View Last CBC Solution File"  
+                   screentip="View the last solution files" 
+       	       supertip="When a model is solved, a temporary solution file is created by the CBC optimization engine. It is sometimes useful to load and view this file." 
+                   onAction="OpenSolver_ViewLastSolutionClickHandler"/>
+            	<button id="OpenSolverLaunchCBC" label="Open Last Model in CBC..."  
+                   screentip="Open the CBC command line, and load in the last model." 
+       	       supertip="Open the CBC optimizer at the command line, and load in the last model solved by OpenSolver. Type '?' at the CBC command line to get help on the CBC commands, and 'exit' to quit CBC. Note that any solutions generated are discarded; they are not loaded back into your spreadsheet." 
+                   onAction="OpenSolver_LaunchCBCCommandLine"/>
+                   <menuSeparator id="separator2" /> 
+			<button id="OpenSolverViewGurobiSolution" label="View Last Gurobi Solution File"  
+                   screentip="View the last gurobi solution files" 
+       	       supertip="When a model is solved, a temporary solution file is created by the Gurobi optimization engine. It is sometimes useful to load and view this file." 
+                   onAction="OpenSolver_ViewLastGurobiSolutionClickHandler"/>
+			<menuSeparator id="separator3" />
+                  <button id="OpenSolverHelp" label="Online Help..." onAction="OpenSolver_OnlineHelp"
+                   screentip="Open the on-line help at OpenSolver.org" /> 
+                   <menuSeparator id="separator4" /> 
+                  <button id="OpenSolverAbout" label="About OpenSolver..." onAction="OpenSolver_AboutClickHandler" /> 
+                  <button id="OpenSolverAboutCoinOR" label="About Coin-OR..." onAction="OpenSolver_AboutCoinOR" />
+                   <menuSeparator id="separator5" /> 
+                  <button id="OpenSolverVisitOpenSolverOrg" label="Open OpenSolver.org" onAction="OpenSolver_VisitOpenSolverOrg" /> 
+                  <button id="OpenSolverVisitCoinOROrg" label="Open COIN-OR.org" onAction="OpenSolver_VisitCoinOROrg" /> 
+           </menu>
+	  </group>
+      </tab>
+    </tabs>
+  </ribbon>
+</customUI>
