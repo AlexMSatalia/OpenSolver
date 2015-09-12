@@ -278,11 +278,20 @@ Function GetTempFolder(Optional AllowEnvironOverride As Boolean = True) As Strin
 91                ret = GetTempPath(255, TempFolderPath)
 92                If ret <> 0 Then
 93                    TempFolderPath = Left(TempFolderPath, ret)
-94                    If Right(TempFolderPath, 1) <> "\" Then TempFolderPath = TempFolderPath & "\"
 95                Else
 96                    TempFolderPath = ""
 97                End If
               #End If
+              
+              ' Append OpenSolver to dir
+              If Len(TempFolderPath) <> 0 Then
+                  If Not GetExistingFilePathName(TempFolderPath, "OpenSolver", TempFolderPath) Then
+                      ' Folder doesn't exist - create it
+                      MkDir TempFolderPath
+                  End If
+                  If Right(TempFolderPath, 1) <> Application.PathSeparator Then TempFolderPath = TempFolderPath & Application.PathSeparator
+              End If
+              
               ' Andres Sommerhoff (ASL) - Country: Chile
               ' Allow user to specify a temp path using an environment variable
               ' This can also be a workaround to avoid problem with spaces in the temp path.

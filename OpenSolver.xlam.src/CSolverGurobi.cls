@@ -292,7 +292,10 @@ Private Function CreateSolveScript(ModelFilePathName As String, s As COpenSolver
     Dim SolverString As String, CommandLineRunString As String, SolverParametersString As String
     SolverString = MakePathSafe(ShellScriptPath())
 
-    CommandLineRunString = MakePathSafe(PythonScriptPath())
+    CommandLineRunString = MakePathSafe(PythonScriptPath()) & " " & _
+                           MakePathSafe(ModelFilePathName) & " " & _
+                           MakePathSafe(SolutionFilePath()) & " " & _
+                           MakePathSafe(SensitivityFilePath())
     
     SolverParametersString = ParametersToKwargs(s.SolverParameters)
     

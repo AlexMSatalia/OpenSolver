@@ -51,13 +51,19 @@ Function CallNeos_Local(s As COpenSolver) As String
               ParametersToOptionsFile OptionsFilePath, s.SolverParameters
           End If
        
-          Dim scriptFileContents As String
           Dim ScriptFilePathName As String
           GetTempFilePath "ampl_local" & ScriptExtension, ScriptFilePathName
+          
           Dim FileSolver As ISolverFile
           Set FileSolver = s.Solver
-          scriptFileContents = "cd " & MakePathSafe(GetTempFolder()) & " && " & _
-                               "ampl " & MakePathSafe(GetModelFilePath(FileSolver))
+          
+          Dim scriptFileContents As String
+          scriptFileContents = "cd " & MakePathSafe(GetTempFolder()) & ScriptSeparator
+          #If Mac Then
+              scriptFileContents = scriptFileContents & "source ~/.bashrc" & _
+                                   ScriptSeparator & "source ~/.zshrc" & ScriptSeparator
+          #End If
+          scriptFileContents = scriptFileContents & "ampl " & MakePathSafe(GetModelFilePath(FileSolver))
           CreateScriptFile ScriptFilePathName, scriptFileContents
           
           RunExternalCommand MakePathSafe(ScriptFilePathName), MakePathSafe(s.LogFilePathName)

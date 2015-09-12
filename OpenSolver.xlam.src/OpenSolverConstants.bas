@@ -117,10 +117,12 @@ End Enum
     Public Const ExecExtension = ""
     Public Const ScriptExtension = ".sh"
     Public Const NBSP = 202 ' ascii char code for non-breaking space on Mac
+    Public Const ScriptSeparator = " ; "
 #Else
     Public Const ExecExtension = ".exe"
     Public Const ScriptExtension = ".bat"
     Public Const NBSP = 160 ' ascii char code for non-breaking space on Windows
+    Public Const ScriptSeparator = " & "
 #End If
 
 Function ObjectiveSenseStringToEnum(ByVal sense As String) As ObjectiveSenseType
