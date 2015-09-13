@@ -116,15 +116,23 @@ Sub OpenSolver_ViewLastModelClickHandler(Optional Control)
           AutoUpdateCheck
 End Sub
 
-Sub OpenSolver_ViewLogFileClickHandler(Optional Control)
+Sub OpenSolver_ViewSolverLogFileClickHandler(Optional Control)
           If Len(LastUsedSolver) = 0 Then
               MsgBox "Cannot open the log file as the model has not been solved yet."
           Else
               Dim NotFoundMessage As String, FilePath As String
 2787          GetLogFilePath FilePath
-2788          NotFoundMessage = "Error: There is no log file (" & FilePath & ") to open. Please solve the OpenSolver model and then try again."
+2788          NotFoundMessage = "Error: There is no solver log file (" & FilePath & ") to open. Please solve the OpenSolver model and then try again."
 2789          OpenFile FilePath, NotFoundMessage
           End If
+          AutoUpdateCheck
+End Sub
+
+Sub OpenSolver_ViewErrorLogFileClickHandler(Optional Control)
+          Dim NotFoundMessage As String, FilePath As String
+2787      FilePath = GetErrorLogFilePath()
+2788      NotFoundMessage = "Error: There is no error log file (" & FilePath & ") to open."
+2789      OpenFile FilePath, NotFoundMessage
           AutoUpdateCheck
 End Sub
 
@@ -310,10 +318,13 @@ Function GenerateMenuItems() As Collection
                          "View the last solution file", _
                          "When a model is solved, a temporary solution file can be created by the solver containing the solution " & _
                          "to the optimization problem. It is sometimes useful to load and view this file.")
-        .Add NewMenuItem("button", "OpenSolverViewLogFile", "View Last Log File", "OpenSolver_ViewLogFileClickHandler", _
-                         "View the last log file", _
+        .Add NewMenuItem("button", "OpenSolverViewSolverLogFile", "View Last Solver Log File", "OpenSolver_ViewSolverLogFileClickHandler", _
+                         "View the last solver log file", _
                          "OpenSolver creates a log file every time a model is solved. The log file contains output from the solver, " & _
                          "such as iteration details during the solve, which can give you more information about your model.")
+        .Add NewMenuItem("button", "OpenSolverViewErrorLogFile", "View Last Error Log File", "OpenSolver_ViewErrorLogFileClickHandler", _
+                         "View the last error log file", _
+                         "OpenSolver creates a log file every time an error occurs with detailed information about the error.")
         .Add NewMenuItem("button", "OpenSolverLaunchCBC", "Open Last Model in CBC...", "OpenSolver_LaunchCBCCommandLine", _
                          "Open the CBC command line, and load in the last model.", _
                          "Open the CBC optimizer at the command line, and load in the last model solved by OpenSolver. " & _
