@@ -540,8 +540,8 @@ Function StripNonBreakingSpaces(Text As String) As String
 784       StripNonBreakingSpaces = Replace(Text, Chr(NBSP), Chr(32))
 End Function
 
-Function QuotePath(Path As String) As String
-745       QuotePath = """" & Path & """"
+Function Quote(Text As String) As String
+745       Quote = """" & Text & """"
 End Function
 
 Function TrimBlankLines(s As String) As String

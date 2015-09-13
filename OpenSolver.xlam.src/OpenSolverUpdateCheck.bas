@@ -95,7 +95,7 @@ Private Function InitialiseUpdateCheck_Mac() As String
     Cmd = "curl -L" & _
               " -m " & MaxTime & _
               " -o " & MakePathSafe(LogFilePath) & _
-              " -A " & QuotePath(GetUserAgent()) & _
+              " -A " & Quote(GetUserAgent()) & _
               " " & GetPageUrl()
     RunExternalCommand Cmd, "", Hide, False
     

@@ -52,7 +52,7 @@ NoHighlighting:
 3041      SheetHasOpenSolverHighlighting = False
 End Function
 
-Function CreateLabelShape(w As Worksheet, Left As Long, Top As Long, Width As Long, Height As Long, label As String, HighlightColor As Long) As Shape
+Function CreateLabelShape(w As Worksheet, Left As Long, Top As Long, Width As Long, Height As Long, Label As String, HighlightColor As Long) As Shape
 ' Create a label (as a msoShapeRectangle) and give it text. This is used for labelling obj function as min/max, and decision vars as binary or integer
           Dim RaiseError As Boolean
           RaiseError = False
@@ -67,7 +67,7 @@ Function CreateLabelShape(w As Worksheet, Left As Long, Top As Long, Width As Lo
 3047      s1.Line.Visible = False
 3048      s1.Shadow.Visible = msoFalse
 3049      With s1.TextFrame
-3050          .Characters.Text = label
+3050          .Characters.Text = Label
 3051          .Characters.Font.Size = 9
 3052          .Characters.Font.Color = HighlightColor
 3053          .HorizontalAlignment = xlHAlignLeft
@@ -94,15 +94,15 @@ ErrorHandler:
           GoTo ExitFunction
 End Function
 
-Function AddLabelToRange(w As Worksheet, r As Range, voffset As Long, Height As Long, label As String, HighlightColor As Long) As Shape
-3066      Set AddLabelToRange = CreateLabelShape(w, r.Left + 1, r.Top + voffset, r.Width, Height, label, HighlightColor)
+Function AddLabelToRange(w As Worksheet, r As Range, voffset As Long, Height As Long, Label As String, HighlightColor As Long) As Shape
+3066      Set AddLabelToRange = CreateLabelShape(w, r.Left + 1, r.Top + voffset, r.Width, Height, Label, HighlightColor)
 End Function
 
-Function AddLabelToShape(w As Worksheet, s As Shape, voffset As Long, Height As Long, label As String, HighlightColor As Long)
-3067      Set AddLabelToShape = CreateLabelShape(w, s.Left - 1, s.Top + voffset, s.Width, Height, label, HighlightColor)
+Function AddLabelToShape(w As Worksheet, s As Shape, voffset As Long, Height As Long, Label As String, HighlightColor As Long)
+3067      Set AddLabelToShape = CreateLabelShape(w, s.Left - 1, s.Top + voffset, s.Width, Height, Label, HighlightColor)
 End Function
 
-Function HighlightRange(r As Range, label As String, HighlightColor As Long, Optional ShowFill As Boolean = False, Optional ShapeNamePrefix As String = "OpenSolver", Optional Bounds As Boolean = False) As ShapeRange
+Function HighlightRange(r As Range, Label As String, HighlightColor As Long, Optional ShowFill As Boolean = False, Optional ShapeNamePrefix As String = "OpenSolver", Optional Bounds As Boolean = False) As ShapeRange
           Dim RaiseError As Boolean
           RaiseError = False
           On Error GoTo ErrorHandler
@@ -201,7 +201,7 @@ Function HighlightRange(r As Range, label As String, HighlightColor As Long, Opt
 3131          Else
                   'If there has already been a bound then just add new text to it rather then making a new box
 3132              Set s1 = r.Worksheet.Shapes(shapeName)
-3133              s1.TextFrame.Characters.Text = s1.TextFrame.Characters.Text & "," & label
+3133              s1.TextFrame.Characters.Text = s1.TextFrame.Characters.Text & "," & Label
 3134              GoTo endLoop
 3135          End If
 3136      End If
@@ -226,11 +226,11 @@ Function HighlightRange(r As Range, label As String, HighlightColor As Long, Opt
 3151      s1.Shadow.Visible = msoFalse
         
 3152      With s1.TextFrame
-3153          .Characters.Text = label
+3153          .Characters.Text = Label
 3154          .Characters.Font.Color = HighlightColor
 3155          .HorizontalAlignment = xlHAlignLeft ' xlHAlignCenter
               ' "=", "<=", & ">=" will be centered
-3156          If ((Height < 500) Or (label = "=") Or (label = ChrW(&H2265)) Or (label = ChrW(&H2264))) Then
+3156          If ((Height < 500) Or (Label = "=") Or (Label = ChrW(&H2265)) Or (Label = ChrW(&H2264))) Then
 3157              .VerticalAlignment = xlVAlignCenter  ' Shape is small enought to have text fit on the screen when centered, so we center text
 3158          Else
 3159              .VerticalAlignment = xlVAlignTop   ' So we can see the name when scrolled to the top
@@ -269,7 +269,7 @@ ErrorHandler:
           GoTo ExitFunction
 End Function
 
-Function AddLabelledConnector(w As Worksheet, s1 As Shape, s2 As Shape, label As String)
+Function AddLabelledConnector(w As Worksheet, s1 As Shape, s2 As Shape, Label As String)
           Dim RaiseError As Boolean
           RaiseError = False
           On Error GoTo ErrorHandler
@@ -300,9 +300,9 @@ Function AddLabelledConnector(w As Worksheet, s1 As Shape, s2 As Shape, label As
 3197      s3.Line.Visible = False
 3198      s3.Fill.Visible = False
 3199      s3.Shadow.Visible = msoFalse
-3200      If label <> "" Then
+3200      If Label <> "" Then
 3201          With s3.TextFrame
-3202              .Characters.Text = label
+3202              .Characters.Text = Label
 3203              .MarginBottom = 0
 3204              .MarginLeft = 0
 3205              .MarginRight = 0
@@ -627,21 +627,21 @@ Sub AddDecisionVariableHighlighting(DecisionVariableRange As Range)
           
 End Sub
 
-Sub AddBinaryIntegerIndividualLabels(CellsRange As Range, label As String)
+Sub AddBinaryIntegerIndividualLabels(CellsRange As Range, Label As String)
     Dim c As Range
     If Not CellsRange Is Nothing Then
         For Each c In CellsRange
-            AddLabelToRange ActiveSheet, c, 1, 9, label, RGB(0, 0, 0)
+            AddLabelToRange ActiveSheet, c, 1, 9, Label, RGB(0, 0, 0)
         Next c
     End If
 End Sub
 
-Sub AddBinaryIntegerBlockLabels(CellsRange As Range, label As String)
+Sub AddBinaryIntegerBlockLabels(CellsRange As Range, Label As String)
     Dim selectedArea As Range, CellHighlight As ShapeRange
     If Not CellsRange Is Nothing Then
         For Each selectedArea In CellsRange.Areas
             Set CellHighlight = HighlightRange(selectedArea, "", RGB(255, 0, 255)) ' Magenta highlight
-            AddLabelToShape ActiveSheet, CellHighlight(1), -6, 10, label, RGB(0, 0, 0) ' Black text
+            AddLabelToShape ActiveSheet, CellHighlight(1), -6, 10, Label, RGB(0, 0, 0) ' Black text
         Next selectedArea
     End If
 End Sub

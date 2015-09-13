@@ -199,7 +199,7 @@ End Function
 
 Function MakePathSafe(Path As String) As String
 ' Prepares a path for command-line invocation
-    MakePathSafe = IIf(Len(Path) = 0, "", QuotePath(ConvertHfsPathToPosix(Path)))
+    MakePathSafe = IIf(Len(Path) = 0, "", Quote(ConvertHfsPathToPosix(Path)))
 End Function
 
 Function JoinPaths(ParamArray Paths() As Variant) As String
