@@ -28,7 +28,6 @@ Private Const pPythonScript = "gurobiOSRun.py"
 
 Private Const pSensitivityAnalysisAvailable = True
 
-Private Const pSolutionFile = "modelsolution.sol"
 Private Const pSensitivityFile = "sensitivityData.sol"
 Private Const pFileType = OpenSolver_FileType.LP
 Private Const pModelType = OpenSolver_ModelType.Diff
@@ -139,10 +138,6 @@ Private Property Get ISolverFile_FileType() As OpenSolver_FileType
 End Property
 
 ' Methods
-
-Function SolutionFilePath() As String
-    GetTempFilePath pSolutionFile, SolutionFilePath
-End Function
 
 Private Function PythonScriptPath() As String
     PythonScriptPath = JoinPaths(ThisWorkbook.Path, SolverDir, pPythonScript)
@@ -279,7 +274,7 @@ ErrorHandler:
 End Function
 
 Private Sub CleanFiles()
-    DeleteFileAndVerify SolutionFilePath()
+    DeleteFileAndVerify GetSolutionFilePath()
     DeleteFileAndVerify ScriptFilePath()
     DeleteFileAndVerify SensitivityFilePath()
 End Sub
@@ -294,7 +289,7 @@ Private Function CreateSolveScript(ModelFilePathName As String, s As COpenSolver
 
     CommandLineRunString = MakePathSafe(PythonScriptPath()) & " " & _
                            MakePathSafe(ModelFilePathName) & " " & _
-                           MakePathSafe(SolutionFilePath()) & " " & _
+                           MakePathSafe(GetSolutionFilePath()) & " " & _
                            MakePathSafe(SensitivityFilePath())
     
     SolverParametersString = ParametersToKwargs(s.SolverParameters)
@@ -322,13 +317,15 @@ Sub ReadResults(s As COpenSolver)
     RaiseError = False
     On Error GoTo ErrorHandler
 
-    If Not FileOrDirExists(SolutionFilePath()) Then
+    Dim SolutionFilePath As String
+    SolutionFilePath = GetSolutionFilePath()
+    If Not FileOrDirExists(SolutionFilePath) Then
         Err.Raise Number:=OpenSolver_SolveError, Description:="The solver did not create a solution file. No new solution is available."
     End If
     
     s.SolutionWasLoaded = True
     
-    Open SolutionFilePath() For Input As #1 ' supply path with filename
+    Open SolutionFilePath For Input As #1 ' supply path with filename
     Dim Line As String, Index As Long
     Line Input #1, Line
     ' Check for python exception while running Gurobi

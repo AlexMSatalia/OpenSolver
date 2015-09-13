@@ -2,11 +2,14 @@ Attribute VB_Name = "SolverCommon"
 Option Explicit
 
 Public Const LogFileName = "log1.tmp"
+Public Const SolutionFileName = "model.sol"
 
 Public Const SolverDir As String = "Solvers"
 Public Const SolverDirMac As String = "osx"
 Public Const SolverDirWin32 As String = "win32"
 Public Const SolverDirWin64 As String = "win64"
+
+Public LastUsedSolver As String
 
 Sub SolveModel(s As COpenSolver, ShouldSolveRelaxation As Boolean, ShouldMinimiseUserInteraction As Boolean)
     Dim RaiseError As Boolean
@@ -163,6 +166,10 @@ Function GetLogFilePath(ByRef Path As String) As Boolean
           GetLogFilePath = GetTempFilePath(LogFileName, Path)
 End Function
 
+Function GetSolutionFilePath() As String
+    GetTempFilePath SolutionFileName, GetSolutionFilePath
+End Function
+
 Function IterationLimitAvailable(Solver As ISolver) As Boolean
     IterationLimitAvailable = (Len(Solver.IterationLimitName) <> 0)
 End Function
@@ -242,7 +249,7 @@ Function SolverIsAvailable(Solver As ISolver, Optional SolverPath As String, Opt
         Else
 ErrorHandlerLocal:
             SolverIsAvailable = False
-            errorString = "Unable to access the " & Solver.Name & " solver at " & MakeSpacesNonBreaking(MakePathSafe(SolverPath))
+            errorString = "Unable to access the " & DisplayName(Solver) & " solver at " & MakeSpacesNonBreaking(MakePathSafe(SolverPath))
         End If
     ElseIf TypeOf Solver Is ISolverNeos Then
         SolverIsAvailable = True
@@ -268,7 +275,7 @@ Function AboutLocalSolver(LocalSolver As ISolverLocal) As String
             SolverPath = GurobiSolver.ExecFilePath()
         End If
     
-        AboutLocalSolver = Solver.Name & " " & _
+        AboutLocalSolver = DisplayName(Solver) & " " & _
                            "v" & LocalSolver.Version & " " & _
                            "(" & LocalSolver.Bitness & "-bit) " & _
                            LibVersion & _
@@ -295,7 +302,7 @@ Sub RunLocalSolver(s As COpenSolver, ExternalCommand As String)
     ' Check log for any errors which can offer more descriptive messages than exeresult <> 0
     s.Solver.CheckLog s
     If exeResult <> 0 Then
-        Err.Raise Number:=OpenSolver_SolveError, Description:="The " & s.Solver.Name & " solver did not complete, but aborted with the error code " & exeResult & "." & vbCrLf & vbCrLf & "The last log file can be viewed under the OpenSolver menu and may give you more information on what caused this error."
+        Err.Raise Number:=OpenSolver_SolveError, Description:="The " & DisplayName(s.Solver) & " solver did not complete, but aborted with the error code " & exeResult & "." & vbCrLf & vbCrLf & "The last log file can be viewed under the OpenSolver menu and may give you more information on what caused this error."
     End If
 
 ExitSub:
@@ -327,7 +334,7 @@ Function SolverLibPath(LocalLibSolver As ISolverLocalLib, Optional errorString A
         SolverLibPath = ""
         Dim Solver As ISolver
         Set Solver = LocalLibSolver
-        errorString = "Unable to find " & Solver.Name & " ('" & LocalLibSolver.LibBinary & "'). Folders searched:" & _
+        errorString = "Unable to find " & DisplayName(Solver) & " ('" & LocalLibSolver.LibBinary & "'). Folders searched:" & _
                       vbNewLine & MakePathSafe(LibDir())
     End If
 End Function
@@ -362,7 +369,7 @@ Function SolverExecPath(LocalExecSolver As ISolverLocalExec, Optional errorStrin
             If GetExistingFilePathName(JoinPaths(SearchPath, SolverDirWin32), LocalExecSolver.ExecName, SolverExecPath) Then
                 Bitness = "32"
                 If SystemIs64Bit Then
-                    errorString = "Unable to find 64-bit " & Solver.Name & " in the Solvers folder. A 32-bit version will be used instead."
+                    errorString = "Unable to find 64-bit " & DisplayName(Solver) & " in the Solvers folder. A 32-bit version will be used instead."
                 End If
             Else
                 errorString = errorString & vbNewLine & MakePathSafe(JoinPaths(SearchPath, SolverDirWin32))
@@ -373,7 +380,7 @@ Function SolverExecPath(LocalExecSolver As ISolverLocalExec, Optional errorStrin
     If Len(Bitness) = 0 Then
         ' Failed to find a valid solver
         SolverExecPath = ""
-        errorString = "Unable to find " & Solver.Name & " ('" & LocalExecSolver.ExecName & "'). Folders searched:" & errorString
+        errorString = "Unable to find " & DisplayName(Solver) & " ('" & LocalExecSolver.ExecName & "'). Folders searched:" & errorString
     End If
 
 ExitFunction:
@@ -483,5 +490,12 @@ Function RunSolver(s As COpenSolver, SolverCommand As String) As String
         RunSolver = ""
     ElseIf TypeOf s.Solver Is ISolverNeos Then
         RunSolver = CallNEOS(s, SolverCommand)
+    End If
+End Function
+
+Function DisplayName(Solver As ISolver) As String
+    DisplayName = Solver.Name
+    If TypeOf Solver Is ISolverNeos Then
+        DisplayName = DisplayName & " on NEOS"
     End If
 End Function

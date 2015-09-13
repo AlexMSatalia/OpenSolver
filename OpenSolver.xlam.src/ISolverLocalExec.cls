@@ -17,3 +17,4 @@ End Property
 
 Public Function CreateSolveScript(ModelFilePathName As String, c As COpenSolver) As String
 End Function
+

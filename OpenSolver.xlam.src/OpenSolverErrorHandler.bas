@@ -1,4 +1,6 @@
 Attribute VB_Name = "OpenSolverErrorHandler"
+Option Explicit
+
 Const DEBUG_MODE As Boolean = False
 Const USER_CANCEL As Long = 18
  
@@ -8,8 +10,6 @@ Private Const FILE_ERROR_LOG As String = "error.log"
 Public ErrMsg As String
 Public ErrNum As Long
 Public ErrSource As String
-
-Public SolverInUse As String
 
 ' OpenSolver error numbers.
 Public Const OpenSolver_ModelError = vbObjectError + 1001 ' An error occured while building the model
@@ -98,7 +98,7 @@ Function ReportError(ModuleName As String, ProcedureName As String, Optional IsE
     Print #FileNum, LogText
     If IsEntryPoint Then
         Print #FileNum, vbNewLine & "Error " & CStr(ErrNum) & ": " & ErrMsg & vbNewLine
-        If Len(SolverInUse) <> 0 Then Print #FileNum, "Solver: " & SolverInUse & vbNewLine
+        If Len(LastUsedSolver) <> 0 Then Print #FileNum, "Solver: " & LastUsedSolver & vbNewLine
         Print #FileNum, EnvironmentSummary() & vbNewLine
         Print #FileNum, StripNonBreakingSpaces(SolverInfo)
     End If

@@ -234,13 +234,13 @@ DeleteError:
           Err.Raise Number:=Err.Number, Description:="Unable to delete the file: " & FilePath & vbNewLine & vbNewLine & Err.Description
 End Sub
 
-Sub OpenFile(FilePath As String, notFoundMessage As String)
+Sub OpenFile(FilePath As String, NotFoundMessage As String)
           Dim RaiseError As Boolean
           RaiseError = False
           On Error GoTo ErrorHandler
 
 762       If Not FileOrDirExists(FilePath) Then
-763           Err.Raise OpenSolver_NoFile, Description:=notFoundMessage
+763           Err.Raise OpenSolver_NoFile, Description:=NotFoundMessage
 764       Else
               ' Check that there is no workbook open with the same name
               Dim w As Workbook

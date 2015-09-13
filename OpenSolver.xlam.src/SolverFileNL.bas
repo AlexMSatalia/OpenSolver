@@ -2,7 +2,6 @@ Attribute VB_Name = "SolverFileNL"
 Option Explicit
 
 Public Const NLModelFileName As String = "model.nl"
-Public Const NLSolutionFileName As String = "model.sol"
 
 ' This module is for writing .nl files that describe the model and solving these
 ' For more info on .nl file format see:
@@ -123,10 +122,6 @@ End Property
 
 Function GetNLModelFilePath(ByRef Path As String) As Boolean
           GetNLModelFilePath = GetTempFilePath(NLModelFileName, Path)
-End Function
-
-Function GetNLSolutionFilePath(ByRef Path As String) As Boolean
-          GetNLSolutionFilePath = GetTempFilePath(NLSolutionFileName, Path)
 End Function
 
 ' Creates .nl file and solves model
@@ -1827,7 +1822,7 @@ Sub ReadResults_NL(s As COpenSolver)
     s.SolutionWasLoaded = False
     
     Dim SolutionFilePathName As String
-    GetNLSolutionFilePath SolutionFilePathName
+    SolutionFilePathName = GetSolutionFilePath()
     
     If Not FileOrDirExists(SolutionFilePathName) Then
         Err.Raise OpenSolver_SolveError, Description:= _
@@ -1862,9 +1857,9 @@ Sub ReadResults_NL(s As COpenSolver)
         Else
             If Not GetExtraInfoFromLog(s) Then
                 Err.Raise OpenSolver_SolveError = _
-                    "The response from the " & s.Solver.Name & " solver is not recognised. The response was: " & vbNewLine & vbNewLine & _
+                    "The response from the " & DisplayName(s.Solver) & " solver is not recognised. The response was: " & vbNewLine & vbNewLine & _
                     Line & vbNewLine & vbNewLine & _
-                    "The " & s.Solver.Name & " command line can be found at:" & vbNewLine & _
+                    "The " & DisplayName(s.Solver) & " command line can be found at:" & vbNewLine & _
                     SolveScriptPathName
             End If
         End If
@@ -1948,7 +1943,7 @@ Sub CheckLog_NL(s As COpenSolver)
           For Each Key In s.SolverParameters.Keys
               If InStrText(message, Key & """. It is not a valid option.") Then
                   Err.Raise OpenSolver_SolveError, Description:= _
-                      "The parameter '" & Key & "' was not recognised by the " & s.Solver.Name & " solver. " & _
+                      "The parameter '" & Key & "' was not recognised by the " & DisplayName(s.Solver) & " solver. " & _
                       "Please check that this name is correct, or consult the solver documentation for more information."
               End If
               If InStrText(message, "not a valid setting for Option: " & Key) Then
@@ -1962,13 +1957,13 @@ Sub CheckLog_NL(s As COpenSolver)
           For Each BadFunction In Array("max", "min")
               If InStrText(message, BadFunction & " not implemented") Then
                   Err.Raise OpenSolver_SolveError, Description:= _
-                      "The '" & BadFunction & "' function is not supported by the " & s.Solver.Name & " solver"
+                      "The '" & BadFunction & "' function is not supported by the " & DisplayName(s.Solver) & " solver"
               End If
           Next BadFunction
           
           If InStr(message, "unknown operator") Then
               Err.Raise OpenSolver_SolveError, Description:= _
-                  "A function in the model is not supported by the " & s.Solver.Name & " solver. " & _
+                  "A function in the model is not supported by the " & DisplayName(s.Solver) & " solver. " & _
                   "This is likely to be either MIN or MAX"
           End If
 

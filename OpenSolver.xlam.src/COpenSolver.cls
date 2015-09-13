@@ -614,7 +614,7 @@ Sub BuildModelFromSolverData(Optional LinearityCheckOffset As Double = 0, _
           '----------------------------------------------------------------------------------------------------------
           'Find the solver
 960       Set Solver = CreateSolver(GetChosenSolver(sheet))
-          OpenSolverErrorHandler.SolverInUse = Solver.ShortName
+          LastUsedSolver = Solver.ShortName
 
           '--------------------------------------------------------------------------
           ' ADJUSTABLE CELLS SETUP and Setting of Initial Decision Var Cell values

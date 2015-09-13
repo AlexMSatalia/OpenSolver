@@ -26,7 +26,7 @@ Sub WriteLPFile_Diff(s As COpenSolver, ModelFilePathName As String)
           End If
           
 1615      Open ModelFilePathName For Output As #1 ' supply path with filename
-1616      Print #1, commentStart & " Model solved using the solver '" & s.Solver.Name & "'"
+1616      Print #1, commentStart & " Model solved using the solver '" & DisplayName(s.Solver) & "'"
 1617      Print #1, commentStart & " Model for sheet " & s.sheet.Name
 1619      Print #1, commentStart & " Model has " & s.NumConstraints & " Excel constraints giving " & s.NumRows & " constraint rows and " & s.numVars & " variables."
 1620      If s.SolveRelaxation And (s.NumBinVars > 0) Then

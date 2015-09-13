@@ -48,7 +48,25 @@ Sub OpenSolver_SolveRelaxationClickHandler(Optional Control)
 End Sub
 
 Sub OpenSolver_LaunchCBCCommandLine(Optional Control)
-2764      LaunchCommandLine_CBC
+          If Len(LastUsedSolver) = 0 Then
+              MsgBox "Cannot open the last model in CBC as the model has not been solved yet."
+          Else
+              Dim Solver As ISolver
+              Set Solver = CreateSolver(LastUsedSolver)
+              If TypeOf Solver Is ISolverFile Then
+                  Dim FileSolver As ISolverFile
+                  Set FileSolver = Solver
+                  If FileSolver.FileType = LP Then
+2764                  LaunchCommandLine_CBC
+                  Else
+                      GoTo NotLPSolver
+                  End If
+              Else
+NotLPSolver:
+                  MsgBox "The last used solver (" & DisplayName(Solver) & ") does not use .lp model files, so CBC cannot load the model. " & _
+                         "Please solve the model using a solver that uses .lp files, such as CBC or Gurobi, and try again."
+              End If
+          End If
           AutoUpdateCheck
 End Sub
 
@@ -81,44 +99,50 @@ Sub OpenSolver_QuickSolveClickHandler(Optional Control)
 End Sub
 
 Sub OpenSolver_ViewLastModelClickHandler(Optional Control)
-          Dim notFoundMessage As String, FilePath As String
-2781      GetLPFilePath FilePath
-2782      notFoundMessage = "Error: There is no LP file (" & FilePath & ") to open. Please solve the model using one of the linear solvers within OpenSolver, and then try again."
-2783      OpenFile FilePath, notFoundMessage
+          If Len(LastUsedSolver) = 0 Then
+              MsgBox "Cannot open the last model file as the model has not been solved yet."
+          Else
+              Dim Solver As ISolver
+              Set Solver = CreateSolver(LastUsedSolver)
+              If TypeOf Solver Is ISolverFile Then
+                  Dim NotFoundMessage As String, FilePath As String
+                  FilePath = GetModelFilePath(Solver)
+                  NotFoundMessage = "Error: There is no model file (" & FilePath & ") to open. Please solve the OpenSolver model and then try again."
+                  OpenFile FilePath, NotFoundMessage
+              Else
+                  MsgBox "The last used solver (" & DisplayName(Solver) & ") does not use a model file."
+              End If
+          End If
           AutoUpdateCheck
 End Sub
 
-Sub OpenSolver_ViewLastAmplClickHandler(Optional Control)
-          Dim notFoundMessage As String, FilePath As String
-2784      GetAMPLFilePath FilePath
-2785      notFoundMessage = "Error: There is no AMPL file (" & FilePath & ") to open. Please solve the model using one of the NEOS solvers within OpenSolver, and then try again."
-2786      OpenFile FilePath, notFoundMessage
-          AutoUpdateCheck
-End Sub
-
-Sub OpenSolver_ViewLogFile(Optional Control)
-          Dim notFoundMessage As String, FilePath As String
-2787      GetLogFilePath FilePath
-2788      notFoundMessage = "Error: There is no log file (" & FilePath & ") to open. Please re-solve the OpenSolver model, and then try again."
-2789      OpenFile FilePath, notFoundMessage
+Sub OpenSolver_ViewLogFileClickHandler(Optional Control)
+          If Len(LastUsedSolver) = 0 Then
+              MsgBox "Cannot open the log file as the model has not been solved yet."
+          Else
+              Dim NotFoundMessage As String, FilePath As String
+2787          GetLogFilePath FilePath
+2788          NotFoundMessage = "Error: There is no log file (" & FilePath & ") to open. Please solve the OpenSolver model and then try again."
+2789          OpenFile FilePath, NotFoundMessage
+          End If
           AutoUpdateCheck
 End Sub
 
 Sub OpenSolver_ViewLastSolutionClickHandler(Optional Control)
-          Dim notFoundMessage As String, FilePath As String, CbcSolver As CSolverCbc
-          Set CbcSolver = New CSolverCbc
-2790      FilePath = CbcSolver.SolutionFilePath()
-2791      notFoundMessage = "Error: There is no solution file (" & FilePath & ") to open. Please solve the model using the CBC solver for OpenSolver, and then try again. Or if you solved your model using a different solver try opening that file instead."
-2792      OpenFile FilePath, notFoundMessage
-          AutoUpdateCheck
-End Sub
-
-Sub OpenSolver_ViewLastGurobiSolutionClickHandler(Optional Control)
-          Dim notFoundMessage As String, FilePath As String, GurobiSolver As CSolverGurobi
-          Set GurobiSolver = New CSolverGurobi
-2790      FilePath = GurobiSolver.SolutionFilePath()
-2794      notFoundMessage = "Error: There is no solution file (" & FilePath & ") to open. Please solve the model using the Gurobi solver for OpenSolver, and then try again. Or if you solved your model using a different solver try opening that file instead."
-2795      OpenFile FilePath, notFoundMessage
+          If Len(LastUsedSolver) = 0 Then
+              MsgBox "Cannot open the last solution file as the model has not been solved yet."
+          Else
+              Dim Solver As ISolver
+              Set Solver = CreateSolver(LastUsedSolver)
+              If TypeOf Solver Is ISolverLocalExec Then
+                  Dim NotFoundMessage As String, FilePath As String
+2790              FilePath = GetSolutionFilePath()
+2791              NotFoundMessage = "Error: There is no solution file (" & FilePath & ") to open. Please solve the OpenSolver model and then try again."
+2792              OpenFile FilePath, NotFoundMessage
+              Else
+                  MsgBox "The last used solver (" & DisplayName(Solver) & ") does not produce a solution file. Please check the log file for any solution information."
+              End If
+          End If
           AutoUpdateCheck
 End Sub
 
@@ -278,33 +302,23 @@ Function GenerateMenuItems() As Collection
                          "Solve a modified problem without any integer or binary constraints", _
                          "Relaxes any integer or binary requirements on the variables, and solves the resulting linear program, " & _
                          "typically giving an answer with fractional variables.")
-        .Add NewMenuItem("button", "OpenSolverViewModel", "View last model .lp file", "OpenSolver_ViewLastModelClickHandler", _
-                         "View the .lp file created when OpenSolver last solved a model", _
-                         "OpenSolver writes the model to a temporary text file that is read by the CBC optimization engine. " & _
+        .Add NewMenuItem("button", "OpenSolverViewModel", "View Last Model File", "OpenSolver_ViewLastModelClickHandler", _
+                         "View the model file created when OpenSolver last solved a model", _
+                         "For some solvers, OpenSolver writes the model to a temporary text file that is read by the solver. " & _
                          "It is often useful to load and view this file.")
-        .Add NewMenuItem("button", "OpenSolverViewModelAMPL", "View last AMPL file", "OpenSolver_ViewLastAmplClickHandler", _
-                         "View the AMPL file created when OpenSolver last solved a model", _
-                         "OpenSolver writes the AMPL model to a temporary text file that is sent to the NEOS optimization " & _
-                         "engine servers. It is often useful to load and view this file.")
-        .Add NewMenuItem("button", "OpenSolverViewLogFile", "View last log file", "OpenSolver_ViewLogFile", _
+        .Add NewMenuItem("button", "OpenSolverViewSolution", "View Last Solution File", "OpenSolver_ViewLastSolutionClickHandler", _
+                         "View the last solution file", _
+                         "When a model is solved, a temporary solution file can be created by the solver containing the solution " & _
+                         "to the optimization problem. It is sometimes useful to load and view this file.")
+        .Add NewMenuItem("button", "OpenSolverViewLogFile", "View Last Log File", "OpenSolver_ViewLogFileClickHandler", _
                          "View the last log file", _
-                         "Linear: For the linear solvers the log file shows you the command line output, which can give " & _
-                         "you more information about your model. Non-Linear: When a nomad model is solved a temporary log " & _
-                         "file is created by the Nomad optimization engine which has information on the parameters passed " & _
-                         "to Nomad as well as information on some of the iterations of the solver.")
-        .Add NewMenuItem("button", "OpenSolverViewSolution", "View Last CBC Solution File", "OpenSolver_ViewLastSolutionClickHandler", _
-                         "View the last solution files", _
-                         "When a model is solved, a temporary solution file is created by the CBC optimization engine. " & _
-                         "It is sometimes useful to load and view this file.")
+                         "OpenSolver creates a log file every time a model is solved. The log file contains output from the solver, " & _
+                         "such as iteration details during the solve, which can give you more information about your model.")
         .Add NewMenuItem("button", "OpenSolverLaunchCBC", "Open Last Model in CBC...", "OpenSolver_LaunchCBCCommandLine", _
                          "Open the CBC command line, and load in the last model.", _
                          "Open the CBC optimizer at the command line, and load in the last model solved by OpenSolver. " & _
                          "Type '?' at the CBC command line to get help on the CBC commands, and 'exit' to quit CBC. " & _
                          "Note that any solutions generated are discarded; they are not loaded back into your spreadsheet.")
-        .Add NewMenuItem("button", "OpenSolverViewGurobiSolution", "View Last Gurobi Solution File", _
-                         "OpenSolver_ViewLastGurobiSolutionClickHandler", "View the last gurobi solution files", _
-                         "When a model is solved, a temporary solution file is created by the Gurobi optimization engine. " & _
-                         "It is sometimes useful to load and view this file.")
                               
         .Add NewMenuItem("menuSeparator", "separator2", "About")
         .Add NewMenuItem("button", "OpenSolverAbout", "About OpenSolver...", "OpenSolver_AboutClickHandler")

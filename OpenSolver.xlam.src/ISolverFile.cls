@@ -16,3 +16,4 @@ End Sub
 
 Public Property Get FileType() As OpenSolver_FileType
 End Property
+

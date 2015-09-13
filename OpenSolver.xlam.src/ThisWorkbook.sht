@@ -41,6 +41,7 @@ Private Sub Workbook_BeforeSave(ByVal SaveAsUI As Boolean, Cancel As Boolean)
 
 14        If MsgBox("Export VBA Code?", vbYesNo, "Before you go") = vbYes Then
 15            ExportVBACode
+              CreateRibbonXML
 16        End If
 
           If MsgBox("Close all VB windows? Do this before release!", vbYesNo, "Before you go") = vbYes Then

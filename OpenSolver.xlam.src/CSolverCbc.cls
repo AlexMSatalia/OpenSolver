@@ -26,7 +26,6 @@ Private Const pScriptFile = "cbc" & ScriptExtension
 
 Private Const pSensitivityAnalysisAvailable = True
 
-Private Const pSolutionFile = "modelsolution.txt"
 Private Const pCostRangesFile = "costranges.txt"
 Private Const pRHSRangesFile = "rhsranges.txt"
 Private Const pFileType = OpenSolver_FileType.LP
@@ -154,7 +153,7 @@ ErrorHandler:
 End Function
 
 Private Sub CleanFiles()
-    DeleteFileAndVerify SolutionFilePath()
+    DeleteFileAndVerify GetSolutionFilePath()
     DeleteFileAndVerify CostRangesFilePath()
     DeleteFileAndVerify RHSRangesFilePath()
     DeleteFileAndVerify ScriptFilePath()
@@ -162,10 +161,6 @@ End Sub
 
 Function ScriptFilePath() As String
     GetTempFilePath pScriptFile, ScriptFilePath
-End Function
-
-Function SolutionFilePath() As String
-    GetTempFilePath pSolutionFile, SolutionFilePath
 End Function
 
 Function CostRangesFilePath() As String
@@ -189,7 +184,7 @@ Private Function CreateSolveScript(ModelFilePathName As String, s As COpenSolver
                            " " & SolverParametersString & _
                            " -solve " & _
                            IIf(s.bGetDuals, " -printingOptions all ", "") & _
-                           " -solution " & MakePathSafe(SolutionFilePath) & _
+                           " -solution " & MakePathSafe(GetSolutionFilePath()) & _
                            IIf(s.bGetDuals, " -printingOptions rhs  -solution " & pRHSRangesFile & _
                                             " -printingOptions objective -solution " & pCostRangesFile, "")
                   
@@ -214,7 +209,9 @@ Private Sub ReadResults(s As COpenSolver)
     Dim RaiseError As Boolean
     RaiseError = False
     On Error GoTo ErrorHandler
-
+    
+    Dim SolutionFilePath As String
+    SolutionFilePath = GetSolutionFilePath()
     If Not FileOrDirExists(SolutionFilePath) Then
         Err.Raise Number:=OpenSolver_SolveError, Description:="The solver did not create a solution file. No new solution is available."
     End If
