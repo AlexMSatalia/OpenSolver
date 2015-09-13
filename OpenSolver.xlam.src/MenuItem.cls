@@ -17,4 +17,5 @@ Public ScreenTip As String
 Public SuperTip As String
 Public Image As String
 Public Size As String
+Public NewGroup As Boolean
 Public Children As Collection

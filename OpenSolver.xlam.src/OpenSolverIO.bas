@@ -269,7 +269,7 @@ Sub OpenFolder(FolderPath As String, NotFoundMessage As String)
         Err.Raise OpenSolver_NoFile, Description:=NotFoundMessage
     Else
         #If Mac Then
-            system "open " & MakePathSafe(FolderPath)
+            RunExternalCommand "open " & MakePathSafe(FolderPath), WaitForCompletion:=False
         #Else
             Shell "explorer.exe " & FolderPath, vbNormalFocus
         #End If

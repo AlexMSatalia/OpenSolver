@@ -256,7 +256,7 @@ Function GenerateMenuItems() As Collection
     ModelOnAction = "OpenSolver_ModelClick"
     
     Dim ModelSB As MenuItem
-    Set ModelSB = NewMenuItem("splitButton", "OpenSolverModelSB", Size:="large")
+    Set ModelSB = NewMenuItem("splitButton", "OpenSolverModelSB", Size:="large", NewGroup:=True)
     ModelSB.Children.Add NewMenuItem("button", "OpenSolverModel", "&Model", ModelOnAction, ModelScreenTip, ModelSuperTip, "model")
     
     Dim ModelMenu As MenuItem
@@ -282,10 +282,30 @@ Function GenerateMenuItems() As Collection
     ModelSB.Children.Add ModelMenu
     Items.Add ModelSB
     
-    ' Main menu items
-    Items.Add NewMenuItem("button", "OpenSolverSolve", "&Solve", "OpenSolver_SolveClickHandler", "Solve optimization model", _
-                          "Solve an existing Solver model on the active worksheet by constructing the model's equations and " & _
-                          "then calling the current chosen optimization engine.", "solve", "large")
+    ' Solve sub-menu
+    Dim SolveScreenTip As String, SolveSuperTip As String, SolveOnAction As String
+    SolveScreenTip = "Solve optimization model"
+    SolveSuperTip = "Solve an existing Solver model on the active worksheet by constructing the model's equations and " & _
+                    "then calling the current chosen optimization engine."
+    SolveOnAction = "OpenSolver_SolveClickHandler"
+    
+    Dim SolveSB As MenuItem
+    Set SolveSB = NewMenuItem("splitButton", "OpenSolverSolveSB", Size:="large")
+    SolveSB.Children.Add NewMenuItem("button", "OpenSolverSolve", "&Solve", SolveOnAction, SolveScreenTip, SolveSuperTip, "solve")
+    
+    Dim SolveMenu As MenuItem
+    Set SolveMenu = NewMenuItem("menu", "OpenSolverSolveMenu", Size:="normal")
+    With SolveMenu.Children
+        .Add NewMenuItem("button", "OpenSolverSolve2", "&Solve", SolveOnAction, SolveScreenTip, SolveSuperTip)
+        .Add NewMenuItem("button", "OpenSolverSolveRelaxation", "Solve &Relaxation", "OpenSolver_SolveRelaxationClickHandler", _
+                         "Solve a modified problem without any integer or binary constraints", _
+                         "Relaxes any integer or binary requirements on the variables, and solves the resulting linear program, " & _
+                         "typically giving an answer with fractional variables.")
+    End With
+    SolveSB.Children.Add SolveMenu
+    Items.Add SolveSB
+    
+    ' Single-level main menu items
     Items.Add NewMenuItem("button", "OpenSolverShowModel", "Show/&Hide Model", "OpenSolver_ShowHideModelClickHandler", _
                           "Show or hide the optimization model on this sheet", _
                           "OpenSolver will analyse an existing model on the active sheet, and add coloured annotations " & _
@@ -295,9 +315,9 @@ Function GenerateMenuItems() As Collection
                           "OpenSolver can re-solve problems very quickly if it is first told about the cells (termed parameters) " & _
                           "that change between solves. The Quick Solve menu items below can be used to set this up for your model.")
                                
-    ' OpenSolver submenu
+    ' OpenSolver sub-menu
     Dim OpenSolverMenu As MenuItem
-    Set OpenSolverMenu = NewMenuItem("menu", "menu", "&OpenSolver")
+    Set OpenSolverMenu = NewMenuItem("menu", "menu", "&OpenSolver", NewGroup:=True)
     With OpenSolverMenu.Children
         .Add NewMenuItem("menuSeparator", "separator0", "QuickSolve Options")
         .Add NewMenuItem("button", "OpenSolverInitParameters", "Set QuickSolve Parameters...", _
@@ -314,10 +334,6 @@ Function GenerateMenuItems() As Collection
                          "model's equations ready for quick solving.")
                               
         .Add NewMenuItem("menuSeparator", "separator1", "Temporary Files")
-        .Add NewMenuItem("button", "OpenSolverSolveRelaxation", "Solve Relaxation", "OpenSolver_SolveRelaxationClickHandler", _
-                         "Solve a modified problem without any integer or binary constraints", _
-                         "Relaxes any integer or binary requirements on the variables, and solves the resulting linear program, " & _
-                         "typically giving an answer with fractional variables.")
         .Add NewMenuItem("button", "OpenSolverViewModel", "View Last Model File", "OpenSolver_ViewLastModelClickHandler", _
                          "View the model file created when OpenSolver last solved a model", _
                          "For some solvers, OpenSolver writes the model to a temporary text file that is read by the solver. " & _
@@ -358,7 +374,7 @@ End Function
 Function NewMenuItem(Tag As String, Id As String, Optional Label As String, _
         Optional OnAction As String, Optional ScreenTip As String, _
         Optional SuperTip As String, Optional Image As String, _
-        Optional Size As String) As MenuItem
+        Optional Size As String, Optional NewGroup = False) As MenuItem
     Set NewMenuItem = New MenuItem
     With NewMenuItem
         .Tag = Tag
@@ -369,6 +385,7 @@ Function NewMenuItem(Tag As String, Id As String, Optional Label As String, _
         .SuperTip = SuperTip
         .Image = Image
         .Size = Size
+        .NewGroup = NewGroup
         Set .Children = New Collection
     End With
 End Function
@@ -390,7 +407,7 @@ Sub AddToMenu(Menu As CommandBarControl, Item As MenuItem)
     Case "menu", "splitButton"
         Dim SubMenu As CommandBarControl
         Set SubMenu = Menu.Controls.Add(Type:=msoControlPopup)
-        SubMenu.BeginGroup = True  ' TODO may not always be this
+        SubMenu.BeginGroup = Item.NewGroup
         
         Dim Children As Collection
         If Item.Tag = "menu" Then
