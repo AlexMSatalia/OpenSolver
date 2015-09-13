@@ -154,6 +154,14 @@ Sub OpenSolver_ViewLastSolutionClickHandler(Optional Control)
           AutoUpdateCheck
 End Sub
 
+Sub OpenSolver_ViewTempFolderClickHandler(Optional Control)
+    Dim NotFoundMessage As String, FolderPath As String
+    FolderPath = GetTempFolder()
+    NotFoundMessage = "Error: The OpenSolver temporary files folder (" & FolderPath & ") doesn't exist."
+    OpenFolder FolderPath, NotFoundMessage
+    AutoUpdateCheck
+End Sub
+
 Sub OpenSolver_OnlineHelp(Optional Control)
 2796      OpenURL "http://help.opensolver.org"
           AutoUpdateCheck
@@ -325,6 +333,9 @@ Function GenerateMenuItems() As Collection
         .Add NewMenuItem("button", "OpenSolverViewErrorLogFile", "View Last Error Log File", "OpenSolver_ViewErrorLogFileClickHandler", _
                          "View the last error log file", _
                          "OpenSolver creates a log file every time an error occurs with detailed information about the error.")
+        .Add NewMenuItem("button", "OpenSolverViewTempFolder", "View All OpenSolver Files...", _
+                         "OpenSolver_ViewTempFolderClickHandler", "View all temporary OpenSolver files", _
+                         "Opens the folder containing all files created while using OpenSolver.")
         .Add NewMenuItem("button", "OpenSolverLaunchCBC", "Open Last Model in CBC...", "OpenSolver_LaunchCBCCommandLine", _
                          "Open the CBC command line, and load in the last model.", _
                          "Open the CBC optimizer at the command line, and load in the last model solved by OpenSolver. " & _

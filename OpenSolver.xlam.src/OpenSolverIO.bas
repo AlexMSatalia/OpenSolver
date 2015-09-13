@@ -260,6 +260,32 @@ ErrorHandler:
           GoTo ExitSub
 End Sub
 
+Sub OpenFolder(FolderPath As String, NotFoundMessage As String)
+    Dim RaiseError As Boolean
+    RaiseError = False
+    On Error GoTo ErrorHandler
+
+    If Not FileOrDirExists(FolderPath) Then
+        Err.Raise OpenSolver_NoFile, Description:=NotFoundMessage
+    Else
+        #If Mac Then
+            system "open " & MakePathSafe(FolderPath)
+        #Else
+            Shell "explorer.exe " & FolderPath, vbNormalFocus
+        #End If
+    End If
+
+ExitSub:
+    If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+    Exit Sub
+
+ErrorHandler:
+    If Not ReportError("OpenSolverIO", "OpenFolder") Then Resume
+    RaiseError = True
+    GoTo ExitSub
+          
+End Sub
+
 Function GetTempFolder(Optional AllowEnvironOverride As Boolean = True) As String
           Dim RaiseError As Boolean
           RaiseError = False
