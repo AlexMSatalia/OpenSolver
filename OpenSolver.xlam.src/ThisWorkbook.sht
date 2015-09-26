@@ -22,7 +22,10 @@ Private Sub Workbook_AddinUninstall()
 End Sub
 
 Private Sub Workbook_BeforeClose(Cancel As Boolean)
+          On Error Resume Next
 3         AlterMenuItems (False)
+          DeleteTempFolder
+          On Error GoTo 0
 End Sub
 
 Private Sub Workbook_Open()

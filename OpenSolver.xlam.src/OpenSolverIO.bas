@@ -3,7 +3,9 @@ Option Explicit
 
 ' All interactions with file system and sheets in Excel
 
-#If Win32 Then
+#If Mac Then
+    Private Declare Function mktemp Lib "libc.dylib" (ByVal template As String) As String
+#Else
     #If VBA7 Then
         Private Declare PtrSafe Function GetTempPath Lib "kernel32" Alias "GetTempPathA" (ByVal nBufferLength As Long, ByVal lpBuffer As String) As Long
         Private Declare PtrSafe Function SetCurrentDirectoryA Lib "kernel32" (ByVal lpPathName As String) As Long
@@ -286,6 +288,58 @@ ErrorHandler:
           
 End Sub
 
+Sub DeleteFolderAndContents(FolderPath As String)
+    On Error Resume Next
+
+    #If Mac Then
+        RunExternalCommand "rm -rf " & MakePathSafe(FolderPath)
+    #Else
+        Kill JoinPaths(FolderPath, "*.*")
+        RmDir FolderPath
+    #End If
+    On Error GoTo 0
+End Sub
+
+Sub DeleteTempFolder()
+    Dim RaiseError As Boolean
+    RaiseError = False
+    On Error GoTo ErrorHandler
+
+    Dim TempFolderPath As String
+    TempFolderPath = GetTempFolder()
+    If Len(TempFolderPath) <> 0 Then
+        DeleteFolderAndContents TempFolderPath
+    End If
+
+ExitSub:
+    If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+    Exit Sub
+
+ErrorHandler:
+    If Not ReportError("OpenSolverIO", "DeleteTempFolder") Then Resume
+    RaiseError = True
+    GoTo ExitSub
+End Sub
+
+Function CreateTempName(Prefix As String) As String
+    On Error GoTo Failed
+    #If Mac Then
+        CreateTempName = mktemp(Prefix & "-XXXX")
+    #Else
+        Dim fso As Object
+        Set fso = CreateObject("Scripting.FileSystemObject")
+        
+        Dim RandomName As String
+        RandomName = fso.GetTempName()
+        RandomName = Mid(RandomName, 4, Len(RandomName) - 8)
+        CreateTempName = Prefix & "-" & RandomName
+    #End If
+    Exit Function
+    
+Failed:
+    CreateTempName = Prefix
+End Function
+
 Function GetTempFolder(Optional AllowEnvironOverride As Boolean = True) As String
           Dim RaiseError As Boolean
           RaiseError = False
@@ -309,15 +363,6 @@ Function GetTempFolder(Optional AllowEnvironOverride As Boolean = True) As Strin
 97                End If
               #End If
               
-              ' Append OpenSolver to dir
-              If Len(TempFolderPath) <> 0 Then
-                  If Not GetExistingFilePathName(TempFolderPath, "OpenSolver", TempFolderPath) Then
-                      ' Folder doesn't exist - create it
-                      MkDir TempFolderPath
-                  End If
-                  If Right(TempFolderPath, 1) <> Application.PathSeparator Then TempFolderPath = TempFolderPath & Application.PathSeparator
-              End If
-              
               ' Andres Sommerhoff (ASL) - Country: Chile
               ' Allow user to specify a temp path using an environment variable
               ' This can also be a workaround to avoid problem with spaces in the temp path.
@@ -326,7 +371,15 @@ Function GetTempFolder(Optional AllowEnvironOverride As Boolean = True) As Strin
 99                    TempFolderPath = Environ("OpenSolverTempPath")
                   End If
 100           End If
+
+              ' Append OpenSolver to dir
+              If Len(TempFolderPath) <> 0 Then
+                  TempFolderPath = JoinPaths(TempFolderPath, CreateTempName("OpenSolver"))
+                  If Right(TempFolderPath, 1) <> Application.PathSeparator Then TempFolderPath = TempFolderPath & Application.PathSeparator
+              End If
 101       End If
+          
+          If Not FileOrDirExists(TempFolderPath) Then MkDir TempFolderPath
 102       GetTempFolder = TempFolderPath
 
 ExitFunction:
