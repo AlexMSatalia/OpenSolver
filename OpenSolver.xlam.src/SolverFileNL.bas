@@ -252,7 +252,7 @@ Private Sub InitialiseModelStats(s As COpenSolver)
 7578      nwv_ = 0
 7579      nfunc_ = 0
 7580      arith = 0
-7581      flags = 0
+7581      flags = 1  ' We want suffixes printed in the .sol file
           
           ' Model statistics for line #7
 7582      nbv = 0
@@ -1817,7 +1817,6 @@ Sub ReadResults_NL(s As COpenSolver)
     RaiseError = False
     On Error GoTo ErrorHandler
     
-    Dim Line As String
     Dim solutionExpected As Boolean
     s.SolutionWasLoaded = False
     
@@ -1830,78 +1829,135 @@ Sub ReadResults_NL(s As COpenSolver)
             "This can happen when the initial conditions are invalid. " & _
             "Check the log file for more information."
     Else
-        Open SolutionFilePathName For Input As #1
-        Line Input #1, Line ' Skip empty line at start of file
-        Line Input #1, Line ' Get line with status code
-
-        'Get the returned status code from solver.
-        If InStrText(Line, "optimal") Then
-            s.SolveStatus = OpenSolverResult.Optimal
-            s.SolveStatusString = "Optimal"
-            s.SolutionWasLoaded = True
-        ElseIf InStrText(Line, "infeasible") Then
-            s.SolveStatus = OpenSolverResult.Infeasible
-            s.SolveStatusString = "No Feasible Solution"
-        ElseIf InStrText(Line, "unbounded") Then
-            s.SolveStatus = OpenSolverResult.Unbounded
-            s.SolveStatusString = "No Solution Found (Unbounded)"
-        ElseIf InStrText(Line, "interrupted on limit") Then
-            s.SolveStatus = OpenSolverResult.LimitedSubOptimal
-            s.SolveStatusString = "Stopped on User Limit (Time/Iterations)"
-            s.SolutionWasLoaded = True  ' There may or may not be a solution - we try to load one
-            ' See if we can find out which limit was hit from the log file
-            GetExtraInfoFromLog s
-        ElseIf InStrText(Line, "interrupted by user") Then
-            s.SolveStatus = OpenSolverResult.AbortedThruUserAction
-            s.SolveStatusString = "Stopped on Ctrl-C"
-        Else
-            If Not GetExtraInfoFromLog(s) Then
-                Err.Raise OpenSolver_SolveError = _
-                    "The response from the " & DisplayName(s.Solver) & " solver is not recognised. The response was: " & vbNewLine & vbNewLine & _
-                    Line & vbNewLine & vbNewLine & _
-                    "The " & DisplayName(s.Solver) & " command line can be found at:" & vbNewLine & _
-                    SolveScriptPathName
-            End If
-        End If
-    End If
+        UpdateStatusBar "OpenSolver: Reading Solution... ", True
     
-    If s.SolutionWasLoaded Then
-        UpdateStatusBar "OpenSolver: Loading Solution... " & s.SolveStatusString, True
+        ' Reference implementation for reading .sol files:
+        ' https://github.com/ampl/mp/blob/master/src/asl/solvers/readsol.c
+        Dim Line As String
+        Open SolutionFilePathName For Input As #1
         
-        Line Input #1, Line ' Throw away blank line
-        Line Input #1, Line ' Throw away "Options"
+        Do While True  ' Skip empty line at start of file
+            Line Input #1, Line
+            If Trim(Line) <> vbNullString Then Exit Do
+        Loop
+        ' `Line` now has first line of solve message
         
+        Dim SolveMessage As String
+        SolveMessage = vbNullString
+        Do While True
+            SolveMessage = SolveMessage & IIf(Len(SolveMessage) <> 0, vbNewLine, vbNullString) & Line
+            Line Input #1, Line
+            If Trim(Line) = vbNullString Then Exit Do
+        Loop
+        
+        Line Input #1, Line
+        If LCase(Left(Line, 7)) <> "options" Then
+            Err.Raise OpenSolver_SolveError, Description:="Bad .sol file"
+        End If
+        
+        Dim Options(1 To 14) As Long
         Dim i As Long
-        For i = 1 To 8
-            Line Input #1, Line ' Skip all options lines
+        For i = 1 To 3
+           Line Input #1, Line
+           Options(i) = Val(Line)
         Next i
         
-        ' Check there is a solution to load - the solver might not have provided one even if we expect it
-        If EOF(1) Then
-            s.SolutionWasLoaded = False
-            GoTo ExitSub
+        Dim NumOptions As Long
+        NumOptions = Options(1)
+        If NumOptions < 3 Or NumOptions > 9 Then
+            Err.Raise OpenSolver_SolveError, Description:="Too many options"
+        End If
+        Dim NeedVbTol As Boolean
+        NeedVbTol = False
+        If Options(3) = 3 Then
+            NumOptions = NumOptions - 2
+            NeedVbTol = True
         End If
         
-        ' Note that the variable values are written to file in .nl format
-        ' We need to read in the values and the extract the correct values for the adjustable cells
+        For i = 4 To NumOptions + 1
+            Line Input #1, Line
+            Options(i) = Val(Line)
+        Next i
+        
+        Line Input #1, Line
+        If Val(Line) <> n_con Then
+            Err.Raise OpenSolver_SolveError, Description:="Wrong number of constraints"
+        End If
+        
+        Dim NumDualsToRead As Long
+        Line Input #1, Line
+        NumDualsToRead = Val(Line)
+        
+        Line Input #1, Line
+        If Val(Line) <> n_var Then
+            Err.Raise OpenSolver_SolveError, Description:="Wrong number of variables"
+        End If
+        
+        Dim NumVarsToRead As Long
+        Line Input #1, Line
+        NumVarsToRead = Val(Line)
+        If NumVarsToRead > 0 Then s.SolutionWasLoaded = True
+        
+        If NeedVbTol Then Line Input #1, Line  ' Throw away vbtol line if present
+        
+        ' Read in all dual values
+        For i = 1 To NumDualsToRead
+            Line Input #1, Line
+            ' TODO: do something here
+        Next i
         
         ' Read in all variable values
-        Dim VariableValues As New Collection
-        While Not EOF(1)
+        Dim VarIndex As Long
+        For i = 1 To NumVarsToRead
             Line Input #1, Line
-            VariableValues.Add Val(Line)
-        Wend
+            VarIndex = VariableNLIndexToCollectionIndex(i - 1)
+            If VarIndex <= s.numVars Then
+                s.FinalVarValue(VarIndex) = Val(Line)
+                s.VarCell(VarIndex) = s.VarNames(VarIndex)
+            End If
+        Next i
         
-        ' Loop through variable cells and find the corresponding value from VariableValues
-        i = 1
-        Dim c As Range, VariableIndex As Long
-        For Each c In s.AdjustableCells
-            ' Extract the correct variable value
-            VariableIndex = GetVariableNLIndex(i) + 1
-            s.FinalVarValue(i) = VariableValues(VariableIndex)
-            s.VarCell(i) = s.VarNames(i)
-            i = i + 1
-        Next c
+        ' Read objno suffix
+        Line Input #1, Line
+        Dim solve_result_num As Long
+        solve_result_num = -1
+        If Left(Line, 5) = "objno" Then
+            Dim SplitLine() As String
+            SplitLine = Split(Line, " ")
+            If Val(SplitLine(LBound(SplitLine) + 1)) <> 0 Then
+                Err.Raise OpenSolver_SolveError, Description:="Wrong objno"
+            End If
+            solve_result_num = Val(SplitLine(LBound(SplitLine) + 2))
+        End If
+        
+        Select Case solve_result_num
+        Case 0 To 99
+            s.SolveStatus = OpenSolverResult.Optimal
+            s.SolveStatusString = "Optimal"
+        Case 100 To 199
+            ' Status is `solved?`
+            Debug.Assert False
+        Case 200 To 299
+            s.SolveStatus = OpenSolverResult.Infeasible
+            s.SolveStatusString = "No Feasible Solution"
+        Case 300 To 399
+            s.SolveStatus = OpenSolverResult.Unbounded
+            s.SolveStatusString = "No Solution Found (Unbounded)"
+        Case 400 To 499
+            s.SolveStatus = OpenSolverResult.LimitedSubOptimal
+            s.SolveStatusString = "Stopped on User Limit (Time/Iterations)"
+        Case 500 To 599
+            Err.Raise OpenSolver_SolveError, Description:= _
+                "There was an error while solving the model. The solver returned: " & _
+                vbNewLine & vbNewLine & SolveMessage
+        Case -1
+            ' The objno suffix wasn't there. Check SolveMessage for status
+            Debug.Assert False
+            CheckSolveMessage SolveMessage
+        Case Else
+            ' Something else
+            Debug.Assert False
+        End Select
     End If
 
 ExitSub:
@@ -1914,6 +1970,36 @@ ErrorHandler:
     If Not ReportError("SolverFileNL", "ReadModel_NL") Then Resume
     RaiseError = True
     GoTo ExitSub
+End Sub
+
+Sub CheckSolveMessage(SolveMessage As String)
+    'Get the returned status code from solver.
+    If InStrText(Line, "optimal") Then
+        s.SolveStatus = OpenSolverResult.Optimal
+        s.SolveStatusString = "Optimal"
+    ElseIf InStrText(Line, "infeasible") Then
+        s.SolveStatus = OpenSolverResult.Infeasible
+        s.SolveStatusString = "No Feasible Solution"
+    ElseIf InStrText(Line, "unbounded") Then
+        s.SolveStatus = OpenSolverResult.Unbounded
+        s.SolveStatusString = "No Solution Found (Unbounded)"
+    ElseIf InStrText(Line, "interrupted on limit") Then
+        s.SolveStatus = OpenSolverResult.LimitedSubOptimal
+        s.SolveStatusString = "Stopped on User Limit (Time/Iterations)"
+        ' See if we can find out which limit was hit from the log file
+        GetExtraInfoFromLog s
+    ElseIf InStrText(Line, "interrupted by user") Then
+        s.SolveStatus = OpenSolverResult.AbortedThruUserAction
+        s.SolveStatusString = "Stopped on Ctrl-C"
+    Else
+        If Not GetExtraInfoFromLog(s) Then
+            Err.Raise OpenSolver_SolveError = _
+                "The response from the " & DisplayName(s.Solver) & " solver is not recognised. The response was: " & vbNewLine & vbNewLine & _
+                Line & vbNewLine & vbNewLine & _
+                "The " & DisplayName(s.Solver) & " command line can be found at:" & vbNewLine & _
+                SolveScriptPathName
+        End If
+    End If
 End Sub
 
 Sub CheckLog_NL(s As COpenSolver)
@@ -2037,7 +2123,7 @@ Function CreateSolveScript_NL(ModelFilePathName As String, s As COpenSolver, Scr
        
     Dim scriptFileContents As String
     scriptFileContents = "cd " & MakePathSafe(GetTempFolder()) & " && " & _
-                         SolverString & " " & MakePathSafe(ModelFilePathName)
+                         SolverString & " " & MakePathSafe(ModelFilePathName) & " -AMPL"
     CreateScriptFile ScriptFilePathName, scriptFileContents
        
     CreateSolveScript_NL = ScriptFilePathName
