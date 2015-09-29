@@ -104,8 +104,8 @@ Private Function ISolverLocalExec_GetExecPath(Optional errorString As String, Op
     ISolverLocalExec_GetExecPath = SolverExecPath(Me, errorString, Bitness)
 End Function
 
-Private Function ISolverLocalExec_CreateSolveScript(ModelFilePathName As String, s As COpenSolver) As String
-    ISolverLocalExec_CreateSolveScript = CreateSolveScript(ModelFilePathName, s)
+Private Function ISolverLocalExec_CreateSolveCommand(s As COpenSolver) As String
+    ISolverLocalExec_CreateSolveCommand = CreateSolveCommand(s)
 End Function
 
 ' ISolverLinear
@@ -153,7 +153,6 @@ ErrorHandler:
 End Function
 
 Private Sub CleanFiles()
-    DeleteFileAndVerify GetSolutionFilePath()
     DeleteFileAndVerify CostRangesFilePath()
     DeleteFileAndVerify RHSRangesFilePath()
     DeleteFileAndVerify ScriptFilePath()
@@ -171,29 +170,23 @@ Function RHSRangesFilePath() As String
     GetTempFilePath pRHSRangesFile, RHSRangesFilePath
 End Function
 
-Private Function CreateSolveScript(ModelFilePathName As String, s As COpenSolver) As String
+Private Function CreateSolveCommand(s As COpenSolver) As String
     Dim RaiseError As Boolean
     RaiseError = False
     On Error GoTo ErrorHandler
     
-    Dim CommandLineRunString As String, SolverParametersString As String
-    SolverParametersString = ParametersToFlags(s.SolverParameters)
-    
-    CommandLineRunString = " -directory " & MakePathSafe(Left(GetTempFolder, Len(GetTempFolder) - 1)) & _
-                           " -import " & MakePathSafe(ModelFilePathName) & _
-                           " " & SolverParametersString & _
-                           " -solve " & _
-                           IIf(s.bGetDuals, " -printingOptions all ", "") & _
-                           " -solution " & MakePathSafe(GetSolutionFilePath()) & _
-                           IIf(s.bGetDuals, " -printingOptions rhs  -solution " & pRHSRangesFile & _
-                                            " -printingOptions objective -solution " & pCostRangesFile, "")
-                  
-    Dim scriptFile As String, scriptFileContents As String
-    scriptFile = ScriptFilePath()
-    scriptFileContents = MakePathSafe(ISolverLocalExec_GetExecPath()) & CommandLineRunString
-    CreateScriptFile scriptFile, scriptFileContents
-    
-    CreateSolveScript = scriptFile
+    CreateSolveCommand = _
+        MakePathSafe(ISolverLocalExec_GetExecPath()) & _
+        " -directory " & MakePathSafe(Left(GetTempFolder, Len(GetTempFolder) - 1)) & _
+        " -import " & MakePathSafe(GetModelFilePath(Me)) & _
+        " " & ParametersToFlags(s.SolverParameters) & _
+        " -solve" & _
+        IIf(s.bGetDuals, " -printingOptions all", vbNullString) & _
+        " -solution " & MakePathSafe(s.SolutionFilePathName) & _
+        IIf(s.bGetDuals, " -printingOptions rhs  -solution " & pRHSRangesFile & _
+                         " -printingOptions objective -solution " & pCostRangesFile, vbNullString)
+        
+    CreateScriptFile ScriptFilePath, CreateSolveCommand
 
 ExitFunction:
     If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
@@ -210,15 +203,12 @@ Private Sub ReadResults(s As COpenSolver)
     RaiseError = False
     On Error GoTo ErrorHandler
     
-    Dim SolutionFilePath As String
-    SolutionFilePath = GetSolutionFilePath()
-    If Not FileOrDirExists(SolutionFilePath) Then
+    If Not FileOrDirExists(s.SolutionFilePathName) Then
         Err.Raise Number:=OpenSolver_SolveError, Description:="The solver did not create a solution file. No new solution is available."
     End If
 
+    Open s.SolutionFilePathName For Input As #1
     Dim Response As String
-    ' All parameters valid, now we can check the solution
-    Open SolutionFilePath For Input As #1 ' supply path with filename
     Line Input #1, Response  ' Optimal - objective value              22
 
     s.SolutionWasLoaded = True

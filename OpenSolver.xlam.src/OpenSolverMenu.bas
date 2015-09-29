@@ -144,7 +144,7 @@ Sub OpenSolver_ViewLastSolutionClickHandler(Optional Control)
               Set Solver = CreateSolver(LastUsedSolver)
               If TypeOf Solver Is ISolverLocalExec Then
                   Dim NotFoundMessage As String, FilePath As String
-2790              FilePath = GetSolutionFilePath()
+2790              GetSolutionFilePath FilePath
 2791              NotFoundMessage = "Error: There is no solution file (" & FilePath & ") to open. Please solve the OpenSolver model and then try again."
 2792              OpenFile FilePath, NotFoundMessage
               Else

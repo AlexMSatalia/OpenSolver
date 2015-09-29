@@ -61,6 +61,7 @@ Public VarUpperBounds As Collection
 Dim pSolver As ISolver
 Public ExternalSolverPathName As String 'Path to solver
 Public LogFilePathName As String
+Public SolutionFilePathName As String
 
 ' Details we need for non-linear solver
 Dim pRowSetsBound() As Boolean

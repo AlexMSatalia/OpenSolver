@@ -28,7 +28,6 @@ Function CallNEOS(s As COpenSolver, OutgoingMessage As String) As String
           End If
           
 ExitFunction:
-          Close #1
           If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
           Exit Function
 
@@ -57,22 +56,18 @@ Function CallNeos_Local(s As COpenSolver) As String
           Dim FileSolver As ISolverFile
           Set FileSolver = s.Solver
           
-          Dim scriptFileContents As String
-          scriptFileContents = "cd " & MakePathSafe(GetTempFolder()) & ScriptSeparator
+          Dim SolveCommand As String
           #If Mac Then
-              scriptFileContents = scriptFileContents & "source ~/.bashrc" & _
-                                   ScriptSeparator & "source ~/.zshrc" & ScriptSeparator
+              SolveCommand = SolveCommand & _
+                             "source ~/.bashrc" & ScriptSeparator & _
+                             "source ~/.zshrc" & ScriptSeparator
           #End If
-          scriptFileContents = scriptFileContents & "ampl " & MakePathSafe(GetModelFilePath(FileSolver))
-          CreateScriptFile ScriptFilePathName, scriptFileContents
+          SolveCommand = SolveCommand & "ampl " & MakePathSafe(GetModelFilePath(FileSolver))
+          CreateScriptFile ScriptFilePathName, SolveCommand
           
-          RunExternalCommand MakePathSafe(ScriptFilePathName), MakePathSafe(s.LogFilePathName)
-          Open s.LogFilePathName For Input As #1
-              CallNeos_Local = Input$(LOF(1), 1)
-          Close #1
+          CallNeos_Local = ReadExternalCommandOutput(SolveCommand, s.LogFilePathName, GetTempFolder())
           
 ExitFunction:
-          Close #1
           If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
           Exit Function
 
@@ -161,6 +156,7 @@ Public Function SolveOnNeos(message As String, errorString As String, Optional f
 6848          Else
 6849              SleepSeconds 1
 6850              time = time + 1
+                  DoEvents
 6853          End If
 6854      Wend
           

@@ -13,6 +13,7 @@ Implements ISolver
 Implements ISolverLocal
 Implements ISolverLocalExec
 Implements ISolverFile
+Implements ISolverFileNL
 
 Private Const pTitle = "COIN-OR Couenne (Non-linear, non-convex solver)"
 Private Const pDesc = "Couenne (Convex Over and Under ENvelopes for Nonlinear Estimation) is a branch & bound algorithm to solve Mixed-Integer Nonlinear Programming (MINLP) problems of specific forms. Couenne aims at finding global optima of nonconvex MINLPs. It implements linearization, bound reduction, and branching methods within a branch-and-bound framework. This solver will fail if your spreadsheet uses functions OpenSolver cannot interpret."
@@ -22,7 +23,7 @@ Private Const pShortName = "Couenne"
 
 Private Const pExecName = "couenne" & ExecExtension
 Private Const pScriptFile = "couenne" & ScriptExtension
-Private Const pOptionsFile = "couenne.opt"
+Private Const pOptionFile = "couenne.opt"
 Private Const pFileType = OpenSolver_FileType.NL
 Private Const pModelType = OpenSolver_ModelType.Parsed
 
@@ -70,8 +71,7 @@ Private Property Get ISolver_ModelType() As OpenSolver_ModelType
 End Property
 
 Private Sub ISolver_CleanFiles()
-    DeleteFileAndVerify ScriptFilePath()
-    DeleteFileAndVerify OptionsFilePath()
+    CleanFiles_NL Me
 End Sub
 
 Private Sub ISolver_CheckLog(s As COpenSolver)
@@ -98,8 +98,8 @@ Private Function ISolverLocalExec_GetExecPath(Optional errorString As String, Op
     ISolverLocalExec_GetExecPath = SolverExecPath(Me, errorString, Bitness)
 End Function
 
-Private Function ISolverLocalExec_CreateSolveScript(ModelFilePathName As String, s As COpenSolver) As String
-    ISolverLocalExec_CreateSolveScript = CreateSolveScript_NL(ModelFilePathName, s, ScriptFilePath, OptionsFilePath)
+Private Function ISolverLocalExec_CreateSolveCommand(s As COpenSolver) As String
+    ISolverLocalExec_CreateSolveCommand = CreateSolveCommand_NL(s, ScriptFilePath)
 End Function
 
 ' ISolverFile
@@ -112,14 +112,16 @@ Private Property Get ISolverFile_FileType() As OpenSolver_FileType
     ISolverFile_FileType = pFileType
 End Property
 
+' ISolverFileNL
+
+Private Property Get ISolverFileNL_OptionFile() As String
+    ISolverFileNL_OptionFile = pOptionFile
+End Property
+
 ' Methods
 
-Function ScriptFilePath() As String
+Private Function ScriptFilePath() As String
     GetTempFilePath pScriptFile, ScriptFilePath
-End Function
-
-Function OptionsFilePath() As String
-    GetTempFilePath pOptionsFile, OptionsFilePath
 End Function
 
 Private Function Version() As String

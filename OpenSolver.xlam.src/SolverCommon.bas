@@ -47,12 +47,11 @@ Sub SolveModel(s As COpenSolver, ShouldSolveRelaxation As Boolean, ShouldMinimis
         Err.Raise Number:=OpenSolver_SolveError, Description:=errorString
     End If
 
-    'Delete any existing log file
     Dim LogFilePathName As String
     If GetLogFilePath(LogFilePathName) Then DeleteFileAndVerify LogFilePathName
     s.LogFilePathName = LogFilePathName
-
-    'Clean up solver specific files
+    
+    ' Clean Solver specific files
     s.Solver.CleanFiles
     
     'Check that we can write to all cells
@@ -66,6 +65,11 @@ Sub SolveModel(s As COpenSolver, ShouldSolveRelaxation As Boolean, ShouldMinimis
         Dim LinearSolver As ISolverLinear
         Dim FileSolver As ISolverFile
         Set FileSolver = s.Solver
+        
+        'Delete any existing solution file
+        Dim SolutionFilePathName As String
+        If GetSolutionFilePath(SolutionFilePathName) Then DeleteFileAndVerify SolutionFilePathName
+        s.SolutionFilePathName = SolutionFilePathName
         
         ' Check if we need to request duals from the solver
         If TypeOf s.Solver Is ISolverLinear Then
@@ -163,11 +167,11 @@ Function CreateSolver(SolverShortName As String) As ISolver
 End Function
 
 Function GetLogFilePath(ByRef Path As String) As Boolean
-          GetLogFilePath = GetTempFilePath(LogFileName, Path)
+    GetLogFilePath = GetTempFilePath(LogFileName, Path)
 End Function
 
-Function GetSolutionFilePath() As String
-    GetTempFilePath SolutionFileName, GetSolutionFilePath
+Function GetSolutionFilePath(ByRef Path As String) As Boolean
+    GetSolutionFilePath = GetTempFilePath(SolutionFileName, Path)
 End Function
 
 Function IterationLimitAvailable(Solver As ISolver) As Boolean
@@ -297,7 +301,7 @@ Sub RunLocalSolver(s As COpenSolver, ExternalCommand As String)
                     s.SolverParameters.Item(s.Solver.ToleranceName) * 100 & "% tolerance.", True
                           
     Dim exeResult As Long
-    RunExternalCommand MakePathSafe(ExternalCommand), MakePathSafe(s.LogFilePathName), IIf(s.ShowIterationResults And Not s.MinimiseUserInteraction, WindowStyleType.Normal, WindowStyleType.Hide), True, exeResult
+    ReadExternalCommandOutput ExternalCommand, s.LogFilePathName, GetTempFolder(), s.ShowIterationResults And Not s.MinimiseUserInteraction, exeResult
     
     ' Check log for any errors which can offer more descriptive messages than exeresult <> 0
     s.Solver.CheckLog s
@@ -453,7 +457,7 @@ Function WriteModelFile(s As COpenSolver) As String
         ' Create a script to run the solver
         Dim LocalExecSolver As ISolverLocalExec
         Set LocalExecSolver = s.Solver
-        WriteModelFile = LocalExecSolver.CreateSolveScript(ModelFilePathName, s)
+        WriteModelFile = LocalExecSolver.CreateSolveCommand(s)
     ElseIf TypeOf s.Solver Is ISolverNeos Then
         ' Load the model file back into a string
         Open ModelFilePathName For Input As #1

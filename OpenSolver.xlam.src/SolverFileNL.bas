@@ -1820,10 +1820,7 @@ Sub ReadResults_NL(s As COpenSolver)
     Dim solutionExpected As Boolean
     s.SolutionWasLoaded = False
     
-    Dim SolutionFilePathName As String
-    SolutionFilePathName = GetSolutionFilePath()
-    
-    If Not FileOrDirExists(SolutionFilePathName) Then
+    If Not FileOrDirExists(s.SolutionFilePathName) Then
         Err.Raise OpenSolver_SolveError, Description:= _
             "The solver did not create a solution file. No new solution is available." & vbNewLine & vbNewLine & _
             "This can happen when the initial conditions are invalid. " & _
@@ -1834,7 +1831,7 @@ Sub ReadResults_NL(s As COpenSolver)
         ' Reference implementation for reading .sol files:
         ' https://github.com/ampl/mp/blob/master/src/asl/solvers/readsol.c
         Dim Line As String
-        Open SolutionFilePathName For Input As #1
+        Open s.SolutionFilePathName For Input As #1
         
         Do While True  ' Skip empty line at start of file
             Line Input #1, Line
@@ -1974,28 +1971,28 @@ End Sub
 
 Sub CheckSolveMessage(SolveMessage As String)
     'Get the returned status code from solver.
-    If InStrText(Line, "optimal") Then
+    If InStrText(SolveMessage, "optimal") Then
         s.SolveStatus = OpenSolverResult.Optimal
         s.SolveStatusString = "Optimal"
-    ElseIf InStrText(Line, "infeasible") Then
+    ElseIf InStrText(SolveMessage, "infeasible") Then
         s.SolveStatus = OpenSolverResult.Infeasible
         s.SolveStatusString = "No Feasible Solution"
-    ElseIf InStrText(Line, "unbounded") Then
+    ElseIf InStrText(SolveMessage, "unbounded") Then
         s.SolveStatus = OpenSolverResult.Unbounded
         s.SolveStatusString = "No Solution Found (Unbounded)"
-    ElseIf InStrText(Line, "interrupted on limit") Then
+    ElseIf InStrText(SolveMessage, "interrupted on limit") Then
         s.SolveStatus = OpenSolverResult.LimitedSubOptimal
         s.SolveStatusString = "Stopped on User Limit (Time/Iterations)"
         ' See if we can find out which limit was hit from the log file
         GetExtraInfoFromLog s
-    ElseIf InStrText(Line, "interrupted by user") Then
+    ElseIf InStrText(SolveMessage, "interrupted by user") Then
         s.SolveStatus = OpenSolverResult.AbortedThruUserAction
         s.SolveStatusString = "Stopped on Ctrl-C"
     Else
         If Not GetExtraInfoFromLog(s) Then
             Err.Raise OpenSolver_SolveError = _
                 "The response from the " & DisplayName(s.Solver) & " solver is not recognised. The response was: " & vbNewLine & vbNewLine & _
-                Line & vbNewLine & vbNewLine & _
+                SolveMessage & vbNewLine & vbNewLine & _
                 "The " & DisplayName(s.Solver) & " command line can be found at:" & vbNewLine & _
                 SolveScriptPathName
         End If
@@ -2027,7 +2024,8 @@ Sub CheckLog_NL(s As COpenSolver)
           ' Scan for parameter information
           Dim Key As Variant
           For Each Key In s.SolverParameters.Keys
-              If InStrText(message, Key & """. It is not a valid option.") Then
+              If InStrText(message, "Unknown keyword " & Quote(CStr(Key))) Or _
+                 InStrText(message, Key & """. It is not a valid option.") Then
                   Err.Raise OpenSolver_SolveError, Description:= _
                       "The parameter '" & Key & "' was not recognised by the " & DisplayName(s.Solver) & " solver. " & _
                       "Please check that this name is correct, or consult the solver documentation for more information."
@@ -2110,34 +2108,47 @@ ErrorHandler:
     GoTo ExitFunction
 End Function
 
-Function CreateSolveScript_NL(ModelFilePathName As String, s As COpenSolver, ScriptFilePathName As String, OptionsFilePathName As String) As String
+Function CreateSolveCommand_NL(s As COpenSolver, ScriptFilePathName As String) As String
     ' Create a script to cd to temp and run "/path/to/solver /path/to/<ModelFilePathName>"
     
     Dim RaiseError As Boolean
     RaiseError = False
     On Error GoTo ErrorHandler
 
-    Dim SolverString As String, LocalExecSolver As ISolverLocalExec
+    Dim LocalExecSolver As ISolverLocalExec, NLFileSolver As ISolverFileNL
     Set LocalExecSolver = s.Solver
-    SolverString = MakePathSafe(LocalExecSolver.GetExecPath())
-       
-    Dim scriptFileContents As String
-    scriptFileContents = "cd " & MakePathSafe(GetTempFolder()) & " && " & _
-                         SolverString & " " & MakePathSafe(ModelFilePathName) & " -AMPL"
-    CreateScriptFile ScriptFilePathName, scriptFileContents
-       
-    CreateSolveScript_NL = ScriptFilePathName
+    Set NLFileSolver = s.Solver
     
-    ' Create the options file in the temp folder
-    ParametersToOptionsFile OptionsFilePathName, s.SolverParameters
+    Dim MakeOptionFile As Boolean
+    MakeOptionFile = Len(NLFileSolver.OptionFile) <> 0
+       
+    CreateSolveCommand_NL = MakePathSafe(LocalExecSolver.GetExecPath()) & " " & _
+                            MakePathSafe(GetModelFilePath(s.Solver)) & " -AMPL" & _
+                            IIf(MakeOptionFile, vbNullString, ParametersToKwargs(s.SolverParameters))
+    
+    If MakeOptionFile Then
+        ' Create the options file in the temp folder
+        Dim OptionFilePath As String
+        GetTempFilePath NLFileSolver.OptionFile, OptionFilePath
+        ParametersToOptionsFile OptionFilePath, s.SolverParameters
+    End If
+    
+    CreateScriptFile ScriptFilePathName, CreateSolveCommand_NL
 
 ExitFunction:
     If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
     Exit Function
 
 ErrorHandler:
-    If Not ReportError("SolverFileNL", "CreateSolveScript_NL") Then Resume
+    If Not ReportError("SolverFileNL", "CreateSolveCommand_NL") Then Resume
     RaiseError = True
     GoTo ExitFunction
 End Function
 
+Sub CleanFiles_NL(NLFileSolver As ISolverFileNL)
+    If Len(NLFileSolver.OptionFile) <> 0 Then
+        Dim OptionFilePath As String
+        GetTempFilePath NLFileSolver.OptionFile, OptionFilePath
+        DeleteFileAndVerify OptionFilePath
+    End If
+End Sub

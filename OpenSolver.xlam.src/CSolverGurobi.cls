@@ -117,8 +117,8 @@ Private Function ISolverLocalExec_GetExecPath(Optional errorString As String, Op
     IsPresent ISolverLocalExec_GetExecPath, errorString
 End Function
 
-Private Function ISolverLocalExec_CreateSolveScript(ModelFilePathName As String, s As COpenSolver) As String
-    ISolverLocalExec_CreateSolveScript = CreateSolveScript(ModelFilePathName, s)
+Private Function ISolverLocalExec_CreateSolveCommand(s As COpenSolver) As String
+    ISolverLocalExec_CreateSolveCommand = CreateSolveCommand(s)
 End Function
 
 ' ISolverLinear
@@ -274,32 +274,23 @@ ErrorHandler:
 End Function
 
 Private Sub CleanFiles()
-    DeleteFileAndVerify GetSolutionFilePath()
-    DeleteFileAndVerify ScriptFilePath()
     DeleteFileAndVerify SensitivityFilePath()
+    DeleteFileAndVerify ScriptFilePath()
 End Sub
 
-Private Function CreateSolveScript(ModelFilePathName As String, s As COpenSolver) As String
+Private Function CreateSolveCommand(s As COpenSolver) As String
     Dim RaiseError As Boolean
     RaiseError = False
     On Error GoTo ErrorHandler
 
-    Dim SolverString As String, CommandLineRunString As String, SolverParametersString As String
-    SolverString = MakePathSafe(ShellScriptPath())
-
-    CommandLineRunString = MakePathSafe(PythonScriptPath()) & " " & _
-                           MakePathSafe(ModelFilePathName) & " " & _
-                           MakePathSafe(GetSolutionFilePath()) & " " & _
-                           MakePathSafe(SensitivityFilePath())
-    
-    SolverParametersString = ParametersToKwargs(s.SolverParameters)
-    
-    Dim scriptFile As String, scriptFileContents As String
-    scriptFile = ScriptFilePath()
-    scriptFileContents = SolverString & " " & CommandLineRunString & " " & SolverParametersString
-    CreateScriptFile scriptFile, scriptFileContents
-    
-    CreateSolveScript = scriptFile
+    CreateSolveCommand = MakePathSafe(ShellScriptPath()) & " " & _
+                         MakePathSafe(PythonScriptPath()) & " " & _
+                         MakePathSafe(GetModelFilePath(Me)) & " " & _
+                         MakePathSafe(s.SolutionFilePathName) & " " & _
+                         MakePathSafe(SensitivityFilePath()) & " " & _
+                         ParametersToKwargs(s.SolverParameters)
+                         
+    CreateScriptFile ScriptFilePath, CreateSolveCommand
 
 ExitFunction:
     If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
@@ -317,15 +308,13 @@ Sub ReadResults(s As COpenSolver)
     RaiseError = False
     On Error GoTo ErrorHandler
 
-    Dim SolutionFilePath As String
-    SolutionFilePath = GetSolutionFilePath()
-    If Not FileOrDirExists(SolutionFilePath) Then
+    If Not FileOrDirExists(s.SolutionFilePathName) Then
         Err.Raise Number:=OpenSolver_SolveError, Description:="The solver did not create a solution file. No new solution is available."
     End If
     
     s.SolutionWasLoaded = True
     
-    Open SolutionFilePath For Input As #1 ' supply path with filename
+    Open s.SolutionFilePathName For Input As #1 ' supply path with filename
     Dim Line As String, Index As Long
     Line Input #1, Line
     ' Check for python exception while running Gurobi

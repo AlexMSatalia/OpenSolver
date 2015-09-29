@@ -280,7 +280,8 @@ Function ParametersToKwargs(SolverParameters As Dictionary) As String
 
           Dim Key As Variant, result As String
           For Each Key In SolverParameters.Keys
-              result = result & Key & "=" & StrExNoPlus(SolverParameters.Item(Key)) & " "
+              result = result & Key & _
+                       IIf(SolverParameters.Item(Key) <> "", "=" & StrExNoPlus(SolverParameters.Item(Key)), "") & " "
           Next Key
           ParametersToKwargs = Trim(result)
 
