@@ -335,9 +335,12 @@ Private Function ReadExternalCommandOutput_Mac(CommandString As String, Optional
     RaiseError = False
     On Error GoTo ErrorHandler
     Application.EnableCancelKey = xlErrorHandler
+    
+    Dim Command As String
+    Command = "cd " & MakePathSafe(StartDir) & ScriptSeparator & CommandString
 
     Dim file As Long, fd As Long
-    file = popen(CommandString, "r")
+    file = popen(Command, "r")
     
     ' Set non-blocking read flag on the pipe
     fd = fileno(file)
