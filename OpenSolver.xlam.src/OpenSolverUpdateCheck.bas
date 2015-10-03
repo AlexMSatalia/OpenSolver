@@ -87,17 +87,17 @@ End Sub
 ' On Mac, we use `cURL` via command line which is included by default
 #If Mac Then
 Private Function InitialiseUpdateCheck_Mac() As String
-    Dim Cmd As String
+    Dim Command As String
     
     If GetTempFilePath(UpdateLogName, LogFilePath) Then DeleteFileAndVerify (LogFilePath)
 
     ' -L follows redirects, -m sets Max Time
-    Cmd = "curl -L" & _
+    Command = "curl -L" & _
               " -m " & MaxTime & _
               " -o " & MakePathSafe(LogFilePath) & _
               " -A " & Quote(GetUserAgent()) & _
               " " & GetPageUrl()
-    RunExternalCommand Cmd, "", Hide, False
+    RunExternalCommand Command, "", Hide, False
     
     NumChecks = 0
     
@@ -128,7 +128,7 @@ Public Sub CheckForCompletion_Mac()
     If CheckAgain And NumChecks < MaxTime Then
         NumChecks = NumChecks + 1
         If DoWaitForResponse Then
-            SleepSeconds 1
+            mSleep 1000  ' 1 second
             CheckForCompletion_Mac
         Else
             Application.OnTime Now + TimeSerial(0, 0, 1), "CheckForCompletion_Mac"

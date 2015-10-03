@@ -3,11 +3,17 @@ Option Explicit
 
 #If Mac Then
     ' Declare libc functions
-    Private Declare Function system Lib "libc.dylib" (ByVal command As String) As Long
-    Private Declare Function popen Lib "libc.dylib" (ByVal command As String, ByVal mode As String) As Long
+    Private Declare Function system Lib "libc.dylib" (ByVal Command As String) As Long
+    Private Declare Function popen Lib "libc.dylib" (ByVal Command As String, ByVal mode As String) As Long
     Private Declare Function pclose Lib "libc.dylib" (ByVal file As Long) As Long
-    Private Declare Function fread Lib "libc.dylib" (ByVal outStr As String, ByVal Size As Long, ByVal Items As Long, ByVal stream As Long) As Long
+    Private Declare Function read Lib "libc.dylib" (ByVal fd As Long, ByVal buffer As String, ByVal Size As Long) As Long
     Private Declare Function feof Lib "libc.dylib" (ByVal file As Long) As Long
+    Private Declare Function fileno Lib "libc.dylib" (ByVal file As Long) As Long
+    Private Declare Function fcntl Lib "libc.dylib" (ByVal fd As Long, ByVal cmd As Long, funcargs As Any) As Long
+
+    Private Const O_NONBLOCK As Integer = 4
+    Private Const F_GETFL As Long = 3&
+    Private Const F_SETFL As Long = 4&
 #Else
     #If VBA7 Then
         Private Type PROCESS_INFORMATION
@@ -173,7 +179,7 @@ Dim FullCommand As String
         If WindowStyle = Hide Then
             Dim ret As Long
             ret = system(FullCommand)
-            If ret = 0 Then RunExternalCommand = True
+            If ret = 0 Then RunExternalCommand_Mac = True
         Else
             ' Applescript escapes double quotes with a backslash
             FullCommand = Replace(FullCommand, """", "\""")
@@ -197,7 +203,7 @@ Dim FullCommand As String
                 "    activate" & vbNewLine & _
                 "end tell"
             MacScript (script)
-            RunExternalCommand = True
+            RunExternalCommand_Mac = True
         End If
     Else
         ' We need to start the command asynchronously.
@@ -211,10 +217,10 @@ Dim FullCommand As String
             ' Applescript escapes double quotes with a backslash
             FullCommand = Replace(MakePathSafe(TempScript), """", "\""")
             MacScript "do shell script """ & FullCommand & " > /dev/null 2>&1 &"""
-            RunExternalCommand = True
+            RunExternalCommand_Mac = True
         Else
             ret = system("open -a Terminal " & MakePathSafe(TempScript))
-            If ret = 0 Then RunExternalCommand = True
+            If ret = 0 Then RunExternalCommand_Mac = True
         End If
     End If
 
@@ -270,7 +276,7 @@ Private Function RunExternalCommand_Win(CommandString As String, Optional StartD
         lngResult = WaitForSingleObject(tSA_CreateProcessPrcInfo.hProcess, 10) ' Wait for up to 1 millisecond
         ' Break if we are done to avoid sleeping unnecessarily below
         If lngResult <> 258 Then Exit Do
-        Sleep 50 ' Sleep in Excel to keep escape detection responsive
+        mSleep 50 ' Sleep in Excel to keep escape detection responsive
         DoEvents
     Loop
     
@@ -295,7 +301,6 @@ ErrorHandler:
     GoTo ExitClose
 End Function
 #End If  ' Mac
-
 
 Public Function ReadExternalCommandOutput(CommandString As String, Optional LogPath As String, Optional StartDir As String, Optional DisplayOutput As Boolean, Optional ExitCode As Long) As String
 ' Runs an external command and pipes output back into VBA. From https://stackoverflow.com/questions/2784367/capture-output-value-from-a-shell-command-in-vba
@@ -331,40 +336,53 @@ Private Function ReadExternalCommandOutput_Mac(CommandString As String, Optional
     On Error GoTo ErrorHandler
     Application.EnableCancelKey = xlErrorHandler
 
-    Dim file As Long
+    Dim file As Long, fd As Long
     file = popen(CommandString, "r")
-
+    
+    ' Set non-blocking read flag on the pipe
+    fd = fileno(file)
+    fcntl fd, F_SETFL, ByVal (O_NONBLOCK Or fcntl(fd, F_GETFL, ByVal 0&))
+    
     If file = 0 Then
         Exit Function
     End If
-
-    While feof(file) = 0
-        Dim chunk As String
-        Dim read As Long
-        chunk = Space(50)
-        read = fread(chunk, 1, Len(chunk) - 1, file)
-        If read > 0 Then
-            chunk = Left$(chunk, read)
-            ReadExternalCommandOutput = ReadExternalCommandOutput & chunk
-        End If
-    Wend
     
-    ' Dump the output to the LogPath if present
-    If Len(LogPath) <> 0 Then
-        Open LogPath For Output As #1
-        Print #1, ReadExternalCommandOutput
-        Close #1
+    Dim DoingLogging As Boolean, FileNum As Long
+    DoingLogging = Len(LogPath) <> 0
+    If DoingLogging Then
+        FileNum = FreeFile()
+        Open LogPath For Output As #FileNum
     End If
+
+    Do While True
+        Dim chunk As String
+        Dim num_read As Long
+        chunk = Space(4096)
+        num_read = read(fd, chunk, Len(chunk) - 1)
+        If num_read = 0 Then
+            Exit Do
+        ElseIf num_read > 0 Then
+            chunk = Left$(chunk, num_read)
+            Debug.Print chunk
+            If DoingLogging Then Print #FileNum, chunk;
+            ReadExternalCommandOutput_Mac = ReadExternalCommandOutput_Mac & chunk
+            mSleep 50
+            DoEvents
+        End If
+    Loop
     
-ExitMac:
+ExitFunction:
     ExitCode = pclose(file)
-    Close #1
+    Close #FileNum
     If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
     Exit Function
 
 ErrorHandler:
     If Not ReportError("OpenSolverExternalCommand", "ReadExternalCommandOutput_Mac") Then Resume
     RaiseError = True
+    If OpenSolverErrorHandler.ErrNum = OpenSolver_UserCancelledError Then
+        RunExternalCommand "pkill " & GetExecutableName(CommandString)
+    End If
     GoTo ExitFunction
 End Function
 #Else
@@ -457,7 +475,7 @@ Private Function ReadExternalCommandOutput_Win(CommandString As String, Optional
                 ReadExternalCommandOutput_Win = ReadExternalCommandOutput_Win & sOutput
             End If
         End If
-        Sleep 50 ' Sleep in Excel to keep escape detection responsive
+        mSleep 50 ' Sleep in Excel to keep escape detection responsive
         DoEvents
     Loop
     
@@ -483,6 +501,7 @@ ErrorHandler:
 End Function
 #End If  ' Mac
 
+#If Win32 Then
 Private Function DLLErrorText(ByVal lLastDLLError As Long) As String
 ' From http://stackoverflow.com/questions/1439200/vba-shell-and-wait-with-exit-code
     Dim sBuff As String * 256
@@ -495,4 +514,26 @@ Private Function DLLErrorText(ByVal lLastDLLError As Long) As String
         DLLErrorText = Left$(sBuff, lCount - 2) ' Remove line feeds
     End If
 End Function
+#End If  ' Mac
 
+Private Function GetExecutableName(CommandString As String) As String
+    Dim start As Long, finish As Long
+    ' Get position of the first space, or the end of the first arg if quoted
+    If Left(CommandString, 1) = """" Then
+        finish = InStr(2, CommandString, """")
+    Else
+        finish = InStr(CommandString, " ")
+    End If
+    If finish = 0 Then finish = Len(CommandString) + 1
+    
+    ' Read backwards to first path delimiter
+    Dim Delimiter As String
+    #If Mac Then
+        Delimiter = "/"
+    #Else
+        Delimiter = "\"
+    #End If
+    start = InStrRev(CommandString, Delimiter, finish)
+    
+    GetExecutableName = Mid(CommandString, start + 1, finish - start - 1)
+End Function

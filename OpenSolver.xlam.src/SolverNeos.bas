@@ -154,7 +154,7 @@ Public Function SolveOnNeos(message As String, errorString As String, Optional f
 6845          ElseIf result <> "Waiting" And result <> "Running" Then
 6846              Err.Raise OpenSolver_NeosError, Description:="An error occured while waiting for NEOS. NEOS returned: " & result
 6848          Else
-6849              SleepSeconds 1
+6849              mSleep 1000  ' 1 second
 6850              time = time + 1
                   DoEvents
 6853          End If

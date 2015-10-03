@@ -283,7 +283,8 @@ Private Function CreateSolveCommand(s As COpenSolver) As String
     RaiseError = False
     On Error GoTo ErrorHandler
 
-    CreateSolveCommand = MakePathSafe(ShellScriptPath()) & " " & _
+    ' We use the -u flag on python to force it to unbuffer its output
+    CreateSolveCommand = MakePathSafe(ShellScriptPath()) & " -u " & _
                          MakePathSafe(PythonScriptPath()) & " " & _
                          MakePathSafe(GetModelFilePath(Me)) & " " & _
                          MakePathSafe(s.SolutionFilePathName) & " " & _

@@ -2,7 +2,7 @@ Attribute VB_Name = "OpenSolverUtils"
 Option Explicit
 
 #If Mac Then
-    Public Declare Sub SleepSeconds Lib "libc.dylib" Alias "sleep" (ByVal Seconds As Long)
+    Private Declare Sub uSleep Lib "libc.dylib" Alias "usleep" (ByVal Microseconds As Long)
 #Else
     #If VBA7 Then
         Type OSVERSIONINFO
@@ -27,15 +27,18 @@ Option Explicit
     #End If
 
     #If VBA7 Then
-        Public Declare PtrSafe Sub Sleep Lib "kernel32" (ByVal dwMilliseconds As Long)
+        Public Declare PtrSafe Sub mSleep Lib "kernel32" Alias "Sleep" (ByVal dwMilliseconds As Long)
     #Else
-        Public Declare Sub Sleep Lib "kernel32" (ByVal dwMilliseconds As Long)
+        Public Declare Sub mSleep Lib "kernel32" Alias "Sleep" (ByVal dwMilliseconds As Long)
     #End If
-    
-    Sub SleepSeconds(Seconds As Long)
-        Sleep Seconds * 1000
+#End If  ' Mac
+
+' Complete the sleep interface, we just want a public mSleep function on both platforms
+#If Mac Then
+    Public Sub mSleep(Milliseconds As Long)
+        uSleep Milliseconds * 1000
     End Sub
-#End If
+#End If  ' Mac
 
 Function RemoveSheetNameFromString(s As String, sheet As Worksheet) As String
           Dim RaiseError As Boolean
@@ -460,7 +463,7 @@ Function ForceCalculate(prompt As String, Optional MinimiseUserInteraction As Bo
                   Dim i As Long
 500               For i = 1 To 10
 501                   DoEvents
-502                   Sleep (100)
+502                   mSleep 100
 503               Next i
 504           End If
 505           If Application.CalculationState <> xlDone Then Application.Calculate
