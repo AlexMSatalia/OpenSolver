@@ -25,9 +25,9 @@ Option Explicit
         
         Private Type STARTUPINFO
             cb As Long
-            lpReserved As Long
-            lpDesktop As Long
-            lpTitle As Long
+            lpReserved As LongPtr
+            lpDesktop As LongPtr
+            lpTitle As LongPtr
             dwX As Long
             dwY As Long
             dwXSize As Long
@@ -97,7 +97,7 @@ Option Explicit
 
     #If VBA7 Then
         Private Declare PtrSafe Function CreatePipe Lib "kernel32" (phReadPipe As LongPtr, phWritePipe As LongPtr, lpPipeAttributes As SECURITY_ATTRIBUTES, ByVal nSize As Long) As Long
-        Private Declare PtrSafe Function CreateProcess Lib "kernel32" Alias "CreateProcessA" (ByVal lpApplicationName As String, ByVal lpCommandLine As String, lpProcessAttributes As SECURITY_ATTRIBUTES, lpThreadAttributes As SECURITY_ATTRIBUTES, ByVal bInheritHandles As Long, ByVal dwCreationFlags As Long, lpEnvironment As Any, ByVal lpCurrentDriectory As String, lpStartupInfo As STARTUPINFO, lpProcessInformation As PROCESS_INFORMATION) As LongPtr
+        Private Declare PtrSafe Function CreateProcess Lib "kernel32" Alias "CreateProcessA" (ByVal lpApplicationName As String, ByVal lpCommandLine As String, lpProcessAttributes As SECURITY_ATTRIBUTES, lpThreadAttributes As SECURITY_ATTRIBUTES, ByVal bInheritHandles As Long, ByVal dwCreationFlags As Long, lpEnvironment As Any, ByVal lpCurrentDirectory As String, lpStartupInfo As STARTUPINFO, lpProcessInformation As PROCESS_INFORMATION) As LongPtr
         Private Declare PtrSafe Function ReadFile Lib "kernel32" (ByVal hFile As LongPtr, lpBuffer As Any, ByVal nNumberOfBytesToRead As Long, lpNumberOfBytesRead As Long, lpOverlapped As Any) As Long
         Private Declare PtrSafe Function CloseHandle Lib "kernel32" (ByVal hObject As LongPtr) As Long
         Private Declare PtrSafe Function WaitForSingleObject Lib "kernel32" (ByVal hHandle As LongPtr, ByVal dwMilliseconds As Long) As Long
@@ -109,7 +109,7 @@ Option Explicit
         Private Declare PtrSafe Function PeekNamedPipe Lib "kernel32" (ByVal hNamedPipe As LongPtr, lpBuffer As Any, ByVal nBufferSize As Long, lpBytesRead As Long, lpTotalBytesAvail As Long, lpBytesLeftThisMessage As Long) As Long
     #Else
         Private Declare Function CreatePipe Lib "kernel32" (phReadPipe As Long, phWritePipe As Long, lpPipeAttributes As SECURITY_ATTRIBUTES, ByVal nSize As Long) As Long
-        Private Declare Function CreateProcess Lib "kernel32" Alias "CreateProcessA" (ByVal lpApplicationName As String, ByVal lpCommandLine As String, lpProcessAttributes As SECURITY_ATTRIBUTES, lpThreadAttributes As SECURITY_ATTRIBUTES, ByVal bInheritHandles As Long, ByVal dwCreationFlags As Long, lpEnvironment As Any, ByVal lpCurrentDriectory As String, lpStartupInfo As STARTUPINFO, lpProcessInformation As PROCESS_INFORMATION) As Long
+        Private Declare Function CreateProcess Lib "kernel32" Alias "CreateProcessA" (ByVal lpApplicationName As String, ByVal lpCommandLine As String, lpProcessAttributes As SECURITY_ATTRIBUTES, lpThreadAttributes As SECURITY_ATTRIBUTES, ByVal bInheritHandles As Long, ByVal dwCreationFlags As Long, lpEnvironment As Any, ByVal lpCurrentDirectory As String, lpStartupInfo As STARTUPINFO, lpProcessInformation As PROCESS_INFORMATION) As Long
         Private Declare Function ReadFile Lib "kernel32" (ByVal hFile As Long, lpBuffer As Any, ByVal nNumberOfBytesToRead As Long, lpNumberOfBytesRead As Long, lpOverlapped As Any) As Long
         Private Declare Function CloseHandle Lib "kernel32" (ByVal hObject As Long) As Long
         Private Declare Function WaitForSingleObject Lib "kernel32" (ByVal hHandle As Long, ByVal dwMilliseconds As Long) As Long
@@ -255,7 +255,12 @@ Private Function RunExternalCommand_Win(CommandString As String, Optional StartD
     sec2.nLength = Len(sec2)
     
     ' Start the process
-    Dim tSA_CreateProcessPrcInfo As PROCESS_INFORMATION, lngResult As Long
+    Dim tSA_CreateProcessPrcInfo As PROCESS_INFORMATION
+    #If VBA7 Then
+        Dim lngResult As LongPtr
+    #Else
+        Dim lngResult As Long
+    #End If
     lngResult = CreateProcess(vbNullString, CommandString, sec1, sec2, True, _
                               NORMAL_PRIORITY_CLASS, ByVal 0&, StartDir, tStartupInfo, tSA_CreateProcessPrcInfo)
     
@@ -431,7 +436,12 @@ Private Function ReadExternalCommandOutput_Win(CommandString As String, Optional
     sec2.nLength = Len(sec2)
     
     ' Start the process
-    Dim tSA_CreateProcessPrcInfo As PROCESS_INFORMATION, lngResult As Long
+    Dim tSA_CreateProcessPrcInfo As PROCESS_INFORMATION
+    #If VBA7 Then
+        Dim lngResult As LongPtr
+    #Else
+        Dim lngResult As Long
+    #End If
     lngResult = CreateProcess(vbNullString, CommandString, sec1, sec2, True, _
                               NORMAL_PRIORITY_CLASS, ByVal 0&, StartDir, tStartupInfo, tSA_CreateProcessPrcInfo)
     
