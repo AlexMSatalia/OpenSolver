@@ -5,6 +5,14 @@ Option Explicit
     Private Declare Sub uSleep Lib "libc.dylib" Alias "usleep" (ByVal Microseconds As Long)
 #Else
     #If VBA7 Then
+        Public Declare PtrSafe Sub mSleep Lib "kernel32" Alias "Sleep" (ByVal dwMilliseconds As Long)
+    #Else
+        Public Declare Sub mSleep Lib "kernel32" Alias "Sleep" (ByVal dwMilliseconds As Long)
+    #End If
+#End If  ' Mac
+
+#If Win32 Then
+    #If VBA7 Then
         Type OSVERSIONINFO
             dwOSVersionInfoSize As Long
             dwMajorVersion As Long
@@ -25,13 +33,13 @@ Option Explicit
         End Type
         Private Declare Function GetVersionExA Lib "kernel32" (lpVersionInformation As OSVERSIONINFO) As Integer
     #End If
+#End If  ' Win32
 
-    #If VBA7 Then
-        Public Declare PtrSafe Sub mSleep Lib "kernel32" Alias "Sleep" (ByVal dwMilliseconds As Long)
-    #Else
-        Public Declare Sub mSleep Lib "kernel32" Alias "Sleep" (ByVal dwMilliseconds As Long)
-    #End If
-#End If  ' Mac
+#If Mac Then
+    Public Const IsMac As Boolean = True
+#Else
+    Public Const IsMac As Boolean = False
+#End If
 
 ' Complete the sleep interface, we just want a public mSleep function on both platforms
 #If Mac Then
