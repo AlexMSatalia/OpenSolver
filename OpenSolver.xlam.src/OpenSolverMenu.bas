@@ -6,12 +6,7 @@ Private Const MenuName As String = "&OpenSolver"
 Private Const MenuBarName As String = "Worksheet Menu Bar"
 
 Sub AlterMenuItems(AddItems As Boolean)
-          Dim NeedToAdd As Boolean
-5         NeedToAdd = Application.Version = "11.0"
-          #If Mac Then
-6             NeedToAdd = True
-          #End If
-7         If NeedToAdd Then
+7         If IsMac Or Val(Application.Version) < 12 Then
 8             If AddItems Then
 9                 AddMenuItems
 10            Else
@@ -224,7 +219,67 @@ End Sub
 '====================================================================
 
 Public Sub AddMenuItems()
-2884      DelMenuItems
+    If IsMac And Int(Val(Application.Version)) = 15 Then
+        AddMenuItems_Toolbar
+    Else
+        AddMenuItems_MenuBar
+    End If
+End Sub
+
+Public Sub AddMenuItems_Toolbar(Optional RootItem As String)
+    DelMenuItems_Toolbar
+    
+    Dim OpenSolverMenu As CommandBar
+    Set OpenSolverMenu = Application.CommandBars.Add(MenuName)
+    OpenSolverMenu.Visible = True
+    
+    Dim MenuItems As Collection
+    Set MenuItems = FindChildren(GenerateMenuItems(), RootItem)
+    
+    If Len(RootItem) <> 0 Then
+        AddToMenu_Toolbar OpenSolverMenu, _
+            NewMenuItem("button", "back", ChrW(&H25C2) & " Back to Main Menu", "AddMenuItems_Toolbar")
+    End If
+    
+    Dim Item As MenuItem
+    For Each Item In MenuItems
+        AddToMenu_Toolbar OpenSolverMenu, Item
+    Next Item
+End Sub
+
+Public Sub AddMenuItems_ToolbarModel()
+    AddMenuItems_Toolbar "OpenSolverModelMenu"
+End Sub
+
+Public Sub AddMenuItems_ToolbarSolve()
+    AddMenuItems_Toolbar "OpenSolverSolveMenu"
+End Sub
+
+Public Sub AddMenuItems_ToolbarOpenSolver()
+    AddMenuItems_Toolbar "menu"
+End Sub
+
+Function FindChildren(Items As Collection, RootItem As String) As Collection
+    If Len(RootItem) = 0 Then
+        Set FindChildren = Items
+        Exit Function
+    End If
+    
+    Dim Item As MenuItem
+    For Each Item In Items
+        If Item.Id = RootItem Then
+            Set FindChildren = Item.Children
+            Exit Function
+        End If
+        Set FindChildren = FindChildren(Item.Children, RootItem)
+        If FindChildren.Count <> 0 Then Exit Function
+    Next Item
+    ' No match, return empty collection
+    Set FindChildren = New Collection
+End Function
+
+Public Sub AddMenuItems_MenuBar()
+2884      DelMenuItems_MenuBar
 
           Dim MainMenuBar As CommandBar, OpenSolverMenu As CommandBarControl
 2885      Set MainMenuBar = Application.CommandBars(MenuBarName)
@@ -233,13 +288,26 @@ Public Sub AddMenuItems()
 
           Dim Item As MenuItem
           For Each Item In GenerateMenuItems()
-              AddToMenu OpenSolverMenu, Item
+              AddToMenu_MenuBar OpenSolverMenu, Item
           Next Item
 End Sub
 
 Public Sub DelMenuItems()
+    If IsMac And Int(Val(Application.Version)) = 15 Then
+        DelMenuItems_Toolbar
+    Else
+        DelMenuItems_MenuBar
+    End If
+End Sub
+
+Public Sub DelMenuItems_MenuBar()
 3011      On Error Resume Next
 3012      Application.CommandBars(MenuBarName).Controls(MenuName).Delete
+End Sub
+
+Public Sub DelMenuItems_Toolbar()
+          On Error Resume Next
+          Application.CommandBars(MenuName).Delete
 End Sub
 '====================================================================
 ' Adapted from Excel 2003 Menu Code originally provided by Paul Becker of Eclipse Engineering (www.eclipseeng.com)
@@ -390,7 +458,7 @@ Function NewMenuItem(Tag As String, Id As String, Optional Label As String, _
     End With
 End Function
 
-Sub AddToMenu(Menu As CommandBarControl, Item As MenuItem)
+Sub AddToMenu_MenuBar(Menu As CommandBarControl, Item As MenuItem)
     Static sBeginGroup As Boolean
 
     Select Case Item.Tag
@@ -420,8 +488,36 @@ Sub AddToMenu(Menu As CommandBarControl, Item As MenuItem)
         
         Dim SubItem As MenuItem
         For Each SubItem In Children
-            AddToMenu SubMenu, SubItem
+            AddToMenu_MenuBar SubMenu, SubItem
         Next SubItem
+    End Select
+End Sub
+
+Sub AddToMenu_Toolbar(Menu As CommandBar, Item As MenuItem)
+    Select Case Item.Tag
+    Case "button"
+        With Menu.Controls.Add(Type:=msoControlButton)
+          .Style = msoButtonCaption
+          .Caption = Item.Label
+          .OnAction = Item.OnAction
+          .Enabled = True
+        End With
+    Case "splitButton"
+        With Menu.Controls.Add(Type:=msoControlButton)
+          .Style = msoButtonCaption
+          .Caption = Item.Children(1).Label
+          .OnAction = "AddMenuItems_Toolbar" & Replace(.Caption, "&", "")
+          .Caption = .Caption & " " & ChrW(&H25BE)
+          .Enabled = True
+        End With
+    Case "menu"
+        With Menu.Controls.Add(Type:=msoControlButton)
+          .Style = msoButtonCaption
+          .Caption = Item.Label
+          .OnAction = "AddMenuItems_Toolbar" & Replace(.Caption, "&", "")
+          .Caption = .Caption & " " & ChrW(&H25BE)
+          .Enabled = True
+        End With
     End Select
 End Sub
 
