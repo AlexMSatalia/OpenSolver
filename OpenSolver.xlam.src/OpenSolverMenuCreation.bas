@@ -1,4 +1,4 @@
-Attribute VB_Name = "OpenSolverMenu"
+Attribute VB_Name = "OpenSolverMenuCreation"
 Option Explicit
 
 ' Used for legacy menu title
@@ -6,6 +6,7 @@ Private Const MenuName As String = "&OpenSolver"
 Private Const MenuBarName As String = "Worksheet Menu Bar"
 
 Sub AlterMenuItems(AddItems As Boolean)
+          ' Add if we are on Mac or prior to Excel 2007
 7         If IsMac Or Val(Application.Version) < 12 Then
 8             If AddItems Then
 9                 AddMenuItems
@@ -15,210 +16,8 @@ Sub AlterMenuItems(AddItems As Boolean)
 13        End If
 End Sub
 
-' Menu/ribbon click handlers
-Sub OpenSolver_SolveClickHandler(Optional Control)
-2755      RunOpenSolver False, False, 0
-          AutoUpdateCheck
-End Sub
-
-Sub OpenSolver_ModelOptions(Optional Control)
-          Dim frmOptions As FOptions
-          Set frmOptions = New FOptions
-2757      frmOptions.Show
-          Unload frmOptions
-          AutoUpdateCheck
-End Sub
-
-Sub OpenSolver_SolverOptions(Optional Control)
-          Dim frmSolverChange As FSolverChange
-          Set frmSolverChange = New FSolverChange
-2761      frmSolverChange.Show
-          Unload frmSolverChange
-          AutoUpdateCheck
-End Sub
-
-Sub OpenSolver_SolveRelaxationClickHandler(Optional Control)
-2763      RunOpenSolver True, False, 0
-          AutoUpdateCheck
-End Sub
-
-Sub OpenSolver_LaunchCBCCommandLine(Optional Control)
-          If Len(LastUsedSolver) = 0 Then
-              MsgBox "Cannot open the last model in CBC as the model has not been solved yet."
-          Else
-              Dim Solver As ISolver
-              Set Solver = CreateSolver(LastUsedSolver)
-              If TypeOf Solver Is ISolverFile Then
-                  Dim FileSolver As ISolverFile
-                  Set FileSolver = Solver
-                  If FileSolver.FileType = LP Then
-2764                  LaunchCommandLine_CBC
-                  Else
-                      GoTo NotLPSolver
-                  End If
-              Else
-NotLPSolver:
-                  MsgBox "The last used solver (" & DisplayName(Solver) & ") does not use .lp model files, so CBC cannot load the model. " & _
-                         "Please solve the model using a solver that uses .lp files, such as CBC or Gurobi, and try again."
-              End If
-          End If
-          AutoUpdateCheck
-End Sub
-
-Sub OpenSolver_ShowHideModelClickHandler(Optional Control)
-2766      On Error GoTo ExitSub
-2768      If SheetHasOpenSolverHighlighting Then
-2769          HideSolverModel
-2770      Else
-2771          ShowSolverModel
-2772      End If
-          AutoUpdateCheck
-ExitSub:
-End Sub
-
-Sub OpenSolver_SetQuickSolveParametersClickHandler(Optional Control)
-2774      If SetQuickSolveParameterRange Then
-2775          ClearQuickSolve
-2776      End If
-          AutoUpdateCheck
-End Sub
-
-Sub OpenSolver_InitQuickSolveClickHandler(Optional Control)
-2778      InitializeQuickSolve
-          AutoUpdateCheck
-End Sub
-
-Sub OpenSolver_QuickSolveClickHandler(Optional Control)
-2780      RunQuickSolve
-          AutoUpdateCheck
-End Sub
-
-Sub OpenSolver_ViewLastModelClickHandler(Optional Control)
-          If Len(LastUsedSolver) = 0 Then
-              MsgBox "Cannot open the last model file as the model has not been solved yet."
-          Else
-              Dim Solver As ISolver
-              Set Solver = CreateSolver(LastUsedSolver)
-              If TypeOf Solver Is ISolverFile Then
-                  Dim NotFoundMessage As String, FilePath As String
-                  FilePath = GetModelFilePath(Solver)
-                  NotFoundMessage = "Error: There is no model file (" & FilePath & ") to open. Please solve the OpenSolver model and then try again."
-                  OpenFile FilePath, NotFoundMessage
-              Else
-                  MsgBox "The last used solver (" & DisplayName(Solver) & ") does not use a model file."
-              End If
-          End If
-          AutoUpdateCheck
-End Sub
-
-Sub OpenSolver_ViewSolverLogFileClickHandler(Optional Control)
-          If Len(LastUsedSolver) = 0 Then
-              MsgBox "Cannot open the log file as the model has not been solved yet."
-          Else
-              Dim NotFoundMessage As String, FilePath As String
-2787          GetLogFilePath FilePath
-2788          NotFoundMessage = "Error: There is no solver log file (" & FilePath & ") to open. Please solve the OpenSolver model and then try again."
-2789          OpenFile FilePath, NotFoundMessage
-          End If
-          AutoUpdateCheck
-End Sub
-
-Sub OpenSolver_ViewErrorLogFileClickHandler(Optional Control)
-          Dim NotFoundMessage As String, FilePath As String
-2787      FilePath = GetErrorLogFilePath()
-2788      NotFoundMessage = "Error: There is no error log file (" & FilePath & ") to open."
-2789      OpenFile FilePath, NotFoundMessage
-          AutoUpdateCheck
-End Sub
-
-Sub OpenSolver_ViewLastSolutionClickHandler(Optional Control)
-          If Len(LastUsedSolver) = 0 Then
-              MsgBox "Cannot open the last solution file as the model has not been solved yet."
-          Else
-              Dim Solver As ISolver
-              Set Solver = CreateSolver(LastUsedSolver)
-              If TypeOf Solver Is ISolverLocalExec Then
-                  Dim NotFoundMessage As String, FilePath As String
-2790              GetSolutionFilePath FilePath
-2791              NotFoundMessage = "Error: There is no solution file (" & FilePath & ") to open. Please solve the OpenSolver model and then try again."
-2792              OpenFile FilePath, NotFoundMessage
-              Else
-                  MsgBox "The last used solver (" & DisplayName(Solver) & ") does not produce a solution file. Please check the log file for any solution information."
-              End If
-          End If
-          AutoUpdateCheck
-End Sub
-
-Sub OpenSolver_ViewTempFolderClickHandler(Optional Control)
-    Dim NotFoundMessage As String, FolderPath As String
-    FolderPath = GetTempFolder()
-    NotFoundMessage = "Error: The OpenSolver temporary files folder (" & FolderPath & ") doesn't exist."
-    OpenFolder FolderPath, NotFoundMessage
-    AutoUpdateCheck
-End Sub
-
-Sub OpenSolver_OnlineHelp(Optional Control)
-2796      OpenURL "http://help.opensolver.org"
-          AutoUpdateCheck
-End Sub
-
-Sub OpenSolver_AboutClickHandler(Optional Control)
-          Dim frmAbout As FAbout
-          Set frmAbout = New FAbout
-2798      frmAbout.Show
-          Unload frmAbout
-          AutoUpdateCheck
-End Sub
-
-Sub OpenSolver_AboutCoinOR(Optional Control)
-2799      MsgBox "COIN-OR" & vbCrLf & _
-                 "http://www.Coin-OR.org" & vbCrLf & _
-                 vbCrLf & _
-                 "The Computational Infrastructure for Operations Research (COIN-OR, or simply COIN)  project is an initiative to spur the development of open-source software for the operations research community." & vbCrLf & _
-                 vbCrLf & _
-                 "OpenSolver uses the Coin-OR CBC optimization engine. CBC is licensed under the Common Public License 1.0. Visit the web sites for more information."
-          AutoUpdateCheck
-End Sub
-
-Sub OpenSolver_VisitOpenSolverOrg(Optional Control)
-2800      OpenURL "http://www.opensolver.org"
-          AutoUpdateCheck
-End Sub
-
-Sub OpenSolver_VisitCoinOROrg(Optional Control)
-2801      OpenURL "http://www.coin-or.org"
-          AutoUpdateCheck
-End Sub
-Sub OpenSolver_ModelClick(Optional Control)
-          Dim frmModel As FModel
-          Set frmModel = New FModel
-2853      frmModel.Show
-          Unload frmModel
-2854      DoEvents
-          AutoUpdateCheck
-End Sub
-
-Sub OpenSolver_QuickAutoModelClick(Optional Control)
-          Dim sheet As Worksheet
-          GetActiveSheetIfMissing sheet
-          
-2855      RunAutoModel sheet, False
-          AutoUpdateCheck
-End Sub
-
-Sub OpenSolver_AutoModelAndSolveClick(Optional Control)
-          Dim sheet As Worksheet
-          GetActiveSheetIfMissing sheet
-          If Not RunAutoModel(sheet, False) Then Exit Sub
-2882      RunOpenSolver False, False, 0, sheet
-          AutoUpdateCheck
-End Sub
-
-'====================================================================
-' Adapted from Excel 2003 Menu Code originally provided by Paul Becker of Eclipse Engineering (www.eclipseeng.com)
-'====================================================================
-
-Public Sub AddMenuItems()
+Private Sub AddMenuItems()
+    ' If we are on Mac 2016 we have a toolbar style menu
     If IsMac And Int(Val(Application.Version)) = 15 Then
         AddMenuItems_Toolbar
     Else
@@ -226,73 +25,8 @@ Public Sub AddMenuItems()
     End If
 End Sub
 
-Public Sub AddMenuItems_Toolbar(Optional RootItem As String)
-    DelMenuItems_Toolbar
-    
-    Dim OpenSolverMenu As CommandBar
-    Set OpenSolverMenu = Application.CommandBars.Add(MenuName)
-    OpenSolverMenu.Visible = True
-    
-    Dim MenuItems As Collection
-    Set MenuItems = FindChildren(GenerateMenuItems(), RootItem)
-    
-    If Len(RootItem) <> 0 Then
-        AddToMenu_Toolbar OpenSolverMenu, _
-            NewMenuItem("button", "back", ChrW(&H25C2) & " Back to Main Menu", "AddMenuItems_Toolbar")
-    End If
-    
-    Dim Item As MenuItem
-    For Each Item In MenuItems
-        AddToMenu_Toolbar OpenSolverMenu, Item
-    Next Item
-End Sub
-
-Public Sub AddMenuItems_ToolbarModel()
-    AddMenuItems_Toolbar "OpenSolverModelMenu"
-End Sub
-
-Public Sub AddMenuItems_ToolbarSolve()
-    AddMenuItems_Toolbar "OpenSolverSolveMenu"
-End Sub
-
-Public Sub AddMenuItems_ToolbarOpenSolver()
-    AddMenuItems_Toolbar "menu"
-End Sub
-
-Function FindChildren(Items As Collection, RootItem As String) As Collection
-    If Len(RootItem) = 0 Then
-        Set FindChildren = Items
-        Exit Function
-    End If
-    
-    Dim Item As MenuItem
-    For Each Item In Items
-        If Item.Id = RootItem Then
-            Set FindChildren = Item.Children
-            Exit Function
-        End If
-        Set FindChildren = FindChildren(Item.Children, RootItem)
-        If FindChildren.Count <> 0 Then Exit Function
-    Next Item
-    ' No match, return empty collection
-    Set FindChildren = New Collection
-End Function
-
-Public Sub AddMenuItems_MenuBar()
-2884      DelMenuItems_MenuBar
-
-          Dim MainMenuBar As CommandBar, OpenSolverMenu As CommandBarControl
-2885      Set MainMenuBar = Application.CommandBars(MenuBarName)
-2886      Set OpenSolverMenu = MainMenuBar.Controls.Add(Type:=msoControlPopup)
-2887      OpenSolverMenu.Caption = MenuName
-
-          Dim Item As MenuItem
-          For Each Item In GenerateMenuItems()
-              AddToMenu_MenuBar OpenSolverMenu, Item
-          Next Item
-End Sub
-
-Public Sub DelMenuItems()
+Private Sub DelMenuItems()
+    ' If we are on Mac 2016 we have a toolbar style menu
     If IsMac And Int(Val(Application.Version)) = 15 Then
         DelMenuItems_Toolbar
     Else
@@ -300,20 +34,29 @@ Public Sub DelMenuItems()
     End If
 End Sub
 
-Public Sub DelMenuItems_MenuBar()
-3011      On Error Resume Next
-3012      Application.CommandBars(MenuBarName).Controls(MenuName).Delete
-End Sub
-
-Public Sub DelMenuItems_Toolbar()
-          On Error Resume Next
-          Application.CommandBars(MenuName).Delete
-End Sub
 '====================================================================
-' Adapted from Excel 2003 Menu Code originally provided by Paul Becker of Eclipse Engineering (www.eclipseeng.com)
+' Menu content configuration
 '====================================================================
 
-Function GenerateMenuItems() As Collection
+' All the menus are created using the same collection of MenuItem objects
+
+Private Function NewMenuItem(Tag As String, Id As String, Optional Label As String, Optional OnAction As String, Optional ScreenTip As String, Optional SuperTip As String, Optional Image As String, Optional Size As String, Optional NewGroup = False) As MenuItem
+    Set NewMenuItem = New MenuItem
+    With NewMenuItem
+        .Tag = Tag                      ' The type of item
+        .Id = Id                        ' The unique id for the item
+        .Label = Label                  ' The user-facing label for the item
+        .OnAction = OnAction            ' The macro called when clicked
+        .ScreenTip = ScreenTip          ' The tooltip heading on hover in the ribbon
+        .SuperTip = SuperTip            ' The tooltip body text on hover in the ribbon
+        .Image = Image                  ' The name of the image to include in the ribbon (must be in the .xlam file)
+        .Size = Size                    ' The size of the item in the ribbon
+        .NewGroup = NewGroup            ' Whether the item starts a new group in the menu
+        Set .Children = New Collection  ' All children of the item
+    End With
+End Function
+
+Private Function GenerateMenuItems() As Collection
     Dim Items As Collection
     Set Items = New Collection
     
@@ -439,26 +182,26 @@ Function GenerateMenuItems() As Collection
     Set GenerateMenuItems = Items
 End Function
 
-Function NewMenuItem(Tag As String, Id As String, Optional Label As String, _
-        Optional OnAction As String, Optional ScreenTip As String, _
-        Optional SuperTip As String, Optional Image As String, _
-        Optional Size As String, Optional NewGroup = False) As MenuItem
-    Set NewMenuItem = New MenuItem
-    With NewMenuItem
-        .Tag = Tag
-        .Id = Id
-        .Label = Label
-        .OnAction = OnAction
-        .ScreenTip = ScreenTip
-        .SuperTip = SuperTip
-        .Image = Image
-        .Size = Size
-        .NewGroup = NewGroup
-        Set .Children = New Collection
-    End With
-End Function
+'====================================================================
+' Code for making the MenuBar menu
+' Adapted from Excel 2003 Menu Code originally provided by Paul Becker of Eclipse Engineering (www.eclipseeng.com)
+'====================================================================
 
-Sub AddToMenu_MenuBar(Menu As CommandBarControl, Item As MenuItem)
+Private Sub AddMenuItems_MenuBar()
+2884      DelMenuItems_MenuBar
+
+          Dim MainMenuBar As CommandBar, OpenSolverMenu As CommandBarControl
+2885      Set MainMenuBar = Application.CommandBars(MenuBarName)
+2886      Set OpenSolverMenu = MainMenuBar.Controls.Add(Type:=msoControlPopup)
+2887      OpenSolverMenu.Caption = MenuName
+
+          Dim Item As MenuItem
+          For Each Item In GenerateMenuItems()
+              AddToMenu_MenuBar OpenSolverMenu, Item
+          Next Item
+End Sub
+
+Private Sub AddToMenu_MenuBar(Menu As CommandBarControl, Item As MenuItem)
     Static sBeginGroup As Boolean
 
     Select Case Item.Tag
@@ -493,27 +236,74 @@ Sub AddToMenu_MenuBar(Menu As CommandBarControl, Item As MenuItem)
     End Select
 End Sub
 
-Sub AddToMenu_Toolbar(Menu As CommandBar, Item As MenuItem)
+Private Sub DelMenuItems_MenuBar()
+3011      On Error Resume Next
+3012      Application.CommandBars(MenuBarName).Controls(MenuName).Delete
+End Sub
+
+'====================================================================
+' Code for making the Toolbar menu
+' Adapted from http://peltiertech.com/office-2016-for-mac-is-here/#comment-693017
+'====================================================================
+
+Public Sub AddMenuItems_Toolbar(Optional RootItem As String)
+    ' Creates a menu using the children of the MenuItem with the id specified by RootItem
+    DelMenuItems_Toolbar
+    
+    Dim OpenSolverMenu As CommandBar
+    Set OpenSolverMenu = Application.CommandBars.Add(MenuName)
+    OpenSolverMenu.Visible = True
+    
+    ' Get the children of RootItem
+    Dim MenuItems As Collection
+    Set MenuItems = FindChildren(GenerateMenuItems(), RootItem)
+    
+    ' Add a 'Back to main menu' item if we are in a sub-menu
+    If Len(RootItem) <> 0 Then
+        AddToMenu_Toolbar OpenSolverMenu, _
+            NewMenuItem("button", "back", ChrW(&H25C2) & " Back to Main Menu", "AddMenuItems_Toolbar")
+    End If
+    
+    Dim Item As MenuItem
+    For Each Item In MenuItems
+        AddToMenu_Toolbar OpenSolverMenu, Item
+    Next Item
+End Sub
+
+Private Function FindChildren(Items As Collection, RootItem As String) As Collection
+    If Len(RootItem) = 0 Then
+        Set FindChildren = Items
+        Exit Function
+    End If
+    
+    Dim Item As MenuItem
+    For Each Item In Items
+        If Item.Id = RootItem Then
+            Set FindChildren = Item.Children
+            Exit Function
+        End If
+        Set FindChildren = FindChildren(Item.Children, RootItem)
+        If FindChildren.Count <> 0 Then Exit Function
+    Next Item
+    ' No match, return empty collection
+    Set FindChildren = New Collection
+End Function
+
+Private Sub AddToMenu_Toolbar(Menu As CommandBar, Item As MenuItem)
     Select Case Item.Tag
     Case "button"
+        ' Add button for the item
         With Menu.Controls.Add(Type:=msoControlButton)
           .Style = msoButtonCaption
           .Caption = Item.Label
           .OnAction = Item.OnAction
           .Enabled = True
         End With
-    Case "splitButton"
+    Case "splitButton", "menu"
+        ' Add button to open the specified sub-menu
         With Menu.Controls.Add(Type:=msoControlButton)
           .Style = msoButtonCaption
-          .Caption = Item.Children(1).Label
-          .OnAction = "AddMenuItems_Toolbar" & Replace(.Caption, "&", "")
-          .Caption = .Caption & " " & ChrW(&H25BE)
-          .Enabled = True
-        End With
-    Case "menu"
-        With Menu.Controls.Add(Type:=msoControlButton)
-          .Style = msoButtonCaption
-          .Caption = Item.Label
+          .Caption = IIf(Item.Tag = "splitButton", Item.Children(1).Label, Item.Label)
           .OnAction = "AddMenuItems_Toolbar" & Replace(.Caption, "&", "")
           .Caption = .Caption & " " & ChrW(&H25BE)
           .Enabled = True
@@ -521,7 +311,29 @@ Sub AddToMenu_Toolbar(Menu As CommandBar, Item As MenuItem)
     End Select
 End Sub
 
-Sub CreateRibbonXML()
+' Click handlers for opening sub-menus
+Public Sub AddMenuItems_ToolbarModel()
+    AddMenuItems_Toolbar "OpenSolverModelMenu"
+End Sub
+
+Public Sub AddMenuItems_ToolbarSolve()
+    AddMenuItems_Toolbar "OpenSolverSolveMenu"
+End Sub
+
+Public Sub AddMenuItems_ToolbarOpenSolver()
+    AddMenuItems_Toolbar "menu"
+End Sub
+
+Private Sub DelMenuItems_Toolbar()
+          On Error Resume Next
+          Application.CommandBars(MenuName).Delete
+End Sub
+
+'====================================================================
+' Code for making the Ribbon XML
+'====================================================================
+
+Public Sub CreateRibbonXML()
     Dim CustomXMLFile As String
     GetExistingFilePathName JoinPaths(ThisWorkbook.Path, "RibbonX", "customUI"), "customUI.xml", CustomXMLFile
     
@@ -539,7 +351,7 @@ Sub CreateRibbonXML()
     Close #FileNum
 End Sub
 
-Sub OutputRibbonHeader(FileNum As Integer)
+Private Sub OutputRibbonHeader(FileNum As Integer)
     Print #FileNum, Spc(0); "<?xml version=""1.0"" encoding=""UTF-8"" standalone=""yes""?>"
     Print #FileNum, Spc(0); "<customUI xmlns=""http://schemas.microsoft.com/office/2006/01/customui"">"
     Print #FileNum, Spc(2); "<ribbon startFromScratch=""false"">"
@@ -548,7 +360,7 @@ Sub OutputRibbonHeader(FileNum As Integer)
     Print #FileNum, Spc(8); "<group id=""GroupOpenSolver"" label=""OpenSolver"">"
 End Sub
 
-Sub OutputRibbonFooter(FileNum As Integer)
+Private Sub OutputRibbonFooter(FileNum As Integer)
     Print #FileNum, Spc(8); "</group>"
     Print #FileNum, Spc(6); "</tab>"
     Print #FileNum, Spc(4); "</tabs>"
@@ -556,7 +368,7 @@ Sub OutputRibbonFooter(FileNum As Integer)
     Print #FileNum, Spc(0); "</customUI>"
 End Sub
 
-Sub OutputRibbonXML(FileNum As Integer, Item As MenuItem, Indent As Integer)
+Private Sub OutputRibbonXML(FileNum As Integer, Item As MenuItem, Indent As Integer)
     Print #FileNum, Spc(Indent); "<" & Item.Tag & " id=" & Quote(Item.Id);
     OutputIfExists FileNum, Replace(Item.Label, "&", "&amp;"), IIf(Item.Tag = "menuSeparator", "title", "label")
     OutputIfExists FileNum, Item.OnAction, "onAction"
@@ -579,7 +391,7 @@ Sub OutputRibbonXML(FileNum As Integer, Item As MenuItem, Indent As Integer)
     End Select
 End Sub
 
-Sub OutputIfExists(FileNum As Integer, value As String, Tag As String)
+Private Sub OutputIfExists(FileNum As Integer, value As String, Tag As String)
     If Len(value) <> 0 Then Print #FileNum, " " & Tag & "=" & Quote(value);
 End Sub
 
