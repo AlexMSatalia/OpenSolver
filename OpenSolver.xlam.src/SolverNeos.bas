@@ -235,16 +235,17 @@ Private Function SendToNeos_Windows(message As String) As String
     Dim RaiseError As Boolean
     RaiseError = False
     On Error GoTo ErrorHandler
-
-    ' Late binding so we don't need to add the reference to MSXML, causing a crash on Mac
-    Dim objSvrHTTP As Object 'MSXML2.ServerXMLHTTP
-    Set objSvrHTTP = CreateObject("MSXML2.ServerXMLHTTP")
     
-    objSvrHTTP.Open "POST", NEOS_ADDRESS, False
-    objSvrHTTP.send message
-    SendToNeos_Windows = objSvrHTTP.responseText
+    ' Late binding so we don't need to add the reference to MSXML, causing a crash on Mac
+    Dim XmlHttpReq As Object  ' MSXML2.XMLHTTP
+    Set XmlHttpReq = CreateObject("MSXML2.XMLHTTP")
+    
+    XmlHttpReq.Open "POST", NEOS_ADDRESS, False
+    XmlHttpReq.send message
+    SendToNeos_Windows = XmlHttpReq.responseText
 
 ExitFunction:
+    Set XmlHttpReq = Nothing
     If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
     Exit Function
 
