@@ -136,6 +136,27 @@ Public Enum WindowStyleType
     Minimize = enSW.SW_MINIMIZE
 End Enum
 
+' Our custom type
+#If Mac Then
+    Private Type ExecInformation
+        file As Long
+        fd As Long
+        BinaryName As String
+    End Type
+#ElseIf VBA7 Then
+    Private Type ExecInformation
+        ProcInfo As PROCESS_INFORMATION
+        hWrite As LongPtr
+        hRead As LongPtr
+    End Type
+#Else
+    Private Type ExecInformation
+        ProcInfo As PROCESS_INFORMATION
+        hWrite As Long
+        hRead As Long
+    End Type
+#End If
+
 Public Function RunExternalCommand(CommandString As String, Optional StartDir As String, Optional WindowStyle As WindowStyleType = Hide, Optional WaitForCompletion As Boolean = True, Optional ExitCode As Long) As Boolean
 ' Runs an external command, returning false if the command doesn't run
 '     CommandString:      the command to run
@@ -363,17 +384,17 @@ Private Function ReadExternalCommandOutput_Mac(CommandString As String, Optional
     End If
 
     Do While True
-        Dim chunk As String
+        Dim Chunk As String
         Dim num_read As Long
-        chunk = Space(4096)
-        num_read = read(fd, chunk, Len(chunk) - 1)
+        Chunk = Space(4096)
+        num_read = read(fd, Chunk, Len(Chunk) - 1)
         If num_read = 0 Then
             Exit Do
         ElseIf num_read > 0 Then
-            chunk = Left$(chunk, num_read)
-            Debug.Print chunk
-            If DoingLogging Then Print #FileNum, chunk;
-            ReadExternalCommandOutput_Mac = ReadExternalCommandOutput_Mac & chunk
+            Chunk = Left$(Chunk, num_read)
+            Debug.Print Chunk
+            If DoingLogging Then Print #FileNum, Chunk;
+            ReadExternalCommandOutput_Mac = ReadExternalCommandOutput_Mac & Chunk
             mSleep 50
             DoEvents
         End If
@@ -527,7 +548,7 @@ Private Function DLLErrorText(ByVal lLastDLLError As Long) As String
         DLLErrorText = Left$(sBuff, lCount - 2) ' Remove line feeds
     End If
 End Function
-#End If  ' Mac
+#End If  ' Win32
 
 Private Function GetExecutableName(CommandString As String) As String
     Dim start As Long, finish As Long
@@ -550,3 +571,155 @@ Private Function GetExecutableName(CommandString As String) As String
     
     GetExecutableName = Mid(CommandString, start + 1, finish - start - 1)
 End Function
+
+Private Function StartProcess(Command As String, StartDir As String, PipeCommand As Boolean) As ExecInformation
+    #If Mac Then
+        ' Save the name of the binary in case we need to kill it later
+        StartProcess.BinaryName = GetExecutableName(Command)
+        
+        ' cd to the starting directory if supplied
+        Dim FullCommand As String
+        If Len(StartDir) <> 0 Then
+            FullCommand = "cd " & MakePathSafe(StartDir) & ScriptSeparator
+        End If
+        FullCommand = FullCommand & Command
+
+        ' Start command in pipe
+        StartProcess.file = popen(Command, "r")
+        If StartProcess.file = 0 Then
+            Err.Raise OpenSolver_ExecutableError, _
+                Description:="Unable to run the command: " & vbNewLine & Command
+        End If
+    
+        ' Set non-blocking read flag on the pipe
+        StartProcess.fd = fileno(StartProcess.file)
+        fcntl StartProcess.fd, F_SETFL, ByVal (O_NONBLOCK Or fcntl(StartProcess.fd, F_GETFL, ByVal 0&))
+    #Else
+        If PipeCommand Then
+            ' Create the pipe
+            Dim tSA_CreatePipe As SECURITY_ATTRIBUTES
+            With tSA_CreatePipe
+                .nLength = Len(tSA_CreatePipe)
+                .lpSecurityDescriptor = 0&
+                .bInheritHandle = True
+            End With
+        
+            If CreatePipe(StartProcess.hRead, StartProcess.hWrite, tSA_CreatePipe, 0&) = 0& Then
+                Err.Raise OpenSolver_ExecutableError, Description:="Couldn't create pipe"
+            End If
+        End If
+        
+        Dim tStartupInfo As STARTUPINFO
+        With tStartupInfo
+            .cb = Len(tStartupInfo)
+            GetStartupInfo tStartupInfo
+            
+            If PipeCommand Then
+                ' Set the process to run in our pipe
+                .hStdOutput = StartProcess.hWrite
+                .hStdError = StartProcess.hWrite
+                .hStdInput = StartProcess.hRead
+                .dwFlags = STARTF_USESHOWWINDOW Or STARTF_USESTDHANDLES
+                .wShowWindow = Hide
+            Else
+                .dwFlags = STARTF_USESHOWWINDOW Or .dwFlags
+                .wShowWindow = Hide  ' WindowStyle
+            End If
+        End With
+        
+        'Not used, but needed for CreateProcess
+        Dim sec1 As SECURITY_ATTRIBUTES
+        Dim sec2 As SECURITY_ATTRIBUTES
+        sec1.nLength = Len(sec1)
+        sec2.nLength = Len(sec2)
+        
+        ' Start the process
+        #If VBA7 Then
+            Dim result As LongPtr
+        #Else
+            Dim result As Long
+        #End If
+        result = CreateProcess(vbNullString, Command, sec1, sec2, True, NORMAL_PRIORITY_CLASS, _
+                               ByVal 0&, StartDir, tStartupInfo, StartProcess.ProcInfo)
+        
+        ' Check process has started correctly
+        If result = 0 Then
+            Err.Raise OpenSolver_ExecutableError, _
+                Description:="Unable to run the external program: " & Command & vbNewLine & vbNewLine & _
+                             "Error " & Err.LastDllError & ": " & DLLErrorText(Err.LastDllError)
+        End If
+        
+        ' Close unneeded handles
+        CloseHandle StartProcess.hWrite
+        CloseHandle StartProcess.ProcInfo.hThread
+        StartProcess.hWrite = 0&
+    #End If
+End Function
+
+Private Function GetExitCode(ExecInfo As ExecInformation) As Long
+    ' Tidy up everything to do with the execution
+    #If Mac Then
+        GetExitCode = pclose(ExecInfo.file)
+    #Else
+        GetExitCodeProcess ExecInfo.ProcInfo.hProcess, GetExitCode
+    #End If
+End Function
+
+Private Sub CloseProcess(ExecInfo As ExecInformation)
+    #If Mac Then
+    #Else
+        CloseHandle ExecInfo.ProcInfo.hProcess
+        CloseHandle ExecInfo.ProcInfo.hThread
+        CloseHandle ExecInfo.hWrite
+        CloseHandle ExecInfo.hRead
+    #End If
+End Sub
+
+Private Sub KillProcess(ExecInfo As ExecInformation)
+    #If Mac Then
+        system "pkill " & ExecInfo.BinaryName
+    #Else
+        TerminateProcess ExecInfo.ProcInfo.hProcess, 0
+    #End If
+End Sub
+
+Private Function ReadChunk(ExecInfo As ExecInformation, ByRef NewData As String) As Boolean
+    Const CHUNK_SIZE As Long = 4096
+    Dim NumCharsRead As Long
+    
+    #If Mac Then
+        Dim Chunk As String
+        Chunk = Space(CHUNK_SIZE)
+        NumCharsRead = read(StartProcess.fd, Chunk, Len(Chunk) - 1)
+        
+        ' NumCharsRead = -1 if nothing new written but process alive
+        '              =  0 if nothing new written and process ended
+        '              >  0 if new data has been read - need to read again to get state of process
+        If NumCharsRead > 0 Then
+            NewData = Left$(Chunk, NumCharsRead)
+        End If
+        ReadChunk = (NumCharsRead <> 0)  ' True if process is alive
+    #Else
+        ' Read the size of results from the pipe, without retrieving data
+        Dim lngSizeOf As Long
+        lngSizeOf = 0&  ' Reset the size to zero - this isn't done by PeekNamedPipe
+        PeekNamedPipe ExecInfo.hRead, ByVal 0&, 0&, ByVal 0&, lngSizeOf, ByVal 0&
+        
+        If lngSizeOf = 0 Then
+            ' It's possible that the process can still be running and we have no new data since last read.
+            If WaitForSingleObject(ExecInfo.ProcInfo.hProcess, 10&) <> 258 Then
+                ReadChunk = False  ' No more data coming into pipe
+            Else
+                ReadChunk = True  ' Process is still alive
+            End If
+        Else
+            Dim abytBuff() As Byte
+            ReDim abytBuff(lngSizeOf - 1)
+            If ReadFile(ExecInfo.hRead, abytBuff(0), UBound(abytBuff) + 1, NumCharsRead, ByVal 0&) Then
+                NewData = Left$(StrConv(abytBuff(), vbUnicode), NumCharsRead)
+            End If
+            ReadChunk = True
+        End If
+    #End If
+End Function
+
