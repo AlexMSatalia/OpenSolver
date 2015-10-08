@@ -4,7 +4,7 @@ Option Explicit
 #If Mac Then
     ' Declare libc functions
     Private Declare Function system Lib "libc.dylib" (ByVal Command As String) As Long
-    Private Declare Function popen Lib "libc.dylib" (ByVal Command As String, ByVal mode As String) As Long
+    Private Declare Function popen Lib "libc.dylib" (ByVal Command As String, ByVal Mode As String) As Long
     Private Declare Function pclose Lib "libc.dylib" (ByVal file As Long) As Long
     Private Declare Function read Lib "libc.dylib" (ByVal fd As Long, ByVal buffer As String, ByVal Size As Long) As Long
     Private Declare Function feof Lib "libc.dylib" (ByVal file As Long) As Long
@@ -129,13 +129,6 @@ Private Enum enSW
     SW_MINIMIZE = 6
 End Enum
 
-Public Enum WindowStyleType
-    Hide = enSW.SW_HIDE
-    Normal = enSW.SW_NORMAL
-    Maximize = enSW.SW_MAXIMIZE
-    Minimize = enSW.SW_MINIMIZE
-End Enum
-
 ' Our custom type
 #If Mac Then
     Private Type ExecInformation
@@ -156,384 +149,6 @@ End Enum
         hRead As Long
     End Type
 #End If
-
-Public Function RunExternalCommand(CommandString As String, Optional StartDir As String, Optional WindowStyle As WindowStyleType = Hide, Optional WaitForCompletion As Boolean = True, Optional ExitCode As Long) As Boolean
-' Runs an external command, returning false if the command doesn't run
-'     CommandString:      the command to run
-'     WindowStyle:          the visibility of the process
-'     WaitForCompletion:    waits for the process to complete before returning
-'     ExitCode:             the return code of the process
-
-    Dim RaiseError As Boolean
-    RaiseError = False
-    On Error GoTo ErrorHandler
-    
-    #If Mac Then
-        RunExternalCommand = RunExternalCommand_Mac(CommandString, StartDir, WindowStyle, WaitForCompletion, ExitCode)
-    #Else
-        RunExternalCommand = RunExternalCommand_Win(CommandString, StartDir, WindowStyle, WaitForCompletion, ExitCode)
-    #End If  ' Mac
-
-ExitFunction:
-    If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
-    Exit Function
-
-ErrorHandler:
-    If Not ReportError("OpenSolverExternalCommand", "RunExternalCommand") Then Resume
-    RaiseError = True
-    GoTo ExitFunction
-    
-End Function
-
-#If Mac Then
-Private Function RunExternalCommand_Mac(CommandString As String, Optional StartDir As String, Optional WindowStyle As WindowStyleType = Hide, Optional WaitForCompletion As Boolean = True, Optional ExitCode As Long) As Boolean
-Dim FullCommand As String
-    Dim RaiseError As Boolean
-    RaiseError = False
-    On Error GoTo ErrorHandler
-
-    If Len(StartDir) <> 0 Then FullCommand = "cd " & MakePathSafe(StartDir) & ScriptSeparator
-    FullCommand = FullCommand & CommandString
-
-    If WaitForCompletion Then
-        ' We are waiting for completion
-        If WindowStyle = Hide Then
-            Dim ret As Long
-            ret = system(FullCommand)
-            If ret = 0 Then RunExternalCommand_Mac = True
-        Else
-            ' Applescript escapes double quotes with a backslash
-            FullCommand = Replace(FullCommand, """", "\""")
-        
-            ' Applescript for opening a terminal to run our command
-            ' 1. Create window if terminal not already open, then activate window
-            ' 2. Run our shell command in the terminal, saving a reference to the open window
-            ' 3. Loop until the window is no longer busy
-            Dim script As String
-            script = _
-                "tell application ""Terminal""" & vbNewLine & _
-                "    activate" & vbNewLine & _
-                "    set w to do script """ & FullCommand & """" & vbNewLine & _
-                "    repeat" & vbNewLine & _
-                "        delay 1" & vbNewLine & _
-                "        if not busy of w then exit repeat" & vbNewLine & _
-                "    end repeat" & vbNewLine & _
-                "    do script ""exit"" in w" & vbNewLine & _
-                "end tell" & vbNewLine & _
-                "tell application ""Microsoft Excel""" & vbNewLine & _
-                "    activate" & vbNewLine & _
-                "end tell"
-            MacScript (script)
-            RunExternalCommand_Mac = True
-        End If
-    Else
-        ' We need to start the command asynchronously.
-        ' To do this, we dump the command to script file then start using "open -a Terminal <file>"
-        Dim TempScript As String
-        If GetTempFilePath("tempscript.sh", TempScript) Then DeleteFileAndVerify TempScript
-        
-        CreateScriptFile TempScript, FullCommand
-        
-        If WindowStyle = Hide Then
-            ' Applescript escapes double quotes with a backslash
-            FullCommand = Replace(MakePathSafe(TempScript), """", "\""")
-            MacScript "do shell script """ & FullCommand & " > /dev/null 2>&1 &"""
-            RunExternalCommand_Mac = True
-        Else
-            ret = system("open -a Terminal " & MakePathSafe(TempScript))
-            If ret = 0 Then RunExternalCommand_Mac = True
-        End If
-    End If
-
-ExitFunction:
-    If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
-    Exit Function
-
-ErrorHandler:
-    If Not ReportError("OpenSolverExternalCommand", "RunExternalCommand_Mac") Then Resume
-    RaiseError = True
-    GoTo ExitFunction
-End Function
-#Else
-Private Function RunExternalCommand_Win(CommandString As String, Optional StartDir As String, Optional WindowStyle As WindowStyleType = Hide, Optional WaitForCompletion As Boolean = True, Optional ExitCode As Long) As Boolean
-    Dim RaiseError As Boolean
-    RaiseError = False
-    On Error GoTo ErrorHandler
-    Application.EnableCancelKey = xlErrorHandler
-
-    Dim tStartupInfo As STARTUPINFO
-    With tStartupInfo
-        .cb = Len(tStartupInfo)
-        .dwFlags = STARTF_USESHOWWINDOW Or .dwFlags
-        .wShowWindow = WindowStyle
-    End With
-    
-    'Not used, but needed
-    Dim sec1 As SECURITY_ATTRIBUTES
-    Dim sec2 As SECURITY_ATTRIBUTES
-    'Set the structure size
-    sec1.nLength = Len(sec1)
-    sec2.nLength = Len(sec2)
-    
-    ' Start the process
-    Dim tSA_CreateProcessPrcInfo As PROCESS_INFORMATION
-    #If VBA7 Then
-        Dim lngResult As LongPtr
-    #Else
-        Dim lngResult As Long
-    #End If
-    lngResult = CreateProcess(vbNullString, CommandString, sec1, sec2, True, _
-                              NORMAL_PRIORITY_CLASS, ByVal 0&, StartDir, tStartupInfo, tSA_CreateProcessPrcInfo)
-    
-    ' Check process has started correctly
-    If lngResult = 0& Then
-        Err.Raise OpenSolver_ExecutableError, Description:="Unable to run the external program: " & CommandString & ". " & vbNewLine & vbNewLine & _
-                                                           "Error " & Err.LastDllError & ": " & DLLErrorText(Err.LastDllError)
-    End If
-    
-    If Not WaitForCompletion Then
-        RunExternalCommand_Win = True
-        GoTo ExitFunction
-    End If
-    
-    ' Loop until completion with sleep time for escape handling
-    Do While True
-        ' Split time between Excel and checking the solver process in 20:1 ratio, so hopefully a 20:1 chance of catching an escape press
-        lngResult = WaitForSingleObject(tSA_CreateProcessPrcInfo.hProcess, 10) ' Wait for up to 1 millisecond
-        ' Break if we are done to avoid sleeping unnecessarily below
-        If lngResult <> 258 Then Exit Do
-        mSleep 50 ' Sleep in Excel to keep escape detection responsive
-        DoEvents
-    Loop
-    
-    ' Get exit code
-    Call GetExitCodeProcess(tSA_CreateProcessPrcInfo.hProcess, ExitCode)
-    RunExternalCommand_Win = True
-    
-ExitClose:
-    CloseHandle tSA_CreateProcessPrcInfo.hThread
-    CloseHandle tSA_CreateProcessPrcInfo.hProcess
-ExitFunction:
-    If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
-    Exit Function
-
-ErrorHandler:
-    If Not ReportError("OpenSolverExternalCommand", "RunExternalCommand_Win") Then Resume
-    RaiseError = True
-    On Error Resume Next
-    If OpenSolverErrorHandler.ErrNum = OpenSolver_UserCancelledError Then
-        TerminateProcess tSA_CreateProcessPrcInfo.hProcess, 0
-    End If
-    GoTo ExitClose
-End Function
-#End If  ' Mac
-
-Public Function ReadExternalCommandOutput(CommandString As String, Optional LogPath As String, Optional StartDir As String, Optional DisplayOutput As Boolean, Optional ExitCode As Long) As String
-' Runs an external command and pipes output back into VBA. From https://stackoverflow.com/questions/2784367/capture-output-value-from-a-shell-command-in-vba
-'     CommandString:      the command to run
-'     LogPath:            if specified, writes the whole output to this file after pipe finishes
-'     ExitCode:           the exit code of the command
-
-    Dim RaiseError As Boolean
-    RaiseError = False
-    On Error GoTo ErrorHandler
-    Application.EnableCancelKey = xlErrorHandler
-
-    #If Mac Then
-        ReadExternalCommandOutput = ReadExternalCommandOutput_Mac(CommandString, LogPath, StartDir, DisplayOutput, ExitCode)
-    #Else
-        ReadExternalCommandOutput = ReadExternalCommandOutput_Win(CommandString, LogPath, StartDir, DisplayOutput, ExitCode)
-    #End If  ' Mac
-    
-ExitFunction:
-    If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
-    Exit Function
-
-ErrorHandler:
-    If Not ReportError("OpenSolverExternalCommand", "ReadExternalCommandOutput") Then Resume
-    RaiseError = True
-    GoTo ExitFunction
-End Function
-
-#If Mac Then
-Private Function ReadExternalCommandOutput_Mac(CommandString As String, Optional LogPath As String, Optional StartDir As String, Optional DisplayOutput As Boolean, Optional ExitCode As Long) As String
-    Dim RaiseError As Boolean
-    RaiseError = False
-    On Error GoTo ErrorHandler
-    Application.EnableCancelKey = xlErrorHandler
-    
-    Dim Command As String
-    Command = "cd " & MakePathSafe(StartDir) & ScriptSeparator & CommandString
-
-    Dim file As Long, fd As Long
-    file = popen(Command, "r")
-    
-    ' Set non-blocking read flag on the pipe
-    fd = fileno(file)
-    fcntl fd, F_SETFL, ByVal (O_NONBLOCK Or fcntl(fd, F_GETFL, ByVal 0&))
-    
-    If file = 0 Then
-        Exit Function
-    End If
-    
-    Dim DoingLogging As Boolean, FileNum As Long
-    DoingLogging = Len(LogPath) <> 0
-    If DoingLogging Then
-        FileNum = FreeFile()
-        Open LogPath For Output As #FileNum
-    End If
-
-    Do While True
-        Dim Chunk As String
-        Dim num_read As Long
-        Chunk = Space(4096)
-        num_read = read(fd, Chunk, Len(Chunk) - 1)
-        If num_read = 0 Then
-            Exit Do
-        ElseIf num_read > 0 Then
-            Chunk = Left$(Chunk, num_read)
-            Debug.Print Chunk
-            If DoingLogging Then Print #FileNum, Chunk;
-            ReadExternalCommandOutput_Mac = ReadExternalCommandOutput_Mac & Chunk
-            mSleep 50
-            DoEvents
-        End If
-    Loop
-    
-ExitFunction:
-    ExitCode = pclose(file)
-    Close #FileNum
-    If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
-    Exit Function
-
-ErrorHandler:
-    If Not ReportError("OpenSolverExternalCommand", "ReadExternalCommandOutput_Mac") Then Resume
-    RaiseError = True
-    If OpenSolverErrorHandler.ErrNum = OpenSolver_UserCancelledError Then
-        RunExternalCommand "pkill " & GetExecutableName(CommandString)
-    End If
-    GoTo ExitFunction
-End Function
-#Else
-Private Function ReadExternalCommandOutput_Win(CommandString As String, Optional LogPath As String, Optional StartDir As String, Optional DisplayOutput As Boolean, Optional ExitCode As Long) As String
-    Dim RaiseError As Boolean
-    RaiseError = False
-    On Error GoTo ErrorHandler
-    Application.EnableCancelKey = xlErrorHandler
-        
-    Dim tSA_CreatePipe As SECURITY_ATTRIBUTES
-    With tSA_CreatePipe
-        .nLength = Len(tSA_CreatePipe)
-        .lpSecurityDescriptor = 0&
-        .bInheritHandle = True
-    End With
-    
-    ' Create the pipe
-    #If VBA7 Then
-        Dim hRead As LongPtr, hWrite As LongPtr
-    #Else
-        Dim hRead As Long, hWrite As Long
-    #End If
-    If CreatePipe(hRead, hWrite, tSA_CreatePipe, 0&) = 0& Then
-        Err.Raise OpenSolver_ExecutableError, Description:="Couldn't create pipe"
-    End If
-    
-    Dim tStartupInfo As STARTUPINFO
-    With tStartupInfo
-        .cb = Len(tStartupInfo)
-        GetStartupInfo tStartupInfo
-        ' Set the process to run in our pipe
-        .hStdOutput = hWrite
-        .hStdError = hWrite
-        .hStdInput = hRead
-        .dwFlags = STARTF_USESHOWWINDOW Or STARTF_USESTDHANDLES
-        .wShowWindow = Hide
-    End With
-    
-    'Not used, but needed
-    Dim sec1 As SECURITY_ATTRIBUTES
-    Dim sec2 As SECURITY_ATTRIBUTES
-    sec1.nLength = Len(sec1)
-    sec2.nLength = Len(sec2)
-    
-    ' Start the process
-    Dim tSA_CreateProcessPrcInfo As PROCESS_INFORMATION
-    #If VBA7 Then
-        Dim lngResult As LongPtr
-    #Else
-        Dim lngResult As Long
-    #End If
-    lngResult = CreateProcess(vbNullString, CommandString, sec1, sec2, True, _
-                              NORMAL_PRIORITY_CLASS, ByVal 0&, StartDir, tStartupInfo, tSA_CreateProcessPrcInfo)
-    
-    ' Check process has started correctly
-    If lngResult = 0& Then
-        Err.Raise OpenSolver_ExecutableError, Description:="Unable to run the external program: " & CommandString & ". " & vbNewLine & vbNewLine & _
-                                                           "Error " & Err.LastDllError & ": " & DLLErrorText(Err.LastDllError)
-    End If
-    
-    CloseHandle hWrite
-    CloseHandle tSA_CreateProcessPrcInfo.hThread
-    hWrite = 0&
-    
-    Dim sOutput As String
-    
-    Dim DoingLogging As Boolean, FileNum As Long
-    DoingLogging = Len(LogPath) <> 0
-    If DoingLogging Then
-        FileNum = FreeFile()
-        Open LogPath For Output As #FileNum
-    End If
-    
-    Do
-        ' Check whether the proc has finished yet
-        lngResult = WaitForSingleObject(tSA_CreateProcessPrcInfo.hProcess, 10&)
-        
-        ' Read the size of results from the pipe
-        Dim lngSizeOf As Long
-        lngSizeOf = 0&
-        'lngSizeOf = GetFileSize(hRead, 0&)
-        PeekNamedPipe hRead, ByVal 0&, 0&, ByVal 0&, lngSizeOf, ByVal 0&
-        
-        If lngSizeOf = 0 Then
-            ' Exit if no more data in pipe and process has finished
-            ' It's possible that the process can still be running and we have no new data since last read.
-            If lngResult <> 258 Then Exit Do
-        Else
-            Dim abytBuff() As Byte, bRead As Long
-            ReDim abytBuff(lngSizeOf - 1)
-            If ReadFile(hRead, abytBuff(0), UBound(abytBuff) + 1, bRead, ByVal 0&) Then
-                sOutput = Left$(StrConv(abytBuff(), vbUnicode), lngSizeOf)
-                Debug.Print "new read", vbNewLine, sOutput, vbNewLine
-                If DoingLogging Then Print #FileNum, sOutput;  ' Stream to log file
-                ReadExternalCommandOutput_Win = ReadExternalCommandOutput_Win & sOutput
-            End If
-        End If
-        mSleep 50 ' Sleep in Excel to keep escape detection responsive
-        DoEvents
-    Loop
-    
-    ' Get exit code
-    GetExitCodeProcess tSA_CreateProcessPrcInfo.hProcess, ExitCode
-    CloseHandle tSA_CreateProcessPrcInfo.hProcess
-    
-ExitFunction:
-    CloseHandle hWrite
-    CloseHandle hRead
-    Close #FileNum
-    If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
-    Exit Function
-
-ErrorHandler:
-    If Not ReportError("OpenSolverExternalCommand", "ReadExternalCommandOutput_Win") Then Resume
-    RaiseError = True
-    On Error Resume Next
-    If OpenSolverErrorHandler.ErrNum = OpenSolver_UserCancelledError Then
-        TerminateProcess tSA_CreateProcessPrcInfo.hProcess, 0
-    End If
-    GoTo ExitFunction
-End Function
-#End If  ' Mac
 
 #If Win32 Then
 Private Function DLLErrorText(ByVal lLastDLLError As Long) As String
@@ -572,7 +187,7 @@ Private Function GetExecutableName(CommandString As String) As String
     GetExecutableName = Mid(CommandString, start + 1, finish - start - 1)
 End Function
 
-Private Function StartProcess(Command As String, StartDir As String, PipeCommand As Boolean) As ExecInformation
+Private Function StartProcess(Command As String, StartDir As String, Async As Boolean, Display As Boolean) As ExecInformation
     #If Mac Then
         ' Save the name of the binary in case we need to kill it later
         StartProcess.BinaryName = GetExecutableName(Command)
@@ -583,9 +198,18 @@ Private Function StartProcess(Command As String, StartDir As String, PipeCommand
             FullCommand = "cd " & MakePathSafe(StartDir) & ScriptSeparator
         End If
         FullCommand = FullCommand & Command
+        
+        If Async And Display Then
+            ' We need to start the command asynchronously.
+            ' To do this, we dump the command to script file then start using "open -a Terminal <file>"
+            Dim TempScript As String
+            If GetTempFilePath("tempscript.sh", TempScript) Then DeleteFileAndVerify TempScript
+            CreateScriptFile TempScript, FullCommand
+            FullCommand = "open -a Terminal " & MakePathSafe(TempScript)
+        End If
 
         ' Start command in pipe
-        StartProcess.file = popen(Command, "r")
+        StartProcess.file = popen(FullCommand, "r")
         If StartProcess.file = 0 Then
             Err.Raise OpenSolver_ExecutableError, _
                 Description:="Unable to run the command: " & vbNewLine & Command
@@ -595,7 +219,7 @@ Private Function StartProcess(Command As String, StartDir As String, PipeCommand
         StartProcess.fd = fileno(StartProcess.file)
         fcntl StartProcess.fd, F_SETFL, ByVal (O_NONBLOCK Or fcntl(StartProcess.fd, F_GETFL, ByVal 0&))
     #Else
-        If PipeCommand Then
+        If Not Async Then
             ' Create the pipe
             Dim tSA_CreatePipe As SECURITY_ATTRIBUTES
             With tSA_CreatePipe
@@ -614,16 +238,16 @@ Private Function StartProcess(Command As String, StartDir As String, PipeCommand
             .cb = Len(tStartupInfo)
             GetStartupInfo tStartupInfo
             
-            If PipeCommand Then
+            If Async Then
+                .dwFlags = STARTF_USESHOWWINDOW Or .dwFlags
+                .wShowWindow = IIf(Display, enSW.SW_NORMAL, enSW.SW_HIDE)
+            Else
                 ' Set the process to run in our pipe
                 .hStdOutput = StartProcess.hWrite
                 .hStdError = StartProcess.hWrite
                 .hStdInput = StartProcess.hRead
                 .dwFlags = STARTF_USESHOWWINDOW Or STARTF_USESTDHANDLES
-                .wShowWindow = Hide
-            Else
-                .dwFlags = STARTF_USESHOWWINDOW Or .dwFlags
-                .wShowWindow = Hide  ' WindowStyle
+                .wShowWindow = enSW.SW_HIDE
             End If
         End With
         
@@ -684,13 +308,14 @@ Private Sub KillProcess(ExecInfo As ExecInformation)
 End Sub
 
 Private Function ReadChunk(ExecInfo As ExecInformation, ByRef NewData As String) As Boolean
-    Const CHUNK_SIZE As Long = 4096
     Dim NumCharsRead As Long
+    NewData = vbNullString
     
     #If Mac Then
+        Const CHUNK_SIZE As Long = 4096
         Dim Chunk As String
         Chunk = Space(CHUNK_SIZE)
-        NumCharsRead = read(StartProcess.fd, Chunk, Len(Chunk) - 1)
+        NumCharsRead = read(ExecInfo.fd, Chunk, Len(Chunk) - 1)
         
         ' NumCharsRead = -1 if nothing new written but process alive
         '              =  0 if nothing new written and process ended
@@ -700,6 +325,13 @@ Private Function ReadChunk(ExecInfo As ExecInformation, ByRef NewData As String)
         End If
         ReadChunk = (NumCharsRead <> 0)  ' True if process is alive
     #Else
+        #If VBA7 Then
+            Dim lngResult As LongPtr
+        #Else
+            Dim lngResult As Long
+        #End If
+        lngResult = WaitForSingleObject(ExecInfo.ProcInfo.hProcess, 10&)
+    
         ' Read the size of results from the pipe, without retrieving data
         Dim lngSizeOf As Long
         lngSizeOf = 0&  ' Reset the size to zero - this isn't done by PeekNamedPipe
@@ -707,7 +339,7 @@ Private Function ReadChunk(ExecInfo As ExecInformation, ByRef NewData As String)
         
         If lngSizeOf = 0 Then
             ' It's possible that the process can still be running and we have no new data since last read.
-            If WaitForSingleObject(ExecInfo.ProcInfo.hProcess, 10&) <> 258 Then
+            If lngResult <> 258 Then
                 ReadChunk = False  ' No more data coming into pipe
             Else
                 ReadChunk = True  ' Process is still alive
@@ -722,4 +354,66 @@ Private Function ReadChunk(ExecInfo As ExecInformation, ByRef NewData As String)
         End If
     #End If
 End Function
+
+Public Function ExecCapture(Command As String, Optional LogPath As String, Optional StartDir As String, Optional DisplayOutput As Boolean, Optional ExitCode As Long) As String
+    ExecCapture = RunCommand(Command, LogPath, StartDir, False, DisplayOutput, ExitCode)
+End Function
+
+Public Function Exec(Command As String, Optional StartDir As String, Optional DisplayOutput As Boolean, Optional ExitCode As Long) As Boolean
+    RunCommand Command, vbNullString, StartDir, False, DisplayOutput, ExitCode
+    Exec = True
+End Function
+
+Public Function ExecAsync(Command As String, Optional StartDir As String, Optional DisplayOutput As Boolean) As Boolean
+    RunCommand Command, vbNullString, StartDir, True, DisplayOutput, 0&
+    ExecAsync = True
+End Function
+
+Private Function RunCommand(Command As String, LogPath As String, StartDir As String, Async As Boolean, Display As Boolean, ExitCode As Long) As String
+    Dim RaiseError As Boolean
+    RaiseError = False
+    On Error GoTo ErrorHandler
+    Application.EnableCancelKey = xlErrorHandler
+    
+    Dim ExecInfo As ExecInformation
+    ExecInfo = StartProcess(Command, StartDir, Async, Display)
+    
+    If Async Then GoTo ExitFunction
+    
+    Dim DoingLogging As Boolean, FileNum As Long
+    DoingLogging = Len(LogPath) <> 0
+    If DoingLogging Then
+        FileNum = FreeFile()
+        Open LogPath For Output As #FileNum
+    End If
+
+    Dim NewData As String
+    Do While ReadChunk(ExecInfo, NewData)
+        If Len(NewData) > 0 Then
+            Debug.Print NewData
+            If DoingLogging Then
+                Print #FileNum, NewData;
+            End If
+            RunCommand = RunCommand & NewData
+        End If
+        mSleep 50
+        DoEvents
+    Loop
+    
+ExitFunction:
+    Close #FileNum
+    If Not Async Then ExitCode = GetExitCode(ExecInfo)
+    CloseProcess ExecInfo
+    If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+    Exit Function
+
+ErrorHandler:
+    If Not ReportError("OpenSolverExternalCommand", "RunCommand") Then Resume
+    RaiseError = True
+    If OpenSolverErrorHandler.ErrNum = OpenSolver_UserCancelledError Then
+        KillProcess ExecInfo
+    End If
+    GoTo ExitFunction
+End Function
+
 

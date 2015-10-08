@@ -785,7 +785,7 @@ Function SystemIs64Bit() As Boolean
           #If Mac Then
               ' Check output of uname -a
               Dim result As String
-664           result = ReadExternalCommandOutput("uname -a")
+664           result = ExecCapture("uname -a")
 665           SystemIs64Bit = (InStr(result, "x86_64") > 0)
           #Else
               ' Is true if the Windows system is a 64 bit one
@@ -827,7 +827,7 @@ End Function
 
 Public Function OSVersion() As String
     #If Mac Then
-        OSVersion = Application.Clean(ReadExternalCommandOutput("sw_vers -productVersion"))
+        OSVersion = Application.Clean(ExecCapture("sw_vers -productVersion"))
     #Else
         Dim info As OSVERSIONINFO
         Dim retvalue As Integer

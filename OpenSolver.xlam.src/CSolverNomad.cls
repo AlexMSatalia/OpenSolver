@@ -171,7 +171,7 @@ Private Function Version_Mac() As String
         Exit Function
     End If
     
-    Version_Mac = ReadExternalCommandOutput(MakePathSafe(SolverPath) & " -nv")
+    Version_Mac = ExecCapture(MakePathSafe(SolverPath) & " -nv")
 End Function
 
 Private Function LibVersion_Win() As String
@@ -204,7 +204,7 @@ Private Function LibVersion_Mac() As String
         Exit Function
     End If
     
-    LibVersion_Mac = ReadExternalCommandOutput(MakePathSafe(SolverPath) & " -v")
+    LibVersion_Mac = ExecCapture(MakePathSafe(SolverPath) & " -v")
 End Function
 
 Private Sub Solve(s As COpenSolver)

@@ -137,7 +137,7 @@ Private Function Version() As String
     
     ' Get Couenne version by running 'couenne -v' at command line
     Dim result As String
-    result = ReadExternalCommandOutput(MakePathSafe(SolverPath) & " -v")
+    result = ExecCapture(MakePathSafe(SolverPath) & " -v")
     Version = Mid(result, 9, 5)
 
 ExitFunction:

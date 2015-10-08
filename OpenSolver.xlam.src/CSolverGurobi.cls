@@ -231,7 +231,7 @@ Private Function Version() As String
     SolverPath = ExecFilePath()
     
     Dim result As String
-    result = ReadExternalCommandOutput(MakePathSafe(SolverPath) & " -v")
+    result = ExecCapture(MakePathSafe(SolverPath) & " -v")
     Version = Mid(result, 26, 5)
 
 ExitFunction:
@@ -260,7 +260,7 @@ Private Function Bitness() As String
     SolverPath = ExecFilePath()
 
     Dim result As String
-    result = ReadExternalCommandOutput(MakePathSafe(SolverPath) & " -v")
+    result = ExecCapture(MakePathSafe(SolverPath) & " -v")
     Bitness = IIf(InStr(result, "64)") > 0, "64", "32")
 
 ExitFunction:

@@ -65,7 +65,7 @@ Function CallNeos_Local(s As COpenSolver) As String
           SolveCommand = SolveCommand & "ampl " & MakePathSafe(GetModelFilePath(FileSolver))
           CreateScriptFile ScriptFilePathName, SolveCommand
           
-          CallNeos_Local = ReadExternalCommandOutput(SolveCommand, s.LogFilePathName, GetTempFolder())
+          CallNeos_Local = ExecCapture(SolveCommand, s.LogFilePathName, GetTempFolder())
           
 ExitFunction:
           If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
@@ -193,7 +193,7 @@ Private Function SendToNeos_Mac(method As String, Optional param1 As String, Opt
     NeosClientDir = JoinPaths(ThisWorkbook.Path, SolverDir, SolverDirMac)
     GetExistingFilePathName NeosClientDir, NEOS_SCRIPT_FILE, SolverPath
     SolverPath = MakePathSafe(SolverPath)
-    RunExternalCommand "chmod +x " & SolverPath
+    Exec "chmod +x " & SolverPath
 
     Dim SolutionFilePathName As String
     GetTempFilePath NEOS_RESULT_FILE, SolutionFilePathName
@@ -202,7 +202,7 @@ Private Function SendToNeos_Mac(method As String, Optional param1 As String, Opt
     Dim LogFilePathName As String
     If GetLogFilePath(LogFilePathName) Then DeleteFileAndVerify LogFilePathName
     
-    If Not RunExternalCommand(SolverPath & " " & method & " " & MakePathSafe(SolutionFilePathName) & " " & param1 & " " & param2, MakePathSafe(LogFilePathName), Hide, True) Then
+    If Not Exec(SolverPath & " " & method & " " & MakePathSafe(SolutionFilePathName) & " " & param1 & " " & param2) Then
         Err.Raise OpenSolver_NeosError, Description:="Unknown error while contacting NEOS"
     End If
     

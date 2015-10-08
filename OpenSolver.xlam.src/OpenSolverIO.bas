@@ -271,9 +271,9 @@ Sub OpenFolder(FolderPath As String, NotFoundMessage As String)
         Err.Raise OpenSolver_NoFile, Description:=NotFoundMessage
     Else
         #If Mac Then
-            RunExternalCommand "open " & MakePathSafe(FolderPath), WaitForCompletion:=False
+            ExecAsync "open " & MakePathSafe(FolderPath)
         #Else
-            Shell "explorer.exe " & FolderPath, vbNormalFocus
+            ExecAsync "explorer.exe " & FolderPath, DisplayOutput:=True
         #End If
     End If
 
@@ -292,7 +292,7 @@ Sub DeleteFolderAndContents(FolderPath As String)
     On Error Resume Next
 
     #If Mac Then
-        RunExternalCommand "rm -rf " & MakePathSafe(FolderPath)
+        ExecAsync "rm -rf " & MakePathSafe(FolderPath)
     #Else
         Kill JoinPaths(FolderPath, "*.*")
         RmDir FolderPath
@@ -414,7 +414,7 @@ Sub CreateScriptFile(ByRef ScriptFilePath As String, FileContents As String, Opt
 752       Close #1
           
           #If Mac Then
-753           RunExternalCommand "chmod +x " & MakePathSafe(ScriptFilePath)
+753           Exec "chmod +x " & MakePathSafe(ScriptFilePath)
           #End If
 
 ExitSub:

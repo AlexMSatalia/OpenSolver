@@ -37,7 +37,7 @@ NoSheet:
                            & " -import " & MakePathSafe(ModelFilePathName) _
                            & " " & SolverParametersString _
                            & " -" ' Force CBC to accept commands from the command line
-6365      RunExternalCommand MakePathSafe(SolverPath) & CBCRunString, "", Normal, False
+6365      ExecAsync MakePathSafe(SolverPath) & CBCRunString, GetTempFolder(), True
 
 ExitSub:
           Exit Sub

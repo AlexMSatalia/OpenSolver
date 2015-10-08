@@ -97,7 +97,7 @@ Private Function InitialiseUpdateCheck_Mac() As String
               " -o " & MakePathSafe(LogFilePath) & _
               " -A " & Quote(GetUserAgent()) & _
               " " & GetPageUrl()
-    RunExternalCommand Command, "", Hide, False
+    ExecAsync Command
     
     NumChecks = 0
     
@@ -318,7 +318,7 @@ End Sub
 
 Private Function MakeGuid() As String
     #If Mac Then
-        MakeGuid = Application.Clean(ReadExternalCommandOutput("uuidgen"))
+        MakeGuid = Application.Clean(ExecCapture("uuidgen"))
     #Else
         MakeGuid = Mid$(CreateObject("Scriptlet.TypeLib").Guid, 2, 36)
     #End If

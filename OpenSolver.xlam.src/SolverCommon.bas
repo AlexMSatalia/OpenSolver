@@ -206,7 +206,7 @@ Function SolverIsPresent(Solver As ISolver, Optional SolverPath As String, Optio
             SolverIsPresent = True
             #If Mac Then
                 ' Make sure solver is executable on Mac
-                RunExternalCommand "chmod +x " & MakePathSafe(SolverPath)
+                Exec "chmod +x " & MakePathSafe(SolverPath)
             #End If
         End If
     ElseIf TypeOf Solver Is ISolverLocalLib Then
@@ -301,7 +301,7 @@ Sub RunLocalSolver(s As COpenSolver, ExternalCommand As String)
                     s.SolverParameters.Item(s.Solver.ToleranceName) * 100 & "% tolerance.", True
                           
     Dim exeResult As Long
-    ReadExternalCommandOutput ExternalCommand, s.LogFilePathName, GetTempFolder(), s.ShowIterationResults And Not s.MinimiseUserInteraction, exeResult
+    ExecCapture ExternalCommand, s.LogFilePathName, GetTempFolder(), s.ShowIterationResults And Not s.MinimiseUserInteraction, exeResult
     
     ' Check log for any errors which can offer more descriptive messages than exeresult <> 0
     s.Solver.CheckLog s

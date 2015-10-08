@@ -137,7 +137,7 @@ Private Function Version() As String
     End If
     
     Dim result As String
-    result = ReadExternalCommandOutput(MakePathSafe(SolverPath) & " -v")
+    result = ExecCapture(MakePathSafe(SolverPath) & " -v")
     Version = Mid(result, 8, 5)
 
 ExitFunction:
