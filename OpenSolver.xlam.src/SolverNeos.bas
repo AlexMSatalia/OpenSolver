@@ -105,7 +105,7 @@ Function CallNeos_Remote(s As COpenSolver, OutgoingMessage As String) As String
           End If
           If Len(errorString) > 0 Then
               If errorString = "Aborted" Then
-                  Err.Raise OpenSolver_UserCancelledError, Description:="NEOS solve was aborted"
+                  Err.Raise OpenSolver_UserCancelledError, Description:=SILENT_ERROR
               Else
                   Err.Raise OpenSolver_NeosError, Description:=errorString
               End If

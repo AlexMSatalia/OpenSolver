@@ -130,6 +130,8 @@ Private Enum enSW
     SW_MINIMIZE = 6
 End Enum
 
+Public StartTime As Single
+
 ' Our custom type
 #If Mac Then
     Private Type ExecInformation
@@ -393,7 +395,28 @@ Private Function ReadChunk(ExecInfo As ExecInformation, ByRef NewData As String)
 End Function
 
 Public Function ExecCapture(Command As String, Optional LogPath As String, Optional StartDir As String, Optional DisplayOutput As Boolean, Optional ExitCode As Long) As String
-    ExecCapture = RunCommand(Command, LogPath, StartDir, False, DisplayOutput, ExitCode)
+    If DisplayOutput Then
+        Dim frmConsole As FConsole
+        Set frmConsole = New FConsole
+        frmConsole.SetInput Command, LogPath, StartDir
+        frmConsole.Show
+        
+        ' Get all data from form and destroy it
+        frmConsole.GetOutput ExitCode, ExecCapture
+        Dim status As String
+        status = frmConsole.Tag
+        Unload frmConsole
+        
+        If Len(status) > 0 Then
+            If status = "Aborted" Then
+                Err.Raise OpenSolver_UserCancelledError, Description:="Execution was aborted"
+            Else
+                Err.Raise OpenSolver_ExecutableError, Description:=status
+            End If
+        End If
+    Else
+        ExecCapture = RunCommand(Command, LogPath, StartDir, False, DisplayOutput, ExitCode)
+    End If
 End Function
 
 Public Function Exec(Command As String, Optional StartDir As String, Optional DisplayOutput As Boolean, Optional ExitCode As Long) As Boolean
@@ -406,11 +429,26 @@ Public Function ExecAsync(Command As String, Optional StartDir As String, Option
     ExecAsync = True
 End Function
 
-Private Function RunCommand(Command As String, LogPath As String, StartDir As String, Async As Boolean, Display As Boolean, ExitCode As Long) As String
+Public Function ExecConsole(frmConsole As FConsole, Command As String, Optional LogPath As String, Optional StartDir As String, Optional ExitCode As Long)
+    ExecConsole = RunCommand(Command, LogPath, StartDir, False, True, ExitCode, frmConsole)
+End Function
+
+Private Function RunCommand(Command As String, LogPath As String, StartDir As String, Async As Boolean, Display As Boolean, ExitCode As Long, Optional frmConsole As FConsole) As String
     Dim RaiseError As Boolean
     RaiseError = False
     On Error GoTo ErrorHandler
     Application.EnableCancelKey = xlErrorHandler
+    
+    StartTime = Timer()
+    
+    Dim DoingConsole As Boolean
+    DoingConsole = Not frmConsole Is Nothing
+    If DoingConsole Then
+        frmConsole.AppendText "Starting process:" & vbNewLine & Command & vbNewLine & vbNewLine
+        If Len(StartDir) <> 0 Then
+           frmConsole.AppendText "Startup directory:" & vbNewLine & MakePathSafe(StartDir) & vbNewLine & vbNewLine
+        End If
+    End If
     
     Dim ExecInfo As ExecInformation
     ExecInfo = StartProcess(Command, StartDir, Async, Display)
@@ -423,6 +461,13 @@ Private Function RunCommand(Command As String, LogPath As String, StartDir As St
         FileNum = FreeFile()
         Open LogPath For Output As #FileNum
     End If
+    If DoingConsole Then
+        Dim PidMessage As String
+        #If Mac Then
+            PidMessage = ": PID " & ExecInfo.pid
+        #End If
+        frmConsole.AppendText "Process started" & PidMessage & "." & vbNewLine & vbNewLine
+    End If
 
     Dim NewData As String
     Do While ReadChunk(ExecInfo, NewData)
@@ -433,6 +478,15 @@ Private Function RunCommand(Command As String, LogPath As String, StartDir As St
             End If
             RunCommand = RunCommand & NewData
         End If
+        If DoingConsole Then
+            If frmConsole.Tag = "Cancelled" Then
+                Err.Raise OpenSolver_UserCancelledError, Description:=SILENT_ERROR
+            End If
+        
+            ' Update console even if no new data to update the elapsed time
+            frmConsole.AppendText NewData
+        End If
+        If DoingLogging Then UpdateStatusBar "Solving model, time elapsed: " & Int(Timer() - StartTime) & " seconds"
         mSleep 50
         DoEvents
     Loop
@@ -441,6 +495,7 @@ ExitFunction:
     Close #FileNum
     If Not Async Then ExitCode = GetExitCode(ExecInfo)
     CloseProcess ExecInfo
+    If DoingConsole Then frmConsole.MarkCompleted
     If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
     Exit Function
 

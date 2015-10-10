@@ -3,7 +3,7 @@ Begin {C62A69F0-16DC-11CE-9E98-00AA00574A4F} FCallingNeos
    Caption         =   "OpenSolver Optimisation Running"
    ClientHeight    =   1830
    ClientLeft      =   45
-   ClientTop       =   435
+   ClientTop       =   -945
    ClientWidth     =   4560
    OleObjectBlob   =   "FCallingNeos.frx":0000
 End

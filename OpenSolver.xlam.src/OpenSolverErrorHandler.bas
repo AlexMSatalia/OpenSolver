@@ -4,7 +4,7 @@ Option Explicit
 Const DEBUG_MODE As Boolean = False
 Const USER_CANCEL As Long = 18
  
-Private Const SILENT_ERROR As String = "UserCancel"
+Public Const SILENT_ERROR As String = "Cancelled by user"
 Private Const FILE_ERROR_LOG As String = "error.log"
  
 Public ErrMsg As String
