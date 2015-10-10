@@ -1,4 +1,6 @@
 Attribute VB_Name = "OpenSolverMenuHandlers"
+Option Explicit
+
 Sub OpenSolver_SolveClickHandler(Optional Control)
 2755      RunOpenSolver False, False, 0
           AutoUpdateCheck
