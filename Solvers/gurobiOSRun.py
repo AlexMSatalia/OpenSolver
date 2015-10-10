@@ -34,7 +34,7 @@ for param in params_list:
     except GurobiError as e:
         with open(sol_path, 'w') as sol_file:
             sol_file.write('Gurobi Error: %s' % e.message)
-        sys.exit(1)
+        sys.exit()
 
 # Catch any GurobiError that occurs when solving
 try:
@@ -42,7 +42,7 @@ try:
 except GurobiError as e:
     with open(sol_path, 'w') as sol_file:
         sol_file.write('Gurobi Error: %s' % e.message)
-    sys.exit(1)
+    sys.exit()
 
 with open(sol_path, 'w') as sol_file:
     sol_file.write(str(m.status)+ '\n')
