@@ -1,8 +1,14 @@
-from gurobipy import *
 import argparse
 import os
 import sys
 import tempfile
+
+# Catch gurobi licensing errors
+try:
+  from gurobipy import *
+except Exception as e:
+  print('%s' % e.message)
+  sys.exit(1)
 
 parser = argparse.ArgumentParser()
 parser.add_argument("modelfile", help="Path to the model.lp file")
@@ -28,7 +34,7 @@ for param in params_list:
     except GurobiError as e:
         with open(sol_path, 'w') as sol_file:
             sol_file.write('Gurobi Error: %s' % e.message)
-        sys.exit()
+        sys.exit(1)
 
 # Catch any GurobiError that occurs when solving
 try:
@@ -36,7 +42,7 @@ try:
 except GurobiError as e:
     with open(sol_path, 'w') as sol_file:
         sol_file.write('Gurobi Error: %s' % e.message)
-    sys.exit()
+    sys.exit(1)
 
 with open(sol_path, 'w') as sol_file:
     sol_file.write(str(m.status)+ '\n')
