@@ -7,6 +7,7 @@ Option Explicit
     Private Declare Function popen Lib "libc.dylib" (ByVal Command As String, ByVal Mode As String) As Long
     Private Declare Function pclose Lib "libc.dylib" (ByVal file As Long) As Long
     Private Declare Function read Lib "libc.dylib" (ByVal fd As Long, ByVal buffer As String, ByVal Size As Long) As Long
+    Private Declare Function fread Lib "libc.dylib" (ByVal outStr As String, ByVal Size As Long, ByVal Items As Long, ByVal stream As Long) As Long
     Private Declare Function feof Lib "libc.dylib" (ByVal file As Long) As Long
     Private Declare Function fileno Lib "libc.dylib" (ByVal file As Long) As Long
     Private Declare Function fcntl Lib "libc.dylib" (ByVal fd As Long, ByVal cmd As Long, funcargs As Any) As Long
@@ -135,6 +136,7 @@ End Enum
         file As Long
         fd As Long
         BinaryName As String
+        pid As Long
     End Type
 #ElseIf VBA7 Then
     Private Type ExecInformation
@@ -187,6 +189,30 @@ Private Function GetExecutableName(CommandString As String) As String
     GetExecutableName = Mid(CommandString, start + 1, finish - start - 1)
 End Function
 
+#If Mac Then
+Private Sub GetPid(ExecInfo As ExecInformation)
+    ' Gets the pid of the last spawned process with the same binary name
+    ' We use popen directly rather than ExecCapture to avoid creating an infinite loop
+    
+    ' Get the pid of the newest process (-n) with the same name
+    Dim file As Long
+    file = popen("pgrep -n " & ExecInfo.BinaryName, "r")
+    If file = 0 Then Exit Sub
+    
+    Dim result As String
+    Do While feof(file) = 0
+        Dim chunk As String, read As Long
+        chunk = Space(4096)
+        read = fread(chunk, 1, Len(chunk) - 1, file)
+        If read > 0 Then
+            chunk = Left$(chunk, read)
+            result = result & chunk
+        End If
+    Loop
+    ExecInfo.pid = Int(Val(result))
+End Sub
+#End If  ' Mac
+
 Private Function StartProcess(Command As String, StartDir As String, Async As Boolean, Display As Boolean) As ExecInformation
     #If Mac Then
         ' Save the name of the binary in case we need to kill it later
@@ -214,7 +240,10 @@ Private Function StartProcess(Command As String, StartDir As String, Async As Bo
             Err.Raise OpenSolver_ExecutableError, _
                 Description:="Unable to run the command: " & vbNewLine & Command
         End If
-    
+        
+        ' Log the pid of the spawned process
+        GetPid StartProcess
+        
         ' Set non-blocking read flag on the pipe
         StartProcess.fd = fileno(StartProcess.file)
         fcntl StartProcess.fd, F_SETFL, ByVal (O_NONBLOCK Or fcntl(StartProcess.fd, F_GETFL, ByVal 0&))
@@ -301,6 +330,14 @@ End Sub
 
 Private Sub KillProcess(ExecInfo As ExecInformation)
     #If Mac Then
+        ' Try to kill using the saved pid
+        If ExecInfo.pid <> 0 Then
+            If system("kill " & ExecInfo.pid) = 0 Then
+                Exit Sub
+            End If
+        End If
+
+        ' Fallback to kill according to the binary name
         system "pkill " & ExecInfo.BinaryName
     #Else
         TerminateProcess ExecInfo.ProcInfo.hProcess, 0
@@ -313,15 +350,15 @@ Private Function ReadChunk(ExecInfo As ExecInformation, ByRef NewData As String)
     
     #If Mac Then
         Const CHUNK_SIZE As Long = 4096
-        Dim Chunk As String
-        Chunk = Space(CHUNK_SIZE)
-        NumCharsRead = read(ExecInfo.fd, Chunk, Len(Chunk) - 1)
+        Dim chunk As String
+        chunk = Space(CHUNK_SIZE)
+        NumCharsRead = read(ExecInfo.fd, chunk, Len(chunk) - 1)
         
         ' NumCharsRead = -1 if nothing new written but process alive
         '              =  0 if nothing new written and process ended
         '              >  0 if new data has been read - need to read again to get state of process
         If NumCharsRead > 0 Then
-            NewData = Left$(Chunk, NumCharsRead)
+            NewData = Left$(chunk, NumCharsRead)
         End If
         ReadChunk = (NumCharsRead <> 0)  ' True if process is alive
     #Else
