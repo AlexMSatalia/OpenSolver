@@ -22,7 +22,6 @@ Private Const pName = "Gurobi"
 Private Const pShortName = "Gurobi"
 
 Private Const pExecName = "gurobi_cl" & ExecExtension
-Private Const pShellScript = "gurobi" & ScriptExtension
 Private Const pScriptFile = "gurobi_tmp" & ScriptExtension
 Private Const pPythonScript = "gurobiOSRun.py"
 
@@ -155,15 +154,14 @@ Function ExecFilePath() As String
     ExecFilePath = JoinPaths(GetBinDir(), pExecName)
 End Function
 
-Private Function ShellScriptPath() As String
+Private Function PythonPath() As String
+    ' So that we have direct control over the running process, we start python itself rather than using the gurobi script file.
     #If Mac Then
-        ' On Mac, using the gurobi interactive shell causes errors when there are spaces in the filepath.
-        ' The mac gurobi.sh script, unlike windows, doesn't have a check for a gurobi install, thus it doesn't do anything for us here and is safe to skip.
-        ' We can just run python by itself. We need to use the default system python (pre-installed on mac) and not any other version (e.g. a version from homebrew)
-        ' We also need to launch it without going via /Volumes/.../
-        ShellScriptPath = JoinPaths(GetRootDriveName(), "usr", "bin", "python")
+        ' We need to use the default system python (pre-installed on mac) and not any other version (e.g. a version from homebrew)
+        PythonPath = JoinPaths(GetRootDriveName(), "usr", "bin", "python")
     #Else
-        ShellScriptPath = JoinPaths(GetBinDir(), pShellScript)
+        ' Gurobi supplies a python install on windows in the %GUROBI_HOME% folder
+        PythonPath = JoinPaths(GetGurobiHomeDir(), "python27", "bin", "python" & ExecExtension)
     #End If
 End Function
 
@@ -191,18 +189,18 @@ Function IsPresent(Optional SolverPath As String, Optional errorString As String
     #If Win32 Then
         ElseIf Not FileOrDirExists(GetGurobiHomeDir()) Then
             errorString = "No Gurobi installation was detected. " & _
-                          "The value of GUROBI_HOME was " & IIf(GetGurobiHomeDir() = "", "not set.", "invalid (" & MakePathSafe(GetGurobiHomeDir()) & ").")
+                          "The value of %GUROBI_HOME% was " & IIf(GetGurobiHomeDir() = "", "not set.", "invalid (" & MakePathSafe(GetGurobiHomeDir()) & ").")
     #End If
     ElseIf Not FileOrDirExists(ExecFilePath()) Then
         errorString = "No Gurobi installation was detected. The following file was not found: " & MakePathSafe(ExecFilePath())
-    ElseIf Not FileOrDirExists(ShellScriptPath()) Then
-        errorString = "No Gurobi installation was detected. The following file was not found: " & MakePathSafe(ShellScriptPath())
+    ElseIf Not FileOrDirExists(PythonPath()) Then
+        errorString = "No Gurobi installation was detected. The following file was not found: " & MakePathSafe(PythonPath())
     End If
 
     If errorString <> "" Then
         IsPresent = False
     Else
-        SolverPath = ShellScriptPath()
+        SolverPath = PythonPath()
         IsPresent = True
     End If
 
@@ -284,7 +282,7 @@ Private Function CreateSolveCommand(s As COpenSolver) As String
     On Error GoTo ErrorHandler
 
     ' We use the -u flag on python to force it to unbuffer its output
-    CreateSolveCommand = MakePathSafe(ShellScriptPath()) & " -u " & _
+    CreateSolveCommand = MakePathSafe(PythonPath()) & " -u " & _
                          MakePathSafe(PythonScriptPath()) & " " & _
                          MakePathSafe(GetModelFilePath(Me)) & " " & _
                          MakePathSafe(s.SolutionFilePathName) & " " & _
