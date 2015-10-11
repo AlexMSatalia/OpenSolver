@@ -455,6 +455,7 @@ Private Function RunCommand(Command As String, LogPath As String, StartDir As St
     
     If Async Then GoTo ExitFunction
     
+    ' Take care of things before we start looping
     Dim DoingLogging As Boolean, FileNum As Long
     DoingLogging = Len(LogPath) <> 0
     If DoingLogging Then
@@ -468,11 +469,17 @@ Private Function RunCommand(Command As String, LogPath As String, StartDir As St
         #End If
         frmConsole.AppendText "Process started" & PidMessage & "." & vbNewLine & vbNewLine
     End If
+    
+    Dim OriginalStatus As String
+    If Application.StatusBar = False Then
+        OriginalStatus = "OpenSolver: Solving Model..."
+    Else
+        OriginalStatus = Application.StatusBar
+    End If
 
     Dim NewData As String
     Do While ReadChunk(ExecInfo, NewData)
         If Len(NewData) > 0 Then
-            Debug.Print NewData
             If DoingLogging Then
                 Print #FileNum, NewData;
             End If
@@ -486,7 +493,7 @@ Private Function RunCommand(Command As String, LogPath As String, StartDir As St
             ' Update console even if no new data to update the elapsed time
             frmConsole.AppendText NewData
         End If
-        If DoingLogging Then UpdateStatusBar "Solving model, time elapsed: " & Int(Timer() - StartTime) & " seconds"
+        If DoingLogging Then UpdateStatusBar OriginalStatus & " Time elapsed: " & Int(Timer() - StartTime) & " seconds"
         mSleep 50
         DoEvents
     Loop
