@@ -233,7 +233,10 @@ Sub DeleteFileAndVerify(FilePath As String)
           Exit Sub
           
 DeleteError:
-          Err.Raise Number:=Err.Number, Description:="Unable to delete the file: " & FilePath & vbNewLine & vbNewLine & Err.Description
+          Err.Raise Number:=Err.Number, Description:="Unable to delete the file: " & FilePath & vbNewLine & vbNewLine & _
+                                                     Err.Description & vbNewLine & vbNewLine & _
+                                                     "To fix this, try restarting Excel and check Task Manager to make sure no solver is running. " & _
+                                                     "If this error still appears after that, try restarting the computer."
 End Sub
 
 Sub OpenFile(FilePath As String, NotFoundMessage As String)
