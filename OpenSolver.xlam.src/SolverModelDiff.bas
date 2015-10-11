@@ -466,13 +466,13 @@ Sub WriteConstraintSensitivityTable(sheet As Worksheet, s As COpenSolver)
           Dim sheetName As String
 2278      sheetName = sheet.Name
 
+
+2280      sheet.Cells(row - 1, Column - 1) = "Decision Variables"
+
           Dim headings() As Variant
 2279      headings = Array("Cells", "Name", "Final Value", "Reduced Costs", "Objective Value", "Allowable Increase", "Allowable Decrease")
-          'headings for the variable table
-2280      sheet.Cells(row - 1, Column - 1) = "Decision Variables"
-2281      For i = 1 To UBound(headings)
-2282          sheet.Cells(row, Column + i - 1) = headings(i)
-2283      Next i
+          sheet.Cells(row, Column).Resize(1, UBound(headings) - LBound(headings) + 1).value = headings
+
 2284      row = row + 1
           
           'put the values into the variable table
@@ -489,14 +489,12 @@ Sub WriteConstraintSensitivityTable(sheet As Worksheet, s As COpenSolver)
           
 2296      row = row + 2
           
-2297      headings(4) = "Shadow Price"
-2298      headings(5) = "RHS Value"
+2297      headings(LBound(headings) + 3) = "Shadow Price"
+2298      headings(LBound(headings) + 4) = "RHS Value"
 
           'Headings for constraint table
 2299      sheet.Cells(row - 1, Column - 1) = "Constraints"
-2300      For i = 1 To UBound(headings)
-2301          sheet.Cells(row, Column + i - 1) = headings(i)
-2302      Next i
+          sheet.Cells(row, Column).Resize(1, UBound(headings) - LBound(headings) + 1).value = headings
 
 2303      row = row + 1
           Dim constraint As Long, instance As Long
