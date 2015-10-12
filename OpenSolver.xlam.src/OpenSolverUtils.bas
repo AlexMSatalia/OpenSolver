@@ -207,12 +207,15 @@ Private Function ConvertLocale(ByVal s As String, ConvertToUS As Boolean) As Str
           
           If ConvertToUS Then
               ' Set FormulaLocal and get Formula
-              ThisWorkbook.Sheets(1).Cells(1, 1).FormulaLocal = s
               On Error GoTo DecimalFixer
+              ThisWorkbook.Sheets(1).Cells(1, 1).FormulaLocal = s
+              On Error GoTo ErrorHandler
 302           s = ThisWorkbook.Sheets(1).Cells(1, 1).Formula
           Else
               ' Set Formula and get FormulaLocal
+              On Error GoTo DecimalFixer
               ThisWorkbook.Sheets(1).Cells(1, 1).Formula = s
+              On Error GoTo ErrorHandler
               s = ThisWorkbook.Sheets(1).Cells(1, 1).FormulaLocal
           End If
           
@@ -229,12 +232,10 @@ ExitFunction:
           Exit Function
 
 DecimalFixer: 'Ensures decimal character used is correct.
-          If Application.DecimalSeparator = "." Then
-              s = Replace(s, ".", ",")
-              ThisWorkbook.Sheets(1).Cells(1, 1).FormulaLocal = s
-          ElseIf Application.DecimalSeparator = "," Then
-              s = Replace(s, ",", ".")
-              ThisWorkbook.Sheets(1).Cells(1, 1).FormulaLocal = s
+          If ConvertToUS Then
+              s = Replace(s, ".", Application.DecimalSeparator)
+          Else
+              s = Replace(s, Application.DecimalSeparator, ".")
           End If
           Resume
 
