@@ -62,6 +62,7 @@ Private Sub AutoLayout()
         If chkFullCheck.Visible Then .Top = .Top + chkHighlight.Height - .Height / 2
         .Width = FormButtonWidth
         .Caption = "Continue"
+        .Cancel = True
     End With
     
     With chkHighlight

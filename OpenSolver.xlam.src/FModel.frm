@@ -201,11 +201,6 @@ Private Sub cmdOptions_Click()
           #End If
 End Sub
 
-'--------------------------------------------------------------------------------------
-'Reset Button
-'Deletes the objective function, decision variables and all the constraints in the model
-'---------------------------------------------------------------------------------------
-
 Private Sub cmdReset_Click()
           'Check the user wants to reset the model
 4274      If MsgBox("This will reset the objective function, decision variables and constraints." _
@@ -1007,6 +1002,7 @@ Private Sub AutoLayout()
         .Width = cmdRunAutoModel.Width
         .Caption = "Cancel"
         .Left = LeftOfForm(Me.Width, .Width)
+        .Cancel = True
     End With
     
     With cmdBuild

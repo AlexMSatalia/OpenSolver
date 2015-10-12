@@ -127,19 +127,31 @@ Public Sub AutoLayout()
         .Top = Below(IIf(lblLink.Visible, lblLink, txtMessage))
         .Width = FormButtonWidth
         .Left = LeftOfForm(Me.Width, .Width)
+        .Cancel = False
     End With
     
     With cmdButton2
         .Top = cmdButton3.Top
         .Width = FormButtonWidth
         .Left = cmdButton3.Left + IIf(cmdButton3.Visible, -FormSpacing - .Width, 0)
+        .Cancel = False
     End With
     
     With cmdButton1
         .Top = cmdButton2.Top
         .Width = FormButtonWidth
         .Left = cmdButton2.Left + IIf(cmdButton2.Visible, -FormSpacing - .Width, 0)
+        .Cancel = False
     End With
+    
+    ' Set esc target
+    If cmdButton1.Visible Then
+        cmdButton1.Cancel = True
+    ElseIf cmdButton2.Visible Then
+        cmdButton2.Cancel = True
+    Else
+        cmdButton3.Cancel = True
+    End If
     
     With cmdMoreDetails
         .Left = txtMessage.Left

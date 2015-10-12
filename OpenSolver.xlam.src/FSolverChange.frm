@@ -23,6 +23,10 @@ Option Explicit
 Private Solvers() As ISolver
 
 Private Sub cboSolver_Change()
+          ' Make sure we don't get an error when esc is pressed
+          ' The action we take is unimportant, we'll be exiting the form right after this
+          If cboSolver.ListIndex = -1 Then Exit Sub
+
           Dim Solver As ISolver
 4724      Set Solver = Solvers(cboSolver.ListIndex)
 4725      lblDesc.Caption = Solver.Desc
@@ -134,6 +138,7 @@ Private Sub AutoLayout()
         .Width = FormButtonWidth
         .Top = Below(IIf(lblError.Visible, lblError, lblHyperlink))
         .Left = LeftOfForm(Me.Width, .Width)
+        .Cancel = True
     End With
     
     With cmdOk

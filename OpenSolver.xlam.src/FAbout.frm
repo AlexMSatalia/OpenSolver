@@ -236,6 +236,7 @@ Private Sub LayoutBottom()
         .Width = FormButtonWidth
         .Left = LeftOfForm(FormWidthAbout, .Width)
         .Top = chkAutoLoad.Top
+        .Cancel = True
     End With
     
     Me.Height = FormHeight(cmdOk)

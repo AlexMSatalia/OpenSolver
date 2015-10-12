@@ -29,6 +29,14 @@ Private pConsoleOutput As String
     Const ConsoleHeight = 400
 #End If
 
+Private Sub txtConsole_KeyDown(ByVal KeyCode As MSForms.ReturnInteger, ByVal Shift As Integer)
+    ' Override any escape keypress for the textbox so it doesn't clear the text
+    If KeyCode = 27 Then
+        KeyCode = 0
+        cmdClose_Click
+    End If
+End Sub
+
 ' Make the [x] hide the form rather than unload
 Private Sub UserForm_QueryClose(Cancel As Integer, CloseMode As Integer)
     ' If CloseMode = vbFormControlMenu then we know the user
@@ -135,6 +143,7 @@ Private Sub AutoLayout()
         .Width = FormButtonWidth
         .Left = LeftOfForm(Me.Width, .Width) - 1  ' To account for etched effect on textbox
         .Top = Below(Me.txtConsole)
+        .Cancel = True
     End With
     
     ' Make the label wide enough so that the message is on one line, then use autosize to shrink the width.

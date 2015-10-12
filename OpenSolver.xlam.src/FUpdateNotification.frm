@@ -100,6 +100,7 @@ Private Sub AutoLayout()
         .Left = RightOf(cmdSettings)
         .Width = cmdSettings.Width
         .Top = cmdSettings.Top
+        .Cancel = True
     End With
         
     Me.Height = FormHeight(cmdOk)

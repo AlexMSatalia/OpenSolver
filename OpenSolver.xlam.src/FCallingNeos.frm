@@ -72,6 +72,7 @@ Private Sub AutoLayout()
         .Width = FormButtonWidth
         .Left = (lblMessage.Width - .Width) / 2 + lblMessage.Left
         .Top = Below(lblMessage)
+        .Cancel = True
     End With
     
     Me.Height = FormHeight(cmdCancel)

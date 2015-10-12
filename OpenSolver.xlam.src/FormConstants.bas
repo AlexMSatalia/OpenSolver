@@ -56,6 +56,7 @@ Public Sub AutoFormat(ByRef Controls As Controls)
                 
                 If ContType = "CommandButton" Then
                     .Height = FormButtonHeight
+                    .Cancel = False
                 ElseIf ContType = "CheckBox" Or ContType = "OptionButton" Then
                     .Height = FormCheckBoxHeight
                 ElseIf ContType = "TextBox" Or ContType = "RefEdit" Or ContType = "ComboBox" Then

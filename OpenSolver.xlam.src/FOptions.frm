@@ -196,6 +196,7 @@ Private Sub AutoLayout()
         .Left = txtMaxTime.Left
         .Width = txtMaxTime.Width
         .Top = Below(lblFootnote)
+        .Cancel = True
     End With
     
     With cmdOk

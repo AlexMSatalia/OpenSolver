@@ -227,6 +227,7 @@ Private Sub AutoLayout()
         .Left = LeftOfForm(Me.Width, .Width)
         .Top = Below(lblDiv2)
         .Caption = "Cancel"
+        .Cancel = True
     End With
     
     With cmdFinish

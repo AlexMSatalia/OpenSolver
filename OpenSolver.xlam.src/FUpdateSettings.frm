@@ -1,7 +1,7 @@
 VERSION 5.00
 Begin {C62A69F0-16DC-11CE-9E98-00AA00574A4F} FUpdateSettings 
    Caption         =   "OpenSolver - Update Settings"
-   ClientHeight    =   4396
+   ClientHeight    =   4395
    ClientLeft      =   45
    ClientTop       =   390
    ClientWidth     =   4710
@@ -105,6 +105,7 @@ Private Sub AutoLayout()
         .Width = FormButtonWidth
         .Left = LeftOfForm(Me.Width, .Width)
         .Top = Below(lblUserAgent)
+        .Cancel = True
     End With
     
     With cmdOk
