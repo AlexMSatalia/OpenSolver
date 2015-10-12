@@ -964,14 +964,16 @@ Sub ApplyBounds(row As Long, rel As Long, LHS As Range, RHS As Range, RHSValue A
 1226      If Intersect(LHS, AdjustableCells) Is Nothing Then GoTo ExitSub
           
 1229      If Not RHS Is Nothing Then
-1230          If Not RHS.HasFormula Then
-                  ' The RHS range is a constant - apply a bound
-1231              UpdateBound row, LHS.Address, CDbl(RHS), rel
-1232          Else
-                  ' The RHS range is a formula, check if this depends on the decision vars
-                  ' Will raise an error is no precedents are found (e.g. if they are on another sheet
-1234              If Intersect(RHS.Precedents, AdjustableCells) Is Nothing Then
-1235                  UpdateBound row, LHS.Address, CDbl(RHS), rel
+              If IsNumeric(RHS.value) Then
+1230              If Not RHS.HasFormula Then
+                      ' The RHS range is a constant - apply a bound
+1231                  UpdateBound row, LHS.Address, CDbl(RHS.value), rel
+1232              Else
+                      ' The RHS range is a formula, check if this depends on the decision vars
+                      ' Will raise an error is no precedents are found (e.g. if they are on another sheet
+1234                  If Intersect(RHS.Precedents, AdjustableCells) Is Nothing Then
+1235                      UpdateBound row, LHS.Address, CDbl(RHS.value), rel
+                      End If
 1236              End If
 1237          End If
 1238      Else
