@@ -254,15 +254,10 @@ Sub OpenFile(FilePath As String, NotFoundMessage As String)
 767           On Error GoTo ErrorHandler
 768           Workbooks.Open FileName:=FilePath, ReadOnly:=True ' , Format:=Tabs
 769       End If
-
-ExitSub:
-          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
           Exit Sub
 
 ErrorHandler:
-          If Not ReportError("OpenSolverIO", "OpenFile") Then Resume
-          RaiseError = True
-          GoTo ExitSub
+          MsgBox NotFoundMessage
 End Sub
 
 Sub OpenFolder(FolderPath As String, NotFoundMessage As String)
@@ -279,16 +274,10 @@ Sub OpenFolder(FolderPath As String, NotFoundMessage As String)
             ExecAsync "explorer.exe " & FolderPath, DisplayOutput:=True
         #End If
     End If
-
-ExitSub:
-    If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
     Exit Sub
 
 ErrorHandler:
-    If Not ReportError("OpenSolverIO", "OpenFolder") Then Resume
-    RaiseError = True
-    GoTo ExitSub
-          
+    MsgBox NotFoundMessage
 End Sub
 
 Sub DeleteFolderAndContents(FolderPath As String)

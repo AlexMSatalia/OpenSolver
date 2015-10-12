@@ -97,14 +97,10 @@ Sub OpenSolver_ViewLastModelClickHandler(Optional Control)
 End Sub
 
 Sub OpenSolver_ViewSolverLogFileClickHandler(Optional Control)
-          If Len(LastUsedSolver) = 0 Then
-              MsgBox "Cannot open the log file as the model has not been solved yet."
-          Else
-              Dim NotFoundMessage As String, FilePath As String
-2787          GetLogFilePath FilePath
-2788          NotFoundMessage = "Error: There is no solver log file (" & FilePath & ") to open. Please solve the OpenSolver model and then try again."
-2789          OpenFile FilePath, NotFoundMessage
-          End If
+          Dim NotFoundMessage As String, FilePath As String
+2787      GetLogFilePath FilePath
+2788      NotFoundMessage = "Error: There is no solver log file (" & FilePath & ") to open. Please solve the OpenSolver model and then try again."
+2789      OpenFile FilePath, NotFoundMessage
           AutoUpdateCheck
 End Sub
 
