@@ -237,8 +237,8 @@ Private Function SendToNeos_Windows(message As String) As String
     On Error GoTo ErrorHandler
     
     ' Late binding so we don't need to add the reference to MSXML, causing a crash on Mac
-    Dim XmlHttpReq As Object  ' MSXML2.XMLHTTP
-    Set XmlHttpReq = CreateObject("MSXML2.XMLHTTP")
+    Dim XmlHttpReq As Object  ' MSXML2.ServerXMLHTTP
+    Set XmlHttpReq = CreateObject("MSXML2.ServerXMLHTTP")
     
     XmlHttpReq.Open "POST", NEOS_ADDRESS, False
     XmlHttpReq.send message
