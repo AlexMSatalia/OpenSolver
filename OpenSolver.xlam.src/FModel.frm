@@ -29,6 +29,9 @@ Private DontRepop As Boolean
 Private IsLoadingModel As Boolean
 Private PreserveModel As Boolean  ' For Mac, to persist model when re-showing form
 
+Private RestoreHighlighting As Boolean
+Private sheet As Worksheet
+
 Private IsResizing As Boolean
 Private ResizeStartY As Double
 
@@ -273,7 +276,6 @@ Private Sub UserForm_Activate()
           On Error GoTo ErrorHandler
 
           ' Check we can even start
-4345      Dim sheet As Worksheet
           GetActiveSheetIfMissing sheet
 
           UpdateStatusBar "Loading model...", True
@@ -294,7 +296,11 @@ Private Sub UserForm_Activate()
 
           IsLoadingModel = True
 
-4351      If SheetHasOpenSolverHighlighting(sheet) Then HideSolverModel sheet
+4351      If SheetHasOpenSolverHighlighting(sheet) Then
+              RestoreHighlighting = True
+              HideSolverModel sheet
+          End If
+          
           ' Make sure sheet is up to date
 4352      Application.Calculate
           ' Remove the 'marching ants' showing if a range is copied.
@@ -342,6 +348,7 @@ ExitSub:
           Exit Sub
 
 ErrorHandler:
+          If RestoreHighlighting Then ShowSolverModel sheet
           Me.Hide
           ReportError "FModel", "UserForm_Activate", True
           GoTo ExitSub
@@ -349,6 +356,7 @@ End Sub
 
 
 Private Sub cmdCancel_Click()
+          If RestoreHighlighting Then ShowSolverModel sheet
 4386      DoEvents
 4387      On Error Resume Next ' Just to be safe on our select
 4388      Application.CutCopyMode = False
@@ -373,9 +381,8 @@ Private Sub cmdRunAutoModel_Click()
     Me.Hide
 #End If
 
-    Dim NewModel As CModel, sheet As Worksheet
+    Dim NewModel As CModel
     Set NewModel = New CModel
-    GetActiveSheetIfMissing sheet
     If RunAutoModel(sheet, False, NewModel) Then Set model = NewModel
     
 #If Mac Then
@@ -390,9 +397,6 @@ End Sub
 
 Private Sub cmdBuild_Click()
           On Error GoTo ErrorHandler
-          
-          Dim sheet As Worksheet
-          GetActiveSheetIfMissing sheet
 
 4408      DoEvents
 4409      On Error Resume Next
