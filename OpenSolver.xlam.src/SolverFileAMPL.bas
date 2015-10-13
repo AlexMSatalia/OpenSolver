@@ -234,7 +234,7 @@ Sub WriteAMPLFile_Parsed(s As COpenSolver, ModelFilePathName As String)
 7200          If VarType(c) = vbEmpty Then
 7201              Line = Line & " := 0"
 7202          Else
-7203              Line = Line & " := " & StrExNoPlus(CDbl(c))
+7203              Line = Line & " := " & StrExNoPlus(CDbl(c.Value2))
 7204          End If
 7205          WriteToFile 1, Line & ";"
 7206      Next

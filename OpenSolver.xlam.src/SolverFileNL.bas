@@ -307,7 +307,7 @@ Private Sub CreateVariableIndex()
 7605          VariableIndex.Add i, cellName
               
               ' Update initial values
-7606          InitialVariableValues.Add CDbl(c)
+7606          InitialVariableValues.Add CDbl(c.Value2)
               
 7607          i = i + 1
 7608      Next c
@@ -770,7 +770,9 @@ Private Sub ProcessSingleFormula(RHSExpression As String, LHSVariable As String,
               ' We adopt the AMPL behaviour as it gives faster solve times (see Test 40). Swap the If conditions below to change this behaviour
               
               'If constraint.Coefficient(j) <> 0 Then
-7847          NonZeroConstraintCount(CLng(var)) = NonZeroConstraintCount(CLng(var)) + 1
+              Dim VarIndex As Long
+              VarIndex = CLng(var)
+7847          NonZeroConstraintCount(VarIndex) = NonZeroConstraintCount(VarIndex) + 1
 7849          nzc = nzc + 1
               'End If
 7851      Next var
@@ -983,7 +985,7 @@ Private Sub MakeXBlock()
 7921              initial = InitialVariableValues(VariableIndex)
 7922          Else
                   ' Formulae variables - use the initial value saved in the CFormula instance
-7923              initial = CDbl(m.Formulae(VariableIndex - numActualVars).initialValue)
+7923              initial = m.Formulae(VariableIndex - numActualVars).initialValue
 7924          End If
 7925          Print #1, i - 1 & " " & StrExNoPlus(initial); Tab(CommentSpacing); "#     " & VariableMapRev(CStr(i - 1)) & " = " & initial
 7926      Next i

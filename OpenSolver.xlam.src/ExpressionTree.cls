@@ -930,7 +930,7 @@ Sub CollateLinearTerms()
               ' Constant expression under operator - we can evaluate it and discard all children
 8913          Case ExpressionTreeOperator
 8914              EvaluateConstantOperator
-8915              LinearValue = CDbl(NodeText)
+8915              LinearValue = Val(NodeText)
 8916          End Select
               
           ' A linear node - we need to update the coefficient on the linear term
@@ -1004,7 +1004,7 @@ Public Sub MultiplyByConstant(constant As Double)
 8949      Select Case NodeType
           Case ExpressionTreeConstant
 8950          LinearValue = LinearValue * constant
-8951          NodeText = LinearValue
+8951          NodeText = StrExNoPlus(LinearValue)
           
 8952      Case ExpressionTreeVariable
 8953          LinearCoefficient = LinearCoefficient * constant

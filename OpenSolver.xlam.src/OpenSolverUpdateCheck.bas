@@ -155,8 +155,8 @@ Sub CompleteUpdateCheck(Response As String)
     Dim UpdateAvailable As Boolean, LatestNumber As Long, CurrentNumber As Long
     UpdateAvailable = False
     For i = 0 To 2
-        LatestNumber = CInt(LatestNumbers(i))
-        CurrentNumber = CInt(CurrentNumbers(i))
+        LatestNumber = CLng(LatestNumbers(i))
+        CurrentNumber = CLng(CurrentNumbers(i))
         If LatestNumber > CurrentNumber Then
             UpdateAvailable = True
             Exit For

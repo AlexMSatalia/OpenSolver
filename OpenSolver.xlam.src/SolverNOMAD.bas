@@ -444,7 +444,7 @@ Sub CheckLog(s As COpenSolver)
     If InStrText(message, "invalid parameter: DIMENSION") Then
         Dim MaxSize As Long, Position As Long
         Position = InStrRev(message, " ")
-        MaxSize = CInt(Mid(message, Position + 1, InStrRev(message, ")") - Position - 1))
+        MaxSize = CLng(Mid(message, Position + 1, InStrRev(message, ")") - Position - 1))
         Err.Raise OpenSolver_NomadError, Description:="This model contains too many variables for NOMAD to solve. NOMAD is only capable of solving models with up to " & MaxSize & " variables."
     End If
     

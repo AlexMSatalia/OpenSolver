@@ -1005,7 +1005,7 @@ Public Function MsgBoxEx(ByVal prompt As String, _
         ' If form was closed using [X], then it was also unloaded, so we set the default to vbCancel
         MsgBoxEx = vbCancel
         On Error Resume Next
-        MsgBoxEx = CInt(.Tag)
+        MsgBoxEx = CLng(.Tag)
         On Error GoTo 0
     End With
 End Function

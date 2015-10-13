@@ -303,7 +303,7 @@ Private Sub ReadResults(s As COpenSolver)
                     If SplitLine(StartOffset) = "**" Then StartOffset = 1
 
                     ' Check the index of the row
-                    If CInt(SplitLine(StartOffset)) <> CBCConstraintIndex Then
+                    If CLng(Val(SplitLine(StartOffset))) <> CBCConstraintIndex Then
                         Err.Raise OpenSolver_CBCError, Description:="While reading the CBC solution file, OpenSolver found an unexpected constraint row."
                     End If
 
@@ -330,7 +330,7 @@ Private Sub ReadResults(s As COpenSolver)
             StartOffset = 0
             If SplitLine(StartOffset) = "**" Then StartOffset = 1
             
-            Index = CInt(SplitLine(StartOffset))
+            Index = CLng(Val(SplitLine(StartOffset)))
             NameValue = SplitLine(StartOffset + 1)
             If Left(NameValue, 1) = "_" Then NameValue = Mid(NameValue, 2) ' Strip any _ character added to make a valid name
             s.VarCell(j) = NameValue
