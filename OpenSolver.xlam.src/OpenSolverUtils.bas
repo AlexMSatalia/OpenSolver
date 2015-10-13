@@ -929,6 +929,9 @@ Public Function MsgBoxEx(ByVal prompt As String, _
     ' - MoreDetailsButton: Shows a button that opens the error log
     ' - EmailReportButton: Shows a button that prepares an error report email
     
+    Dim InteractiveStatus As Boolean
+    InteractiveStatus = Application.Interactive
+    
     If Len(LinkText) = 0 Then LinkText = LinkTarget
     
     Dim Button1 As String, Button2 As String, Button3 As String
@@ -1005,7 +1008,10 @@ Public Function MsgBoxEx(ByVal prompt As String, _
         .Caption = Title
         
         .AutoLayout
+        
+        Application.Interactive = True
         .Show
+        Application.Interactive = InteractiveStatus
      
         ' If form was closed using [X], then it was also unloaded, so we set the default to vbCancel
         MsgBoxEx = vbCancel

@@ -154,4 +154,3 @@ NoWindow:
     #End If
     Resume Calculate
 End Function
-

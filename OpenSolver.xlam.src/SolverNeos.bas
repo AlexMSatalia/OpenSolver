@@ -82,6 +82,9 @@ Function CallNeos_Remote(s As COpenSolver, OutgoingMessage As String) As String
           RaiseError = False
           On Error GoTo ErrorHandler
           
+          Dim InteractiveStatus As Boolean
+          InteractiveStatus = Application.Interactive
+          
           Dim NeosSolver As ISolverNeos
           Set NeosSolver = s.Solver
           Dim OptionsFileString As String
@@ -98,7 +101,11 @@ Function CallNeos_Remote(s As COpenSolver, OutgoingMessage As String) As String
           Else
               Dim frmCallingNeos As FCallingNeos
               Set frmCallingNeos = New FCallingNeos
+              
+              Application.Interactive = True
               frmCallingNeos.Show
+              Application.Interactive = InteractiveStatus
+              
               CallNeos_Remote = NeosResult
               errorString = frmCallingNeos.Tag
               Unload frmCallingNeos
@@ -117,6 +124,7 @@ Function CallNeos_Remote(s As COpenSolver, OutgoingMessage As String) As String
           Close #1
 
 ExitFunction:
+          Application.Interactive = InteractiveStatus
           Close #1
           If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
           Exit Function

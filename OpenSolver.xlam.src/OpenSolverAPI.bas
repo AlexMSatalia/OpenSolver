@@ -20,6 +20,10 @@ Public Function RunOpenSolver(Optional SolveRelaxation As Boolean = False, _
     ClearError
     On Error GoTo ErrorHandler
     
+    Dim InteractiveStatus As Boolean
+    InteractiveStatus = Application.Interactive
+    Application.Interactive = False
+    
     GetActiveSheetIfMissing sheet
 
     RunOpenSolver = OpenSolverResult.Unsolved
@@ -36,6 +40,7 @@ Public Function RunOpenSolver(Optional SolveRelaxation As Boolean = False, _
     If Not MinimiseUserInteraction Then OpenSolver.ReportAnySolutionSubOptimality
 
 ExitFunction:
+    Application.Interactive = InteractiveStatus
     Set OpenSolver = Nothing    ' Free any OpenSolver memory used
     Exit Function
 

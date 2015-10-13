@@ -43,6 +43,9 @@ Sub CheckLinearityOfModel(s As COpenSolver)
           RaiseError = False
           On Error GoTo ErrorHandler
           
+          Dim InteractiveStatus As Boolean
+          InteractiveStatus = Application.Interactive
+          
           Dim row As Long, i As Long, RowIsNonLinear() As Boolean
           Dim ValueZero() As CIndexedCoeffs, ValueOne() As CIndexedCoeffs, ValueTen() As CIndexedCoeffs, OriginalSolutionValues() As Variant
           Dim NonLinearInformation As String
@@ -161,7 +164,10 @@ Sub CheckLinearityOfModel(s As COpenSolver)
           Dim frmNonlinear As FNonlinear
           Set frmNonlinear = New FNonlinear
           frmNonlinear.SetLinearityResult NonLinearInformation, False
+          
+          Application.Interactive = True
 2139      frmNonlinear.Show
+          Application.Interactive = InteractiveStatus
           
 2140      If frmNonlinear.chkHighlight.value = True Then
 2141          HighlightNonLinearities RowIsNonLinear, ObjectiveIsNonLinear, s
@@ -169,6 +175,7 @@ Sub CheckLinearityOfModel(s As COpenSolver)
           Unload frmNonlinear
 
 ExitSub:
+          Application.Interactive = InteractiveStatus
           If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
           Exit Sub
 
@@ -245,6 +252,9 @@ Sub QuickLinearityCheck(fullLinearityCheckWasPerformed As Boolean, s As COpenSol
           Dim RaiseError As Boolean
           RaiseError = False
           On Error GoTo ErrorHandler
+          
+          Dim InteractiveStatus As Boolean
+          InteractiveStatus = Application.Interactive
 
 2179      fullLinearityCheckWasPerformed = False
           
@@ -358,7 +368,10 @@ Sub QuickLinearityCheck(fullLinearityCheckWasPerformed As Boolean, s As COpenSol
                   Dim frmNonlinear As FNonlinear
                   Set frmNonlinear = New FNonlinear
                   frmNonlinear.SetLinearityResult NonLinearInfo, True
+                  
+                  Application.Interactive = True
 2263              frmNonlinear.Show
+                  Application.Interactive = InteractiveStatus
               
                   'showing the nonlinear constraints
 2264              If frmNonlinear.chkHighlight.value = True Then
@@ -374,6 +387,7 @@ Sub QuickLinearityCheck(fullLinearityCheckWasPerformed As Boolean, s As COpenSol
 2272      End If
 
 ExitSub:
+          Application.Interactive = InteractiveStatus
           If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
           Exit Sub
 

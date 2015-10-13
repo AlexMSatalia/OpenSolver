@@ -395,11 +395,21 @@ Private Function ReadChunk(ExecInfo As ExecInformation, ByRef NewData As String)
 End Function
 
 Public Function ExecCapture(Command As String, Optional LogPath As String, Optional StartDir As String, Optional DisplayOutput As Boolean, Optional ExitCode As Long) As String
+    Dim RaiseError As Boolean
+    RaiseError = False
+    On Error GoTo ErrorHandler
+    
+    Dim InteractiveStatus As Boolean
+    InteractiveStatus = Application.Interactive
+
     If DisplayOutput Then
         Dim frmConsole As FConsole
         Set frmConsole = New FConsole
         frmConsole.SetInput Command, LogPath, StartDir
+        
+        Application.Interactive = True
         frmConsole.Show
+        Application.Interactive = InteractiveStatus
         
         ' Get all data from form and destroy it
         frmConsole.GetOutput ExitCode, ExecCapture
@@ -417,6 +427,16 @@ Public Function ExecCapture(Command As String, Optional LogPath As String, Optio
     Else
         ExecCapture = RunCommand(Command, LogPath, StartDir, False, DisplayOutput, ExitCode)
     End If
+
+ExitFunction:
+    Application.Interactive = InteractiveStatus
+    If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+    Exit Function
+
+ErrorHandler:
+    If Not ReportError("OpenSolverExternalCommand", "ExecCapture") Then Resume
+    RaiseError = True
+    GoTo ExitFunction
 End Function
 
 Public Function Exec(Command As String, Optional StartDir As String, Optional DisplayOutput As Boolean, Optional ExitCode As Long) As Boolean
