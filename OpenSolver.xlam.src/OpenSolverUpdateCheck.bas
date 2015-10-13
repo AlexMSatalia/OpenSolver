@@ -280,11 +280,11 @@ Private Function GetLastCheckTime() As Double
     Dim result As Variant
     result = GetSetting(OpenSolverRegName, PreferencesRegName, LastUpdateCheckRegName, 0)
     
-    GetLastCheckTime = CDbl(result)
+    GetLastCheckTime = Val(result)
 End Function
 
 Private Sub SetLastCheckTime(CheckTime As Double)
-    SaveSetting OpenSolverRegName, PreferencesRegName, LastUpdateCheckRegName, CStr(CheckTime)
+    SaveSetting OpenSolverRegName, PreferencesRegName, LastUpdateCheckRegName, StrExNoPlus(CheckTime)
 End Sub
 
 Private Sub DeleteLastCheckTime()
