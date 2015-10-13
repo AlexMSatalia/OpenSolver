@@ -62,8 +62,8 @@ Private Function GenerateMenuItems() As Collection
     
     ' Model sub-menu
     Dim ModelScreenTip As String, ModelSuperTip As String, ModelOnAction As String
-    ModelScreenTip = "Build and edit Solver models"
-    ModelSuperTip = "Build or edit your optimization model. Will detect and load any pre-existing model built with Solver, and will save the results to the sheet in a Solver-friendly way."
+    ModelScreenTip = "Build and edit OpenSolver models"
+    ModelSuperTip = "Build or edit your optimization model. Will detect and load any pre-existing model and will save the results to the sheet."
     ModelOnAction = "OpenSolver_ModelClick"
     
     Dim ModelSB As MenuItem
@@ -76,19 +76,18 @@ Private Function GenerateMenuItems() As Collection
         .Add NewMenuItem("button", "OpenSolverModel2", "&Model...", ModelOnAction, ModelScreenTip, ModelSuperTip)
         .Add NewMenuItem("button", "OpenSolverQuickAutomodel", "&Quick AutoModel", _
                          "OpenSolver_QuickAutoModelClick", "Run AutoModel with default options", _
-                         "Run AutoModel with default options. No dialog menu will appear, so for " & _
-                         "well-structured sheets it is unnecessary to run through the full AutoModel " & _
-                         "procedure step-by-step for small changes.")
+                         "OpenSolver's AutoModel will analyze the current sheet and use the sheet's structure " & _
+                         "and formulae to build an optimization model automatically.")
         .Add NewMenuItem("button", "OpenSolverModelAutoModel", "&AutoModel And Solve", _
-                         "OpenSolver_AutoModelAndSolveClick", "Run AutoModel with default options and then solve problem", _
-                         "Run AutoModel with default options and then solve the problem. No dialog menu will appear, so for " & _
-                         "well-structured sheets it is unnecessary to run through the full AutoModel procedure step-by-step for small changes.")
+                         "OpenSolver_AutoModelAndSolveClick", "Run AutoModel and then solve problem", _
+                         "Run AutoModel with the default options to build the problem automatically " & _
+                         "and then solve the resulting problem with the currently selected solver engine.")
         .Add NewMenuItem("button", "OpenSolverChosenSolver", "&Solver Engine...", _
-                         "OpenSolver_SolverOptions", "Choose your solver", _
-                         "Choose your solver: CBC (default), Gurobi, or NOMAD (non-linear).")
+                         "OpenSolver_SolverOptions", "Select your solver", _
+                         "Choose your solver from the list of supported solvers.")
         .Add NewMenuItem("button", "OpenSolverModelOptions", "&Options...", _
                          "OpenSolver_ModelOptions", "Set solve options", _
-                         "Set options: linearity, non-negativity, max solve time, tolerance.")
+                         "Set options such as linearity, non-negativity, max solve time, and tolerance.")
     End With
     ModelSB.Children.Add ModelMenu
     Items.Add ModelSB
@@ -96,7 +95,7 @@ Private Function GenerateMenuItems() As Collection
     ' Solve sub-menu
     Dim SolveScreenTip As String, SolveSuperTip As String, SolveOnAction As String
     SolveScreenTip = "Solve optimization model"
-    SolveSuperTip = "Solve an existing Solver model on the active worksheet by constructing the model's equations and " & _
+    SolveSuperTip = "Solve an existing model on the active worksheet by constructing the model's equations and " & _
                     "then calling the current chosen optimization engine."
     SolveOnAction = "OpenSolver_SolveClickHandler"
     
@@ -119,7 +118,7 @@ Private Function GenerateMenuItems() As Collection
     ' Single-level main menu items
     Items.Add NewMenuItem("button", "OpenSolverShowModel", "Show/&Hide Model", "OpenSolver_ShowHideModelClickHandler", _
                           "Show or hide the optimization model on this sheet", _
-                          "OpenSolver will analyse an existing model on the active sheet, and add coloured annotations " & _
+                          "OpenSolver will analyze an existing model on the active sheet, and add coloured annotations " & _
                           "to the sheet that indicate the variable cells, the objective cell, and the constraints.")
     Items.Add NewMenuItem("button", "OpenSolverQuickSolve", "&Quick Solve", "OpenSolver_QuickSolveClickHandler", _
                           "Quickly re-solve a model after changing the parameter values", _
@@ -153,8 +152,8 @@ Private Function GenerateMenuItems() As Collection
                          "View the last solution file", _
                          "When a model is solved, a temporary solution file can be created by the solver containing the solution " & _
                          "to the optimization problem. It is sometimes useful to load and view this file.")
-        .Add NewMenuItem("button", "OpenSolverViewSolverLogFile", "View Last Solver Log File", "OpenSolver_ViewSolverLogFileClickHandler", _
-                         "View the last solver log file", _
+        .Add NewMenuItem("button", "OpenSolverViewSolverLogFile", "View Last Solve Log File", "OpenSolver_ViewSolverLogFileClickHandler", _
+                         "View the last solve log file", _
                          "OpenSolver creates a log file every time a model is solved. The log file contains output from the solver, " & _
                          "such as iteration details during the solve, which can give you more information about your model.")
         .Add NewMenuItem("button", "OpenSolverViewErrorLogFile", "View Last Error Log File", "OpenSolver_ViewErrorLogFileClickHandler", _
