@@ -40,6 +40,11 @@ End Sub
 
 Public Sub ReflectOpenSolverStatus()
           ' Update buttons to reflect install status of OpenSolver
+          If SolverDirIsPresent Then
+              Me.lblInstalled.Caption = "OpenSolver is correctly installed " & ChrW(&H2714)
+          Else
+              Me.lblInstalled.Caption = "OpenSolver is not correctly installed. Make sure you have unzipped the downloaded file."
+          End If
           
           Dim InstalledAndActive As Boolean
 3480      InstalledAndActive = False
@@ -203,12 +208,21 @@ Private Sub AutoLayout()
         .Width = lblHeading.Width
     End With
     
+    With lblInstalled
+        .Font.Bold = True
+        .Left = lblHeading.Left
+        .Top = Below(txtAbout)
+        .Width = lblHeading.Width
+        .BackStyle = fmBackStyleTransparent
+        AutoHeight lblInstalled, .Width
+    End With
+    
     With txtFilePath
         .Locked = False
         .Text = "OpenSolver file:"
         .Locked = True
         .Left = lblHeading.Left
-        .Top = Below(txtAbout)
+        .Top = Below(lblInstalled)
         .Height = FormTextHeight + 2 ' Stop the text becoming smaller
         .Width = lblHeading.Width
         .BackStyle = fmBackStyleTransparent

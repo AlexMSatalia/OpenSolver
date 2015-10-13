@@ -194,6 +194,14 @@ Function SolverIsPresent(Solver As ISolver, Optional SolverPath As String, Optio
     Dim RaiseError As Boolean
     RaiseError = False
     On Error GoTo ErrorHandler
+    
+    If Not SolverDirIsPresent Then
+        errorString = "Could not find the Solvers folder in the folder containing OpenSolver.xlam, " & _
+                      "indicating OpenSolver has not been properly installed. Make sure you have " & _
+                      "unzipped all files from the downloaded zip file to the same place."
+        SolverIsPresent = False
+        Exit Function
+    End If
 
     If TypeOf Solver Is ISolverLocalExec Then
         Dim LocalExecSolver As ISolverLocalExec

@@ -859,6 +859,11 @@ Function SolverSummary() As String
         Set Solver = CreateSolver(CStr(SolverShortName))
         If TypeOf Solver Is ISolverLocal Then
             SolverSummary = SolverSummary & AboutLocalSolver(Solver) & vbNewLine & vbNewLine
+            
+            ' If we are not correctly installed, we can break after the first such message
+            If Not SolverDirIsPresent Then
+                Exit Function
+            End If
         End If
     Next SolverShortName
 End Function
