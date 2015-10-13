@@ -8,6 +8,10 @@ Sub LaunchCommandLine_CBC()
 
           Dim ModelFilePathName As String
 6353      GetLPFilePath ModelFilePathName
+          If Not FileOrDirExists(ModelFilePathName) Then
+              MsgBox "Error: There is no .lp file (" & ModelFilePathName & ") to open. Please solve the OpenSolver model and then try again."
+              GoTo ExitSub
+          End If
 
           Dim SolverParametersString As String
             
