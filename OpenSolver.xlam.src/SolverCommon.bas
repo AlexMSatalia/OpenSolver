@@ -295,7 +295,7 @@ Sub RunLocalSolver(s As COpenSolver, ExternalCommand As String)
 
     UpdateStatusBar "OpenSolver: Solving " & IIf(s.SolveRelaxation, "Relaxed ", "") & "Model... " & _
                     s.numVars & " vars, " & _
-                    s.NumIntVars & " int vars " & "(" & s.NumBinVars & " 0/1), " & _
+                    s.NumIntVars & " int vars " & "(" & s.NumBinVars & " bin), " & _
                     s.NumRows & " rows, " & _
                     s.SolverParameters.Item(s.Solver.TimeLimitName) & "s time limit, " & _
                     s.SolverParameters.Item(s.Solver.ToleranceName) * 100 & "% tolerance.", True

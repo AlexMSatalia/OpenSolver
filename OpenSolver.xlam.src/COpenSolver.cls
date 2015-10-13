@@ -895,6 +895,14 @@ ModelOptions:
 
           ' Binary trumps integer, so remove all overlap
           Set IntegerCellsRange = SetDifference(IntegerCellsRange, BinaryCellsRange)
+          
+          If Not BinaryCellsRange Is Nothing Then
+              Me.NumBinVars = BinaryCellsRange.Count
+              Me.NumIntVars = Me.NumBinVars
+          End If
+          If Not IntegerCellsRange Is Nothing Then
+              Me.NumIntVars = Me.NumIntVars + IntegerCellsRange.Count
+          End If
 
 1177      If NumRows > 0 Then
 1178          ReDim Preserve pRowSetsBound(NumRows)
