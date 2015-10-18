@@ -73,7 +73,7 @@ Private Sub cmdReportIssue_Click()
                 ErrorLogContents
     
     Dim MailToLink As String
-    MailToLink = "mailto:a.mason@auckland.ac.nz?cc=jdun087@aucklanduni.ac.nz" & _
+    MailToLink = "mailto:andrew@opensolver.org?cc=jack@opensolver.org" & _
                  "&subject=" & URLEncode(EmailSubject) & _
                  "&body=" & URLEncode(EmailBody)
     
