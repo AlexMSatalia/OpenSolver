@@ -308,6 +308,7 @@ Private Function StartProcess(Command As String, StartDir As String, Async As Bo
         CloseHandle StartProcess.hWrite
         CloseHandle StartProcess.ProcInfo.hThread
         StartProcess.hWrite = 0&
+        StartProcess.ProcInfo.hThread = 0&
     #End If
 End Function
 
