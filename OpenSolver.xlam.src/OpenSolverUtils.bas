@@ -726,7 +726,11 @@ Public Sub OpenURL(URL As String)
           RaiseError = False
           On Error GoTo ErrorHandler
 
-          ActiveWorkbook.FollowHyperlink URL
+          #If Mac Then
+              ExecAsync "open " & Quote(URL)
+          #Else
+              ActiveWorkbook.FollowHyperlink URL
+          #End If
 
 ExitSub:
           If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
