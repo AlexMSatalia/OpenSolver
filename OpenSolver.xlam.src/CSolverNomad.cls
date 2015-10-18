@@ -241,9 +241,7 @@ Private Sub Solve(s As COpenSolver)
         ' Using Application.Run causes the API calls inside the DLL to fail on 64 bit Office
         Dim NomadRetVal As Long
         NomadRetVal = NomadMain(s.SolveRelaxation)
-        NOMAD_LoadResult NomadRetVal
-        s.SolveStatus = OS.SolveStatus
-        s.SolveStatusComment = OS.SolveStatusComment
+        GetNomadSolveResult NomadRetVal, s
     #End If
     
 ExitSub:

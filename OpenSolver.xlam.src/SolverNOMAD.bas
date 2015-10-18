@@ -4,6 +4,10 @@ Option Explicit
 Public OS As COpenSolver
 Dim IterationCount As Long
 
+#If Mac Then
+    Dim InteractiveStatus As Boolean
+#End If
+
 'NOMAD return status codes
 Private Enum NomadResult
     LogFileError = -12  ' Error opening the log file, special code because we can't log the error to see what it is!
@@ -23,9 +27,14 @@ Private Type VariableData
 End Type
 
 ' NOMAD functions
-' Do not put error handling in these functions, there is already error-handling in the NOMAD DLL
+' Do not raise errors out of these functions, this will crash the NOMAD plugin
+' We can raise errors inside the function and catch them, e.g. to detect escape presses
 
-Sub NOMAD_UpdateVar(X As Variant, Optional BestSolution As Variant = Nothing, Optional Infeasible As Boolean = False)
+' Returns -1 on error, 0 otherwise
+Function NOMAD_UpdateVar(X As Variant, Optional BestSolution As Variant = Nothing, Optional Infeasible As Boolean = False)
+          On Error GoTo ErrorHandler
+          Application.EnableCancelKey = xlErrorHandler
+          
 7115      IterationCount = IterationCount + 1
 
           ' Update solution
@@ -62,12 +71,25 @@ Sub NOMAD_UpdateVar(X As Variant, Optional BestSolution As Variant = Nothing, Op
 2462              i = i + 1
 2463          Next AdjCell
 2464      End If
-End Sub
+          NOMAD_UpdateVar = 0
 
+ExitFunction:
+          Exit Function
+
+ErrorHandler:
+          If Not ReportError("SolverNOMAD", "NOMAD_UpdateVar") Then Resume
+          NOMAD_UpdateVar = -1&
+          Resume ExitFunction
+End Function
+
+' Returns -1 on error, array of new constraint values otherwise
 Function NOMAD_GetValues() As Variant
-          Dim X As Variant, i As Long, j As Long, k As Long, numCons As Variant
-2465      numCons = NOMAD_GetNumConstraints()
-2466      ReDim X(1 To numCons(0), 1 To 1)
+          On Error GoTo ErrorHandler
+          Application.EnableCancelKey = xlErrorHandler
+          
+          Dim X As Variant, i As Long, j As Long, k As Long, NumCons As Variant
+2465      NumCons = NOMAD_GetNumConstraints()
+2466      ReDim X(1 To NumCons(1, 1), 1 To 1)
           '====NOMAD only does minimise so need to change objective if it is max====
           ' If no objective, just set a constant.
           ' TODO: fix this to set it based on amount of violation to hunt for feasibility
@@ -125,37 +147,89 @@ Function NOMAD_GetValues() As Variant
           
           'Get back new objective and difference between LHS and RHS values
 2511      NOMAD_GetValues = X
+
+ExitFunction:
+          Exit Function
+          
+ErrorHandler:
+          If Not ReportError("SolverNOMAD", "NOMAD_GetValues") Then Resume
+          NOMAD_GetValues = -1&
+          Resume ExitFunction
 End Function
 
-Sub NOMAD_RecalculateValues()
-          On Error Resume Next  ' Eat any errors - we can't throw an error while the C++ code is running
-7129      If Not ForceCalculate("Warning: The worksheet calculation did not complete, and so the iteration may not be calculated correctly. Would you like to retry?") Then Exit Sub
-          On Error GoTo 0
-End Sub
+' Returns -1 on error, 0 otherwise
+Function NOMAD_RecalculateValues()
+          On Error GoTo ErrorHandler
+          Application.EnableCancelKey = xlErrorHandler
+          
+          ForceCalculate "Warning: The worksheet calculation did not complete, and so the iteration may not be calculated correctly. Would you like to retry?"
+          NOMAD_RecalculateValues = 0&
+          
+ExitFunction:
+          Exit Function
+          
+ErrorHandler:
+          If Not ReportError("SolverNOMAD", "NOMAD_RecalculateValues") Then Resume
+          NOMAD_RecalculateValues = -1&
+          Resume ExitFunction
+End Function
 
+' Returns -1 on error, integer number of variables otherwise
 Function NOMAD_GetNumVariables() As Variant
-7130      NOMAD_GetNumVariables = OS.AdjustableCells.Count
+          On Error GoTo ErrorHandler
+          Application.EnableCancelKey = xlErrorHandler
+          
+          NOMAD_GetNumVariables = OS.AdjustableCells.Count
+
+ExitFunction:
+          Exit Function
+          
+ErrorHandler:
+          If Not ReportError("SolverNOMAD", "NOMAD_GetNumVariables") Then Resume
+          NOMAD_GetNumVariables = -1&
+          Resume ExitFunction
 End Function
 
+' Returns -1 on error, integer number of constraints otherwise
 Function NOMAD_GetNumConstraints() As Variant
-          'The number of constraints is actually the number of Objectives + Number of Constraints
+          On Error GoTo ErrorHandler
+          Application.EnableCancelKey = xlErrorHandler
+          
           'Note: Bounds do not count as constraints and equalities count as 2 constraints
+          Dim NumCons As Long
+2540      NumCons = 0
+
           Dim row As Long
-          Dim X(0 To 1) As Double
-2540      X(0) = 1
 2541      For row = 1 To OS.NumRows
-2542          If OS.RowSetsBound(row) = False Then X(0) = X(0) + 1
-2543          If OS.Relation(row) = RelationEQ Then X(0) = X(0) + 1
+2542          If OS.RowSetsBound(row) = False Then NumCons = NumCons + 1
+2543          If OS.Relation(row) = RelationEQ Then NumCons = NumCons + 1
 2544      Next row
 
           'Number of objectives - NOMAD can do bi-objective
           'Note: Currently OpenSolver can only do single objectives- will need to set up multi objectives yourself
-2545      X(1) = 1 'number of objectives
+          Dim NumObjs As Long
+2545      NumObjs = 1
 
+          Dim X() As Variant
+          ReDim X(1 To 1, 1 To 2)
+          X(1, 1) = NumObjs + NumCons  ' Number of constraints and objectives
+          X(1, 2) = NumObjs            ' Number of objectives
 7131      NOMAD_GetNumConstraints = X
+
+ExitFunction:
+          Exit Function
+          
+ErrorHandler:
+          If Not ReportError("SolverNOMAD", "NOMAD_GetNumConstraints") Then Resume
+          NOMAD_GetNumConstraints = -1&
+          Resume ExitFunction
 End Function
 
+' Returns -1 on error, array with variable data otherwise
 Function NOMAD_GetVariableData() As Variant
+          On Error GoTo ErrorHandler
+          Application.EnableCancelKey = xlErrorHandler
+          
           Dim data As VariableData
 2547      data.numVars = NOMAD_GetNumVariables
 
@@ -244,15 +318,33 @@ Function NOMAD_GetVariableData() As Variant
           Next c
           
 2611      NOMAD_GetVariableData = data.X
+
+ExitFunction:
+          Exit Function
+          
+ErrorHandler:
+          If Not ReportError("SolverNOMAD", "NOMAD_GetVariableData") Then Resume
+          NOMAD_GetVariableData = -1&
+          Resume ExitFunction
 End Function
 
+' Returns -1 on error, array of option data (string/length pairs for each key) otherwise
 Function NOMAD_GetOptionData() As Variant
+          On Error GoTo ErrorHandler
+          Application.EnableCancelKey = xlErrorHandler
+          
           IterationCount = 0
+          
+          ' On Mac we are re-entering the code so need to reset all our options
+          #If Mac Then
+              InteractiveStatus = Application.Interactive
+              Application.Interactive = False
+          #End If
 
           Dim SolverParameters As Dictionary
           Set SolverParameters = OS.SolverParameters
           ' Add extra values that depend on precision
-          If SolverParameters.Exists(OS.Solver.PrecisionName) Then
+          If SolverParameters.Exists(OS.Solver.PrecisionName) And Not SolverParameters.Exists("H_MIN") Then
               SolverParameters.Add Key:="H_MIN", Item:=SolverParameters.Item(OS.Solver.PrecisionName)
           End If
           
@@ -268,20 +360,73 @@ Function NOMAD_GetOptionData() As Variant
           Next Key
           
           NOMAD_GetOptionData = X
+
+ExitFunction:
+          Exit Function
+          
+ErrorHandler:
+          If Not ReportError("SolverNOMAD", "NOMAD_GetOptionData") Then Resume
+          NOMAD_GetOptionData = -1&
+          Resume ExitFunction
 End Function
 
-Function NOMAD_ShowCancelDialog() As Variant
+' Returns -1 if error, 0 otherwise
+Function NOMAD_ShowCancelDialog()
+          On Error GoTo ErrorHandler
+          Application.EnableCancelKey = xlErrorHandler
+          
           Dim Response As VbMsgBoxResult
           Response = ShowEscapeCancelMessage()
-          NOMAD_ShowCancelDialog = (Response = vbYes)
+          If Response = vbYes Then
+              OpenSolverErrorHandler.ErrNum = OpenSolver_UserCancelledError
+              OpenSolverErrorHandler.ErrMsg = SILENT_ERROR
+          End If
+          NOMAD_ShowCancelDialog = 0&
+
+ExitFunction:
+          Exit Function
+          
+ErrorHandler:
+          If Not ReportError("SolverNOMAD", "NOMAD_ShowCancelDialog") Then Resume
+          NOMAD_ShowCancelDialog = -1&
+          Resume ExitFunction
 End Function
 
+' Returns -1 if error, boolean indicating whether to abort otherwise
+Function NOMAD_GetConfirmedAbort() As Variant
+          On Error GoTo ErrorHandler
+          Application.EnableCancelKey = xlErrorHandler
+          
+          ' Returns true if an abort has been confirmed by user
+          NOMAD_GetConfirmedAbort = (OpenSolverErrorHandler.ErrNum = OpenSolver_UserCancelledError)
+
+ExitFunction:
+          Exit Function
+          
+ErrorHandler:
+          If Not ReportError("SolverNOMAD", "NOMAD_GetConfirmedAbort") Then Resume
+          NOMAD_GetConfirmedAbort = -1&
+          Resume ExitFunction
+End Function
+
+' Returns -1 if error, array containing log path as string/length pair otherwise
 Function NOMAD_GetLogFilePath() As Variant
+          On Error GoTo ErrorHandler
+          Application.EnableCancelKey = xlErrorHandler
+          
           Dim X() As Variant
           ReDim X(1 To 1, 1 To 2)
           X(1, 1) = ConvertHfsPathToPosix(OS.LogFilePathName)
           X(1, 2) = Len(X(1, 1))
           NOMAD_GetLogFilePath = X
+
+ExitFunction:
+          Exit Function
+          
+ErrorHandler:
+          If Not ReportError("SolverNOMAD", "NOMAD_GetLogFilePath") Then Resume
+          NOMAD_GetLogFilePath = -1&
+          Resume ExitFunction
 End Function
 
 Private Sub SetConstraintValue(ByRef ConstraintValues As Variant, ByRef k As Long, RHSValue As Variant, LHSValue As Variant, RelationType As Long)
@@ -357,70 +502,89 @@ Private Sub SetStartingPoint(ByRef data As VariableData, i As Long, value As Dou
     data.X(2 * data.numVars + i) = value
 End Sub
 
-Private Function GetVarType(data As VariableData, i As Long) As Double
+Private Function GetVarType(data As VariableData, i As Long) As VariableType
     GetVarType = data.X(3 * data.numVars + i)
 End Function
 
-Private Sub SetVarType(ByRef data As VariableData, i As Long, value As Double)
+Private Sub SetVarType(ByRef data As VariableData, i As Long, value As VariableType)
     data.X(3 * data.numVars + i) = value
 End Sub
 
+#If Mac Then
 Public Sub NOMAD_LoadResult(NomadRetVal As Long)
+    On Error GoTo ErrorHandler
+
+    Application.Interactive = InteractiveStatus
+    GetNomadSolveResult NomadRetVal, OS
+    OS.ReportAnySolutionSubOptimality
+
+ExitSub:
+    Set OS = Nothing
+    Application.StatusBar = False
+    Exit Sub
+    
+ErrorHandler:
+    ReportError "OpenSolverAPI", "RunOpenSolver", True
+    If OpenSolverErrorHandler.ErrNum = OpenSolver_UserCancelledError Then
+        OS.SolveStatus = OpenSolverResult.AbortedThruUserAction
+        Resume Next
+    Else
+        OS.SolveStatus = OpenSolverResult.ErrorOccurred
+    End If
+    Resume ExitSub
+End Sub
+#End If
+
+Public Sub GetNomadSolveResult(NomadRetVal As Long, s As COpenSolver)
     'Catch any errors that occured while Nomad was solving
     Select Case NomadRetVal
     Case NomadResult.LogFileError
-        OS.SolveStatus = OpenSolverResult.ErrorOccurred
+        s.SolveStatus = OpenSolverResult.ErrorOccurred
         Err.Raise OpenSolver_NomadError, Description:="NOMAD was unable to open the specified log file for writing: " & vbNewLine & vbNewLine & _
-                                                      OS.LogFilePathName
+                                                      MakePathSafe(s.LogFilePathName)
     Case NomadResult.ErrorOccured
-        OS.SolveStatus = OpenSolverResult.ErrorOccurred
+        s.SolveStatus = OpenSolverResult.ErrorOccurred
         
         ' Check logs for more info and raise an error if we find anything specific
-        CheckLog OS
+        CheckLog s
         
         Err.Raise Number:=OpenSolver_NomadError, Description:="There was an error while Nomad was solving. No solution has been loaded into the sheet."
     Case NomadResult.SolveStoppedIter
-        OS.SolveStatus = OpenSolverResult.LimitedSubOptimal
-        OS.SolveStatusString = "NOMAD reached the maximum number of iterations and returned the best feasible solution it found. " & _
+        s.SolveStatus = OpenSolverResult.LimitedSubOptimal
+        s.SolveStatusString = "NOMAD reached the maximum number of iterations and returned the best feasible solution it found. " & _
                               "This solution is not guaranteed to be an optimal solution." & vbNewLine & vbNewLine & _
                               "You can increase the maximum time and iterations under the options in the model dialogue or check whether your model is feasible."
-        OS.SolutionWasLoaded = True
+        s.SolutionWasLoaded = True
     Case NomadResult.SolveStoppedTime
-        OS.SolveStatusString = "NOMAD reached the maximum time and returned the best feasible solution it found. " & _
+        s.SolveStatusString = "NOMAD reached the maximum time and returned the best feasible solution it found. " & _
                               "This solution is not guaranteed to be an optimal solution." & vbNewLine & vbNewLine & _
                               "You can increase the maximum time and iterations under the options in the model dialogue or check whether your model is feasible."
-        OS.SolveStatus = OpenSolverResult.LimitedSubOptimal
-        OS.SolutionWasLoaded = True
+        s.SolveStatus = OpenSolverResult.LimitedSubOptimal
+        s.SolutionWasLoaded = True
     Case NomadResult.Infeasible
-        OS.SolveStatusString = "Nomad could not find a feasible solution. " & _
+        s.SolveStatusString = "Nomad could not find a feasible solution. " & _
                               "The best infeasible solution has been returned to the sheet." & vbNewLine & vbNewLine & _
                               "Try resolving at a different start point or check whether your model is feasible or relax some of your constraints."
-        OS.SolveStatus = OpenSolverResult.Infeasible
-        OS.SolutionWasLoaded = True
+        s.SolveStatus = OpenSolverResult.Infeasible
+        s.SolutionWasLoaded = True
     Case NomadResult.SolveStoppedIterInfeas
-        OS.SolveStatusString = "Nomad reached the maximum number of iterations without finding a feasible solution. " & _
+        s.SolveStatusString = "Nomad reached the maximum number of iterations without finding a feasible solution. " & _
                               "The best infeasible solution has been returned to the sheet." & vbNewLine & vbNewLine & _
                               "You can increase the maximum number of iterations under the options in the model dialogue or check whether your model is feasible."
-        OS.SolveStatus = OpenSolverResult.Infeasible
-        OS.SolutionWasLoaded = True
+        s.SolveStatus = OpenSolverResult.Infeasible
+        s.SolutionWasLoaded = True
     Case NomadResult.SolveStoppedTimeInfeas
-        OS.SolveStatusString = "Nomad reached the maximum time limit without finding a feasible solution. " & _
+        s.SolveStatusString = "Nomad reached the maximum time limit without finding a feasible solution. " & _
                               "The best infeasible solution has been returned to the sheet." & vbNewLine & vbNewLine & _
                               "You can increase the maximum time limit under the options in the model dialogue or check whether your model is feasible."
-        OS.SolveStatus = OpenSolverResult.Infeasible
-        OS.SolutionWasLoaded = True
+        s.SolveStatus = OpenSolverResult.Infeasible
+        s.SolutionWasLoaded = True
     Case NomadResult.UserCancelled
         Err.Raise OpenSolver_UserCancelledError, "Running NOMAD", "Model solve cancelled by user."
     Case NomadResult.Optimal
-        OS.SolveStatus = OpenSolverResult.Optimal
-        OS.SolveStatusString = "Optimal"
+        s.SolveStatus = OpenSolverResult.Optimal
+        s.SolveStatusString = "Optimal"
     End Select
-
-    #If Mac Then
-        OS.ReportAnySolutionSubOptimality
-        Set OS = Nothing
-        Application.StatusBar = False
-    #End If
 End Sub
 
 
