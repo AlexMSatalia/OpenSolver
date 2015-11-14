@@ -40,13 +40,13 @@ Sub WriteLPFile_Diff(s As COpenSolver, ModelFilePathName As String)
 1628          Print #1, commentStart & " We have no objective function as the objective must achieve a given target value"
 1629      Else
 1631          For var = 1 To s.numVars
-1632              If Abs(s.CostCoeffs(var)) > EPSILON Then
+1632              'If Abs(s.CostCoeffs(var)) > EPSILON Then
                       VarName = ValidLPFileVarName(s.VarNames(var))
                       If s.AssumeNonNegativeVars Then
                           If Not TestKeyExists(UsedVariables, VarName) Then UsedVariables.Add VarName, VarName
                       End If
                       Print #1, " " & StrEx(s.CostCoeffs(var)) & " " & VarName;
-                  End If
+                  'End If
               Next var
               'If Abs(objValue) > EPSILON Then
               '    Print #1, " " & StrEx(objValue);
