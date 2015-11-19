@@ -2,7 +2,7 @@ Attribute VB_Name = "OpenSolverMenuHandlers"
 Option Explicit
 
 Sub OpenSolver_SolveClickHandler(Optional Control)
-2755      RunOpenSolver False, False, 0
+2755      RunOpenSolver False, False
           AutoUpdateCheck
 End Sub
 
@@ -23,7 +23,7 @@ Sub OpenSolver_SolverOptions(Optional Control)
 End Sub
 
 Sub OpenSolver_SolveRelaxationClickHandler(Optional Control)
-2763      RunOpenSolver True, False, 0
+2763      RunOpenSolver True, False
           AutoUpdateCheck
 End Sub
 
@@ -191,7 +191,7 @@ Sub OpenSolver_AutoModelAndSolveClick(Optional Control)
           Dim sheet As Worksheet
           GetActiveSheetIfMissing sheet
           If Not RunAutoModel(sheet, False) Then Exit Sub
-2882      RunOpenSolver False, False, 0, sheet
+2882      RunOpenSolver False, False, sheet:=sheet
           AutoUpdateCheck
 End Sub
 

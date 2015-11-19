@@ -13,7 +13,7 @@ Public Const sOpenSolverDate As String = "2015.06.28"
 ' */
 Public Function RunOpenSolver(Optional SolveRelaxation As Boolean = False, _
                               Optional MinimiseUserInteraction As Boolean = False, _
-                              Optional LinearityCheckOffset As Double = 0, _
+                              Optional LinearityCheckOffset As Double = 10, _
                               Optional sheet As Worksheet) As OpenSolverResult
     CheckLocationValid  ' Check for unicode in path
     
