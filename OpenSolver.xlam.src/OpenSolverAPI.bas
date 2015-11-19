@@ -8,12 +8,12 @@ Public Const sOpenSolverDate As String = "2015.06.28"
 ' * Solves the OpenSolver model on the current sheet.
 ' * @param {} SolveRelaxation If True, all integer and boolean constraints will be relaxed to allow continuous values for these variables. Defaults to False
 ' * @param {} MinimiseUserInteraction If True, all dialogs and messages will be suppressed. Use this when automating a lot of solves so that there are no interruptions. Defaults to False
-' * @param {} LinearityCheckOffset Sets the base value used for checking if the model is linear. Change this if a non-linear model is not being detected as non-linear. Defaults to 0
+' * @param {} LinearityCheckOffset Sets the base value used for checking if the model is linear. Change this if a non-linear model is not being detected as non-linear. Defaults to 10.423 (a random number that hopefully does not occur in the model, e.g. =ABS(A1-10.423))
 ' * @param {} sheet The worksheet containing the model (defaults to active worksheet)
 ' */
 Public Function RunOpenSolver(Optional SolveRelaxation As Boolean = False, _
                               Optional MinimiseUserInteraction As Boolean = False, _
-                              Optional LinearityCheckOffset As Double = 10, _
+                              Optional LinearityCheckOffset As Double = 10.423, _
                               Optional sheet As Worksheet) As OpenSolverResult
     CheckLocationValid  ' Check for unicode in path
     
