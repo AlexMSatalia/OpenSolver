@@ -906,7 +906,7 @@ Private Sub AutoLayout()
     End With
     
     With chkNonNeg
-        .Caption = "Make unconstrainted variable cells non-negative"
+        .Caption = "Make unconstrained variable cells non-negative"
         .Left = lblConstraintGroup.Left
         .Top = Below(cmdDelSelCon)
         .Width = lblConstraintGroup.Width
