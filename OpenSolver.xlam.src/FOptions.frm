@@ -26,6 +26,10 @@ Private Sub cmdCancel_Click()
 4089      Me.Hide
 End Sub
 
+Private Sub lblExtraParametersHelp_Click()
+    OpenURL "http://opensolver.org/using-opensolver/#extra-parameters"
+End Sub
+
 ' Make the [x] hide the form rather than unload
 Private Sub UserForm_QueryClose(Cancel As Integer, CloseMode As Integer)
     ' If CloseMode = vbFormControlMenu then we know the user
@@ -41,7 +45,13 @@ Private Sub cmdOk_Click()
           
           Dim ParametersRange As Range
           If Len(refExtraParameters.Text) <> 0 Then
+              On Error Resume Next
               Set ParametersRange = Range(refExtraParameters.Text)
+              If Err.Number <> 0 Then
+                  On Error GoTo ErrorHandler
+                  Err.Raise OpenSolver_ModelError, Description:="The extra solver parameters range needs to be a range on the sheet."
+              End If
+              On Error GoTo ErrorHandler
               ValidateParametersRange ParametersRange
           End If
 
@@ -172,16 +182,26 @@ Private Sub AutoLayout()
     End With
     
     With lblExtraParameters
-        .Caption = "Extra Solver Parameters:"
+        .Caption = "Extra Solver Parameters Range:"
         .Left = chkNonNeg.Left
         .Width = chkNonNeg.Width
-        .Top = Below(txtPre, False)
+        .Top = Below(txtPre)
+    End With
+    
+    With lblExtraParametersHelp
+        .Caption = "What's this?"
+        .Width = Me.Width
+        AutoHeight lblExtraParametersHelp, Me.Width, True
+        .Left = LeftOfForm(Me.Width, .Width)
+        .Top = lblExtraParameters.Top
+        .Font.Underline = True
+        .ForeColor = FormLinkColor
     End With
     
     With refExtraParameters
         .Width = chkNonNeg.Width
         .Left = chkNonNeg.Left
-        .Top = Below(lblExtraParameters, False) - FormSpacing
+        .Top = Below(lblExtraParameters, False) - FormSpacing / 2
     End With
     
     With lblFootnote
