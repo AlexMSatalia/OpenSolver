@@ -1095,6 +1095,8 @@ Function BuildConstraintMatrix(objIsMissing As Boolean, SparseA() As CIndexedCoe
 
 1275      BuildConstraintMatrix = False
           
+          If Not ObjRange Is Nothing Then objValue = ObjRange.Value2
+          
           '--------------------------------------------------------------------------
           ' FILL A MATRIX BY CHANGING ADJUSTABLE CELLS
           '--------------------------------------------------------------------------
@@ -1102,13 +1104,6 @@ Function BuildConstraintMatrix(objIsMissing As Boolean, SparseA() As CIndexedCoe
           ' dependent on it and by what amount
           Dim var As Long
           Dim AdjCell As Range
-          
-          ' Add constants to Target
-1276      If ObjectiveSense = TargetObjective Then
-              ' Target value needs to be incremented by any constants in the objective
-1277          ObjectiveTargetValue = ObjectiveTargetValue - objValue
-1278      End If
-          
 1279      var = 0
 1280      For Each AdjCell In AdjustableCells
               ' Count how many variables we've processed, let the user know
@@ -1180,32 +1175,51 @@ Function BuildConstraintMatrix(objIsMissing As Boolean, SparseA() As CIndexedCoe
 1318          MappingRowsToConstraints(NumConstraints + 1) = NumRows + 1  ' An 'end of data' entry
 1319      End If
 
-          'Create the rhs vector
+          'Create the rhs vector by resetting cells to zero
+          AdjustableCells.Value2 = 0
+          ' Recalculate the spreadsheet
+          If Not ForceCalculate("Warning: The worksheet calculation did not complete, and so the model may not be generated correctly. Would you like to retry?") Then GoTo ExitSub
+
           ' TODO Handle errors in the original spreadsheet values
+          Dim ZeroedLHSValues As Variant
+          Dim ZeroedRHSValues As Variant
 1320      row = 1
 1321      For constraint = 1 To NumConstraints
+              ' Get current value(s) for LHS and RHS of this constraint off the sheet. LHS is always an array (even if 1x1)
+              GetCurrentConstraintValues constraint, ZeroedLHSValues, ZeroedRHSValues
 1322          If Not LHSRange(constraint) Is Nothing Then
 1323              If RHSType(constraint) = SolverInputType.MultiCellRange Then 'does the constraint refer to more than one cell
-1324                  For i = 1 To UBound(LHSOriginalValues(constraint), 1)
-1325                      For j = 1 To UBound(LHSOriginalValues(constraint), 2)
-1326                          If UBound(LHSOriginalValues(constraint), 1) = UBound(RHSOriginalValues(constraint), 1) Then
-1327                              RHS(row) = RHSOriginalValues(constraint)(i, j) - LHSOriginalValues(constraint)(i, j)
+1324                  For i = 1 To UBound(ZeroedLHSValues, 1)
+1325                      For j = 1 To UBound(ZeroedLHSValues, 2)
+1326                          If UBound(ZeroedLHSValues, 1) = UBound(ZeroedRHSValues, 1) Then
+1327                              RHS(row) = ZeroedRHSValues(i, j) - ZeroedLHSValues(i, j)
 1328                          Else
-1329                              RHS(row) = RHSOriginalValues(constraint)(j, i) - LHSOriginalValues(constraint)(i, j)
+1329                              RHS(row) = ZeroedRHSValues(j, i) - ZeroedLHSValues(i, j)
 1330                          End If
 1331                          row = row + 1
 1332                      Next j
 1333                  Next i
 1334              Else
-1335                  For i = 1 To UBound(LHSOriginalValues(constraint), 1)
-1336                      For j = 1 To UBound(LHSOriginalValues(constraint), 2)
-1337                          RHS(row) = RHSOriginalValues(constraint) - LHSOriginalValues(constraint)(i, j)
+1335                  For i = 1 To UBound(ZeroedLHSValues, 1)
+1336                      For j = 1 To UBound(ZeroedLHSValues, 2)
+1337                          RHS(row) = ZeroedRHSValues - ZeroedLHSValues(i, j)
 1338                          row = row + 1
 1339                      Next j
 1340                  Next i
 1341              End If
 1342          End If
 1343      Next constraint
+
+          If Not ObjRange Is Nothing Then
+              ' Store the value currently in the objective cell
+              objValue = ObjRange.Value2
+              ObjectiveFunctionConstant = ObjRange.Value2
+              ' Add constants to Target
+              If ObjectiveSense = TargetObjective Then
+                  ' Target value needs to be incremented by any constants in the objective
+                  ObjectiveTargetValue = ObjectiveTargetValue - objValue
+              End If
+          End If
 
 1344      BuildConstraintMatrix = True
           
