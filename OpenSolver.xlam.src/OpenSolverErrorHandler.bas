@@ -12,6 +12,7 @@ Public ErrNum As Long
 Public ErrSource As String
 
 ' OpenSolver error numbers.
+Public Const OpenSolver_Error = vbObjectError + 1000 ' A general error
 Public Const OpenSolver_ModelError = vbObjectError + 1001 ' An error occured while building the model
 Public Const OpenSolver_BuildError = vbObjectError + 1002 ' An error occured while building the model
 Public Const OpenSolver_SolveError = vbObjectError + 1003 ' An error occured while solving the model

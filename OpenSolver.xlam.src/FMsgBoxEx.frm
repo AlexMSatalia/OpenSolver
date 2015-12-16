@@ -77,7 +77,15 @@ Private Sub cmdReportIssue_Click()
                  "&subject=" & URLEncode(EmailSubject) & _
                  "&body=" & URLEncode(EmailBody)
     
+    On Error GoTo FailedOpen
     OpenURL MailToLink
+    On Error GoTo 0
+    
+    Exit Sub
+    
+FailedOpen:
+    MsgBoxEx "Couldn't create an email to report the issue. Please try again, or send us the error.log " & _
+             "file manually."
 End Sub
 
 Private Sub lblLink_Click()

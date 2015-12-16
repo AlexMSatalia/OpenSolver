@@ -1,6 +1,7 @@
 Attribute VB_Name = "OpenSolverUtils"
 Option Explicit
 
+' For sleep
 #If Mac Then
     Private Declare Sub uSleep Lib "libc.dylib" Alias "usleep" (ByVal Microseconds As Long)
 #Else
@@ -9,8 +10,9 @@ Option Explicit
     #Else
         Public Declare Sub mSleep Lib "kernel32" Alias "Sleep" (ByVal dwMilliseconds As Long)
     #End If
-#End If  ' Mac
+#End If  ' sleep
 
+' For OS version
 #If Win32 Then
     #If VBA7 Then
         Type OSVERSIONINFO
@@ -33,7 +35,43 @@ Option Explicit
         End Type
         Private Declare Function GetVersionExA Lib "kernel32" (lpVersionInformation As OSVERSIONINFO) As Integer
     #End If
-#End If  ' Win32
+#End If  ' OS version
+
+'For OpenURL - Code Courtesy of Dev Ashish
+#If Win32 Then
+    #If VBA7 Then
+        Private Declare PtrSafe Function apiShellExecute Lib "shell32.dll" _
+            Alias "ShellExecuteA" _
+            (ByVal hwnd As LongPtr, _
+            ByVal lpOperation As String, _
+            ByVal lpFile As String, _
+            ByVal lpParameters As String, _
+            ByVal lpDirectory As String, _
+            ByVal nShowCmd As Long) _
+            As Long
+    #Else
+        Private Declare Function apiShellExecute Lib "shell32.dll" _
+            Alias "ShellExecuteA" _
+            (ByVal hwnd As Long, _
+            ByVal lpOperation As String, _
+            ByVal lpFile As String, _
+            ByVal lpParameters As String, _
+            ByVal lpDirectory As String, _
+            ByVal nShowCmd As Long) _
+            As Long
+    #End If
+    
+    Private Const WIN_NORMAL = 1         'Open Normal
+    Private Const WIN_MAX = 2            'Open Maximized
+    Private Const WIN_MIN = 3            'Open Minimized
+    
+    Private Const ERROR_SUCCESS = 32&
+    Private Const ERROR_NO_ASSOC = 31&
+    Private Const ERROR_OUT_OF_MEM = 0&
+    Private Const ERROR_FILE_NOT_FOUND = 2&
+    Private Const ERROR_PATH_NOT_FOUND = 3&
+    Private Const ERROR_BAD_FORMAT = 11&
+#End If ' OpenURL
 
 #If Mac Then
     Public Const IsMac As Boolean = True
@@ -729,7 +767,9 @@ Public Sub OpenURL(URL As String)
           #If Mac Then
               ExecAsync "open " & Quote(URL)
           #Else
-              ActiveWorkbook.FollowHyperlink URL
+              ' We can't use ActiveWorkbook.FollowHyperlink as this seems to have some limit on
+              ' the length of the URL that we can pass
+              fHandleFile URL, WIN_NORMAL
           #End If
 
 ExitSub:
@@ -785,6 +825,37 @@ ErrorHandler:
     RaiseError = True
     GoTo ExitFunction
 End Function
+
+Private Sub fHandleFile(FilePath As String, WindowStyle As Long)
+    ' Used to open a URL - Code Courtesy of Dev Ashish
+    Dim lRet As Long
+    #If VBA7 Then
+        Dim hwnd As LongPtr
+    #Else
+        Dim hwnd As Long
+    #End If
+    'First try ShellExecute
+    lRet = apiShellExecute(hwnd, vbNullString, FilePath, vbNullString, vbNullString, WindowStyle)
+
+    If lRet <= ERROR_SUCCESS Then
+        Select Case lRet
+            Case ERROR_NO_ASSOC:
+                'Try the OpenWith dialog
+                Dim varTaskID As Variant
+                varTaskID = Shell("rundll32.exe shell32.dll, OpenAs_RunDLL " & FilePath, WIN_NORMAL)
+            Case ERROR_OUT_OF_MEM:
+                Err.Raise OpenSolver_Error, Description:="Error: Out of Memory/Resources. Couldn't Execute!"
+            Case ERROR_FILE_NOT_FOUND:
+                Err.Raise OpenSolver_Error, Description:="Error: File not found.  Couldn't Execute!"
+            Case ERROR_PATH_NOT_FOUND:
+                Err.Raise OpenSolver_Error, Description:="Error: Path not found. Couldn't Execute!"
+            Case ERROR_BAD_FORMAT:
+                Err.Raise OpenSolver_Error, Description:="Error:  Bad File Format. Couldn't Execute!"
+            Case Else:
+                Err.Raise OpenSolver_Error, Description:="Unknown error when opening file"
+        End Select
+    End If
+End Sub
 
 Function SystemIs64Bit() As Boolean
           #If Mac Then
