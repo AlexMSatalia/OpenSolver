@@ -1185,9 +1185,9 @@ Function BuildConstraintMatrix(objIsMissing As Boolean, SparseA() As CIndexedCoe
           Dim ZeroedRHSValues As Variant
 1320      row = 1
 1321      For constraint = 1 To NumConstraints
-              ' Get current value(s) for LHS and RHS of this constraint off the sheet. LHS is always an array (even if 1x1)
-              GetCurrentConstraintValues constraint, ZeroedLHSValues, ZeroedRHSValues
 1322          If Not LHSRange(constraint) Is Nothing Then
+                  ' Get current value(s) for LHS and RHS of this constraint off the sheet. LHS is always an array (even if 1x1)
+                  GetCurrentConstraintValues constraint, ZeroedLHSValues, ZeroedRHSValues
 1323              If RHSType(constraint) = SolverInputType.MultiCellRange Then 'does the constraint refer to more than one cell
 1324                  For i = 1 To UBound(ZeroedLHSValues, 1)
 1325                      For j = 1 To UBound(ZeroedLHSValues, 2)
