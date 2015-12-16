@@ -1123,7 +1123,15 @@ Function AddNodeIfNew(ByRef objCurNode As CFormula, ByRef c As Range) As String
                       AddNodeIfNew = StrExNoPlus(CDbl(varReturn(1)))
                       GoTo finishedNode
 5387              Else
+                      On Error Resume Next
 5388                  AddNodeIfNew = StrExNoPlus(CDbl(varReturn))
+                      If Err.Number <> 0 Then
+                          On Error GoTo ErrorHandler
+                          Err.Raise OpenSolver_ModelError, Description:= _
+                              "The constant in cell " & c.Address & " has value `" & varReturn & "` which is not numeric. " & _
+                              "Make sure this constant isn't being included in a formula unnecessarily."
+                      End If
+                      On Error GoTo ErrorHandler
 5389                  GoTo finishedNode
 5390              End If
 5391          End If
