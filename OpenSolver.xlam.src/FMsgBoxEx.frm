@@ -46,6 +46,7 @@ Private Sub UserForm_QueryClose(Cancel As Integer, CloseMode As Integer)
 End Sub
 
 Private Sub cmdMoreDetails_Click()
+    Me.Hide  ' Close the dialog so that we don't block interaction with the log file
     OpenFile GetErrorLogFilePath, "No error log was found."
 End Sub
 
