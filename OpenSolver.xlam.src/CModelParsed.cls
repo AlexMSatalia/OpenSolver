@@ -611,7 +611,14 @@ Function ExpandFormula(ByVal strFormula As String, _
 5093                  LookingForEndOfRef = False
 5094                  CheckForColon = False
 5095                  If strSheetPrefix <> "" Then BuildingRef = strSheetPrefix + "!" + BuildingRef
+                      On Error Resume Next
 5096                  Set rngBuildingRef = s.sheet.Range(BuildingRef)
+                      If Err.Number <> 0 Then
+                          On Error GoTo ErrorHandler
+                          Err.Raise OpenSolver_ModelError, Description:="The model contains references to cells on other sheets, " & _
+                                                                         "which is not currently supported by the parsing solvers."
+                      End If
+                      On Error GoTo ErrorHandler
 5097                  If rngBuildingRef.Count > 1 Then
 5098                      strParsed = strParsed + "["
 5099                      For Each c In rngBuildingRef
