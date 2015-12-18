@@ -26,7 +26,7 @@ Private model As CModel
 Private ConChangedMode As Boolean
 Private DontRepop As Boolean
 Private IsLoadingModel As Boolean
-Private PreserveModel As Boolean  ' For Mac, to persist model when re-showing form
+Private PreserveModel As Boolean  ' Used to persist model when re-showing form
 
 Private RestoreHighlighting As Boolean
 Private sheet As Worksheet
@@ -164,14 +164,14 @@ End Sub
 Private Sub cmdChange_Click()
     Dim frmSolverChange As FSolverChange
     Set frmSolverChange = New FSolverChange
-    #If Mac Then
-        frmSolverChange.Show
-    #Else
-        frmSolverChange.Show vbModal
-    #End If
+    
+    Me.Hide  '  Hide the model form so the refedit on the options form works, and to keep the focus clear
+    frmSolverChange.Show
     Unload frmSolverChange
+    
     FormatCurrentSolver
-    Disabler True
+    PreserveModel = True
+    Me.Show
 End Sub
 
 Sub FormatCurrentSolver()
@@ -186,21 +186,18 @@ Private Sub cmdOptions_Click()
 4267      SetNonNegativity chkNonNeg.value
           Dim frmOptions As FOptions
           Set frmOptions = New FOptions
-          #If Mac Then
-              Me.Hide  ' Hide the model form so the refedit on the options form works
-4268          frmOptions.Show
-          #Else
-4269          frmOptions.Show vbModal
-          #End If
+          
+          Me.Hide  ' Hide the model form so the refedit on the options form works, and to keep the focus clear
+4268      frmOptions.Show
+          
           Unload frmOptions
 4270      chkNonNeg.value = GetNonNegativity
 
-          #If Mac Then
-              ' Restore the original model form
-              model.NonNegativityAssumption = chkNonNeg.value
-              PreserveModel = True
-              Me.Show
-          #End If
+          
+          ' Restore the original model form
+          model.NonNegativityAssumption = chkNonNeg.value
+          PreserveModel = True
+          Me.Show
 End Sub
 
 Private Sub cmdReset_Click()
@@ -388,23 +385,16 @@ Private Sub UserForm_QueryClose(Cancel As Integer, CloseMode As Integer)
 End Sub
 
 Private Sub cmdRunAutoModel_Click()
-#If Mac Then
     ' Refedits on Mac don't work if more than one form is shown, so we need to hide it
+    ' We also hide on windows to make sure that the forms don't hide each other
     Me.Hide
-#End If
 
     Dim NewModel As CModel
     Set NewModel = New CModel
     If RunAutoModel(sheet, False, NewModel) Then Set model = NewModel
     
-#If Mac Then
     PreserveModel = True
     Me.Show
-#Else
-    UpdateFormFromMemory
-    DoEvents
-#End If
-    
 End Sub
 
 Private Sub cmdBuild_Click()
