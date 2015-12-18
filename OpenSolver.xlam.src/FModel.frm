@@ -23,7 +23,6 @@ Const MinHeight = 140
 
 Private model As CModel
 
-Private ListItem As Long
 Private ConChangedMode As Boolean
 Private DontRepop As Boolean
 Private IsLoadingModel As Boolean
@@ -240,36 +239,50 @@ Private Sub AlterConstraints(DoDisable As Boolean)
 End Sub
 
 Private Sub refConLHS_Change()
-          If IsLoadingModel Then Exit Sub
-          
-          ' Compare to expected value
-          Dim DoDisable As Boolean
-4295      If ListItem >= 1 And Not model.Constraints Is Nothing Then
-4297          DoDisable = (RemoveActiveSheetNameFromString(refConLHS.Text) = model.Constraints(ListItem).LHS.Address)
-4306      ElseIf ListItem = 0 Then
-4307          DoDisable = (refConLHS.Text = "")
-4316      End If
-          AlterConstraints DoDisable
+    If IsLoadingModel Then Exit Sub
+    AlterConstraints Not HasConstraintChanged()
 End Sub
 
 Private Sub refConRHS_Change()
-          If IsLoadingModel Then Exit Sub
-          
-          ' Compare to expected value
-          Dim DoDisable As Boolean
-4318      If ListItem >= 1 And Not model.Constraints Is Nothing Then
-              Dim origRHS As String
-4319          If model.Constraints(ListItem).RHS Is Nothing Then
-4320              origRHS = model.Constraints(ListItem).RHSstring
-4321          Else
-4322              origRHS = model.Constraints(ListItem).RHS.Address
-4323          End If
-4324          DoDisable = (RemoveActiveSheetNameFromString(refConRHS.Text) = origRHS)
-4333      ElseIf ListItem = 0 Then
-4334          DoDisable = (refConLHS.Text = "")
-4343      End If
-          AlterConstraints DoDisable
+    If IsLoadingModel Then Exit Sub
+    AlterConstraints Not HasConstraintChanged()
 End Sub
+
+Private Sub cboConRel_Change()
+    refConRHS.Enabled = RelationHasRHS(RelationStringToEnum(cboConRel.Text))
+    AlterConstraints Not HasConstraintChanged()
+
+End Sub
+
+Private Function HasConstraintChanged() As Boolean
+    Dim LHSChanged As Boolean, RelChanged As Boolean, RHSChanged As Boolean
+
+    Dim OrigLHS As String, OrigRHS As String
+    ' If there is a selected constraint, we check against the original values
+    ' otherwise we compare to empty strings
+    If lstConstraints.ListIndex >= 1 And Not model.Constraints Is Nothing Then
+        Dim con As CConstraint
+        Set con = model.Constraints(lstConstraints.ListIndex)
+        
+        ' Check relation
+        If cboConRel.Text <> RelationEnumToString(con.RelationType) Then
+            RelChanged = True
+        End If
+        
+        ' Set original values
+        OrigLHS = con.LHS.Address
+        If con.RHS Is Nothing Then
+            OrigRHS = con.RHSstring
+        Else
+            OrigRHS = con.RHS.Address
+        End If
+    End If
+    LHSChanged = RemoveActiveSheetNameFromString(refConLHS.Text) <> OrigLHS
+    ' Only check the RHS if the relation uses RHS
+    RHSChanged = RelationHasRHS(RelationStringToEnum(cboConRel.Text)) And RemoveActiveSheetNameFromString(refConRHS.Text) <> OrigRHS
+    
+    HasConstraintChanged = LHSChanged Or RelChanged Or RHSChanged
+End Function
 
 Private Sub UserForm_Activate()
           CenterForm
@@ -330,7 +343,6 @@ Private Sub UserForm_Activate()
           FormatCurrentSolver
 
           ' Load the model on the sheet into memory
-4373      ListItem = -1
 4374      AlterConstraints True
           IsLoadingModel = False
 4378      DoEvents
@@ -509,16 +521,6 @@ ErrorHandler:
           GoTo ExitSub
 End Sub
 
-Private Sub cboConRel_Change()
-          refConRHS.Enabled = RelationHasRHS(RelationStringToEnum(cboConRel.Text))
-
-4483      If ListItem >= 1 And Not model.Constraints Is Nothing Then
-              Dim con As CConstraint
-              Set con = model.Constraints(ListItem)
-4485          AlterConstraints (cboConRel.Text = RelationEnumToString(con.RelationType))
-4494      End If
-End Sub
-
 Private Sub cmdAddCon_Click()
 4496      On Error GoTo ErrorHandler
 
@@ -579,7 +581,7 @@ Private Sub cmdAddCon_Click()
           Dim curCon As CConstraint
 4561      If cmdAddCon.Caption <> "Add constraint" Then
               ' Update constraint
-4562          Set curCon = model.Constraints(ListItem)
+4562          Set curCon = model.Constraints(lstConstraints.ListIndex)
 4585      Else
               ' Add constraint
               Set curCon = New CConstraint
@@ -631,8 +633,6 @@ Private Sub lstConstraints_Change()
 4647          AlterConstraints True
 4650          model.PopulateConstraintListBox lstConstraints, chkNameRange.value
 4651      End If
-
-4652      ListItem = lstConstraints.ListIndex
 
 4653      If lstConstraints.ListIndex = -1 Then
 4654          Exit Sub
