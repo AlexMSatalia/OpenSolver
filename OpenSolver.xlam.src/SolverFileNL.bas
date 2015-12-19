@@ -1318,7 +1318,7 @@ Private Function ConvertFormulaToExpressionTree(strFormula As String) As Express
 8065          Case TokenType.Reference
                   ' TODO this is a hacky way of distinguishing strings eg "A1" from model variables "Sheet_A1"
                   ' Obviously it will fail if the string has an underscore.
-                  If InStr(tkn.Text, "_") Then
+                  If InStr(tkn.Text, "_") > 0 Then
 8066                  Operands.Push CreateTree(tkn.Text, ExpressionTreeVariable)
                   Else
                       Operands.Push CreateTree(tkn.Text, ExpressionTreeString)
@@ -1823,10 +1823,13 @@ Sub ReadResults_NL(s As COpenSolver)
     s.SolutionWasLoaded = False
     
     If Not FileOrDirExists(s.SolutionFilePathName) Then
-        Err.Raise OpenSolver_SolveError, Description:= _
-            "The solver did not create a solution file. No new solution is available." & vbNewLine & vbNewLine & _
-            "This can happen when the initial conditions are invalid. " & _
-            "Check the log file for more information."
+        If Not GetExtraInfoFromLog(s) Then
+            CheckLog_NL s
+            Err.Raise OpenSolver_SolveError, Description:= _
+                "The solver did not create a solution file. No new solution is available." & vbNewLine & vbNewLine & _
+                "This can happen when the initial conditions are invalid. " & _
+                "Check the log file for more information."
+        End If
     Else
         UpdateStatusBar "OpenSolver: Reading Solution... ", True
     
@@ -1945,6 +1948,7 @@ Sub ReadResults_NL(s As COpenSolver)
         Case 400 To 499
             s.SolveStatus = OpenSolverResult.LimitedSubOptimal
             s.SolveStatusString = "Stopped on User Limit (Time/Iterations)"
+            GetExtraInfoFromLog s
         Case 500 To 599
             Err.Raise OpenSolver_SolveError, Description:= _
                 "There was an error while solving the model. The solver returned: " & _
@@ -1972,22 +1976,24 @@ ErrorHandler:
 End Sub
 
 Sub CheckSolveMessage(SolveMessage As String)
+    Dim LowerSolveMessage As String
+    LowerSolveMessage = LCase(SolveMessage)
     'Get the returned status code from solver.
-    If InStrText(SolveMessage, "optimal") Then
+    If InStr(LowerSolveMessage, "optimal") > 0 Then
         s.SolveStatus = OpenSolverResult.Optimal
         s.SolveStatusString = "Optimal"
-    ElseIf InStrText(SolveMessage, "infeasible") Then
+    ElseIf InStr(LowerSolveMessage, "infeasible") > 0 Then
         s.SolveStatus = OpenSolverResult.Infeasible
         s.SolveStatusString = "No Feasible Solution"
-    ElseIf InStrText(SolveMessage, "unbounded") Then
+    ElseIf InStr(LowerSolveMessage, "unbounded") > 0 Then
         s.SolveStatus = OpenSolverResult.Unbounded
         s.SolveStatusString = "No Solution Found (Unbounded)"
-    ElseIf InStrText(SolveMessage, "interrupted on limit") Then
+    ElseIf InStr(LowerSolveMessage, "interrupted on limit") > 0 Then
         s.SolveStatus = OpenSolverResult.LimitedSubOptimal
         s.SolveStatusString = "Stopped on User Limit (Time/Iterations)"
         ' See if we can find out which limit was hit from the log file
         GetExtraInfoFromLog s
-    ElseIf InStrText(SolveMessage, "interrupted by user") Then
+    ElseIf InStr(LowerSolveMessage, "interrupted by user") > 0 Then
         s.SolveStatus = OpenSolverResult.AbortedThruUserAction
         s.SolveStatusString = "Stopped on Ctrl-C"
     Else
@@ -2014,11 +2020,11 @@ Sub CheckLog_NL(s As COpenSolver)
           
           Dim message As String
 8483      Open s.LogFilePathName For Input As #3
-8484          message = Input$(LOF(3), 3)
+8484          message = LCase(Input$(LOF(3), 3))
 8485      Close #3
           
           ' We need to check > 0 explicitly, as the expression doesn't work without it
-8486      If Not InStrText(message, s.Solver.Name) > 0 Then
+8486      If Not InStr(message, LCase(s.Solver.Name)) > 0 Then
              ' Not dealing with the correct solver log, abort silently
 8488          GoTo ExitSub
 8489      End If
@@ -2026,13 +2032,13 @@ Sub CheckLog_NL(s As COpenSolver)
           ' Scan for parameter information
           Dim Key As Variant
           For Each Key In s.SolverParameters.Keys
-              If InStrText(message, "Unknown keyword " & Quote(CStr(Key))) Or _
-                 InStrText(message, Key & """. It is not a valid option.") Then
+              If InStr(message, LCase("Unknown keyword " & Quote(CStr(Key)))) > 0 Or _
+                 InStr(message, LCase(Key & """. It is not a valid option.")) > 0 Then
                   Err.Raise OpenSolver_SolveError, Description:= _
                       "The parameter '" & Key & "' was not recognised by the " & DisplayName(s.Solver) & " solver. " & _
                       "Please check that this name is correct, or consult the solver documentation for more information."
               End If
-              If InStrText(message, "not a valid setting for Option: " & Key) Then
+              If InStr(message, LCase("not a valid setting for Option: " & Key)) > 0 Then
                   Err.Raise OpenSolver_SolveError, Description:= _
                       "The value specified for the parameter '" & Key & "' was invalid. " & _
                       "Please check the OpenSolver log file for a description, or consult the solver documentation for more information."
@@ -2041,13 +2047,13 @@ Sub CheckLog_NL(s As COpenSolver)
 
           Dim BadFunction As Variant
           For Each BadFunction In Array("max", "min")
-              If InStrText(message, BadFunction & " not implemented") Then
+              If InStr(message, LCase(BadFunction & " not implemented")) > 0 Then
                   Err.Raise OpenSolver_SolveError, Description:= _
                       "The '" & BadFunction & "' function is not supported by the " & DisplayName(s.Solver) & " solver"
               End If
           Next BadFunction
           
-          If InStr(message, "unknown operator") Then
+          If InStr(message, LCase("unknown operator")) > 0 Then
               Err.Raise OpenSolver_SolveError, Description:= _
                   "A function in the model is not supported by the " & DisplayName(s.Solver) & " solver. " & _
                   "This is likely to be either MIN or MAX"
@@ -2075,25 +2081,25 @@ Function GetExtraInfoFromLog(s As COpenSolver) As Boolean
 
     Dim message As String
     Open s.LogFilePathName For Input As #3
-    message = Input$(LOF(3), 3)
+    message = LCase(Input$(LOF(3), 3))
     Close #3
 
     ' 1 - scan for time limit
-    If InStrText(message, "exiting on maximum time") Then
+    If InStr(message, LCase("exiting on maximum time")) > 0 Then
         s.SolveStatus = OpenSolverResult.LimitedSubOptimal
         s.SolveStatusString = "Stopped on Time Limit"
         GetExtraInfoFromLog = True
         GoTo ExitFunction
     End If
     ' 2 - scan for iteration limit
-    If InStrText(message, "exiting on maximum number of iterations") Then
+    If InStr(message, LCase("exiting on maximum number of iterations")) > 0 Then
         s.SolveStatus = OpenSolverResult.LimitedSubOptimal
         s.SolveStatusString = "Stopped on Iteration Limit"
         GetExtraInfoFromLog = True
         GoTo ExitFunction
     End If
     ' 3 - scan for infeasible. Don't look just for "infeasible", it is shown a lot even in optimal solutions
-    If InStrText(message, "The LP relaxation is infeasible or too expensive") Then
+    If InStr(message, LCase("The LP relaxation is infeasible or too expensive")) > 0 Then
         s.SolveStatus = OpenSolverResult.Infeasible
         s.SolveStatusString = "No Feasible Solution"
         GetExtraInfoFromLog = True

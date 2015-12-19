@@ -421,17 +421,17 @@ Private Sub CheckLog(s As COpenSolver)
     
     Dim message As String
     Open s.LogFilePathName For Input As #1
-        message = Input$(LOF(1), 1)
+        message = LCase(Input$(LOF(1), 1))
     Close #1
     
     Dim Key As Variant
     For Each Key In s.SolverParameters.Keys
-        If InStrText(message, "parameter " & Key & " value remains") Then
+        If InStr(message, LCase("parameter " & Key & " value remains")) > 0 Then
             Err.Raise OpenSolver_SolveError, Description:= _
                 "The value for the parameter '" & Key & "' supplied to CBC was invalid. " & _
                 "Please check the value you have specified, or consult the CBC documentation for more information."
         End If
-        If InStrText(message, "No match for " & Key) Then
+        If InStr(message, LCase("No match for " & Key)) > 0 Then
             Err.Raise OpenSolver_SolveError, Description:= _
                 "The parameter '" & Key & "' was not recognised by CBC. " & _
                 "Please check the parameter name you have specified, or consult the CBC documentation for more information."

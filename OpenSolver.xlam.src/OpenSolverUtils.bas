@@ -738,11 +738,6 @@ ErrorHandler:
           GoTo ExitFunction
 End Function
 
-Function InStrText(String1 As String, String2 As String)
-' Case-insensitive InStr helper
-    InStrText = InStr(1, String1, String2, vbTextCompare)
-End Function
-
 Public Function TestKeyExists(ByRef col As Collection, Key As String) As Boolean
           On Error GoTo doesntExist:
           Dim Item As Variant

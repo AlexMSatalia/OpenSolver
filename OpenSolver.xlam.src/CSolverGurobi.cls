@@ -376,7 +376,7 @@ Sub ReadResults(s As COpenSolver)
                 
                 ' Check for an exponent that is too large, rougly >300
                 ' Only do it for -ve exponents, since e-30 ~= e-300
-                Index = InStrText(FinalValue, "e-")
+                Index = InStr(LCase(FinalValue), "e-")
                 If Index > 0 Then
                     ' Trim the final digit if the exponent has 3 digits
                     If Len(FinalValue) - Index - 1 > 2 Then
@@ -443,12 +443,12 @@ Private Sub CheckLog(s As COpenSolver)
     
     Dim message As String
     Open s.LogFilePathName For Input As #1
-        message = Input$(LOF(1), 1)
+        message = LCase(Input$(LOF(1), 1))
     Close #1
 
     Dim Key As Variant
     For Each Key In s.SolverParameters.Keys
-        If InStrText(message, "No parameters matching '" & Key & "' found") Then
+        If InStr(message, LCase("No parameters matching '" & Key & "' found")) > 0 Then
             Err.Raise OpenSolver_SolveError, Description:= _
                 "The parameter '" & Key & "' was not recognised by Gurobi. " & _
                 "Please check the parameter name you have specified, or consult the Gurobi documentation for more information."

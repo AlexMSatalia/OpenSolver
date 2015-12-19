@@ -600,12 +600,12 @@ Sub CheckLog(s As COpenSolver)
     
     Dim message As String
     Open s.LogFilePathName For Input As #3
-        message = Input$(LOF(3), 3)
+        message = LCase(Input$(LOF(3), 3))
     Close #3
     
-    If Not InStrText(message, "NOMAD") > 0 Then GoTo ExitSub
+    If Not InStr(message, LCase("NOMAD")) > 0 Then GoTo ExitSub
 
-    If InStrText(message, "invalid parameter: DIMENSION") Then
+    If InStr(message, LCase("invalid parameter: DIMENSION")) > 0 Then
         Dim MaxSize As Long, Position As Long
         Position = InStrRev(message, " ")
         MaxSize = CLng(Mid(message, Position + 1, InStrRev(message, ")") - Position - 1))
@@ -614,15 +614,15 @@ Sub CheckLog(s As COpenSolver)
     
     Dim Key As Variant
     For Each Key In s.SolverParameters.Keys()
-        If InStrText(message, "invalid parameter: " & UCase(Key) & " - unknown") Then
+        If InStr(message, LCase("invalid parameter: " & Key & " - unknown")) > 0 Then
             Err.Raise OpenSolver_NomadError, Description:="The parameter '" & UCase(Key) & "' was not understood by NOMAD. Check that you have specified a valid parameter name, or consult the NOMAD documentation for more information."
         End If
-        If InStrText(message, "invalid parameter: " & UCase(Key)) Then
+        If InStr(message, LCase("invalid parameter: " & Key)) > 0 Then
             Err.Raise OpenSolver_NomadError, Description:="The value of the parameter '" & UCase(Key) & "' supplied to NOMAD was invalid. Check that you have specified a valid value for this parameter, or consult the NOMAD documentation for more information."
         End If
     Next Key
         
-    If InStrText(message, "invalid parameter") Then
+    If InStr(message, LCase("invalid parameter")) > 0 Then
         Err.Raise OpenSolver_NomadError, Description:="One of the parameters supplied to NOMAD was invalid. This usually happens if the precision is too large. Try adjusting the values in the Solve Options dialog box."
     End If
 
