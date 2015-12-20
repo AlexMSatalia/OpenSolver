@@ -211,6 +211,7 @@ Private Sub GetPid(ExecInfo As ExecInformation)
             result = result & chunk
         End If
     Loop
+    pclose file
     ExecInfo.pid = Int(Val(result))
 End Sub
 #End If  ' Mac
