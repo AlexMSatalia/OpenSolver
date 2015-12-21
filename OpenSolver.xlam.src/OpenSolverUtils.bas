@@ -284,18 +284,19 @@ ErrorHandler:
           GoTo ExitFunction
 End Function
 
-Sub PopulateSolverParameters(Solver As ISolver, sheet As Worksheet, SolverParameters As Dictionary, SolveOptions As SolveOptionsType)
+Function GetSolverParametersDict(Solver As ISolver, sheet As Worksheet) As Dictionary
           Dim RaiseError As Boolean
           RaiseError = False
           On Error GoTo ErrorHandler
           
-          ' First we fill all info from the SolveOptions. These can then be overridden by the parameters defined on the sheet
-          With SolveOptions
-              If PrecisionAvailable(Solver) Then SolverParameters.Add Key:=Solver.PrecisionName, Item:=.Precision
-              If TimeLimitAvailable(Solver) Then SolverParameters.Add Key:=Solver.TimeLimitName, Item:=.MaxTime
-              If IterationLimitAvailable(Solver) Then SolverParameters.Add Key:=Solver.IterationLimitName, Item:=.MaxIterations
-              If ToleranceAvailable(Solver) Then SolverParameters.Add Key:=Solver.ToleranceName, Item:=.Tolerance
-          End With
+          Dim SolverParameters As Dictionary
+          Set SolverParameters = New Dictionary
+          
+          ' First we fill all info from the saved options. These can then be overridden by the parameters defined on the sheet
+          If PrecisionAvailable(Solver) Then SolverParameters.Add Key:=Solver.PrecisionName, Item:=GetPrecision(sheet)
+          If TimeLimitAvailable(Solver) Then SolverParameters.Add Key:=Solver.TimeLimitName, Item:=GetMaxTime(sheet)
+          If IterationLimitAvailable(Solver) Then SolverParameters.Add Key:=Solver.IterationLimitName, Item:=GetMaxIterations(sheet)
+          If ToleranceAvailable(Solver) Then SolverParameters.Add Key:=Solver.ToleranceName, Item:=GetTolerance(sheet)
           
           ' The user can define a set of parameters they want to pass to the solver; this gets them as a dictionary. MUST be on the current sheet
           Dim ParametersRange As Range, i As Long
@@ -313,15 +314,17 @@ Sub PopulateSolverParameters(Solver As ISolver, sheet As Worksheet, SolverParame
 6116          Next i
 6117      End If
 
-ExitSub:
+          Set GetSolverParametersDict = SolverParameters
+
+ExitFunction:
           If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
-          Exit Sub
+          Exit Function
 
 ErrorHandler:
-          If Not ReportError("OpenSolverUtils", "PopulateSolverParameters") Then Resume
+          If Not ReportError("OpenSolverUtils", "GetSolverParametersDict") Then Resume
           RaiseError = True
-          GoTo ExitSub
-End Sub
+          GoTo ExitFunction
+End Function
 
 Function ParametersToKwargs(SolverParameters As Dictionary) As String
           Dim RaiseError As Boolean
@@ -407,34 +410,6 @@ ExitSub:
 
 ErrorHandler:
           If Not ReportError("SolverFileNL", "OutputOptionsFile") Then Resume
-          RaiseError = True
-          GoTo ExitSub
-End Sub
-
-Sub GetSolveOptions(sheet As Worksheet, SolveOptions As SolveOptionsType)
-          ' Get the Solver Options, stored in named ranges with values such as "=0.12"
-          ' Because these are NAMEs, they are always in English, not the local language, so get their value using Val
-          Dim RaiseError As Boolean
-          RaiseError = False
-          On Error GoTo ErrorHandler
-
-416       SetAnyMissingDefaultSolverOptions ' This can happen if they have created the model using an old version of OpenSolver
-417       With SolveOptions
-418           .MaxTime = GetMaxTime(sheet:=sheet)
-419           .MaxIterations = GetMaxIterations(sheet:=sheet)
-420           .Precision = GetPrecision(sheet:=sheet)
-421           .Tolerance = GetTolerance(sheet:=sheet)  ' Stored as a value between 0 and 1 (representing a percentage)
-422           .ShowIterationResults = GetShowSolverProgress(sheet:=sheet)
-423       End With
-
-ExitSub:
-          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
-          Exit Sub
-
-ErrorHandler:
-          On Error Resume Next
-          Err.Raise OpenSolver_SolveError, Description:="No Solve options (such as Tolerance) could be found - perhaps a model has not been defined on this sheet?"
-          If Not ReportError("OpenSolverUtils", "GetSolveOptions") Then Resume
           RaiseError = True
           GoTo ExitSub
 End Sub
@@ -821,6 +796,7 @@ ErrorHandler:
     GoTo ExitFunction
 End Function
 
+#If Win32 Then
 Private Sub fHandleFile(FilePath As String, WindowStyle As Long)
     ' Used to open a URL - Code Courtesy of Dev Ashish
     Dim lRet As Long
@@ -851,6 +827,7 @@ Private Sub fHandleFile(FilePath As String, WindowStyle As Long)
         End Select
     End If
 End Sub
+#End If
 
 Function SystemIs64Bit() As Boolean
           #If Mac Then

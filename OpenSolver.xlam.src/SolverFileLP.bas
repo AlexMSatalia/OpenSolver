@@ -28,7 +28,7 @@ Sub WriteLPFile_Diff(s As COpenSolver, ModelFilePathName As String)
 1615      Open ModelFilePathName For Output As #1 ' supply path with filename
 1616      Print #1, commentStart & " Model solved using the solver '" & DisplayName(s.Solver) & "'"
 1617      Print #1, commentStart & " Model for sheet " & s.sheet.Name
-1619      Print #1, commentStart & " Model has " & s.NumConstraints & " Excel constraints giving " & s.NumRows & " constraint rows and " & s.numVars & " variables."
+1619      Print #1, commentStart & " Model has " & s.NumConstraints & " Excel constraints giving " & s.NumRows & " constraint rows and " & s.NumVars & " variables."
 1620      If s.SolveRelaxation And (s.NumBinVars > 0) Then
 1621          Print #1, commentStart & " (Formulation for relaxed problem)"
 1622      End If
@@ -39,7 +39,7 @@ Sub WriteLPFile_Diff(s As COpenSolver, ModelFilePathName As String)
 1626          Print #1, ' A new line meaning a blank objective; add a comment to this effect next
 1628          Print #1, commentStart & " We have no objective function as the objective must achieve a given target value"
 1629      Else
-1631          For var = 1 To s.numVars
+1631          For var = 1 To s.NumVars
 1632              'If Abs(s.CostCoeffs(var)) > EPSILON Then
                       VarName = ValidLPFileVarName(s.VarNames(var))
                       If s.AssumeNonNegativeVars Then
@@ -60,7 +60,7 @@ Sub WriteLPFile_Diff(s As COpenSolver, ModelFilePathName As String)
 1638      If s.ObjectiveSense = TargetObjective Then
 1639          Print #1, commentStart & " The objective must achieve a given target value; this constraint enforces this."
               Dim NonTrivialObjective As Boolean
-1640          For var = 1 To s.numVars
+1640          For var = 1 To s.NumVars
 1641              If Abs(s.CostCoeffs(var)) > EPSILON Then
                       VarName = ValidLPFileVarName(s.VarNames(var))
                       If s.AssumeNonNegativeVars Then
@@ -80,12 +80,10 @@ Sub WriteLPFile_Diff(s As COpenSolver, ModelFilePathName As String)
 1652          End If
 1653      End If
           
-          Dim constraint As Long
-          Dim instance As Long
-1654      constraint = 1
-          
+          Dim constraint As Long, instance As Long
 1655      For row = 1 To s.NumRows
-1656          s.GetConstraintFromRow row, constraint, instance  ' Which Excel constraint are we in, and which instance?
+              constraint = s.RowToConstraint(row)
+              instance = s.GetConstraintInstance(row, constraint)
 1657          If instance = 1 Then
                   ' We are outputting the first row of a new Excel constraint block; put a comment in the .lp file
 1658              Print #1, commentStart & " " & s.ConstraintSummary(constraint)
@@ -104,17 +102,14 @@ Sub WriteLPFile_Diff(s As COpenSolver, ModelFilePathName As String)
 1666          End With
               
 1667          If s.SparseA(row).Count = 0 Then
-                ' We have a constraint that does not vary with the decision variables; check it is satisfied
-1668            If s.CheckConstantConstraintIsSatisfied(row, constraint, instance, i, j) Then
-                    ' We output the row as a comment
-1669                Print #1, commentStart & " (A row with all zero coeffs)";
-1670            Else
-1671                GoTo ExitSub
-1672            End If
+                  ' This constraint must be trivially satisfied!
+                  ' We output the row as a comment
+1669              Print #1, commentStart & " (A row with all zero coeffs)";
 1673          End If
 1674
-1681          Print #1, RelationToLPString(s.Relation(row)) & StrEx(s.RHS(row))
+1681          Print #1, RelationToLPString(s.Relation(constraint)) & StrEx(s.RHS(row))
 1682      Next row
+
 1683      Print #1,   ' New line
 1692      Print #1, "BOUNDS"
           Print #1,   ' New line

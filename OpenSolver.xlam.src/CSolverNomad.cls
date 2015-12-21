@@ -215,14 +215,6 @@ Private Sub Solve(s As COpenSolver)
     Dim ScreenStatus As Boolean
     ScreenStatus = Application.ScreenUpdating
     Application.ScreenUpdating = GetShowSolverProgress()
-
-    ' Check precision is not 0
-    Dim SolveOptions As SolveOptionsType
-    GetSolveOptions s.sheet, SolveOptions
-    
-    If SolveOptions.Precision <= 0 Then
-        Err.Raise Number:=OpenSolver_NomadError, Description:="The current level of precision (" & CStr(SolveOptions.Precision) & ") is invalid. Please set the precision to a small positive (non-zero) value and try again."
-    End If
     
     Dim currentDir As String
     currentDir = CurDir

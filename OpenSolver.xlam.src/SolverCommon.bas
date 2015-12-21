@@ -86,7 +86,7 @@ Sub SolveModel(s As COpenSolver, ShouldSolveRelaxation As Boolean, ShouldMinimis
         
         ' Write file
         Dim SolverCommand As String
-        UpdateStatusBar "OpenSolver: Writing Model to disk... " & s.numVars & " vars, " & s.NumRows & " rows.", True
+        UpdateStatusBar "OpenSolver: Writing Model to disk... " & s.NumVars & " vars, " & s.NumRows & " rows.", True
         SolverCommand = WriteModelFile(s)
         
         ' Check if anything detected while writing file
@@ -100,16 +100,6 @@ Sub SolveModel(s As COpenSolver, ShouldSolveRelaxation As Boolean, ShouldMinimis
         s.LoadResultsToSheet
         
         If TypeOf s.Solver Is ISolverLinear Then
-            ' Perform a linearity check unless the user has requested otherwise
-            If GetLinearityCheck() Then
-                Dim fullLinearityCheckWasPerformed As Boolean
-                QuickLinearityCheck fullLinearityCheckWasPerformed, s
-                If fullLinearityCheckWasPerformed Then
-                    s.SolveStatus = OpenSolverResult.AbortedThruUserAction
-                    s.SolveStatusString = "No Solution Found"
-                End If
-            End If
-            
             ' Get sensitivity results
             If s.bGetDuals And s.SolveStatus = OpenSolverResult.Optimal Then
                 'write the duals on the same sheet if the user has picked this option
@@ -302,7 +292,7 @@ Sub RunLocalSolver(s As COpenSolver, ExternalCommand As String)
     On Error GoTo ErrorHandler
 
     UpdateStatusBar "OpenSolver: Solving " & IIf(s.SolveRelaxation, "Relaxed ", "") & "Model... " & _
-                    s.numVars & " vars, " & _
+                    s.NumVars & " vars, " & _
                     s.NumIntVars & " int vars " & "(" & s.NumBinVars & " bin), " & _
                     s.NumRows & " rows, " & _
                     s.SolverParameters.Item(s.Solver.TimeLimitName) & "s time limit, " & _

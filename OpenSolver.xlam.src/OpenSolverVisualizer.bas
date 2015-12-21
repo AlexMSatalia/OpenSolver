@@ -504,8 +504,8 @@ Function ShowSolverModel(Optional sheet As Worksheet) As Boolean
           
 3332      UpdateStatusBar "OpenSolver: Displaying Problem... " & AdjustableCells.Count & " vars, " & NumConstraints & " Solver constraints", True
                   
-          Dim numVars As Long
-3333      numVars = AdjustableCells.Count
+          Dim NumVars As Long
+3333      NumVars = AdjustableCells.Count
           Dim BinaryCellsRange As Range
           Dim IntegerCellsRange As Range
           Dim NonAdjustableCellsRange As Range
@@ -575,7 +575,7 @@ NextConstraint:
 
           ' Mark integer and binary variables
           Dim selectedArea As Range
-3399      If numVars > 200 Then
+3399      If NumVars > 200 Then
 3400          AddBinaryIntegerBlockLabels BinaryCellsRange, "binary"
 3406          AddBinaryIntegerBlockLabels IntegerCellsRange, "integer"
 3421      Else

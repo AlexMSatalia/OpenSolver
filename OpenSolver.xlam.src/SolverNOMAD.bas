@@ -23,7 +23,7 @@ End Enum
 
 Private Type VariableData
     X() As Variant
-    numVars As Long
+    NumVars As Long
 End Type
 
 ' NOMAD functions
@@ -53,14 +53,14 @@ Function NOMAD_UpdateVar(X As Variant, Optional BestSolution As Variant = Nothin
 7124      End If
 7125      UpdateStatusBar status, (IterationCount = 1)
 
-          Dim i As Long, numVars As Long
+          Dim i As Long, NumVars As Long
           'set new variable values on sheet
-2452      numVars = UBound(X)
+2452      NumVars = UBound(X)
 2453      i = 1
           Dim AdjCell As Range
           ' If only one variable is returned, X is treated as a 1D array rather than 2D, so we need to access it
           ' differently.
-2454      If numVars = 1 Then
+2454      If NumVars = 1 Then
 2455          For Each AdjCell In OS.AdjustableCells
 2456              AdjCell.Value2 = X(i)
 2457              i = i + 1
@@ -122,15 +122,15 @@ Function NOMAD_GetValues() As Variant
                   ' Get current value(s) for LHS and RHS of this constraint off the sheet. LHS is always an array (even if 1x1)
 2487              OS.GetCurrentConstraintValues constraint, CurrentLHSValues, CurrentRHSValues
 2488              If OS.LHSType(constraint) = SolverInputType.MultiCellRange Then
-2489                  For i = 1 To UBound(OS.LHSOriginalValues(constraint), 1)
-2490                      For j = 1 To UBound(OS.LHSOriginalValues(constraint), 2)
+2489                  For i = 1 To UBound(CurrentLHSValues, 1)
+2490                      For j = 1 To UBound(CurrentLHSValues, 2)
 2491                          If OS.RowSetsBound(row) = False Then
 2492                              If OS.RHSType(constraint) <> SolverInputType.MultiCellRange Then
-2493                                  SetConstraintValue X, k, CurrentRHSValues, CurrentLHSValues(i, j), OS.Relation(row)
-2494                              ElseIf UBound(OS.LHSOriginalValues(constraint), 1) = UBound(OS.RHSOriginalValues(constraint), 1) Then
-2495                                  SetConstraintValue X, k, CurrentRHSValues(i, j), CurrentLHSValues(i, j), OS.Relation(row)
+2493                                  SetConstraintValue X, k, CurrentRHSValues, CurrentLHSValues(i, j), OS.Relation(constraint)
+2494                              ElseIf UBound(CurrentLHSValues, 1) = UBound(CurrentRHSValues, 1) Then
+2495                                  SetConstraintValue X, k, CurrentRHSValues(i, j), CurrentLHSValues(i, j), OS.Relation(constraint)
 2496                              Else
-2497                                  SetConstraintValueMismatchedDims X, k, CurrentRHSValues, CurrentLHSValues, OS.Relation(row), i, j
+2497                                  SetConstraintValueMismatchedDims X, k, CurrentRHSValues, CurrentLHSValues, OS.Relation(constraint), i, j
 2498                              End If
 2499                          End If
 2500                          row = row + 1
@@ -138,7 +138,7 @@ Function NOMAD_GetValues() As Variant
 2502                  Next i
 2503              Else
 2504                  If OS.RowSetsBound(row) = False Then
-2505                      SetConstraintValue X, k, CurrentRHSValues, CurrentLHSValues(1, 1), OS.Relation(row)
+2505                      SetConstraintValue X, k, CurrentRHSValues, CurrentLHSValues(1, 1), OS.Relation(constraint)
 2506                  End If
 2507                  row = row + 1
 2508              End If
@@ -199,10 +199,11 @@ Function NOMAD_GetNumConstraints() As Variant
           Dim NumCons As Long
 2540      NumCons = 0
 
-          Dim row As Long
+          Dim row As Long, constraint As Long
 2541      For row = 1 To OS.NumRows
+              constraint = OS.RowToConstraint(row)
 2542          If OS.RowSetsBound(row) = False Then NumCons = NumCons + 1
-2543          If OS.Relation(row) = RelationEQ Then NumCons = NumCons + 1
+2543          If OS.Relation(constraint) = RelationEQ Then NumCons = NumCons + 1
 2544      Next row
 
           'Number of objectives - NOMAD can do bi-objective
@@ -231,9 +232,9 @@ Function NOMAD_GetVariableData() As Variant
           Application.EnableCancelKey = xlErrorHandler
           
           Dim data As VariableData
-2547      data.numVars = NOMAD_GetNumVariables
+2547      data.NumVars = NOMAD_GetNumVariables
 
-2548      ReDim data.X(1 To 4 * data.numVars)
+2548      ReDim data.X(1 To 4 * data.NumVars)
 
           Dim DefaultLowerBound As Double, DefaultUpperBound As Double
           DefaultLowerBound = IIf(OS.AssumeNonNegativeVars, 0, -10000000000000#)
@@ -487,27 +488,27 @@ Private Sub SetLowerBound(ByRef data As VariableData, i As Long, value As Double
 End Sub
 
 Private Function GetUpperBound(data As VariableData, i As Long) As Double
-    GetUpperBound = data.X(data.numVars + i)
+    GetUpperBound = data.X(data.NumVars + i)
 End Function
 
 Private Sub SetUpperBound(ByRef data As VariableData, i As Long, value As Double)
-    data.X(data.numVars + i) = value
+    data.X(data.NumVars + i) = value
 End Sub
 
 Private Function GetStartingPoint(data As VariableData, i As Long) As Double
-    GetStartingPoint = data.X(2 * data.numVars + i)
+    GetStartingPoint = data.X(2 * data.NumVars + i)
 End Function
 
 Private Sub SetStartingPoint(ByRef data As VariableData, i As Long, value As Double)
-    data.X(2 * data.numVars + i) = value
+    data.X(2 * data.NumVars + i) = value
 End Sub
 
 Private Function GetVarType(data As VariableData, i As Long) As VariableType
-    GetVarType = data.X(3 * data.numVars + i)
+    GetVarType = data.X(3 * data.NumVars + i)
 End Function
 
 Private Sub SetVarType(ByRef data As VariableData, i As Long, value As VariableType)
-    data.X(3 * data.numVars + i) = value
+    data.X(3 * data.NumVars + i) = value
 End Sub
 
 #If Mac Then
@@ -605,6 +606,10 @@ Sub CheckLog(s As COpenSolver)
     
     If Not InStr(message, LCase("NOMAD")) > 0 Then GoTo ExitSub
 
+    If InStr(message, LCase("invalid epsilon")) > 0 Then
+        Err.Raise OpenSolver_NomadError, Description:="The specified precision was not a valid value for NOMAD. Check that you have specified a value above zero, or consult the NOMAD documentation for more information."
+    End If
+    
     If InStr(message, LCase("invalid parameter: DIMENSION")) > 0 Then
         Dim MaxSize As Long, Position As Long
         Position = InStrRev(message, " ")
@@ -615,10 +620,10 @@ Sub CheckLog(s As COpenSolver)
     Dim Key As Variant
     For Each Key In s.SolverParameters.Keys()
         If InStr(message, LCase("invalid parameter: " & Key & " - unknown")) > 0 Then
-            Err.Raise OpenSolver_NomadError, Description:="The parameter '" & UCase(Key) & "' was not understood by NOMAD. Check that you have specified a valid parameter name, or consult the NOMAD documentation for more information."
+            Err.Raise OpenSolver_NomadError, Description:="The parameter '" & Key & "' was not understood by NOMAD. Check that you have specified a valid parameter name, or consult the NOMAD documentation for more information."
         End If
         If InStr(message, LCase("invalid parameter: " & Key)) > 0 Then
-            Err.Raise OpenSolver_NomadError, Description:="The value of the parameter '" & UCase(Key) & "' supplied to NOMAD was invalid. Check that you have specified a valid value for this parameter, or consult the NOMAD documentation for more information."
+            Err.Raise OpenSolver_NomadError, Description:="The value of the parameter '" & Key & "' supplied to NOMAD was invalid. Check that you have specified a valid value for this parameter, or consult the NOMAD documentation for more information."
         End If
     Next Key
         

@@ -13,7 +13,7 @@ Public Const sOpenSolverDate As String = "2015.06.28"
 ' */
 Public Function RunOpenSolver(Optional SolveRelaxation As Boolean = False, _
                               Optional MinimiseUserInteraction As Boolean = False, _
-                              Optional LinearityCheckOffset As Double = 10.423, _
+                              Optional LinearityOffset As Double = 10.423, _
                               Optional sheet As Worksheet) As OpenSolverResult
     CheckLocationValid  ' Check for unicode in path
     
@@ -30,7 +30,7 @@ Public Function RunOpenSolver(Optional SolveRelaxation As Boolean = False, _
     Dim OpenSolver As COpenSolver
     Set OpenSolver = New COpenSolver
 
-    OpenSolver.BuildModelFromSolverData LinearityCheckOffset, MinimiseUserInteraction, SolveRelaxation, sheet
+    OpenSolver.BuildModelFromSolverData LinearityOffset, GetLinearityCheck(sheet), MinimiseUserInteraction, SolveRelaxation, sheet
     ' Only proceed with solve if nothing detected while building model
     If OpenSolver.SolveStatus = OpenSolverResult.Unsolved Then
         SolveModel OpenSolver, SolveRelaxation, MinimiseUserInteraction
@@ -730,7 +730,7 @@ Public Sub InitializeQuickSolve(Optional SolveRelaxation As Boolean = False, Opt
     Dim ParamRange As Range
     Set ParamRange = GetQuickSolveParameters(sheet, True)  ' Throws error if missing
     Set QuickSolver = New COpenSolver
-    QuickSolver.BuildModelFromSolverData LinearityCheckOffset, MinimiseUserInteraction, SolveRelaxation, sheet
+    QuickSolver.BuildModelFromSolverData LinearityCheckOffset, GetLinearityCheck(sheet), MinimiseUserInteraction, SolveRelaxation, sheet
     QuickSolver.InitializeQuickSolve ParamRange
 
 ExitSub:

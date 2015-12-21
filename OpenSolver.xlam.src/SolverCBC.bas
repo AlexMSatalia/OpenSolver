@@ -28,11 +28,8 @@ Sub LaunchCommandLine_CBC()
 6351          Err.Raise OpenSolver_CBCError, Description:=errorString
 6352      End If
           
-          
-          Dim SolveOptions As SolveOptionsType, SolverParameters As New Dictionary
-          GetSolveOptions sheet, SolveOptions
-          Set SolverParameters = New Dictionary
-          PopulateSolverParameters Solver, sheet, SolverParameters, SolveOptions
+          Dim SolverParameters As New Dictionary
+          Set SolverParameters = GetSolverParametersDict(Solver, sheet)
           SolverParametersString = ParametersToFlags(SolverParameters)
              
 NoSheet:

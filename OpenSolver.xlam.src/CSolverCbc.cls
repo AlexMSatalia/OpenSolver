@@ -274,6 +274,9 @@ Private Sub ReadResults(s As COpenSolver)
     If s.SolutionWasLoaded Then
         ' We read in whatever solution CBC returned
         UpdateStatusBar "OpenSolver: Loading Solution... " & Response
+        
+        Dim m As CModelDiff
+        Set m = s.DiffModel
     
         Dim Line As String, SplitLine() As String, Index As Double, NameValue As String, value As Double, CBCConstraintIndex As Long, StartOffset As Long
         If s.bGetDuals Then
@@ -291,7 +294,7 @@ Private Sub ReadResults(s As COpenSolver)
 
             j = 1
             For row = 1 To s.NumRows
-                If s.GetSparseACount(row) = 0 Then
+                If s.SparseA(row).Count = 0 Then
                     ' This constraint was not written to the model, as it had no coefficients. Just ignore it.
                     s.rConstraintList.Cells(row, 2).ClearContents
                 Else

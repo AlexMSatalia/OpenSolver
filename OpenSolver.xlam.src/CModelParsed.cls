@@ -142,7 +142,7 @@ Private Function ParseFormulae() As Boolean
 4851          Set rngLHS = s.LHSRange(i)
               
               Dim rel As RelationConsts
-4852          rel = s.RELs(i)
+4852          rel = s.Relation(i)
               If Not RelationHasRHS(rel) Then GoTo NextCons
 
               Dim strRHS As String, rngRHS As Range

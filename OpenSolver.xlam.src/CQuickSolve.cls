@@ -75,14 +75,23 @@ Function AnalyseParameters(s As COpenSolver, ParamRange As Range) As Boolean
 2642      Application.ScreenUpdating = False
           
           Dim param As Long, row As Long, NonZeros As Long, constraint As Long
-          Dim CurrentLHSValues  As Variant, CurrentRHSValues As Variant
+          Dim CurrentLHSValues As Variant, CurrentRHSValues As Variant
 2643      param = 0
           
 2644      If NumRows > 0 And NumParams > 0 Then ReDim SparseA(NumRows)
 2645      For row = 1 To NumRows
 2646          Set SparseA(row) = New CIndexedCoeffs
 2647      Next row
-         
+          
+          Dim LHSOriginalValues() As Variant, RHSOriginalValues() As Variant
+          ReDim LHSOriginalValues(s.NumConstraints)
+          ReDim RHSOriginalValues(s.NumConstraints)
+          For constraint = 1 To s.NumConstraints
+              If Not s.LHSRange(constraint) Is Nothing Then
+                  s.GetCurrentConstraintValues constraint, LHSOriginalValues(constraint), RHSOriginalValues(constraint)
+              End If
+          Next constraint
+          
 2648      For Each c In ParamRange
 2649          If c.HasArray Then
 2650              Err.Raise OpenSolver_BuildError, Description:="QuickSolve Initialisation Failed: OpenSolver cannot perform quick solves for parameters that contain array formulae."
@@ -108,8 +117,8 @@ Function AnalyseParameters(s As COpenSolver, ParamRange As Range) As Boolean
 2666              If Not s.LHSRange(constraint) Is Nothing Then ' skip Binary and Integer constraints
                       Dim OriginalLHSValues As Variant
                       Dim OriginalRHSValues As Variant
-2667                  OriginalLHSValues = s.LHSOriginalValues(constraint)
-2668                  OriginalRHSValues = s.RHSOriginalValues(constraint)
+2667                  OriginalLHSValues = LHSOriginalValues(constraint)
+2668                  OriginalRHSValues = RHSOriginalValues(constraint)
                       ' Get current value(s) for LHS and RHS of this constraint off the sheet. LHS is always an array (even if 1x1)
 2669                  s.GetCurrentConstraintValues constraint, CurrentLHSValues, CurrentRHSValues
                       'TODO Put in better error trapping for errors that occur on the s/sheet

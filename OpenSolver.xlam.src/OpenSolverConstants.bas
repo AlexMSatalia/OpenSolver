@@ -92,14 +92,6 @@ Public Enum VariableType
     VarBinary = 2
 End Enum
 
-Public Type SolveOptionsType
-    MaxTime As Long
-    MaxIterations As Long
-    Precision As Double
-    Tolerance As Double ' Tolerance, being allowable percentage gap. NB: Solver shows this as a percentage, but stores it as a value, eg 1% is stored as 0.01
-    ShowIterationResults As Boolean
-End Type
-
 Public Enum OpenSolver_FileType
     LP = 1
     AMPL = 2

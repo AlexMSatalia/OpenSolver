@@ -225,7 +225,7 @@ Private Sub InitialiseModelStats(s As COpenSolver)
           ' Initialise the ASL variables - see definitions for explanation of each variable
           
           ' Model statistics for line #1
-7564      problem_name = "'Sheet=" + s.sheetName + "'"
+7564      problem_name = "'Sheet=" + s.sheet.Name + "'"
           
           ' Model statistics for line #2
 7565      n_var = numActualVars + numFakeVars
@@ -1913,7 +1913,7 @@ Sub ReadResults_NL(s As COpenSolver)
         For i = 1 To NumVarsToRead
             Line Input #1, Line
             VarIndex = VariableNLIndexToCollectionIndex(i - 1)
-            If VarIndex <= s.numVars Then
+            If VarIndex <= s.NumVars Then
                 s.FinalVarValue(VarIndex) = Val(Line)
                 s.VarCell(VarIndex) = s.VarNames(VarIndex)
             End If

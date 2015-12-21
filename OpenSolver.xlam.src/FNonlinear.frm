@@ -16,8 +16,10 @@ Option Explicit
 
 #If Mac Then
     Const FormWidthNonLinear = 570
+    Const MinHeightNonLinear = 200
 #Else
     Const FormWidthNonLinear = 570
+    Const MinHeightNonLinear = 280
 #End If
 
 Private Sub cmdContinue_Click()
@@ -35,10 +37,18 @@ Private Sub UserForm_QueryClose(Cancel As Integer, CloseMode As Integer)
 End Sub
 
 Public Sub SetLinearityResult(resultString As String, IsQuickCheck As Boolean)
-    txtNonLinearInfo.Caption = resultString
+    With txtNonLinearInfo
+        .Locked = False
+        .Text = resultString
+        .Locked = True
+    End With
     chkFullCheck.Visible = IsQuickCheck
     AutoLayout
     CenterForm
+    With txtNonLinearInfo
+        .SelStart = 0
+        .SetFocus
+    End With
 End Sub
 
 Private Sub UserForm_Activate()
@@ -54,6 +64,10 @@ Private Sub AutoLayout()
         .Left = FormMargin
         .Top = FormMargin
         AutoHeight txtNonLinearInfo, Me.Width - 2 * FormMargin, True
+        If .Height > MinHeightNonLinear Then
+            .Height = MinHeightNonLinear
+            .Width = .Width + 20  ' margin for scrollbar
+        End If
     End With
     
     With cmdContinue
@@ -73,7 +87,7 @@ Private Sub AutoLayout()
     End With
     
     With chkFullCheck
-        .Caption = "Run a full linearity check. (This will destroy the current solution)"
+        .Caption = "Run a full linearity check."
         .Left = chkHighlight.Left
         .Top = Below(chkHighlight, False)
         AutoHeight chkFullCheck, LeftOfForm(Me.Width, .Left), True

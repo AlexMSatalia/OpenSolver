@@ -29,7 +29,7 @@ Sub WriteAMPLFile_Diff(s As COpenSolver, ModelFilePathName As String)
 1779       Print #1, "# used in defining the data items)"
            
            ' Variables
-1780       For var = 1 To s.numVars
+1780       For var = 1 To s.NumVars
 1781           VarDic.Add "", ValidLPFileVarName(s.VarNames(var))
 1782       Next var
            
@@ -53,10 +53,6 @@ Sub WriteAMPLFile_Diff(s As COpenSolver, ModelFilePathName As String)
 1794           Next c
 1796       End If
            
-           Dim constraint As Long
-           Dim instance As Long
-1797       constraint = 1
-           
            ' Reindex bounded variables by relative address so that VarNames(var) can search the collection
            Dim BoundedVariables As New Collection
 1798       For Each c In s.AdjustableCells
@@ -66,7 +62,7 @@ Sub WriteAMPLFile_Diff(s As COpenSolver, ModelFilePathName As String)
 1802       Next c
            
            ' Intialise Variables
-1803       For var = 1 To s.numVars
+1803       For var = 1 To s.NumVars
 1804           Line = "var " & ValidLPFileVarName(s.VarNames(var)) & VarDic.Item(ValidLPFileVarName(s.VarNames(var)))
 1805           If s.AssumeNonNegativeVars Then
                    ' If no lower bound has been applied then we need to add >= 0
@@ -80,15 +76,15 @@ Sub WriteAMPLFile_Diff(s As COpenSolver, ModelFilePathName As String)
            ' Parameter - Costs
 1812       Print #1,   ' New line
 1813       Line = "  "
-1814       For var = 1 To s.numVars
+1814       For var = 1 To s.NumVars
                If Abs(s.CostCoeffs(var)) > EPSILON Then
 1815               Line = Line & ValidLPFileVarName(s.VarNames(var)) & "*" & StrEx(s.CostCoeffs(var))
-1816               If var < s.numVars Then
+1816               If var < s.NumVars Then
 1817                   Line = Line & " + "
                    End If
 1818           End If
 1819       Next var
-           Line = Line & " " & StrEx(s.objValue)
+           Line = Line & " " & StrEx(s.ObjectiveFunctionConstant)
            
            ' Objective function replaced with constraint if
 1820       If s.ObjectiveSense = TargetObjective Then
@@ -113,7 +109,10 @@ Sub WriteAMPLFile_Diff(s As COpenSolver, ModelFilePathName As String)
            ' Subject to Constraints
 1835       For row = 1 To s.NumRows
 1836           Line = "   "
-1837           s.GetConstraintFromRow row, constraint, instance  ' Which Excel constraint are we in, and which instance?
+               
+               Dim constraint As Long, instance As Long
+               constraint = s.RowToConstraint(row)
+1837           instance = s.GetConstraintInstance(row, constraint)
 1838           If instance = 1 Then
                    ' We are outputting the first row of a new Excel constraint block; put a comment in the .lp file
 1839               Print #1, commentStart & " " & s.ConstraintSummary(constraint)
@@ -129,19 +128,14 @@ Sub WriteAMPLFile_Diff(s As COpenSolver, ModelFilePathName As String)
 1847           End With
               
               ' Check sense
-1848          Line = Line & RelationToAMPLString(s.Relation(row))
+1848          Line = Line & RelationToAMPLString(s.Relation(constraint))
               
               ' Add RHS
 1855          Line = Line & StrEx(s.RHS(row))
               
 1856          If s.SparseA(row).Count = 0 Then
-                  ' We have a constraint that does not vary with the decision variables; check it is satisfied
-1857              If s.CheckConstantConstraintIsSatisfied(row, constraint, instance, i, j) Then
-                      'We output the row as a comment
-1858                  Print #1, commentStart & " (A row with all zero coeffs)" & Line & ";"
-1859              Else
-1860                  GoTo ExitSub
-1861              End If
+                  ' This constraint must be satisfied trivially!
+1858              Print #1, commentStart & " (A row with all zero coeffs)" & Line & ";"
 1862          Else
                   'Output the constraint
 1863              Print #1, "subject to c" & row & ":"
@@ -160,7 +154,7 @@ Sub WriteAMPLFile_Diff(s As COpenSolver, ModelFilePathName As String)
 1872       Print #1, "solve;"
 1873       Print #1,   ' New line
            ' Display variables
-1874       For var = 1 To s.numVars
+1874       For var = 1 To s.NumVars
 1875           Print #1, "_display " & ValidLPFileVarName(s.VarNames(var)) & ";"
 1876       Next var
 
@@ -204,7 +198,7 @@ Sub WriteAMPLFile_Parsed(s As COpenSolver, ModelFilePathName As String)
           ' Define useful constants
 7191      WriteToFile 1, "param pi = 4 * atan(1);"
           
-7192      WriteToFile 1, "# 'Sheet=" + s.sheetName + "'"
+7192      WriteToFile 1, "# 'Sheet=" + s.sheet.Name + "'"
              
           Dim Line As String
               
