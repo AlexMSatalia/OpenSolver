@@ -412,13 +412,15 @@ Private Sub cmdBuild_Click()
           Application.Calculation = xlCalculationManual
 
           ' Pull possibly update objective info into model
-4414      On Error GoTo BadObjRef
 4415      If Trim(refObj.Text) = "" Then
 4416          Set model.ObjectiveFunctionCell = Nothing
 4417      Else
+              On Error GoTo BadObjRef
 4418          Set model.ObjectiveFunctionCell = sheet.Range(refObj.Text)
+              On Error GoTo ErrorHandler
+              ' Check objective is a single cell
+              If model.ObjectiveFunctionCell.Count <> 1 Then GoTo BadObjRef
 4419      End If
-4420      On Error GoTo ErrorHandler
 
           ' Get the objective sense
 4421      If optMax.value = True Then model.ObjectiveSense = MaximiseObjective
@@ -433,22 +435,23 @@ Private Sub cmdBuild_Click()
 4430          Err.Raise OpenSolver_ModelError, Description:="Please select an objective sense (minimise, maximise or target)."
 4432      End If
 
-          ' We allow multiple area ranges here, which requires ConvertFromCurrentLocale as delimiter can vary
-4433      On Error GoTo BadDecRef
 4434      If Trim(refDecision.Text) = "" Then
 4435          Set model.DecisionVariables = Nothing
 4436      Else
+4433          On Error GoTo BadDecRef
+              ' We allow multiple area ranges here, which requires ConvertFromCurrentLocale as delimiter can vary
 4437          Set model.DecisionVariables = sheet.Range(ConvertFromCurrentLocale(refDecision.Text))
+4439          On Error GoTo ErrorHandler
 4438      End If
-4439      On Error GoTo ErrorHandler
 
-4440      On Error GoTo BadDualsRef
 4441      If chkGetDuals.value = False Or Trim(refDuals.Text) = "" Then
 4442          Set model.Duals = Nothing
 4443      Else
+4440          On Error GoTo BadDualsRef
 4444          Set model.Duals = sheet.Range(refDuals.Text)
+4446          On Error GoTo ErrorHandler
+              If model.Duals.Count <> 1 Then GoTo BadDualsRef
 4445      End If
-4446      On Error GoTo ErrorHandler
 
 4447      model.NonNegativityAssumption = chkNonNeg.value
           
@@ -477,14 +480,14 @@ CalculateFailed:
 BadObjRef:
           ' Couldn't turn the objective cell address into a range
 4457      MsgBox "Error: the cell address for the objective is invalid. " + _
+                 "This must be a single cell on the active sheet. " & _
                  "Please correct this and try again.", vbExclamation + vbOKOnly, "OpenSolver"
 4458      refObj.SetFocus ' Set the focus back to the RefEdit
           GoTo ExitSub
-          '----------------------------------------------------------------
 BadDecRef:
           ' Couldn't turn the decision variable address into a range
 4461      MsgBox "Error: the cell range specified for the Variable Cells is invalid. " + _
-                 "This must be a valid Excel range that does not exceed Excel's internal character count limits. " + _
+                 "This must be a valid Excel range on the current sheet that does not exceed Excel's internal character count limits. " + _
                  "Please correct this and try again.", vbExclamation + vbOKOnly, "OpenSolver"
 4462      refDecision.SetFocus ' Set the focus back to the RefEdit
           GoTo ExitSub
@@ -497,6 +500,7 @@ BadObjectiveTarget:
 BadDualsRef:
           ' Couldn't turn the dual cell into a range
 4469      MsgBox "Error: the cell for storing the shadow prices is invalid. " + _
+                 "This must be a single cell on the active sheet. " & _
                  "Please correct this and try again.", vbExclamation + vbOKOnly, "OpenSolver"
 4470      refDuals.SetFocus ' Set the focus back to the target text box
           GoTo ExitSub
