@@ -27,6 +27,15 @@ Function CallNEOS(s As COpenSolver, OutgoingMessage As String) As String
               CallNEOS = CallNeos_Remote(s, OutgoingMessage)
           End If
           
+          If InStr(CallNEOS, "Error (2) in /opt/ampl/ampl -R amplin") > 0 Then
+              ' Check for any other error - the amplin error is shown for invalid parameters too
+              s.Solver.CheckLog s
+              Err.Raise OpenSolver_ModelError, Description:= _
+                  "NEOS was unable to solve the model because there was an error while running AMPL. " & _
+                  "Please let us know and send us a copy of your spreadsheet so that we can try to fix this error."
+          End If
+              
+          
 ExitFunction:
           If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
           Exit Function
