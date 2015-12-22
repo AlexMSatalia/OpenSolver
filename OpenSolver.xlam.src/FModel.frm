@@ -3,7 +3,7 @@ Begin {C62A69F0-16DC-11CE-9E98-00AA00574A4F} FModel
    Caption         =   "OpenSolver - Model"
    ClientHeight    =   8280
    ClientLeft      =   45
-   ClientTop       =   390
+   ClientTop       =   -975
    ClientWidth     =   9840
    OleObjectBlob   =   "FModel.frx":0000
 End
@@ -77,7 +77,7 @@ Sub Disabler(TrueIfEnable As Boolean)
 
 4175      chkNonNeg.Enabled = TrueIfEnable
 4176      cmdCancelCon.Enabled = Not TrueIfEnable
-4177      cmdDelSelCon.Enabled = TrueIfEnable
+4177      cmdDelSelCon.Enabled = TrueIfEnable And lstConstraints.ListIndex > 0
           chkNameRange.Enabled = TrueIfEnable
 
 4178      lblDiv4.Enabled = False
@@ -231,7 +231,7 @@ End Sub
 
 Private Sub AlterConstraints(DoDisable As Boolean)
           Disabler DoDisable
-          cmdAddCon.Enabled = Not DoDisable
+          cmdAddCon.Enabled = Not DoDisable Or lstConstraints.ListIndex = 0
           ConChangedMode = Not DoDisable
 End Sub
 
@@ -248,7 +248,6 @@ End Sub
 Private Sub cboConRel_Change()
     refConRHS.Enabled = RelationHasRHS(RelationStringToEnum(cboConRel.Text))
     AlterConstraints Not HasConstraintChanged()
-
 End Sub
 
 Private Function HasConstraintChanged() As Boolean
