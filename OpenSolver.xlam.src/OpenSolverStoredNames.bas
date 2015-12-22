@@ -89,8 +89,8 @@ Sub GetNameAsValueOrRange(book As Workbook, theName As String, IsMissing As Bool
 184           IsRange = True
 185       Else
 186           IsRange = False
-187           ' String will be of form: "=5", or "=Sheet1!#REF!" or "=Test4!$M$11/4+Test4!$A$3"
-189           If Right(RefersTo, 6) = "!#REF!" Then
+187           ' String will be of form: "5", or "Sheet1!#REF!" or "#REF!$A$1" or "Sheet1!$A$1/4+Sheet1!$A$3"
+189           If Right(RefersTo, 6) = "!#REF!" Or Left(RefersTo, 5) = "#REF!" Then
 191               RangeRefersToError = True
 192           Else
               ' If StrComp(Mid(S, 2, 1), Chr(34), vbBinaryCompare) = 0 Then
