@@ -129,7 +129,7 @@ Sub UpdateFormFromMemory()
 4215      refDecision.Text = ConvertToCurrentLocale(GetDisplayAddress(model.DecisionVariables))
 4218      refDuals.Text = GetDisplayAddress(model.Duals, False)
 
-4222      model.PopulateConstraintListBox lstConstraints, chkNameRange.value
+4222      model.PopulateConstraintListBox lstConstraints, chkNameRange.value, sheet
 4223      lstConstraints_Change
 
           chkGetDuals2.value = GetDualsOnSheet()
@@ -149,7 +149,7 @@ Private Sub chkGetDuals2_Click()
 End Sub
 
 Private Sub chkNameRange_Click()
-4256      model.PopulateConstraintListBox lstConstraints, chkNameRange.value
+4256      model.PopulateConstraintListBox lstConstraints, chkNameRange.value, sheet
 4257      lstConstraints_Change
 End Sub
 
@@ -213,7 +213,7 @@ Private Sub cmdReset_Click()
 
           ' Remove the constraints
 4280      Set model.Constraints = New Collection
-4283      model.PopulateConstraintListBox lstConstraints, chkNameRange.value
+4283      model.PopulateConstraintListBox lstConstraints, chkNameRange.value, sheet
 
 End Sub
 
@@ -267,16 +267,16 @@ Private Function HasConstraintChanged() As Boolean
         End If
         
         ' Set original values
-        OrigLHS = con.LHS.Address
+        OrigLHS = GetDisplayAddress(con.LHS, False)
         If con.RHS Is Nothing Then
             OrigRHS = con.RHSstring
         Else
-            OrigRHS = con.RHS.Address
+            OrigRHS = GetDisplayAddress(con.RHS, False)
         End If
     End If
-    LHSChanged = RemoveActiveSheetNameFromString(refConLHS.Text) <> OrigLHS
+    LHSChanged = RemoveSheetNameFromString(refConLHS.Text, sheet) <> OrigLHS
     ' Only check the RHS if the relation uses RHS
-    RHSChanged = RelationHasRHS(RelationStringToEnum(cboConRel.Text)) And RemoveActiveSheetNameFromString(refConRHS.Text) <> OrigRHS
+    RHSChanged = RelationHasRHS(RelationStringToEnum(cboConRel.Text)) And RemoveSheetNameFromString(refConRHS.Text, sheet) <> OrigRHS
     
     HasConstraintChanged = LHSChanged Or RelChanged Or RHSChanged
 End Function
@@ -584,7 +584,7 @@ Private Sub cmdAddCon_Click()
           
 4586      curCon.Init rngLHS, rel, Nothing, rngRHS, internalRHS
 
-4608      If Not DontRepop Then model.PopulateConstraintListBox lstConstraints, chkNameRange.value
+4608      If Not DontRepop Then model.PopulateConstraintListBox lstConstraints, chkNameRange.value, sheet
 4609      Exit Sub
 
 ErrorHandler:
@@ -606,7 +606,7 @@ Private Sub cmdDelSelCon_Click()
 4630      model.Constraints.Remove lstConstraints.ListIndex
 
           ' Update form
-4631      model.PopulateConstraintListBox lstConstraints, chkNameRange.value
+4631      model.PopulateConstraintListBox lstConstraints, chkNameRange.value, sheet
 End Sub
 
 Private Sub lstConstraints_Change()
@@ -625,7 +625,7 @@ Private Sub lstConstraints_Change()
 4644              DontRepop = False
               End If
 4647          AlterConstraints True
-4650          model.PopulateConstraintListBox lstConstraints, chkNameRange.value
+4650          model.PopulateConstraintListBox lstConstraints, chkNameRange.value, sheet
 4651      End If
 
 4653      If lstConstraints.ListIndex = -1 Then
@@ -677,7 +677,7 @@ Private Sub lstConstraints_Change()
 4693                  Dim newRHS As String
                       newRHS = ConvertToCurrentLocale(.RHSstring)
                       If Mid(newRHS, 1) = "=" Then newRHS = Mid(newRHS, 2)
-                      refConRHS.Text = RemoveActiveSheetNameFromString(newRHS)
+                      refConRHS.Text = RemoveSheetNameFromString(newRHS, sheet)
 4698              End If
 4699          End With
 4700          cboConRel_Change

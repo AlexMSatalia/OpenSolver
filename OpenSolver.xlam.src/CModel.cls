@@ -81,7 +81,7 @@ ErrorHandler:
           GoTo ExitFunction
 End Function
 
-Public Sub PopulateConstraintListBox(ByRef lst As MSForms.ListBox, showNameRange As Boolean)
+Public Sub PopulateConstraintListBox(ByRef lst As MSForms.ListBox, showNameRange As Boolean, sheet As Worksheet)
           Dim RaiseError As Boolean
           RaiseError = False
           On Error GoTo ErrorHandler
@@ -104,7 +104,7 @@ Public Sub PopulateConstraintListBox(ByRef lst As MSForms.ListBox, showNameRange
                       Dim DisplayStringRHS As String
                       DisplayStringRHS = ConvertToCurrentLocale(.RHSstring)
 3994                  If Left(DisplayStringRHS, 1) = "=" Then DisplayString = Mid(DisplayStringRHS, 2)
-3995                  DisplayString = DisplayString + " " + RemoveActiveSheetNameFromString(DisplayStringRHS)
+3995                  DisplayString = DisplayString + " " + RemoveSheetNameFromString(DisplayStringRHS, sheet)
 3999              End If
 4000          End With
 4001          lst.AddItem DisplayString
