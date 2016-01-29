@@ -90,7 +90,9 @@ Private Function BuildConstantTerms() As Boolean
 1343      Next constraint
 
           If Not s.ObjRange Is Nothing Then
+              On Error GoTo NotLinear
               s.ObjectiveFunctionConstant = s.ObjRange.Value2
+              On Error GoTo ErrorHandler
               ' Add constants to Target
               If s.ObjectiveSense = TargetObjective Then
                   ' Target value needs to be incremented by any constants in the objective
@@ -109,6 +111,9 @@ ErrorHandler:
           If Not ReportError("CModelDiff", "BuildConstantTerms") Then Resume
           RaiseError = True
           GoTo ExitFunction
+          
+NotLinear:
+          Err.Raise OpenSolver_ModelError, Description:="The objective cell appears to contain an error. This could have occurred if there is a divide by zero error or if you have used the wrong function (eg #DIV/0! or #VALUE!). Please fix this, and try again."
 End Function
 
 Private Function BuildVariableTerms(LinearityOffset As Double) As Boolean
@@ -240,7 +245,7 @@ Private Function BuildVariableTerms(LinearityOffset As Double) As Boolean
                   End If
               End If
           Next row
-
+          
 1344      BuildVariableTerms = True
           
 ExitFunction:
