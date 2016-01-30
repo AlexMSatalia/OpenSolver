@@ -21,6 +21,7 @@ Option Explicit
 #End If
 
 Private Solvers() As ISolver
+Private sheet As Worksheet
 
 Private Sub cboSolver_Change()
           ' Make sure we don't get an error when esc is pressed
@@ -47,13 +48,15 @@ End Sub
 
 Private Sub UserForm_Activate()
           CenterForm
+          
+          GetActiveSheetIfMissing sheet
 
 4744      cboSolver.Clear
 4745      cboSolver.MatchRequired = True
 4746      cboSolver.Style = fmStyleDropDownList
           
           Dim ChosenSolver As String
-          ChosenSolver = GetChosenSolver()
+          ChosenSolver = GetChosenSolver(sheet)
           
           Dim NumSolvers As Long
           NumSolvers = UBound(GetAvailableSolvers) - LBound(GetAvailableSolvers) + 1
@@ -73,7 +76,7 @@ End Sub
 
 Private Sub cmdOk_Click()
          'Add the chosen solver as a hidden name in the workbook
-4758      SetChosenSolver Solvers(cboSolver.ListIndex).ShortName
+4758      SetChosenSolver Solvers(cboSolver.ListIndex).ShortName, sheet
 4763      Me.Hide
 End Sub
 

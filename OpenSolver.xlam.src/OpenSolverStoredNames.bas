@@ -2,67 +2,7 @@ Attribute VB_Name = "OpenSolverStoredNames"
 Option Explicit
 
 Const SolverPrefix As String = "solver_"
-
-Function SheetNameExistsInWorkbook(sheet As Worksheet, Name As String, Optional o As Object) As Boolean
-    SheetNameExistsInWorkbook = NameExistsInWorkbook(sheet.Parent, EscapeSheetName(sheet) & Name, o)
-End Function
-
-Function NameExistsInWorkbook(book As Workbook, Name As String, Optional o As Object) As Boolean
-          ' WARNING: If the name has a sheet prefix, eg Sheet1!OpenSolverCBCParameters, then this will NOT find the range
-          ' if the range has been defined globally (which happens when the user defines a name if that name exists only once)
-142       On Error Resume Next
-143       Set o = book.Names(Name)
-144       NameExistsInWorkbook = (Err.Number = 0)
-End Function
-
-Function GetSheetNameValueIfExists(sheet As Worksheet, theName As String, ByRef value As String) As Boolean
-    GetSheetNameValueIfExists = GetNameValueIfExists(sheet.Parent, EscapeSheetName(sheet) & theName, value)
-End Function
-
-Function GetNameValueIfExists(book As Workbook, theName As String, ByRef value As String) As Boolean
-          ' See http://www.cpearson.com/excel/DefinedNames.aspx
-          Dim s As String
-          Dim HasRef As Boolean
-          Dim r As Range
-          Dim NM As Name
-          
-117       On Error Resume Next
-118       Set NM = book.Names(theName)
-119       If Err.Number <> 0 Then ' Name does not exist
-120           value = ""
-121           GetNameValueIfExists = False
-122           Exit Function
-123       End If
-          
-124       On Error Resume Next
-125       Set r = NM.RefersToRange
-126       If Err.Number = 0 Then
-127           HasRef = True
-128       Else
-129           HasRef = False
-130       End If
-131       If HasRef = True Then
-132           value = r.value
-133       Else
-134           s = NM.RefersTo
-135           If StrComp(Mid(s, 2, 1), Chr(34), vbBinaryCompare) = 0 Then
-                  ' text constant
-136               value = Mid(s, 3, Len(s) - 3)
-137           Else
-                  ' numeric contant (AJM: or Formula)
-138               value = Mid(s, 2)
-139           End If
-140       End If
-141       GetNameValueIfExists = True
-End Function
-
-Function GetNameRefersToIfExists(book As Workbook, Name As String, RefersTo As String) As Boolean
-          ' WARNING: If the name has a sheet prefix, eg Sheet1!OpenSolverCBCParameters, then this will NOT find the range
-          ' if the range has been defined globally (which happens when the user defines a name if that name exists only once)
-145       On Error Resume Next
-146       RefersTo = book.Names(Name).RefersTo
-147       GetNameRefersToIfExists = (Err.Number = 0)
-End Function
+Const TempPrefix As String = "OpenSolver_Temp"
 
 Sub GetSheetNameAsValueOrRange(sheet As Worksheet, theName As String, IsMissing As Boolean, IsRange As Boolean, r As Range, RefersToFormula As Boolean, RangeRefersToError As Boolean, RefersTo As String, value As Double)
     ' Wrapper for a sheet-prefixed defined name
@@ -84,7 +24,7 @@ Sub GetNameAsValueOrRange(book As Workbook, theName As String, IsMissing As Bool
 180       IsMissing = False
           RefersTo = Mid(NM.RefersTo, 2)
 181       On Error Resume Next
-182       Set r = NM.RefersToRange
+182       Set r = GetRefersToRange(RefersTo)
 183       If Err.Number = 0 Then
 184           IsRange = True
 185       Else
@@ -93,17 +33,6 @@ Sub GetNameAsValueOrRange(book As Workbook, theName As String, IsMissing As Bool
 189           If Right(RefersTo, 6) = "!#REF!" Or Left(RefersTo, 5) = "#REF!" Then
 191               RangeRefersToError = True
 192           Else
-              ' If StrComp(Mid(S, 2, 1), Chr(34), vbBinaryCompare) = 0 Then
-                  ' text constant
-              '    S = Mid(S, 3, Len(S) - 3)
-              'Else
-                  ' numeric contant (or possibly a string? We ignore strings - Solver rejects them as invalid on entry)
-                  ' The following Pearson code FAILS because "Value=RefersTo" applies regional settings, but Names are always stored as strings containing values in US settings (with no regionalisation)
-                  ' value = RefersTo
-                  ' If Err.Number = 13 Then
-                  '    RefersToFormula = True
-                  ' End If
-                  
                   ' Test for a numeric constant, in US format
 193               If IsAmericanNumber(RefersTo) Then
 194                   value = Val(RefersTo)   ' Force a conversion to a number using Val which uses US settings (no regionalisation)
@@ -114,109 +43,85 @@ Sub GetNameAsValueOrRange(book As Workbook, theName As String, IsMissing As Bool
 199       End If
 End Sub
 
-Function GetNamedRangeIfExists(book As Workbook, Name As String, r As Range) As Boolean
-          ' WARNING: If the name has a sheet prefix, eg Sheet1!OpenSolverCBCParameters, then this will NOT find the range
-          ' if the range has been defined globally (which happens when the user defines a name if that name exists only once)
-148       On Error Resume Next
-149       Set r = book.Names(Name).RefersToRange
-150       GetNamedRangeIfExists = (Err.Number = 0)
-End Function
-
-Function GetNamedRangeIfExistsOnSheet(sheet As Worksheet, Name As String, r As Range) As Boolean
-          GetActiveSheetIfMissing sheet
-          ' This finds a named range (either local or global) if it exists, and if it refers to the specified sheet.
-          ' It will not find a globally defined name
-151       On Error Resume Next
-152       Set r = sheet.Range(Name)   ' This will return either a local or globally defined named range, that must refer to the specified sheet. OTherwise there is an error
-153       GetNamedRangeIfExistsOnSheet = Err.Number = 0
-End Function
-
-Function GetNamedNumericValueIfExists(sheet As Worksheet, Name As String, value As Double) As Boolean
-          ' Get a named range that must contain a double value or the form "=12.34" or "=12" etc, with no spaces
+Function GetNamedDoubleIfExists(sheet As Worksheet, Name As String, DoubleValue As Double) As Boolean
           Dim IsRange As Boolean, r As Range, RefersToFormula As Boolean, RangeRefersToError As Boolean, RefersTo As String, IsMissing As Boolean
-154       GetSheetNameAsValueOrRange sheet, Name, IsMissing, IsRange, r, RefersToFormula, RangeRefersToError, RefersTo, value
-155       GetNamedNumericValueIfExists = Not IsMissing And Not IsRange And Not RefersToFormula And Not RangeRefersToError
+154       GetSheetNameAsValueOrRange sheet, Name, IsMissing, IsRange, r, RefersToFormula, RangeRefersToError, RefersTo, DoubleValue
+155       GetNamedDoubleIfExists = Not IsMissing And Not IsRange And Not RefersToFormula And Not RangeRefersToError
 End Function
 
 Function GetNamedIntegerIfExists(sheet As Worksheet, Name As String, IntegerValue As Long) As Boolean
-          ' Get a named range that must contain an integer value
-          Dim value As Double
-156       If GetNamedNumericValueIfExists(sheet, Name, value) Then
-157           IntegerValue = Int(value)
-158           GetNamedIntegerIfExists = IntegerValue = value
-159       Else
-160           GetNamedIntegerIfExists = False
+          Dim DoubleValue As Double
+156       If GetNamedDoubleIfExists(sheet, Name, DoubleValue) Then
+157           IntegerValue = CLng(DoubleValue)
+158           GetNamedIntegerIfExists = (IntegerValue = DoubleValue)
 161       End If
 End Function
 
-Function GetNamedIntegerWithDefault(Name As String, Optional sheet As Worksheet, Optional DefaultValue As Long = 0) As Long
-    GetActiveSheetIfMissing sheet
-    
-    Dim value As String
-    If Not GetSheetNameValueIfExists(sheet, Name, value) Then GoTo SetDefault
-    On Error GoTo SetDefault
-    GetNamedIntegerWithDefault = CLng(value)
-    Exit Function
-    
-SetDefault:
-    GetNamedIntegerWithDefault = DefaultValue
-    SetIntegerNameOnSheet Name, GetNamedIntegerWithDefault, sheet
+Function GetNamedIntegerAsBooleanIfExists(sheet As Worksheet, Name As String, BooleanValue As Boolean) As Boolean
+          Dim IntegerValue As Long
+          If GetNamedIntegerIfExists(sheet, Name, IntegerValue) Then
+              BooleanValue = (IntegerValue = 1)
+              GetNamedIntegerAsBooleanIfExists = True
+          End If
 End Function
 
-Function GetNamedDoubleWithDefault(Name As String, Optional sheet As Worksheet, Optional DefaultValue As Double = 0) As Double
-    GetActiveSheetIfMissing sheet
-    
-    Dim value As String
-    If Not GetSheetNameValueIfExists(sheet, Name, value) Then GoTo SetDefault
-    On Error GoTo SetDefault
-    GetNamedDoubleWithDefault = Val(value)
-    Exit Function
-    
-SetDefault:
-    GetNamedDoubleWithDefault = DefaultValue
-    SetDoubleNameOnSheet Name, GetNamedDoubleWithDefault, sheet
+Function GetNamedBooleanIfExists(sheet As Worksheet, Name As String, BooleanValue As Boolean) As Boolean
+    Dim IsRange As Boolean, r As Range, RefersToFormula As Boolean, RangeRefersToError As Boolean, RefersTo As String, IsMissing As Boolean, value As Double
+    GetSheetNameAsValueOrRange sheet, Name, IsMissing, IsRange, r, RefersToFormula, RangeRefersToError, RefersTo, value
+
+    If Not IsMissing And Not IsRange And Not RangeRefersToError Then
+        On Error GoTo NotBoolean
+        BooleanValue = CBool(RefersTo)
+        GetNamedBooleanIfExists = True
+    Else
+NotBoolean:
+        GetNamedBooleanIfExists = False
+    End If
 End Function
 
-Function GetNamedBooleanWithDefault(Name As String, Optional sheet As Worksheet, Optional DefaultValue As Boolean = False) As Boolean
-    GetActiveSheetIfMissing sheet
+Function GetNamedStringIfExists(sheet As Worksheet, Name As String, StringValue As String) As Boolean
+    Dim IsRange As Boolean, r As Range, RefersToFormula As Boolean, RangeRefersToError As Boolean, value As Double, IsMissing As Boolean
+    GetSheetNameAsValueOrRange sheet, Name, IsMissing, IsRange, r, RefersToFormula, RangeRefersToError, StringValue, value
     
-    Dim value As String
-    If Not GetSheetNameValueIfExists(sheet, Name, value) Then GoTo SetDefault
-    On Error GoTo SetDefault
-    GetNamedBooleanWithDefault = CBool(value)  ' TODO: Check localisation
-    Exit Function
+    ' Remove any quotes
+    If Left(StringValue, 1) = """" Then StringValue = Mid(StringValue, 2, Len(StringValue) - 2)
     
-SetDefault:
-    GetNamedBooleanWithDefault = DefaultValue
-    SetBooleanNameOnSheet Name, GetNamedBooleanWithDefault, sheet
+    GetNamedStringIfExists = Not IsMissing And Not IsRange And Not RangeRefersToError
 End Function
 
-Function GetNamedIntegerAsBooleanWithDefault(Name As String, Optional sheet As Worksheet, Optional DefaultValue As Boolean = False) As Boolean
-    GetActiveSheetIfMissing sheet
-    
-    Dim value As Long
-    If Not GetNamedIntegerIfExists(sheet, Name, value) Then GoTo SetDefault
-    If value <> 1 And value <> 2 Then GoTo SetDefault
-    GetNamedIntegerAsBooleanWithDefault = (value = 1)
-    Exit Function
-    
-SetDefault:
-    GetNamedIntegerAsBooleanWithDefault = DefaultValue
-    SetBooleanAsIntegerNameOnSheet Name, GetNamedIntegerAsBooleanWithDefault, sheet
+Function GetNamedDoubleWithDefault(sheet As Worksheet, Name As String, DefaultValue As Double) As Double
+    If Not GetNamedDoubleIfExists(sheet, Name, GetNamedDoubleWithDefault) Then
+        GetNamedDoubleWithDefault = DefaultValue
+        SetDoubleNameOnSheet Name, GetNamedDoubleWithDefault, sheet
+    End If
 End Function
 
-Function GetNamedStringIfExists(book As Workbook, Name As String, value As String) As Boolean
-' Get a named range that must contain a string value (probably with quotes)
-162       If GetNameRefersToIfExists(book, Name, value) Then
-163           If Left(value, 2) = "=""" Then ' Remove delimiters and equals in: ="...."
-164               value = Mid(value, 3, Len(value) - 3)
-165           ElseIf Left(value, 1) = "=" Then
-166               value = Mid(value, 2)
-167           End If
-168           GetNamedStringIfExists = True
-169       Else
-170           GetNamedStringIfExists = False
-171       End If
+Function GetNamedIntegerWithDefault(sheet As Worksheet, Name As String, DefaultValue As Long) As Long
+    If Not GetNamedIntegerIfExists(sheet, Name, GetNamedIntegerWithDefault) Then
+        GetNamedIntegerWithDefault = DefaultValue
+        SetIntegerNameOnSheet Name, GetNamedIntegerWithDefault, sheet
+    End If
+End Function
+
+Function GetNamedIntegerAsBooleanWithDefault(sheet As Worksheet, Name As String, DefaultValue As Boolean) As Boolean
+    If Not GetNamedIntegerAsBooleanIfExists(sheet, Name, GetNamedIntegerAsBooleanWithDefault) Then
+        GetNamedIntegerAsBooleanWithDefault = DefaultValue
+        SetBooleanAsIntegerNameOnSheet Name, GetNamedIntegerAsBooleanWithDefault, sheet
+    End If
+End Function
+
+Function GetNamedBooleanWithDefault(sheet As Worksheet, Name As String, DefaultValue As Boolean) As Boolean
+    If Not GetNamedBooleanIfExists(sheet, Name, GetNamedBooleanWithDefault) Then
+        GetNamedBooleanWithDefault = DefaultValue
+        SetBooleanNameOnSheet Name, GetNamedBooleanWithDefault, sheet
+    End If
+End Function
+
+Function GetNamedStringWithDefault(sheet As Worksheet, Name As String, DefaultValue As String) As String
+    If Not GetNamedStringIfExists(sheet, Name, GetNamedStringWithDefault) Then
+        GetNamedStringWithDefault = DefaultValue
+        SetNameOnSheet Name, GetNamedStringWithDefault, sheet
+    End If
 End Function
 
 Sub DeleteNameOnSheet(Name As String, Optional sheet As Worksheet, Optional SolverName As Boolean = False)
@@ -262,7 +167,15 @@ Sub SetBooleanAsIntegerNameOnSheet(Name As String, value As Boolean, Optional sh
     SetIntegerNameOnSheet Name, IIf(value, 1, 2), sheet, SolverName
 End Sub
 
-Sub SetAnyMissingDefaultSolverOptions(Optional sheet As Worksheet)
+Sub SetRefersToNameOnSheet(Name As String, value As String, Optional sheet As Worksheet, Optional SolverName As Boolean = False)
+    If Len(value) > 0 Then
+        SetNameOnSheet Name, AddEquals(value), sheet, SolverName
+    Else
+        DeleteNameOnSheet Name, sheet, SolverName
+    End If
+End Sub
+
+Sub SetAnyMissingDefaultSolverOptions(sheet As Worksheet)
           ' We set all the default values, as per Solver in Excel 2007, but with some changes. This ensures Solver does not delete the few values we actually use
           Dim RaiseError As Boolean
           RaiseError = False
@@ -274,9 +187,9 @@ Sub SetAnyMissingDefaultSolverOptions(Optional sheet As Worksheet)
           
           GetActiveSheetIfMissing sheet
           
-          Dim i As Long, s As String
+          Dim i As Long, value As Double
           For i = LBound(SolverOptions) To UBound(SolverOptions)
-              If Not GetSheetNameValueIfExists(sheet, "solver_" & SolverOptions(i), s) Then
+              If Not GetNamedDoubleIfExists(sheet, "solver_" & SolverOptions(i), value) Then
                   SetNameOnSheet CStr(SolverOptions(i)), "=" & SolverDefaults(i), sheet, True
               End If
           Next i
@@ -291,57 +204,52 @@ ErrorHandler:
           GoTo ExitSub
 End Sub
 
-Public Sub ValidateConstraint(LHSRange As Range, Relation As RelationConsts, Optional RHSRange As Range, Optional RHSFormula As String, Optional sheet As Worksheet)
-    GetActiveSheetIfMissing sheet
+Function GetRefersToRange(RefersTo As String) As Range
+    If Len(RefersTo) = 0 Then Exit Function
     
-    If LHSRange.Areas.Count > 1 Then
-        Err.Raise OpenSolver_ModelError, Description:="Left-hand-side of constraint must have only one area."
-    End If
+    ' Add the text as a name and retrieve the corresponding sanitised range
+    ' We can't use .RefersToRange as this is broken in non-US locales
+    ' Instead we use sheet.Range()
+    On Error GoTo InvalidRange
+    Set GetRefersToRange = Application.Range(RefersTo)
+    Exit Function
     
-    If RelationHasRHS(Relation) Then
-        If Not RHSRange Is Nothing Then
-            If RHSRange.Count > 1 And RHSRange.Count <> LHSRange.Count Then
-                Err.Raise OpenSolver_ModelError, Description:="Right-hand-side of constraint has more than one cell, and does not match the number of cells on the left-hand-side."
-            End If
-        Else
-            ' Try to convert it to a US locale string internally
-            Dim internalRHS As String
-            internalRHS = ConvertFromCurrentLocale(RHSFormula)
+InvalidRange:
+    Err.Raise Err.Number, Err.Source, Err.Description
+End Function
 
-            ' Can we evaluate this function or constant?
-            Dim varReturn As Variant
-            varReturn = sheet.Evaluate(internalRHS) ' Must be worksheet.evaluate to get references to names local to the sheet
-            If VBA.VarType(varReturn) = vbError Then
-                Err.Raise OpenSolver_ModelError, Description:="The formula or value for the RHS is not valid. Please check and try again."
-            End If
-
-            ' Convert any cell references to absolute
-            If Left(internalRHS, 1) <> "=" Then internalRHS = "=" & internalRHS
-            varReturn = Application.ConvertFormula(internalRHS, FromReferenceStyle:=xlA1, ToReferenceStyle:=xlA1, ToAbsolute:=xlAbsolute)
-
-            If (VBA.VarType(varReturn) = vbError) Then
-                ' Its valid, but couldn't convert to standard form, probably because not A1... just leave it
-            Else
-                ' Always comes back with a = at the start
-                ' Unfortunately, return value will have wrong locale...
-                ' But not much can be done with that?
-                internalRHS = Mid(varReturn, 2, Len(varReturn))
-            End If
-            RHSFormula = internalRHS
-        End If
-        
-    Else
-        If Not RHSRange Is Nothing Or _
-           (RHSFormula <> "" And RHSFormula <> "integer" And RHSFormula <> "binary" And RHSFormula <> "alldiff") Then
-            Err.Raise OpenSolver_ModelError, Description:="No right-hand-side is permitted for this relation"
+Function RefEditToRefersTo(RefEditText As String) As String
+    If Len(RefEditText) = 0 Then Exit Function
+    
+    ' Try to evaluate the formula and catch `Error 2015` for an invalid formula
+    ' ============
+    ' IMPORTANT: We can't catch this error using an error handler!
+    ' This is sometimes run inside a RefEdit event, in which the
+    ' error handlers don't work properly. We have to use a method of
+    ' detecting the invalid formula that never throws any error.
+    ' ============
+    Dim varReturn As Variant
+    varReturn = Application.Evaluate(RefEditText)
+    If VarType(varReturn) = vbError Then
+        If CLng(varReturn) = 2015 Then
+            RefEditToRefersTo = RefEditText
+            Exit Function
         End If
     End If
-End Sub
 
-Sub ValidateParametersRange(ParametersRange As Range)
-    If ParametersRange Is Nothing Then Exit Sub
-    If ParametersRange.Areas.Count > 1 Or ParametersRange.Columns.Count <> 2 Then
-        Err.Raise OpenSolver_SolveError, Description:="The Extra Solver Parameters range must be a single two-column table of keys and values."
-    End If
-End Sub
+    ' Add the text as a name and retrieve the sanitised RefersTo
+    Dim n As Name
+    Set n = ActiveWorkbook.Names.Add(TempPrefix, AddEquals(Trim(RefEditText)))
+    RefEditToRefersTo = Mid(n.RefersTo, 2)
+    n.Delete
+End Function
 
+Function RangeToRefersTo(ConvertRange As Range) As String
+    If ConvertRange Is Nothing Then Exit Function
+    
+    ' Add the text as a name and retrieve the sanitised refers to
+    Dim n As Name
+    Set n = ActiveWorkbook.Names.Add(TempPrefix, ConvertRange)
+    RangeToRefersTo = Mid(n.RefersTo, 2)
+    n.Delete
+End Function

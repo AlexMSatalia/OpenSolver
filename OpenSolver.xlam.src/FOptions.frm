@@ -21,6 +21,7 @@ Option Explicit
 #End If
 
 Private SolverString As String
+Private sheet As Worksheet
 
 Private Sub cmdCancel_Click()
 4089      Me.Hide
@@ -43,26 +44,22 @@ End Sub
 Private Sub cmdOk_Click()
           On Error GoTo ErrorHandler
           
-          Dim ParametersRange As Range
-          If Len(refExtraParameters.Text) <> 0 Then
-              On Error Resume Next
-              Set ParametersRange = Range(refExtraParameters.Text)
-              If Err.Number <> 0 Then
-                  On Error GoTo ErrorHandler
-                  Err.Raise OpenSolver_ModelError, Description:="The extra solver parameters range needs to be a range on the sheet."
-              End If
-              On Error GoTo ErrorHandler
-              ValidateParametersRange ParametersRange
-          End If
+          ' All validation
+          
+          Dim SolverParametersRefersTo As String
+          SolverParametersRefersTo = RefEditToRefersTo(refExtraParameters.Text)
+          ValidateSolverParametersRefersTo SolverParametersRefersTo
+          
+          ' Save confirmed!
 
-4092      SetNonNegativity chkNonNeg.value
-4098      SetShowSolverProgress chkShowSolverProgress.value
-4102      SetMaxTime CDbl(txtMaxTime.Text)
-4103      SetMaxIterations CDbl(txtMaxIter.Text)
-4104      SetPrecision CDbl(txtPre.Text)
-4106      SetToleranceAsPercentage CDbl(Replace(txtTol.Text, "%", ""))
-4107      SetLinearityCheck chkPerformLinearityCheck.value
-          SetSolverParameters SolverString, ParametersRange
+4092      SetNonNegativity chkNonNeg.value, sheet
+4098      SetShowSolverProgress chkShowSolverProgress.value, sheet
+4102      SetMaxTime CDbl(txtMaxTime.Text), sheet
+4103      SetMaxIterations CDbl(txtMaxIter.Text), sheet
+4104      SetPrecision CDbl(txtPre.Text), sheet
+4106      SetToleranceAsPercentage CDbl(Replace(txtTol.Text, "%", "")), sheet
+4107      SetLinearityCheck chkPerformLinearityCheck.value, sheet
+          SetSolverParametersRefersTo SolverString, SolverParametersRefersTo, sheet
                                                                       
 4112      Me.Hide
           Exit Sub
@@ -74,18 +71,20 @@ End Sub
 Private Sub UserForm_Activate()
           CenterForm
           
-4114      SetAnyMissingDefaultSolverOptions
+          GetActiveSheetIfMissing sheet
+          
+4114      SetAnyMissingDefaultSolverOptions sheet
 
-4129      chkNonNeg.value = GetNonNegativity()
-4130      chkShowSolverProgress.value = GetShowSolverProgress()
-4131      txtMaxTime.Text = CStr(GetMaxTime())
-4132      txtTol.Text = CStr(GetToleranceAsPercentage())
-4133      txtMaxIter.Text = CStr(GetMaxIterations())
-4134      txtPre = CStr(GetPrecision())
-4135      chkPerformLinearityCheck.value = GetLinearityCheck()
+4129      chkNonNeg.value = GetNonNegativity(sheet)
+4130      chkShowSolverProgress.value = GetShowSolverProgress(sheet)
+4131      txtMaxTime.Text = CStr(GetMaxTime(sheet))
+4132      txtTol.Text = CStr(GetToleranceAsPercentage(sheet))
+4133      txtMaxIter.Text = CStr(GetMaxIterations(sheet))
+4134      txtPre = CStr(GetPrecision(sheet))
+4135      chkPerformLinearityCheck.value = GetLinearityCheck(sheet)
 
           Dim Solver As ISolver
-4136      SolverString = GetChosenSolver()
+4136      SolverString = GetChosenSolver(sheet)
           Set Solver = CreateSolver(SolverString)
 
           chkPerformLinearityCheck.Enabled = (SolverLinearity(Solver) = Linear) And _
@@ -95,7 +94,7 @@ Private Sub UserForm_Activate()
           txtMaxTime.Enabled = TimeLimitAvailable(Solver)
           txtTol.Enabled = ToleranceAvailable(Solver)
           
-          refExtraParameters.Text = GetDisplayAddress(GetSolverParameters(SolverString), False)
+          refExtraParameters.Text = GetDisplayAddress(GetSolverParametersRefersTo(SolverString, sheet), sheet, False)
 End Sub
 
 Private Sub UserForm_Initialize()

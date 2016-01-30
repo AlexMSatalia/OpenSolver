@@ -2,7 +2,9 @@ Attribute VB_Name = "OpenSolverMenuHandlers"
 Option Explicit
 
 Sub OpenSolver_SolveClickHandler(Optional Control)
-2755      RunOpenSolver False, False
+          Dim sheet As Worksheet
+          GetActiveSheetIfMissing sheet
+2755      RunOpenSolver SolveRelaxation:=False, MinimiseUserInteraction:=False, sheet:=sheet
           AutoUpdateCheck
 End Sub
 
@@ -23,7 +25,9 @@ Sub OpenSolver_SolverOptions(Optional Control)
 End Sub
 
 Sub OpenSolver_SolveRelaxationClickHandler(Optional Control)
-2763      RunOpenSolver True, False
+          Dim sheet As Worksheet
+          GetActiveSheetIfMissing sheet
+2763      RunOpenSolver SolveRelaxation:=True, MinimiseUserInteraction:=False, sheet:=sheet
           AutoUpdateCheck
 End Sub
 
@@ -51,11 +55,14 @@ NotLPSolver:
 End Sub
 
 Sub OpenSolver_ShowHideModelClickHandler(Optional Control)
+          Dim sheet As Worksheet
+          GetActiveSheetIfMissing sheet
+          
 2766      On Error GoTo ExitSub
-2768      If SheetHasOpenSolverHighlighting Then
-2769          HideSolverModel
+2768      If SheetHasOpenSolverHighlighting(sheet) Then
+2769          HideSolverModel sheet
 2770      Else
-2771          ShowSolverModel
+2771          ShowSolverModel sheet
 2772      End If
           AutoUpdateCheck
 ExitSub:
@@ -69,7 +76,9 @@ Sub OpenSolver_SetQuickSolveParametersClickHandler(Optional Control)
 End Sub
 
 Sub OpenSolver_InitQuickSolveClickHandler(Optional Control)
-2778      InitializeQuickSolve
+          Dim sheet As Worksheet
+          GetActiveSheetIfMissing sheet
+2778      InitializeQuickSolve sheet:=sheet
           AutoUpdateCheck
 End Sub
 
@@ -183,15 +192,23 @@ Sub OpenSolver_QuickAutoModelClick(Optional Control)
           Dim sheet As Worksheet
           GetActiveSheetIfMissing sheet
           
-2855      RunAutoModel sheet, False
+          Dim AutoModel As CAutoModel
+          Set AutoModel = New CAutoModel
+          AutoModel.BuildModel sheet, MinimiseUserInteraction:=False, SaveAfterBuilding:=True
+          
           AutoUpdateCheck
 End Sub
 
 Sub OpenSolver_AutoModelAndSolveClick(Optional Control)
           Dim sheet As Worksheet
           GetActiveSheetIfMissing sheet
-          If Not RunAutoModel(sheet, False) Then Exit Sub
-2882      RunOpenSolver False, False, sheet:=sheet
+          
+          Dim AutoModel As CAutoModel
+          Set AutoModel = New CAutoModel
+          If Not AutoModel.BuildModel(sheet, MinimiseUserInteraction:=False, SaveAfterBuilding:=True) Then Exit Sub
+
+2882      RunOpenSolver SolveRelaxation:=False, MinimiseUserInteraction:=False, sheet:=sheet
+
           AutoUpdateCheck
 End Sub
 

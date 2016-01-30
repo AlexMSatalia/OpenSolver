@@ -132,6 +132,8 @@ Function RelationStringToEnum(ByVal rel As String) As RelationConsts
     Case "integer", "int", "i": RelationStringToEnum = RelationINT
     Case "binary", "bin", "b":  RelationStringToEnum = RelationBIN
     Case "alldiff":             RelationStringToEnum = RelationAllDiff
+    Case Else
+        Err.Raise OpenSolver_ModelError, Description:="Unknown relation code: " & rel
     End Select
 End Function
 

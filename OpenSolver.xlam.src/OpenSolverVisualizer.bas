@@ -489,7 +489,7 @@ Function ShowSolverModel(Optional sheet As Worksheet) As Boolean
           
           ' Highlight the objective cell, if there is one
           Dim ObjRange As Range
-3323      Set ObjRange = GetObjectiveFunctionCell(sheet)
+3323      Set ObjRange = GetObjectiveFunctionCell(sheet, Validate:=False)
           If Not ObjRange Is Nothing Then
               Dim ObjType As ObjectiveSenseType, ObjectiveTargetValue As Double
 3325          ObjType = GetObjectiveSense(sheet)
@@ -499,7 +499,7 @@ Function ShowSolverModel(Optional sheet As Worksheet) As Boolean
           
           ' Count the correct number of constraints, and form the constraint
           Dim NumConstraints As Long
-3331      NumConstraints = GetNumConstraints()  ' Number of constraints entered in excel; can include ranges covering many constraints
+3331      NumConstraints = GetNumConstraints(sheet)  ' Number of constraints entered in excel; can include ranges covering many constraints
           ' Note: Solver leaves around old constraints; the name <sheet>!solver_num gives the correct number of constraints (eg "=4")
           
 3332      UpdateStatusBar "OpenSolver: Displaying Problem... " & AdjustableCells.Count & " vars, " & NumConstraints & " Solver constraints", True

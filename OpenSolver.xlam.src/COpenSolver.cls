@@ -357,7 +357,7 @@ Function CheckConstraintValuesAreNumeric(constraint As Long, LHSValues As Varian
 861               ElseIf VarType(RHSValues) <> vbDouble Then
                       ' It might be vbError, or vbString, or anything else?
 862                   GetConstraintInstanceData constraint, 1, LHSCellRange, RHSCellRange, RHSstring
-863                   ErrorMsg = "The right hand side in constraint '" & ConstraintSummary(constraint) & "' has a value which is not numeric."
+863                   ErrorMsg = "The right hand side in constraint '" & ConstraintSummary(constraint) & "' has a value which is not a single numeric value."
                       ' Try to show the incorrect value; just cary on with the old ErrorMsg if this gives an error
 864                   On Error Resume Next
 865                   ErrorMsg = "The right hand side in constraint '" & ConstraintSummary(constraint) & "' has the value '" & RHSValues & "' which is not numeric."
@@ -540,7 +540,7 @@ Sub BuildModelFromSolverData(Optional LinearityOffset As Double = 0, _
           ' OBJECTIVE SETUP
 1011      ObjectiveSense = GetObjectiveSense(sheet)
 1013      ObjectiveTargetValue = GetObjectiveTargetValue(sheet)
-          Set ObjRange = GetObjectiveFunctionCellWithValidation(sheet)
+          Set ObjRange = GetObjectiveFunctionCell(sheet, Validate:=True)
 
           '--------------------------------------------------------------------------
           ' MODEL OPTIONS SETUP
@@ -595,7 +595,7 @@ RaiseError:
                            
               ' LEFT HAND SIDE
               Dim rangeLHS As Range, sRefersToLHS As String
-              Set rangeLHS = GetConstraintLhs(constraint, sheet, sRefersToLHS)
+              Set rangeLHS = GetConstraintLhs(constraint, sheet, Validate:=True, RefersTo:=sRefersToLHS)
               Dim LHSCount As Long
 1082          LHSCount = rangeLHS.Count
               

@@ -4,8 +4,6 @@ Option Explicit
 Public QuickSolver As COpenSolver
 
 Function SetQuickSolveParameterRange() As Boolean
-          Dim RaiseError As Boolean
-          RaiseError = False
           On Error GoTo ErrorHandler
 
 362       SetQuickSolveParameterRange = False
@@ -14,37 +12,39 @@ Function SetQuickSolveParameterRange() As Boolean
           GetActiveSheetIfMissing sheet
           
           ' Find the Parameter range
-          Dim ParamRange As Range
-375       Set ParamRange = GetQuickSolveParameters(sheet)
+          Dim ParamRangeRefersTo As String
+375       ParamRangeRefersTo = GetQuickSolveParametersRefersTo(sheet)
           
           ' Get a range from the user
-          Dim DefaultValue As String
-          Dim NewRange As Range
-378       If Not ParamRange Is Nothing Then DefaultValue = ParamRange.Address
+          Dim NewValue As String
           On Error Resume Next
-379       Set NewRange = Application.InputBox(prompt:="Please select the 'parameter' cells that you will be changing between successsive solves of the model.", Type:=8, Default:=DefaultValue, Title:="OpenSolver Quick Solve Parameters")
+379       NewValue = Application.InputBox( _
+                         prompt:="Please select the 'parameter' cells that you will be changing between successsive solves of the model.", _
+                         Type:=0, _
+                         Default:=GetDisplayAddress(ParamRangeRefersTo, sheet, False), _
+                         Title:="OpenSolver Quick Solve Parameters")
           If Err.Number <> 0 And Err.Number <> 424 Then ' Error 424: Object required - happens on cancel press
               On Error GoTo ErrorHandler
               Err.Raise Err.Number, Err.Source, Err.Description, Err.HelpFile, Err.HelpContext
           End If
           On Error GoTo ErrorHandler
           
-384       If Not NewRange Is Nothing Then
-385           If NewRange.Worksheet.Name <> sheet.Name Then
-386               Err.Raise OpenSolver_BuildError, Description:="The parameter cells need to be on the current worksheet."
-388           End If
-389           SetQuickSolveParameters NewRange, sheet
+          ' Formula is always returned as ="<input>" or =<input> depending on whether the user
+          ' entered an equals in the formula
+          ' We make sure it's in A1 notation and strip the equals and any quotes
+          NewValue = Application.ConvertFormula(NewValue, xlR1C1, xlA1)
+          NewValue = Mid(NewValue, 2)
+          If Left(NewValue, 1) = """" Then NewValue = Mid(NewValue, 2, Len(NewValue) - 2)
+          
+          SetQuickSolveParametersRefersTo RefEditToRefersTo(NewValue), sheet
 
-              ' Return true as we have succeeded
-393           SetQuickSolveParameterRange = True
-394       End If
+          ' Return true as we have succeeded
+393       SetQuickSolveParameterRange = True
 
 ExitFunction:
-          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
           Exit Function
 
 ErrorHandler:
-          If Not ReportError("OpenSolverQuickSolve", "SetQuickSolveParameterRange") Then Resume
-          RaiseError = True
+          ReportError "OpenSolverQuickSolve", "SetQuickSolveParameterRange", True, False
           GoTo ExitFunction
 End Function

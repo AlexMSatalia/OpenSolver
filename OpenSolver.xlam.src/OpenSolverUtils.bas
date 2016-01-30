@@ -206,6 +206,7 @@ Private Function ConvertLocale(ByVal s As String, ConvertToUS As Boolean) As Str
           Static SkipConvert As Long
           
           If SkipConvert < 1 Then
+              SkipConvert = 1  ' Don't check again
               ' If we are in an english version of Excel and a known locale, we can skip the conversion
               If Application.International(xlCountryCode) = 1 Then ' English language excel
                   Dim Country As Long
@@ -299,16 +300,16 @@ Function GetSolverParametersDict(Solver As ISolver, sheet As Worksheet) As Dicti
           If ToleranceAvailable(Solver) Then SolverParameters.Add Key:=Solver.ToleranceName, Item:=GetTolerance(sheet)
           
           ' The user can define a set of parameters they want to pass to the solver; this gets them as a dictionary. MUST be on the current sheet
-          Dim ParametersRange As Range, i As Long
-6104      Set ParametersRange = GetSolverParameters(Solver.ShortName, sheet:=sheet)
-          If Not ParametersRange Is Nothing Then
-6105          ValidateParametersRange ParametersRange
-6109          For i = 1 To ParametersRange.Rows.Count
+          Dim SolverParametersRange As Range, i As Long
+6104      Set SolverParametersRange = GetSolverParameters(Solver.ShortName, sheet:=sheet)
+          If Not SolverParametersRange Is Nothing Then
+6105          ValidateSolverParameters SolverParametersRange
+6109          For i = 1 To SolverParametersRange.Rows.Count
                   Dim ParamName As String, ParamValue As String
-6110              ParamName = Trim(ParametersRange.Cells(i, 1))
+6110              ParamName = Trim(SolverParametersRange.Cells(i, 1))
 6111              If ParamName <> "" Then
                       If SolverParameters.Exists(ParamName) Then SolverParameters.Remove ParamName
-6112                  ParamValue = ParametersRange.Cells(i, 2).value
+6112                  ParamValue = SolverParametersRange.Cells(i, 2).value
 6114                  SolverParameters.Add Key:=ParamName, Item:=ParamValue
 6115              End If
 6116          Next i
@@ -1086,3 +1087,11 @@ Function StringHasUnicode(TestString As String) As Boolean
     Next i
     StringHasUnicode = False
 End Function
+
+Function AddEquals(s As String) As String
+    AddEquals = IIf(Left(s, 1) <> "=", "=", vbNullString) & s
+End Function
+Function RemoveEquals(s As String) As String
+    RemoveEquals = IIf(Left(s, 1) <> "=", s, Mid(s, 2))
+End Function
+

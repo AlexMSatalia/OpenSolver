@@ -90,58 +90,59 @@ Function SearchRangeInVisibleNames(r As Range) As Name
 731       Set SearchRangeInVisibleNames = SearchRangeNameCACHE.Item((r.Name))
 End Function
 
-Function GetDisplayAddress(r As Range, Optional showRangeName As Boolean = False) As String
+Function GetDisplayAddress(RefersTo As String, sheet As Worksheet, Optional showRangeName As Boolean = False) As String
           Dim RaiseError As Boolean
           RaiseError = False
           On Error GoTo ErrorHandler
 
-          If r Is Nothing Then
-              GetDisplayAddress = ""
+          Dim r As Range
+          On Error Resume Next
+          Set r = Range(RefersTo)
+          If Err.Number <> 0 Then
+              GetDisplayAddress = RemoveSheetNameFromString(RefersTo, ActiveSheet)
               GoTo ExitFunction
           End If
-          ' Get a name to display for this range which includes a sheet name if this range is not on the active sheet
-          Dim s As String
-          Dim R2 As Range
-          Dim Rname As Name
-          Dim i As Long
+          On Error GoTo ErrorHandler
           
-          'Find if the range has a defined name
-200       If r.Worksheet.Name = ActiveSheet.Name Then
-201           GetDisplayAddress = r.Address
-202           If showRangeName Then
-203               Set Rname = SearchRangeInVisibleNames(r)
-204               If Not Rname Is Nothing Then
-205                   GetDisplayAddress = StripWorksheetNameAndDollars(Rname.Name, ActiveSheet)
+          Dim RefersToNames() As String, Offset As Long
+          RefersToNames = Split(RefersTo, ",")
+          Offset = LBound(RefersToNames) - 1  ' Add Offset to make array 1-indexed
+          
+          ' Make sure our range has the right number of areas
+          If UBound(RefersToNames) - Offset <> r.Areas.Count Then
+              Err.Raise OpenSolver_ModelError, Description:="The number of names does not match the number of areas in the range." & vbNewLine & _
+                                                            "Names: " & RefersTo & vbNewLine & _
+                                                            "Range: " & r.Address
+          End If
+          
+          ' Include a sheet name if this range is not on the active sheet
+          Dim Prefix As String
+200       If r.Worksheet.Name <> sheet.Name Then
+              Prefix = EscapeSheetName(r.Worksheet)
+          End If
+          
+          Dim i As Long, AreaName As String, Rname As Name, R2 As Range
+          For i = 1 To r.Areas.Count
+              Set R2 = r.Areas(i)
+              AreaName = Prefix & R2.Address
+203           Set Rname = SearchRangeInVisibleNames(R2)
+              If Not Rname Is Nothing Then
+                  ' Check if the name was specified in the RefersTo
+                  If Rname.Name <> RefersToNames(i + Offset) Then
+                      If showRangeName Then
+205                       AreaName = AreaName & " (" & StripWorksheetNameAndDollars(Rname.Name, R2.Worksheet) & ")"
+                      End If
+                  Else
+                      AreaName = RefersToNames(i + Offset)
 206               End If
 207           End If
-208           GoTo ExitFunction
-209       End If
-
-234       Set R2 = r.Areas(1)
-          Dim sheetName As String
-          sheetName = EscapeSheetName(R2.Worksheet)
-235       s = sheetName & R2.Address
-236       If showRangeName Then
-237           Set Rname = SearchRangeInVisibleNames(R2)
-238           If Not Rname Is Nothing Then
-239               s = sheetName & StripWorksheetNameAndDollars(Rname.Name, R2.Worksheet)
-240           End If
-241       End If
-          Dim pre As String
-          ' Conversion must also work with multiple areas, eg: A1,B5 converts to Sheet1!A1,Sheet1!B5
-242       For i = 2 To r.Areas.Count
-243           Set R2 = r.Areas(i)
-244           pre = sheetName & R2.Address
-245           If showRangeName Then
-246               Set Rname = SearchRangeInVisibleNames(R2)
-247               If Not Rname Is Nothing Then
-248                   pre = sheetName & StripWorksheetNameAndDollars(Rname.Name, R2.Worksheet)
-249               End If
-250           End If
-251           s = s & "," & pre
-252       Next i
-253       Set R2 = Range(s) ' Check it has worked!
-254       GetDisplayAddress = s
+              GetDisplayAddress = GetDisplayAddress & "," & AreaName
+          Next i
+          
+          ' Trim "," at beginning
+          GetDisplayAddress = Mid(GetDisplayAddress, 2)
+          ' Check it works!
+          Set r = Range(GetDisplayAddress)
 
 ExitFunction:
           If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg

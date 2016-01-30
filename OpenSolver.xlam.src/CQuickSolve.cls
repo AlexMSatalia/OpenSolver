@@ -170,13 +170,11 @@ Public Function UpdateModelRHS(sheet As Worksheet, ByRef RHS() As Double) As Boo
 
           ' Find the Parameter range on the given (current) sheet, and check that this is the range we are set up for
           Dim ParamRange As Range
-2719      Set ParamRange = GetQuickSolveParameters(sheet)
-2720      If ParamRange Is Nothing Then
-2721          Err.Raise OpenSolver_BuildError, Description:="No Parameter range could be found on the worksheet."
-2724      End If
+2719      Set ParamRange = GetQuickSolveParameters(sheet, Validate:=True)
+
 2726      If (CurrentParameterRange.Address <> ParamRange.Address) Or _
-             (CurrentParameterRange.Worksheet.Name <> sheet.Name) Or _
-             (CurrentParameterRange.Worksheet.Parent.Name <> sheet.Parent.Name) Then
+             (CurrentParameterRange.Worksheet.Name <> ParamRange.Worksheet.Name) Or _
+             (CurrentParameterRange.Worksheet.Parent.Name <> ParamRange.Worksheet.Parent.Name) Then
 2727          Err.Raise OpenSolver_BuildError, Description:="QuickSolve Failed: You need to initialize the QuickSolve engine for the current parameters."
 2730      End If
 2731      If NumParams <> ParamRange.Count Then

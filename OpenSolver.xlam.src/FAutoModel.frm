@@ -20,7 +20,8 @@ Option Explicit
     Const FormWidthAutoModel = 340
 #End If
 
-Public ObjectiveCell As Range
+Public sheet As Worksheet
+Public ObjectiveFunctionCellRefersTo As String
 Public ObjectiveSense As ObjectiveSenseType
 
 Private Sub cmdCancel_Click()
@@ -45,27 +46,15 @@ Private Sub UserForm_Activate()
 4050      On Error Resume Next
 4051      Application.Calculate
 4052      On Error GoTo 0
+
           ' Remove the 'marching ants' showing if a range is copied.
           ' Otherwise, the ants stay visible, and visually conflict with
           ' our cell selection. The ants are also left behind on the
           ' screen. This works around an apparent bug (?) in Excel 2007.
 4053      Application.CutCopyMode = False
-          ' Get ready to process
-4054      DoEvents
+
           ' Show results of finding objective
-4055      SetValues
-          Me.Tag = ""
-End Sub
-
-Private Sub ResetEverything()
-4056      Set ObjectiveCell = Nothing
-          refObj.Text = ""
-4057      ObjectiveSense = UnknownObjectiveSense
-          optMax.value = False
-          optMin.value = False
-End Sub
-
-Private Sub SetValues()
+4054      DoEvents
 4059      If ObjectiveSense = UnknownObjectiveSense Then
               ' Didn't find anything
 4060          lblStatus.Caption = "AutoModel was unable to guess anything." & vbNewLine & _
@@ -76,9 +65,18 @@ Private Sub SetValues()
               lblStatus.Caption = "AutoModel found the objective sense, but couldn't find the objective cell." & vbNewLine & _
                                   "Please check the objective sense and enter the objective function cell."
 4065      End If
-          
 4066      Me.Repaint
 4067      DoEvents
+
+          Me.Tag = ""
+End Sub
+
+Private Sub ResetEverything()
+          ObjectiveFunctionCellRefersTo = vbNullString
+          refObj.Text = vbNullString
+4057      ObjectiveSense = UnknownObjectiveSense
+          optMax.value = False
+          optMin.value = False
 End Sub
 
 Private Sub cmdFinish_Click()
@@ -86,15 +84,20 @@ Private Sub cmdFinish_Click()
 4071      If optMax.value = True Then ObjectiveSense = MaximiseObjective
 4072      If optMin.value = True Then ObjectiveSense = MinimiseObjective
           
-          ' Check if user changed objective cell
-4069      On Error GoTo BadObjRef
-4070      Set ObjectiveCell = ActiveSheet.Range(refObj.Text)
-          
-          
 4073      If ObjectiveSense = UnknownObjectiveSense Then
-4074          MsgBox "Error: Please select an objective sense (minimise or maximise)!", vbExclamation + vbOKOnly, "AutoModel"
-4075          Exit Sub
-4076      End If
+              If refObj.Text = "" Then
+                  ' We allow a blank objective if no sense is set.
+                  ' Set a valid sense
+                  ObjectiveSense = MinimiseObjective
+              Else
+4074              GoTo BadObjSense
+              End If
+4076      Else
+4069          On Error GoTo BadObjRef
+              ObjectiveFunctionCellRefersTo = RefEditToRefersTo(refObj.Text)
+              ValidateObjectiveFunctionCellRefersTo ObjectiveFunctionCellRefersTo
+              On Error GoTo 0
+          End If
           
 ExitSub:
 4081      Me.Hide
@@ -102,19 +105,16 @@ ExitSub:
 4084      Exit Sub
           
 BadObjRef:
-          ' Couldn't turn the objective cell address into a range
-          ' If no objective sense is specified, show an error. We allow a blank objective if no sense is set.
-4085      If ObjectiveSense <> UnknownObjectiveSense Then
-              MsgBox "Error: the cell address for the objective is invalid. Please correct " & _
-                     "and click 'Finish AutoModel' again.", vbExclamation + vbOKOnly, "AutoModel"
-4086          refObj.SetFocus ' Set the focus back to the RefEdit
-4087          DoEvents ' Try to stop RefEdit bugs
-          Else
-              ' Set a valid sense
-              ObjectiveSense = MinimiseObjective
-              Resume ExitSub
-          End If
+          MsgBox "Error: the cell address for the objective is invalid. " & _
+                 "This must be a single cell. " & _
+                 "Please correct this and click 'Finish AutoModel' again.", vbExclamation + vbOKOnly, "AutoModel"
+4086      refObj.SetFocus ' Set the focus back to the RefEdit
+4087      DoEvents ' Try to stop RefEdit bugs
 4088      Exit Sub
+
+BadObjSense:
+          MsgBox "Error: Please select an objective sense (minimise or maximise)!", vbExclamation + vbOKOnly, "AutoModel"
+4075      Exit Sub
 End Sub
 
 

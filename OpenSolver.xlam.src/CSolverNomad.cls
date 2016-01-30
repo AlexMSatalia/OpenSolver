@@ -214,7 +214,7 @@ Private Sub Solve(s As COpenSolver)
 
     Dim ScreenStatus As Boolean
     ScreenStatus = Application.ScreenUpdating
-    Application.ScreenUpdating = GetShowSolverProgress()
+    Application.ScreenUpdating = GetShowSolverProgress(s.sheet)
     
     Dim currentDir As String
     currentDir = CurDir

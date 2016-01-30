@@ -67,9 +67,7 @@ End Function
 ' */
 Public Function GetChosenSolver(Optional sheet As Worksheet) As String
     GetActiveSheetIfMissing sheet
-    If Not GetSheetNameValueIfExists(sheet, "OpenSolver_ChosenSolver", GetChosenSolver) Then
-        GoTo SetDefault
-    End If
+    If Not GetNamedStringIfExists(sheet, "OpenSolver_ChosenSolver", GetChosenSolver) Then GoTo SetDefault
     
     ' Check solver is an allowed solver
     On Error GoTo SetDefault
@@ -87,6 +85,7 @@ End Function
 ' * @param {} sheet The worksheet containing the model (defaults to active worksheet)
 ' */
 Public Sub SetChosenSolver(SolverShortName As String, Optional sheet As Worksheet)
+    GetActiveSheetIfMissing sheet
     ' Check that a valid solver has been specified
     On Error GoTo SolverNotAllowed
     WorksheetFunction.Match SolverShortName, GetAvailableSolvers, 0
@@ -102,44 +101,37 @@ End Sub
 '/**
 ' * Returns the objective cell in an OpenSolver model.
 ' * @param {} sheet The worksheet containing the model (defaults to active worksheet)
-' * @param {} ValidateObjective If True, throws an error if the model is invalid. Defaults to False
+' * @param {} Validate If True, throws an error if the model is invalid. Defaults to True
+' * @param {} RefersTo Returns the RefersTo string describing the objective
 ' */
-Public Function GetObjectiveFunctionCell(Optional sheet As Worksheet, Optional ValidateObjective As Boolean = False) As Range
+Public Function GetObjectiveFunctionCell(Optional sheet As Worksheet, Optional Validate As Boolean = True, Optional RefersTo As String) As Range
     GetActiveSheetIfMissing sheet
     
     ' Get and check the objective function
-    Dim isRangeObj As Boolean, valObj As Double, ObjRefersToError As Boolean, ObjRefersToFormula As Boolean, sRefersToObj As String, objIsMissing As Boolean
-    GetSheetNameAsValueOrRange sheet, "solver_opt", objIsMissing, isRangeObj, GetObjectiveFunctionCell, ObjRefersToFormula, ObjRefersToError, sRefersToObj, valObj
+    Dim isRangeObj As Boolean, valObj As Double, ObjRefersToError As Boolean, ObjRefersToFormula As Boolean, objIsMissing As Boolean
+    GetSheetNameAsValueOrRange sheet, "solver_opt", objIsMissing, isRangeObj, GetObjectiveFunctionCell, ObjRefersToFormula, ObjRefersToError, RefersTo, valObj
 
-    If Not ValidateObjective Then Exit Function
-
-    ' If objMissing is false, but the ObjRange is empty, the objective might be an out of date reference
-    If objIsMissing = False And GetObjectiveFunctionCell Is Nothing Then
-        Err.Raise Number:=OpenSolver_BuildError, Description:="OpenSolver cannot find the objective ('solver_opt' is out of date). Please re-enter the objective, and try again."
-    End If
-    ' Objective is corrupted somehow
-    If ObjRefersToError Then
-        Err.Raise Number:=OpenSolver_BuildError, Description:="The objective is marked #REF!, indicating this cell has been deleted. Please fix the objective, and try again."
-    End If
-    
-    If GetObjectiveFunctionCell Is Nothing Then Exit Function
-    
-    ' Objective has a value that is not a number
-    If VarType(GetObjectiveFunctionCell.Value2) <> vbDouble Then
-        If VarType(GetObjectiveFunctionCell.Value2) = vbError Then
-            Err.Raise Number:=OpenSolver_BuildError, Description:="The objective cell appears to contain an error. This could have occurred if there is a divide by zero error or if you have used the wrong function (eg #DIV/0! or #VALUE!). Please fix this, and try again."
-        Else
-            Err.Raise Number:=OpenSolver_BuildError, Description:="The objective cell does not appear to contain a numeric value. Please fix this, and try again."
+    If Validate Then
+        ' If objMissing is false, but the ObjRange is empty, the objective might be an out of date reference
+        If objIsMissing = False And GetObjectiveFunctionCell Is Nothing Then
+            Err.Raise Number:=OpenSolver_BuildError, Description:="OpenSolver cannot find the objective ('solver_opt' is out of date). Please re-enter the objective, and try again."
+        End If
+        ' Objective is corrupted somehow
+        If ObjRefersToError Then
+            Err.Raise Number:=OpenSolver_BuildError, Description:="The objective is marked #REF!, indicating this cell has been deleted. Please fix the objective, and try again."
+        End If
+        
+        If GetObjectiveFunctionCell Is Nothing Then Exit Function
+        
+        ' Objective has a value that is not a number
+        If VarType(GetObjectiveFunctionCell.Value2) <> vbDouble Then
+            If VarType(GetObjectiveFunctionCell.Value2) = vbError Then
+                Err.Raise Number:=OpenSolver_BuildError, Description:="The objective cell appears to contain an error. This could have occurred if there is a divide by zero error or if you have used the wrong function (eg #DIV/0! or #VALUE!). Please fix this, and try again."
+            Else
+                Err.Raise Number:=OpenSolver_BuildError, Description:="The objective cell does not appear to contain a numeric value. Please fix this, and try again."
+            End If
         End If
     End If
-End Function
-
-'/**
-' * Returns the objective cell in an OpenSolver model. Throws error if invalid.
-' * @param {} sheet The worksheet containing the model (defaults to active worksheet)
-' */
-Public Function GetObjectiveFunctionCellWithValidation(Optional sheet As Worksheet) As Range
-    Set GetObjectiveFunctionCellWithValidation = GetObjectiveFunctionCell(sheet, True)
 End Function
 
 '/**
@@ -148,6 +140,8 @@ End Function
 ' * @param {} sheet The worksheet containing the model (defaults to active worksheet)
 ' */
 Public Sub SetObjectiveFunctionCell(ObjectiveFunctionCell As Range, Optional sheet As Worksheet)
+    GetActiveSheetIfMissing sheet
+    ValidateObjectiveFunctionCell ObjectiveFunctionCell
     SetNamedRangeIfExists "solver_opt", ObjectiveFunctionCell, sheet
 End Sub
 
@@ -156,7 +150,8 @@ End Sub
 ' * @param {} sheet The worksheet containing the model (defaults to active worksheet)
 ' */
 Public Function GetObjectiveSense(Optional sheet As Worksheet) As ObjectiveSenseType
-    GetObjectiveSense = GetNamedIntegerWithDefault("solver_typ", sheet, ObjectiveSenseType.MinimiseObjective)
+    GetActiveSheetIfMissing sheet
+    GetObjectiveSense = GetNamedIntegerWithDefault(sheet, "solver_typ", ObjectiveSenseType.MinimiseObjective)
     
     ' Check that our integer is a valid value for the enum
     Dim i As Integer
@@ -174,6 +169,7 @@ End Function
 ' * @param {} sheet The worksheet containing the model (defaults to active worksheet)
 ' */
 Public Sub SetObjectiveSense(ObjectiveSense As ObjectiveSenseType, Optional sheet As Worksheet)
+    GetActiveSheetIfMissing sheet
     SetIntegerNameOnSheet "solver_typ", ObjectiveSense, sheet
 End Sub
 
@@ -182,7 +178,8 @@ End Sub
 ' * @param {} sheet The worksheet containing the model (defaults to active worksheet)
 ' */
 Public Function GetObjectiveTargetValue(Optional sheet As Worksheet) As Double
-    GetObjectiveTargetValue = GetNamedDoubleWithDefault("solver_val", sheet, 0)
+    GetActiveSheetIfMissing sheet
+    GetObjectiveTargetValue = GetNamedDoubleWithDefault(sheet, "solver_val", 0)
 End Function
 
 '/**
@@ -191,35 +188,44 @@ End Function
 ' * @param {} sheet The worksheet containing the model (defaults to active worksheet)
 ' */
 Public Sub SetObjectiveTargetValue(ObjectiveTargetValue As Double, Optional sheet As Worksheet)
+    GetActiveSheetIfMissing sheet
     SetDoubleNameOnSheet "solver_val", ObjectiveTargetValue, sheet
 End Sub
 
 '/**
 ' * Gets the adjustable cells for an OpenSolver model, throwing an error if unset/invalid.
 ' * @param {} sheet The worksheet containing the model (defaults to active worksheet)
+' * @param {} Validate If True, throws an error if the decision variables specified are missing or invalid. Defaults to True
+' * @param {} RefersTo Returns the RefersTo string describing the decision variables
 ' */
-Public Function GetDecisionVariables(Optional sheet As Worksheet) As Range
+Public Function GetDecisionVariables(Optional sheet As Worksheet, Optional Validate As Boolean = True, Optional RefersTo As String) As Range
 ' We check to see if a model exists by getting the adjustable cells. We check for a name first, as this may contain =Sheet1!$C$2:$E$2,Sheet1!#REF!
     GetActiveSheetIfMissing sheet
     
-    Dim n As Name
-    If Not SheetNameExistsInWorkbook(sheet, "solver_adj", n) Then
-        Err.Raise Number:=OpenSolver_ModelError, Description:="No Solver model with decision variables was found on sheet " & sheet.Name
-    End If
-    
-    GetNamedRangeIfExistsOnSheet sheet, "solver_adj", GetDecisionVariables
-    If GetDecisionVariables Is Nothing Then
-        Err.Raise OpenSolver_ModelError, Description:="A model was found on the sheet " & sheet.Name & " but the decision variable cells (" & n & ") could not be interpreted. Please redefine the decision variable cells, and try again."
+    Dim IsRange As Boolean, value As Double, RefersToError As Boolean, RefersToFormula As Boolean, IsMissing As Boolean
+    GetSheetNameAsValueOrRange sheet, "solver_adj", IsMissing, IsRange, GetDecisionVariables, RefersToFormula, RefersToError, RefersTo, value
+
+    If Validate Then
+        If IsMissing Then
+            Err.Raise Number:=OpenSolver_ModelError, Description:="No Solver model with decision variables was found on sheet " & sheet.Name
+        End If
+        
+        If Not IsRange Then
+            Err.Raise OpenSolver_ModelError, Description:="A model was found on the sheet " & sheet.Name & " but the decision variable cells (" & RefersTo & ") could not be interpreted. Please redefine the decision variable cells, and try again."
+        End If
     End If
 End Function
 
 '/**
 ' * Gets the adjustable cells range (returning Nothing if invalid) for an OpenSolver model.
 ' * @param {} sheet The worksheet containing the model (defaults to active worksheet)
+' * @param {} DecisionVariablesRefersTo Returns the RefersTo string describing the decision variables
 ' */
-Public Function GetDecisionVariablesWithDefault(Optional sheet As Worksheet) As Range
+Public Function GetDecisionVariablesWithDefault(Optional sheet As Worksheet, Optional DecisionVariablesRefersTo As String) As Range
+    GetActiveSheetIfMissing sheet
+    
     On Error GoTo SetDefault:
-    Set GetDecisionVariablesWithDefault = GetDecisionVariables(sheet)
+    Set GetDecisionVariablesWithDefault = GetDecisionVariables(sheet, True, DecisionVariablesRefersTo)
     Exit Function
     
 SetDefault:
@@ -229,9 +235,11 @@ End Function
 '/**
 ' * Gets the adjustable cells range (with overlap removed) for an OpenSolver model.
 ' * @param {} sheet The worksheet containing the model (defaults to active worksheet)
+' * @param {} DecisionVariablesRefersTo Returns the RefersTo string describing the decision variables
 ' */
-Public Function GetDecisionVariablesNoOverlap(Optional sheet As Worksheet) As Range
-    Set GetDecisionVariablesNoOverlap = RemoveRangeOverlap(GetDecisionVariables(sheet))
+Public Function GetDecisionVariablesNoOverlap(Optional sheet As Worksheet, Optional DecisionVariablesRefersTo As String) As Range
+    GetActiveSheetIfMissing sheet
+    Set GetDecisionVariablesNoOverlap = RemoveRangeOverlap(GetDecisionVariables(sheet, True, DecisionVariablesRefersTo))
 End Function
 
 '/**
@@ -240,6 +248,8 @@ End Function
 ' * @param {} sheet The worksheet containing the model (defaults to active worksheet)
 ' */
 Public Sub SetDecisionVariables(DecisionVariables As Range, Optional sheet As Worksheet)
+    GetActiveSheetIfMissing sheet
+    ValidateDecisionVariables DecisionVariables
     SetNamedRangeIfExists "adj", DecisionVariables, sheet, True
 End Sub
 
@@ -252,6 +262,8 @@ End Sub
 ' * @param {} sheet The worksheet containing the model (defaults to active worksheet)
 ' */
 Public Sub AddConstraint(LHSRange As Range, Relation As RelationConsts, Optional RHSRange As Range, Optional RHSFormula As String, Optional sheet As Worksheet)
+    GetActiveSheetIfMissing sheet
+    
     Dim NewIndex As Long
     NewIndex = GetNumConstraints(sheet) + 1
     UpdateConstraint NewIndex, LHSRange, Relation, RHSRange, RHSFormula, sheet
@@ -267,6 +279,8 @@ End Sub
 ' * @param {} sheet The worksheet containing the model (defaults to active worksheet)
 ' */
 Public Sub UpdateConstraint(Index As Long, LHSRange As Range, Relation As RelationConsts, Optional RHSRange As Range, Optional RHSFormula As String, Optional sheet As Worksheet)
+    GetActiveSheetIfMissing sheet
+    
     ValidateConstraint LHSRange, Relation, RHSRange, RHSFormula, sheet
     
     SetConstraintLhs Index, LHSRange, sheet
@@ -293,6 +307,8 @@ End Sub
 ' * @param {} sheet The worksheet containing the model (defaults to active worksheet)
 ' */
 Public Sub DeleteConstraint(Index As Long, Optional sheet As Worksheet)
+    GetActiveSheetIfMissing sheet
+    
     Dim NumConstraints As Long
     NumConstraints = GetNumConstraints(sheet)
     
@@ -320,6 +336,8 @@ End Sub
 ' * @param {} sheet The worksheet containing the model (defaults to active worksheet)
 ' */
 Public Sub ResetModel(Optional sheet As Worksheet)
+    GetActiveSheetIfMissing sheet
+    
     Dim SolverNames() As Variant, OpenSolverNames() As Variant, Name As Variant
     SolverNames = Array("opt", "typ", "adj", "neg", "sho", "rlx", "tol", "tim", "pre", "itr", "num", "val")
     OpenSolverNames = Array("ChosenSolver", "DualsNewSheet", "UpdateSensitivity", "LinearityCheck", "Duals")
@@ -337,7 +355,8 @@ End Sub
 ' * @param {} sheet The worksheet containing the model (defaults to active worksheet)
 ' */
 Public Function GetNumConstraints(Optional sheet As Worksheet) As Long
-    GetNumConstraints = GetNamedIntegerWithDefault("solver_num", sheet, 0)
+    GetActiveSheetIfMissing sheet
+    GetNumConstraints = GetNamedIntegerWithDefault(sheet, "solver_num", 0)
 End Function
 
 '/**
@@ -346,6 +365,7 @@ End Function
 ' * @param {} sheet The worksheet containing the model (defaults to active worksheet)
 ' */
 Public Sub SetNumConstraints(NumConstraints As Long, Optional sheet As Worksheet)
+    GetActiveSheetIfMissing sheet
     SetIntegerNameOnSheet "solver_num", NumConstraints, sheet
 End Sub
 
@@ -353,26 +373,28 @@ End Sub
 ' * Returns the LHS range for a specified constraint in an OpenSolver model.
 ' * @param {} Index The index of the constraint
 ' * @param {} sheet The worksheet containing the model (defaults to active worksheet)
-' * @param {} RefersTo Optional. Returns a string representation of the LHS range
+' * @param {} Validate Whether to validate the LHS range. Defaults to True
+' * @param {} RefersTo Returns RefersTo string representation of the LHS range
 ' */
-Public Function GetConstraintLhs(Index As Long, Optional sheet As Worksheet, Optional RefersTo As String) As Range
+Public Function GetConstraintLhs(Index As Long, Optional sheet As Worksheet, Optional Validate As Boolean = True, Optional RefersTo As String) As Range
     GetActiveSheetIfMissing sheet
-    
-    Set GetConstraintLhs = Nothing
     
     Dim IsRange As Boolean, value As Double, RefersToError As Boolean, RefersToFormula As Boolean, IsMissing As Boolean
     GetSheetNameAsValueOrRange sheet, "solver_lhs" & Index, IsMissing, IsRange, GetConstraintLhs, RefersToFormula, RefersToError, RefersTo, value
-    ' Must have a left hand side defined
-    If IsMissing Then
-        Err.Raise Number:=OpenSolver_BuildError, Description:="The left hand side for a constraint does not appear to be defined ('solver_lhs" & Index & " is missing). Please fix this, and try again."
-    End If
-    ' Must be valid
-    If RefersToError Then
-        Err.Raise Number:=OpenSolver_BuildError, Description:="The constraints reference cells marked #REF!, indicating these cells have been deleted. Please fix these constraints, and try again."
-    End If
-    ' LHSs must be ranges
-    If Not IsRange Then
-        Err.Raise Number:=OpenSolver_BuildError, Description:="A constraint was entered with a left hand side (" & RefersTo & ") that is not a range. Please update the constraint, and try again."
+    
+    If Validate Then
+        ' Must have a left hand side defined
+        If IsMissing Then
+            Err.Raise Number:=OpenSolver_BuildError, Description:="The left hand side for a constraint does not appear to be defined ('solver_lhs" & Index & " is missing). Please fix this, and try again."
+        End If
+        ' Must be valid
+        If RefersToError Then
+            Err.Raise Number:=OpenSolver_BuildError, Description:="The constraints reference cells marked #REF!, indicating these cells have been deleted. Please fix these constraints, and try again."
+        End If
+        ' LHSs must be ranges
+        If Not IsRange Then
+            Err.Raise Number:=OpenSolver_BuildError, Description:="A constraint was entered with a left hand side (" & RefersTo & ") that is not a range. Please update the constraint, and try again."
+        End If
     End If
 End Function
 
@@ -383,6 +405,7 @@ End Function
 ' * @param {} sheet The worksheet containing the model (defaults to active worksheet)
 ' */
 Public Sub SetConstraintLhs(Index As Long, ConstraintLhs As Range, Optional sheet As Worksheet)
+    GetActiveSheetIfMissing sheet
     SetNamedRangeIfExists "solver_lhs" & Index, ConstraintLhs, sheet
 End Sub
 
@@ -392,7 +415,9 @@ End Sub
 ' * @param {} sheet The worksheet containing the model (defaults to active worksheet)
 ' */
 Public Function GetConstraintRel(Index As Long, Optional sheet As Worksheet) As RelationConsts
-    GetConstraintRel = GetNamedIntegerWithDefault("solver_rel" & Index, sheet, RelationConsts.RelationLE)
+    GetActiveSheetIfMissing sheet
+    
+    GetConstraintRel = GetNamedIntegerWithDefault(sheet, "solver_rel" & Index, RelationConsts.RelationLE)
     
     ' Check that our integer is a valid value for the enum
     Dim i As Integer
@@ -411,6 +436,7 @@ End Function
 ' * @param {} sheet The worksheet containing the model (defaults to active worksheet)
 ' */
 Public Sub SetConstraintRel(Index As Long, ConstraintRel As RelationConsts, Optional sheet As Worksheet)
+    GetActiveSheetIfMissing sheet
     SetIntegerNameOnSheet "solver_rel" & Index, ConstraintRel, sheet
 End Sub
 
@@ -421,21 +447,23 @@ End Sub
 ' * @param {} value Returns the value of the RHS if it is a constant value
 ' * @param {} RefersToFormula Set to true if the RHS is a string formula
 ' * @param {} sheet The worksheet containing the model (defaults to active worksheet)
+' * @param {} Validate Whether to validate the RHS range. Defaults to True
 ' */
-Public Function GetConstraintRhs(Index As Long, Formula As String, value As Double, RefersToFormula As Boolean, Optional sheet As Worksheet) As Range
+Public Function GetConstraintRhs(Index As Long, Formula As String, value As Double, RefersToFormula As Boolean, Optional sheet As Worksheet, Optional Validate As Boolean = True) As Range
     GetActiveSheetIfMissing sheet
-    
-    Set GetConstraintRhs = Nothing
     
     Dim IsRange As Boolean, RefersToError As Boolean, IsMissing As Boolean
     GetSheetNameAsValueOrRange sheet, "solver_rhs" & Index, IsMissing, IsRange, GetConstraintRhs, RefersToFormula, RefersToError, Formula, value
-    ' Must have a right hand side defined
-    If IsMissing Then
-        Err.Raise Number:=OpenSolver_BuildError, Description:="The right hand side for a constraint does not appear to be defined ('solver_rhs" & Index & " is missing). Please fix this, and try again."
-    End If
-    ' Must be valid
-    If RefersToError Then
-        Err.Raise Number:=OpenSolver_BuildError, Description:="The constraints reference cells marked #REF!, indicating these cells have been deleted. Please fix these constraints, and try again."
+    
+    If Validate Then
+        ' Must have a right hand side defined
+        If IsMissing Then
+            Err.Raise Number:=OpenSolver_BuildError, Description:="The right hand side for a constraint does not appear to be defined ('solver_rhs" & Index & " is missing). Please fix this, and try again."
+        End If
+        ' Must be valid
+        If RefersToError Then
+            Err.Raise Number:=OpenSolver_BuildError, Description:="The constraints reference cells marked #REF!, indicating these cells have been deleted. Please fix these constraints, and try again."
+        End If
     End If
 End Function
 
@@ -447,6 +475,8 @@ End Function
 ' * @param {} sheet The worksheet containing the model (defaults to active worksheet)
 ' */
 Public Sub SetConstraintRhs(Index As Long, ConstraintRhsRange As Range, ConstraintRhsFormula As String, Optional sheet As Worksheet)
+    GetActiveSheetIfMissing sheet
+    
     If ConstraintRhsRange Is Nothing Then
         SetNameOnSheet "rhs" & Index, ConstraintRhsFormula, sheet, True
     Else
@@ -459,7 +489,8 @@ End Sub
 ' * @param {} sheet The worksheet containing the model (defaults to active worksheet)
 ' */
 Public Function GetNonNegativity(Optional sheet As Worksheet) As Boolean
-    GetNonNegativity = GetNamedIntegerAsBooleanWithDefault("solver_neg", sheet, True)
+    GetActiveSheetIfMissing sheet
+    GetNonNegativity = GetNamedIntegerAsBooleanWithDefault(sheet, "solver_neg", True)
 End Function
 
 '/**
@@ -468,6 +499,7 @@ End Function
 ' * @param {} sheet The worksheet containing the model (defaults to active worksheet)
 ' */
 Public Sub SetNonNegativity(NonNegativity As Boolean, Optional sheet As Worksheet)
+    GetActiveSheetIfMissing sheet
     SetBooleanAsIntegerNameOnSheet "solver_neg", NonNegativity, sheet
 End Sub
 
@@ -476,7 +508,8 @@ End Sub
 ' * @param {} sheet The worksheet containing the model (defaults to active worksheet)
 ' */
 Public Function GetLinearityCheck(Optional sheet As Worksheet) As Boolean
-    GetLinearityCheck = GetNamedIntegerAsBooleanWithDefault("OpenSolver_LinearityCheck", sheet, True)
+    GetActiveSheetIfMissing sheet
+    GetLinearityCheck = GetNamedIntegerAsBooleanWithDefault(sheet, "OpenSolver_LinearityCheck", True)
 End Function
 
 '/**
@@ -485,6 +518,7 @@ End Function
 ' * @param {} sheet The worksheet containing the model (defaults to active worksheet)
 ' */
 Public Sub SetLinearityCheck(LinearityCheck As Boolean, Optional sheet As Worksheet)
+    GetActiveSheetIfMissing sheet
     SetBooleanAsIntegerNameOnSheet "OpenSolver_LinearityCheck", LinearityCheck, sheet
 End Sub
 
@@ -493,7 +527,8 @@ End Sub
 ' * @param {} sheet The worksheet containing the model (defaults to active worksheet)
 ' */
 Public Function GetShowSolverProgress(Optional sheet As Worksheet) As Boolean
-    GetShowSolverProgress = GetNamedIntegerAsBooleanWithDefault("solver_sho", sheet, False)
+    GetActiveSheetIfMissing sheet
+    GetShowSolverProgress = GetNamedIntegerAsBooleanWithDefault(sheet, "solver_sho", False)
 End Function
 
 '/**
@@ -502,6 +537,7 @@ End Function
 ' * @param {} sheet The worksheet containing the model (defaults to active worksheet)
 ' */
 Public Sub SetShowSolverProgress(ShowSolverProgress As Boolean, Optional sheet As Worksheet)
+    GetActiveSheetIfMissing sheet
     SetBooleanAsIntegerNameOnSheet "solver_sho", ShowSolverProgress, sheet
 End Sub
 
@@ -510,7 +546,8 @@ End Sub
 ' * @param {} sheet The worksheet containing the model (defaults to active worksheet)
 ' */
 Public Function GetMaxTime(Optional sheet As Worksheet) As Long
-    GetMaxTime = GetNamedIntegerWithDefault("solver_tim", sheet, 999999999)
+    GetActiveSheetIfMissing sheet
+    GetMaxTime = GetNamedIntegerWithDefault(sheet, "solver_tim", 999999999)
 End Function
 
 '/**
@@ -519,6 +556,7 @@ End Function
 ' * @param {} sheet The worksheet containing the model (defaults to active worksheet)
 ' */
 Public Sub SetMaxTime(MaxTime As Long, Optional sheet As Worksheet)
+    GetActiveSheetIfMissing sheet
     SetIntegerNameOnSheet "solver_tim", MaxTime, sheet
 End Sub
 
@@ -527,7 +565,8 @@ End Sub
 ' * @param {} sheet The worksheet containing the model (defaults to active worksheet)
 ' */
 Public Function GetTolerance(Optional sheet As Worksheet) As Double
-    GetTolerance = GetNamedDoubleWithDefault("solver_tol", sheet, 0.05)
+    GetActiveSheetIfMissing sheet
+    GetTolerance = GetNamedDoubleWithDefault(sheet, "solver_tol", 0.05)
 End Function
 
 '/**
@@ -535,6 +574,7 @@ End Function
 ' * @param {} sheet The worksheet containing the model (defaults to active worksheet)
 ' */
 Public Function GetToleranceAsPercentage(Optional sheet As Worksheet) As Double
+    GetActiveSheetIfMissing sheet
     GetToleranceAsPercentage = GetTolerance(sheet) * 100
 End Function
 
@@ -544,6 +584,7 @@ End Function
 ' * @param {} sheet The worksheet containing the model (defaults to active worksheet)
 ' */
 Public Sub SetTolerance(Tolerance As Double, Optional sheet As Worksheet)
+    GetActiveSheetIfMissing sheet
     SetDoubleNameOnSheet "solver_tol", Tolerance, sheet
 End Sub
 
@@ -553,6 +594,7 @@ End Sub
 ' * @param {} sheet The worksheet containing the model (defaults to active worksheet)
 ' */
 Public Sub SetToleranceAsPercentage(Tolerance As Double, Optional sheet As Worksheet)
+    GetActiveSheetIfMissing sheet
     SetTolerance Tolerance / 100, sheet
 End Sub
 
@@ -561,7 +603,8 @@ End Sub
 ' * @param {} sheet The worksheet containing the model (defaults to active worksheet)
 ' */
 Public Function GetMaxIterations(Optional sheet As Worksheet) As Long
-    GetMaxIterations = GetNamedIntegerWithDefault("solver_itr", sheet, 999999999)
+    GetActiveSheetIfMissing sheet
+    GetMaxIterations = GetNamedIntegerWithDefault(sheet, "solver_itr", 999999999)
 End Function
 
 '/**
@@ -570,6 +613,7 @@ End Function
 ' * @param {} sheet The worksheet containing the model (defaults to active worksheet)
 ' */
 Public Sub SetMaxIterations(MaxIterations As Long, Optional sheet As Worksheet)
+    GetActiveSheetIfMissing sheet
     SetIntegerNameOnSheet "solver_itr", MaxIterations, sheet
 End Sub
 
@@ -578,7 +622,8 @@ End Sub
 ' * @param {} sheet The worksheet containing the model (defaults to active worksheet)
 ' */
 Public Function GetPrecision(Optional sheet As Worksheet) As Double
-    GetPrecision = GetNamedDoubleWithDefault("solver_pre", sheet, 0.000001)
+    GetActiveSheetIfMissing sheet
+    GetPrecision = GetNamedDoubleWithDefault(sheet, "solver_pre", 0.000001)
 End Function
 
 '/**
@@ -587,6 +632,7 @@ End Function
 ' * @param {} sheet The worksheet containing the model (defaults to active worksheet)
 ' */
 Public Sub SetPrecision(Precision As Double, Optional sheet As Worksheet)
+    GetActiveSheetIfMissing sheet
     SetDoubleNameOnSheet "solver_pre", Precision, sheet
 End Sub
 
@@ -594,9 +640,18 @@ End Sub
 ' * Returns 'Extra Solver Parameters' range for specified solver in an OpenSolver model.
 ' * @param {} SolverShortName The short name of the solver for which parameters are being returned
 ' * @param {} sheet The worksheet containing the model (defaults to active worksheet)
+' * @param {} Validate Whether to validate the parameters range. Defaults to True
+' * @param {} RefersTo Returns RefersTo string representation of the parameters range
 ' */
-Public Function GetSolverParameters(SolverShortName As String, Optional sheet As Worksheet) As Range
-    If Not GetNamedRangeIfExistsOnSheet(sheet, "OpenSolver_" & SolverShortName & "Parameters", GetSolverParameters) Then Set GetSolverParameters = Nothing
+Public Function GetSolverParameters(SolverShortName As String, Optional sheet As Worksheet, Optional Validate As Boolean = True, Optional RefersTo As String) As Range
+    GetActiveSheetIfMissing sheet
+    
+    Dim IsRange As Boolean, value As Double, RefersToError As Boolean, RefersToFormula As Boolean, IsMissing As Boolean
+    GetSheetNameAsValueOrRange sheet, "OpenSolver_" & SolverShortName & "Parameters", IsMissing, IsRange, GetSolverParameters, RefersToFormula, RefersToError, RefersTo, value
+
+    If Validate Then
+        ValidateSolverParameters GetSolverParameters
+    End If
 End Function
 
 '/**
@@ -606,7 +661,8 @@ End Function
 ' * @param {} sheet The worksheet containing the model (defaults to active worksheet)
 ' */
 Public Sub SetSolverParameters(SolverShortName As String, SolverParameters As Range, Optional sheet As Worksheet)
-    ValidateParametersRange SolverParameters
+    GetActiveSheetIfMissing sheet
+    ValidateSolverParameters SolverParameters
     SetNamedRangeIfExists "OpenSolver_" & SolverShortName & "Parameters", SolverParameters, sheet
 End Sub
 
@@ -616,6 +672,7 @@ End Sub
 ' * @param {} sheet The worksheet containing the model (defaults to active worksheet)
 ' */
 Public Sub DeleteSolverParameters(SolverShortName As String, Optional sheet As Worksheet)
+    GetActiveSheetIfMissing sheet
     SetSolverParameters SolverShortName, Nothing, sheet
 End Sub
 
@@ -624,7 +681,8 @@ End Sub
 ' * @param {} sheet The worksheet containing the model (defaults to active worksheet)
 ' */
 Public Function GetIgnoreIntegerConstraints(Optional sheet As Worksheet) As Boolean
-    GetIgnoreIntegerConstraints = GetNamedIntegerAsBooleanWithDefault("solver_rlx", sheet, False)
+    GetActiveSheetIfMissing sheet
+    GetIgnoreIntegerConstraints = GetNamedIntegerAsBooleanWithDefault(sheet, "solver_rlx", False)
 End Function
 
 '/**
@@ -633,15 +691,25 @@ End Function
 ' * @param {} sheet The worksheet containing the model (defaults to active worksheet)
 ' */
 Public Sub SetIgnoreIntegerConstraints(IgnoreIntegerConstraints As Boolean, Optional sheet As Worksheet)
+    GetActiveSheetIfMissing sheet
     SetBooleanAsIntegerNameOnSheet "solver_rlx", IgnoreIntegerConstraints, sheet
 End Sub
 
 '/**
 ' * Returns target range for sensitivity analysis output for an OpenSolver model.
 ' * @param {} sheet The worksheet containing the model (defaults to active worksheet)
+' * @param {} Validate If True, checks the Duals range for validity. Defaults to True
+' * @param {} RefersTo Returns the RefersTo string describing the Duals range
 ' */
-Public Function GetDuals(Optional sheet As Worksheet) As Range
-    If Not GetNamedRangeIfExistsOnSheet(sheet, "OpenSolver_Duals", GetDuals) Then Set GetDuals = Nothing
+Public Function GetDuals(Optional sheet As Worksheet, Optional Validate As Boolean = True, Optional RefersTo As String) As Range
+    GetActiveSheetIfMissing sheet
+    
+    Dim IsRange As Boolean, value As Double, RefersToError As Boolean, RefersToFormula As Boolean, IsMissing As Boolean
+    GetSheetNameAsValueOrRange sheet, "OpenSolver_Duals", IsMissing, IsRange, GetDuals, RefersToFormula, RefersToError, RefersTo, value
+
+    If Validate Then
+        ' TODO
+    End If
 End Function
 
 '/**
@@ -650,6 +718,8 @@ End Function
 ' * @param {} sheet The worksheet containing the model (defaults to active worksheet)
 ' */
 Public Sub SetDuals(Duals As Range, Optional sheet As Worksheet)
+    GetActiveSheetIfMissing sheet
+    ValidateDuals Duals
     SetNamedRangeIfExists "OpenSolver_Duals", Duals, sheet
 End Sub
 
@@ -658,7 +728,8 @@ End Sub
 ' * @param {} sheet The worksheet containing the model (defaults to active worksheet)
 ' */
 Public Function GetDualsOnSheet(Optional sheet As Worksheet) As Boolean
-    GetDualsOnSheet = GetNamedBooleanWithDefault("OpenSolver_DualsNewSheet", sheet, False)
+    GetActiveSheetIfMissing sheet
+    GetDualsOnSheet = GetNamedBooleanWithDefault(sheet, "OpenSolver_DualsNewSheet", False)
 End Function
 
 '/**
@@ -667,6 +738,7 @@ End Function
 ' * @param {} sheet The worksheet containing the model (defaults to active worksheet)
 ' */
 Public Sub SetDualsOnSheet(DualsOnSheet As Boolean, Optional sheet As Worksheet)
+    GetActiveSheetIfMissing sheet
     SetBooleanNameOnSheet "OpenSolver_DualsNewSheet", DualsOnSheet, sheet
 End Sub
 
@@ -675,7 +747,8 @@ End Sub
 ' * @param {} sheet The worksheet containing the model (defaults to active worksheet)
 ' */
 Public Function GetUpdateSensitivity(Optional sheet As Worksheet) As Boolean
-    GetUpdateSensitivity = GetNamedBooleanWithDefault("OpenSolver_UpdateSensitivity", sheet, True)
+    GetActiveSheetIfMissing sheet
+    GetUpdateSensitivity = GetNamedBooleanWithDefault(sheet, "OpenSolver_UpdateSensitivity", True)
 End Function
 
 '/**
@@ -684,20 +757,28 @@ End Function
 ' * @param {} sheet The worksheet containing the model (defaults to active worksheet)
 ' */
 Public Sub SetUpdateSensitivity(UpdateSensitivity As Boolean, Optional sheet As Worksheet)
+    GetActiveSheetIfMissing sheet
     SetBooleanNameOnSheet "OpenSolver_UpdateSensitivity", UpdateSensitivity, sheet
 End Sub
 
 '/**
 ' * Gets the QuickSolve parameter range for an OpenSolver model.
 ' * @param {} sheet The worksheet containing the model (defaults to active worksheet)
-' * @param {} ValidateRange If True, an error will be thrown if no range is set
+' * @param {} Validate If True, an error will be thrown if no range is set
+' * @param {} RefersTo Returns RefersTo string representation of the parameters range
 ' */
-Public Function GetQuickSolveParameters(Optional sheet As Worksheet, Optional ValidateRange As Boolean = False) As Range
-    If Not GetNamedRangeIfExistsOnSheet(sheet, "OpenSolverModelParameters", GetQuickSolveParameters) Then Set GetQuickSolveParameters = Nothing
-    If ValidateRange And GetQuickSolveParameters Is Nothing Then
-        Err.Raise OpenSolver_BuildError, Description:="No parameter range could be found on the worksheet. Please use ""Initialize Quick Solve Parameters""" & _
-                                                      "to define the cells that you wish to change between successive OpenSolver solves. Note that changes " & _
-                                                      "to these cells must lead to changes in the underlying model's right hand side values for its constraints."
+Public Function GetQuickSolveParameters(Optional sheet As Worksheet, Optional Validate As Boolean = True, Optional RefersTo As String) As Range
+    GetActiveSheetIfMissing sheet
+    
+    Dim IsRange As Boolean, value As Double, RefersToError As Boolean, RefersToFormula As Boolean, IsMissing As Boolean
+    GetSheetNameAsValueOrRange sheet, "OpenSolverModelParameters", IsMissing, IsRange, GetQuickSolveParameters, RefersToFormula, RefersToError, RefersTo, value
+    
+    If Validate Then
+        If GetQuickSolveParameters Is Nothing Then
+            Err.Raise OpenSolver_BuildError, Description:="No parameter range could be found on the worksheet. Please use ""Initialize Quick Solve Parameters""" & _
+                                                          "to define the cells that you wish to change between successive OpenSolver solves. Note that changes " & _
+                                                          "to these cells must lead to changes in the underlying model's right hand side values for its constraints."
+        End If
     End If
 End Function
 
@@ -707,6 +788,8 @@ End Function
 ' * @param {} sheet The worksheet containing the model (defaults to active worksheet)
 ' */
 Public Sub SetQuickSolveParameters(QuickSolveParameters As Range, Optional sheet As Worksheet)
+    GetActiveSheetIfMissing sheet
+    ValidateQuickSolveParameters QuickSolveParameters, sheet
     SetNamedRangeIfExists "OpenSolverModelParameters", QuickSolveParameters, sheet
 End Sub
 
@@ -728,7 +811,7 @@ Public Sub InitializeQuickSolve(Optional SolveRelaxation As Boolean = False, Opt
     End If
 
     Dim ParamRange As Range
-    Set ParamRange = GetQuickSolveParameters(sheet, True)  ' Throws error if missing
+    Set ParamRange = GetQuickSolveParameters(sheet, Validate:=True)  ' Throws error if missing
     Set QuickSolver = New COpenSolver
     QuickSolver.BuildModelFromSolverData LinearityCheckOffset, GetLinearityCheck(sheet), MinimiseUserInteraction, SolveRelaxation, sheet
     QuickSolver.InitializeQuickSolve ParamRange
@@ -776,5 +859,202 @@ End Function
 ' */
 Public Sub ClearQuickSolve()
     Set QuickSolver = Nothing
+End Sub
+
+'/**
+' * Returns the RefersTo string for the objective in an OpenSolver model. WARNING: Do not use RefersTo methods unless you know what you are doing!
+' * @param {} sheet The worksheet containing the model (defaults to active worksheet)
+' */
+Public Function GetObjectiveFunctionCellRefersTo(Optional sheet As Worksheet) As String
+    GetActiveSheetIfMissing sheet
+    GetObjectiveFunctionCell sheet:=sheet, Validate:=False, RefersTo:=GetObjectiveFunctionCellRefersTo
+End Function
+
+'/**
+' * Sets the objective cell using a RefersTo string in an OpenSolver model. WARNING: Do not use RefersTo methods unless you know what you are doing!
+' * @param {} ObjectiveRefersTo The RefersTo string to set as the objective
+' * @param {} sheet The worksheet containing the model (defaults to active worksheet)
+' */
+Public Sub SetObjectiveFunctionCellRefersTo(ObjectiveFunctionCellRefersTo As String, Optional sheet As Worksheet)
+    GetActiveSheetIfMissing sheet
+    ValidateObjectiveFunctionCellRefersTo ObjectiveFunctionCellRefersTo
+    SetRefersToNameOnSheet "solver_opt", ObjectiveFunctionCellRefersTo, sheet
+End Sub
+
+'/**
+' * Returns the RefersTo string for the decision variables in an OpenSolver model. WARNING: Do not use RefersTo methods unless you know what you are doing!
+' * @param {} sheet The worksheet containing the model (defaults to active worksheet)
+' */
+Public Function GetDecisionVariablesRefersTo(Optional sheet As Worksheet) As String
+    GetActiveSheetIfMissing sheet
+    GetDecisionVariables sheet:=sheet, Validate:=False, RefersTo:=GetDecisionVariablesRefersTo
+End Function
+
+'/**
+' * Sets the adjustable cells using a RefersTo string for an OpenSolver model. WARNING: Do not use RefersTo methods unless you know what you are doing!
+' * @param {} DecisionVariablesRefersTo The RefersTo string describing the decision variable range to set
+' * @param {} sheet The worksheet containing the model (defaults to active worksheet)
+' */
+Public Sub SetDecisionVariablesRefersTo(DecisionVariablesRefersTo As String, Optional sheet As Worksheet)
+    GetActiveSheetIfMissing sheet
+    ValidateDecisionVariablesRefersTo DecisionVariablesRefersTo
+    SetRefersToNameOnSheet "adj", DecisionVariablesRefersTo, sheet, True
+End Sub
+
+'/**
+' * Updates an existing constraint in an OpenSolver model using RefersTo strings. WARNING: Do not use RefersTo methods unless you know what you are doing!
+' * @param {} Index The index of the constraint to update
+' * @param {} LHSRefersTo The new RefersTo string to set as the constraint LHS
+' * @param {} Relation The new relation to set for the constraint. If Int/Bin, neither RHSRange nor RHSFormula should be set.
+' * @param {} RHSRefersTo The new RefersTo string to set as the constraint RHS
+' * @param {} sheet The worksheet containing the model (defaults to active worksheet)
+' */
+Public Sub UpdateConstraintRefersTo(Index As Long, LHSRefersTo As String, Relation As RelationConsts, RHSRefersTo As String, Optional sheet As Worksheet)
+    GetActiveSheetIfMissing sheet
+    
+    ValidateConstraintRefersTo LHSRefersTo, Relation, RHSRefersTo, sheet
+    
+    SetConstraintLhsRefersTo Index, LHSRefersTo, sheet
+    SetConstraintRel Index, Relation, sheet
+    
+    Select Case Relation
+    Case RelationINT
+        RHSRefersTo = "integer"
+    Case RelationBIN
+        RHSRefersTo = "binary"
+    Case RelationAllDiff
+        RHSRefersTo = "alldiff"
+    End Select
+    
+    SetConstraintRhsRefersTo Index, RHSRefersTo, sheet
+    
+    If Index > GetNumConstraints(sheet) Then SetNumConstraints Index, sheet
+End Sub
+
+'/**
+' * Gets the constraint description in RefersTo format for the specified constraint in an OpenSolver model. WARNING: Do not use RefersTo methods unless you know what you are doing!
+' * @param {} Index The index of the constraint
+' * @param {} LHSRefersTo Returns the RefersTo string describing the constraint LHS
+' * @param {} Relation Returns the constraint relation type
+' * @param {} RHSRefersTo Returns the RefersTo string describing the constraint RHS
+' * @param {} sheet The worksheet containing the model (defaults to active worksheet)
+' */
+Public Sub GetConstraintRefersTo(Index As Long, LHSRefersTo As String, Relation As RelationConsts, RHSRefersTo As String, Optional sheet As Worksheet)
+    GetActiveSheetIfMissing sheet
+    
+    LHSRefersTo = GetConstraintLhsRefersTo(Index, sheet)
+    Relation = GetConstraintRel(Index, sheet)
+    If RelationHasRHS(Relation) Then
+        RHSRefersTo = GetConstraintRhsRefersTo(Index, sheet)
+    Else
+        RHSRefersTo = vbNullString
+    End If
+End Sub
+
+'/**
+' * Returns the RefersTo string for the LHS of the specified constraint in an OpenSolver model. WARNING: Do not use RefersTo methods unless you know what you are doing!
+' * @param {} Index The index of the constraint
+' * @param {} sheet The worksheet containing the model (defaults to active worksheet)
+' */
+Public Function GetConstraintLhsRefersTo(Index As Long, Optional sheet As Worksheet) As String
+    GetActiveSheetIfMissing sheet
+    GetConstraintLhs Index, sheet:=sheet, Validate:=False, RefersTo:=GetConstraintLhsRefersTo
+End Function
+
+'/**
+' * Sets the constraint LHS using a RefersTo string for a specified constraint in an OpenSolver model. Using Set methods to modify constraints is dangerous, it is best to use Add/Delete/UpdateConstraint. WARNING: Do not use RefersTo methods unless you know what you are doing!
+' * @param {} Index The index of the constraint to modify
+' * @param {} ConstraintLhsRefersTo The RefersTo string to set as the constraint LHS
+' * @param {} sheet The worksheet containing the model (defaults to active worksheet)
+' */
+Public Sub SetConstraintLhsRefersTo(Index As Long, ConstraintLhsRefersTo As String, Optional sheet As Worksheet)
+    GetActiveSheetIfMissing sheet
+    SetRefersToNameOnSheet "solver_lhs" & Index, ConstraintLhsRefersTo, sheet
+End Sub
+
+'/**
+' * Returns the RefersTo string for the LHS of the specified constraint in an OpenSolver model. WARNING: Do not use RefersTo methods unless you know what you are doing!
+' * @param {} Index The index of the constraint
+' * @param {} sheet The worksheet containing the model (defaults to active worksheet)
+' */
+Public Function GetConstraintRhsRefersTo(Index As Long, Optional sheet As Worksheet) As String
+    GetActiveSheetIfMissing sheet
+    
+    Dim value As Double, RefersToFormula As Boolean
+    GetConstraintRhs Index, GetConstraintRhsRefersTo, value, RefersToFormula, sheet:=sheet, Validate:=False
+End Function
+
+'/**
+' * Sets the constraint RHS using a RefersTo string for a specified constraint in an OpenSolver model. Using Set methods to modify constraints is dangerous, it is best to use Add/Delete/UpdateConstraint. WARNING: Do not use RefersTo methods unless you know what you are doing!
+' * @param {} Index The index of the constraint to modify
+' * @param {} ConstraintRhsRefersTo The RefersTo string to set as the constraint RHS
+' * @param {} sheet The worksheet containing the model (defaults to active worksheet)
+' */
+Public Sub SetConstraintRhsRefersTo(Index As Long, ConstraintRhsRefersTo As String, Optional sheet As Worksheet)
+    GetActiveSheetIfMissing sheet
+    SetRefersToNameOnSheet "solver_rhs" & Index, ConstraintRhsRefersTo, sheet
+End Sub
+
+'/**
+' * Returns the RefersTo string for the 'Extra Solver Parameters' range for specified solver in an OpenSolver model. WARNING: Do not use RefersTo methods unless you know what you are doing!
+' * @param {} SolverShortName The short name of the solver for which parameters are being returned
+' * @param {} sheet The worksheet containing the model (defaults to active worksheet)
+' */
+Public Function GetSolverParametersRefersTo(SolverShortName As String, Optional sheet As Worksheet) As String
+    GetActiveSheetIfMissing sheet
+    GetSolverParameters SolverShortName, sheet:=sheet, Validate:=False, RefersTo:=GetSolverParametersRefersTo
+End Function
+
+'/**
+' * Sets the 'Extra Parameters' range using a RefersTo string for a specified solver in an OpenSolver model. WARNING: Do not use RefersTo methods unless you know what you are doing!
+' * @param {} Index The index of the constraint to modify
+' * @param {} SolverParametersRefersTo The RefersTo string to set as the extra parameters range
+' * @param {} sheet The worksheet containing the model (defaults to active worksheet)
+' */
+Public Sub SetSolverParametersRefersTo(SolverShortName As String, SolverParametersRefersTo As String, Optional sheet As Worksheet)
+    GetActiveSheetIfMissing sheet
+    
+    ValidateSolverParametersRefersTo SolverParametersRefersTo
+    SetRefersToNameOnSheet "OpenSolver_" & SolverShortName & "Parameters", SolverParametersRefersTo, sheet
+End Sub
+
+'/**
+' * Returns the RefersTo string for the sensitivity analysis output in an OpenSolver model. WARNING: Do not use RefersTo methods unless you know what you are doing!
+' * @param {} sheet The worksheet containing the model (defaults to active worksheet)
+' */
+Public Function GetDualsRefersTo(Optional sheet As Worksheet) As String
+    GetActiveSheetIfMissing sheet
+    GetDuals sheet:=sheet, Validate:=False, RefersTo:=GetDualsRefersTo
+End Function
+
+'/**
+' * Sets target range for sensitivity analysis output using a RefersTo string for an OpenSolver model. WARNING: Do not use RefersTo methods unless you know what you are doing!
+' * @param {} DualsRefersTo The RefersTo string describing the target range for output (Nothing for no sensitivity analysis)
+' * @param {} sheet The worksheet containing the model (defaults to active worksheet)
+' */
+Public Sub SetDualsRefersTo(DualsRefersTo As String, Optional sheet As Worksheet)
+    GetActiveSheetIfMissing sheet
+    ValidateDualsRefersTo DualsRefersTo
+    SetRefersToNameOnSheet "OpenSolver_Duals", DualsRefersTo, sheet
+End Sub
+
+'/**
+' * Returns the RefersTo string for the QuickSolve parameter range in an OpenSolver model. WARNING: Do not use RefersTo methods unless you know what you are doing!
+' * @param {} sheet The worksheet containing the model (defaults to active worksheet)
+' */
+Public Function GetQuickSolveParametersRefersTo(Optional sheet As Worksheet) As String
+    GetActiveSheetIfMissing sheet
+    GetQuickSolveParameters sheet:=sheet, Validate:=False, RefersTo:=GetQuickSolveParametersRefersTo
+End Function
+
+'/**
+' * Sets the QuickSolve parameter range using a RefersTo string for an OpenSolver model. WARNING: Do not use RefersTo methods unless you know what you are doing!
+' * @param {} QuickSolveParametersRefersTo The RefersTo string describing the parameter range to set
+' * @param {} sheet The worksheet containing the model (defaults to active worksheet)
+' */
+Public Sub SetQuickSolveParametersRefersTo(QuickSolveParametersRefersTo As String, Optional sheet As Worksheet)
+    GetActiveSheetIfMissing sheet
+    ValidateQuickSolveParametersRefersTo QuickSolveParametersRefersTo, sheet
+    SetRefersToNameOnSheet "OpenSolverModelParameters", QuickSolveParametersRefersTo, sheet
 End Sub
 

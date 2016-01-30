@@ -9,26 +9,53 @@ Attribute VB_PredeclaredId = False
 Attribute VB_Exposed = False
 Option Explicit
 
-Public LHS As Range
-Public RHS As Range
-Public RHSstring As String
-Public RelationType As RelationConsts
-Public RelationCell As Range  ' Used during AutoModel: The cell on the sheet containing the relation information
+' Used for tracking the constraints on the model form
+' All modification must via `Update` - enforced by only having getters for these private variables
 
-Public Sub Init(newLHS As Range, newRelationType As RelationConsts, Optional newRelationCell As Range, Optional newRHS As Range, Optional newRHSstring As String)
-    Set LHS = newLHS
-    Set RHS = newRHS
-    RHSstring = newRHSstring
-    RelationType = newRelationType
-    Set RelationCell = newRelationCell
+' These are set by the fields on the form
+Private pLHSRefersTo As String
+Private pRHSRefersTo As String
+Private pRHSRefersToLocal As String  ' RefersTo in local format
+Private pRelation As RelationConsts
+
+' These are recalculated automatically each time the constraints are updated
+Private pLHSRange As Range
+Private pRHSRange As Range
+Private pRHSFormula As String
+
+Public Property Get LHSRefersTo() As String
+    LHSRefersTo = pLHSRefersTo
+End Property
+Public Property Get RHSRefersTo() As String
+    RHSRefersTo = pRHSRefersTo
+End Property
+Public Property Get RHSRefersToLocal() As String
+    RHSRefersToLocal = pRHSRefersToLocal
+End Property
+Public Property Get Relation() As RelationConsts
+    Relation = pRelation
+End Property
+Public Property Get LHSRange() As Range
+    Set LHSRange = pLHSRange
+End Property
+Public Property Get RHSRange() As Range
+    Set RHSRange = pRHSRange
+End Property
+Public Property Get RHSFormula() As String
+    RHSFormula = pRHSFormula
+End Property
+
+Public Sub Update(newLHSRefersTo As String, newRelation As RelationConsts, newRHSRefersTo As String, sheet As Worksheet)
+    pLHSRefersTo = newLHSRefersTo
+    pRelation = newRelation
+    pRHSRefersTo = IIf(RelationHasRHS(newRelation), newRHSRefersTo, vbNullString)
+    pRHSRefersToLocal = ConvertToCurrentLocale(pRHSRefersTo)
+    
+    ConvertRefersToConstraint pLHSRefersTo, pRHSRefersTo, pLHSRange, pRHSRange, pRHSFormula
 End Sub
 
-Public Property Get KeyCell() As Range
-   Set KeyCell = IIf(RelationHasRHS(RelationType), RelationCell, LHS)
-End Property
-
-Public Property Get Key() As String
-   Key = KeyCell.Address
-End Property
-
-
+Public Function ListDisplayString(sheet As Worksheet, Optional showNamedRanges As Boolean = False) As String
+    ListDisplayString = GetDisplayAddress(pLHSRefersTo, sheet, showNamedRanges) & _
+                        " " & RelationEnumToString(pRelation) & " " & _
+                        GetDisplayAddress(pRHSRefersToLocal, sheet, showNamedRanges)
+End Function

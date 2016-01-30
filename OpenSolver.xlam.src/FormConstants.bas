@@ -64,6 +64,12 @@ Public Sub AutoFormat(ByRef Controls As Controls)
                 Else
                     .Height = FormTextHeight
                 End If
+                
+                If ContType = "RefEdit" Then
+                    ' Prevent refedit focus bugs, but lose the ability to tab into refedits, so we don't do it
+                    ' See: http://peltiertech.com/using-refedit-controls-in-excel-dialogs/#comment-276990
+                    '.TabStop = False
+                End If
             End With
         End If
     Next
