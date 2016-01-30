@@ -29,11 +29,19 @@ Private pConsoleOutput As String
     Const ConsoleHeight = 400
 #End If
 
+Private Sub cmdCancel_Click()
+    ProcessAbortSignal
+End Sub
+
+Private Sub cmdOk_Click()
+    ProcessAbortSignal
+End Sub
+
 Private Sub txtConsole_KeyDown(ByVal KeyCode As MSForms.ReturnInteger, ByVal Shift As Integer)
     ' Override any escape keypress for the textbox so it doesn't clear the text
     If KeyCode = 27 Then
         KeyCode = 0
-        cmdClose_Click
+        ProcessAbortSignal
     End If
 End Sub
 
@@ -42,11 +50,10 @@ Private Sub UserForm_QueryClose(Cancel As Integer, CloseMode As Integer)
     ' If CloseMode = vbFormControlMenu then we know the user
     ' clicked the [x] close button or Alt+F4 to close the form.
     If CloseMode = vbFormControlMenu Then
-        cmdClose_Click
+        ProcessAbortSignal
         Cancel = True
     End If
 End Sub
-
 
 Public Sub SetInput(Command As String, LogPath As String, StartDir As String)
     pCommand = Command
@@ -84,14 +91,17 @@ Public Sub MarkCompleted()
         message = "Process completed successfully."
     End If
     Me.AppendText vbNewLine & vbNewLine & message
-    cmdClose.Caption = "OK"
     
     ' Scroll to bottom
     Me.txtConsole.SetFocus
+    
+    cmdCancel.Enabled = False
+    cmdOk.Enabled = True
+    cmdOk.SetFocus
 End Sub
 
-Private Sub cmdClose_Click()
-    If Me.cmdClose.Caption = "Cancel" Then
+Private Sub ProcessAbortSignal()
+    If cmdCancel.Enabled Then
         Me.Tag = "Cancelled"
     Else
         Me.Hide
@@ -138,24 +148,34 @@ Private Sub AutoLayout()
     
     Me.Width = Me.txtConsole.Width + 2 * FormMargin
     
-    With Me.cmdClose
+    With Me.cmdCancel
         .Caption = "Cancel"
         .Width = FormButtonWidth
         .Left = LeftOfForm(Me.Width, .Width) - 1  ' To account for etched effect on textbox
         .Top = Below(Me.txtConsole)
         .Cancel = True
+        .Enabled = True
+    End With
+    
+    With Me.cmdOk
+        .Caption = "OK"
+        .Width = FormButtonWidth
+        .Left = LeftOf(cmdCancel, .Width)
+        .Top = cmdCancel.Top
+        .Cancel = True
+        .Enabled = False
     End With
     
     ' Make the label wide enough so that the message is on one line, then use autosize to shrink the width.
     With Me.lblElapsed
         .Caption = "OpenSolver is busy running your optimisation model..."
         .Left = FormMargin
-        .Width = Me.txtConsole.Width - Me.cmdClose.Width - FormMargin
+        .Width = Me.cmdOk.Left - Me.txtConsole.Left - FormMargin
         AutoHeight Me.lblElapsed, .Width
-        .Top = Me.cmdClose.Top + (Me.cmdClose.Height - .Height) / 2
+        .Top = Me.cmdCancel.Top + (Me.cmdCancel.Height - .Height) / 2
     End With
     
-    Me.Height = FormHeight(Me.cmdClose)
+    Me.Height = FormHeight(Me.cmdCancel)
     Me.Width = Me.Width + FormWindowMargin
     
     Me.BackColor = FormBackColor
