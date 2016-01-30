@@ -401,8 +401,9 @@ Public Function ExecCapture(Command As String, Optional LogPath As String, Optio
     RaiseError = False
     On Error GoTo ErrorHandler
     
-    Dim InteractiveStatus As Boolean
+    Dim InteractiveStatus As Boolean, CursorStatus As XlMousePointer
     InteractiveStatus = Application.Interactive
+    CursorStatus = Application.Cursor
 
     If DisplayOutput Then
         Dim frmConsole As FConsole
@@ -410,7 +411,9 @@ Public Function ExecCapture(Command As String, Optional LogPath As String, Optio
         frmConsole.SetInput Command, LogPath, StartDir
         
         Application.Interactive = True
+        Application.Cursor = xlDefault
         frmConsole.Show
+        Application.Cursor = CursorStatus
         Application.Interactive = InteractiveStatus
         
         ' Get all data from form and destroy it
@@ -432,6 +435,7 @@ Public Function ExecCapture(Command As String, Optional LogPath As String, Optio
 
 ExitFunction:
     Application.Interactive = InteractiveStatus
+    Application.Cursor = CursorStatus
     If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
     Exit Function
 
