@@ -164,6 +164,7 @@ Public Function SolveOnNeos(message As String, errorString As String, Optional f
               End If
               
               UpdateStatusBar "OpenSolver: Solving model on NEOS... Time Elapsed: " & Int(Timer() - StartTime) & " seconds"
+              DoEvents
               
               result = GetNeosJobStatus(jobNumber, Password)
 6843          If result = "Done" Then
