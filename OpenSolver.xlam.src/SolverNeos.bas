@@ -155,15 +155,15 @@ Public Function SolveOnNeos(message As String, errorString As String, Optional f
           If Not frmCallingNeos Is Nothing Then frmCallingNeos.Tag = "Running"
           
           ' Loop until job is done
-          Dim time As Long, Done As Boolean
-6835      time = 0
+          Dim StartTime As Single, Done As Boolean
+6835      StartTime = Timer()
           Done = False
 6836      While Done = False
               If Not frmCallingNeos Is Nothing Then
                   If frmCallingNeos.Tag = "Cancelled" Then GoTo Aborted
               End If
               
-              UpdateStatusBar "OpenSolver: Solving model on NEOS... Time Elapsed: " & time & " seconds"
+              UpdateStatusBar "OpenSolver: Solving model on NEOS... Time Elapsed: " & Int(Timer() - StartTime) & " seconds"
               
               result = GetNeosJobStatus(jobNumber, Password)
 6843          If result = "Done" Then
@@ -171,8 +171,7 @@ Public Function SolveOnNeos(message As String, errorString As String, Optional f
 6845          ElseIf result <> "Waiting" And result <> "Running" Then
 6846              Err.Raise OpenSolver_NeosError, Description:="An error occured while waiting for NEOS. NEOS returned: " & result
 6848          Else
-6849              mSleep 1000  ' 1 second
-6850              time = time + 1
+6849              mSleep 5000  ' 5 seconds
                   DoEvents
 6853          End If
 6854      Wend
