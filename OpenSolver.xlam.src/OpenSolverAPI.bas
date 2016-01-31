@@ -1,8 +1,8 @@
 Attribute VB_Name = "OpenSolverAPI"
 Option Explicit
 
-Public Const sOpenSolverVersion As String = "2.7.1"
-Public Const sOpenSolverDate As String = "2015.06.28"
+Public Const sOpenSolverVersion As String = "2.8.0"
+Public Const sOpenSolverDate As String = "2016.02.01"
 
 '/**
 ' * Solves the OpenSolver model on the current sheet.
