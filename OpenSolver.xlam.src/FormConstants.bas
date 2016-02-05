@@ -105,7 +105,7 @@ Public Sub AutoHeight(NewControl As Control, Width As Long, Optional ShrinkWidth
     End With
 End Sub
 
-Public Function CenterFormTop(FormHeight As Long)
+Public Function CenterFormTop(FormHeight As Long) As Single
     Dim BaseTop As Long, BaseHeight As Long
     
     On Error GoTo NoWindow
@@ -133,7 +133,7 @@ NoWindow:
     Resume Calculate
 End Function
 
-Public Function CenterFormLeft(FormWidth As Long)
+Public Function CenterFormLeft(FormWidth As Long) As Single
     Dim BaseLeft As Long, BaseWidth As Long
     
     On Error GoTo NoWindow
