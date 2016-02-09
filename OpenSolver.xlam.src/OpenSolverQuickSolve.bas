@@ -17,17 +17,16 @@ Function SetQuickSolveParameterRange() As Boolean
           
           ' Get a range from the user
           Dim NewValue As String
-          On Error Resume Next
 379       NewValue = Application.InputBox( _
                          prompt:="Please select the 'parameter' cells that you will be changing between successsive solves of the model.", _
                          Type:=0, _
                          Default:=GetDisplayAddress(ParamRangeRefersTo, sheet, False), _
                          Title:="OpenSolver Quick Solve Parameters")
-          If Err.Number <> 0 And Err.Number <> 424 Then ' Error 424: Object required - happens on cancel press
-              On Error GoTo ErrorHandler
-              Err.Raise Err.Number, Err.Source, Err.Description, Err.HelpFile, Err.HelpContext
-          End If
-          On Error GoTo ErrorHandler
+
+          ' Exit if the return is "False" indicating a cancel press
+          ' If the user enters "False", this is converted to "=FALSE"
+          ' so we can't get a false positive.
+          If NewValue = "False" Then GoTo ExitFunction
           
           ' Formula is always returned as ="<input>" or =<input> depending on whether the user
           ' entered an equals in the formula
