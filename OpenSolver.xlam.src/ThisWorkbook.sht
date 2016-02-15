@@ -22,6 +22,21 @@ Private Sub Workbook_AddinUninstall()
 End Sub
 
 Private Sub Workbook_BeforeClose(Cancel As Boolean)
+          If Not ThisWorkbook.Saved Then
+              Dim Answer As VbMsgBoxResult
+              Answer = MsgBox(ThisWorkbook.Name & " is unsaved. Save?", _
+                              vbExclamation + vbYesNoCancel, "Unsaved Addin")
+              If Answer = vbYes Then
+                  ThisWorkbook.Save
+              ElseIf Answer = vbNo Then
+                  ' Do nothing special and proceed as normal
+              Else
+                  ' Not yes or no - should be cancel, but we just abort the close either way
+                  Cancel = True
+                  Exit Sub
+              End If
+          End If
+    
           On Error Resume Next
 3         AlterMenuItems (False)
           DeleteTempFolder
