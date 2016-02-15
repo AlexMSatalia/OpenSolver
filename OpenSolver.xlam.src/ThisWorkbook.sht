@@ -57,9 +57,10 @@ End Sub
 '====================================================================
 Private Sub Workbook_BeforeSave(ByVal SaveAsUI As Boolean, Cancel As Boolean)
 
-14        If MsgBox("Export VBA Code?", vbYesNo, "Before you go") = vbYes Then
+14        If MsgBox("Export VBA Code and tidy up?", vbYesNo, "Before you go") = vbYes Then
 15            ExportVBACode
               CreateRibbonXML
+              DoTidyUp
 16        End If
 
           If MsgBox("Close all VB windows? Do this before release!", vbYesNo, "Before you go") = vbYes Then
@@ -110,3 +111,13 @@ End Function
 ' Excel Code Exporter by Mike Woodhouse
 ' Released under MIT License at https://xlvbadevtools.codeplex.com/
 '====================================================================
+
+Private Sub DoTidyUp()
+    ' Clear help file
+    ThisWorkbook.VBProject.HelpFile = vbNullString
+    
+    ' Set version number in file properties to the current value
+    ' Adapted from Pearson code: www.cpearson.com/Excel/DocProp.apsx
+    On Error Resume Next
+    ThisWorkbook.BuiltinDocumentProperties("Document version").value = sOpenSolverVersion & " (" & sOpenSolverDate & ")"
+End Sub
