@@ -25,6 +25,8 @@ Public RELs As Collection
 
 Public lngMaxDepth As Long
 
+Dim AdjDependents As Range
+
 Private s As COpenSolver
 
 '==============================================================================
@@ -34,6 +36,7 @@ Public Function ProcessSolverModel(OpenSolver As COpenSolver) As Boolean
           On Error GoTo ErrorHandler
           
           Set s = OpenSolver
+          Set AdjDependents = s.AdjustableCells.Dependents
           
           Set SolverModelParsed.SheetNameMap = New Collection
           Set SolverModelParsed.SheetNameMapReverse = New Collection
@@ -721,7 +724,9 @@ Function ExpandFormula(ByVal strFormula As String, _
 5139                              If FunctionName = "SUMPRODUCT" And Not FunctionCount = 0 Then
 5140                                  Count = Count + 1
 5141                                  If FunctionCount > 1 And Count < rngBuildingRef.Count Then
-5142                                      strParsed = Replace(strParsed, "+", "*" & node & "+", FindPosition(strParsed, "+", Count), 1)
+                                          Dim StartIndex As Long
+                                          StartIndex = FindPosition(strParsed, "+", Count)
+5142                                      strParsed = Left(strParsed, StartIndex - 1) & Replace(strParsed, "+", "*" & node & "+", StartIndex, 1)
 5143                                  Else
 5144                                      strParsed = Replace(strParsed, ",", "*" & node & "+", 1, 1)
 5145                                  End If
@@ -1107,7 +1112,7 @@ Function AddNodeIfNew(ByRef objCurNode As CFormula, ByRef c As Range) As String
               ' This formula is on the same sheet as the adjacent cells
               ' Thus we can safely check if this formula's cell is depedent on
               ' a decision variable
-5377          If objNewNode.IsDependentOn(s.AdjustableCells.Dependents) Then
+5377          If objNewNode.IsDependentOn(AdjDependents) Then
                   ' This formula depends on the value of the adjustable cells
                   ' This means we can NOT evaluate it
 5378              objNewNode.boolCanEval = False
@@ -1131,7 +1136,7 @@ Function AddNodeIfNew(ByRef objCurNode As CFormula, ByRef c As Range) As String
                       GoTo finishedNode
 5387              Else
                       On Error Resume Next
-5388                  AddNodeIfNew = StrExNoPlus(CDbl(varReturn))
+5388                  AddNodeIfNew = StrExNoPlus(varReturn)
                       If Err.Number <> 0 Then
                           On Error GoTo ErrorHandler
                           Err.Raise OpenSolver_ModelError, Description:= _
