@@ -778,7 +778,7 @@ Function ExpandFormula(ByVal strFormula As String, _
                           
 5171                  Case TokenType.ComparisonOperator
 5172                      If tkn.Text = "=" Then
-5173                          strParsed = strParsed + "=="
+5173                          strParsed = strParsed + ConvertFormula(tkn.Text)
 5174                      Else 'TODO (maybe): <>?
 5175                          strParsed = strParsed + tkn.Text
 5176                      End If
@@ -1234,7 +1234,8 @@ Function ConvertFormula_AMPL(tokenText As String) As String
 
 5437      tokenText = LCase(tokenText)
 5438      Select Case tokenText
-          ' RADIANS
+          Case "="
+              ConvertFormula_AMPL = "=="
           Case "radians"
 5439          ConvertFormula_AMPL = "pi/180*("
 5440      Case "pi"
