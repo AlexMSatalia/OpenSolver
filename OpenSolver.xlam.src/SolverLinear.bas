@@ -14,13 +14,11 @@ Sub WriteConstraintListToSheet(r As Range, s As COpenSolver)
 1918      r.Cells(1, 3).Value2 = "Inc"
 1919      r.Cells(1, 4).Value2 = "Dec"
           
-          Dim constraint As Long, row As Long, instance As Long
+          Dim constraint As Long, row As Long, instance As Long, i As Long
+          i = 1
 1921      For row = 1 To s.NumRows
               constraint = s.RowToConstraint(row)
 1922          instance = s.GetConstraintInstance(row, constraint)
-
-              Dim UnusedConstraint As Boolean
-1923          UnusedConstraint = s.SparseA(row).Count = 0
               
               Dim LHSCellRange As Range, RHSCellRange As Range, RHSstring As String
 1924          s.GetConstraintInstanceData constraint, instance, LHSCellRange, RHSCellRange, RHSstring
@@ -31,8 +29,8 @@ Sub WriteConstraintListToSheet(r As Range, s As COpenSolver)
 1930          End If
               
               Dim summary As String
-1931          summary = IIf(UnusedConstraint, "", "") & LHSCellRange.AddressLocal(RowAbsolute:=False, ColumnAbsolute:=False) & _
-                        RelationEnumToString(s.Relation(constraint)) & RHSstring & IIf(UnusedConstraint, "", "")
+1931          summary = LHSCellRange.AddressLocal(RowAbsolute:=False, ColumnAbsolute:=False) & _
+                        RelationEnumToString(s.Relation(constraint)) & RHSstring
           
 1932          r.Cells(row + 1, 1).value = summary
 1933          r.Cells(row + 1, 2).Value2 = ZeroIfSmall(s.ShadowPrice(row))
@@ -47,7 +45,7 @@ Sub WriteConstraintListToSheet(r As Range, s As COpenSolver)
 1940      r.Cells(row, 3).Value2 = "Inc"
 1941      r.Cells(row, 4).Value2 = "Dec"
 1942      row = row + 1
-          Dim i As Long
+
 1943      For i = 1 To s.NumVars
 1944          r.Cells(row, 1).Value2 = s.VarCell(i)
 1945          r.Cells(row, 2).Value2 = ZeroIfSmall(s.ReducedCosts(i))
@@ -128,8 +126,6 @@ Sub WriteConstraintSensitivityTable(sheet As Worksheet, s As COpenSolver)
               constraint = s.RowToConstraint(i)
               instance = s.GetConstraintInstance(i, constraint)
               
-              Dim UnusedConstraint As Boolean
-2312          UnusedConstraint = s.SparseA(i).Count = 0
               Dim LHSCellRange As Range, RHSCellRange As Range, RHSstring As String
 2313          s.GetConstraintInstanceData constraint, instance, LHSCellRange, RHSCellRange, RHSstring
 2314          If Not RHSCellRange Is Nothing Then
@@ -138,8 +134,8 @@ Sub WriteConstraintSensitivityTable(sheet As Worksheet, s As COpenSolver)
 2317              RHSstring = ConvertToCurrentLocale(StripWorksheetNameAndDollars(RHSstring, s.sheet))
 2319          End If
               Dim summary As String
-2320          summary = IIf(UnusedConstraint, "", "") & LHSCellRange.AddressLocal(RowAbsolute:=False, ColumnAbsolute:=False) & _
-                        RelationEnumToString(s.Relation(constraint)) & RHSstring & IIf(UnusedConstraint, "", "")
+2320          summary = LHSCellRange.AddressLocal(RowAbsolute:=False, ColumnAbsolute:=False) & _
+                        RelationEnumToString(s.Relation(constraint)) & RHSstring
               'Cell Range for each constraint
 2321          sheet.Cells(row, Column).value = summary
               'Finds the nearest name for the constraint

@@ -405,17 +405,31 @@ Sub ReadResults(s As COpenSolver)
                 s.DecreaseVar(i) = s.CostCoeffs(i) - Val(SplitLine(1))
                 s.IncreaseVar(i) = Val(SplitLine(2)) - s.CostCoeffs(i)
             Next i
-
-            For i = 1 To s.NumRows
+            
+            ' Throw away first constraint if it was from a seek objective model
+            If s.ObjectiveSense = TargetObjective Then
                 Line Input #2, Line
-                SplitLine = SplitWithoutRepeats(Line, ",")
-                s.ShadowPrice(i) = Val(SplitLine(0))
-                Dim RHSValue As Double
-                RHSValue = Val(SplitLine(1))
-                s.IncreaseCon(i) = Val(SplitLine(4)) - RHSValue
-                s.DecreaseCon(i) = RHSValue - Val(SplitLine(3))
-                s.FinalValue(i) = RHSValue - Val(SplitLine(2))
-            Next i
+            End If
+            
+            Dim row As Long
+            For row = 1 To s.NumRows
+                ' Skip any rows that weren't written
+                If s.SparseA(row).Count > 0 Then
+                    Line Input #2, Line
+                    SplitLine = SplitWithoutRepeats(Line, ",")
+                    s.ShadowPrice(row) = Val(SplitLine(0))
+                    Dim RHSValue As Double
+                    RHSValue = Val(SplitLine(1))
+                    s.IncreaseCon(row) = Val(SplitLine(4)) - RHSValue
+                    s.DecreaseCon(row) = RHSValue - Val(SplitLine(3))
+                    s.FinalValue(row) = RHSValue - Val(SplitLine(2))
+                Else
+                    s.FinalValue(row) = s.RHS(row)
+                    s.ShadowPrice(row) = 0
+                    s.IncreaseCon(row) = 0
+                    s.DecreaseCon(row) = 0
+                End If
+            Next row
         End If
     End If
 

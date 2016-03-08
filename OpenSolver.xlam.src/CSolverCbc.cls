@@ -292,12 +292,9 @@ Private Sub ReadResults(s As COpenSolver)
                 CBCConstraintIndex = CBCConstraintIndex + 1
             End If
 
-            j = 1
             For row = 1 To s.NumRows
-                If s.SparseA(row).Count = 0 Then
-                    ' This constraint was not written to the model, as it had no coefficients. Just ignore it.
-                    s.rConstraintList.Cells(row, 2).ClearContents
-                Else
+                ' Only process rows that were in the model
+                If s.SparseA(row).Count > 0 Then
                     Line Input #1, Line
                     SplitLine = SplitWithoutRepeats(Line, " ")
 
@@ -311,12 +308,14 @@ Private Sub ReadResults(s As COpenSolver)
                     End If
 
                     NameValue = SplitLine(StartOffset + 1)
-                    s.FinalValue(j) = Val(SplitLine(StartOffset + 2))
+                    s.FinalValue(row) = Val(SplitLine(StartOffset + 2))
                     value = Val(SplitLine(StartOffset + 3))
                     If s.ObjectiveSense = MaximiseObjective Then value = -value
-                    s.ShadowPrice(j) = value
+                    s.ShadowPrice(row) = value
                     CBCConstraintIndex = CBCConstraintIndex + 1
-                    j = j + 1
+                Else
+                    s.FinalValue(row) = s.RHS(row)
+                    s.ShadowPrice(row) = 0
                 End If
             Next row
             ReadSensitivityData s
@@ -374,13 +373,24 @@ Sub ReadSensitivityData(s As COpenSolver)
 
     Open RHSRangesFilePath For Input As #2 ' supply path with filename
     Line Input #2, Line 'Dont want first line
-    j = 1
-    While Not EOF(2)
+    row = 1
+    
+    ' Throw away first constraint if it was from a seek objective model
+    If s.ObjectiveSense = TargetObjective Then
         Line Input #2, Line
-        LineData() = Split(Line, ",")
-        s.IncreaseCon(j) = Val(LineData(2))
-        s.DecreaseCon(j) = Val(LineData(4))
-        j = j + 1
+    End If
+    
+    While Not EOF(2)
+        If s.SparseA(row).Count > 0 Then
+            Line Input #2, Line
+            LineData() = Split(Line, ",")
+            s.IncreaseCon(row) = Val(LineData(2))
+            s.DecreaseCon(row) = Val(LineData(4))
+        Else
+            s.IncreaseCon(row) = 0
+            s.DecreaseCon(row) = 0
+        End If
+        row = row + 1
     Wend
     Close 2
     
