@@ -219,7 +219,7 @@ Private Function SendToNeos_Mac(method As String, Optional param1 As String, Opt
     Dim LogFilePathName As String
     If GetLogFilePath(LogFilePathName) Then DeleteFileAndVerify LogFilePathName
     
-    If Not Exec(SolverPath & " " & method & " " & MakePathSafe(SolutionFilePathName) & " " & param1 & " " & param2) Then
+    If Not Exec("python " & SolverPath & " " & method & " " & MakePathSafe(SolutionFilePathName) & " " & param1 & " " & param2) Then
         Err.Raise OpenSolver_NeosError, Description:="Unknown error while contacting NEOS"
     End If
     
