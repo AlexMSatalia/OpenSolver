@@ -204,7 +204,7 @@ Sub ExtractVariables(constraint As Dictionary)
 
 8577      If NodeType = ExpressionTreeVariable Then
               Dim Index As Long
-8578          Index = VariableIndex(NodeText)
+8578          Index = VariableIndex.Item(NodeText)
 8579          If Not constraint.Exists(Index) Then
 8580              constraint.Add Key:=Index, Item:=0
 8581          End If
@@ -1038,7 +1038,7 @@ Sub AddLinearTreeToConstraint(constraint As Dictionary, constant As Double)
           ' Add variable coefficient to constraint
           Case ExpressionTreeVariable
               Dim VarIndex As Long
-8967          VarIndex = VariableIndex(NodeText)
+8967          VarIndex = VariableIndex.Item(NodeText)
 8968          constraint.Item(VarIndex) = constraint.Item(VarIndex) + LinearCoefficient
           
           ' Add constant
