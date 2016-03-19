@@ -16,7 +16,7 @@ Dim problem_name As String
 
 Dim WriteComments As Boolean    ' Whether .nl file should include comments
 Const CommentIndent = 4         ' Tracks the level of indenting in comments on nl output
-Const CommentSpacing = 28       ' The column number at which nl comments begin
+Public Const CommentSpacing = 28       ' The column number at which nl comments begin
 
 ' ==========================================================================
 ' ASL variables
@@ -80,11 +80,10 @@ Dim VariableMap As Dictionary         ' A map from variable name (e.g. Test1_D4)
 Dim VariableMapRev() As String        ' A map from .nl variable index (0 to n_var - 1) to variable name (e.g. Test1_D4)
 Public VariableIndex As Dictionary    ' A map from variable name (e.g. Test1_D4) to parsed variable index (1 to n_var)
 
-'Dim ConstraintMap As Collection     ' A map from constraint name (e.g. c1_Test1_D4) to .nl constraint index (0 to n_con - 1)
 Dim ConstraintMapRev() As String     ' A map from .nl constraint index (0 to n_con - 1) to constraint name (e.g. c1_Test1_D4)
 
-Dim NonLinearConstraintTrees() As ExpressionTree  ' Collection containing all non-linear constraint ExpressionTrees stored in parsed constraint order
-Dim NonLinearObjectiveTrees() As ExpressionTree   ' Collection containing all non-linear objective ExpressionTrees stored in parsed objective order
+Dim NonLinearConstraintTrees() As ExpressionTree  ' Array of size n_con containing all non-linear constraint ExpressionTrees stored in parsed constraint order
+Dim NonLinearObjectiveTrees() As ExpressionTree   ' Array of size n_con containing all non-linear objective ExpressionTrees stored in parsed objective order
 
 Dim NonLinearVars() As Boolean          ' Array of size n_var indicating whether each variable appears non-linearly in the model
 Dim NonLinearConstraints() As Boolean   ' Array of size n_con indicating whether each constraint has non-linear elements
@@ -93,16 +92,16 @@ Dim ConstraintIndexToTreeIndex() As Long         ' Array of size n_con storing t
 Dim VariableNLIndexToCollectionIndex() As Long   ' Array of size n_var storing the parsed variable index for each .nl variable index
 Dim VariableCollectionIndexToNLIndex() As Long   ' Array of size n_var storing the .nl variable index for each parsed variable index
 
-Dim LinearConstraints() As Dictionary     ' Collection containing the Dictionaries for each constraint stored in parsed constraint order
-Dim LinearConstants() As Double       ' Collection containing the constant (a Double) for each constraint stored in parsed constraint order
-Dim LinearObjectives() As Dictionary      ' Collection containing the Dictionaries for each objective stored in parsed objective order
+Dim LinearConstraints() As Dictionary     ' Array of size n_con containing the Dictionaries for each constraint stored in parsed constraint order
+Dim LinearConstants() As Double           ' Array of size n_con containing the constant (a Double) for each constraint stored in parsed constraint order
+Dim LinearObjectives() As Dictionary      ' Array of size n_obj containing the Dictionaries for each objective stored in parsed objective order
 
-Dim InitialVariableValues() As Double ' Collection containing the intital values for each variable in OpenSolver index order
+Dim InitialVariableValues() As Double ' Array of size n_var containing the intital values for each variable in OpenSolver index order
 
-Dim ConstraintRelations() As RelationConsts   ' Collection containing the RelationConst for each constraint stored in parsed constraint order
+Dim ConstraintRelations() As RelationConsts   ' Array of size n_con containing the RelationConst for each constraint stored in parsed constraint order
 
-Dim ObjectiveCells() As String                ' Collection containing the objective cells for each objective stored in parsed objective order
-Dim ObjectiveSenses() As ObjectiveSenseType   ' Collection containing the objective sense for each objective stored in parsed objective order
+Dim ObjectiveCells() As String                ' Array of size n_obj containing the objective cells for each objective stored in parsed objective order
+Dim ObjectiveSenses() As ObjectiveSenseType   ' Array of size n_obj containing the objective sense for each objective stored in parsed objective order
 
 Dim numActualVars As Long    ' The number of actual variables in the parsed model (the adjustable cells in the Solver model)
 Dim numFakeVars As Long      ' The number of "fake" variables in the parsed model (variables that arise from parsing the formulae in the Solver model)
@@ -164,8 +163,10 @@ Function WriteNLFile_Parsed(OpenSolver As COpenSolver, ModelFilePathName As Stri
           ' =============================================================
           
           ' Create supplementary outputs
-7472      OutputColFile
-7473      OutputRowFile
+          If WriteComments Then
+7472          OutputColFile
+7473          OutputRowFile
+          End If
           
           ' Write .nl file
 7474      Open ModelFilePathName For Output As #1
@@ -207,7 +208,7 @@ Private Sub InitialiseModelStats(s As COpenSolver)
           ' Number of fake constraints is the number of formulae equations we have created
 7550      numFakeCons = m.Formulae.Count
           
-          ' Divide the actual constraints into equalities and inequalities (ranges)
+          ' Count the actual constraints that are equalities and ranges (2-sided inequalities)
           Dim i As Long
 7551      numActualEqs = 0
 7552      numActualRanges = 0
@@ -216,8 +217,9 @@ Private Sub InitialiseModelStats(s As COpenSolver)
               
 7558          If m.RELs(i) = RelationConsts.RelationEQ Then
 7559              numActualEqs = numActualEqs + 1
-7560          Else
-7561              numActualRanges = numActualRanges + 1
+              ' ElseIf
+              '     ' We don't currently support 2-sided inequalities, so there are no ranges
+              '     numActualRanges = numActualRanges + 1
 7562          End If
 7563      Next i
           
@@ -225,7 +227,7 @@ Private Sub InitialiseModelStats(s As COpenSolver)
           ' Initialise the ASL variables - see definitions for explanation of each variable
           
           ' Model statistics for line #1
-7564      problem_name = "'Sheet=" + s.sheet.Name + "'"
+7564      problem_name = "Sheet=" + s.sheet.Name + ""
           
           ' Model statistics for line #2
 7565      n_var = numActualVars + numFakeVars
@@ -511,9 +513,11 @@ Private Sub AddVariable(cellName As String, Index As Long, i As Long)
 7726      VariableCollectionIndexToNLIndex(i) = Index
           
           ' Update max length of variable name
-7727      If Len(cellName) > maxcolnamelen_ Then
-7728         maxcolnamelen_ = Len(cellName)
-7729      End If
+          If WriteComments Then
+7727          If Len(cellName) > maxcolnamelen_ Then
+7728              maxcolnamelen_ = Len(cellName)
+7729          End If
+          End If
           
           ' Increase index for the next variable
 7730      Index = Index + 1
@@ -607,9 +611,11 @@ Private Sub AddConstraint(cellName As String, Index As Long, i As Long)
 7769      ConstraintIndexToTreeIndex(Index) = i
           
           ' Update max length
-7770      If Len(cellName) > maxrownamelen_ Then
-7771         maxrownamelen_ = Len(cellName)
-7772      End If
+          If WriteComments Then
+7770          If Len(cellName) > maxrownamelen_ Then
+7771              maxrownamelen_ = Len(cellName)
+7772          End If
+          End If
           
           ' Increase index for next constraint
 7773      Index = Index + 1
@@ -851,16 +857,16 @@ Private Sub MakeHeader()
           RaiseError = False
           On Error GoTo ErrorHandler
           
-7873      Print #1, "g3 1 1 0"; Tab(CommentSpacing); "# problem " & problem_name
-7874      Print #1, " " & n_var & " " & n_con & " " & n_obj & " " & nranges & " " & n_eqn_ & " " & n_lcon; Tab(CommentSpacing); "# vars, constraints, objectives, ranges, eqns"
-7875      Print #1, " " & nlc & " " & nlo; Tab(CommentSpacing); "# nonlinear constraints, objectives"
-7876      Print #1, " " & nlnc & " " & lnc; Tab(CommentSpacing); "# network constraints: nonlinear, linear"
-7877      Print #1, " " & nlvc & " " & nlvo & " " & nlvb; Tab(CommentSpacing); "# nonlinear vars in constraints, objectives, both"
-7878      Print #1, " " & nwv_ & " " & nfunc_ & " " & arith & " " & flags; Tab(CommentSpacing); "# linear network variables; functions; arith, flags"
-7879      Print #1, " " & nbv & " " & niv & " " & nlvbi & " " & nlvci & " " & nlvoi; Tab(CommentSpacing); "# discrete variables: binary, integer, nonlinear (b,c,o)"
-7880      Print #1, " " & nzc & " " & nzo; Tab(CommentSpacing); "# nonzeros in Jacobian, gradients"
-7881      Print #1, " " & maxrownamelen_ & " " & maxcolnamelen_; Tab(CommentSpacing); "# max name lengths: constraints, variables"
-7882      Print #1, " " & comb & " " & comc & " " & como & " " & comc1 & " " & como1; Tab(CommentSpacing); "# common exprs: b,c,o,c1,o1"
+7873      Print #1, "g3 1 1 0"; vbTab; "# problem " & problem_name
+7874      Print #1, " " & n_var & " " & n_con & " " & n_obj & " " & nranges & " " & n_eqn_ & IIf(n_lcon > 0, " " & n_lcon, vbNullString); vbTab; "# vars, constraints, objectives, ranges, eqns"
+7875      Print #1, " " & nlc & " " & nlo; vbTab; "# nonlinear constraints, objectives"
+7876      Print #1, " " & nlnc & " " & lnc; vbTab; "# network constraints: nonlinear, linear"
+7877      Print #1, " " & nlvc & " " & nlvo & " " & nlvb; vbTab; "# nonlinear vars in constraints, objectives, both"
+7878      Print #1, " " & nwv_ & " " & nfunc_ & " " & arith & " " & flags; vbTab; "# linear network variables; functions; arith, flags"
+7879      Print #1, " " & nbv & " " & niv & " " & nlvbi & " " & nlvci & " " & nlvoi; vbTab; "# discrete variables: binary, integer, nonlinear (b,c,o)"
+7880      Print #1, " " & nzc & " " & nzo; vbTab; "# nonzeros in Jacobian, gradients"
+7881      Print #1, " " & maxrownamelen_ & " " & maxcolnamelen_; vbTab; "# max name lengths: constraints, variables"
+7882      Print #1, " " & comb & " " & comc & " " & como & " " & comc1 & " " & como1; vbTab; "# common exprs: b,c,o,c1,o1"
 
 ExitSub:
           If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
@@ -883,8 +889,9 @@ Private Sub MakeCBlocks()
 7886          UpdateStatusBar "OpenSolver: Creating .nl file. Writing non-linear constraints " & i & "/" & n_con
 
               ' Add block header for the constraint
-7890          Print #1, "C" & i - 1;
-              Print #1, Tab(CommentSpacing); "# CONSTRAINT NON-LINEAR SECTION " + ConstraintMapRev(i - 1)
+7890          OutputLine 1, _
+                  "C" & i - 1, _
+                  "CONSTRAINT NON-LINEAR SECTION " & ConstraintMapRev(i - 1)
               
               ' Add expression tree
               Dim Tree As ExpressionTree
@@ -911,8 +918,9 @@ Private Sub MakeOBlocks()
           Dim i As Long
 7896      For i = 1 To n_obj
               ' Add block header for the objective
-7897          Print #1, "O" & i - 1 & " " & ConvertObjectiveSenseToNL(ObjectiveSenses(i));
-              Print #1, Tab(CommentSpacing); "# OBJECTIVE NON-LINEAR SECTION " & ObjectiveCells(i)
+              OutputLine 1, _
+                  "O" & i - 1 & " " & ConvertObjectiveSenseToNL(ObjectiveSenses(i)), _
+                  "OBJECTIVE NON-LINEAR SECTION " & ObjectiveCells(i)
               
               ' Add expression tree
               Dim Tree As ExpressionTree
@@ -938,14 +946,16 @@ Private Sub MakeDBlock()
           On Error GoTo ErrorHandler
           
           ' Add block header
-7903      Print #1, "d" & n_con; Tab(CommentSpacing); "# INITIAL DUAL GUESS"
+7903      OutputLine 1, "d" & n_con, "INITIAL DUAL GUESS"
           
           ' Set duals to zero for all constraints
           Dim i As Long
 7904      For i = 1 To n_con
 7905          UpdateStatusBar "OpenSolver: Creating .nl file. Writing initial duals " & i & "/" & n_con
               
-7909          Print #1, i - 1 & " 0"; Tab(CommentSpacing); "#     " & ConstraintMapRev(i - 1) & " = " & 0
+              OutputLine 1, _
+                  i - 1 & " 0", _
+                  "    " & ConstraintMapRev(i - 1) & " = " & 0
 7910      Next i
 
 ExitSub:
@@ -965,7 +975,7 @@ Private Sub MakeXBlock()
           On Error GoTo ErrorHandler
 
           ' Add block header
-7913      Print #1, "x" & n_var; Tab(CommentSpacing); "# INITIAL PRIMAL GUESS"
+7913      OutputLine 1, "x" & n_var, "INITIAL PRIMAL GUESS"
 
           ' Loop through the variables in .nl variable order
           Dim i As Long, initial As Double, VarIndex As Long
@@ -982,7 +992,10 @@ Private Sub MakeXBlock()
                   ' Formulae variables - use the initial value saved in the CFormula instance
 7923              initial = m.Formulae(VarIndex - numActualVars).initialValue
 7924          End If
-7925          Print #1, i - 1 & " " & StrExNoPlus(initial); Tab(CommentSpacing); "#     " & VariableMapRev(i - 1) & " = " & initial
+
+              OutputLine 1, _
+                  i - 1 & " " & StrExNoPlus(initial), _
+                  "    " & VariableMapRev(i - 1) & " = " & initial
 7926      Next i
 
 ExitSub:
@@ -1004,7 +1017,7 @@ Private Sub MakeRBlock()
           If n_con = 0 Then GoTo ExitSub
 
            ' Add block header
-7929      Print #1, "r"; Tab(CommentSpacing); "# CONSTRAINT BOUNDS"
+          OutputLine 1, "r", "CONSTRAINT BOUNDS"
           
           ' Apply bounds according to the relation type
           Dim i As Long, BoundType As Long, Comment As String, bound As Double
@@ -1013,7 +1026,10 @@ Private Sub MakeRBlock()
               
 7935          bound = LinearConstants(ConstraintIndexToTreeIndex(i - 1))
 7936          ConvertConstraintToNL ConstraintRelations(ConstraintIndexToTreeIndex(i - 1)), BoundType, Comment
-7937          Print #1, BoundType & " " & StrExNoPlus(bound); Tab(CommentSpacing); "#     " & ConstraintMapRev(i - 1) & Comment & bound
+
+              OutputLine 1, _
+                  BoundType & " " & StrExNoPlus(bound), _
+                  "    " & ConstraintMapRev(i - 1) & Comment & bound
 7938      Next i
 
 ExitSub:
@@ -1033,14 +1049,14 @@ Private Sub MakeBBlock()
           On Error GoTo ErrorHandler
           
           ' Write block header
-7941      Print #1, "b"; Tab(CommentSpacing); "# VARIABLE BOUNDS"
+          OutputLine 1, "b", "VARIABLE BOUNDS"
           
           Dim i As Long, bound As String, Comment As String, VarIndex As Long, VarName As String
 7942      For i = 1 To n_var
 7943          UpdateStatusBar "OpenSolver: Creating .nl file. Writing variable bounds " & i & "/" & n_var
               
 7947          VarIndex = VariableNLIndexToCollectionIndex(i - 1)
-7948          Comment = "#     " & VariableMapRev(i - 1)
+7948          Comment = "    " & VariableMapRev(i - 1)
            
 7949          If VarIndex <= numActualVars Then
                   If BinaryVars(VarIndex) Then
@@ -1065,7 +1081,7 @@ Private Sub MakeBBlock()
 7964              bound = "3"
 7965              Comment = Comment & " FREE"
 7966          End If
-7967          Print #1, bound; Tab(CommentSpacing); Comment
+              OutputLine 1, bound, Comment
 7968      Next i
 
 ExitSub:
@@ -1087,7 +1103,9 @@ Private Sub MakeKBlock()
           If n_var = 0 Then GoTo ExitSub
 
           ' Add block header
-7971      Print #1, "k" & n_var - 1; Tab(CommentSpacing); "# NUMBER OF JACOBIAN ENTRIES (CUMULATIVE) FOR FIRST " & n_var - 1 & " VARIABLES"
+          OutputLine 1, _
+              "k" & n_var - 1, _
+              "NUMBER OF JACOBIAN ENTRIES (CUMULATIVE) FOR FIRST " & n_var - 1 & " VARIABLES"
           
           ' Loop through first n_var - 1 variables and add the non-zero count to the running total
           Dim i As Long, total As Long
@@ -1096,7 +1114,10 @@ Private Sub MakeKBlock()
 7974          UpdateStatusBar "OpenSolver: Creating .nl file. Writing jacobian counts " & i & "/" & n_var - 1
               
 7978          total = total + NonZeroConstraintCount(VariableNLIndexToCollectionIndex(i - 1))
-7979          Print #1, CStr(total); Tab(CommentSpacing); "#     Up to " & VariableMapRev(i - 1) & ": " & total & " entries in Jacobian"
+
+              OutputLine 1, _
+                  CStr(total), _
+                  "    Up to " & VariableMapRev(i - 1) & ": " & total & " entries in Jacobian"
 7980      Next i
 
 ExitSub:
@@ -1115,9 +1136,6 @@ Private Sub MakeJBlocks()
           RaiseError = False
           On Error GoTo ErrorHandler
           
-          Dim ConstraintElements() As String
-          Dim CommentElements() As String
-          
           Dim i As Long, TreeIndex As Long, VarIndex As Long
 7983      For i = 1 To n_con
 7984          UpdateStatusBar "OpenSolver: Creating .nl file. Writing linear constraints " & i & "/" & n_con
@@ -1127,28 +1145,20 @@ Private Sub MakeJBlocks()
               Set LinearConstraint = LinearConstraints(TreeIndex)
           
               ' Make header
-7989          Print #1, "J" & i - 1 & " " & LinearConstraint.Count; Tab(CommentSpacing); "# CONSTRAINT LINEAR SECTION " & ConstraintMapRev(i)
-              
-7990          ReDim ConstraintElements(n_var)
-7991          ReDim CommentElements(n_var)
+              OutputLine 1, _
+                  "J" & i - 1 & " " & LinearConstraint.Count, _
+                  "CONSTRAINT LINEAR SECTION " & ConstraintMapRev(i)
               
               ' We need variables output in .nl order
-              ' First we collect all the constraint elements for the variables that are present
               Dim j As Long
-7992          For j = 1 To n_var
-7993              If LinearConstraint.Exists(j) Then
-7994                  VarIndex = VariableCollectionIndexToNLIndex(j)
-                      Print #1, VarIndex; " "; StrExNoPlus(LinearConstraint.Item(j));
-7995                  Print #1, Tab(CommentSpacing); "#     + "; LinearConstraint.Item(j); " * "; VariableMapRev(VarIndex)
+7992          For j = 0 To n_var - 1
+                  VarIndex = VariableNLIndexToCollectionIndex(j)
+7993              If LinearConstraint.Exists(VarIndex) Then
+                      OutputLine 1, _
+                          CStr(j) & " " & StrExNoPlus(LinearConstraint.Item(VarIndex)), _
+                          "    + " & LinearConstraint.Item(VarIndex) & " * " & VariableMapRev(j)
 7997              End If
 7998          Next j
-              
-              ' Output the constraint elements to the J Block in .nl variable order
-7999          For j = 0 To n_var - 1
-8000              If ConstraintElements(j) <> "" Then
-8001                  Print #1, ConstraintElements(j); Tab(CommentSpacing); CommentElements(j)
-8002              End If
-8003          Next j
 8004      Next i
 
 ExitSub:
@@ -1170,7 +1180,9 @@ Private Sub MakeGBlocks()
           Dim i As Long
 8007      For i = 1 To n_obj
               ' Make header
-8008          Print #1, "G" & i - 1 & " " & LinearObjectives(i).Count; Tab(CommentSpacing); "# OBJECTIVE LINEAR SECTION " & ObjectiveCells(i)
+              OutputLine 1, _
+                  "G" & i - 1 & " " & LinearObjectives(i).Count, _
+                  "OBJECTIVE LINEAR SECTION " & ObjectiveCells(i)
               
               Dim LinearObjective As Dictionary
               Set LinearObjective = LinearObjectives(i)
@@ -1178,12 +1190,14 @@ Private Sub MakeGBlocks()
               ' This loop is not in the right order (see J blocks)
               ' Since the objective only containts one variable, the output will still be correct without reordering
               Dim j As Long, VarIndex As Long
-8009          For j = 1 To n_var
-8010              If LinearObjective.Exists(j) Then
-8011                  VarIndex = VariableCollectionIndexToNLIndex(j)
-8012                  Print #1, VarIndex & " " & StrExNoPlus(LinearObjective.Item(j)); Tab(CommentSpacing); "#     + " & LinearObjective.Item(j) & " * " & VariableMapRev(VarIndex)
-8013              End If
-8014          Next j
+              For j = 0 To n_var - 1
+                  VarIndex = VariableNLIndexToCollectionIndex(j)
+7993              If LinearObjective.Exists(VarIndex) Then
+                      OutputLine 1, _
+                          CStr(j) & " " & StrExNoPlus(LinearObjective.Item(VarIndex)), _
+                          "    + " & LinearObjective.Item(VarIndex) & " * " & VariableMapRev(j)
+7997              End If
+7998          Next j
 8015      Next i
 
 ExitSub:
@@ -1259,19 +1273,19 @@ End Sub
 
 
 ' Adds a new line to the current string, appending LineText at position 0 and CommentText at position CommentSpacing
-Sub AddNewLine(CurText As String, LineText As String, Optional CommentText As String = "")
+Sub OutputLine(FileNum As Long, LineText As String, Optional CommentText As String = "")
           Dim RaiseError As Boolean
           RaiseError = False
           On Error GoTo ErrorHandler
 
-          CurText = CurText & LineText
+          Print #FileNum, LineText;
           
           ' Add comment with padding if comment should be included
 8044      If WriteComments And CommentText <> "" Then
-8048          CurText = CurText & Space(CommentSpacing - Len(LineText)) & "# " & CommentText
+8048          Print #FileNum, Tab(CommentSpacing); "# " & CommentText;
 8049      End If
           
-8050      CurText = CurText & vbNewLine
+8050      Print #FileNum,
 
 ExitSub:
           If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg

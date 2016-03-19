@@ -172,12 +172,15 @@ Public Sub ConvertToNL(FileNum As Long, Optional CommentIndent As Integer = 0)
           On Error GoTo ErrorHandler
           
           ' Add current node to output
-8561      Print #FileNum, FormatNL(NodeText, NodeType);
-          Print #FileNum, Space(CommentIndent) + NodeText + " " + DisplayLinearity()
+8561      OutputLine FileNum, _
+              FormatNL(NodeText, NodeType), _
+              Space(CommentIndent) & NodeText & " " & DisplayLinearity()
           
           ' If n-ary operator, we need the number of operators on a newline
 8562      If IsNAry(NodeText) Then
-8568          Print #FileNum, CStr(NumChildren); Space(CommentIndent + 2) & NumChildren & " arguments"
+8568          OutputLine FileNum, _
+                  CStr(NumChildren), _
+                  Space(CommentIndent + 2) & NumChildren & " arguments"
 8570      End If
           
           ' Add children nodes to output
