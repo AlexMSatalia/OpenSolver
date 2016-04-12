@@ -683,7 +683,7 @@ Private Sub cmdDelSelCon_Click()
               End If
           Next i
           NumConstraints = NumConstraints - 1
-          ReDim Preserve Constraints(1 To NumConstraints) As CConstraint
+          If NumConstraints > 0 Then ReDim Preserve Constraints(1 To NumConstraints) As CConstraint
           
           ' Update form
 4631      PopulateConstraintListBox
