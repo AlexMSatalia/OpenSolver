@@ -32,6 +32,10 @@ Private PreserveModel As Boolean  ' Used to persist model when re-showing form
 Private RestoreHighlighting As Boolean
 Private sheet As Worksheet
 
+' Options that persist across form showings
+Public ShowModelAfterSavingState As Boolean
+Public ShowNamedRangesState As Boolean
+
 Private IsResizing As Boolean
 Private ResizeStartY As Double
 
@@ -197,6 +201,11 @@ End Sub
 
 Private Sub chkNameRange_Click()
 4256      PopulateConstraintListBox
+          ShowNamedRangesState = chkNameRange.value
+End Sub
+
+Private Sub chkShowModel_Click()
+          ShowModelAfterSavingState = chkShowModel.value
 End Sub
 
 Private Sub cmdCancelCon_Click()
@@ -381,6 +390,9 @@ Private Sub UserForm_Activate()
           
           PopulateConstraintListBox
           RefreshConstraintPanel
+              
+          chkNameRange.value = ShowNamedRangesState
+          chkShowModel.value = ShowModelAfterSavingState
         
 ExitSub:
           Application.StatusBar = False

@@ -180,10 +180,23 @@ Sub OpenSolver_VisitCoinOROrg(Optional Control)
           AutoUpdateCheck
 End Sub
 Sub OpenSolver_ModelClick(Optional Control)
+          Static ShownFormBefore As Boolean, ShowNamedRangesState As Boolean, ShowModelAfterSavingState As Boolean
+          ' Set the checkboxes default to true
+          If Not ShownFormBefore Then
+              ShownFormBefore = True
+              ShowNamedRangesState = True
+              ShowModelAfterSavingState = True
+          End If
+
           Dim frmModel As FModel
           Set frmModel = New FModel
+          frmModel.ShowModelAfterSavingState = ShowModelAfterSavingState
+          frmModel.ShowNamedRangesState = ShowNamedRangesState
 2853      frmModel.Show
+          ShowModelAfterSavingState = frmModel.ShowModelAfterSavingState
+          ShowNamedRangesState = frmModel.ShowNamedRangesState
           Unload frmModel
+          
 2854      DoEvents
           AutoUpdateCheck
 End Sub
