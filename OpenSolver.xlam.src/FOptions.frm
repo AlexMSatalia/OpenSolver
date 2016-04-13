@@ -115,7 +115,7 @@ Private Sub AutoLayout()
     End With
        
     With chkPerformLinearityCheck
-        .Caption = "Perform a quick linearity check on the solution"
+        .Caption = "Perform a quick linearity check on the model"
         .Left = chkNonNeg.Left
         .Top = Below(chkNonNeg, False)
         .Width = chkNonNeg.Width
