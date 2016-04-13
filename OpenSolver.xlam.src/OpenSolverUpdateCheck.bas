@@ -230,11 +230,11 @@ Public Function GetUpdateSetting(Optional SilentFail As Boolean = True, Optional
         Missing = False
     End If
     
-    GetUpdateSetting = CBool(result)
+    GetUpdateSetting = SafeCBool(result, True)
 End Function
 
 Public Sub SaveUpdateSetting(UpdateSetting As Boolean)
-    SaveSetting OpenSolverRegName, PreferencesRegName, CheckForUpdatesRegName, UpdateSetting
+    SaveSetting OpenSolverRegName, PreferencesRegName, CheckForUpdatesRegName, BoolToInt(UpdateSetting)
 End Sub
 
 ' Useful for testing update check
@@ -265,11 +265,11 @@ Public Function GetBetaUpdateSetting(Optional SilentFail As Boolean = True, Opti
         Missing = False
     End If
     
-    GetBetaUpdateSetting = CBool(result)
+    GetBetaUpdateSetting = SafeCBool(result, False)
 End Function
 
 Public Sub SaveBetaUpdateSetting(BetaUpdateSetting As Boolean)
-    SaveSetting OpenSolverRegName, PreferencesRegName, CheckForBetaUpdatesRegName, BetaUpdateSetting
+    SaveSetting OpenSolverRegName, PreferencesRegName, CheckForBetaUpdatesRegName, BoolToInt(BetaUpdateSetting)
 End Sub
 
 Private Sub DeleteBetaUpdateSetting()

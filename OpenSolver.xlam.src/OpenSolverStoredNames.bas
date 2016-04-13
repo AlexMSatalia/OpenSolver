@@ -57,22 +57,27 @@ Function GetNamedIntegerIfExists(sheet As Worksheet, Name As String, IntegerValu
 161       End If
 End Function
 
-Function GetNamedIntegerAsBooleanIfExists(sheet As Worksheet, Name As String, BooleanValue As Boolean) As Boolean
-          Dim IntegerValue As Long
-          If GetNamedIntegerIfExists(sheet, Name, IntegerValue) Then
-              BooleanValue = (IntegerValue = 1)
-              GetNamedIntegerAsBooleanIfExists = True
-          End If
-End Function
-
 Function GetNamedBooleanIfExists(sheet As Worksheet, Name As String, BooleanValue As Boolean) As Boolean
     Dim IsRange As Boolean, r As Range, RefersToFormula As Boolean, RangeRefersToError As Boolean, RefersTo As String, IsMissing As Boolean, value As Double
     GetSheetNameAsValueOrRange sheet, Name, IsMissing, IsRange, r, RefersToFormula, RangeRefersToError, RefersTo, value
 
     If Not IsMissing And Not IsRange And Not RangeRefersToError Then
-        On Error GoTo NotBoolean
-        BooleanValue = CBool(RefersTo)
-        GetNamedBooleanIfExists = True
+        If RefersToFormula Then
+            ' It's a string, probably "=TRUE" or "=FALSE"
+            On Error GoTo NotBoolean
+            BooleanValue = CBool(RefersTo)
+            GetNamedBooleanIfExists = True
+        Else
+            ' It's a value
+            If CLng(value) = value Then
+                ' It's integer, we can interpret that as a bool
+                GetNamedBooleanIfExists = True
+                BooleanValue = IntToBool(CLng(value))
+            Else
+                ' It's a double, so not a boolean
+                GetNamedBooleanIfExists = False
+            End If
+        End If
     Else
 NotBoolean:
         GetNamedBooleanIfExists = False
@@ -103,13 +108,6 @@ Function GetNamedIntegerWithDefault(sheet As Worksheet, Name As String, DefaultV
     End If
 End Function
 
-Function GetNamedIntegerAsBooleanWithDefault(sheet As Worksheet, Name As String, DefaultValue As Boolean) As Boolean
-    If Not GetNamedIntegerAsBooleanIfExists(sheet, Name, GetNamedIntegerAsBooleanWithDefault) Then
-        GetNamedIntegerAsBooleanWithDefault = DefaultValue
-        SetBooleanAsIntegerNameOnSheet Name, GetNamedIntegerAsBooleanWithDefault, sheet
-    End If
-End Function
-
 Function GetNamedBooleanWithDefault(sheet As Worksheet, Name As String, DefaultValue As Boolean) As Boolean
     If Not GetNamedBooleanIfExists(sheet, Name, GetNamedBooleanWithDefault) Then
         GetNamedBooleanWithDefault = DefaultValue
@@ -135,8 +133,9 @@ End Sub
 Sub SetNameOnSheet(Name As String, value As Variant, Optional sheet As Worksheet, Optional SolverName As Boolean = False)
 ' If a key exists we can just add it (http://www.cpearson.com/Excel/DefinedNames.aspx)
           GetActiveSheetIfMissing sheet
-600       Name = EscapeSheetName(sheet) & IIf(SolverName, SolverPrefix, "") & Name
-603       sheet.Parent.Names.Add Name, value, False
+          Dim FullName As String ' Don't mangle the value of Name!
+600       FullName = EscapeSheetName(sheet) & IIf(SolverName, SolverPrefix, "") & Name
+603       sheet.Parent.Names.Add FullName, value, False
 End Sub
 
 Sub SetNamedRangeIfExists(ByVal Name As String, ByRef RangeToSet As Range, Optional sheet As Worksheet, Optional SolverName As Boolean = False)
@@ -160,11 +159,7 @@ Sub SetDoubleNameOnSheet(Name As String, value As Double, Optional sheet As Work
 End Sub
 
 Sub SetBooleanNameOnSheet(Name As String, value As Boolean, Optional sheet As Worksheet, Optional SolverName As Boolean = False)
-    SetNameOnSheet Name, value, sheet, SolverName
-End Sub
-
-Sub SetBooleanAsIntegerNameOnSheet(Name As String, value As Boolean, Optional sheet As Worksheet, Optional SolverName As Boolean = False)
-    SetIntegerNameOnSheet Name, IIf(value, 1, 2), sheet, SolverName
+    SetIntegerNameOnSheet Name, BoolToInt(value), sheet, SolverName
 End Sub
 
 Sub SetRefersToNameOnSheet(Name As String, value As String, Optional sheet As Worksheet, Optional SolverName As Boolean = False)
@@ -174,6 +169,28 @@ Sub SetRefersToNameOnSheet(Name As String, value As String, Optional sheet As Wo
         DeleteNameOnSheet Name, sheet, SolverName
     End If
 End Sub
+
+Function BoolToInt(BoolValue As Boolean) As Long
+    BoolToInt = IIf(BoolValue, 1, 0)
+End Function
+
+Function IntToBool(IntValue As Long) As Boolean
+    IntToBool = (IntValue = 1)
+End Function
+
+Function StringToBool(StringValue As String) As Boolean
+    ' Can throw error due to locale! Caller should handle and set default appropriately
+    StringToBool = CBool(StringValue)
+End Function
+
+Function SafeCBool(value As Variant, DefaultValue As Boolean) As Boolean
+    On Error GoTo NotBoolean
+    SafeCBool = CBool(value)
+    Exit Function
+    
+NotBoolean:
+    SafeCBool = DefaultValue
+End Function
 
 Sub SetAnyMissingDefaultSolverOptions(sheet As Worksheet)
           ' We set all the default values, as per Solver in Excel 2007, but with some changes. This ensures Solver does not delete the few values we actually use
@@ -253,3 +270,110 @@ Function RangeToRefersTo(ConvertRange As Range) As String
     RangeToRefersTo = Mid(n.RefersTo, 2)
     n.Delete
 End Function
+
+Sub TestBooleanConversion()
+    Dim sheet As Worksheet, Name As String, BoolValue As Boolean
+    Set sheet = ThisWorkbook.ActiveSheet
+    Name = "BoolTest"
+    
+    ' ***** Getting
+    ' Checks that boolean is correctly detected or not, and check value if boolean is found
+    
+    ' Non boolean
+    SetNameOnSheet Name, "abc", sheet
+    Debug.Assert Not GetNamedBooleanIfExists(sheet, Name, BoolValue)
+    SetNameOnSheet Name, 1.23, sheet
+    Debug.Assert Not GetNamedBooleanIfExists(sheet, Name, BoolValue)
+    
+    ' T/F strings
+    SetNameOnSheet Name, "false", sheet
+    Debug.Assert GetNamedBooleanIfExists(sheet, Name, BoolValue)
+    Debug.Assert Not BoolValue
+    SetNameOnSheet Name, "true", sheet
+    Debug.Assert GetNamedBooleanIfExists(sheet, Name, BoolValue)
+    Debug.Assert BoolValue
+    SetNameOnSheet Name, "=FALSE", sheet
+    Debug.Assert GetNamedBooleanIfExists(sheet, Name, BoolValue)
+    Debug.Assert Not BoolValue
+    SetNameOnSheet Name, "=TRUE", sheet
+    Debug.Assert GetNamedBooleanIfExists(sheet, Name, BoolValue)
+    Debug.Assert BoolValue
+    
+    ' Integer values
+    SetNameOnSheet Name, 0, sheet
+    Debug.Assert GetNamedBooleanIfExists(sheet, Name, BoolValue)
+    Debug.Assert Not BoolValue
+    SetNameOnSheet Name, 1, sheet
+    Debug.Assert GetNamedBooleanIfExists(sheet, Name, BoolValue)
+    Debug.Assert BoolValue
+    SetNameOnSheet Name, 2, sheet
+    Debug.Assert GetNamedBooleanIfExists(sheet, Name, BoolValue)
+    Debug.Assert Not BoolValue
+    
+    ' ***** Setting
+    ' Checks that a bool can be interpreted correctly after setting it
+    SetBooleanNameOnSheet Name, False, sheet
+    Debug.Assert GetNamedBooleanIfExists(sheet, Name, BoolValue)
+    Debug.Assert Not BoolValue
+    SetBooleanNameOnSheet Name, True, sheet
+    Debug.Assert GetNamedBooleanIfExists(sheet, Name, BoolValue)
+    Debug.Assert BoolValue
+    
+    Dim DefaultBool As Boolean, value As Variant
+    For Each value In Array(True, False)
+        DefaultBool = CBool(value)
+        
+        ' ***** Getting with defaults
+        ' Should return DefaultBool on any name that can't be interpreted as bool, otherwise returns expected result
+        
+        ' Non boolean
+        SetNameOnSheet Name, "abc", sheet
+        Debug.Assert GetNamedBooleanWithDefault(sheet, Name, DefaultBool) = DefaultBool
+        SetNameOnSheet Name, 1.23, sheet
+        Debug.Assert GetNamedBooleanWithDefault(sheet, Name, DefaultBool) = DefaultBool
+        
+        ' T/F strings
+        SetNameOnSheet Name, "false", sheet
+        Debug.Assert GetNamedBooleanWithDefault(sheet, Name, DefaultBool) = False
+        SetNameOnSheet Name, "true", sheet
+        Debug.Assert GetNamedBooleanWithDefault(sheet, Name, DefaultBool) = True
+        SetNameOnSheet Name, "=FALSE", sheet
+        Debug.Assert GetNamedBooleanWithDefault(sheet, Name, DefaultBool) = False
+        SetNameOnSheet Name, "=TRUE", sheet
+        Debug.Assert GetNamedBooleanWithDefault(sheet, Name, DefaultBool) = True
+        SetNameOnSheet Name, "=FAUX", sheet
+        Debug.Assert GetNamedBooleanWithDefault(sheet, Name, DefaultBool) = DefaultBool
+        SetNameOnSheet Name, "=VRAI", sheet
+        Debug.Assert GetNamedBooleanWithDefault(sheet, Name, DefaultBool) = DefaultBool
+        
+        ' Integer values
+        SetNameOnSheet Name, 0, sheet
+        Debug.Assert GetNamedBooleanWithDefault(sheet, Name, DefaultBool) = False
+        SetNameOnSheet Name, 1, sheet
+        Debug.Assert GetNamedBooleanWithDefault(sheet, Name, DefaultBool) = True
+        SetNameOnSheet Name, 2, sheet
+        Debug.Assert GetNamedBooleanWithDefault(sheet, Name, DefaultBool) = False
+        
+        ' ***** Test SafeCBool
+        ' Should return DefaultBool on any conversion where CBool would fail, otherwise returns output of CBool
+        Debug.Assert SafeCBool("abc", DefaultBool) = DefaultBool
+        Debug.Assert SafeCBool("1.23", DefaultBool) = True
+        Debug.Assert SafeCBool(1.23, DefaultBool) = True
+        Debug.Assert SafeCBool(False, DefaultBool) = False
+        Debug.Assert SafeCBool(True, DefaultBool) = True
+        Debug.Assert SafeCBool("false", DefaultBool) = False
+        Debug.Assert SafeCBool("true", DefaultBool) = True
+        Debug.Assert SafeCBool("FALSE", DefaultBool) = False
+        Debug.Assert SafeCBool("TRUE", DefaultBool) = True
+        Debug.Assert SafeCBool("FAUX", DefaultBool) = DefaultBool
+        Debug.Assert SafeCBool("VRAI", DefaultBool) = DefaultBool
+        Debug.Assert SafeCBool("0", DefaultBool) = False
+        Debug.Assert SafeCBool("1", DefaultBool) = True
+        Debug.Assert SafeCBool("2", DefaultBool) = True
+        Debug.Assert SafeCBool(0, DefaultBool) = False
+        Debug.Assert SafeCBool(1, DefaultBool) = True
+        Debug.Assert SafeCBool(2, DefaultBool) = True
+        Debug.Assert SafeCBool(BoolToInt(False), DefaultBool) = False
+        Debug.Assert SafeCBool(BoolToInt(True), DefaultBool) = True
+    Next value
+End Sub

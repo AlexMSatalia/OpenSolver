@@ -490,7 +490,7 @@ End Sub
 ' */
 Public Function GetNonNegativity(Optional sheet As Worksheet) As Boolean
     GetActiveSheetIfMissing sheet
-    GetNonNegativity = GetNamedIntegerAsBooleanWithDefault(sheet, "solver_neg", True)
+    GetNonNegativity = GetNamedBooleanWithDefault(sheet, "solver_neg", True)
 End Function
 
 '/**
@@ -500,7 +500,7 @@ End Function
 ' */
 Public Sub SetNonNegativity(NonNegativity As Boolean, Optional sheet As Worksheet)
     GetActiveSheetIfMissing sheet
-    SetBooleanAsIntegerNameOnSheet "solver_neg", NonNegativity, sheet
+    SetBooleanNameOnSheet "solver_neg", NonNegativity, sheet
 End Sub
 
 '/**
@@ -509,7 +509,7 @@ End Sub
 ' */
 Public Function GetLinearityCheck(Optional sheet As Worksheet) As Boolean
     GetActiveSheetIfMissing sheet
-    GetLinearityCheck = GetNamedIntegerAsBooleanWithDefault(sheet, "OpenSolver_LinearityCheck", True)
+    GetLinearityCheck = GetNamedBooleanWithDefault(sheet, "OpenSolver_LinearityCheck", True)
 End Function
 
 '/**
@@ -519,7 +519,7 @@ End Function
 ' */
 Public Sub SetLinearityCheck(LinearityCheck As Boolean, Optional sheet As Worksheet)
     GetActiveSheetIfMissing sheet
-    SetBooleanAsIntegerNameOnSheet "OpenSolver_LinearityCheck", LinearityCheck, sheet
+    SetBooleanNameOnSheet "OpenSolver_LinearityCheck", LinearityCheck, sheet
 End Sub
 
 '/**
@@ -528,7 +528,7 @@ End Sub
 ' */
 Public Function GetShowSolverProgress(Optional sheet As Worksheet) As Boolean
     GetActiveSheetIfMissing sheet
-    GetShowSolverProgress = GetNamedIntegerAsBooleanWithDefault(sheet, "solver_sho", False)
+    GetShowSolverProgress = GetNamedBooleanWithDefault(sheet, "solver_sho", False)
 End Function
 
 '/**
@@ -538,7 +538,7 @@ End Function
 ' */
 Public Sub SetShowSolverProgress(ShowSolverProgress As Boolean, Optional sheet As Worksheet)
     GetActiveSheetIfMissing sheet
-    SetBooleanAsIntegerNameOnSheet "solver_sho", ShowSolverProgress, sheet
+    SetBooleanNameOnSheet "solver_sho", ShowSolverProgress, sheet
 End Sub
 
 '/**
@@ -682,7 +682,7 @@ End Sub
 ' */
 Public Function GetIgnoreIntegerConstraints(Optional sheet As Worksheet) As Boolean
     GetActiveSheetIfMissing sheet
-    GetIgnoreIntegerConstraints = GetNamedIntegerAsBooleanWithDefault(sheet, "solver_rlx", False)
+    GetIgnoreIntegerConstraints = GetNamedBooleanWithDefault(sheet, "solver_rlx", False)
 End Function
 
 '/**
@@ -692,7 +692,7 @@ End Function
 ' */
 Public Sub SetIgnoreIntegerConstraints(IgnoreIntegerConstraints As Boolean, Optional sheet As Worksheet)
     GetActiveSheetIfMissing sheet
-    SetBooleanAsIntegerNameOnSheet "solver_rlx", IgnoreIntegerConstraints, sheet
+    SetBooleanNameOnSheet "solver_rlx", IgnoreIntegerConstraints, sheet
 End Sub
 
 '/**
