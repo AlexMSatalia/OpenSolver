@@ -64,6 +64,9 @@ Function GetNamedBooleanIfExists(sheet As Worksheet, Name As String, BooleanValu
     If Not IsMissing And Not IsRange And Not RangeRefersToError Then
         If RefersToFormula Then
             ' It's a string, probably "=TRUE" or "=FALSE"
+            ' We handle this conversion for legacy reasons, in versions 2.8.2 and earlier OpenSolver bool options
+            ' were stored as strings "=TRUE" or "=FALSE". This was changed to 0/1 to resolve locale issues with CBool.
+            ' e.g. In French, the strings would be "=VRAI" and "=FAUX", which didn't always work with CBool.
             On Error GoTo NotBoolean
             BooleanValue = CBool(RefersTo)
             GetNamedBooleanIfExists = True
@@ -176,11 +179,6 @@ End Function
 
 Function IntToBool(IntValue As Long) As Boolean
     IntToBool = (IntValue = 1)
-End Function
-
-Function StringToBool(StringValue As String) As Boolean
-    ' Can throw error due to locale! Caller should handle and set default appropriately
-    StringToBool = CBool(StringValue)
 End Function
 
 Function SafeCBool(value As Variant, DefaultValue As Boolean) As Boolean
