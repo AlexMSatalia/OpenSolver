@@ -162,88 +162,100 @@ Function HighlightRange(r As Range, Label As String, HighlightColor As Long, Opt
           
           ' Use doubles here for more accuracy as we are summing terms, and so accummulating errors
           Dim left2 As Double, top2 As Double, right2 As Double, bottom2 As Double, Height As Double, Width As Double
-3108      left2 = l + Offset
-3109      top2 = t + Offset
-          
+
           ' Draw enough shapes to cover the space; each shape has an Excel-set (undocumented?) maximum height (and width?)
           Dim isFirstShape As Boolean
 3110      isFirstShape = True
           Dim firstShapeIndex As Long
 3111      firstShapeIndex = ShapeIndex + 1
-3112      Do
-          ' The height cannot exceed 169056.0; we allow some tolerance
-3113      Height = bottom - top2
-3114      If Height > 160000# Then
-3115          Height = 150000  ' This difference ensures we never end up with very small rectangle
-3116      End If
-3117      If isFirstShape And Height > 9500 Then
-3118          Height = 9000   ' The first shape we create has a height of 9000 to ensure we can rotate the text and have it show
-                            ' correctly; this works around and Excel 2007 bug
-3119      End If
-3120      isFirstShape = False
-        
-          Dim shapeName As String, s1 As Shape
-3121      ShapeIndex = ShapeIndex + 1
-          'If the constraint is not a bound then make a box for it
-3122      If Not Bounds Then
-3123          shapeName = ShapeNamePrefix & ShapeIndex
-3124          r.Worksheet.Shapes.AddShape(msoShapeRectangle, l + Offset, top2, Right - l, Height).Name = shapeName
-3125      Else
-              'If the box is a bound we name it after the cell that it is in
-3126          shapeName = ShapeNamePrefix & Key
-3127          On Error Resume Next
-              Dim tmpName As String
-3128          tmpName = r.Worksheet.Shapes(shapeName).Name
-              On Error GoTo ErrorHandler
-              'If there hasn't been a bound on that cell then make a new cell
-3129          If tmpName = "" Then
-3130              r.Worksheet.Shapes.AddShape(msoShapeRectangle, l + Offset, top2, Right - l, Height).Name = shapeName
-3131          Else
-                  'If there has already been a bound then just add new text to it rather then making a new box
-3132              Set s1 = r.Worksheet.Shapes(shapeName)
-3133              s1.TextFrame.Characters.Text = s1.TextFrame.Characters.Text & "," & Label
-3134              GoTo endLoop
-3135          End If
-3136      End If
-        
-3137      Set s1 = r.Worksheet.Shapes(shapeName)
+
+3109      top2 = t + Offset
+3112      Do While bottom - top2 > 0.01  ' handle float rounding
+              ' The height cannot exceed 169056.0; we allow some tolerance
+3113          Height = bottom - top2
+3114          If Height > 160000# Then
+3115              Height = 150000  ' This difference ensures we never end up with very small rectangle
+3116          End If
+3117          If isFirstShape And Height > 9500 Then
+3118              Height = 9000   ' The first shape we create has a height of 9000 to ensure we can rotate the text and have it show
+                                  ' correctly; this works around an Excel 2007 bug
+3119          End If
+3120          isFirstShape = False
               
-          Dim ShowOutline As Boolean
-3138      ShowOutline = Not ShowFill
+              ' Reset left2 for the inside loop
+              left2 = l + Offset
+
+              Do While Right - left2 > 0.01
+                  Width = Right - left2
+                  ' The height cannot exceed 169056.0; we allow some tolerance
+                  If Width > 160000# Then
+                      Width = 150000   ' This difference ensures we never end up with very small rectangle
+                  End If
         
-3139      If ShowOutline Then
-3140          s1.Fill.Visible = False
-3141          With s1.Line
-3142              .Weight = 2
-3143              .ForeColor.RGB = HighlightColor
-3144          End With
-3145      Else
-3146          s1.Line.Visible = False
-3147          s1.Fill.Solid
-3148          s1.Fill.Transparency = 0.6
-3149          s1.Fill.ForeColor.RGB = HighlightColor
-3150      End If
-3151      s1.Shadow.Visible = msoFalse
+                  Dim shapeName As String, s1 As Shape
+3121              ShapeIndex = ShapeIndex + 1
+                  'If the constraint is not a bound then make a box for it
+3122              If Not Bounds Then
+3123                  shapeName = ShapeNamePrefix & ShapeIndex
+3124                  r.Worksheet.Shapes.AddShape(msoShapeRectangle, left2, top2, Width, Height).Name = shapeName
+3125              Else
+                      'If the box is a bound we name it after the cell that it is in
+3126                  shapeName = ShapeNamePrefix & Key
+3127                  On Error Resume Next
+                      Dim tmpName As String
+3128                  tmpName = r.Worksheet.Shapes(shapeName).Name
+                      On Error GoTo ErrorHandler
+                      'If there hasn't been a bound on that cell then make a new cell
+3129                  If tmpName = "" Then
+3130                      r.Worksheet.Shapes.AddShape(msoShapeRectangle, left2, top2, Width, Height).Name = shapeName
+3131                  Else
+                          'If there has already been a bound then just add new text to it rather then making a new box
+3132                      Set s1 = r.Worksheet.Shapes(shapeName)
+3133                      s1.TextFrame.Characters.Text = s1.TextFrame.Characters.Text & "," & Label
+3134                      GoTo endLoop
+3135                  End If
+3136              End If
+            
+3137              Set s1 = r.Worksheet.Shapes(shapeName)
+              
+                  Dim ShowOutline As Boolean
+3138              ShowOutline = Not ShowFill
+               
+3139              If ShowOutline Then
+3140                  s1.Fill.Visible = False
+3141                  With s1.Line
+3142                      .Weight = 2
+3143                      .ForeColor.RGB = HighlightColor
+3144                  End With
+3145              Else
+3146                  s1.Line.Visible = False
+3147                  s1.Fill.Solid
+3148                  s1.Fill.Transparency = 0.6
+3149                  s1.Fill.ForeColor.RGB = HighlightColor
+3150              End If
+3151              s1.Shadow.Visible = msoFalse
         
-3152      With s1.TextFrame
-3153          .Characters.Text = Label
-3154          .Characters.Font.Color = HighlightColor
-3155          .HorizontalAlignment = xlHAlignLeft ' xlHAlignCenter
-              ' "=", "<=", & ">=" will be centered
-3156          If ((Height < 500) Or (Label = "=") Or (Label = ChrW(&H2265)) Or (Label = ChrW(&H2264))) Then
-3157              .VerticalAlignment = xlVAlignCenter  ' Shape is small enought to have text fit on the screen when centered, so we center text
-3158          Else
-3159              .VerticalAlignment = xlVAlignTop   ' So we can see the name when scrolled to the top
-3160          End If
-3161          .MarginBottom = 0
-3162          .MarginLeft = 2
-3163          .MarginRight = 0
-3164          .MarginTop = 2
-3165          .Characters.Font.Bold = True
-3166      End With
+3152              With s1.TextFrame
+3153                  .Characters.Text = Label
+3154                  .Characters.Font.Color = HighlightColor
+3155                  .HorizontalAlignment = xlHAlignLeft ' xlHAlignCenter
+                      ' "=", "<=", & ">=" will be centered
+3156                  If ((Height < 500) Or (Label = "=") Or (Label = ChrW(&H2265)) Or (Label = ChrW(&H2264))) Then
+3157                      .VerticalAlignment = xlVAlignCenter  ' Shape is small enought to have text fit on the screen when centered, so we center text
+3158                  Else
+3159                      .VerticalAlignment = xlVAlignTop   ' So we can see the name when scrolled to the top
+3160                  End If
+3161                  .MarginBottom = 0
+3162                  .MarginLeft = 2
+3163                  .MarginRight = 0
+3164                  .MarginTop = 2
+3165                  .Characters.Font.Bold = True
+3166              End With
 endLoop:
-3167      top2 = top2 + Height
-3168      Loop While bottom - top2 > 0.01  ' handle float rounding
+                  left2 = left2 + Width
+              Loop
+3167          top2 = top2 + Height
+3168      Loop
           
           ' Create & return the shapeRange containing all the shapes we added
           Dim shapeNames(), i As Long
