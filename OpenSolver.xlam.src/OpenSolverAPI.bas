@@ -545,9 +545,9 @@ End Sub
 ' * Returns the max solve time for an OpenSolver model.
 ' * @param {} sheet The worksheet containing the model (defaults to active worksheet)
 ' */
-Public Function GetMaxTime(Optional sheet As Worksheet) As Long
+Public Function GetMaxTime(Optional sheet As Worksheet) As Double
     GetActiveSheetIfMissing sheet
-    GetMaxTime = GetNamedIntegerWithDefault(sheet, "solver_tim", 999999999)
+    GetMaxTime = GetNamedDoubleWithDefault(sheet, "solver_tim", 999999999)
 End Function
 
 '/**
@@ -555,9 +555,9 @@ End Function
 ' * @param {} MaxTime The max solve time in seconds
 ' * @param {} sheet The worksheet containing the model (defaults to active worksheet)
 ' */
-Public Sub SetMaxTime(MaxTime As Long, Optional sheet As Worksheet)
+Public Sub SetMaxTime(MaxTime As Double, Optional sheet As Worksheet)
     GetActiveSheetIfMissing sheet
-    SetIntegerNameOnSheet "solver_tim", MaxTime, sheet
+    SetDoubleNameOnSheet "solver_tim", MaxTime, sheet
 End Sub
 
 '/**
