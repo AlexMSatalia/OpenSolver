@@ -29,6 +29,11 @@ Private pConsoleOutput As String
     Const ConsoleHeight = 400
 #End If
 
+Private Const MinWidth = ConsoleWidth
+Private Const MinHeight = 200
+Private ResizeStartX As Double
+Private ResizeStartY As Double
+
 Private Sub cmdCancel_Click()
     ProcessAbortSignal
 End Sub
@@ -146,13 +151,9 @@ Private Sub AutoLayout()
         .Left = FormMargin
     End With
     
-    Me.Width = Me.txtConsole.Width + 2 * FormMargin
-    
     With Me.cmdCancel
         .Caption = "Cancel"
         .Width = FormButtonWidth
-        .Left = LeftOfForm(Me.Width, .Width) - 1  ' To account for etched effect on textbox
-        .Top = Below(Me.txtConsole)
         .Cancel = True
         .Enabled = True
     End With
@@ -160,8 +161,6 @@ Private Sub AutoLayout()
     With Me.cmdOk
         .Caption = "OK"
         .Width = FormButtonWidth
-        .Left = LeftOf(cmdCancel, .Width)
-        .Top = cmdCancel.Top
         .Cancel = True
         .Enabled = False
     End With
@@ -170,13 +169,27 @@ Private Sub AutoLayout()
     With Me.lblElapsed
         .Caption = "OpenSolver is busy running your optimisation model..."
         .Left = FormMargin
-        .Width = Me.cmdOk.Left - Me.txtConsole.Left - FormMargin
-        AutoHeight Me.lblElapsed, .Width
-        .Top = Me.cmdCancel.Top + (Me.cmdCancel.Height - .Height) / 2
     End With
     
-    Me.Height = FormHeight(Me.cmdCancel)
-    Me.Width = Me.Width + FormWindowMargin
+    ' Add resizer
+    With lblResizer
+        #If Mac Then
+            ' Mac labels don't fire MouseMove events correctly
+            .Visible = False
+        #End If
+        .Caption = "o"
+        With .Font
+            .Name = "Marlett"
+            .Charset = 2
+            .Size = 10
+        End With
+        .AutoSize = True
+        .MousePointer = fmMousePointerSizeNWSE
+        .BackStyle = fmBackStyleTransparent
+    End With
+    
+    ' Set the positions of the form
+    UpdateLayout
     
     Me.BackColor = FormBackColor
     Me.Caption = "OpenSolver - Optimisation Running"
@@ -185,4 +198,46 @@ End Sub
 Private Sub CenterForm()
     Me.Top = CenterFormTop(Me.Height)
     Me.Left = CenterFormLeft(Me.Width)
+End Sub
+
+Private Sub UpdateLayout(Optional ChangeX As Single = 0, Optional ChangeY As Single = 0)
+    Dim NewWidth As Double, NewHeight As Double
+    NewWidth = Max(txtConsole.Width + ChangeX, MinWidth)
+    NewHeight = Max(txtConsole.Height + ChangeY, MinHeight)
+    
+    ' Update based on new width
+    txtConsole.Width = NewWidth
+    Me.Width = Me.txtConsole.Width + 2 * FormMargin
+    Me.cmdCancel.Left = LeftOfForm(Me.Width, Me.cmdCancel.Width) - 1  ' To account for etched effect on textbox
+    Me.cmdOk.Left = LeftOf(cmdCancel, Me.cmdOk.Width)
+    Me.lblElapsed.Width = Me.cmdOk.Left - Me.txtConsole.Left - FormMargin
+    AutoHeight Me.lblElapsed, Me.lblElapsed.Width
+    Me.lblResizer.Left = Me.Width - Me.lblResizer.Width
+    Me.Width = Me.Width + FormWindowMargin
+    
+    ' Update based on new height
+    txtConsole.Height = NewHeight
+    Me.cmdCancel.Top = Below(Me.txtConsole)
+    Me.cmdOk.Top = Me.cmdCancel.Top
+    Me.lblElapsed.Top = Me.cmdCancel.Top + (Me.cmdCancel.Height - Me.lblElapsed.Height) / 2
+    Me.Height = FormHeight(Me.cmdCancel)
+    Me.lblResizer.Top = Me.InsideHeight - Me.lblResizer.Height
+End Sub
+
+Private Sub lblResizer_MouseDown(ByVal Button As Integer, ByVal Shift As Integer, ByVal X As Single, ByVal Y As Single)
+    If Button = 1 Then
+        ResizeStartX = X
+        ResizeStartY = Y
+    End If
+End Sub
+
+Private Sub lblResizer_MouseMove(ByVal Button As Integer, ByVal Shift As Integer, ByVal X As Single, ByVal Y As Single)
+    If Button = 1 Then
+        #If Mac Then
+            ' Mac reports delta already
+            UpdateLayout X, Y
+        #Else
+            UpdateLayout X - ResizeStartX, Y - ResizeStartY
+        #End If
+    End If
 End Sub

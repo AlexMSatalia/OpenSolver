@@ -20,7 +20,6 @@ Option Explicit
 #Else
     Const FormWidthModel = 500
 #End If
-Const MinHeight = 140
 
 Private Constraints() As CConstraint
 Private NumConstraints As Long
@@ -36,7 +35,8 @@ Private sheet As Worksheet
 Public ShowModelAfterSavingState As Boolean
 Public ShowNamedRangesState As Boolean
 
-Private IsResizing As Boolean
+' Resizing info
+Const MinHeight = 140
 Private ResizeStartY As Double
 
 ' Function to map string rels to combobox index positions
@@ -1071,7 +1071,6 @@ Private Sub AutoLayout()
         .MousePointer = fmMousePointerSizeNWSE
         .BackStyle = fmBackStyleTransparent
     End With
-    IsResizing = False
     
     ' Set the vertical positions of the lower half of the form
     UpdateLayout
@@ -1085,8 +1084,7 @@ End Sub
 Private Sub UpdateLayout(Optional ChangeY As Single = 0)
 ' Do the layout of the lower half of the form, changing the height of the list box by ChangeY
     Dim NewHeight As Double
-    NewHeight = lstConstraints.Height + ChangeY
-    If NewHeight < MinHeight Then NewHeight = MinHeight
+    NewHeight = Max(lstConstraints.Height + ChangeY, MinHeight)
     
     lstConstraints.Height = NewHeight
         
