@@ -68,7 +68,7 @@ Dim RaiseError As Boolean
         End If
     
         If ShowModel Then
-            OpenSolverVisualizer.ShowSolverModel sheet
+            OpenSolverVisualizer.ShowSolverModel sheet, HandleError:=True
         Else
             OpenSolverVisualizer.HideSolverModel sheet
         End If

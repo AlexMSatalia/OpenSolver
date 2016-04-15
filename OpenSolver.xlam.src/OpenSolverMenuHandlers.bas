@@ -62,7 +62,7 @@ Sub OpenSolver_ShowHideModelClickHandler(Optional Control)
 2768      If SheetHasOpenSolverHighlighting(sheet) Then
 2769          HideSolverModel sheet
 2770      Else
-2771          ShowSolverModel sheet
+2771          ShowSolverModel sheet, HandleError:=True
 2772      End If
           AutoUpdateCheck
 ExitSub:

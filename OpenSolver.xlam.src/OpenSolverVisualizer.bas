@@ -1,6 +1,8 @@
 Attribute VB_Name = "OpenSolverVisualizer"
 Option Explicit
 
+Private VisualizerHasShownError As Boolean  ' Track whether we've shown an error while trying to show the model
+
 Private ShapeIndex As Long
 Private HighlightColorIndex As Long   ' Used to rotate thru colours on different constraints
 Private colHighlightOffsets As Collection
@@ -258,18 +260,21 @@ endLoop:
 3168      Loop
           
           ' Create & return the shapeRange containing all the shapes we added
-          Dim shapeNames(), i As Long
-3169      ReDim shapeNames(ShapeIndex - firstShapeIndex + 1)
-3170      If Not Bounds Then
-3171          For i = firstShapeIndex To ShapeIndex
-3172              shapeNames(i - firstShapeIndex + 1) = ShapeNamePrefix & i
-3173          Next i
-3174      Else
-3175          For i = firstShapeIndex To ShapeIndex
-3176              shapeNames(i - firstShapeIndex + 1) = ShapeNamePrefix & Key
-3177          Next i
-3178      End If
-3179      Set HighlightRange = r.Worksheet.Shapes.Range(shapeNames)
+          ' Check we made a shape
+          If ShapeIndex >= firstShapeIndex Then
+              Dim shapeNames(), i As Long
+3169          ReDim shapeNames(1 To ShapeIndex - firstShapeIndex + 1)
+3170          If Not Bounds Then
+3171              For i = firstShapeIndex To ShapeIndex
+3172                  shapeNames(i - firstShapeIndex + 1) = ShapeNamePrefix & i
+3173              Next i
+3174          Else
+3175              For i = firstShapeIndex To ShapeIndex
+3176                  shapeNames(i - firstShapeIndex + 1) = ShapeNamePrefix & Key
+3177              Next i
+3178          End If
+3179          Set HighlightRange = r.Worksheet.Shapes.Range(shapeNames)
+          End If
 
 ExitFunction:
           If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
@@ -393,7 +398,10 @@ Sub HighlightConstraint(myDocument As Worksheet, LHSRange As Range, _
               ' Reverse the sense if the objects are shown in the reverse order
 3241          Set s2 = HighlightRange(Range2, SolverRelationAsUnicodeChar(IIf(Reversed, 4 - sense, sense)), Color)
               
-3242          If Range1.Worksheet.Name = Range2.Worksheet.Name And Range1.Worksheet.Name = ActiveSheet.Name Then
+3242          If Range1.Worksheet.Name = Range2.Worksheet.Name And _
+                 Range1.Worksheet.Name = ActiveSheet.Name And _
+                 Not s1 Is Nothing And _
+                 Not s2 Is Nothing Then
 3243              AddLabelledConnector Range1.Worksheet, s1(1), s2(1), ""
 3244          End If
 3245      Else 'this was added if there is only a lhs that needs highlighting in linearity
@@ -467,7 +475,7 @@ ErrorHandler:
           
 End Function
 
-Function ShowSolverModel(Optional sheet As Worksheet) As Boolean
+Function ShowSolverModel(Optional sheet As Worksheet, Optional HandleError As Boolean = False) As Boolean
           Dim RaiseError As Boolean
           RaiseError = False
           On Error GoTo ErrorHandler
@@ -612,6 +620,14 @@ ExitFunction:
 
 ErrorHandler:
           If Not ReportError("OpenSolverVisualizer", "ShowSolverModel") Then Resume
+          
+          ' Only show an error once per Excel instance
+          If HandleError And Not VisualizerHasShownError Then
+              VisualizerHasShownError = True
+              MsgBox "There was an error while showing the model. Please let us know about this so that we can investigate the issue.", vbOKOnly, "OpenSolver Visualizer Error"
+              GoTo ExitFunction
+          End If
+          
           RaiseError = True
           GoTo ExitFunction
 End Function

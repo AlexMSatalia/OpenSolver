@@ -401,7 +401,7 @@ ExitSub:
           Exit Sub
 
 ErrorHandler:
-          If RestoreHighlighting Then ShowSolverModel sheet
+          If RestoreHighlighting Then ShowSolverModel sheet, HandleError:=True
           Me.Hide
           ReportError "FModel", "UserForm_Activate", True
           GoTo ExitSub
@@ -409,7 +409,7 @@ End Sub
 
 
 Private Sub cmdCancel_Click()
-          If RestoreHighlighting Then ShowSolverModel sheet
+          If RestoreHighlighting Then ShowSolverModel sheet, HandleError:=True
 4386      DoEvents
 4387      On Error Resume Next ' Just to be safe on our select
 4388      Application.CutCopyMode = False
@@ -573,7 +573,8 @@ Private Sub cmdBuild_Click()
           'End If
 
           ' Display on screen
-4449      If chkShowModel.value = True Then OpenSolverVisualizer.ShowSolverModel sheet
+4449      If chkShowModel.value = True Then ShowSolverModel sheet, HandleError:=True
+              
 4450      On Error GoTo CalculateFailed
 4451      Application.Calculate
 4452      On Error GoTo ErrorHandler
