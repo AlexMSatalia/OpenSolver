@@ -100,7 +100,7 @@ Function ReportError(ModuleName As String, ProcedureName As String, Optional IsE
     If IsEntryPoint Then
         Print #FileNum, vbNewLine & "Error " & CStr(ErrNum) & ": " & ErrMsg & vbNewLine
         If Len(LastUsedSolver) <> 0 Then Print #FileNum, "Solver: " & LastUsedSolver & vbNewLine
-        Print #FileNum, EnvironmentSummary() & vbNewLine
+        Print #FileNum, EnvironmentDetail() & vbNewLine
         Print #FileNum, StripNonBreakingSpaces(SolverInfo)
     End If
     Close #FileNum

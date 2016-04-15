@@ -830,7 +830,7 @@ Private Sub fHandleFile(FilePath As String, WindowStyle As Long)
 End Sub
 #End If
 
-Function SystemIs64Bit() As Boolean
+Public Function SystemIs64Bit() As Boolean
           #If Mac Then
               ' Check output of uname -a
               Dim result As String
@@ -848,7 +848,7 @@ Function SystemIs64Bit() As Boolean
           #End If
 End Function
 
-Function VBAversion() As String
+Private Function VBAversion() As String
           #If VBA7 Then
 3517          VBAversion = "VBA7"
           #ElseIf VBA6 Then
@@ -858,7 +858,7 @@ Function VBAversion() As String
           #End If
 End Function
 
-Function ExcelBitness() As String
+Private Function ExcelBitness() As String
           #If Win64 Then
 3519          ExcelBitness = "64"
           #Else
@@ -866,7 +866,32 @@ Function ExcelBitness() As String
           #End If
 End Function
 
-Function OSFamily() As String
+Private Function ExcelLanguage() As String
+    Dim Lang As Long
+    #If Mac Then
+        ' http://www.rondebruin.nl/mac/mac002.htm
+        Lang = Application.LocalizedLanguage
+    #Else
+        Lang = Application.LanguageSettings.LanguageID(msoLanguageIDUI)
+    #End If
+    ExcelLanguage = LanguageCodeToString(Lang)
+End Function
+    
+Private Function LanguageCodeToString(Lang As Long)
+    Dim Language As String
+    Select Case Lang
+    Case 1033: Language = "English - US"
+    Case 1036: Language = "French"
+    Case 1031: Language = "German"
+    Case 1040: Language = "Italian"
+    Case 3082: Language = "Spanish - Spain (Modern Sort)"
+    Case 1034: Language = "Spanish - Spain (Traditional Sort)"
+    Case Else: Language = "Code " & Lang & "; see http://msdn.microsoft.com/en-US/goglobal/bb964664.aspx"
+    End Select
+    LanguageCodeToString = Language
+End Function
+
+Private Function OSFamily() As String
           #If Mac Then
 3521          OSFamily = "Mac"
           #Else
@@ -874,7 +899,7 @@ Function OSFamily() As String
           #End If
 End Function
 
-Public Function OSVersion() As String
+Private Function OSVersion() As String
     #If Mac Then
         OSVersion = Application.Clean(ExecCapture("sw_vers -productVersion"))
     #Else
@@ -887,21 +912,64 @@ Public Function OSVersion() As String
     #End If
 End Function
 
-Function OSBitness() As String
+Private Function OSBitness() As String
     OSBitness = IIf(SystemIs64Bit, "64", "32")
 End Function
 
-Function OpenSolverDistribution() As String
+Private Function OSUsername() As String
+    #If Mac Then
+        OSUsername = ExecCapture("whoami")
+    #Else
+        OSUsername = Environ("USERNAME")
+    #End If
+End Function
+
+Private Function OpenSolverDistribution() As String
+    ' TODO replace with enum
     OpenSolverDistribution = IIf(SolverIsPresent(CreateSolver("Bonmin")), "Advanced", "Linear")
 End Function
 
-Function EnvironmentSummary() As String
-3523      EnvironmentSummary = "Version " & sOpenSolverVersion & " (" & sOpenSolverDate & ")" & _
-                               " running on " & OSBitness() & "-bit " & OSFamily() & " " & OSVersion() & _
-                               " with " & VBAversion() & " in " & ExcelBitness() & "-bit Excel " & Application.Version
+Public Function EnvironmentString() As String
+' Short encoding of key environment details
+    EnvironmentString = _
+        OSFamily() & "/" & OSVersion() & "x" & OSBitness() & " " & _
+        "Excel/" & Application.Version & "x" & ExcelBitness() & " " & _
+        "OpenSolver/" & sOpenSolverVersion & "x" & OpenSolverDistribution()
 End Function
 
-Function SolverSummary() As String
+Public Function EnvironmentSummary() As String
+' Human-readable summary of key environment details
+    EnvironmentSummary = _
+        "Version " & sOpenSolverVersion & " (" & sOpenSolverDate & ") " & _
+        "running on " & OSBitness() & "-bit " & OSFamily() & " " & _
+        OSVersion() & " with " & VBAversion() & " in " & ExcelBitness() & _
+        "-bit Excel " & Application.Version
+End Function
+
+Public Function EnvironmentDetail() As String
+' Full description of environment details
+    Dim ProductCodeLine As String
+    #If Win32 Then
+        ProductCodeLine = "Excel product code = " & Application.ProductCode & _
+                          vbNewLine
+    #End If
+    EnvironmentDetail = _
+        "OpenSolver version " & sOpenSolverVersion & " (" & sOpenSolverDate & _
+        "); Distribution=" & OpenSolverDistribution & vbNewLine & _
+        "Location: " & _
+        MakeSpacesNonBreaking(MakePathSafe(ThisWorkbook.FullName)) & _
+        vbNewLine & vbNewLine & _
+        "Excel " & Application.Version & "; build " & _
+        Application.Build & "; " & ExcelBitness & "-bit; " & VBAversion & _
+        vbNewLine & _
+        ProductCodeLine & _
+        "Excel language: " & ExcelLanguage & vbNewLine & _
+        "OS: " & OSFamily & " " & OSVersion & "; " & OSBitness & "-bit" & _
+        vbNewLine & _
+        "Username: " & OSUsername
+End Function
+
+Public Function SolverSummary() As String
     Dim SolverShortName As Variant, Solver As ISolver
     For Each SolverShortName In GetAvailableSolvers()
         Set Solver = CreateSolver(CStr(SolverShortName))

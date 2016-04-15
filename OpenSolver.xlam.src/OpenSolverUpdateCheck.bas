@@ -29,11 +29,7 @@ Private Const MinTimeBetweenChecks As Double = 1 ' 1 day between checks
 #End If
  
 Function GetUserAgent() As String
-    GetUserAgent = _
-        OSFamily() & "/" & OSVersion() & "x" & OSBitness() & " " & _
-        "Excel/" & Application.Version & "x" & ExcelBitness() & " " & _
-        "OpenSolver/" & sOpenSolverVersion & "x" & OpenSolverDistribution()
-        '& " " & "GUID/" & GetGuid()
+    GetUserAgent = EnvironmentString() ' & " " & "GUID/" & GetGuid()
 End Function
 
 Private Function GetPageUrl() As String

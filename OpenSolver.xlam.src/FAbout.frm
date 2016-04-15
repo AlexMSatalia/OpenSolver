@@ -120,7 +120,11 @@ Private Sub UserForm_Activate()
           
           With txtAbout
 3524          .Locked = False
-3525          .Text = About_OpenSolver & vbNewLine & vbNewLine & SolverSummary()
+3525          .Text = About_OpenSolver & vbNewLine & vbNewLine & _
+                      "========== SYSTEM INFORMATION ==========" & _
+                      vbNewLine & vbNewLine & _
+                      EnvironmentDetail() & vbNewLine & vbNewLine & _
+                      SolverSummary()
 3534          .Locked = True
 3535          .SetFocus
 3536          .SelStart = 0
