@@ -1,37 +1,46 @@
 Attribute VB_Name = "OpenSolverUpdateCheck"
+'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+Option Explicit
+
 Private HasCheckedForUpdate As Boolean
 
 Private DoSilentFail As Boolean
 Private DoWaitForResponse As Boolean
 Private AvoidPromptForBeta As Boolean
 
-Const OpenSolverRegName = "OpenSolver"
-Const PreferencesRegName = "Preferences"
-Const CheckForUpdatesRegName = "CheckForUpdates"
-Const CheckForBetaUpdatesRegName = "CheckForBetaUpdates"
-Const LastUpdateCheckRegName = "LastUpdateCheck"
-Const GuidRegName = "Guid"
+Private Const OpenSolverRegName = "OpenSolver"
+Private Const PreferencesRegName = "Preferences"
+Private Const CheckForUpdatesRegName = "CheckForUpdates"
+Private Const CheckForBetaUpdatesRegName = "CheckForBetaUpdates"
+Private Const LastUpdateCheckRegName = "LastUpdateCheck"
+Private Const GuidRegName = "Guid"
 
-Const MinTimeBetweenChecks As Double = 1 ' 1 day between checks
+' From rondebruin.nl:
+' The GetSetting default argument can't be an emptystring on Mac
+Private Const VALUE_IF_MISSING As String = "?"
+
+Private Const MinTimeBetweenChecks As Double = 1 ' 1 day between checks
 
 #If Mac Then
     Private Const UpdateLogName = "update.log"
-    Dim LogFilePath As String
-    Dim NumChecks As Long
-    Const MaxTime As Long = 10
+    Private LogFilePath As String
+    Private NumChecks As Long
+    Private Const MaxTime As Long = 10
 #End If
  
 Function GetUserAgent() As String
-    GetUserAgent = OSFamily() & "/" & OSVersion() & "x" & OSBitness() & " " & _
-                   "Excel/" & Application.Version & "x" & ExcelBitness() & " " & _
-                   "OpenSolver/" & sOpenSolverVersion & "x" & OpenSolverDistribution() '& " " & _
-                   '"GUID/" & GetGuid()
+    GetUserAgent = _
+        OSFamily() & "/" & OSVersion() & "x" & OSBitness() & " " & _
+        "Excel/" & Application.Version & "x" & ExcelBitness() & " " & _
+        "OpenSolver/" & sOpenSolverVersion & "x" & OpenSolverDistribution()
+        '& " " & "GUID/" & GetGuid()
 End Function
 
 Private Function GetPageUrl() As String
-    If DEBUG_MODE Then
+    If False Then
         ' The link below is a useful tool for async testing
-        ' It delays the response of the server (2s by default). Add "?sleep=5" to change timeout to 5s etc
+        ' It delays the response of the server (2s by default).
+        ' Add "?sleep=5" to change timeout to 5s etc
         GetPageUrl = "https://fake-response.appspot.com/"
     ElseIf GetBetaUpdateSetting(AvoidPromptForBeta) Then
         GetPageUrl = "http://opensolver.org/download/731/"
@@ -40,7 +49,8 @@ Private Function GetPageUrl() As String
     End If
 End Function
 
-Sub InitialiseUpdateCheck(Optional ByVal SilentFail As Boolean = False, Optional WaitForResponse As Boolean = False)
+Sub InitialiseUpdateCheck(Optional ByVal SilentFail As Boolean = False, _
+        Optional WaitForResponse As Boolean = False)
     HasCheckedForUpdate = True
     SetLastCheckTime Now
     
@@ -49,7 +59,8 @@ Sub InitialiseUpdateCheck(Optional ByVal SilentFail As Boolean = False, Optional
     If DoWaitForResponse Then Application.Cursor = xlWait
     
     ' We initiate a request for the version info.
-    ' This check should be asynchronous, and fire "CompleteUpdateCheck" when the response is returned
+    ' This check should be asynchronous, and fire "CompleteUpdateCheck" when
+    ' the response is returned
     #If Mac Then
         InitialiseUpdateCheck_Mac
     #Else
@@ -89,7 +100,9 @@ End Sub
 Private Function InitialiseUpdateCheck_Mac() As String
     Dim Command As String
     
-    If GetTempFilePath(UpdateLogName, LogFilePath) Then DeleteFileAndVerify (LogFilePath)
+    If GetTempFilePath(UpdateLogName, LogFilePath) Then
+        DeleteFileAndVerify (LogFilePath)
+    End If
 
     ' -L follows redirects, -m sets Max Time
     Command = "curl -L" & _
@@ -131,7 +144,8 @@ Public Sub CheckForCompletion_Mac()
             mSleep 1000  ' 1 second
             CheckForCompletion_Mac
         Else
-            Application.OnTime Now + TimeSerial(0, 0, 1), "CheckForCompletion_Mac"
+            Application.OnTime Now + TimeSerial(0, 0, 1), _
+                               "CheckForCompletion_Mac"
         End If
     Else
         CompleteUpdateCheck Response
@@ -152,9 +166,10 @@ Sub CompleteUpdateCheck(Response As String)
     LatestNumbers() = Split(Response, ".")
     CurrentNumbers() = Split(sOpenSolverVersion, ".")
     
-    Dim UpdateAvailable As Boolean, LatestNumber As Long, CurrentNumber As Long
+    Dim UpdateAvailable As Boolean, i As Long
     UpdateAvailable = False
     For i = 0 To 2
+        Dim LatestNumber As Long, CurrentNumber As Long
         LatestNumber = CLng(LatestNumbers(i))
         CurrentNumber = CLng(CurrentNumbers(i))
         If LatestNumber > CurrentNumber Then
@@ -174,15 +189,17 @@ Sub CompleteUpdateCheck(Response As String)
         frmUpdateNotification.ShowUpdate Response
         Unload frmUpdateNotification
     ElseIf Not DoSilentFail Then
-        MsgBox "No updates for OpenSolver are available at this time.", vbOKOnly, "OpenSolver - Update Check"
+        MsgBox "No updates for OpenSolver are available at this time.", _
+               vbOKOnly, "OpenSolver - Update Check"
     End If
     
 ExitSub:
     Exit Sub
     
 ConnectionError:
-    If Not SilentFail Then
-        MsgBox "The update checker was unable to determine the latest version of OpenSolver. Please try again later."
+    If Not DoSilentFail Then
+        MsgBox "The update checker was unable to determine the latest " _
+             & "version of OpenSolver. Please try again later."
     End If
     GoTo ExitSub
 End Sub
@@ -190,15 +207,16 @@ End Sub
 Sub AutoUpdateCheck()
     ' Don't check the saved setting if we have already run the checker
     If Not HasCheckedForUpdate Then
-        ' Make sure we don't keep asking the user for their preference if they cancel
+        ' Make sure we don't keep asking the user for their preference if
+        ' we have already shown them the settings form
         HasCheckedForUpdate = True
         
         Dim SettingWasMissing As Boolean, DoCheck As Boolean
         ' Get the entry, and show the update settings form if missing
         DoCheck = GetUpdateSetting(False, SettingWasMissing)
         
-        ' If the setting was missing, then we have shown the update settings form already
-        ' We don't want to show it again when we get the beta entry
+        ' If the setting was missing, then we have shown the update settings
+        ' form, and we don't want to show it again when we get the beta entry
         AvoidPromptForBeta = SettingWasMissing
         
         If DoCheck Then
@@ -210,12 +228,20 @@ Sub AutoUpdateCheck()
     End If
 End Sub
 
-Public Function GetUpdateSetting(Optional SilentFail As Boolean = True, Optional Missing As Boolean) As Boolean
+Private Function GetUpdateRegName(Beta As Boolean) As String
+    GetUpdateRegName = IIf(Beta, CheckForBetaUpdatesRegName, _
+                                 CheckForUpdatesRegName)
+End Function
+
+Public Function GetUpdateSetting(Optional SilentFail As Boolean = True, _
+        Optional Missing As Boolean, _
+        Optional Beta As Boolean = False) As Boolean
+        
     Dim result As Variant
-    ' From rondebruin.nl: The GetSetting default argument can't be an empty string on Mac
-    result = GetSetting(OpenSolverRegName, PreferencesRegName, CheckForUpdatesRegName, "?")
+    result = GetSetting(OpenSolverRegName, PreferencesRegName, _
+                        GetUpdateRegName(Beta), VALUE_IF_MISSING)
     
-    If result = "?" Then
+    If result = VALUE_IF_MISSING Then
         Missing = True
         ' Handle a missing entry
         If SilentFail Then
@@ -233,63 +259,48 @@ Public Function GetUpdateSetting(Optional SilentFail As Boolean = True, Optional
         Missing = False
     End If
     
-    GetUpdateSetting = SafeCBool(result, True)
+    ' Check for stable updates only by default
+    Dim DefaultSetting As Boolean
+    DefaultSetting = IIf(Beta, False, True)
+    GetUpdateSetting = SafeCBool(result, DefaultSetting)
 End Function
 
-Public Sub SaveUpdateSetting(UpdateSetting As Boolean)
-    SaveSetting OpenSolverRegName, PreferencesRegName, CheckForUpdatesRegName, BoolToInt(UpdateSetting)
+Public Sub SaveUpdateSetting(UpdateSetting As Boolean, _
+        Optional Beta As Boolean = False)
+    SaveSetting OpenSolverRegName, PreferencesRegName, _
+                GetUpdateRegName(Beta), BoolToInt(UpdateSetting)
 End Sub
 
 ' Useful for testing update check
-Private Sub DeleteUpdateSetting()
+Private Sub DeleteUpdateSetting(Optional Beta As Boolean = False)
     On Error Resume Next
-    DeleteSetting OpenSolverRegName, PreferencesRegName, CheckForUpdatesRegName
+    DeleteSetting OpenSolverRegName, PreferencesRegName, GetUpdateRegName(Beta)
 End Sub
 
-Public Function GetBetaUpdateSetting(Optional SilentFail As Boolean = True, Optional Missing As Boolean) As Boolean
-    Dim result As Variant
-    ' From rondebruin.nl: The GetSetting default argument can't be an empty string on Mac
-    result = GetSetting(OpenSolverRegName, PreferencesRegName, CheckForBetaUpdatesRegName, "?")
-    
-    If result = "?" Then
-        Missing = True
-        ' Handle a missing entry
-        If SilentFail Then
-            ' In silent mode, return false without saving anything
-            result = False
-        Else
-            ' Otherwise, show the dialog and get the setting
-            Dim frmUpdateSettings As FUpdateSettings
-            Set frmUpdateSettings = New FUpdateSettings
-            frmUpdateSettings.Show
-            Unload frmUpdateSettings
-            result = GetUpdateSetting(True)
-        End If
-    Else
-        Missing = False
-    End If
-    
-    GetBetaUpdateSetting = SafeCBool(result, False)
+Public Function GetBetaUpdateSetting(Optional SilentFail As Boolean = True, _
+        Optional Missing As Boolean) As Boolean
+    GetBetaUpdateSetting = GetUpdateSetting(SilentFail, Missing, Beta:=True)
 End Function
 
-Public Sub SaveBetaUpdateSetting(BetaUpdateSetting As Boolean)
-    SaveSetting OpenSolverRegName, PreferencesRegName, CheckForBetaUpdatesRegName, BoolToInt(BetaUpdateSetting)
+Public Sub SaveBetaUpdateSetting(UpdateSetting As Boolean)
+    SaveUpdateSetting UpdateSetting, Beta:=True
 End Sub
 
 Private Sub DeleteBetaUpdateSetting()
-    On Error Resume Next
-    DeleteSetting OpenSolverRegName, PreferencesRegName, CheckForBetaUpdatesRegName
+    DeleteUpdateSetting Beta:=True
 End Sub
 
 Private Function GetLastCheckTime() As Double
     Dim result As Variant
-    result = GetSetting(OpenSolverRegName, PreferencesRegName, LastUpdateCheckRegName, 0)
+    result = GetSetting(OpenSolverRegName, PreferencesRegName, _
+                        LastUpdateCheckRegName, 0)
     
     GetLastCheckTime = Val(result)
 End Function
 
 Private Sub SetLastCheckTime(CheckTime As Double)
-    SaveSetting OpenSolverRegName, PreferencesRegName, LastUpdateCheckRegName, StrExNoPlus(CheckTime)
+    SaveSetting OpenSolverRegName, PreferencesRegName, _
+                LastUpdateCheckRegName, StrExNoPlus(CheckTime)
 End Sub
 
 Private Sub DeleteLastCheckTime()
@@ -302,11 +313,13 @@ Private Sub ResetHasChecked()
 End Sub
 
 Private Function GetGuid() As String
-    ' From rondebruin.nl: The GetSetting default argument can't be an empty string on Mac
+    ' From rondebruin.nl:
+    ' The GetSetting default argument can't be an empty string on Mac
     Dim result As Variant
-    result = GetSetting(OpenSolverRegName, PreferencesRegName, GuidRegName, "?")
+    result = GetSetting(OpenSolverRegName, PreferencesRegName, GuidRegName, _
+                        VALUE_IF_MISSING)
     
-    If result = "?" Then
+    If result = VALUE_IF_MISSING Then
         result = MakeGuid()
         SetGuid CStr(result)
     End If
