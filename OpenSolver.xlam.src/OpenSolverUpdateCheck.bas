@@ -190,6 +190,9 @@ End Sub
 Sub AutoUpdateCheck()
     ' Don't check the saved setting if we have already run the checker
     If Not HasCheckedForUpdate Then
+        ' Make sure we don't keep asking the user for their preference if they cancel
+        HasCheckedForUpdate = True
+        
         Dim SettingWasMissing As Boolean, DoCheck As Boolean
         ' Get the entry, and show the update settings form if missing
         DoCheck = GetUpdateSetting(False, SettingWasMissing)
@@ -239,6 +242,7 @@ End Sub
 
 ' Useful for testing update check
 Private Sub DeleteUpdateSetting()
+    On Error Resume Next
     DeleteSetting OpenSolverRegName, PreferencesRegName, CheckForUpdatesRegName
 End Sub
 
@@ -273,6 +277,7 @@ Public Sub SaveBetaUpdateSetting(BetaUpdateSetting As Boolean)
 End Sub
 
 Private Sub DeleteBetaUpdateSetting()
+    On Error Resume Next
     DeleteSetting OpenSolverRegName, PreferencesRegName, CheckForBetaUpdatesRegName
 End Sub
 
@@ -288,6 +293,7 @@ Private Sub SetLastCheckTime(CheckTime As Double)
 End Sub
 
 Private Sub DeleteLastCheckTime()
+    On Error Resume Next
     DeleteSetting OpenSolverRegName, PreferencesRegName, LastUpdateCheckRegName
 End Sub
 
