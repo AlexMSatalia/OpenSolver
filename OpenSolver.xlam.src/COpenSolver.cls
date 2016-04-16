@@ -367,7 +367,7 @@ NextCellLHS:
                           ' This is an empty cell; VBA quietly turns this into 0 when used in an expression. We need no special handling of this, and don't report an error.
 857                   Case vbError:
 858                       GetConstraintInstanceData constraint, instance, LHSCellRange, RHSCellRange, RHSstring
-859                       ErrorMsg = "The right hand side in constraint '" & ConstraintSummary(constraint) & "' has a divide by zero error or has a problem with the function used (eg #DIV/0! or #VALUE!). Please fix this and try again."
+859                       ErrorMsg = "The right hand side in constraint '" & ConstraintSummary(constraint) & "' has a divide by zero error or has a problem with the function used (eg #DIV/0! or #VALUE!)."
 860                   Case Else:
                           ' It might be vbError, or vbString, or anything else?
 862                       GetConstraintInstanceData constraint, 1, LHSCellRange, RHSCellRange, RHSstring
@@ -438,7 +438,10 @@ NextCellMultiRHS:
           Exit Function
           
 ExitError:
-          ErrorMsg = ErrorMsg & vbNewLine & vbNewLine & "This can happen if your model is nonlinear, or if you have made an error when constructing the model. Please fix this and try again."
+          ErrorMsg = ErrorMsg & vbNewLine & vbNewLine & _
+                     IIf(AllowNonNumericIfNotConstant, "This can happen if you have made an error when constructing the model.", _
+                                                       "This can happen if your model is nonlinear, or if you have made an error when constructing the model.") & _
+                     " Please fix this and try again."
 End Function
 
 ' Get the current values off the spreadsheet for the given constraint. LHS is always returned as a 2D array. RHS may be a single or array value
@@ -524,7 +527,11 @@ Function GetCurrentObjectiveValue(Optional ValidateNumeric As Boolean = True, Op
                           End If
                       End If
                   End If
-                  ErrorMsg = ErrorMsg & vbNewLine & vbNewLine & "This can happen if your model is nonlinear, or if you have made an error when constructing the model. Please fix this and try again."
+                  ErrorMsg = _
+                      ErrorMsg & vbNewLine & vbNewLine & _
+                      IIf(AllowNonNumericIfNotConstant, "This can happen if you have made an error when constructing the model.", _
+                                                        "This can happen if your model is nonlinear, or if you have made an error when constructing the model.") & _
+                      " Please fix this and try again."
                   Err.Raise OpenSolver_BuildError, Description:=ErrorMsg
               End If
           End If
