@@ -120,17 +120,6 @@ Public Function GetObjectiveFunctionCell(Optional sheet As Worksheet, Optional V
         If ObjRefersToError Then
             Err.Raise Number:=OpenSolver_BuildError, Description:="The objective is marked #REF!, indicating this cell has been deleted. Please fix the objective, and try again."
         End If
-        
-        If GetObjectiveFunctionCell Is Nothing Then Exit Function
-        
-        ' Objective has a value that is not a number
-        If VarType(GetObjectiveFunctionCell.Value2) <> vbDouble Then
-            If VarType(GetObjectiveFunctionCell.Value2) = vbError Then
-                Err.Raise Number:=OpenSolver_BuildError, Description:="The objective cell appears to contain an error. This could have occurred if there is a divide by zero error or if you have used the wrong function (eg #DIV/0! or #VALUE!). Please fix this, and try again."
-            Else
-                Err.Raise Number:=OpenSolver_BuildError, Description:="The objective cell does not appear to contain a numeric value. Please fix this, and try again."
-            End If
-        End If
     End If
 End Function
 

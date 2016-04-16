@@ -90,9 +90,7 @@ Private Function BuildConstantTerms() As Boolean
 1343      Next constraint
 
           If Not s.ObjRange Is Nothing Then
-              On Error GoTo NotLinear
-              s.ObjectiveFunctionConstant = s.ObjRange.Value2
-              On Error GoTo ErrorHandler
+              s.ObjectiveFunctionConstant = s.GetCurrentObjectiveValue()
               ' Add constants to Target
               If s.ObjectiveSense = TargetObjective Then
                   ' Target value needs to be incremented by any constants in the objective
@@ -111,9 +109,6 @@ ErrorHandler:
           If Not ReportError("CModelDiff", "BuildConstantTerms") Then Resume
           RaiseError = True
           GoTo ExitFunction
-          
-NotLinear:
-          Err.Raise OpenSolver_ModelError, Description:="The objective cell appears to contain an error. This could have occurred if there is a divide by zero error or if you have used the wrong function (eg #DIV/0! or #VALUE!). Please fix this, and try again."
 End Function
 
 Private Function BuildVariableTerms(LinearityOffset As Double) As Boolean
@@ -136,7 +131,7 @@ Private Function BuildVariableTerms(LinearityOffset As Double) As Boolean
           
           Dim ObjPresent As Boolean, OriginalObjectiveValue As Double
           ObjPresent = Not s.ObjRange Is Nothing
-          If ObjPresent Then OriginalObjectiveValue = s.ObjRange.Value2
+          If ObjPresent Then OriginalObjectiveValue = s.GetCurrentObjectiveValue()
           
           ' Increment each decision variable by one to see what constraints are dependent on it and by what amount
           Dim var As Long, AdjCell As Range
@@ -151,7 +146,7 @@ Private Function BuildVariableTerms(LinearityOffset As Double) As Boolean
 
               ' Easy part first - the objective function value change
 1285          If ObjPresent Then
-1286              s.CostCoeffs(var) = s.ObjRange.Value2 - OriginalObjectiveValue
+1286              s.CostCoeffs(var) = s.GetCurrentObjectiveValue - OriginalObjectiveValue
 1287          End If
 
               ' Now the hard (slow) bit - the constraint changes
@@ -580,7 +575,7 @@ Sub DoQuickLinearityCheck()
           If s.ObjRange Is Nothing Then
               ObservedObjValue = 0
           Else
-2233          ObservedObjValue = s.ObjRange.Value2
+2233          ObservedObjValue = s.GetCurrentObjectiveValue()
           End If
 2236      CalculatedObjValue = CalcObjFnValue(DecisionVariableValues)
 

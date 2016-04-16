@@ -353,6 +353,25 @@ ErrorHandler:
           GoTo ExitFunction
 End Function
 
+Function ProperPrecedents(r As Range) As Range
+' Gets the precedents of a range, returning nothing if there are no precedents or the range is nothing
+    If r Is Nothing Then
+        GoTo ExitFunction
+    End If
+    
+    On Error GoTo ErrorHandler
+    Set ProperPrecedents = r.Precedents
+ExitFunction:
+    Exit Function
+
+ErrorHandler:
+    If Err.Number = 1004 Then
+        Set ProperPrecedents = Nothing
+        Resume ExitFunction
+    End If
+    Err.Raise Err.Number, Err.Source, Err.Description
+End Function
+
 Function SetDifference(ByRef rng1 As Range, ByRef rng2 As Range) As Range
 ' Returns rng1 \ rng2 (set minus) i.e. all elements in rng1 that are not in rng2
 ' https://stackoverflow.com/a/17510237/4492726

@@ -90,27 +90,23 @@ Function NOMAD_GetValues() As Variant
           Dim X As Variant, i As Long, j As Long, k As Long, NumCons As Variant
 2465      NumCons = NOMAD_GetNumConstraints()
 2466      ReDim X(1 To NumCons(1, 1), 1 To 1)
-          '====NOMAD only does minimise so need to change objective if it is max====
-          ' If no objective, just set a constant.
-          ' TODO: fix this to set it based on amount of violation to hunt for feasibility
-2467      If OS.ObjRange Is Nothing Then
-2468          X(1, 1) = 0
-          ' If objective cell is error, report this directly to NOMAD. Attempting to manipulate it can cause errors
-2469      ElseIf VarType(OS.ObjRange.Value2) = vbError Then
-2470          X(1, 1) = OS.ObjRange.Value2
-          'If objective sense is maximise then multiply by minus 1
-2471      ElseIf OS.ObjectiveSense = MaximiseObjective Then
-2472          If OS.ObjRange.Value2 <> 0 Then
-2473              X(1, 1) = -1 * OS.ObjRange.Value2 'objective value
-2474          Else
-2475              X(1, 1) = OS.ObjRange.Value2
-2476          End If
-          'Else if objective sense is minimise leave it
-2477      ElseIf OS.ObjectiveSense = MinimiseObjective Then
-2478          X(1, 1) = OS.ObjRange.Value2
-2479      ElseIf OS.ObjectiveSense = TargetObjective Then
-2480          X(1, 1) = Abs(OS.ObjRange.Value2 - OS.ObjectiveTargetValue)
+
+          ' We get the objective value without validation and report an error value
+          ' directly to NOMAD. Attempting to manipulate it can cause errors
+          Dim ObjValue As Variant
+          ObjValue = OS.GetCurrentObjectiveValue(ValidateNumeric:=False)
+          
+2469      If VarType(ObjValue) = vbDouble Then
+2470          Select Case OS.ObjectiveSense
+                  Case MaximiseObjective:
+                      ' NOMAD only does minimization so flip sign
+2472                  ObjValue = -ObjValue
+                  Case TargetObjective:
+                      ObjValue = Abs(ObjValue - OS.ObjectiveTargetValue)
+              End Select
 2481      End If
+          X(1, 1) = ObjValue
+
 2483      k = 1 'keep a count of what constraint its up to not including bounds
           Dim row As Long, constraint As Long
 2484      row = 1
@@ -120,7 +116,7 @@ Function NOMAD_GetValues() As Variant
               ' Check to see what is different and add rows to sparsea
 2486          If Not OS.LHSRange(constraint) Is Nothing Then ' skip Binary and Integer constraints
                   ' Get current value(s) for LHS and RHS of this constraint off the sheet. LHS is always an array (even if 1x1)
-2487              OS.GetCurrentConstraintValues constraint, CurrentLHSValues, CurrentRHSValues
+2487              OS.GetCurrentConstraintValues constraint, CurrentLHSValues, CurrentRHSValues, ValidateNumeric:=False
 2488              If OS.LHSType(constraint) = SolverInputType.MultiCellRange Then
 2489                  For i = 1 To UBound(CurrentLHSValues, 1)
 2490                      For j = 1 To UBound(CurrentLHSValues, 2)

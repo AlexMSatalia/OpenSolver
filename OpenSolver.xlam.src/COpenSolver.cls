@@ -311,80 +311,141 @@ ErrorHandler:
           GoTo ExitFunction
 End Function
 
-Function CheckConstraintValuesAreNumeric(constraint As Long, LHSValues As Variant, RHSValues As Variant, ErrorMsg As String) As Boolean
+Function CheckConstraintValuesAreNumeric(constraint As Long, LHSValues As Variant, RHSValues As Variant, ErrorMsg As String, AllowNonNumericIfNotConstant As Boolean) As Boolean
           ' Check that the LHS and RHS values are doubles (not vbError, or vbString, or ??)
           ' vbEmpty (blank) cell values are permitted as VBA quietly turns them into 0's in expressions
 836       CheckConstraintValuesAreNumeric = False
           Dim i As Long, j As Long, instance As Long
-          Dim LHSCellRange As Range, RHSCellRange As Range, RHSstring As String
+          Dim LHSCellRange As Range, RHSCellRange As Range, RHSstring As String, cell As Range
           
           ' Check LHS first; this is always an array
 837       instance = 0
 838       For i = 1 To UBound(LHSValues, 1)
 839           For j = 1 To UBound(LHSValues, 2)
 840               instance = instance + 1
-841               If VarType(LHSValues(i, j)) = vbEmpty Then
-                      ' This is an empty cell; VBA quietly turns this into 0 when used in an expression. We need no special handling of this, and don't report an error.
-842               ElseIf VarType(LHSValues(i, j)) = vbError Then
-843                   GetConstraintInstanceData constraint, instance, LHSCellRange, RHSCellRange, RHSstring
-844                   ErrorMsg = "The cell '" & LHSCellRange.AddressLocal(RowAbsolute:=False, ColumnAbsolute:=False) & "' in constraint '" & ConstraintSummary(constraint) & "' has a divide by zero error or has a problem with the function used ( eg #DIV/0! or #VALUE!). Please fix this and try again."
-845                   Exit Function
-846               ElseIf VarType(LHSValues(i, j)) <> vbDouble Then
-                      ' It might be vbError, or vbString, or vbEmpty
-847                   GetConstraintInstanceData constraint, instance, LHSCellRange, RHSCellRange, RHSstring
-848                   ErrorMsg = "The cell '" & LHSCellRange.AddressLocal(RowAbsolute:=False, ColumnAbsolute:=False) & "' in constraint '" & ConstraintSummary(constraint) & "' has a value which is not numeric."
-849                   On Error Resume Next
-                      ' Try to show the incorrect value; just cary on with the old ErrorMsg if this gives an error
-850                   ErrorMsg = "The cell '" & LHSCellRange.AddressLocal(RowAbsolute:=False, ColumnAbsolute:=False) & "' in constraint '" & ConstraintSummary(constraint) & "' has the value '" & LHSValues(i, j) & "' which is not numeric."
-851                   Exit Function
-852               End If
+                  Select Case VarType(LHSValues(i, j))
+                      Case vbDouble:
+                      Case vbEmpty:
+                          ' This is an empty cell; VBA quietly turns this into 0 when used in an expression. We need no special handling of this, and don't report an error.
+842                   Case vbError:
+843                       GetConstraintInstanceData constraint, instance, LHSCellRange, RHSCellRange, RHSstring
+844                       ErrorMsg = "The cell '" & LHSCellRange.AddressLocal(RowAbsolute:=False, ColumnAbsolute:=False) & "' in constraint '" & ConstraintSummary(constraint) & "' has a divide by zero error or has a problem with the function used ( eg #DIV/0! or #VALUE!)."
+846                   Case Else:
+                          ' It might be vbError, or vbString, or vbEmpty
+847                       GetConstraintInstanceData constraint, instance, LHSCellRange, RHSCellRange, RHSstring
+848                       ErrorMsg = "The cell '" & LHSCellRange.AddressLocal(RowAbsolute:=False, ColumnAbsolute:=False) & "' in constraint '" & ConstraintSummary(constraint) & "' has a value which is not numeric."
+849                       On Error Resume Next
+                          ' Try to show the incorrect value; just cary on with the old ErrorMsg if this gives an error
+850                       ErrorMsg = "The cell '" & LHSCellRange.AddressLocal(RowAbsolute:=False, ColumnAbsolute:=False) & "' in constraint '" & ConstraintSummary(constraint) & "' has the value '" & LHSValues(i, j) & "' which is not numeric."
+                          On Error GoTo 0
+852               End Select
+
+                  If Len(ErrorMsg) > 0 Then
+                      ' We have an invalid value
+                      If AllowNonNumericIfNotConstant Then
+                          ' Allow this if the cell depends on the variable cells - it might be valid later
+                          Set cell = GetOneCellInRange(LHSCellRange, instance)
+                          If Not ProperPrecedents(cell) Is Nothing Then
+                              If Not Intersect(ProperPrecedents(cell), AdjustableCells) Is Nothing Then
+                                  GoTo NextCellLHS
+                              End If
+                          End If
+                      End If
+                      ' Else the error is real, exit and report it
+                      GoTo ExitError
+                  End If
+NextCellLHS:
+                  ErrorMsg = vbNullString
 853           Next j
 854       Next i
           
 855       Select Case RHSType(constraint)
               Case SolverInputType.SingleCellRange, SolverInputType.Formula, SolverInputType.constant
-856               If VarType(RHSValues) = vbEmpty Then
-                      ' This is an empty cell; VBA quietly turns this into 0 when used in an expression. We need no special handling of this, and don't report an error.
-857               ElseIf VarType(RHSValues) = vbError Then
-858                   GetConstraintInstanceData constraint, instance, LHSCellRange, RHSCellRange, RHSstring
-859                   ErrorMsg = "The right hand side in constraint '" & ConstraintSummary(constraint) & "' has a divide by zero error or has a problem with the function used ( eg #DIV/0! or #VALUE!). Please fix this and try again."
-860                   Exit Function
-861               ElseIf VarType(RHSValues) <> vbDouble Then
-                      ' It might be vbError, or vbString, or anything else?
-862                   GetConstraintInstanceData constraint, 1, LHSCellRange, RHSCellRange, RHSstring
-863                   ErrorMsg = "The right hand side in constraint '" & ConstraintSummary(constraint) & "' has a value which is not a single numeric value."
-                      ' Try to show the incorrect value; just cary on with the old ErrorMsg if this gives an error
-864                   On Error Resume Next
-865                   ErrorMsg = "The right hand side in constraint '" & ConstraintSummary(constraint) & "' has the value '" & RHSValues & "' which is not numeric."
-866                   Exit Function
-867               End If
+856               Select Case VarType(RHSValues)
+                      Case vbDouble
+                      Case vbEmpty:
+                          ' This is an empty cell; VBA quietly turns this into 0 when used in an expression. We need no special handling of this, and don't report an error.
+857                   Case vbError:
+858                       GetConstraintInstanceData constraint, instance, LHSCellRange, RHSCellRange, RHSstring
+859                       ErrorMsg = "The right hand side in constraint '" & ConstraintSummary(constraint) & "' has a divide by zero error or has a problem with the function used (eg #DIV/0! or #VALUE!). Please fix this and try again."
+860                   Case Else:
+                          ' It might be vbError, or vbString, or anything else?
+862                       GetConstraintInstanceData constraint, 1, LHSCellRange, RHSCellRange, RHSstring
+863                       ErrorMsg = "The right hand side in constraint '" & ConstraintSummary(constraint) & "' has a value which is not a single numeric value."
+                          ' Try to show the incorrect value; just cary on with the old ErrorMsg if this gives an error
+864                       On Error Resume Next
+865                       ErrorMsg = "The right hand side in constraint '" & ConstraintSummary(constraint) & "' has the value '" & RHSValues & "' which is not numeric."
+                          On Error GoTo 0
+867               End Select
+
+                  If Len(ErrorMsg) > 0 Then
+                      ' We have an invalid value
+                      If AllowNonNumericIfNotConstant Then
+                          ' Allow this if the cell depends on the variable cells - it might be valid later
+                          Set cell = RHSCellRange
+                          If Not ProperPrecedents(cell) Is Nothing Then
+                              If Not Intersect(ProperPrecedents(cell), AdjustableCells) Is Nothing Then
+                                  GoTo NextCellSingleRHS
+                              End If
+                          End If
+                      End If
+                      ' Else the error is real, exit and report it
+                      GoTo ExitError
+                  End If
+NextCellSingleRHS:
 868           Case SolverInputType.MultiCellRange
 869               instance = 0
 870               For i = 1 To UBound(RHSValues, 1)
 871                   For j = 1 To UBound(RHSValues, 2)
 872                       instance = instance + 1
-873                       If VarType(RHSValues(i, j)) = vbEmpty Then
-                              ' This is an empty cell; VBA quietly turns this into 0 when used in an expression. We need no special handling of this, and don't report an error.
-874                       ElseIf VarType(RHSValues) = vbError Then
-875                           GetConstraintInstanceData constraint, instance, LHSCellRange, RHSCellRange, RHSstring
-876                           ErrorMsg = "The right hand side in constraint '" & ConstraintSummary(constraint) & "' has a divide by zero error or has a problem with the function used ( eg #DIV/0! or #VALUE!). Please fix this and try again."
-877                           Exit Function
-878                       ElseIf VarType(RHSValues(i, j)) <> vbDouble Then
-                              ' It might be vbError, or vbString, or vbEmpty
-879                           GetConstraintInstanceData constraint, instance, LHSCellRange, RHSCellRange, RHSstring
-880                           ErrorMsg = "The cell '" & RHSCellRange.AddressLocal(RowAbsolute:=False, ColumnAbsolute:=False) & "' in constraint '" & ConstraintSummary(constraint) & "' has a value which is not numeric."
-881                           On Error Resume Next
-882                           ErrorMsg = "The cell '" & RHSCellRange.AddressLocal(RowAbsolute:=False, ColumnAbsolute:=False) & "' in constraint '" & ConstraintSummary(constraint) & "' has the value '" & RHSValues(i, j) & "' which is not numeric."
-883                           Exit Function
-884                       End If
+873                       Select Case VarType(RHSValues(i, j))
+                              Case vbDouble:
+                              Case vbEmpty:
+                                  ' This is an empty cell; VBA quietly turns this into 0 when used in an expression. We need no special handling of this, and don't report an error.
+874                           Case vbError:
+875                               GetConstraintInstanceData constraint, instance, LHSCellRange, RHSCellRange, RHSstring
+876                               ErrorMsg = "The right hand side in constraint '" & ConstraintSummary(constraint) & "' has a divide by zero error or has a problem with the function used ( eg #DIV/0! or #VALUE!)."
+877                               GoTo ExitError
+878                           Case Else:
+                                  ' It might be vbError, or vbString, or vbEmpty
+879                               GetConstraintInstanceData constraint, instance, LHSCellRange, RHSCellRange, RHSstring
+880                               ErrorMsg = "The cell '" & RHSCellRange.AddressLocal(RowAbsolute:=False, ColumnAbsolute:=False) & "' in constraint '" & ConstraintSummary(constraint) & "' has a value which is not numeric."
+881                               On Error Resume Next
+882                               ErrorMsg = "The cell '" & RHSCellRange.AddressLocal(RowAbsolute:=False, ColumnAbsolute:=False) & "' in constraint '" & ConstraintSummary(constraint) & "' has the value '" & RHSValues(i, j) & "' which is not numeric."
+                                  On Error GoTo 0
+884                       End Select
+
+                          If Len(ErrorMsg) > 0 Then
+                              ' We have an invalid value
+                              If AllowNonNumericIfNotConstant Then
+                                  ' Allow this if the cell depends on the variable cells - it might be valid later
+                                  Set cell = GetOneCellInRange(RHSCellRange, instance)
+                                  If Not ProperPrecedents(cell) Is Nothing Then
+                                      If Not Intersect(ProperPrecedents(cell), AdjustableCells) Is Nothing Then
+                                          GoTo NextCellMultiRHS
+                                      End If
+                                  End If
+                              End If
+                              ' Else the error is real, exit and report it
+                              GoTo ExitError
+                          End If
+NextCellMultiRHS:
+                          ErrorMsg = vbNullString
 885                   Next j
 886               Next i
 887       End Select
 888       CheckConstraintValuesAreNumeric = True
+          Exit Function
+          
+ExitError:
+          ErrorMsg = ErrorMsg & vbNewLine & vbNewLine & "This can happen if your model is nonlinear, or if you have made an error when constructing the model. Please fix this and try again."
 End Function
 
 ' Get the current values off the spreadsheet for the given constraint. LHS is always returned as a 2D array. RHS may be a single or array value
-Sub GetCurrentConstraintValues(constraint As Long, LHSValues As Variant, RHSValues As Variant)
+' Options:
+' - ValidateNumeric: validates that all values are numeric
+' - AllowNonNumericIfNotConstant: doesn't throw an error if the non-numeric value depends on the variable cells
+Sub GetCurrentConstraintValues(constraint As Long, LHSValues As Variant, RHSValues As Variant, Optional ValidateNumeric As Boolean = True, Optional AllowNonNumericIfNotConstant As Boolean = False)
           Dim RaiseError As Boolean
           RaiseError = False
           On Error GoTo ErrorHandler
@@ -412,10 +473,12 @@ Sub GetCurrentConstraintValues(constraint As Long, LHSValues As Variant, RHSValu
 901           RHSValues = RHSConstant(constraint)
 902       End If
 
-          Dim ErrorMsg As String
-1171      If Not CheckConstraintValuesAreNumeric(constraint, LHSValues, _
-                                                 RHSValues, ErrorMsg) Then
-1173          Err.Raise Number:=OpenSolver_BuildError, Description:=ErrorMsg
+1171      If ValidateNumeric Then
+              Dim ErrorMsg As String
+              If Not CheckConstraintValuesAreNumeric(constraint, LHSValues, RHSValues, ErrorMsg, _
+                                                     AllowNonNumericIfNotConstant) Then
+1173              Err.Raise Number:=OpenSolver_BuildError, Description:=ErrorMsg
+              End If
 1174      End If
 
 ExitSub:
@@ -427,6 +490,57 @@ ErrorHandler:
           RaiseError = True
           GoTo ExitSub
 End Sub
+
+Function GetCurrentObjectiveValue(Optional ValidateNumeric As Boolean = True, Optional AllowNonNumericIfNotConstant As Boolean = False) As Variant
+          Dim RaiseError As Boolean
+          RaiseError = False
+          On Error GoTo ErrorHandler
+          
+          If ObjRange Is Nothing Then
+              GetCurrentObjectiveValue = 0
+              GoTo ExitFunction
+          End If
+              
+          
+          Dim ObjValue As Variant
+          ObjValue = ObjRange.Value2
+          
+          If ValidateNumeric Then
+              Dim ErrorMsg As String
+              ' Check if objective has a value that is not a number
+              If VarType(ObjValue) <> vbDouble Then
+                  If VarType(ObjValue) = vbError Then
+                      ErrorMsg = "The objective cell appears to contain an error. This could have occurred if there is a divide by zero error or if you have used the wrong function (eg #DIV/0! or #VALUE!)."
+                  Else
+                      ErrorMsg = "The objective cell does not appear to contain a numeric value."
+                  End If
+              End If
+              
+              If Len(ErrorMsg) > 0 Then
+                  If AllowNonNumericIfNotConstant Then
+                      If Not ProperPrecedents(ObjRange) Is Nothing Then
+                          If Not Intersect(ProperPrecedents(ObjRange), AdjustableCells) Is Nothing Then
+                              GoTo DontRaise
+                          End If
+                      End If
+                  End If
+                  ErrorMsg = ErrorMsg & vbNewLine & vbNewLine & "This can happen if your model is nonlinear, or if you have made an error when constructing the model. Please fix this and try again."
+                  Err.Raise OpenSolver_BuildError, Description:=ErrorMsg
+              End If
+          End If
+DontRaise:
+          GetCurrentObjectiveValue = ObjValue
+
+ExitFunction:
+          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          Exit Function
+
+ErrorHandler:
+          If Not ReportError("COpenSolver", "GetCurrentObjectiveValue") Then Resume
+          RaiseError = True
+          GoTo ExitFunction
+End Function
+
 
 ' Get the information required to display a single instance of a constraint to the user
 Sub GetConstraintInstanceData(constraint As Long, instance As Long, LHSCellRange As Range, RHSCellRange As Range, RHSstring As String)
@@ -548,6 +662,8 @@ Sub BuildModelFromSolverData(Optional LinearityOffset As Double = 0, _
 1011      ObjectiveSense = GetObjectiveSense(sheet)
 1013      ObjectiveTargetValue = GetObjectiveTargetValue(sheet)
           Set ObjRange = GetObjectiveFunctionCell(sheet, Validate:=True)
+          ' Check that objective is not an non-numeric constant
+          GetCurrentObjectiveValue AllowNonNumericIfNotConstant:=True
 
           '--------------------------------------------------------------------------
           ' MODEL OPTIONS SETUP
@@ -679,11 +795,12 @@ RaiseError:
                       RHSConstant(constraint) = valRHS
 1145              End If
 
-                  ' Check values are numeric
+                  ' Check that all constant values are numeric
+                  ' We allow non-numeric values that might later change with the variable cells
                   Dim LHSValues As Variant
                   Dim RHSValues As Variant
-                  GetCurrentConstraintValues constraint, LHSValues, RHSValues
-
+                  GetCurrentConstraintValues constraint, LHSValues, RHSValues, AllowNonNumericIfNotConstant:=True
+                  
                   ' Check if this constraint applies any bounds on decision variables
 1146              If LHSCount = 1 Then
                       ' Single LHS, single RHS
