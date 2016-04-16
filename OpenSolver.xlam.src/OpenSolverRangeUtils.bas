@@ -372,6 +372,14 @@ ErrorHandler:
     Err.Raise Err.Number, Err.Source, Err.Description
 End Function
 
+Function ProperIntersect(R1 As Range, R2 As Range) As Range
+    If R1 Is Nothing Or R2 Is Nothing Then
+        Set ProperIntersect = Nothing
+    Else
+        Set ProperIntersect = Intersect(R1, R2)
+    End If
+End Function
+
 Function SetDifference(ByRef rng1 As Range, ByRef rng2 As Range) As Range
 ' Returns rng1 \ rng2 (set minus) i.e. all elements in rng1 that are not in rng2
 ' https://stackoverflow.com/a/17510237/4492726

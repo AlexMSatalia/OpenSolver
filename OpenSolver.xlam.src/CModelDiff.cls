@@ -117,6 +117,8 @@ Private Function BuildVariableTerms(LinearityOffset As Double) As Boolean
           On Error GoTo ErrorHandler
 
           s.AdjustableCells.Value2 = LinearityOffset
+          If Not s.BinaryCellsRange Is Nothing Then s.BinaryCellsRange.Value2 = 0
+          
           If Not ForceCalculate("Warning: The worksheet calculation did not complete, and so the model may not be generated correctly. Would you like to retry?") Then GoTo ExitFunction
 
           Dim LHSOriginalValues() As Variant, RHSOriginalValues() As Variant
@@ -140,8 +142,12 @@ Private Function BuildVariableTerms(LinearityOffset As Double) As Boolean
               ' Count how many variables we've processed, let the user know that the program hasn't crashed!
 1281          var = var + 1
 1282          UpdateStatusBar "OpenSolver: Setting Up Problem... " & var & "/" & s.NumVars & " vars, " & s.NumRows & " rows."
+              
+              ' We start binaries at 0 to test 0 and 1, and all others at the specified offset value
+              Dim BaseValue As Double
+              BaseValue = IIf(ProperIntersect(AdjCell, s.BinaryCellsRange) Is Nothing, LinearityOffset, 0)
+1283          AdjCell.Value2 = BaseValue + 1
 
-1283          AdjCell.Value2 = AdjCell.Value2 + 1
 1284          If Not ForceCalculate("Warning: The worksheet calculation did not complete, and so the model may not be generated correctly. Would you like to retry?") Then GoTo ExitFunction
 
               ' Easy part first - the objective function value change
@@ -195,7 +201,7 @@ Private Function BuildVariableTerms(LinearityOffset As Double) As Boolean
 1312                  Next i
 1313              End If
 1314          Next constraint
-1315          AdjCell.Value2 = AdjCell.Value2 - 1
+1315          AdjCell.Value2 = BaseValue
 1316      Next AdjCell
 
           ' Now we check if any empty constraints are feasible
