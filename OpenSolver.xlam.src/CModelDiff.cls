@@ -131,11 +131,6 @@ Private Function BuildVariableTerms(LinearityOffset As Double) As Boolean
           For constraint = 1 To s.NumConstraints
               If Not s.LHSRange(constraint) Is Nothing Then
                   s.GetCurrentConstraintValues constraint, LHSOriginalValues(constraint), RHSOriginalValues(constraint)
-                  ' Check that all our values are in fact numbers
-                  Dim ErrorMsg As String
-1171              If Not s.CheckConstraintValuesAreNumeric(constraint, LHSOriginalValues(constraint), RHSOriginalValues(constraint), ErrorMsg) Then
-1173                  Err.Raise Number:=OpenSolver_BuildError, Description:=ErrorMsg
-1174              End If
               End If
           Next constraint
           

@@ -311,11 +311,6 @@ ErrorHandler:
           GoTo ExitFunction
 End Function
 
-Sub GetArrayPosnFromConstraintInstance(instance As Long, LHSValues As Variant, i As Long, j As Long)
-834       i = 1 + ((instance - 1) \ UBound(LHSValues, 2))
-835       j = 1 + ((instance - 1) Mod UBound(LHSValues, 2))
-End Sub
-
 Function CheckConstraintValuesAreNumeric(constraint As Long, LHSValues As Variant, RHSValues As Variant, ErrorMsg As String) As Boolean
           ' Check that the LHS and RHS values are doubles (not vbError, or vbString, or ??)
           ' vbEmpty (blank) cell values are permitted as VBA quietly turns them into 0's in expressions
@@ -396,20 +391,32 @@ Sub GetCurrentConstraintValues(constraint As Long, LHSValues As Variant, RHSValu
 
 889       If LHSType(constraint) = SolverInputType.SingleCellRange Then
               ' Create a 1x1 array
-890           LHSValues = Create1x1Array(LHSRange(constraint).Value2) ' LHSRange(Constraint).value
-891       Else ' LHSConstraintType = SolverInputType.MultiCellRange
-892           LHSValues = LHSRange(constraint).Value2    ' Copy all the values into a variant, which will then be an array of doubles; see http://support.microsoft.com/kb/213798
+890           LHSValues = Create1x1Array(LHSRange(constraint).Value2)
+891       Else ' LHSType(constraint) = SolverInputType.MultiCellRange
+              ' Copy all the values into a variant, which will then be an
+              ' array of variants; see http://support.microsoft.com/kb/213798
+892           LHSValues = LHSRange(constraint).Value2
 893       End If
 
 894       If RHSType(constraint) = SolverInputType.SingleCellRange Then
-895           RHSValues = RHSRange(constraint).Value2  ' A variant containing just a single double
+              ' A variant containing just a single double
+895           RHSValues = RHSRange(constraint).Value2
 896       ElseIf RHSType(constraint) = SolverInputType.MultiCellRange Then
-897           RHSValues = RHSRange(constraint).Value2   ' Copy all the values into a variant, which will then be an array of doubles (or an array of variants?)
+              ' Copy all the values into a variant, which will then be an
+              ' array of variants
+897           RHSValues = RHSRange(constraint).Value2
 898       ElseIf RHSType(constraint) = SolverInputType.Formula Then
-899           RHSValues = sheet.Evaluate("=" & RHSFormula(constraint)) ' Will not throw an error, but may put an error value in RHSValues
-900       Else        'if the rhs value is a constant
+              ' Will not throw an error, but may put an error value in RHSValues
+899           RHSValues = sheet.Evaluate("=" & RHSFormula(constraint))
+900       Else  ' RHSType(constraint) = SolverInputType.Constant
 901           RHSValues = RHSConstant(constraint)
 902       End If
+
+          Dim ErrorMsg As String
+1171      If Not CheckConstraintValuesAreNumeric(constraint, LHSValues, _
+                                                 RHSValues, ErrorMsg) Then
+1173          Err.Raise Number:=OpenSolver_BuildError, Description:=ErrorMsg
+1174      End If
 
 ExitSub:
           If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
@@ -676,10 +683,6 @@ RaiseError:
                   Dim LHSValues As Variant
                   Dim RHSValues As Variant
                   GetCurrentConstraintValues constraint, LHSValues, RHSValues
-                  Dim ErrorMsg As String
-1171              If Not CheckConstraintValuesAreNumeric(constraint, LHSValues, RHSValues, ErrorMsg) Then
-1173                  Err.Raise Number:=OpenSolver_BuildError, Description:=ErrorMsg
-1174              End If
 
                   ' Check if this constraint applies any bounds on decision variables
 1146              If LHSCount = 1 Then
