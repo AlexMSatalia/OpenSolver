@@ -1065,7 +1065,7 @@ Private Sub MakeBBlock()
                   ' Real variables, use actual bounds
 7950              ElseIf s.AssumeNonNegativeVars Then
 7951                  VarName = s.VarName(VarIndex)
-7952                  If TestKeyExists(s.VarLowerBounds, VarName) And Not BinaryVars(VarIndex) Then
+7952                  If s.VarLowerBounds.Exists(VarName) And Not BinaryVars(VarIndex) Then
 7953                      bound = "3"
 7954                      Comment = Comment & " FREE"
 7955                  Else
@@ -1147,7 +1147,7 @@ Private Sub MakeJBlocks()
               ' Make header
               OutputLine 1, _
                   "J" & i - 1 & " " & LinearConstraint.Count, _
-                  "CONSTRAINT LINEAR SECTION " & ConstraintMapRev(i)
+                  "CONSTRAINT LINEAR SECTION " & ConstraintMapRev(i - 1)
               
               ' We need variables output in .nl order
               Dim j As Long

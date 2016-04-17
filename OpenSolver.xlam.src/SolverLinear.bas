@@ -89,6 +89,9 @@ Sub WriteConstraintSensitivityTable(sheet As Worksheet, s As COpenSolver)
 2279      headings = Array("Cells", "Name", "Final Value", "Reduced Costs", "Objective Value", "Allowable Increase", "Allowable Decrease")
           sheet.Cells(row, Column).Resize(1, UBound(headings) - LBound(headings) + 1).value = headings
 
+          Dim CostVector() As Double
+          CostVector = s.CostCoeffs.AsVector(s.NumVars)
+
 2284      row = row + 1
           
           'put the values into the variable table
@@ -96,7 +99,7 @@ Sub WriteConstraintSensitivityTable(sheet As Worksheet, s As COpenSolver)
 2287          sheet.Cells(row, Column) = s.VarCellName(i)
 2288          sheet.Cells(row, Column + 2) = ZeroIfSmall(s.VarFinalValue(i))
 2289          sheet.Cells(row, Column + 3) = ZeroIfSmall(s.VarReducedCost(i))
-2290          sheet.Cells(row, Column + 4) = ZeroIfSmall(s.CostCoeffs(i))
+2290          sheet.Cells(row, Column + 4) = ZeroIfSmall(CostVector(i))
 2291          sheet.Cells(row, Column + 5) = ZeroIfSmall(s.VarIncrease(i))
 2292          sheet.Cells(row, Column + 6) = ZeroIfSmall(s.VarDecrease(i))
 2293          sheet.Cells(row, Column + 1) = findName(s.sheet, s.VarCellName(i))

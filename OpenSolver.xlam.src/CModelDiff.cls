@@ -25,6 +25,8 @@ Public Function ProcessSolverModel(OpenSolver As COpenSolver, LinearityOffset As
           If Not BuildConstantTerms() Then GoTo ExitFunction
           If Not BuildVariableTerms(LinearityOffset) Then GoTo ExitFunction
           
+          If Not QuickFeasibilityCheck() Then GoTo ExitFunction
+          
           If ShouldCheckLinearity Then
               DoQuickLinearityCheck
           End If
@@ -115,6 +117,7 @@ Private Function BuildVariableTerms(LinearityOffset As Double, Optional BinaryOf
 1182      For row = 1 To s.NumRows
 1183          Set s.SparseA(row) = New CIndexedCoeffs
 1184      Next row
+          Set s.CostCoeffs = New CIndexedCoeffs
 
           s.AdjustableCells.Value2 = LinearityOffset
           If Not s.BinaryCellsRange Is Nothing Then s.BinaryCellsRange.Value2 = BinaryOffset
@@ -136,7 +139,7 @@ Private Function BuildVariableTerms(LinearityOffset As Double, Optional BinaryOf
           If ObjPresent Then OriginalObjectiveValue = s.GetCurrentObjectiveValue()
           
           ' Increment each decision variable by one to see what constraints are dependent on it and by what amount
-          Dim var As Long, AdjCell As Range
+          Dim var As Long, AdjCell As Range, coeff As Double
 1279      var = 0
 1280      For Each AdjCell In s.AdjustableCells
               ' Count how many variables we've processed, let the user know that the program hasn't crashed!
@@ -158,7 +161,10 @@ Private Function BuildVariableTerms(LinearityOffset As Double, Optional BinaryOf
 
               ' Easy part first - the objective function value change
 1285          If ObjPresent Then
-1286              s.CostCoeffs(var) = s.GetCurrentObjectiveValue - OriginalObjectiveValue
+                  coeff = s.GetCurrentObjectiveValue - OriginalObjectiveValue
+1286              If Abs(coeff) > EPSILON Then
+                      s.CostCoeffs.Add var, coeff
+                  End If
 1287          End If
 
               ' Now the hard (slow) bit - the constraint changes
@@ -181,7 +187,6 @@ Private Function BuildVariableTerms(LinearityOffset As Double, Optional BinaryOf
                       Dim i As Long, j As Long
 1294                  For i = 1 To UBound(OriginalLHSValues, 1) ' number of rows
 1295                      For j = 1 To UBound(OriginalLHSValues, 2) ' number of columns
-                              Dim coeff As Double
 1296                          Select Case s.RHSType(constraint)
                               Case SolverInputType.MultiCellRange
                                   '-----------------------------------------------------------
@@ -209,12 +214,31 @@ Private Function BuildVariableTerms(LinearityOffset As Double, Optional BinaryOf
 
               AdjCell.Value2 = BaseValue
 1316      Next AdjCell
+          
+1344      BuildVariableTerms = True
+          
+ExitFunction:
+          Application.StatusBar = False
+          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          Exit Function
 
-          ' Now we check if any empty constraints are feasible
+ErrorHandler:
+          If Not ReportError("COpenSolver", "BuildVariableTerms") Then Resume
+          RaiseError = True
+          GoTo ExitFunction
+End Function
+
+Function QuickFeasibilityCheck() As Boolean
+          Dim RaiseError As Boolean
+          RaiseError = False
+          On Error GoTo ErrorHandler
+    
+          ' Check if any empty constraints are feasible
+          Dim row As Long
           For row = 1 To s.NumRows
               If s.SparseA(row).Count = 0 Then
                   ' We have a constraint that does not vary with the decision variables; check it is satisfied
-                  Dim instance As Long
+                  Dim constraint As Long, instance As Long
                   constraint = s.RowToConstraint(row)
                   instance = s.GetConstraintInstance(row, constraint)
                   
@@ -248,15 +272,27 @@ Private Function BuildVariableTerms(LinearityOffset As Double, Optional BinaryOf
               End If
           Next row
           
-1344      BuildVariableTerms = True
+          ' Check objective if it is a target and all zeros
+          If s.ObjectiveSense = TargetObjective Then
+              If s.CostCoeffs.Count = 0 And _
+                 Abs(s.ObjectiveTargetValue - s.ObjectiveFunctionConstant) > EPSILON Then
+                  s.SolveStatus = OpenSolverResult.Infeasible
+                  s.SolveStatusString = "Infeasible"
+                  s.SolveStatusComment = "The objective cell does not depend on the adjustable cells " & _
+                                         "and has a value different to the specified target value. " & _
+                                         "This means the target value cannot be attained."
+                  GoTo ExitFunction
+              End If
+          End If
           
+          QuickFeasibilityCheck = True
+
 ExitFunction:
-          Application.StatusBar = False
           If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
           Exit Function
 
 ErrorHandler:
-          If Not ReportError("COpenSolver", "BuildVariableTerms") Then Resume
+          If Not ReportError("CModelDiff", "QuickFeasibilityCheck") Then Resume
           RaiseError = True
           GoTo ExitFunction
 End Function
@@ -270,11 +306,13 @@ Function CalcObjFnValue(DecisionVariableValues() As Double) As Double
           RaiseError = False
           On Error GoTo ErrorHandler
 
-          Dim sum As Double, var As Long
+          Dim sum As Double, i As Long
 930       sum = s.ObjectiveFunctionConstant ' The value found for the obj function when all decision variables are 0
-931       For var = 1 To s.NumVars
-932           sum = sum + (s.CostCoeffs(var) * DecisionVariableValues(var))
-933       Next var
+          With s.CostCoeffs
+931           For i = 1 To .Count
+932               sum = sum + (.Coefficient(i) * DecisionVariableValues(.Index(i)))
+933           Next i
+          End With
 934       CalcObjFnValue = sum
 
 ExitFunction:
@@ -326,19 +364,15 @@ ErrorHandler:
           GoTo ExitSub
 End Sub
 
-Private Sub ExtractModelInfo(ByRef value() As CIndexedCoeffs, ByRef ObjectiveCoeffs() As Double)
+Private Sub ExtractModelInfo(ByRef value() As CIndexedCoeffs, ByRef ObjectiveCoeffs As CIndexedCoeffs)
           If s.NumRows > 0 Then ReDim Preserve value(s.NumRows) As CIndexedCoeffs
-2053      ReDim ObjectiveCoeffs(s.NumVars) As Double
 
           Dim row As Long
 2055      For row = 1 To s.NumRows
 2056          Set value(row) = s.SparseA(row).Clone
 2057      Next row
 
-          Dim i As Long
-2058      For i = 1 To s.NumVars
-2059          ObjectiveCoeffs(i) = s.CostCoeffs(i)
-2060      Next i
+          Set ObjectiveCoeffs = s.CostCoeffs.Clone
 End Sub
 
 Private Function RatioTest(Value1 As Double, Value2 As Double, Optional Threshold As Double = EPSILON) As Boolean
@@ -357,81 +391,50 @@ Private Sub DoFullLinearityCheck()
 2051      NonLinearInformation = ""
           
           'Build each matrix where the decision variables start at the base linearity offset (ValueBase()), one (ValueOne()) and ten (ValueTen())
-          Dim ValueBase() As CIndexedCoeffs, ObjectiveCoeffsBase() As Double
+          Dim ValueBase() As CIndexedCoeffs, ObjectiveCoeffsBase As CIndexedCoeffs
           ExtractModelInfo ValueBase, ObjectiveCoeffsBase
           
-          Dim ValueOne() As CIndexedCoeffs, ObjectiveCoeffsOne() As Double
+          Dim ValueOne() As CIndexedCoeffs, ObjectiveCoeffsOne As CIndexedCoeffs
 2062      BuildVariableTerms LinearityOffset:=1
           ExtractModelInfo ValueOne, ObjectiveCoeffsOne
               
-          Dim ValueTen() As CIndexedCoeffs, ObjectiveCoeffsTen() As Double
+          Dim ValueTen() As CIndexedCoeffs, ObjectiveCoeffsTen As CIndexedCoeffs
           BuildVariableTerms LinearityOffset:=10, BinaryOffset:=1
           ExtractModelInfo ValueTen, ObjectiveCoeffsTen
           
           Dim RowIsNonLinear() As Boolean
 2054      If s.NumRows > 0 Then ReDim RowIsNonLinear(s.NumRows) As Boolean
 
-          'Go through each row and check each coefficient individually. if it is not within the tolerance the its nonlinear
           Dim row As Long
           For row = 1 To s.NumRows
 2082          RowIsNonLinear(row) = False
               
-              Dim FirstVar As Boolean
-2083          FirstVar = True
-
-              Dim NumEntries As Long
-2087          NumEntries = Max(ValueBase(row).Count, ValueOne(row).Count, ValueTen(row).Count)
-              Dim i As Long
-2088          For i = 1 To NumEntries
-                  Dim VarIndex As Long
-                  VarIndex = 0
+              Dim NonLinearConVars As String
+              NonLinearConVars = CompareSparseVectors(ValueBase(row), ValueOne(row), ValueTen(row))
+              If Len(NonLinearConVars) > 0 Then
+                  Dim constraint As Long, instance As Long
+                  constraint = s.RowToConstraint(row)
+                  instance = s.GetConstraintInstance(row, constraint)
                   
-2089              If TestExistenceOfEntry(ValueBase(row), ValueOne(row), ValueTen(row), i) Then
-                      'do a ratio test
-2090                  If RatioTest(ValueBase(row).Coefficient(i), ValueOne(row).Coefficient(i)) Or _
-                         RatioTest(ValueBase(row).Coefficient(i), ValueTen(row).Coefficient(i)) Then
-2092                      VarIndex = ValueOne(row).Index(i)
-2095                  End If
-2096              Else
-2098                  VarIndex = GetEntry(ValueBase(row), ValueOne(row), ValueTen(row), i)
-2102              End If
-
-                  If VarIndex > 0 Then
-                      Dim constraint As Long, instance As Long
-                      constraint = s.RowToConstraint(row)
-                      instance = s.GetConstraintInstance(row, constraint)
-                      
-                      If FirstVar = True Then
-2159                      If s.LHSType(constraint) = SolverInputType.SingleCellRange Then
-2160                          NonLinearInformation = NonLinearInformation & vbNewLine & "In the constraint: " & s.ConstraintSummary(constraint) & "," & vbNewLine & "  the model appears to be non-linear in the decision variables: "
-2161                      Else
-                              NonLinearInformation = NonLinearInformation & vbNewLine & "In instance " & instance & " of the constraint: " & s.ConstraintSummary(constraint) & "," & vbNewLine & "  the model appears to be non-linear in the following decision variables: "
-2163                      End If
-                          FirstVar = False
-2164                  Else
-2165                      NonLinearInformation = NonLinearInformation & ", "
-2166                  End If
-                      NonLinearInformation = NonLinearInformation & s.VarName(VarIndex)
-                      
-2101                  RowIsNonLinear(row) = True
-                  End If
-2103          Next i
+                  If s.LHSType(constraint) = SolverInputType.SingleCellRange Then
+2160                  NonLinearInformation = NonLinearInformation & vbNewLine & "In the constraint: " & s.ConstraintSummary(constraint) & "," & vbNewLine & "  the model appears to be non-linear in the decision variables: "
+2161              Else
+                      NonLinearInformation = NonLinearInformation & vbNewLine & "In instance " & instance & " of the constraint: " & s.ConstraintSummary(constraint) & "," & vbNewLine & "  the model appears to be non-linear in the following decision variables: "
+2163              End If
+                  NonLinearInformation = NonLinearInformation & NonLinearConVars
+2101              RowIsNonLinear(row) = True
+              End If
 2105      Next row
 
-          Dim ObjectiveIsNonLinear As Boolean
+          Dim ObjectiveIsNonLinear As Boolean, NonLinearObjVars As String
 2109      ObjectiveIsNonLinear = False
-2110      For i = 1 To s.NumVars
-2111          If RatioTest(ObjectiveCoeffsBase(i), ObjectiveCoeffsOne(i)) Or _
-                 RatioTest(ObjectiveCoeffsBase(i), ObjectiveCoeffsTen(i)) Then
-2112              If Not ObjectiveIsNonLinear Then
-2113                  ObjectiveIsNonLinear = True
-2114                  NonLinearInformation = NonLinearInformation & vbNewLine & vbNewLine & "The objective function is nonlinear in the following variables: "
-2115              Else
-2116                  NonLinearInformation = NonLinearInformation & " , "
-2117              End If
-                  NonLinearInformation = NonLinearInformation & s.VarName(i)
-2118          End If
-2119      Next i
+          NonLinearObjVars = CompareSparseVectors(ObjectiveCoeffsBase, ObjectiveCoeffsOne, ObjectiveCoeffsTen)
+2112      If Len(NonLinearObjVars) > 0 Then
+2113          ObjectiveIsNonLinear = True
+2114          NonLinearInformation = NonLinearInformation & vbNewLine & vbNewLine & _
+                                     "The objective function is nonlinear in the following variables: " & _
+                                     NonLinearObjVars
+          End If
 
           NonLinearInformation = TrimBlankLines(NonLinearInformation)
           If NonLinearInformation = "" Then
@@ -500,6 +503,36 @@ Function GetEntry(ValueBase As CIndexedCoeffs, ValueOne As CIndexedCoeffs, Value
 2155      ElseIf i <= ValueTen.Count Then
 2156          GetEntry = ValueTen.Index(i)
 2157      End If
+End Function
+
+Function CompareSparseVectors(v1 As CIndexedCoeffs, v2 As CIndexedCoeffs, v3 As CIndexedCoeffs) As String
+' Returns a collection of all variable indices with different coefficients in the vectors
+          Dim NumEntries As Long
+          NumEntries = Max(v1.Count, v2.Count, v3.Count)
+          
+          Dim VarString As String
+          
+          Dim i As Long
+          For i = 1 To NumEntries
+              Dim VarIndex As Long
+              VarIndex = 0
+                  
+              If TestExistenceOfEntry(v1, v2, v3, i) Then
+                  'do a ratio test
+                  If RatioTest(v1.Coefficient(i), v2.Coefficient(i)) Or _
+                     RatioTest(v1.Coefficient(i), v3.Coefficient(i)) Then
+                      VarIndex = v1.Index(i)
+                  End If
+              Else
+                  VarIndex = GetEntry(v1, v2, v3, i)
+              End If
+              
+              If VarIndex > 0 Then
+                  VarString = VarString & ", " & s.VarName(VarIndex)
+              End If
+          Next i
+          
+          CompareSparseVectors = Mid(VarString, 3)  ' Trim leading comma
 End Function
 
 Sub DoQuickLinearityCheck()
@@ -594,7 +627,8 @@ Sub DoQuickLinearityCheck()
           Else
 2233          ObservedObjValue = s.GetCurrentObjectiveValue()
           End If
-2236      CalculatedObjValue = CalcObjFnValue(DecisionVariableValues)
+2236      CalculatedObjValue = s.CostCoeffs.Evaluate_RecordPrecision(DecisionVariableValues, MaxValueInCalculation) + s.ObjectiveFunctionConstant
+          MaxValueInCalculation = Max(MaxValueInCalculation, Abs(s.ObjectiveFunctionConstant))
 
 2237      ObjectiveIsNonLinear = RatioTest(CalculatedObjValue, ObservedObjValue)
 2238      If ObjectiveIsNonLinear Then

@@ -24,7 +24,7 @@ Sub WriteAMPLFile_Diff(s As COpenSolver, ModelFilePathName As String)
 1804           Print #1, "var "; s.VarName(var); ConvertVarTypeAMPL(s.VarCategory(var), s.SolveRelaxation);
 1805           If s.AssumeNonNegativeVars Then
                    ' If no lower bound has been applied then we need to add >= 0
-1806               If Not TestKeyExists(s.VarLowerBounds, s.VarName(var)) Then
+1806               If Not s.VarLowerBounds.Exists(s.VarName(var)) Then
 1807                   Print #1, ", >= 0";
 1808               End If
 1809           End If
@@ -47,11 +47,12 @@ Sub WriteAMPLFile_Diff(s As COpenSolver, ModelFilePathName As String)
 1834           End If
            
                ' Parameter - Costs
-1814           For var = 1 To s.NumVars
-                   If Abs(s.CostCoeffs(var)) > EPSILON Then
-1815                   Print #1, StrEx(s.CostCoeffs(var)); " * "; s.VarName(var); ;
-1818               End If
-1819           Next var
+1814           With s.CostCoeffs
+                   Dim i As Long
+                   For i = 1 To .Count
+                       Print #1, StrEx(.Coefficient(i)); " * "; s.VarName(.Index(i)); " ";
+                   Next i
+               End With
                Print #1, StrEx(s.ObjectiveFunctionConstant); ";"
            End If
            
@@ -77,7 +78,6 @@ Sub WriteAMPLFile_Diff(s As COpenSolver, ModelFilePathName As String)
                 
                    ' Output variables
 1841               With s.SparseA(row)
-                       Dim i As Long
 1842                   For i = 1 To .Count
 1845                       Print #1, StrEx(.Coefficient(i)); " * "; s.VarName(.Index(i)); " ";
 1846                   Next i
@@ -150,7 +150,7 @@ Sub WriteAMPLFile_Parsed(s As COpenSolver, ModelFilePathName As String)
               
 7195          If s.AssumeNonNegativeVars Then
                   ' If no lower bound has been applied then we need to add >= 0
-7196              If Not TestKeyExists(s.VarLowerBounds, GetCellName(c)) Then
+7196              If Not s.VarLowerBounds.Exists(GetCellName(c)) Then
 7197                  Print #1, ", >= 0";
 7198              End If
 7199          End If

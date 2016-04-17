@@ -393,13 +393,16 @@ Sub ReadResults(s As COpenSolver)
         End If
         
         If s.bGetDuals Then
+            Dim CostVector() As Double
+            CostVector = s.CostCoeffs.AsVector(s.NumVars)
+        
             Open SensitivityFilePath() For Input As 2
             For i = 1 To NumVar
                 Line Input #2, Line
                 SplitLine = SplitWithoutRepeats(Line, ",")
                 s.VarReducedCost(i) = Val(SplitLine(0))
-                s.VarDecrease(i) = s.CostCoeffs(i) - Val(SplitLine(1))
-                s.VarIncrease(i) = Val(SplitLine(2)) - s.CostCoeffs(i)
+                s.VarDecrease(i) = CostVector(i) - Val(SplitLine(1))
+                s.VarIncrease(i) = Val(SplitLine(2)) - CostVector(i)
             Next i
             
             ' Throw away first constraint if it was from a seek objective model

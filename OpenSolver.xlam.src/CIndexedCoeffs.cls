@@ -128,3 +128,21 @@ ErrorHandler:
           RaiseError = True
           GoTo ExitFunction
 End Function
+
+Public Function AsVector(Length As Long) As Double()
+    Dim coeffs() As Double
+    ReDim coeffs(1 To Length) As Double
+    
+    ' Zero it out to be sure
+    Dim i As Long
+    For i = 1 To Length
+        coeffs(i) = 0
+    Next i
+    
+    ' Add in the results of the sparse vector
+    For i = 1 To Count
+        coeffs(Index(i)) = Coefficient(i)
+    Next i
+    
+    AsVector = coeffs()
+End Function

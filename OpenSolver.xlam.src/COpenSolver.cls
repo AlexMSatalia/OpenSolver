@@ -26,8 +26,8 @@ Public AssumeNonNegativeVars As Boolean
 Public AdjustableCells As Range    ' All decision variables
 Public BinaryCellsRange As Range   ' All binary variables
 Public IntegerCellsRange As Range  ' All integer variables (excluding binary)
-Public VarLowerBounds As Collection
-Public VarUpperBounds As Collection
+Public VarLowerBounds As Dictionary
+Public VarUpperBounds As Dictionary
 Private pVarName() As String
 Public VarNameToIndex As Collection
 Private pVarCategory() As VariableType  ' Name to avoid clash with VarType() function
@@ -78,7 +78,7 @@ Public NumRows As Long         ' Number of constraints in the A matrix
 ' Model information filled in by specific model builder
 Dim pSparseA() As CIndexedCoeffs            ' This is the A matrix for our Solver model
 Dim pRHS() As Double                        ' The RHS values for each row in the LP
-Dim pCostCoeffs() As Double                 ' The cost vector
+Public CostCoeffs As CIndexedCoeffs            ' The sparse cost vector
 Public ObjectiveFunctionConstant As Double  ' The constant offset in the objective function
 
 
@@ -288,13 +288,6 @@ Public Property Set SparseA(Index As Long, NewSparseA As CIndexedCoeffs)
 End Property
 Public Property Get SparseA(Index As Long) As CIndexedCoeffs
           Set SparseA = pSparseA(Index)
-End Property
-
-Public Property Get CostCoeffs(Index As Long) As Double
-790       CostCoeffs = pCostCoeffs(Index)
-End Property
-Public Property Let CostCoeffs(Index As Long, value As Double)
-792       pCostCoeffs(Index) = value
 End Property
 
 Public Property Get RowToConstraint(Index As Long) As Long
@@ -728,8 +721,8 @@ RaiseError:
 1059          ReDim ConstraintToRow(NumConstraints) As Long
               ReDim RowCount(NumConstraints) As Long
 1060      End If
-1061      Set VarLowerBounds = New Collection
-1062      Set VarUpperBounds = New Collection
+1061      Set VarLowerBounds = New Dictionary
+1062      Set VarUpperBounds = New Dictionary
 1063      ReDim pRowSetsBound(1)
 
 1064      NumRows = 0
@@ -989,33 +982,22 @@ Sub UpdateBound(row As Long, VarName As String, bound As Double, rel As Long)
           RaiseError = False
           On Error GoTo ErrorHandler
           
-          Dim SetBound As Boolean
-          SetBound = True
-          
           ' Only GE constraints can provide lower bounds
 1246      If rel = RelationGE Then
               ' Remove existing lower bound on variable if our new one is better
-1247          If TestKeyExists(VarLowerBounds, VarName) Then
-1248              If bound > VarLowerBounds(VarName) Then
-1249                  VarLowerBounds.Remove VarName
-1250              Else
-                      SetBound = False
-                  End If
+1247          If VarLowerBounds.Exists(VarName) Then
+1248              VarLowerBounds.Item(VarName) = Max(bound, VarLowerBounds.Item(VarName))
+1250          Else
+                  VarLowerBounds.Add Item:=bound, Key:=VarName
 1251          End If
-              
-1252          If SetBound Then VarLowerBounds.Add bound, VarName
           ' Only LE constraints can provide upper bounds
 1253      ElseIf rel = RelationLE Then
               ' Remove existing upper bound on variable if our new one is better
-1254          If TestKeyExists(VarUpperBounds, VarName) Then
-1255              If bound < VarUpperBounds(VarName) Then
-1256                  VarUpperBounds.Remove VarName
-                  Else
-                      SetBound = False
-1257              End If
-1258          End If
-              
-1259          If SetBound Then VarUpperBounds.Add bound, VarName
+1254          If VarUpperBounds.Exists(VarName) Then
+1255              VarUpperBounds.Item(VarName) = Min(bound, VarUpperBounds.Item(VarName))
+              Else
+                  VarUpperBounds.Add Item:=bound, Key:=VarName
+              End If
 1260      End If
           
           ' Track that this constraint row applies a bound

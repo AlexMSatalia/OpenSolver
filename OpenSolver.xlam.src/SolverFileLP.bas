@@ -13,15 +13,7 @@ Sub WriteLPFile_Diff(s As COpenSolver, ModelFilePathName As String)
           RaiseError = False
           On Error GoTo ErrorHandler
 
-          Dim i As Long, j As Long, var As Long, row As Long, coeff As Double
-          
-          ' Track which variables we have printed so far - only needed when AssumeNonNegativeVars is true
-          ' This is so we can print all unused variables as FREE for sensitivity analysis
-          ' When AssumeNonNegativeVars is false, we print all vars as FREE anyway, so this isn't needed
-          Dim UsedVariables As Collection, VarName As String
-          If s.AssumeNonNegativeVars Then
-              Set UsedVariables = New Collection
-          End If
+          Dim i As Long, var As Long, row As Long
           
 1615      Open ModelFilePathName For Output As #1
 1616      Print #1, "\ Model solved using the solver: "; DisplayName(s.Solver)
@@ -41,32 +33,30 @@ Sub WriteLPFile_Diff(s As COpenSolver, ModelFilePathName As String)
               ' We want the objective to achieve some target value; we have no objective; nothing is output
 1626          Print #1, ' A new line meaning a blank objective; add a comment to this effect next
 1628          Print #1, "\ We have no objective function as the objective must achieve a given target value"
-1629      Else
-1631          For var = 1 To s.NumVars
-1632              'If Abs(s.CostCoeffs(var)) > EPSILON Then
-                      VarName = GetLPNameFromVarName(s.VarName(var))
-                      Print #1, " "; StrEx(s.CostCoeffs(var)); " "; VarName;
-                      AddUsedVariable s, VarName, UsedVariables
-                  'End If
-              Next var
-              'If Abs(objValue) > EPSILON Then
-              '    Print #1, " " & StrEx(objValue);
-              'End If
-1634          Print #1, ' New line
-1635      End If
-1636      Print #1, ' New line
-1637      Print #1, "SUBJECT TO"
-          
-          ' If we are seeking a specific objective value, we add this as a constraint
-1638      If s.ObjectiveSense = TargetObjective Then
-1639          Print #1, "\ The objective must achieve a given target value; this constraint enforces this."
-1640          For var = 1 To s.NumVars
-                  VarName = GetLPNameFromVarName(s.VarName(var))
-                  Print #1, " "; StrEx(s.CostCoeffs(var)); " "; VarName;
-                  AddUsedVariable s, VarName, UsedVariables
-1645          Next var
-1646          Print #1, " = "; StrEx(s.ObjectiveTargetValue)
-1653      End If
+1636          Print #1, ' New line
+1637          Print #1, "SUBJECT TO"
+              Print #1, "\ The objective must achieve a given target value; this constraint enforces this."
+          Else
+              ' Support for the constant in the objective isn't universal, so we don't add it
+              'Print #1, " " & StrEx(s.objectivefunctionconstant);
+1629      End If
+
+          ' Output objective coeffs
+          ' NOTE: We output a non-sparse cost vector to ensure that the variables appear in
+          '       the same order in the .lp file, which makes matching the results easier
+          Dim CostVector() As Double
+          CostVector = s.CostCoeffs.AsVector(s.NumVars)
+1631      For var = 1 To s.NumVars
+              Print #1, " "; StrEx(CostVector(var)); _
+                        " "; GetLPNameFromVarName(s.VarName(var));
+          Next var
+
+          If s.ObjectiveSense = TargetObjective Then
+1646          Print #1, " = "; StrEx(s.ObjectiveTargetValue - s.ObjectiveFunctionConstant)
+          Else
+              Print #1, ' New line
+              Print #1, "SUBJECT TO"
+          End If
           
           Dim constraint As Long, instance As Long
 1655      For row = 1 To s.NumRows
@@ -79,9 +69,8 @@ Sub WriteLPFile_Diff(s As COpenSolver, ModelFilePathName As String)
          
 1660          With s.SparseA(row)
 1661              For i = 1 To .Count
-                      VarName = GetLPNameFromVarName(s.VarName(.Index(i)))
-                      Print #1, " "; StrEx(.Coefficient(i)); " "; VarName;
-                      AddUsedVariable s, VarName, UsedVariables
+                      Print #1, " "; StrEx(.Coefficient(i)); _
+                                " "; GetLPNameFromVarName(s.VarName(.Index(i)));
 1665              Next i
 1666          End With
               
@@ -102,8 +91,7 @@ Sub WriteLPFile_Diff(s As COpenSolver, ModelFilePathName As String)
 1684      If s.SolveRelaxation And s.NumBinVars > 0 Then
 1685          Print #1, "\ (Upper bounds of 1 on the relaxed binary variables)"
 1686          For Each c In s.BinaryCellsRange
-                  VarName = GetLPNameFromVarName(GetCellName(c))
-1687              Print #1, VarName; " <= 1"
+1687              Print #1, GetLPNameFromVarName(GetCellName(c)); " <= 1"
 1688          Next c
 1689          Print #1, ' New line
 1690      End If
@@ -121,17 +109,14 @@ Sub WriteLPFile_Diff(s As COpenSolver, ModelFilePathName As String)
               End If
 1705          Print #1,   ' New line
 1706      Else
-              ' If AssumeNonNegative, then we need to apply lower bounds to any variables without explicit lower bounds.
-              ' However, we don't make Binary variables free
-1707          For var = 1 To s.NumVars
-                  VarName = GetLPNameFromVarName(s.VarName(var))
-1708              If TestKeyExists(s.VarLowerBounds, s.VarName(var)) Or _
-                     Not TestKeyExists(UsedVariables, VarName) Then
-                      If s.VarCategory(var) <> VarBinary Then
-                          Print #1, " "; VarName; " FREE"
-                      End If
+              ' If AssumeNonNegative, then we need to remove the implicit >=0 bounds
+              ' for any variables with explicit lower bounds, unless they are binary
+              Dim VarName As Variant
+              For Each VarName In s.VarLowerBounds.Keys()
+                  If s.VarCategory(s.VarNameToIndex(VarName)) <> VarBinary Then
+                      Print #1, " "; GetLPNameFromVarName(CStr(VarName)); " FREE"
                   End If
-1711          Next var
+              Next VarName
 1728      End If
           
           ' Output any integer variables
@@ -178,12 +163,6 @@ Function ObjectiveSenseToLPString(ObjSense As ObjectiveSenseType) As String
         ObjectiveSenseToLPString = "MAXIMIZE"
     End Select
 End Function
-
-Sub AddUsedVariable(s As COpenSolver, VarName As String, UsedVariables As Collection)
-    If s.AssumeNonNegativeVars Then
-        If Not TestKeyExists(UsedVariables, VarName) Then UsedVariables.Add VarName, VarName
-    End If
-End Sub
 
 Function GetLPNameFromVarName(s As String) As String
 ' http://lpsolve.sourceforge.net/5.5/CPLEX-format.htm
