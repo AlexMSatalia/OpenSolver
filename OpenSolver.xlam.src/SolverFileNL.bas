@@ -1064,7 +1064,7 @@ Private Sub MakeBBlock()
                     Comment = Comment & " IN [0, 1]"
                   ' Real variables, use actual bounds
 7950              ElseIf s.AssumeNonNegativeVars Then
-7951                  VarName = s.VarNames(VarIndex)
+7951                  VarName = s.VarName(VarIndex)
 7952                  If TestKeyExists(s.VarLowerBounds, VarName) And Not BinaryVars(VarIndex) Then
 7953                      bound = "3"
 7954                      Comment = Comment & " FREE"
@@ -1928,8 +1928,8 @@ Sub ReadResults_NL(s As COpenSolver)
             Line Input #1, Line
             VarIndex = VariableNLIndexToCollectionIndex(i - 1)
             If VarIndex <= s.NumVars Then
-                s.FinalVarValue(VarIndex) = Val(Line)
-                s.VarCell(VarIndex) = s.VarNames(VarIndex)
+                s.VarFinalValue(VarIndex) = Val(Line)
+                s.VarCellName(VarIndex) = s.VarName(VarIndex)
             End If
         Next i
         

@@ -371,25 +371,21 @@ Sub ReadResults(s As COpenSolver)
             While Not EOF(1)
                 Line Input #1, Line
                 SplitLine = SplitWithoutRepeats(Line, " ")
-                Dim FinalValue As String
-                FinalValue = SplitLine(1)
+                Dim ConFinalValue As String
+                ConFinalValue = SplitLine(1)
                 
                 ' Check for an exponent that is too large, rougly >300
                 ' Only do it for -ve exponents, since e-30 ~= e-300
-                Index = InStr(LCase(FinalValue), "e-")
+                Index = InStr(LCase(ConFinalValue), "e-")
                 If Index > 0 Then
                     ' Trim the final digit if the exponent has 3 digits
-                    If Len(FinalValue) - Index - 1 > 2 Then
-                        FinalValue = Left(FinalValue, Len(FinalValue) - 1)
+                    If Len(ConFinalValue) - Index - 1 > 2 Then
+                        ConFinalValue = Left(ConFinalValue, Len(ConFinalValue) - 1)
                     End If
                 End If
                 
-                s.FinalVarValue(i) = Val(FinalValue)
-                s.VarCell(i) = SplitLine(0)
-                If Left(s.VarCell(i), 1) = "_" Then
-                    ' Strip any _ character added to make a valid name
-                    s.VarCell(i) = Mid(s.VarCell(i), 2)
-                End If
+                s.VarFinalValue(i) = Val(ConFinalValue)
+                s.VarCellName(i) = GetVarNameFromLPName(SplitLine(0))
                 ' Save number of vars read
                 NumVar = i
                 i = i + 1
@@ -401,9 +397,9 @@ Sub ReadResults(s As COpenSolver)
             For i = 1 To NumVar
                 Line Input #2, Line
                 SplitLine = SplitWithoutRepeats(Line, ",")
-                s.ReducedCosts(i) = Val(SplitLine(0))
-                s.DecreaseVar(i) = s.CostCoeffs(i) - Val(SplitLine(1))
-                s.IncreaseVar(i) = Val(SplitLine(2)) - s.CostCoeffs(i)
+                s.VarReducedCost(i) = Val(SplitLine(0))
+                s.VarDecrease(i) = s.CostCoeffs(i) - Val(SplitLine(1))
+                s.VarIncrease(i) = Val(SplitLine(2)) - s.CostCoeffs(i)
             Next i
             
             ' Throw away first constraint if it was from a seek objective model
@@ -417,17 +413,17 @@ Sub ReadResults(s As COpenSolver)
                 If s.SparseA(row).Count > 0 Then
                     Line Input #2, Line
                     SplitLine = SplitWithoutRepeats(Line, ",")
-                    s.ShadowPrice(row) = Val(SplitLine(0))
+                    s.ConShadowPrice(row) = Val(SplitLine(0))
                     Dim RHSValue As Double
                     RHSValue = Val(SplitLine(1))
-                    s.IncreaseCon(row) = Val(SplitLine(4)) - RHSValue
-                    s.DecreaseCon(row) = RHSValue - Val(SplitLine(3))
-                    s.FinalValue(row) = RHSValue - Val(SplitLine(2))
+                    s.ConIncrease(row) = Val(SplitLine(4)) - RHSValue
+                    s.ConDecrease(row) = RHSValue - Val(SplitLine(3))
+                    s.ConFinalValue(row) = RHSValue - Val(SplitLine(2))
                 Else
-                    s.FinalValue(row) = s.RHS(row)
-                    s.ShadowPrice(row) = 0
-                    s.IncreaseCon(row) = 0
-                    s.DecreaseCon(row) = 0
+                    s.ConFinalValue(row) = s.RHS(row)
+                    s.ConShadowPrice(row) = 0
+                    s.ConIncrease(row) = 0
+                    s.ConDecrease(row) = 0
                 End If
             Next row
         End If

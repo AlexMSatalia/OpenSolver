@@ -281,7 +281,7 @@ Private Sub ReadResults(s As COpenSolver)
         Dim Line As String, SplitLine() As String, Index As Double, NameValue As String, value As Double, CBCConstraintIndex As Long, StartOffset As Long
         If s.bGetDuals Then
             ' Read in the Solution File
-            ' Line format: Index ConstraintName Value ShadowPrice
+            ' Line format: Index ConstraintName Value ConShadowPrice
             
             Dim j As Long, row As Long
             CBCConstraintIndex = 0
@@ -308,14 +308,15 @@ Private Sub ReadResults(s As COpenSolver)
                     End If
 
                     NameValue = SplitLine(StartOffset + 1)
-                    s.FinalValue(row) = Val(SplitLine(StartOffset + 2))
+                    
+                    s.ConFinalValue(row) = Val(SplitLine(StartOffset + 2))
                     value = Val(SplitLine(StartOffset + 3))
                     If s.ObjectiveSense = MaximiseObjective Then value = -value
-                    s.ShadowPrice(row) = value
+                    s.ConShadowPrice(row) = value
                     CBCConstraintIndex = CBCConstraintIndex + 1
                 Else
-                    s.FinalValue(row) = s.RHS(row)
-                    s.ShadowPrice(row) = 0
+                    s.ConFinalValue(row) = s.RHS(row)
+                    s.ConShadowPrice(row) = 0
                 End If
             Next row
             ReadSensitivityData s
@@ -333,15 +334,13 @@ Private Sub ReadResults(s As COpenSolver)
             If SplitLine(StartOffset) = "**" Then StartOffset = 1
             
             Index = CLng(Val(SplitLine(StartOffset)))
-            NameValue = SplitLine(StartOffset + 1)
-            If Left(NameValue, 1) = "_" Then NameValue = Mid(NameValue, 2) ' Strip any _ character added to make a valid name
-            s.VarCell(j) = NameValue
-            s.FinalVarValue(j) = Val(SplitLine(StartOffset + 2))
+            s.VarCellName(j) = GetVarNameFromLPName(SplitLine(StartOffset + 1))
+            s.VarFinalValue(j) = Val(SplitLine(StartOffset + 2))
            
             If s.bGetDuals Then
                 value = Val(SplitLine(StartOffset + 3))
                 If s.ObjectiveSense = MaximiseObjective Then value = -value
-                s.ReducedCosts(j) = value
+                s.VarReducedCost(j) = value
             End If
             j = j + 1
         Wend
@@ -384,11 +383,11 @@ Sub ReadSensitivityData(s As COpenSolver)
         If s.SparseA(row).Count > 0 Then
             Line Input #2, Line
             LineData() = Split(Line, ",")
-            s.IncreaseCon(row) = Val(LineData(2))
-            s.DecreaseCon(row) = Val(LineData(4))
+            s.ConIncrease(row) = Val(LineData(2))
+            s.ConDecrease(row) = Val(LineData(4))
         Else
-            s.IncreaseCon(row) = 0
-            s.DecreaseCon(row) = 0
+            s.ConIncrease(row) = 0
+            s.ConDecrease(row) = 0
         End If
         row = row + 1
     Wend
@@ -403,11 +402,11 @@ Sub ReadSensitivityData(s As COpenSolver)
         Line Input #2, Line
         LineData() = Split(Line, ",")
         If s.ObjectiveSense = MaximiseObjective Then
-            s.IncreaseVar(j) = Val(LineData(4))
-            s.DecreaseVar(j) = Val(LineData(2))
+            s.VarIncrease(j) = Val(LineData(4))
+            s.VarDecrease(j) = Val(LineData(2))
         Else
-            s.IncreaseVar(j) = Val(LineData(2))
-            s.DecreaseVar(j) = Val(LineData(4))
+            s.VarIncrease(j) = Val(LineData(2))
+            s.VarDecrease(j) = Val(LineData(4))
         End If
         j = j + 1
     Wend

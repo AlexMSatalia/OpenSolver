@@ -22,12 +22,6 @@ Public Function ProcessSolverModel(OpenSolver As COpenSolver, LinearityOffset As
           
           Set s = OpenSolver
           
-          ' Initialize
-          Dim row As Long
-1182      For row = 1 To s.NumRows
-1183          Set s.SparseA(row) = New CIndexedCoeffs
-1184      Next row
-
           If Not BuildConstantTerms() Then GoTo ExitFunction
           If Not BuildVariableTerms(LinearityOffset) Then GoTo ExitFunction
           
@@ -111,13 +105,19 @@ ErrorHandler:
           GoTo ExitFunction
 End Function
 
-Private Function BuildVariableTerms(LinearityOffset As Double) As Boolean
+Private Function BuildVariableTerms(LinearityOffset As Double, Optional BinaryOffset As Double = 0) As Boolean
           Dim RaiseError As Boolean
           RaiseError = False
           On Error GoTo ErrorHandler
+          
+          ' Initialize
+          Dim row As Long
+1182      For row = 1 To s.NumRows
+1183          Set s.SparseA(row) = New CIndexedCoeffs
+1184      Next row
 
           s.AdjustableCells.Value2 = LinearityOffset
-          If Not s.BinaryCellsRange Is Nothing Then s.BinaryCellsRange.Value2 = 0
+          If Not s.BinaryCellsRange Is Nothing Then s.BinaryCellsRange.Value2 = BinaryOffset
           
           If Not ForceCalculate("Warning: The worksheet calculation did not complete, and so the model may not be generated correctly. Would you like to retry?") Then GoTo ExitFunction
 
@@ -144,9 +144,15 @@ Private Function BuildVariableTerms(LinearityOffset As Double) As Boolean
 1282          UpdateStatusBar "OpenSolver: Setting Up Problem... " & var & "/" & s.NumVars & " vars, " & s.NumRows & " rows."
               
               ' We start binaries at 0 to test 0 and 1, and all others at the specified offset value
-              Dim BaseValue As Double
-              BaseValue = IIf(ProperIntersect(AdjCell, s.BinaryCellsRange) Is Nothing, LinearityOffset, 0)
-1283          AdjCell.Value2 = BaseValue + 1
+              Dim BaseValue As Double, NewValue As Double
+              If ProperIntersect(AdjCell, s.BinaryCellsRange) Is Nothing Then
+                  BaseValue = LinearityOffset
+                  NewValue = LinearityOffset + 1
+              Else
+                  BaseValue = BinaryOffset
+                  NewValue = 1 - BinaryOffset
+              End If
+1283          AdjCell.Value2 = NewValue
 
 1284          If Not ForceCalculate("Warning: The worksheet calculation did not complete, and so the model may not be generated correctly. Would you like to retry?") Then GoTo ExitFunction
 
@@ -156,7 +162,6 @@ Private Function BuildVariableTerms(LinearityOffset As Double) As Boolean
 1287          End If
 
               ' Now the hard (slow) bit - the constraint changes
-              Dim row As Long
 1288          row = 1
 1289          For constraint = 1 To s.NumConstraints
 
@@ -201,7 +206,8 @@ Private Function BuildVariableTerms(LinearityOffset As Double) As Boolean
 1312                  Next i
 1313              End If
 1314          Next constraint
-1315          AdjCell.Value2 = BaseValue
+
+              AdjCell.Value2 = BaseValue
 1316      Next AdjCell
 
           ' Now we check if any empty constraints are feasible
@@ -355,11 +361,11 @@ Private Sub DoFullLinearityCheck()
           ExtractModelInfo ValueBase, ObjectiveCoeffsBase
           
           Dim ValueOne() As CIndexedCoeffs, ObjectiveCoeffsOne() As Double
-2062      s.BuildModelFromSolverData LinearityOffset:=1, ShouldCheckLinearity:=False
+2062      BuildVariableTerms LinearityOffset:=1
           ExtractModelInfo ValueOne, ObjectiveCoeffsOne
               
           Dim ValueTen() As CIndexedCoeffs, ObjectiveCoeffsTen() As Double
-          s.BuildModelFromSolverData LinearityOffset:=10, ShouldCheckLinearity:=False
+          BuildVariableTerms LinearityOffset:=10, BinaryOffset:=1
           ExtractModelInfo ValueTen, ObjectiveCoeffsTen
           
           Dim RowIsNonLinear() As Boolean
@@ -405,7 +411,7 @@ Private Sub DoFullLinearityCheck()
 2164                  Else
 2165                      NonLinearInformation = NonLinearInformation & ", "
 2166                  End If
-                      NonLinearInformation = NonLinearInformation & s.VarNames(VarIndex)
+                      NonLinearInformation = NonLinearInformation & s.VarName(VarIndex)
                       
 2101                  RowIsNonLinear(row) = True
                   End If
@@ -423,7 +429,7 @@ Private Sub DoFullLinearityCheck()
 2115              Else
 2116                  NonLinearInformation = NonLinearInformation & " , "
 2117              End If
-                  NonLinearInformation = NonLinearInformation & s.VarNames(i)
+                  NonLinearInformation = NonLinearInformation & s.VarName(i)
 2118          End If
 2119      Next i
 
@@ -504,6 +510,11 @@ Sub DoQuickLinearityCheck()
           
           Dim InteractiveStatus As Boolean
           InteractiveStatus = Application.Interactive
+          
+          ' Do a better check for binary non-linearity - build from 0, check at 1
+          If Not s.BinaryCellsRange Is Nothing Then
+              s.BinaryCellsRange.Value2 = 1
+          End If
           
 2181      If Not ForceCalculate("Warning: The worksheet calculation did not complete during the linearity test, and so the test may not be correct. Would you like to retry?") Then GoTo ExitSub
           

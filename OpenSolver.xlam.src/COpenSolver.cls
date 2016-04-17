@@ -28,7 +28,9 @@ Public BinaryCellsRange As Range   ' All binary variables
 Public IntegerCellsRange As Range  ' All integer variables (excluding binary)
 Public VarLowerBounds As Collection
 Public VarUpperBounds As Collection
-Dim pVarNames() As String
+Private pVarName() As String
+Public VarNameToIndex As Collection
+Private pVarCategory() As VariableType  ' Name to avoid clash with VarType() function
 
 ' Constraint information
 Dim pLHSType() As SolverInputType
@@ -69,6 +71,7 @@ Public ModelStatus As OpenSolver_ModelStatus
 Public NumVars As Long
 Public NumIntVars As Long
 Public NumBinVars As Long
+Public NumDiscreteVars As Long
 Public NumConstraints As Long  ' Number of Solver-constraints in the model
 Public NumRows As Long         ' Number of constraints in the A matrix
 
@@ -83,16 +86,18 @@ Dim ConstraintToRow() As Long   ' Maps solver constraint number to row
 Dim pRowToConstraint() As Long  ' Maps row number to original solver constraint number
 Dim RowCount() As Long          ' Number of rows for each solver constraint
 
-' Solution results
-Dim pFinalValue() As Double
-Dim pShadowPrice() As Double
-Dim pIncreaseCon() As Double
-Dim pDecreaseCon() As Double
-Dim pFinalVarValue() As Double
-Dim pReducedCosts() As Double
-Dim pIncreaseVar() As Double
-Dim pDecreaseVar() As Double
-Dim pVarCell() As String
+' SOLUTION INFORMATION
+' Constraints
+Dim pConFinalValue() As Double  ' Final value of each constraint (RHScell - LHScell)
+Dim pConShadowPrice() As Double ' Shadow price for each constraint
+Dim pConIncrease() As Double    ' Allowable increase for each constraint
+Dim pConDecrease() As Double    ' Allowable decrease for each constraint
+' Variables
+Dim pVarCellName() As String    ' Name of Excel cell for each variable (must be inferred from model/solution files)
+Dim pVarFinalValue() As Double  ' Final value of each variable
+Dim pVarReducedCost() As Double ' Reduced cost for each variable
+Dim pVarIncrease() As Double    ' Allowable increase for each variable
+Dim pVarDecrease() As Double    ' Allowable decrease for each variable
 
 ' Our result as an enum and a string
 Public SolveStatus As OpenSolverResult
@@ -108,83 +113,90 @@ Dim QuickSolve As CQuickSolve
 
 ' ============================================================================
 ' Array accessors
-Public Property Get FinalVarValue(Index As Long) As Double
-793       FinalVarValue = pFinalVarValue(Index)
+Public Property Get VarFinalValue(Index As Long) As Double
+793       VarFinalValue = pVarFinalValue(Index)
 End Property
-Public Property Let FinalVarValue(Index As Long, value As Double)
-794       If Index > UBound(pFinalVarValue) Then ReDim Preserve pFinalVarValue(Index)
-795       pFinalVarValue(Index) = value
-End Property
-
-Public Property Get FinalValue(Index As Long) As Double
-796       FinalValue = pFinalValue(Index)
-End Property
-Public Property Let FinalValue(Index As Long, value As Double)
-797       If Index > UBound(pFinalValue) Then ReDim Preserve pFinalValue(Index)
-798       pFinalValue(Index) = value
+Public Property Let VarFinalValue(Index As Long, value As Double)
+794       If Index > UBound(pVarFinalValue) Then ReDim Preserve pVarFinalValue(Index)
+795       pVarFinalValue(Index) = value
 End Property
 
-Public Property Get ShadowPrice(Index As Long) As Double
-799       ShadowPrice = pShadowPrice(Index)
+Public Property Get ConFinalValue(Index As Long) As Double
+796       ConFinalValue = pConFinalValue(Index)
 End Property
-Public Property Let ShadowPrice(Index As Long, value As Double)
-800       If Index > UBound(pShadowPrice) Then ReDim Preserve pShadowPrice(Index)
-801       pShadowPrice(Index) = value
-End Property
-
-Public Property Get ReducedCosts(Index As Long) As Double
-802       ReducedCosts = pReducedCosts(Index)
-End Property
-Public Property Let ReducedCosts(Index As Long, value As Double)
-803       If Index > UBound(pReducedCosts) Then ReDim Preserve pReducedCosts(Index)
-804       pReducedCosts(Index) = value
+Public Property Let ConFinalValue(Index As Long, value As Double)
+797       If Index > UBound(pConFinalValue) Then ReDim Preserve pConFinalValue(Index)
+798       pConFinalValue(Index) = value
 End Property
 
-Public Property Get VarCell(Index As Long) As String
-805       VarCell = pVarCell(Index)
+Public Property Get ConShadowPrice(Index As Long) As Double
+799       ConShadowPrice = pConShadowPrice(Index)
 End Property
-Public Property Let VarCell(Index As Long, value As String)
-806       If Index > UBound(pVarCell) Then ReDim Preserve pVarCell(Index)
-807       pVarCell(Index) = value
-End Property
-
-Public Property Get IncreaseCon(Index As Long) As Double
-808       IncreaseCon = pIncreaseCon(Index)
-End Property
-Public Property Let IncreaseCon(Index As Long, value As Double)
-809       If Index > UBound(pIncreaseCon) Then ReDim Preserve pIncreaseCon(Index)
-810       pIncreaseCon(Index) = value
+Public Property Let ConShadowPrice(Index As Long, value As Double)
+800       If Index > UBound(pConShadowPrice) Then ReDim Preserve pConShadowPrice(Index)
+801       pConShadowPrice(Index) = value
 End Property
 
-Public Property Get DecreaseCon(Index As Long) As Double
-811       DecreaseCon = pDecreaseCon(Index)
+Public Property Get VarReducedCost(Index As Long) As Double
+802       VarReducedCost = pVarReducedCost(Index)
 End Property
-Public Property Let DecreaseCon(Index As Long, value As Double)
-812       If Index > UBound(pDecreaseCon) Then ReDim Preserve pDecreaseCon(Index)
-813       pDecreaseCon(Index) = value
-End Property
-
-Public Property Get IncreaseVar(Index As Long) As Double
-814       IncreaseVar = pIncreaseVar(Index)
-End Property
-Public Property Let IncreaseVar(Index As Long, value As Double)
-815       If Index > UBound(pIncreaseVar) Then ReDim Preserve pIncreaseVar(Index)
-816       pIncreaseVar(Index) = value
+Public Property Let VarReducedCost(Index As Long, value As Double)
+803       If Index > UBound(pVarReducedCost) Then ReDim Preserve pVarReducedCost(Index)
+804       pVarReducedCost(Index) = value
 End Property
 
-Public Property Get DecreaseVar(Index As Long) As Double
-817       DecreaseVar = pDecreaseVar(Index)
+Public Property Get VarCellName(Index As Long) As String
+805       VarCellName = pVarCellName(Index)
 End Property
-Public Property Let DecreaseVar(Index As Long, value As Double)
-818       If Index > UBound(pDecreaseVar) Then ReDim Preserve pDecreaseVar(Index)
-819       pDecreaseVar(Index) = value
+Public Property Let VarCellName(Index As Long, value As String)
+806       If Index > UBound(pVarCellName) Then ReDim Preserve pVarCellName(Index)
+807       pVarCellName(Index) = value
 End Property
 
-Public Property Get VarNames(Index As Long) As String
-820       VarNames = pVarNames(Index)
+Public Property Get ConIncrease(Index As Long) As Double
+808       ConIncrease = pConIncrease(Index)
 End Property
-Public Property Let VarNames(Index As Long, value As String)
-          pVarNames(Index) = value
+Public Property Let ConIncrease(Index As Long, value As Double)
+809       If Index > UBound(pConIncrease) Then ReDim Preserve pConIncrease(Index)
+810       pConIncrease(Index) = value
+End Property
+
+Public Property Get ConDecrease(Index As Long) As Double
+811       ConDecrease = pConDecrease(Index)
+End Property
+Public Property Let ConDecrease(Index As Long, value As Double)
+812       If Index > UBound(pConDecrease) Then ReDim Preserve pConDecrease(Index)
+813       pConDecrease(Index) = value
+End Property
+
+Public Property Get VarIncrease(Index As Long) As Double
+814       VarIncrease = pVarIncrease(Index)
+End Property
+Public Property Let VarIncrease(Index As Long, value As Double)
+815       If Index > UBound(pVarIncrease) Then ReDim Preserve pVarIncrease(Index)
+816       pVarIncrease(Index) = value
+End Property
+
+Public Property Get VarDecrease(Index As Long) As Double
+817       VarDecrease = pVarDecrease(Index)
+End Property
+Public Property Let VarDecrease(Index As Long, value As Double)
+818       If Index > UBound(pVarDecrease) Then ReDim Preserve pVarDecrease(Index)
+819       pVarDecrease(Index) = value
+End Property
+
+Public Property Get VarName(Index As Long) As String
+820       VarName = pVarName(Index)
+End Property
+Public Property Let VarName(Index As Long, value As String)
+          pVarName(Index) = value
+End Property
+
+Public Property Get VarCategory(Index As Long) As VariableType
+          VarCategory = pVarCategory(Index)
+End Property
+Public Property Let VarCategory(Index As Long, value As VariableType)
+          pVarCategory(Index) = value
 End Property
 
 Public Property Get LHSType(Index As Long) As SolverInputType
@@ -504,7 +516,6 @@ Function GetCurrentObjectiveValue(Optional ValidateNumeric As Boolean = True, Op
               GoTo ExitFunction
           End If
               
-          
           Dim ObjValue As Variant
           ObjValue = ObjRange.Value2
           
@@ -647,12 +658,17 @@ Sub BuildModelFromSolverData(Optional LinearityOffset As Double = 0, _
 990       End If
 
           ' Get names for all the variables, creating names that distinguish cells on different sheets
-991       ReDim pVarNames(NumVars) As String
+991       ReDim pVarName(1 To NumVars) As String
+          ReDim pVarCategory(1 To NumVars) As VariableType
+          Set VarNameToIndex = New Collection
+          
           Dim AdjCell As Range, i As Long
-996       i = 0
+996       i = 1
 997       For Each AdjCell In AdjustableCells
-998           i = i + 1
-999           VarNames(i) = AdjCell.Address(RowAbsolute:=False, ColumnAbsolute:=False) ' eg A1
+999           VarName(i) = GetCellName(AdjCell)
+              VarCategory(i) = VariableType.VarContinuous
+              VarNameToIndex.Add Item:=i, Key:=VarName(i)
+              i = i + 1
 1003      Next AdjCell
           
           ' Reset the cell values to catch protected sheets
@@ -857,11 +873,17 @@ RaiseError:
           
           If Not IntegerCellsRange Is Nothing Then
               Me.NumIntVars = IntegerCellsRange.Count
+              For Each AdjCell In IntegerCellsRange
+                  Me.VarCategory(Me.VarNameToIndex(GetCellName(AdjCell))) = VarInteger
+              Next AdjCell
           End If
           If Not BinaryCellsRange Is Nothing Then
               Me.NumBinVars = BinaryCellsRange.Count
-              Me.NumIntVars = Me.NumIntVars + Me.NumBinVars
+              For Each AdjCell In BinaryCellsRange
+                  Me.VarCategory(Me.VarNameToIndex(GetCellName(AdjCell))) = VarBinary
+              Next AdjCell
           End If
+          Me.NumDiscreteVars = Me.NumIntVars + Me.NumBinVars
 
 1177      If NumRows > 0 Then
 1178          ReDim Preserve pRowSetsBound(NumRows)
@@ -933,18 +955,18 @@ Sub ApplyBounds(row As Long, rel As Long, LHS As Range, RHS As Range, RHSValue A
               If IsNumeric(RHS.value) Then
 1230              If Not RHS.HasFormula Then
                       ' The RHS range is a constant - apply a bound
-1231                  UpdateBound row, LHS.Address, CDbl(RHS.value), rel
+1231                  UpdateBound row, GetCellName(LHS), CDbl(RHS.value), rel
 1232              Else
                       ' The RHS range is a formula, check if this depends on the decision vars
                       ' Will raise an error is no precedents are found (e.g. if they are on another sheet
 1234                  If Intersect(RHS.Precedents, AdjustableCells) Is Nothing Then
-1235                      UpdateBound row, LHS.Address, CDbl(RHS.value), rel
+1235                      UpdateBound row, GetCellName(LHS), CDbl(RHS.value), rel
                       End If
 1236              End If
 1237          End If
 1238      Else
               ' The RHS is a numeric constant - apply a bound
-1239          UpdateBound row, LHS.Address, RHSValue, rel
+1239          UpdateBound row, GetCellName(LHS), RHSValue, rel
 1240      End If
           
 ExitSub:
@@ -1080,16 +1102,16 @@ ErrorHandler:
 End Sub
 
 Public Sub PrepareForSolution()
-          ReDim pFinalVarValue(NumVars)
-1435      ReDim pVarCell(NumVars)
+          ReDim pVarFinalValue(NumVars) As Double
+1435      ReDim pVarCellName(NumVars) As String
 1436      If bGetDuals Then
-1437          ReDim pFinalValue(NumRows)
-1438          ReDim pShadowPrice(NumRows)
-1439          ReDim pIncreaseCon(NumRows)
-1440          ReDim pDecreaseCon(NumRows)
-1441          ReDim pReducedCosts(NumVars)
-1442          ReDim pIncreaseVar(NumVars)
-1443          ReDim pDecreaseVar(NumVars)
+1437          ReDim pConFinalValue(NumRows) As Double
+1438          ReDim pConShadowPrice(NumRows) As Double
+1439          ReDim pConIncrease(NumRows) As Double
+1440          ReDim pConDecrease(NumRows) As Double
+1441          ReDim pVarReducedCost(NumVars) As Double
+1442          ReDim pVarIncrease(NumVars) As Double
+1443          ReDim pVarDecrease(NumVars) As Double
 1444      End If
 End Sub
 
@@ -1098,8 +1120,8 @@ Public Sub LoadResultsToSheet()
         AdjustableCells.Value2 = 0
         Dim i As Long
         For i = 1 To NumVars
-            If Len(VarCell(i)) <> 0 Then
-                AdjustableCells.Worksheet.Range(VarCell(i)).Value2 = FinalVarValue(i)
+            If Len(VarCellName(i)) <> 0 Then
+                AdjustableCells.Worksheet.Range(VarCellName(i)).Value2 = VarFinalValue(i)
             End If
         Next i
     End If

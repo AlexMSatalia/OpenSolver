@@ -415,16 +415,6 @@ ErrorHandler:
           GoTo ExitSub
 End Sub
 
-Function ValidLPFileVarName(s As String)
-' http://lpsolve.sourceforge.net/5.5/CPLEX-format.htm
-' The letter E or e, alone or followed by other valid symbols, or followed by another E or e, should be avoided as this notation is reserved for exponential entries. Thus, variables cannot be named e9, E-24, E8cats, or other names that could be interpreted as an exponent. Even variable names such as eels or example can cause a read error, depending on their placement in an input line.
-338       If Left(s, 1) = "E" Then
-339           ValidLPFileVarName = "_" & s
-340       Else
-341           ValidLPFileVarName = s
-342       End If
-End Function
-
 Function Max(ParamArray Vals() As Variant) As Variant
           Max = Vals(LBound(Vals))
           

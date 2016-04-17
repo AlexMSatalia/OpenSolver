@@ -243,12 +243,15 @@ Function NOMAD_GetVariableData() As Variant
               SetLowerBound data, i, DefaultLowerBound
               SetUpperBound data, i, DefaultUpperBound
               
+              Dim VarName As String
+              VarName = GetCellName(c)
+              
               ' Set any specified bounds (overwriting defaults)
-              If TestKeyExists(OS.VarLowerBounds, c.Address) Then
-                  SetLowerBound data, i, OS.VarLowerBounds(c.Address)
+              If TestKeyExists(OS.VarLowerBounds, VarName) Then
+                  SetLowerBound data, i, OS.VarLowerBounds(VarName)
               End If
-              If TestKeyExists(OS.VarUpperBounds, c.Address) Then
-                  SetUpperBound data, i, OS.VarUpperBounds(c.Address)
+              If TestKeyExists(OS.VarUpperBounds, VarName) Then
+                  SetUpperBound data, i, OS.VarUpperBounds(VarName)
               End If
               
               Dim LowerBound As Double, UpperBound As Double

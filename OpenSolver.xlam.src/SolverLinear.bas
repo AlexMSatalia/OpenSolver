@@ -33,9 +33,9 @@ Sub WriteConstraintListToSheet(r As Range, s As COpenSolver)
                         RelationEnumToString(s.Relation(constraint)) & RHSstring
           
 1932          r.Cells(row + 1, 1).value = summary
-1933          r.Cells(row + 1, 2).Value2 = ZeroIfSmall(s.ShadowPrice(row))
-1934          r.Cells(row + 1, 3).Value2 = ZeroIfSmall(s.IncreaseCon(row))
-1935          r.Cells(row + 1, 4).Value2 = ZeroIfSmall(s.DecreaseCon(row))
+1933          r.Cells(row + 1, 2).Value2 = ZeroIfSmall(s.ConShadowPrice(row))
+1934          r.Cells(row + 1, 3).Value2 = ZeroIfSmall(s.ConIncrease(row))
+1935          r.Cells(row + 1, 4).Value2 = ZeroIfSmall(s.ConDecrease(row))
 1936      Next row
 
           'Write the variable duals
@@ -47,10 +47,10 @@ Sub WriteConstraintListToSheet(r As Range, s As COpenSolver)
 1942      row = row + 1
 
 1943      For i = 1 To s.NumVars
-1944          r.Cells(row, 1).Value2 = s.VarCell(i)
-1945          r.Cells(row, 2).Value2 = ZeroIfSmall(s.ReducedCosts(i))
-1946          r.Cells(row, 3).Value2 = ZeroIfSmall(s.IncreaseVar(i))
-1947          r.Cells(row, 4).Value2 = ZeroIfSmall(s.DecreaseVar(i))
+1944          r.Cells(row, 1).Value2 = s.VarCellName(i)
+1945          r.Cells(row, 2).Value2 = ZeroIfSmall(s.VarReducedCost(i))
+1946          r.Cells(row, 3).Value2 = ZeroIfSmall(s.VarIncrease(i))
+1947          r.Cells(row, 4).Value2 = ZeroIfSmall(s.VarDecrease(i))
 1948          row = row + 1
 1949      Next i
 
@@ -93,13 +93,13 @@ Sub WriteConstraintSensitivityTable(sheet As Worksheet, s As COpenSolver)
           
           'put the values into the variable table
 2286      For i = 1 To s.NumVars
-2287          sheet.Cells(row, Column) = s.VarCell(i)
-2288          sheet.Cells(row, Column + 2) = ZeroIfSmall(s.FinalVarValue(i))
-2289          sheet.Cells(row, Column + 3) = ZeroIfSmall(s.ReducedCosts(i))
+2287          sheet.Cells(row, Column) = s.VarCellName(i)
+2288          sheet.Cells(row, Column + 2) = ZeroIfSmall(s.VarFinalValue(i))
+2289          sheet.Cells(row, Column + 3) = ZeroIfSmall(s.VarReducedCost(i))
 2290          sheet.Cells(row, Column + 4) = ZeroIfSmall(s.CostCoeffs(i))
-2291          sheet.Cells(row, Column + 5) = ZeroIfSmall(s.IncreaseVar(i))
-2292          sheet.Cells(row, Column + 6) = ZeroIfSmall(s.DecreaseVar(i))
-2293          sheet.Cells(row, Column + 1) = findName(s.sheet, s.VarCell(i))
+2291          sheet.Cells(row, Column + 5) = ZeroIfSmall(s.VarIncrease(i))
+2292          sheet.Cells(row, Column + 6) = ZeroIfSmall(s.VarDecrease(i))
+2293          sheet.Cells(row, Column + 1) = findName(s.sheet, s.VarCellName(i))
 2294          row = row + 1
 2295      Next i
           
@@ -116,11 +116,11 @@ Sub WriteConstraintSensitivityTable(sheet As Worksheet, s As COpenSolver)
 
           'Values for constraint table
 2305      For i = 1 To s.NumRows
-2306          sheet.Cells(row, Column + 2) = ZeroIfSmall(s.FinalValue(i))
-2307          sheet.Cells(row, Column + 3) = ZeroIfSmall(s.ShadowPrice(i))
+2306          sheet.Cells(row, Column + 2) = ZeroIfSmall(s.ConFinalValue(i))
+2307          sheet.Cells(row, Column + 3) = ZeroIfSmall(s.ConShadowPrice(i))
 2308          sheet.Cells(row, Column + 4) = ZeroIfSmall(s.RHS(i))
-2309          sheet.Cells(row, Column + 5) = ZeroIfSmall(s.IncreaseCon(i))
-2310          sheet.Cells(row, Column + 6) = ZeroIfSmall(s.DecreaseCon(i))
+2309          sheet.Cells(row, Column + 5) = ZeroIfSmall(s.ConIncrease(i))
+2310          sheet.Cells(row, Column + 6) = ZeroIfSmall(s.ConDecrease(i))
 
               Dim constraint As Long, instance As Long
               constraint = s.RowToConstraint(i)

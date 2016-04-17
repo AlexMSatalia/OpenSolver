@@ -77,7 +77,7 @@ Sub SolveModel(s As COpenSolver, ShouldSolveRelaxation As Boolean, ShouldMinimis
             Set s.rConstraintList = GetDuals(s.sheet)
             s.DualsOnSameSheet = (Not s.rConstraintList Is Nothing)
             s.DualsOnNewSheet = GetDualsOnSheet(s.sheet)
-            s.bGetDuals = ((s.IntegerCellsRange Is Nothing And s.BinaryCellsRange Is Nothing) Or s.SolveRelaxation) And _
+            s.bGetDuals = ((s.NumDiscreteVars = 0) Or s.SolveRelaxation) And _
                           (s.DualsOnNewSheet Or s.DualsOnSameSheet) And LinearSolver.SensitivityAnalysisAvailable
         End If
         
@@ -293,7 +293,7 @@ Sub RunLocalSolver(s As COpenSolver, ExternalCommand As String)
 
     UpdateStatusBar "OpenSolver: Solving " & IIf(s.SolveRelaxation, "Relaxed ", "") & "Model... " & _
                     s.NumVars & " vars, " & _
-                    s.NumIntVars & " int vars " & "(" & s.NumBinVars & " bin), " & _
+                    s.NumDiscreteVars & " int vars " & "(" & s.NumBinVars & " bin), " & _
                     s.NumRows & " rows, " & _
                     s.SolverParameters.Item(s.Solver.TimeLimitName) & "s time limit, " & _
                     s.SolverParameters.Item(s.Solver.ToleranceName) * 100 & "% tolerance.", True

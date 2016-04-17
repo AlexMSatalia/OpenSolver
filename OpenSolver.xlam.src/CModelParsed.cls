@@ -41,18 +41,6 @@ Public Function ProcessSolverModel(OpenSolver As COpenSolver) As Boolean
           Set SolverModelParsed.SheetNameMap = New Collection
           Set SolverModelParsed.SheetNameMapReverse = New Collection
 
-          Dim c As Range
-4793      For Each c In s.AdjustableCells
-              ' Reindex lower bound collection by local address
-              ' TODO why not just use absolute?
-4794          If TestKeyExists(s.VarLowerBounds, c.Address) Then
-                  Dim bound As Double
-                  bound = s.VarLowerBounds(c.Address)
-                  s.VarLowerBounds.Remove c.Address
-4795              s.VarLowerBounds.Add bound, c.Address(RowAbsolute:=False, ColumnAbsolute:=False)
-4796          End If
-4797      Next c
-
           ' =========================================
           ' Conduct parsed-specific processing
 4816      ProcessVarTypes

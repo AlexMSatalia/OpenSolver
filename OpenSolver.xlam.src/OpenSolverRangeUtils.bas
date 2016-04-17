@@ -90,6 +90,10 @@ Function SearchRangeInVisibleNames(r As Range) As Name
 731       Set SearchRangeInVisibleNames = SearchRangeNameCACHE.Item((r.Name))
 End Function
 
+Function GetCellName(cell As Range) As String
+    GetCellName = cell.Address(RowAbsolute:=False, ColumnAbsolute:=False)  ' Eg. A1
+End Function
+
 Function GetDisplayAddress(RefersTo As String, sheet As Worksheet, Optional showRangeName As Boolean = False) As String
           Dim RaiseError As Boolean
           RaiseError = False
