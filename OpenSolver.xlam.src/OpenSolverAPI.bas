@@ -834,6 +834,10 @@ End Sub
 Public Function RunQuickSolve(Optional SolveRelaxation As Boolean = False, Optional MinimiseUserInteraction As Boolean = False) As OpenSolverResult
     ClearError
     On Error GoTo ErrorHandler
+    
+    Dim InteractiveStatus As Boolean
+    InteractiveStatus = Application.Interactive
+    Application.Interactive = False
 
     If QuickSolver Is Nothing Then
         Err.Raise OpenSolver_SolveError, Description:="There is no model to solve, and so the quick solve cannot be completed. Please select the Initialize Quick Solve command."
@@ -845,6 +849,7 @@ Public Function RunQuickSolve(Optional SolveRelaxation As Boolean = False, Optio
     If Not MinimiseUserInteraction Then QuickSolver.ReportAnySolutionSubOptimality
 
 ExitFunction:
+    Application.Interactive = InteractiveStatus
     Exit Function
 
 ErrorHandler:
