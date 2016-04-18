@@ -175,7 +175,7 @@ Function WriteNLFile_Parsed(OpenSolver As COpenSolver, ModelFilePathName As Stri
 7477      MakeCBlocks
 7480      MakeOBlocks
 7483      'MakeDBlock
-7485      MakeXBlock
+7485      If s.InitialSolutionIsValid Then MakeXBlock
 7487      MakeRBlock
 7489      MakeBBlock
 7491      MakeKBlock

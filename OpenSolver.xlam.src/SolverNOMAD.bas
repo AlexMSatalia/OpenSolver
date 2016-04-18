@@ -236,15 +236,14 @@ Function NOMAD_GetVariableData() As Variant
           DefaultLowerBound = IIf(OS.AssumeNonNegativeVars, 0, -10000000000000#)
           DefaultUpperBound = 10000000000000#
 
-          Dim i As Long, c As Range
-          i = 1
-          For Each c In OS.AdjustableCells
+          Dim i As Long
+          For i = 1 To OS.NumVars
               ' Set the default bounds
               SetLowerBound data, i, DefaultLowerBound
               SetUpperBound data, i, DefaultUpperBound
               
               Dim VarName As String
-              VarName = GetCellName(c)
+              VarName = OS.VarName(i)
               
               ' Set any specified bounds (overwriting defaults)
               If OS.VarLowerBounds.Exists(VarName) Then
@@ -253,69 +252,24 @@ Function NOMAD_GetVariableData() As Variant
               If OS.VarUpperBounds.Exists(VarName) Then
                   SetUpperBound data, i, OS.VarUpperBounds.Item(VarName)
               End If
-              
-              Dim LowerBound As Double, UpperBound As Double
-              LowerBound = GetLowerBound(data, i)
-              UpperBound = GetUpperBound(data, i)
           
               ' Get the starting point
-              SetStartingPoint data, i, c.value
+              If OS.InitialSolutionIsValid Then
+                  SetStartingPoint data, i, OS.VarInitialValue(i)
+              End If
           
-              ' Initialise all variables as continuous
-              SetVarType data, i, VariableType.VarContinuous
-              
-              ' Get the variable type (int or bin)
+              ' Set the variable type (int or bin)
 2584          If OS.SolveRelaxation Then
-                  ' Set Binary vars to have bounds of 0 and 1 and start at 0
-                  If TestIntersect(c, OS.BinaryCellsRange) Then
+                  ' Set Binary vars to have bounds of 0 and 1
+                  If OS.VarCategory(i) = VarBinary Then
                       SetLowerBound data, i, 0
                       SetUpperBound data, i, 1
-                      SetStartingPoint data, i, 0
                   End If
+                  SetVarType data, i, VarContinuous
               Else
-                  Dim Integral As Boolean
-                  Integral = True
-                  If TestIntersect(c, OS.BinaryCellsRange) Then
-                      SetVarType data, i, VariableType.VarBinary
-                  ElseIf TestIntersect(c, OS.IntegerCellsRange) Then
-                      SetVarType data, i, VariableType.VarInteger
-                  Else
-                      Integral = False
-                  End If
-                  
-                  If Integral Then
-                      'Make bounds on integer and binary constraints integer
-2587                  If LowerBound > 0 Then
-2588                      LowerBound = Application.WorksheetFunction.RoundUp(LowerBound, 0)
-2589                  Else
-2590                      LowerBound = Application.WorksheetFunction.RoundDown(LowerBound, 0)
-2591                  End If
-                      SetLowerBound data, i, LowerBound
-
-2592                  If UpperBound > 0 Then
-2593                      UpperBound = Application.WorksheetFunction.RoundDown(UpperBound, 0)
-2594                  Else
-2595                      UpperBound = Application.WorksheetFunction.RoundUp(UpperBound, 0)
-2596                  End If
-                      SetUpperBound data, i, UpperBound
-                      
-                      'Make starting positions on integer and binary constraints integer
-                      SetStartingPoint data, i, Round(GetStartingPoint(data, i))
-                  End If
+                  SetVarType data, i, OS.VarCategory(i)
               End If
-              
-              ' Force starting point between the bounds
-              Dim StartingPoint As Double
-              StartingPoint = GetStartingPoint(data, i)
-              If StartingPoint < LowerBound Then
-                  StartingPoint = LowerBound
-              ElseIf StartingPoint > UpperBound Then
-                  StartingPoint = UpperBound
-              End If
-              SetStartingPoint data, i, StartingPoint
-              
-              i = i + 1
-          Next c
+          Next i
           
 2611      NOMAD_GetVariableData = data.X
 
@@ -344,8 +298,8 @@ Function NOMAD_GetOptionData() As Variant
           Dim SolverParameters As Dictionary
           Set SolverParameters = OS.SolverParameters
           ' Add extra values that depend on precision
-          If SolverParameters.Exists(OS.Solver.PrecisionName) And Not SolverParameters.Exists("H_MIN") Then
-              SolverParameters.Add Key:="H_MIN", Item:=SolverParameters.Item(OS.Solver.PrecisionName)
+          If SolverParameters.Exists(OS.Solver.PrecisionName) Then
+              SolverParameters.Item("H_MIN") = SolverParameters.Item(OS.Solver.PrecisionName)
           End If
           
           Dim X() As Variant

@@ -29,8 +29,10 @@ Public IntegerCellsRange As Range  ' All integer variables (excluding binary)
 Public VarLowerBounds As Dictionary
 Public VarUpperBounds As Dictionary
 Private pVarName() As String
+Private pVarInitialValue() As Double
 Public VarNameToIndex As Collection
 Private pVarCategory() As VariableType  ' Name to avoid clash with VarType() function
+Public InitialSolutionIsValid As Boolean  ' True if we can warmstart with the starting solution
 
 ' Constraint information
 Dim pLHSType() As SolverInputType
@@ -190,6 +192,13 @@ Public Property Get VarName(Index As Long) As String
 End Property
 Public Property Let VarName(Index As Long, value As String)
           pVarName(Index) = value
+End Property
+
+Public Property Get VarInitialValue(Index As Long) As Double
+820       VarInitialValue = pVarInitialValue(Index)
+End Property
+Public Property Let VarInitialValue(Index As Long, value As Double)
+          pVarInitialValue(Index) = value
 End Property
 
 Public Property Get VarCategory(Index As Long) As VariableType
@@ -591,6 +600,90 @@ ErrorHandler:
           GoTo ExitSub
 End Sub
 
+Sub CheckCurrentConstraintFeasible(LHSValues As Variant, RHSValues As Variant, rel As RelationConsts, constraint As Long)
+          ' Check if the current solution is valid for this constraint
+          On Error GoTo Invalid
+          
+          Dim i As Long, j As Long, LHSValue As Double, RHSValue As Double, value As Double
+          For i = 1 To UBound(LHSValues, 1)
+              For j = 1 To UBound(LHSValues, 2)
+                  LHSValue = LHSValues(i, j)
+                  If RHSType(constraint) <> SolverInputType.MultiCellRange Then
+                      RHSValue = RHSValues
+                  ElseIf UBound(LHSValues, 1) = UBound(RHSValues, 1) Then
+                      RHSValue = RHSValues(i, j)
+                  Else
+                      RHSValue = RHSValues(j, i)
+                  End If
+                        
+                  value = RHSValue - LHSValue
+                  If (rel = RelationEQ And Abs(value) > EPSILON) Or _
+                     (rel = RelationGE And value > EPSILON) Or _
+                     (rel = RelationLE And value < -EPSILON) Then
+                      GoTo Invalid
+                  End If
+              Next j
+          Next i
+          Exit Sub
+Invalid:
+          InitialSolutionIsValid = False
+End Sub
+
+Sub CheckCurrentVariablesFeasible()
+          Dim i As Long, RoundedValue As Double, bound As Double
+          For i = 1 To NumVars
+              ' Check value is integral if discrete
+              If VarCategory(i) <> VarContinuous Then
+                  ' If the starting value is not integer, solution is invalid.
+                  ' Otherwise round starting value to ensure feasibility
+                  RoundedValue = CLng(VarInitialValue(i))
+                  If Abs(VarInitialValue(i) - RoundedValue) <= EPSILON Then
+                      VarInitialValue(i) = RoundedValue
+                  Else
+                      GoTo Invalid
+                  End If
+              End If
+                  
+              ' Check lower bounds
+              If VarLowerBounds.Exists(VarName(i)) Or VarCategory(i) = VarBinary Or AssumeNonNegativeVars Then
+                  If VarLowerBounds.Exists(VarName(i)) And VarCategory(i) <> VarBinary Then
+                      bound = VarLowerBounds.Item(VarName(i))
+                  Else
+                      bound = 0
+                  End If
+                  If VarInitialValue(i) >= bound - EPSILON Then
+                      ' Make sure the bound is strictly satisfied
+                      If VarInitialValue(i) < bound Then
+                          VarInitialValue(i) = bound
+                      End If
+                  Else
+                      GoTo Invalid
+                  End If
+              End If
+              
+              ' Check upper bounds
+              If VarUpperBounds.Exists(VarName(i)) Or VarCategory(i) = VarBinary Then
+                  If VarCategory(i) = VarBinary Then
+                      bound = 1
+                  Else
+                      bound = VarUpperBounds.Item(VarName(i))
+                  End If
+                  
+                  If VarInitialValue(i) <= bound + EPSILON Then
+                      ' Make sure the bound is strictly satisfied
+                      If VarInitialValue(i) > bound Then
+                          VarInitialValue(i) = bound
+                      End If
+                  Else
+                      GoTo Invalid
+                  End If
+              End If
+          Next i
+          Exit Sub
+Invalid:
+          InitialSolutionIsValid = False
+End Sub
+
 Sub BuildModelFromSolverData(Optional LinearityOffset As Double = 0, _
                              Optional ShouldCheckLinearity As Boolean = False, _
                              Optional ShouldMinimiseUserInteraction As Boolean = False, _
@@ -650,10 +743,12 @@ Sub BuildModelFromSolverData(Optional LinearityOffset As Double = 0, _
 989           Err.Raise Number:=OpenSolver_BuildError, Description:="There are no decision variable cells in this model, and so the model cannot be solved."
 990       End If
 
-          ' Get names for all the variables, creating names that distinguish cells on different sheets
-991       ReDim pVarName(1 To NumVars) As String
+          ' Variable initialization
+          ReDim pVarName(1 To NumVars) As String
+          ReDim pVarInitialValue(1 To NumVars) As Double
           ReDim pVarCategory(1 To NumVars) As VariableType
           Set VarNameToIndex = New Collection
+          InitialSolutionIsValid = True
           
           Dim AdjCell As Range, i As Long
 996       i = 1
@@ -661,6 +756,11 @@ Sub BuildModelFromSolverData(Optional LinearityOffset As Double = 0, _
 999           VarName(i) = GetCellName(AdjCell)
               VarCategory(i) = VariableType.VarContinuous
               VarNameToIndex.Add Item:=i, Key:=VarName(i)
+              ' Try to get the starting value, if we can't the starting solution is invalid
+              On Error Resume Next
+              VarInitialValue(i) = AdjCell.Value2
+              If Err.Number <> 0 Then InitialSolutionIsValid = False
+              On Error GoTo ErrorHandler
               i = i + 1
 1003      Next AdjCell
           
@@ -739,7 +839,7 @@ RaiseError:
 1082          LHSCount = rangeLHS.Count
               
               ' RELATIONSHIP
-              Dim rel As Long
+              Dim rel As RelationConsts
               rel = GetConstraintRel(constraint, sheet)
               Relation(constraint) = rel
               
@@ -816,6 +916,10 @@ RaiseError:
                   Dim LHSValues As Variant
                   Dim RHSValues As Variant
                   GetCurrentConstraintValues constraint, LHSValues, RHSValues, AllowNonNumericIfNotConstant:=True
+                  ' Check if the constraint is satisfied (unless we already know the solution is invalid)
+                  If InitialSolutionIsValid Then
+                      CheckCurrentConstraintFeasible LHSValues, RHSValues, rel, constraint
+                  End If
                   
                   ' Check if this constraint applies any bounds on decision variables
 1146              If LHSCount = 1 Then
@@ -864,19 +968,23 @@ RaiseError:
           ' Binary trumps integer, so remove all overlap
           Set IntegerCellsRange = SetDifference(IntegerCellsRange, BinaryCellsRange)
           
+          Dim RoundedValue As Long
           If Not IntegerCellsRange Is Nothing Then
               Me.NumIntVars = IntegerCellsRange.Count
               For Each AdjCell In IntegerCellsRange
-                  Me.VarCategory(Me.VarNameToIndex(GetCellName(AdjCell))) = VarInteger
+                  VarCategory(VarNameToIndex(GetCellName(AdjCell))) = VarInteger
               Next AdjCell
           End If
           If Not BinaryCellsRange Is Nothing Then
               Me.NumBinVars = BinaryCellsRange.Count
               For Each AdjCell In BinaryCellsRange
-                  Me.VarCategory(Me.VarNameToIndex(GetCellName(AdjCell))) = VarBinary
+                  Me.VarCategory(VarNameToIndex(GetCellName(AdjCell))) = VarBinary
               Next AdjCell
           End If
           Me.NumDiscreteVars = Me.NumIntVars + Me.NumBinVars
+          
+          ' Check whether variables are within bounds and discrete if needed
+          CheckCurrentVariablesFeasible
 
 1177      If NumRows > 0 Then
 1178          ReDim Preserve pRowSetsBound(NumRows)

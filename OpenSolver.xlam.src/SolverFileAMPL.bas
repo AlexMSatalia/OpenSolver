@@ -28,6 +28,9 @@ Sub WriteAMPLFile_Diff(s As COpenSolver, ModelFilePathName As String)
 1807                   Print #1, ", >= 0";
 1808               End If
 1809           End If
+               If s.InitialSolutionIsValid Then
+                   Print #1, ", := "; s.VarInitialValue(var);
+               End If
 1810           Print #1, ";"
 1811       Next var
            
@@ -154,11 +157,8 @@ Sub WriteAMPLFile_Parsed(s As COpenSolver, ModelFilePathName As String)
 7197                  Print #1, ", >= 0";
 7198              End If
 7199          End If
-              ' TODO use initial values collection instead
-7200          If VarType(c) = vbEmpty Then
-7201              Print #1, " := 0";
-7202          Else
-7203              Print #1, " := " & StrExNoPlus(CDbl(c.Value2));
+              If s.InitialSolutionIsValid Then
+7200              Print #1, ", := "; s.VarInitialValue(s.VarNameToIndex(GetCellName(c)));
 7204          End If
 7205          Print #1, ";"
 7206      Next
