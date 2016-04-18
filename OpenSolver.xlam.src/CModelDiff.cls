@@ -301,30 +301,6 @@ End Function
 ' Linearity check functions
 ' =========================================
 
-Function CalcObjFnValue(DecisionVariableValues() As Double) As Double
-          Dim RaiseError As Boolean
-          RaiseError = False
-          On Error GoTo ErrorHandler
-
-          Dim sum As Double, i As Long
-930       sum = s.ObjectiveFunctionConstant ' The value found for the obj function when all decision variables are 0
-          With s.CostCoeffs
-931           For i = 1 To .Count
-932               sum = sum + (.Coefficient(i) * DecisionVariableValues(.Index(i)))
-933           Next i
-          End With
-934       CalcObjFnValue = sum
-
-ExitFunction:
-          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
-          Exit Function
-
-ErrorHandler:
-          If Not ReportError("COpenSolver", "CalcObjFnValue") Then Resume
-          RaiseError = True
-          GoTo ExitFunction
-End Function
-
 ' Highlight all constraints (and the objective) that are non-linear using our standard model highlighting, but showing only individual cells, not ranges
 Sub HighlightNonLinearities(RowIsNonLinear() As Boolean, ObjectiveIsNonLinear As Boolean)
           Dim RaiseError As Boolean
