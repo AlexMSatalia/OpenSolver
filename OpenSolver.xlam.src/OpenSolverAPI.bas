@@ -75,7 +75,21 @@ Public Function GetChosenSolver(Optional sheet As Worksheet) As String
     Exit Function
     
 SetDefault:
-    GetChosenSolver = GetAvailableSolvers()(LBound(GetAvailableSolvers))
+    ' See if we can choose based on the selection for Solver
+    Dim SolverEng As Long
+    If GetNamedIntegerIfExists(sheet, "solver_eng", SolverEng) Then
+        ' Lookup based on standard Solver options
+        Select Case SolverEng
+        Case 1:  ' GRG Nonlinear
+            GetChosenSolver = "Bonmin"
+        Case 2:  ' Simplex LP
+            GetChosenSolver = "CBC"
+        Case 3:  ' Evolutionary
+            GetChosenSolver = "NOMAD"
+        End Select
+    End If
+    ' Make a default choice if we still don't have anything
+    If Len(GetChosenSolver) = 0 Then GetChosenSolver = GetAvailableSolvers()(LBound(GetAvailableSolvers))
     SetChosenSolver GetChosenSolver, sheet
 End Function
 
