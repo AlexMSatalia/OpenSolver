@@ -36,7 +36,7 @@ Public ShowModelAfterSavingState As Boolean
 Public ShowNamedRangesState As Boolean
 
 ' Resizing info
-Const MinHeight = 140
+Const MinHeight = 141
 Private ResizeStartY As Double
 
 ' Function to map string rels to combobox index positions
@@ -940,17 +940,18 @@ Private Sub AutoLayout()
         .Width = lblConstraintGroup.Width
     End With
     
+    With chkNameRange
+        .Left = lblConstraintGroup.Left
+        .Width = lstConstraints.Width
+        .Caption = "Show named ranges in constraint list"
+        .Top = Below(chkNonNeg, False)
+    End With
+    
     With lstConstraints
         .Left = lblDescHeader.Left
         .Top = lblConstraintGroup.Top
         .Height = MinHeight
         .Width = LeftOf(lblConstraintGroup, .Left)
-    End With
-    
-    With chkNameRange
-        .Left = lblDescHeader.Left
-        .Width = lstConstraints.Width
-        .Caption = "Show named ranges"
     End With
     
     With lblDiv4
@@ -1090,8 +1091,7 @@ Private Sub UpdateLayout(Optional ChangeY As Single = 0)
     lstConstraints.Height = NewHeight
         
     ' Cascade the updated height
-    chkNameRange.Top = Below(lstConstraints)
-    lblDiv4.Top = Below(chkNameRange)
+    lblDiv4.Top = Below(lstConstraints)
     lblStep4.Top = Below(lblDiv4)
     chkGetDuals.Top = lblStep4.Top
     refDuals.Top = lblStep4.Top
