@@ -12,6 +12,7 @@ except Exception as e:
 
 parser = argparse.ArgumentParser()
 parser.add_argument("modelfile", help="Path to the model.lp file")
+parser.add_argument("mipstartfile", help="Path to any mipstart .mst file")
 parser.add_argument("solutionfile", help="Path to write the solution file")
 parser.add_argument("sensitivityfile", 
                     help="Path to write the sensitivity data")
@@ -20,12 +21,16 @@ parser.add_argument("params", help="Additional Gurobi parameters to set",
 
 args = parser.parse_args()
 mod_path = args.modelfile
+mst_path = args.mipstartfile
 sol_path = args.solutionfile
 sense_path = args.sensitivityfile
 params_list = args.params
 
-m = Model ('myModel')
+m = Model('myModel')
 m = read(mod_path)
+
+if os.path.exists(mst_path):
+    m.read(mst_path)
 
 for param in params_list:
     name, value = param.split('=')

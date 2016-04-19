@@ -24,6 +24,7 @@ Private Const pShortName = "Gurobi"
 Private Const pExecName = "gurobi_cl" & ExecExtension
 Private Const pScriptFile = "gurobi_tmp" & ScriptExtension
 Private Const pPythonScript = "gurobiOSRun.py"
+Private Const pMipStartFile = "model.mst"
 
 Private Const pSensitivityAnalysisAvailable = True
 
@@ -165,6 +166,10 @@ Private Function PythonPath() As String
     #End If
 End Function
 
+Function MipStartFilePath() As String
+    GetTempFilePath pMipStartFile, MipStartFilePath
+End Function
+
 Private Function GetGurobiHomeDir() As String
     GetGurobiHomeDir = Environ("GUROBI_HOME")
 End Function
@@ -280,11 +285,17 @@ Private Function CreateSolveCommand(s As COpenSolver) As String
     Dim RaiseError As Boolean
     RaiseError = False
     On Error GoTo ErrorHandler
+    
+    DeleteFileAndVerify MipStartFilePath()
+    If s.InitialSolutionIsValid Then
+        CreateMipStartFile s
+    End If
 
     ' We use the -u flag on python to force it to unbuffer its output
     CreateSolveCommand = MakePathSafe(PythonPath()) & " -u " & _
                          MakePathSafe(PythonScriptPath()) & " " & _
                          MakePathSafe(GetModelFilePath(Me)) & " " & _
+                         MakePathSafe(MipStartFilePath()) & " " & _
                          MakePathSafe(s.SolutionFilePathName) & " " & _
                          MakePathSafe(SensitivityFilePath()) & " " & _
                          ParametersToKwargs(s.SolverParameters)
@@ -300,6 +311,32 @@ ErrorHandler:
     RaiseError = True
     GoTo ExitFunction
 End Function
+
+Private Sub CreateMipStartFile(s As COpenSolver)
+    Dim RaiseError As Boolean
+    RaiseError = False
+    On Error GoTo ErrorHandler
+
+    Dim FileNum As Long
+    FileNum = FreeFile()
+    Open MipStartFilePath() For Output As FileNum
+    Print #FileNum, "# MIP start for problem on sheet '"; s.sheet.Name; "'"
+    
+    Dim i As Long
+    For i = 1 To s.NumVars
+        Print #FileNum, GetLPNameFromVarName(s.VarName(i)); " "; StrEx(s.VarInitialValue(i))
+    Next i
+
+ExitSub:
+    Close #FileNum
+    If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+    Exit Sub
+
+ErrorHandler:
+    If Not ReportError("CSolverGurobi", "CreateMipStartFile") Then Resume
+    RaiseError = True
+    GoTo ExitSub
+End Sub
 
 Sub ReadResults(s As COpenSolver)
     
