@@ -643,6 +643,9 @@ Sub CheckCurrentVariablesFeasible()
                       GoTo Invalid
                   End If
               End If
+              
+              ' Check bounds - we have already invalidated anything that violates these in the constraint validation
+              ' However, we go through them again because we can now adjust variables that are only just infeasible
                   
               ' Check lower bounds
               If VarLowerBounds.Exists(VarName(i)) Or VarCategory(i) = VarBinary Or AssumeNonNegativeVars Then
@@ -1042,9 +1045,6 @@ Sub ApplyBounds(row As Long, rel As Long, LHS As Range, RHS As Range, RHSValue A
           On Error GoTo ErrorHandler
 
 1217      If rel <> RelationGE And rel <> RelationLE Then GoTo ExitSub
-          
-          ' Check if we need upper bounds
-1220      If Not SolverUsesUpperBounds(Solver.ShortName) And rel = RelationLE Then GoTo ExitSub
            
           ' Following Solver, we don't apply formulae as lower bounds, even if constant
 1223      If RHSRefersToFormula Then GoTo ExitSub
