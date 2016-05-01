@@ -214,7 +214,15 @@ Public Function GetDecisionVariables(Optional sheet As Worksheet, Optional Valid
         End If
         
         If Not IsRange Then
-            Err.Raise OpenSolver_ModelError, Description:="A model was found on the sheet " & sheet.Name & " but the decision variable cells (" & RefersTo & ") could not be interpreted. Please redefine the decision variable cells, and try again."
+            ' We may not have been able to get the range because the RefersTo text of the saved range might have
+            ' exceeded Excel's range size limit. We can also try to get the named range off the sheet directly
+            ' as a fallback
+            On Error Resume Next
+            Set GetDecisionVariables = sheet.Range("solver_adj")
+            If Err.Number <> 0 Then
+                Err.Raise OpenSolver_ModelError, Description:="A model was found on the sheet " & sheet.Name & " but the decision variable cells (" & RefersTo & ") could not be interpreted. Please redefine the decision variable cells, and try again."
+            End If
+            On Error GoTo 0
         End If
     End If
 End Function

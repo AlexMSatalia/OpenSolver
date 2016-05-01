@@ -596,6 +596,14 @@ BadObjRef:
 4458      refObj.SetFocus ' Set the focus back to the RefEdit
           GoTo ExitSub
 BadDecRef:
+          ' Try with raw text if it might work that way!
+          ' Converting the text to RefersTo can increase the length (with sheet names etc)
+          ' and could cause the range text to become too long for Excel
+          If DecisionVariablesRefersTo <> Me.refDecision.Text Then
+              DecisionVariablesRefersTo = Me.refDecision.Text
+              Resume ' Try again on the validation
+          End If
+          
           ' Couldn't turn the decision variable address into a range
 4461      MsgBox "Error: the cell range specified for the Variable Cells is invalid. " + _
                  "This must be a valid Excel range that does not exceed Excel's internal character count limits. " + _
