@@ -136,7 +136,7 @@ End Sub
 
 Public Function About_OpenSolver() As String
 3539  About_OpenSolver = _
-      "(c) Andrew J Mason 2011 , 2012" & vbNewLine & _
+      "Copyright (c) 2011, 2012, 2014-2016: Andrew J. Mason" & vbNewLine & _
       "Developed by Andrew Mason, Iain Dunning and Jack Dunn, with coding assistance by Kat Gilbert, Matthew Milner, Kris Atkins. Various contributions have been made by Andres Sommerhoff, and assistance with Mac version was given by Zhanibek Datbayev." & vbNewLine & _
       "Department of Engineering Science" & vbNewLine & _
       "University of Auckland, New Zealand" & vbNewLine & _
@@ -146,7 +146,9 @@ Public Function About_OpenSolver() As String
       vbNewLine & _
       "OpenSolver allows the Coin-OR CBC optimization engine to be used to solve linear integer programming problems in Excel as well as the NOMAD optimization engine to solve non-linear programming problems. OpenSolver also offers the choice of solving linear problems with the Gurobi optimizer if this is installed." & vbNewLine & _
       vbNewLine & _
-      "OpenSolver is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.  The COIN-OR solvers (CBC, Couenne and Bonmin) are licensed under the Eclipse Public License while the NOMAD software is subject to the terms of the GNU Lesser General Public License." & vbNewLine & _
+      "OpenSolver is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.  License copyright years may be listed using range notation (e.g. 2011-2016) indicating that every year in the range, inclusive, is a copyrightable year that would otherwise be listed individually." & vbNewLine & _
+      vbNewLine & _
+      "The COIN-OR solvers (CBC, Couenne and Bonmin) are licensed under the Eclipse Public License while the NOMAD software is subject to the terms of the GNU Lesser General Public License." & vbNewLine & _
       vbNewLine & _
       "OpenSolver is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.  You should have received a copy of the GNU General Public License along with OpenSolver.  If not, see http://www.gnu.org/licenses/" & vbNewLine & _
       vbNewLine & _
