@@ -36,7 +36,12 @@ Public ShowModelAfterSavingState As Boolean
 Public ShowNamedRangesState As Boolean
 
 ' Resizing info
-Const MinHeight = 141
+#If Mac Then
+    Const MinHeight = 168
+#Else
+    Const MinHeight = 141
+#End If
+
 Private ResizeStartY As Double
 
 ' Function to map string rels to combobox index positions
