@@ -23,8 +23,6 @@ Option Explicit
     Public Const FormButtonWidth = 66
     Public Const FormCheckBoxHeight = 16
     Public Const FormTextBoxHeight = 18
-    Public Const FormTitleHeight = 20
-    Public Const FormWindowMargin = 4
     Public Const FormMargin = 6
     Public Const FormTextHeight = 16
 #End If
@@ -35,6 +33,29 @@ Public Const FormLinkColor = &HFF0000
 Public Const FormHeadingHeight = 24
 Public Const FormDivHeight = 2
 Public Const FormDivBackColor = &HC1C1C1
+
+#If Win32 Then
+    ' Hacks for Excel 2016 on Windows Form margins being different to earlier versions
+    ' We provide functions with the same names as the old constants so that the values can
+    ' change based on the version of Excel.
+    ' We can then use these functions as we would the original constants
+    
+    Public Function FormWindowMargin() As Long
+        If Val(Application.Version) >= 16 Then
+            FormWindowMargin = 12
+        Else
+            FormWindowMargin = 4
+        End If
+    End Function
+    
+    Public Function FormTitleHeight() As Long
+        If Val(Application.Version) >= 16 Then
+            FormTitleHeight = 29
+        Else
+            FormTitleHeight = 20
+        End If
+    End Function
+#End If
 
 Public Sub AutoFormat(ByRef Controls As Controls)
 ' Sets default appearances for Form controls
