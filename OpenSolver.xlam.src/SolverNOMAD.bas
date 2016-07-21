@@ -324,6 +324,22 @@ ErrorHandler:
           Resume ExitFunction
 End Function
 
+' Returns -1 on error, boolean whether to use warmstart or not otherwise
+Function NOMAD_GetUseWarmstart() As Variant
+          On Error GoTo ErrorHandler
+          Application.EnableCancelKey = xlErrorHandler
+          
+          NOMAD_GetUseWarmstart = OS.InitialSolutionIsValid
+
+ExitFunction:
+          Exit Function
+          
+ErrorHandler:
+          If Not ReportError("SolverNOMAD", "NOMAD_GetUseWarmstart") Then Resume
+          NOMAD_GetUseWarmstart = -1&
+          Resume ExitFunction
+End Function
+
 ' Returns -1 if error, 0 otherwise
 Function NOMAD_ShowCancelDialog()
           On Error GoTo ErrorHandler
