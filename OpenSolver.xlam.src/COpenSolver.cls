@@ -629,11 +629,11 @@ Invalid:
           InitialSolutionIsValid = False
 End Sub
 
-Sub CheckCurrentVariablesFeasible()
+Sub CheckCurrentVariablesFeasible(ShouldSolveRelaxation As Boolean)
           Dim i As Long, RoundedValue As Double, bound As Double
           For i = 1 To NumVars
               ' Check value is integral if discrete
-              If VarCategory(i) <> VarContinuous Then
+              If VarCategory(i) <> VarContinuous And Not ShouldSolveRelaxation Then
                   ' If the starting value is not integer, solution is invalid.
                   ' Otherwise round starting value to ensure feasibility
                   RoundedValue = CLng(VarInitialValue(i))
@@ -987,7 +987,7 @@ RaiseError:
           Me.NumDiscreteVars = Me.NumIntVars + Me.NumBinVars
           
           ' Check whether variables are within bounds and discrete if needed
-          CheckCurrentVariablesFeasible
+          CheckCurrentVariablesFeasible ShouldSolveRelaxation
 
 1177      If NumRows > 0 Then
 1178          ReDim Preserve pRowSetsBound(NumRows)
