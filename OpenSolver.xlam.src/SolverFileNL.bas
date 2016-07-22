@@ -636,6 +636,8 @@ Private Sub ProcessFormulae()
           RaiseError = False
           On Error GoTo ErrorHandler
 
+          Erase NonLinearConstraintTrees
+          Erase LinearConstraints
 7774      ReDim NonLinearConstraintTrees(1 To n_con) As ExpressionTree
 7775      ReDim LinearConstraints(1 To n_con) As Dictionary
 7776      ReDim LinearConstants(1 To n_con) As Double
@@ -819,6 +821,8 @@ Private Sub ProcessObjective()
               ' Adjust objective count
 7870          n_obj = n_obj + 1
 
+              Erase NonLinearObjectiveTrees
+              Erase LinearObjectives
 7852          ReDim NonLinearObjectiveTrees(1 To n_obj) As ExpressionTree
 7853          ReDim ObjectiveSenses(1 To n_obj) As ObjectiveSenseType
 7854          ReDim ObjectiveCells(1 To n_obj) As String
