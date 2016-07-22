@@ -1,7 +1,7 @@
 Attribute VB_Name = "OpenSolverConstants"
 Option Explicit
 
-Public Const EPSILON = 0.000001
+Public Const EPSILON = 0.00001
 
 'Solution results, as reported by Excel Solver
 ' FROM http://msdn.microsoft.com/en-us/library/ff197237.aspx
