@@ -369,7 +369,7 @@ Private Sub MakeVariableMap(SolveRelaxation As Boolean)
           
           ' Get integer variables
           Dim IntegerVars() As Boolean
-7635      ReDim IntegerVars(n_var)
+7635      ReDim IntegerVars(n_var) As Boolean
 7636      If Not s.IntegerCellsRange Is Nothing Then
 7638          UpdateStatusBar "OpenSolver: Creating .nl file. Finding integer variables"
 7637          For Each c In s.IntegerCellsRange
@@ -379,7 +379,7 @@ Private Sub MakeVariableMap(SolveRelaxation As Boolean)
 7643      End If
           
           ' Get binary variables
-7644      ReDim BinaryVars(n_var)
+7644      ReDim BinaryVars(n_var) As Boolean
 7645      If Not s.BinaryCellsRange Is Nothing Then
 7647          UpdateStatusBar "OpenSolver: Creating .nl file. Finding binary variables"
 7646          For Each c In s.BinaryCellsRange
@@ -423,8 +423,8 @@ Private Sub MakeVariableMap(SolveRelaxation As Boolean)
           
           ' ==============================================
           ' Add variables to the variable map in the required order
-7675      ReDim VariableNLIndexToCollectionIndex(n_var)
-7676      ReDim VariableCollectionIndexToNLIndex(n_var)
+7675      ReDim VariableNLIndexToCollectionIndex(n_var) As Long
+7676      ReDim VariableCollectionIndexToNLIndex(n_var) As Long
 7677      Set VariableMap = New Dictionary
 7678      ReDim VariableMapRev(n_var) As String
           
@@ -540,7 +540,7 @@ Private Sub MakeConstraintMap()
           On Error GoTo ErrorHandler
 
 7732      ReDim ConstraintMapRev(n_con) As String
-7733      ReDim ConstraintIndexToTreeIndex(n_con)
+7733      ReDim ConstraintIndexToTreeIndex(n_con) As Long
           
           Dim Index As Long, i As Long, cellName As String
 7734      Index = 0
