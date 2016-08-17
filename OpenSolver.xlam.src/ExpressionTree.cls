@@ -290,7 +290,7 @@ Sub MarkLinearity()
 8617              If Not Children(2).NodeLinearity = ExpressionTreeConstant Then
 8618                 NodeLinearity = ExpressionTreeNonLinear
                   ' Otherwise non-linear if linear variable raised to power other than one
-8619              ElseIf Children(1).NodeLinearity = ExpressionTreeLinear And Children(2).NodeText <> 1 Then
+8619              ElseIf Children(1).NodeLinearity = ExpressionTreeLinear And Children(2).NodeText <> "1" Then
 8620                 NodeLinearity = ExpressionTreeNonLinear
                   ' Otherwise expression is same linearity as base
 8621              Else
