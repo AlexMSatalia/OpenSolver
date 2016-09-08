@@ -112,7 +112,7 @@ Function RemoveSheetNameFromString(s As String, sheet As Worksheet) As String
 290       RemoveSheetNameFromString = s
 
 ExitFunction:
-          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          If RaiseError Then RethrowError
           Exit Function
 
 ErrorHandler:
@@ -137,7 +137,7 @@ Function StripTrailingNewline(Block As String) As String
           StripTrailingNewline = Block
 
 ExitFunction:
-          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          If RaiseError Then RethrowError
           Exit Function
 
 ErrorHandler:
@@ -156,7 +156,7 @@ Function StripWorksheetNameAndDollars(s As String, currentSheet As Worksheet) As
 588       StripWorksheetNameAndDollars = Replace(StripWorksheetNameAndDollars, "$", "")
 
 ExitFunction:
-          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          If RaiseError Then RethrowError
           Exit Function
 
 ErrorHandler:
@@ -271,7 +271,7 @@ ExitFunction:
           ThisWorkbook.Sheets(1).Cells(1, 1).Clear
           Application.Calculation = oldCalculation
           Application.DisplayAlerts = oldDisplayAlerts
-          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          If RaiseError Then RethrowError
           Exit Function
 
 DecimalFixer: 'Ensures decimal character used is correct.
@@ -330,7 +330,7 @@ Function GetSolverParametersDict(Solver As ISolver, sheet As Worksheet) As Dicti
           Set GetSolverParametersDict = SolverParameters
 
 ExitFunction:
-          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          If RaiseError Then RethrowError
           Exit Function
 
 ErrorHandler:
@@ -352,7 +352,7 @@ Function ParametersToKwargs(SolverParameters As Dictionary) As String
           ParametersToKwargs = Trim(result)
 
 ExitFunction:
-          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          If RaiseError Then RethrowError
           Exit Function
 
 ErrorHandler:
@@ -373,7 +373,7 @@ Function ParametersToFlags(SolverParameters As Dictionary) As String
           ParametersToFlags = Trim(result)
 
 ExitFunction:
-          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          If RaiseError Then RethrowError
           Exit Function
 
 ErrorHandler:
@@ -395,7 +395,7 @@ Function ParametersToOptionsFileString(SolverParameters As Dictionary) As String
           ParametersToOptionsFileString = StripTrailingNewline(result)
           
 ExitFunction:
-          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          If RaiseError Then RethrowError
           Exit Function
 
 ErrorHandler:
@@ -418,7 +418,7 @@ Sub ParametersToOptionsFile(OptionsFilePath As String, SolverParameters As Dicti
 
 ExitSub:
           Close #FileNum
-          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          If RaiseError Then RethrowError
           Exit Sub
 
 ErrorHandler:
@@ -531,7 +531,7 @@ Function ForceCalculate(prompt As String, Optional MinimiseUserInteraction As Bo
           #End If
 
 ExitFunction:
-          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          If RaiseError Then RethrowError
           Exit Function
 
 ErrorHandler:
@@ -550,7 +550,7 @@ Sub WriteToFile(intFileNum As Long, strData As String, Optional numSpaces As Lon
 781       Print #intFileNum, Space(numSpaces) & strData
 
 ExitSub:
-          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          If RaiseError Then RethrowError
           Exit Sub
 
 ErrorHandler:
@@ -603,7 +603,7 @@ Function TrimBlankLines(s As String) As String
 630       TrimBlankLines = s
 
 ExitFunction:
-          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          If RaiseError Then RethrowError
           Exit Function
 
 ErrorHandler:
@@ -677,7 +677,7 @@ Function IsAmericanNumber(s As String, Optional i As Long = 1) As Boolean
 649       IsAmericanNumber = SeenDigit
 
 ExitFunction:
-          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          If RaiseError Then RethrowError
           Exit Function
 
 ErrorHandler:
@@ -707,7 +707,7 @@ Function SplitWithoutRepeats(StringToSplit As String, Delimiter As String) As St
           SplitWithoutRepeats = SplitValues
 
 ExitFunction:
-          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          If RaiseError Then RethrowError
           Exit Function
 
 ErrorHandler:
@@ -746,7 +746,7 @@ Public Sub OpenURL(URL As String)
           #End If
 
 ExitSub:
-          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          If RaiseError Then RethrowError
           Exit Sub
 
 ErrorHandler:
@@ -790,7 +790,7 @@ Public Function URLEncode(StringVal As String, Optional SpaceAsPlus As Boolean =
     End If
 
 ExitFunction:
-    If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+    If RaiseError Then RethrowError
     Exit Function
 
 ErrorHandler:
@@ -818,15 +818,15 @@ Private Sub fHandleFile(FilePath As String, WindowStyle As Long)
                 Dim varTaskID As Variant
                 varTaskID = Shell("rundll32.exe shell32.dll, OpenAs_RunDLL " & FilePath, WIN_NORMAL)
             Case ERROR_OUT_OF_MEM:
-                Err.Raise OpenSolver_Error, Description:="Error: Out of Memory/Resources. Couldn't Execute!"
+                RaiseGeneralError "Error: Out of Memory/Resources. Couldn't Execute!"
             Case ERROR_FILE_NOT_FOUND:
-                Err.Raise OpenSolver_Error, Description:="Error: File not found.  Couldn't Execute!"
+                RaiseGeneralError "Error: File not found.  Couldn't Execute!"
             Case ERROR_PATH_NOT_FOUND:
-                Err.Raise OpenSolver_Error, Description:="Error: Path not found. Couldn't Execute!"
+                RaiseGeneralError "Error: Path not found. Couldn't Execute!"
             Case ERROR_BAD_FORMAT:
-                Err.Raise OpenSolver_Error, Description:="Error:  Bad File Format. Couldn't Execute!"
+                RaiseGeneralError "Error:  Bad File Format. Couldn't Execute!"
             Case Else:
-                Err.Raise OpenSolver_Error, Description:="Unknown error when opening file"
+                RaiseGeneralError "Unknown error when opening file"
         End Select
     End If
 End Sub
@@ -1020,7 +1020,7 @@ ExitSub:
     #If Mac Then
         Application.ScreenUpdating = ScreenStatus
     #End If
-    If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+    If RaiseError Then RethrowError
     Exit Sub
 
 ErrorHandler:

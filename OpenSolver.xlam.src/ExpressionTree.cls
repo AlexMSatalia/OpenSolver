@@ -46,7 +46,7 @@ Public Function GetChild(Index As Long) As ExpressionTree
 8511      Set GetChild = obj
 
 ExitFunction:
-          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          If RaiseError Then RethrowError
           Exit Function
 
 ErrorHandler:
@@ -71,7 +71,7 @@ Public Sub SetChild(Index As Long, obj As ExpressionTree)
 8519      Set Children(Index) = obj
 
 ExitSub:
-          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          If RaiseError Then RethrowError
           Exit Sub
 
 ErrorHandler:
@@ -122,7 +122,7 @@ Public Function Negate() As ExpressionTree
 8534      End If
 
 ExitFunction:
-          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          If RaiseError Then RethrowError
           Exit Function
 
 ErrorHandler:
@@ -190,7 +190,7 @@ Public Sub ConvertToNL(FileNum As Long, Optional CommentIndent As Integer = 0)
 8574      Next i
 
 ExitFunction:
-          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          If RaiseError Then RethrowError
           Exit Sub
 
 ErrorHandler:
@@ -219,7 +219,7 @@ Sub ExtractVariables(constraint As Dictionary)
 8585      Next i
 
 ExitSub:
-          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          If RaiseError Then RethrowError
           Exit Sub
 
 ErrorHandler:
@@ -335,7 +335,7 @@ Sub MarkLinearity()
 8635      End Select
 
 ExitSub:
-          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          If RaiseError Then RethrowError
           Exit Sub
 
 ErrorHandler:
@@ -360,7 +360,7 @@ Public Sub PullUpConstants()
 8641      End If
 
 ExitSub:
-          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          If RaiseError Then RethrowError
           Exit Sub
 
 ErrorHandler:
@@ -434,7 +434,7 @@ Public Sub EvaluateConstantOperator()
               
               Case Else
                   NewValue = 0
-                  Err.Raise OpenSolver_BuildError, "Building expression tree", "String evaluation of " & NodeText & " not implemented yet in collation of linear terms" & vbCrLf & "Please let us know about this at opensolver.org so we can fix it."
+                  RaiseGeneralError "String evaluation of " & NodeText & " not implemented yet in collation of linear terms" & vbCrLf & "Please let us know about this so we can fix it."
               End Select
           Else
           
@@ -717,7 +717,7 @@ Public Sub EvaluateConstantOperator()
                   
 8846          Case Else
 8847              NewValue = 0
-8848              Err.Raise OpenSolver_BuildError, "Building expression tree", "Constant evaluation of " & NodeText & " not implemented yet in collation of linear terms" & vbCrLf & "Please let us know about this at opensolver.org so we can fix it."
+8848              RaiseGeneralError "Constant evaluation of " & NodeText & " not implemented yet in collation of linear terms" & vbCrLf & "Please let us know about this so we can fix it."
 8849          End Select
           End If
               
@@ -728,7 +728,7 @@ FinishNode:
 8852      ClearChildren
 
 ExitSub:
-          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          If RaiseError Then RethrowError
           Exit Sub
 
 ErrorHandler:
@@ -798,7 +798,7 @@ Public Function PruneLinearTrees(LinearTrees As Collection, Optional NegativeTre
 8885      End If
 
 ExitFunction:
-          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          If RaiseError Then RethrowError
           Exit Function
 
 ErrorHandler:
@@ -820,7 +820,7 @@ Sub SetTreeToChild(Index As Long)
 8887      SetExpressionTree NewTree
 
 ExitSub:
-          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          If RaiseError Then RethrowError
           Exit Sub
 
 ErrorHandler:
@@ -849,7 +849,7 @@ Public Function Clone() As ExpressionTree
 8895      Set Clone = NewTree
 
 ExitFunction:
-          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          If RaiseError Then RethrowError
           Exit Function
 
 ErrorHandler:
@@ -878,7 +878,7 @@ Sub SetExpressionTree(NewTree As ExpressionTree)
 8904      Next i
 
 ExitSub:
-          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          If RaiseError Then RethrowError
           Exit Sub
 
 ErrorHandler:
@@ -900,7 +900,7 @@ Public Sub ConvertLinearTreeToConstraint(constraint As Dictionary, constant As D
 8906      AddLinearTreeToConstraint constraint, constant
 
 ExitSub:
-          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          If RaiseError Then RethrowError
           Exit Sub
 
 ErrorHandler:
@@ -983,13 +983,13 @@ Sub CollateLinearTerms()
 8942                  SetTreeToChild 1
           
 8943              Case Else
-8944                  Err.Raise OpenSolver_BuildError, "Collating linear terms", "Unknown linear operator " & NodeText & vbCrLf & "Please let us know about this at opensolver.org so we can fix it."
+8944                  RaiseGeneralError "Unknown linear operator " & NodeText & vbCrLf & "Please let us know about this so we can fix it."
 8945              End Select
 8946          End Select
 8947      End Select
 
 ExitSub:
-          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          If RaiseError Then RethrowError
           Exit Sub
 
 ErrorHandler:
@@ -1019,7 +1019,7 @@ Public Sub MultiplyByConstant(constant As Double)
 8957      End Select
 
 ExitSub:
-          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          If RaiseError Then RethrowError
           Exit Sub
 
 ErrorHandler:
@@ -1056,12 +1056,12 @@ Sub AddLinearTreeToConstraint(constraint As Dictionary, constant As Double)
 8974                  Children(i).AddLinearTreeToConstraint constraint, constant
 8975              Next i
 8976          Else
-8977              Err.Raise OpenSolver_BuildError, "Collating linear terms", "Operator that isn't plus at the last stage of the linear tree pruning: " & NodeText & vbCrLf & "Please let us know about this at opensolver.org so we can fix it."
+8977              RaiseGeneralError "Operator that isn't plus at the last stage of the linear tree pruning: " & NodeText & vbCrLf & "Please let us know about this so we can fix it."
 8978          End If
 8979      End Select
 
 ExitSub:
-          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          If RaiseError Then RethrowError
           Exit Sub
 
 ErrorHandler:

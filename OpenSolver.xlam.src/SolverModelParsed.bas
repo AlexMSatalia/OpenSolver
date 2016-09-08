@@ -46,7 +46,7 @@ Function ConvertCellToStandardName(rngCell As Range, Optional strParentName As S
 7444      ConvertCellToStandardName = strCleanParentName + "_" + strCleanAddress
 
 ExitFunction:
-          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          If RaiseError Then RethrowError
           Exit Function
 
 ErrorHandler:
@@ -69,7 +69,7 @@ Function GetFormulaWithDefault(Formulae As Collection, NodeName As String, Defau
 7449      End If
 
 ExitFunction:
-          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          If RaiseError Then RethrowError
           Exit Function
 
 ErrorHandler:

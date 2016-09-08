@@ -210,7 +210,7 @@ Function IsPresent(Optional SolverPath As String, Optional errorString As String
     End If
 
 ExitFunction:
-    If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+    If RaiseError Then RethrowError
     Exit Function
 
 ErrorHandler:
@@ -239,7 +239,7 @@ Private Function Version() As String
 
 ExitFunction:
     Close #1
-    If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+    If RaiseError Then RethrowError
     Exit Function
 
 ErrorHandler:
@@ -267,7 +267,7 @@ Private Function Bitness() As String
     Bitness = IIf(InStr(result, "64)") > 0, "64", "32")
 
 ExitFunction:
-    If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+    If RaiseError Then RethrowError
     Exit Function
 
 ErrorHandler:
@@ -303,7 +303,7 @@ Private Function CreateSolveCommand(s As COpenSolver) As String
     CreateScriptFile ScriptFilePath, CreateSolveCommand
 
 ExitFunction:
-    If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+    If RaiseError Then RethrowError
     Exit Function
 
 ErrorHandler:
@@ -329,7 +329,7 @@ Private Sub CreateMipStartFile(s As COpenSolver)
 
 ExitSub:
     Close #FileNum
-    If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+    If RaiseError Then RethrowError
     Exit Sub
 
 ErrorHandler:
@@ -345,7 +345,8 @@ Sub ReadResults(s As COpenSolver)
     On Error GoTo ErrorHandler
 
     If Not FileOrDirExists(s.SolutionFilePathName) Then
-        Err.Raise Number:=OpenSolver_SolveError, Description:="The solver did not create a solution file. No new solution is available."
+        RaiseGeneralError "The solver did not create a solution file. No new solution is available.", _
+                          LINK_NO_SOLUTION_FILE
     End If
     
     s.SolutionWasLoaded = True
@@ -357,7 +358,7 @@ Sub ReadResults(s As COpenSolver)
     Dim GurobiError As String ' The string that identifies a gurobi error in the model file
     GurobiError = "Gurobi Error: "
     If Left(Line, Len(GurobiError)) = GurobiError Then
-        Err.Raise OpenSolver_GurobiError, Description:=Line
+        RaiseGeneralError Line
     End If
     'Get the returned status code from gurobi.
     'List of return codes can be seen at - http://www.gurobi.com/documentation/5.1/reference-manual/node865#sec:StatusCodes
@@ -392,7 +393,7 @@ Sub ReadResults(s As COpenSolver)
         s.SolveStatus = OpenSolverResult.LimitedSubOptimal
         s.SolveStatusString = "Unable to satisfy optimality tolerances; a sub-optimal solution is available."
     Else
-        Err.Raise OpenSolver_GurobiError = "The response from the Gurobi solver is not recognised. The response was: " & Line
+        RaiseGeneralError "The response from the Gurobi solver is not recognised. The response was: " & Line
     End If
     
     If s.SolutionWasLoaded Then
@@ -473,7 +474,7 @@ ExitSub:
     Application.StatusBar = False
     Close #1
     Close #2
-    If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+    If RaiseError Then RethrowError
     Exit Sub
 
 ErrorHandler:
@@ -488,7 +489,8 @@ Private Sub CheckLog(s As COpenSolver)
     On Error GoTo ErrorHandler
 
     If Not FileOrDirExists(s.LogFilePathName) Then
-        Err.Raise Number:=OpenSolver_SolveError, Description:="The solver did not create a log file. No new solution is available."
+        RaiseGeneralError "The solver did not create a log file. No new solution is available.", _
+                          LINK_NO_SOLUTION_FILE
     End If
     
     Dim message As String
@@ -499,15 +501,16 @@ Private Sub CheckLog(s As COpenSolver)
     Dim Key As Variant
     For Each Key In s.SolverParameters.Keys
         If InStr(message, LCase("No parameters matching '" & Key & "' found")) > 0 Then
-            Err.Raise OpenSolver_SolveError, Description:= _
+            RaiseUserError _
                 "The parameter '" & Key & "' was not recognised by Gurobi. " & _
-                "Please check the parameter name you have specified, or consult the Gurobi documentation for more information."
+                "Please check the parameter name you have specified, or consult the Gurobi documentation for more information.", _
+                LINK_PARAMETER_DOCS
         End If
     Next Key
 
 ExitSub:
     Close #1
-    If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+    If RaiseError Then RethrowError
     Exit Sub
 
 ErrorHandler:

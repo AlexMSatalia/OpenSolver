@@ -186,7 +186,7 @@ Private Sub PopulateConstraintListBox(Optional UpdateIndex As Long = -1)
           DisableConstraintListChange = False
           
 ExitSub:
-          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          If RaiseError Then RethrowError
           Exit Sub
 
 ErrorHandler:
@@ -494,7 +494,7 @@ Private Sub cmdBuild_Click()
           Dim ObjectiveSense As ObjectiveSenseType
 4421      ObjectiveSense = GetFormObjectiveSense()
 4429      If ObjectiveSense = UnknownObjectiveSense Then
-4430          Err.Raise OpenSolver_ModelError, Description:="Please select an objective sense (minimise, maximise or target)."
+4430          RaiseUserError "Please select an objective sense (minimise, maximise or target)."
 4432      End If
 
           ' Check objective target

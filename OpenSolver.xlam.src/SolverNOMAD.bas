@@ -510,15 +510,15 @@ Public Sub GetNomadSolveResult(NomadRetVal As Long, s As COpenSolver)
     Select Case NomadRetVal
     Case NomadResult.LogFileError
         s.SolveStatus = OpenSolverResult.ErrorOccurred
-        Err.Raise OpenSolver_NomadError, Description:="NOMAD was unable to open the specified log file for writing: " & vbNewLine & vbNewLine & _
-                                                      MakePathSafe(s.LogFilePathName)
+        RaiseGeneralError "NOMAD was unable to open the specified log file for writing: " & vbNewLine & vbNewLine & _
+                          MakePathSafe(s.LogFilePathName)
     Case NomadResult.ErrorOccured
         s.SolveStatus = OpenSolverResult.ErrorOccurred
         
         ' Check logs for more info and raise an error if we find anything specific
         CheckLog s
         
-        Err.Raise Number:=OpenSolver_NomadError, Description:="There was an error while Nomad was solving. No solution has been loaded into the sheet."
+        RaiseGeneralError "There was an error while Nomad was solving. No solution has been loaded into the sheet."
     Case NomadResult.SolveStoppedIter
         s.SolveStatus = OpenSolverResult.LimitedSubOptimal
         s.SolveStatusString = "NOMAD reached the maximum number of iterations and returned the best feasible solution it found. " & _
@@ -550,7 +550,7 @@ Public Sub GetNomadSolveResult(NomadRetVal As Long, s As COpenSolver)
         s.SolveStatus = OpenSolverResult.Infeasible
         s.SolutionWasLoaded = True
     Case NomadResult.UserCancelled
-        Err.Raise OpenSolver_UserCancelledError, "Running NOMAD", "Model solve cancelled by user."
+        RaiseUserCancelledError
     Case NomadResult.Optimal
         s.SolveStatus = OpenSolverResult.Optimal
         s.SolveStatusString = "Optimal"
@@ -565,7 +565,8 @@ Sub CheckLog(s As COpenSolver)
     On Error GoTo ErrorHandler
     
     If Not FileOrDirExists(s.LogFilePathName) Then
-        Err.Raise Number:=OpenSolver_SolveError, Description:="The solver did not create a log file. No new solution is available."
+        RaiseGeneralError "The solver did not create a log file. No new solution is available.", _
+                          LINK_NO_SOLUTION_FILE
     End If
     
     Dim message As String
@@ -576,33 +577,36 @@ Sub CheckLog(s As COpenSolver)
     If Not InStr(message, LCase("NOMAD")) > 0 Then GoTo ExitSub
 
     If InStr(message, LCase("invalid epsilon")) > 0 Then
-        Err.Raise OpenSolver_NomadError, Description:="The specified precision was not a valid value for NOMAD. Check that you have specified a value above zero, or consult the NOMAD documentation for more information."
+        RaiseUserError "The specified precision was not a valid value for NOMAD. Check that you have specified a value above zero, or consult the NOMAD documentation for more information.", _
+                        LINK_PARAMETER_DOCS
     End If
     
     If InStr(message, LCase("invalid parameter: DIMENSION")) > 0 Then
         Dim MaxSize As Long, Position As Long
         Position = InStrRev(message, " ")
         MaxSize = CLng(Mid(message, Position + 1, InStrRev(message, ")") - Position - 1))
-        Err.Raise OpenSolver_NomadError, Description:="This model contains too many variables for NOMAD to solve. NOMAD is only capable of solving models with up to " & MaxSize & " variables."
+        RaiseUserError "This model contains too many variables for NOMAD to solve. NOMAD is only capable of solving models with up to " & MaxSize & " variables."
     End If
     
     Dim Key As Variant
     For Each Key In s.SolverParameters.Keys()
         If InStr(message, LCase("invalid parameter: " & Key & " - unknown")) > 0 Then
-            Err.Raise OpenSolver_NomadError, Description:="The parameter '" & Key & "' was not understood by NOMAD. Check that you have specified a valid parameter name, or consult the NOMAD documentation for more information."
+            RaiseUserError "The parameter '" & Key & "' was not understood by NOMAD. Check that you have specified a valid parameter name, or consult the NOMAD documentation for more information.", _
+                           LINK_PARAMETER_DOCS
         End If
         If InStr(message, LCase("invalid parameter: " & Key)) > 0 Then
-            Err.Raise OpenSolver_NomadError, Description:="The value of the parameter '" & Key & "' supplied to NOMAD was invalid. Check that you have specified a valid value for this parameter, or consult the NOMAD documentation for more information."
+            RaiseUserError "The value of the parameter '" & Key & "' supplied to NOMAD was invalid. Check that you have specified a valid value for this parameter, or consult the NOMAD documentation for more information.", _
+                           LINK_PARAMETER_DOCS
         End If
     Next Key
         
     If InStr(message, LCase("invalid parameter")) > 0 Then
-        Err.Raise OpenSolver_NomadError, Description:="One of the parameters supplied to NOMAD was invalid. This usually happens if the precision is too large. Try adjusting the values in the Solve Options dialog box."
+        RaiseUserError "One of the parameters supplied to NOMAD was invalid. This usually happens if the precision is too large. Try adjusting the values in the Solve Options dialog box."
     End If
 
 ExitSub:
     Close #3
-    If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+    If RaiseError Then RethrowError
     Exit Sub
 
 ErrorHandler:

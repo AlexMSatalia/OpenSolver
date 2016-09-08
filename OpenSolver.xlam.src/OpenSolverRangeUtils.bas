@@ -18,7 +18,7 @@ Sub SearchRangeName_DestroyCache()
 702       Set SearchRangeNameCACHE = Nothing
 
 ExitSub:
-          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          If RaiseError Then RethrowError
           Exit Sub
 
 ErrorHandler:
@@ -114,9 +114,9 @@ Function GetDisplayAddress(RefersTo As String, sheet As Worksheet, Optional show
           
           ' Make sure our range has the right number of areas
           If UBound(RefersToNames) - Offset <> r.Areas.Count Then
-              Err.Raise OpenSolver_ModelError, Description:="The number of names does not match the number of areas in the range." & vbNewLine & _
-                                                            "Names: " & RefersTo & vbNewLine & _
-                                                            "Range: " & r.Address
+              RaiseGeneralError "The number of names does not match the number of areas in the range." & vbNewLine & _
+                                "Names: " & RefersTo & vbNewLine & _
+                                "Range: " & r.Address
           End If
           
           ' Include a sheet name if this range is not on the active sheet
@@ -149,7 +149,7 @@ Function GetDisplayAddress(RefersTo As String, sheet As Worksheet, Optional show
           Set r = Range(GetDisplayAddress)
 
 ExitFunction:
-          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          If RaiseError Then RethrowError
           Exit Function
 
 ErrorHandler:
@@ -172,7 +172,7 @@ Function GetRangeValues(r As Range) As Variant()
 547       GetRangeValues = v
 
 ExitFunction:
-          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          If RaiseError Then RethrowError
           Exit Function
 
 ErrorHandler:
@@ -193,7 +193,7 @@ Sub SetRangeValues(r As Range, v() As Variant)
 550       Next i
 
 ExitSub:
-          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          If RaiseError Then RethrowError
           Exit Sub
 
 ErrorHandler:
@@ -216,7 +216,7 @@ Function GetOneCellInRange(r As Range, instance As Long) As Range
 481       Set GetOneCellInRange = r.Cells(1 + RowOffset, 1 + ColOffset)
 
 ExitFunction:
-          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          If RaiseError Then RethrowError
           Exit Function
 
 ErrorHandler:
@@ -257,7 +257,7 @@ Function CheckRangeContainsNoAmbiguousMergedCells(r As Range, BadCell As Range) 
 585       Next cell
 
 ExitFunction:
-          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          If RaiseError Then RethrowError
           Exit Function
 
 ErrorHandler:
@@ -297,7 +297,7 @@ Function RemoveRangeOverlap(r As Range) As Range
 572       Set RemoveRangeOverlap = s
 
 ExitFunction:
-          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          If RaiseError Then RethrowError
           Exit Function
 
 ErrorHandler:
@@ -321,7 +321,7 @@ Function MergeRangesCellByCell(R1 As Range, R2 As Range) As Range
 555       Set MergeRangesCellByCell = result
 
 ExitFunction:
-          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          If RaiseError Then RethrowError
           Exit Function
 
 ErrorHandler:
@@ -348,7 +348,7 @@ Function ProperUnion(R1 As Range, R2 As Range) As Range
 542       End If
 
 ExitFunction:
-          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          If RaiseError Then RethrowError
           Exit Function
 
 ErrorHandler:
@@ -373,7 +373,7 @@ ErrorHandler:
         Set ProperPrecedents = Nothing
         Resume ExitFunction
     End If
-    Err.Raise Err.Number, Err.Source, Err.Description
+    RethrowError Err
 End Function
 
 Function ProperIntersect(R1 As Range, R2 As Range) As Range
@@ -443,7 +443,7 @@ Function SetDifference(ByRef rng1 As Range, ByRef rng2 As Range) As Range
     Set SetDifference = rngResult
 
 ExitFunction:
-    If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+    If RaiseError Then RethrowError
     Exit Function
 
 ErrorHandler:
@@ -455,8 +455,13 @@ End Function
 Sub TestCellsForWriting(r As Range)
     ' We can't do r.Value2 = r.Value2 as this
     ' just sets the values from the first area in all areas
+    On Error GoTo ErrorHandler
     Dim Area As Range
     For Each Area In r.Areas
         Area.Value2 = Area.Value2
     Next Area
+    Exit Sub
+    
+ErrorHandler:
+    RaiseUserError Err.Description
 End Sub

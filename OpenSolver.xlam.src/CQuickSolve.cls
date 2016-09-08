@@ -49,7 +49,7 @@ Function AnalyseParameters(s As COpenSolver, ParamRange As Range) As Boolean
           
           Dim BadCell As Range
 2630      If Not CheckRangeContainsNoAmbiguousMergedCells(ParamRange, BadCell) Then
-2631          Err.Raise OpenSolver_BuildError, Description:="QuickSolve Initialisation Failed: The parameter " & BadCell.AddressLocal(RowAbsolute:=False, ColumnAbsolute:=False) & " is inaccessible as it is within the merged range " & BadCell.MergeArea.AddressLocal(RowAbsolute:=False, ColumnAbsolute:=False) & "."
+2631          RaiseUserError "QuickSolve Initialisation Failed: The parameter " & BadCell.AddressLocal(RowAbsolute:=False, ColumnAbsolute:=False) & " is inaccessible as it is within the merged range " & BadCell.MergeArea.AddressLocal(RowAbsolute:=False, ColumnAbsolute:=False) & "."
 2633      End If
           
 2634      NumParams = ParamRange.Count
@@ -94,7 +94,7 @@ Function AnalyseParameters(s As COpenSolver, ParamRange As Range) As Boolean
           
 2648      For Each c In ParamRange
 2649          If c.HasArray Then
-2650              Err.Raise OpenSolver_BuildError, Description:="QuickSolve Initialisation Failed: OpenSolver cannot perform quick solves for parameters that contain array formulae."
+2650              RaiseUserError "QuickSolve Initialisation Failed: OpenSolver cannot perform quick solves for parameters that contain array formulae."
 2652          End If
 
 2653          param = param + 1
@@ -104,7 +104,7 @@ Function AnalyseParameters(s As COpenSolver, ParamRange As Range) As Boolean
 2655          On Error Resume Next
 2656          OldFormula = c.Formula
 2657          If Err.Number <> 0 Then
-2658              Err.Raise OpenSolver_BuildError, Description:="QuickSolve Initialisation Failed: An error (" & Err.Description & ") occurred while changing the value in parameter cell " & c.AddressLocal(RowAbsolute:=False, ColumnAbsolute:=False) & "."
+2658              RaiseUserError "QuickSolve Initialisation Failed: An error (" & Err.Description & ") occurred while changing the value in parameter cell " & c.AddressLocal(RowAbsolute:=False, ColumnAbsolute:=False) & "."
 2660          End If
               ' Change the parameter value, and see how the RHS's change
 2661          On Error GoTo ErrorHandler
@@ -143,7 +143,7 @@ Function AnalyseParameters(s As COpenSolver, ParamRange As Range) As Boolean
 2697      Next c
           
 2698      If NonZeros = 0 Then
-2699          Err.Raise OpenSolver_BuildError, Description:="QuickSolve Initialisation Failed: The model's constraints do not depend on the QuickSolve parameter cells; please try again. (The QuickSolve process is used for repeatedly solving a model after making changes to the parameter cells, where these changes result in changes to the model's constraints.)"
+2699          RaiseUserError "QuickSolve Initialisation Failed: The model's constraints do not depend on the QuickSolve parameter cells; please try again. (The QuickSolve process is used for repeatedly solving a model after making changes to the parameter cells, where these changes result in changes to the model's constraints.)"
 2701      End If
           
 2702      Set CurrentParameterRange = ParamRange
@@ -153,7 +153,7 @@ ExitFunction:
 2704      Application.StatusBar = False ' Resume normal status bar behaviour
 2705      Application.ScreenUpdating = ScreenStatus
 2706      Application.Calculation = oldCalculationMode
-          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          If RaiseError Then RethrowError
           Exit Function
 
 ErrorHandler:
@@ -175,10 +175,10 @@ Public Function UpdateModelRHS(sheet As Worksheet, ByRef RHS() As Double) As Boo
 2726      If (CurrentParameterRange.Address <> ParamRange.Address) Or _
              (CurrentParameterRange.Worksheet.Name <> ParamRange.Worksheet.Name) Or _
              (CurrentParameterRange.Worksheet.Parent.Name <> ParamRange.Worksheet.Parent.Name) Then
-2727          Err.Raise OpenSolver_BuildError, Description:="QuickSolve Failed: You need to initialize the QuickSolve engine for the current parameters."
+2727          RaiseUserError "QuickSolve Failed: You need to initialize the QuickSolve engine for the current parameters."
 2730      End If
 2731      If NumParams <> ParamRange.Count Then
-2732          Err.Raise OpenSolver_BuildError, Description:="QuickSolve Failed: The number of values in the Parameter range has changed, and so the model update can not be completed."
+2732          RaiseUserError "QuickSolve Failed: The number of values in the Parameter range has changed, and so the model update can not be completed."
 2735      End If
           
           Dim ParamChanges() As Double
@@ -207,7 +207,7 @@ Public Function UpdateModelRHS(sheet As Worksheet, ByRef RHS() As Double) As Boo
 2753      UpdateModelRHS = True
 
 ExitFunction:
-          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          If RaiseError Then RethrowError
           Exit Function
 
 ErrorHandler:

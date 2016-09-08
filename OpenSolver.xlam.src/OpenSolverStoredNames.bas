@@ -210,7 +210,7 @@ Sub SetAnyMissingDefaultSolverOptions(sheet As Worksheet)
           Next i
 
 ExitSub:
-          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          If RaiseError Then RethrowError
           Exit Sub
 
 ErrorHandler:
@@ -230,7 +230,7 @@ Function GetRefersToRange(RefersTo As String) As Range
     Exit Function
     
 InvalidRange:
-    Err.Raise Err.Number, Err.Source, Err.Description
+    RethrowError Err
 End Function
 
 Function RefEditToRefersTo(RefEditText As String) As String

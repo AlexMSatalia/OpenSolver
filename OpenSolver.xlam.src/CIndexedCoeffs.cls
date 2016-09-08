@@ -33,7 +33,7 @@ Public Sub Add(Index As Long, value As Double)
 3559      Values(NumEntries) = value
 
 ExitSub:
-          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          If RaiseError Then RethrowError
           Exit Sub
 
 ErrorHandler:
@@ -67,7 +67,7 @@ Public Function Evaluate(DecisionVariableValues() As Double) As Double
 3567      Evaluate = v
 
 ExitFunction:
-          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          If RaiseError Then RethrowError
           Exit Function
 
 ErrorHandler:
@@ -95,7 +95,7 @@ Public Function Evaluate_RecordPrecision(DecisionVariableValues() As Double, vMa
 3577      Evaluate_RecordPrecision = v
 
 ExitFunction:
-          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          If RaiseError Then RethrowError
           Exit Function
 
 ErrorHandler:
@@ -120,7 +120,7 @@ Public Function Clone() As CIndexedCoeffs
 3582      Set Clone = v
 
 ExitFunction:
-          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          If RaiseError Then RethrowError
           Exit Function
 
 ErrorHandler:

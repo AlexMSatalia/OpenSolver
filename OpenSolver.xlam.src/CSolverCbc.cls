@@ -143,7 +143,7 @@ Private Function Version() As String
     Version = Mid(result, InStr(result, "Version:") + 9, 5)
 
 ExitFunction:
-    If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+    If RaiseError Then RethrowError
     Exit Function
 
 ErrorHandler:
@@ -189,7 +189,7 @@ Private Function CreateSolveCommand(s As COpenSolver) As String
     CreateScriptFile ScriptFilePath, CreateSolveCommand
 
 ExitFunction:
-    If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+    If RaiseError Then RethrowError
     Exit Function
 
 ErrorHandler:
@@ -204,7 +204,8 @@ Private Sub ReadResults(s As COpenSolver)
     On Error GoTo ErrorHandler
     
     If Not FileOrDirExists(s.SolutionFilePathName) Then
-        Err.Raise Number:=OpenSolver_SolveError, Description:="The solver did not create a solution file. No new solution is available."
+        RaiseGeneralError "The solver did not create a solution file. No new solution is available.", _
+                          "http://opensolver.org/help/#cbcfails"
     End If
 
     Open s.SolutionFilePathName For Input As #1
@@ -258,12 +259,13 @@ Private Sub ReadResults(s As COpenSolver)
         End If
         '
     ElseIf Response Like "Status unknown*" Then
-        Err.Raise OpenSolver_CBCError, Description:="CBC solver did not solve the problem, suggesting there was an error in the CBC input parameters. The response was: " & vbCrLf _
-         & Response _
-         & vbCrLf & "The CBC command line can be found at:" _
-         & vbCrLf & ScriptFilePath()
+        RaiseGeneralError "The CBC solver did not solve the problem, suggesting there was an error " & _
+                          "in the CBC input parameters. The response was: " & vbNewLine & _
+                          Response & vbNewLine & _
+                          "The CBC command line can be found at:" & vbNewLine & _
+                          ScriptFilePath()
     Else
-        Err.Raise OpenSolver_CBCError, Description:="The response from the CBC solver is not recognised. The response was: " & Response
+        RaiseGeneralError "The response from the CBC solver is not recognised. The response was: " & Response
     End If
     
     ' Remove the double spaces from Response
@@ -304,7 +306,7 @@ Private Sub ReadResults(s As COpenSolver)
 
                     ' Check the index of the row
                     If CLng(Val(SplitLine(StartOffset))) <> CBCConstraintIndex Then
-                        Err.Raise OpenSolver_CBCError, Description:="While reading the CBC solution file, OpenSolver found an unexpected constraint row."
+                        RaiseGeneralError "While reading the CBC solution file, OpenSolver found an unexpected constraint row."
                     End If
 
                     NameValue = SplitLine(StartOffset + 1)
@@ -350,7 +352,7 @@ Private Sub ReadResults(s As COpenSolver)
 
 ExitSub:
     Close #1
-    If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+    If RaiseError Then RethrowError
     Exit Sub
 
 ErrorHandler:
@@ -413,7 +415,7 @@ Sub ReadSensitivityData(s As COpenSolver)
 
 ExitSub:
     Close #2
-    If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+    If RaiseError Then RethrowError
     Exit Sub
 
 ErrorHandler:
@@ -428,7 +430,8 @@ Private Sub CheckLog(s As COpenSolver)
     On Error GoTo ErrorHandler
     
     If Not FileOrDirExists(s.LogFilePathName) Then
-        Err.Raise Number:=OpenSolver_SolveError, Description:="The solver did not create a log file. No new solution is available."
+        RaiseGeneralError "The solver did not create a log file. No new solution is available.", _
+                          "http://opensolver.org/help/#cbcfails"
     End If
     
     Dim message As String
@@ -439,19 +442,21 @@ Private Sub CheckLog(s As COpenSolver)
     Dim Key As Variant
     For Each Key In s.SolverParameters.Keys
         If InStr(message, LCase("parameter " & Key & " value remains")) > 0 Then
-            Err.Raise OpenSolver_SolveError, Description:= _
+            RaiseUserError _
                 "The value for the parameter '" & Key & "' supplied to CBC was invalid. " & _
-                "Please check the value you have specified, or consult the CBC documentation for more information."
+                "Please check the value you have specified, or consult the CBC documentation for more information.", _
+                "http://opensolver.org/using-opensolver/#extra-parameters"
         End If
         If InStr(message, LCase("No match for " & Key)) > 0 Then
-            Err.Raise OpenSolver_SolveError, Description:= _
+            RaiseUserError _
                 "The parameter '" & Key & "' was not recognised by CBC. " & _
-                "Please check the parameter name you have specified, or consult the CBC documentation for more information."
+                "Please check the parameter name you have specified, or consult the CBC documentation for more information.", _
+                "http://opensolver.org/using-opensolver/#extra-parameters"
         End If
     Next Key
 
 ExitSub:
-    If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+    If RaiseError Then RethrowError
     Exit Sub
 
 ErrorHandler:

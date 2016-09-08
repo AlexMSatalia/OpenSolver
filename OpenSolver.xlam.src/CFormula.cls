@@ -52,7 +52,7 @@ Private Sub Class_Initialize()
 4773      Set Parents = New Collection
 
 ExitSub:
-          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          If RaiseError Then RethrowError
           Exit Sub
 
 ErrorHandler:
@@ -74,7 +74,7 @@ Public Function GetSheet() As String
 4778      End If
 
 ExitFunction:
-          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          If RaiseError Then RethrowError
           Exit Function
 
 ErrorHandler:
@@ -97,7 +97,7 @@ Public Function IsDependentOn(rngAdjDepedents As Range) As Boolean
 4781      IsDependentOn = TestIntersect(rngAddress, rngAdjDepedents)
 
 ExitFunction:
-          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          If RaiseError Then RethrowError
           Exit Function
 
 ErrorHandler:

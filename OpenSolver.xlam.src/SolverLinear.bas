@@ -55,7 +55,7 @@ Sub WriteConstraintListToSheet(r As Range, s As COpenSolver)
 1949      Next i
 
 ExitSub:
-          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          If RaiseError Then RethrowError
           Exit Sub
 
 ErrorHandler:
@@ -150,7 +150,7 @@ Sub WriteConstraintSensitivityTable(sheet As Worksheet, s As COpenSolver)
 2325      FormatSensitivityTable sheet, row, s.NumVars
 
 ExitSub:
-          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          If RaiseError Then RethrowError
           Exit Sub
 
 ErrorHandler:
@@ -282,7 +282,7 @@ Sub FormatSensitivityTable(sheet As Worksheet, row As Long, NumVars As Double)
 
 ExitSub:
           Application.ScreenUpdating = ScreenStatus
-          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          If RaiseError Then RethrowError
           Exit Sub
 
 ErrorHandler:
@@ -341,7 +341,7 @@ Function findName(searchSheet As Worksheet, cell As String) As String
 2451      End If
 
 ExitFunction:
-          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          If RaiseError Then RethrowError
           Exit Function
 
 ErrorHandler:

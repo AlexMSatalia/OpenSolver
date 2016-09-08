@@ -121,7 +121,7 @@ Sub WriteAMPLFile_Diff(s As COpenSolver, ModelFilePathName As String)
            
 ExitSub:
            Close #1
-           If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+           If RaiseError Then RethrowError
            Exit Sub
 
 ErrorHandler:
@@ -231,7 +231,7 @@ Sub WriteAMPLFile_Parsed(s As COpenSolver, ModelFilePathName As String)
 
 ExitSub:
           Close #1
-          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          If RaiseError Then RethrowError
           Exit Sub
 
 ErrorHandler:
@@ -310,7 +310,7 @@ Sub ReadResults_AMPL(s As COpenSolver, solution As String)
     End If
 
 ExitSub:
-    If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+    If RaiseError Then RethrowError
     Exit Sub
 
 ErrorHandler:

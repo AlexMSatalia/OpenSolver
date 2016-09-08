@@ -316,7 +316,7 @@ Function GetConstraintInstance(ByVal row As Long, ByVal constraint As Long) As L
 832       GetConstraintInstance = row - ConstraintToRow(constraint) + 1
 
 ExitFunction:
-          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          If RaiseError Then RethrowError
           Exit Function
 
 ErrorHandler:
@@ -494,12 +494,12 @@ Sub GetCurrentConstraintValues(constraint As Long, LHSValues As Variant, RHSValu
               Dim ErrorMsg As String
               If Not CheckConstraintValuesAreNumeric(constraint, LHSValues, RHSValues, ErrorMsg, _
                                                      AllowNonNumericIfNotConstant) Then
-1173              Err.Raise Number:=OpenSolver_BuildError, Description:=ErrorMsg
+1173              RaiseUserError ErrorMsg
               End If
 1174      End If
 
 ExitSub:
-          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          If RaiseError Then RethrowError
           Exit Sub
 
 ErrorHandler:
@@ -545,14 +545,14 @@ Function GetCurrentObjectiveValue(Optional ValidateNumeric As Boolean = True, Op
                       IIf(AllowNonNumericIfNotConstant, "This can happen if you have made an error when constructing the model.", _
                                                         "This can happen if your model is nonlinear, or if you have made an error when constructing the model.") & _
                       " Please fix this and try again."
-                  Err.Raise OpenSolver_BuildError, Description:=ErrorMsg
+                  RaiseUserError ErrorMsg
               End If
           End If
 DontRaise:
           GetCurrentObjectiveValue = ObjValue
 
 ExitFunction:
-          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          If RaiseError Then RethrowError
           Exit Function
 
 ErrorHandler:
@@ -591,7 +591,7 @@ Sub GetConstraintInstanceData(constraint As Long, instance As Long, LHSCellRange
 924       End Select
 
 ExitSub:
-          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          If RaiseError Then RethrowError
           Exit Sub
 
 ErrorHandler:
@@ -737,13 +737,12 @@ Sub BuildModelFromSolverData(Optional LinearityOffset As Double = 0, _
           ' Handle any merged ranges
           Dim BadCell As Range
 981       If Not CheckRangeContainsNoAmbiguousMergedCells(AdjustableCells, BadCell) Then
-983           Err.Raise Number:=OpenSolver_BuildError, Description:="This model contains a decision variable " & BadCell.AddressLocal(RowAbsolute:=False, ColumnAbsolute:=False) & " that is inaccessible as it is within the merged range " & BadCell.MergeArea.AddressLocal(RowAbsolute:=False, ColumnAbsolute:=False) & ". Please redefine the decision variable cells, and try again."
-984           GoTo ExitSub
+983           RaiseUserError "This model contains a decision variable " & BadCell.AddressLocal(RowAbsolute:=False, ColumnAbsolute:=False) & " that is inaccessible as it is within the merged range " & BadCell.MergeArea.AddressLocal(RowAbsolute:=False, ColumnAbsolute:=False) & ". Please redefine the decision variable cells, and try again."
 985       End If
           ' Check we have any cells after all this
 986       NumVars = AdjustableCells.Count
 987       If NumVars < 1 Then
-989           Err.Raise Number:=OpenSolver_BuildError, Description:="There are no decision variable cells in this model, and so the model cannot be solved."
+989           RaiseUserError "There are no decision variable cells in this model, and so the model cannot be solved."
 990       End If
 
           ' Variable initialization
@@ -773,7 +772,7 @@ Sub BuildModelFromSolverData(Optional LinearityOffset As Double = 0, _
           ' Initial sheet calculation
           If Not ForceCalculate("Warning: The initial worksheet calculation did not complete, and so the model may not be generated correctly. Would you like to try again?", MinimiseUserInteraction) Then
 1008          On Error GoTo ErrorHandler
-1009          Err.Raise Number:=OpenSolver_BuildError, Description:="Calculation failed. The model has not been built so cannot be solved."
+1009          RaiseGeneralError "Calculation failed. The model has not been built so cannot be solved."
 1010      End If
 
           '--------------------------------------------------------------------------
@@ -796,13 +795,13 @@ Sub BuildModelFromSolverData(Optional LinearityOffset As Double = 0, _
           If Not ShouldSolveRelaxation Then
               ' If we are in Excel 2010 or newer, and the user has set "Ignore Integer Constraints", then we report an error
 1266          If Val(Application.Version) >= 14 And GetIgnoreIntegerConstraints(sheet) Then
-                   If MinimiseUserInteraction Then GoTo RaiseError
-                   If Not MsgBox("You have the 'Ignore integer constraints' option enabled in Solver, so OpenSolver cannot proceed with solving. You can either disable this option, or use the 'Solve Relaxation' option in the OpenSolver menu. Would you like OpenSolver to disable this option and proceed?", vbCritical + vbYesNo + vbDefaultButton1, "OpenSolver Warning") = vbNo Then
+                   If MinimiseUserInteraction Then
+                       RaiseUserError "You have the Solver option 'ignore integer constraints' turned on. Please turn this off in the Solver (not OpenSolver) options menu and then solve with OpenSolver again or choose OpenSolver's solve relaxed model option"
+                   ElseIf Not MsgBox("You have the 'Ignore integer constraints' option enabled in Solver, so OpenSolver cannot proceed with solving. You can either disable this option, or use the 'Solve Relaxation' option in the OpenSolver menu. Would you like OpenSolver to disable this option and proceed?", vbCritical + vbYesNo + vbDefaultButton1, "OpenSolver Warning") = vbNo Then
                        SetIgnoreIntegerConstraints False, sheet
                    Else
-RaiseError:
-                       ' Set UserCancelledError because the user has already confirmed the abort if not in silent mode
-                       Err.Raise Number:=OpenSolver_UserCancelledError, Description:="You have the Solver option 'ignore integer constraints' turned on. Please turn this off in the Solver (not OpenSolver) options menu and then solve with OpenSolver again or choose OpenSolver's solve relaxed model option"
+                       ' Already confirmed abort by user
+                       RaiseUserCancelledError
                    End If
 1271          End If
           End If
@@ -854,7 +853,7 @@ RaiseError:
 1085              If intersection Is Nothing Then
                       ' The cells are not all decision variables
 1086                  On Error GoTo ErrorHandler
-1087                  Err.Raise Number:=OpenSolver_BuildError, Description:="A range of cells are specified as bin or int that are not decision variables. OpenSolver does not support this yet."
+1087                  RaiseUserError "A range of cells are specified as bin or int that are not decision variables. OpenSolver does not support this."
 1088              End If
 1089              If intersection.Count = rangeLHS.Count Then
 1090                  If rel = RelationINT Then
@@ -865,7 +864,7 @@ RaiseError:
 1095              Else
                       ' The cells are not all decision variables
 1096                  On Error GoTo ErrorHandler
-1097                  Err.Raise Number:=OpenSolver_BuildError, Description:="Unable to find a cell specified as bin or int in the decision variables."
+1097                  RaiseUserError "Unable to find a cell specified as bin or int in the decision variables."
 1098              End If
                   ' This constraint does not relate to any new rows, so mark it
                   ' with a dummy entry. row = same value as we get for the
@@ -892,7 +891,7 @@ RaiseError:
                   ' Check we have a compatible constraint system.
 1122              If (LHSCount <> 1 And RHSCount <> 1) And (LHSCount <> RHSCount) Then
 1123                  On Error GoTo ErrorHandler
-1124                  Err.Raise Number:=OpenSolver_BuildError, Description:="The constraint '" & ConstraintSummary(constraint) & "' has a different cell count on the left and the right. The model cannot be built."
+1124                  RaiseUserError "The constraint '" & ConstraintSummary(constraint) & "' has a different cell count on the left and the right. The model cannot be built."
 1125              End If
                   
                   ' Store left hand side:
@@ -951,7 +950,7 @@ RaiseError:
               Case Else
                   ' Don't allow 'alldiff' from Excel 2010 or any other wierd things
 1116              On Error GoTo ErrorHandler
-1118              Err.Raise Number:=OpenSolver_BuildError, Description:="Unrecognised relationship for constraint " & ConstraintSummary(constraint)
+1118              RaiseGeneralError "Unrecognised relationship for constraint " & ConstraintSummary(constraint)
 1175          End Select
 1176      Next constraint
           NumRows = row - 1
@@ -1021,7 +1020,7 @@ ExitSub:
           Application.StatusBar = False
           Application.ScreenUpdating = ScreenStatus
           Application.Calculation = oldCalculationMode
-          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          If RaiseError Then RethrowError
           Exit Sub
 
 ErrorHandler:
@@ -1071,7 +1070,7 @@ Sub ApplyBounds(row As Long, rel As Long, LHS As Range, RHS As Range, RHSValue A
 1240      End If
           
 ExitSub:
-          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          If RaiseError Then RethrowError
           Exit Sub
 
 ErrorHandler:
@@ -1113,7 +1112,7 @@ Sub UpdateBound(row As Long, VarName As String, bound As Double, rel As Long)
 1262      RowSetsBound(row) = True
 
 ExitSub:
-          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          If RaiseError Then RethrowError
           Exit Sub
 
 ErrorHandler:
@@ -1148,7 +1147,7 @@ Function InitializeQuickSolve(ParamRange As Range) As Boolean
 
 1993      InitializeQuickSolve = False
 1994      If ModelStatus <> Built Then
-1995          Err.Raise OpenSolver_BuildError, Description:="QuickSolve Initialisation Failed: The model cannot be solved as it has not yet been built."
+1995          RaiseUserError "QuickSolve Initialisation Failed: The model cannot be solved as it has not yet been built."
 1997      End If
 
 1998      Set QuickSolve = New CQuickSolve
@@ -1159,7 +1158,7 @@ Function InitializeQuickSolve(ParamRange As Range) As Boolean
 2003      End If
 
 ExitFunction:
-          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          If RaiseError Then RethrowError
           Exit Function
 
 ErrorHandler:
@@ -1174,7 +1173,7 @@ Sub DoQuickSolve(Optional SolveRelaxation As Boolean = False, Optional MinimiseU
           On Error GoTo ErrorHandler
           
 2013      If QuickSolve Is Nothing Then
-2014          Err.Raise OpenSolver_ModelError, Description:="Quick Solve has not been initialized. Please choose Intialize Quick Solve, and then try again."
+2014          RaiseUserError "Quick Solve has not been initialized. Please choose Intialize Quick Solve, and then try again."
 2015      Else
 2016          If QuickSolve.UpdateModelRHS(sheet, pRHS) Then
 2017              SolveModel Me, SolveRelaxation, MinimiseUserInteraction
@@ -1182,7 +1181,7 @@ Sub DoQuickSolve(Optional SolveRelaxation As Boolean = False, Optional MinimiseU
 2019      End If
 
 ExitSub:
-          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          If RaiseError Then RethrowError
           Exit Sub
 
 ErrorHandler:

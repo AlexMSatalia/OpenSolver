@@ -36,7 +36,7 @@ Public Function ProcessSolverModel(OpenSolver As COpenSolver, LinearityOffset As
 
 ExitFunction:
           Application.StatusBar = False
-          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          If RaiseError Then RethrowError
           Exit Function
           
 ErrorHandler:
@@ -98,7 +98,7 @@ Private Function BuildConstantTerms() As Boolean
 
 ExitFunction:
           Application.StatusBar = False
-          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          If RaiseError Then RethrowError
           Exit Function
           
 ErrorHandler:
@@ -219,7 +219,7 @@ Private Function BuildVariableTerms(LinearityOffset As Double, Optional BinaryOf
           
 ExitFunction:
           Application.StatusBar = False
-          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          If RaiseError Then RethrowError
           Exit Function
 
 ErrorHandler:
@@ -288,7 +288,7 @@ Function QuickFeasibilityCheck() As Boolean
           QuickFeasibilityCheck = True
 
 ExitFunction:
-          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          If RaiseError Then RethrowError
           Exit Function
 
 ErrorHandler:
@@ -331,7 +331,7 @@ Sub HighlightNonLinearities(RowIsNonLinear() As Boolean, ObjectiveIsNonLinear As
 2048      End If
 
 ExitSub:
-          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          If RaiseError Then RethrowError
           Exit Sub
 
 ErrorHandler:
@@ -435,7 +435,7 @@ Private Sub DoFullLinearityCheck()
 
 ExitSub:
           Application.Interactive = InteractiveStatus
-          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          If RaiseError Then RethrowError
           Exit Sub
 
 ErrorHandler:
@@ -455,7 +455,7 @@ Function TestExistenceOfEntry(ValueBase As CIndexedCoeffs, ValueOne As CIndexedC
 2146      End If
 
 ExitFunction:
-          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          If RaiseError Then RethrowError
           Exit Function
 
 ErrorHandler:
@@ -638,7 +638,7 @@ Sub DoQuickLinearityCheck()
 
 ExitSub:
           Application.Interactive = InteractiveStatus
-          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          If RaiseError Then RethrowError
           Exit Sub
 
 ErrorHandler:

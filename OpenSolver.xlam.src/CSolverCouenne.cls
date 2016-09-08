@@ -141,7 +141,7 @@ Private Function Version() As String
     Version = Mid(result, 9, 5)
 
 ExitFunction:
-    If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+    If RaiseError Then RethrowError
     Exit Function
 
 ErrorHandler:

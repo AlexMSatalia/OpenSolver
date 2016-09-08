@@ -141,7 +141,7 @@ Sub WriteLPFile_Diff(s As COpenSolver, ModelFilePathName As String)
           
 ExitSub:
           Close #1
-          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          If RaiseError Then RethrowError
           Exit Sub
 
 ErrorHandler:

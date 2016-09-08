@@ -30,14 +30,13 @@ Function CallNEOS(s As COpenSolver, OutgoingMessage As String) As String
           If InStr(CallNEOS, "Error (2) in /opt/ampl/ampl -R amplin") > 0 Then
               ' Check for any other error - the amplin error is shown for invalid parameters too
               s.Solver.CheckLog s
-              Err.Raise OpenSolver_ModelError, Description:= _
-                  "NEOS was unable to solve the model because there was an error while running AMPL. " & _
-                  "Please let us know and send us a copy of your spreadsheet so that we can try to fix this error."
+              RaiseGeneralError "NEOS was unable to solve the model because there was an error while running AMPL. " & _
+                                "Please let us know and send us a copy of your spreadsheet so that we can try to fix this error."
           End If
               
           
 ExitFunction:
-          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          If RaiseError Then RethrowError
           Exit Function
 
 ErrorHandler:
@@ -77,7 +76,7 @@ Function CallNeos_Local(s As COpenSolver) As String
           CallNeos_Local = ExecCapture(SolveCommand, s.LogFilePathName, GetTempFolder())
           
 ExitFunction:
-          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          If RaiseError Then RethrowError
           Exit Function
 
 ErrorHandler:
@@ -121,9 +120,9 @@ Function CallNeos_Remote(s As COpenSolver, OutgoingMessage As String) As String
           End If
           If Len(errorString) > 0 Then
               If errorString = "Aborted" Then
-                  Err.Raise OpenSolver_UserCancelledError, Description:=SILENT_ERROR
+                  RaiseUserCancelledError
               Else
-                  Err.Raise OpenSolver_NeosError, Description:=errorString
+                  RaiseGeneralError errorString
               End If
           End If
               
@@ -135,7 +134,7 @@ Function CallNeos_Remote(s As COpenSolver, OutgoingMessage As String) As String
 ExitFunction:
           Application.Interactive = InteractiveStatus
           Close #1
-          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          If RaiseError Then RethrowError
           Exit Function
 
 ErrorHandler:
@@ -150,7 +149,7 @@ Public Function SolveOnNeos(message As String, errorString As String, Optional f
           Dim result As String, jobNumber As String, Password As String
 6820      result = SubmitNeosJob(message, jobNumber, Password)
           
-6825      If jobNumber = "0" Then Err.Raise OpenSolver_NeosError, Description:="An error occured when sending file to NEOS."
+6825      If jobNumber = "0" Then RaiseGeneralError "An error occured when sending file to NEOS."
           
           If Not frmCallingNeos Is Nothing Then frmCallingNeos.Tag = "Running"
           
@@ -170,7 +169,7 @@ Public Function SolveOnNeos(message As String, errorString As String, Optional f
 6843          If result = "Done" Then
 6844              Done = True
 6845          ElseIf result <> "Waiting" And result <> "Running" Then
-6846              Err.Raise OpenSolver_NeosError, Description:="An error occured while waiting for NEOS. NEOS returned: " & result
+6846              RaiseGeneralError "An error occured while waiting for NEOS. NEOS returned: " & result
 6848          Else
 6849              mSleep 5000  ' 5 seconds
                   DoEvents
@@ -220,7 +219,7 @@ Private Function SendToNeos_Mac(method As String, Optional param1 As String, Opt
     If GetLogFilePath(LogFilePathName) Then DeleteFileAndVerify LogFilePathName
     
     If Not Exec("python " & SolverPath & " " & method & " " & MakePathSafe(SolutionFilePathName) & " " & param1 & " " & param2) Then
-        Err.Raise OpenSolver_NeosError, Description:="Unknown error while contacting NEOS"
+        RaiseGeneralError "Unknown error while contacting NEOS"
     End If
     
     ' Read in results from file
@@ -229,12 +228,12 @@ Private Function SendToNeos_Mac(method As String, Optional param1 As String, Opt
     Close #1
     
     If Left(SendToNeos_Mac, 6) = "Error:" And method <> "ping" Then
-        Err.Raise OpenSolver_NeosError, Description:="An error occured while solving on NEOS. NEOS returned: " & SendToNeos_Mac
+        RaiseGeneralError "An error occured while solving on NEOS. NEOS returned: " & SendToNeos_Mac
     End If
 
 ExitFunction:
     Close #1
-    If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+    If RaiseError Then RethrowError
     Exit Function
 
 ErrorHandler:
@@ -263,14 +262,14 @@ Private Function SendToNeos_Windows(message As String) As String
 
 ExitFunction:
     Set XmlHttpReq = Nothing
-    If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+    If RaiseError Then RethrowError
     Exit Function
 
 ErrorHandler:
     If GetXmlTagValue(message, "methodName") <> "ping" Then
         If Not PingNeos() Then
             Err.Description = "OpenSolver could not establish a connection to NEOS. Check your internet connection and try again. If this error message persists, NEOS may be down."
-            Err.Number = OpenSolver_NeosError
+            Err.Number = OpenSolver_Error
         End If
         If Not ReportError("SolverNeos", "SendToNeos_Windows") Then Resume
     End If
@@ -291,7 +290,7 @@ Private Function GetNeosResult(jobNumber As String, Password As String) As Strin
     #End If
 
 ExitFunction:
-    If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+    If RaiseError Then RethrowError
     Exit Function
 
 ErrorHandler:
@@ -339,7 +338,7 @@ Private Function SubmitNeosJob(message As String, ByRef jobNumber As String, ByR
 
 ExitFunction:
     Close #1
-    If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+    If RaiseError Then RethrowError
     Exit Function
 
 ErrorHandler:
@@ -360,7 +359,7 @@ Private Function GetNeosJobStatus(jobNumber As String, Password As String) As St
     #End If
 
 ExitFunction:
-    If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+    If RaiseError Then RethrowError
     Exit Function
 
 ErrorHandler:
@@ -383,7 +382,7 @@ Private Function GetXmlTagValue(message As String, Tag As String) As String
     GetXmlTagValue = Mid(message, openingParen + TagLength, closingParen - openingParen - TagLength)
 
 ExitFunction:
-    If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+    If RaiseError Then RethrowError
     Exit Function
 
 ErrorHandler:
@@ -413,7 +412,7 @@ Private Function DecodeBase64(ByVal strData As String) As String
 6956      Set objXML = Nothing
 
 ExitFunction:
-          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          If RaiseError Then RethrowError
           Exit Function
 
 ErrorHandler:
@@ -454,7 +453,7 @@ Function Stream_BinaryToString(Binary)
 6965       Set BinaryStream = Nothing
 
 ExitFunction:
-           If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+           If RaiseError Then RethrowError
            Exit Function
 
 ErrorHandler:
@@ -485,7 +484,7 @@ Function WrapMessageForNEOS(message As String, NeosSolver As ISolverNeos, Option
         "document")
 
 ExitSub:
-    If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+    If RaiseError Then RethrowError
     Exit Function
 
 ErrorHandler:

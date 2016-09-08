@@ -39,18 +39,18 @@ Function ActiveSheetWithValidation() As Worksheet
           On Error GoTo ErrorHandler
 
           ' Check there is a workbook
-465       If Application.Workbooks.Count = 0 Then Err.Raise Number:=OpenSolver_NoWorkbook, Description:="No active workbook available."
+465       If Application.Workbooks.Count = 0 Then RaiseGeneralError "No active workbook available."
 
           ' Check we can access the worksheet
 470       On Error Resume Next
 471       Set ActiveSheetWithValidation = ActiveSheet
 472       If Err.Number <> 0 Then
               On Error GoTo ErrorHandler
-473           Err.Raise Number:=OpenSolver_NoWorksheet, Description:="The active sheet is not a worksheet."
+473           RaiseGeneralError "The active sheet is not a worksheet."
 476       End If
 
 ExitFunction:
-          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          If RaiseError Then RethrowError
           Exit Function
 
 ErrorHandler:
@@ -118,7 +118,7 @@ Function GetRootDriveName() As String
           #End If
 
 ExitFunction:
-          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          If RaiseError Then RethrowError
           Exit Function
 
 ErrorHandler:
@@ -160,7 +160,7 @@ Function ConvertHfsPathToPosix(Path As String) As String
           #End If
 
 ExitFunction:
-          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          If RaiseError Then RethrowError
           Exit Function
 
 ErrorHandler:
@@ -198,7 +198,7 @@ Function ConvertPosixPathToHfs(Path As String) As String
     #End If
 
 ExitFunction:
-    If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+    If RaiseError Then RethrowError
     Exit Function
 
 ErrorHandler:
@@ -252,10 +252,10 @@ Sub DeleteFileAndVerify(FilePath As String)
           Exit Sub
           
 DeleteError:
-          Err.Raise Number:=Err.Number, Description:="Unable to delete the file: " & FilePath & vbNewLine & vbNewLine & _
-                                                     Err.Description & vbNewLine & vbNewLine & _
-                                                     "To fix this, try restarting Excel and check Task Manager to make sure no solver is running. " & _
-                                                     "If this error still appears after that, try restarting the computer."
+          RaiseUserError "Unable to delete the file: " & FilePath & vbNewLine & vbNewLine & _
+                         Err.Description & vbNewLine & vbNewLine & _
+                         "To fix this, try restarting Excel and check Task Manager to make sure no solver is running. " & _
+                         "If this error still appears after that, try restarting the computer."
 End Sub
 
 Sub OpenFile(FilePath As String, NotFoundMessage As String)
@@ -264,7 +264,7 @@ Sub OpenFile(FilePath As String, NotFoundMessage As String)
           On Error GoTo ErrorHandler
 
 762       If Not FileOrDirExists(FilePath) Then
-763           Err.Raise OpenSolver_NoFile, Description:=NotFoundMessage
+763           RaiseGeneralError NotFoundMessage
 764       Else
               ' Check that there is no workbook open with the same name
               Dim w As Workbook
@@ -285,7 +285,7 @@ Sub OpenFolder(FolderPath As String, NotFoundMessage As String)
     On Error GoTo ErrorHandler
 
     If Not FileOrDirExists(FolderPath) Then
-        Err.Raise OpenSolver_NoFile, Description:=NotFoundMessage
+        RaiseGeneralError NotFoundMessage
     Else
         #If Mac Then
             ExecAsync "open " & MakePathSafe(FolderPath)
@@ -323,7 +323,7 @@ Sub DeleteTempFolder()
     End If
 
 ExitSub:
-    If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+    If RaiseError Then RethrowError
     Exit Sub
 
 ErrorHandler:
@@ -397,7 +397,7 @@ Function GetTempFolder(Optional AllowEnvironOverride As Boolean = True) As Strin
 102       GetTempFolder = TempFolderPath
 
 ExitFunction:
-          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          If RaiseError Then RethrowError
           Exit Function
 
 ErrorHandler:
@@ -433,7 +433,7 @@ Sub CreateScriptFile(ByRef ScriptFilePath As String, FileContents As String, Opt
 
 ExitSub:
           Close #1
-          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          If RaiseError Then RethrowError
           Exit Sub
 
 ErrorHandler:
@@ -454,7 +454,7 @@ Sub SetCurrentDirectory(NewPath As String)
           #End If
 
 ExitSub:
-          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          If RaiseError Then RethrowError
           Exit Sub
 
 ErrorHandler:

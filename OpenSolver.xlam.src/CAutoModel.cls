@@ -77,7 +77,7 @@ Dim RaiseError As Boolean
     BuildModel = True
 
 ExitFunction:
-    If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+    If RaiseError Then RethrowError
     Exit Function
 
 ErrorHandler:
@@ -132,7 +132,7 @@ ExitSearchLoop:
 ExitSub:
 3648      Application.Cursor = xlDefault
 3649      Application.StatusBar = False
-          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          If RaiseError Then RethrowError
           Exit Sub
 
 ErrorHandler:
@@ -260,7 +260,7 @@ NextArea:
 
 ExitFunction:
           Application.StatusBar = False
-          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          If RaiseError Then RethrowError
           Exit Function
 
 ErrorHandler:
@@ -311,7 +311,7 @@ Private Sub UpdatePrecedentCount(ByRef PrecedentCount As Dictionary, ByRef Paren
     End If
 
 ExitSub:
-    If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+    If RaiseError Then RethrowError
     Exit Sub
 
 ErrorHandler:
@@ -346,7 +346,7 @@ Private Sub FindAllCells(ByVal searchStr As String, ByRef FoundCells As Range, B
 3805      Loop While (Not LastCell Is Nothing) And (FirstCell.Address <> LastCell.Address)
 
 ExitSub:
-          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          If RaiseError Then RethrowError
           Exit Sub
 
 ErrorHandler:
@@ -401,7 +401,7 @@ Private Sub AddRangeToConstraints(ByRef LHSs As Range, ByRef RelRange As Range, 
 3839      Next i
 
 ExitSub:
-          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          If RaiseError Then RethrowError
           Exit Sub
 
 ErrorHandler:
@@ -425,7 +425,7 @@ Private Sub AddConstraintToModel(constraintGroup As Collection, newLHS As Range,
           End If
 
 ExitSub:
-          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          If RaiseError Then RethrowError
           Exit Sub
 
 ErrorHandler:
@@ -483,7 +483,7 @@ Private Sub RationaliseConstraints(ByRef Constraints As Collection)
 3905      Set Constraints = NewConstraints
 
 ExitSub:
-          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          If RaiseError Then RethrowError
           Exit Sub
 
 ErrorHandler:
@@ -529,7 +529,7 @@ Private Sub SaveModel(sheet As Worksheet)
 3968      Next c
 
 ExitSub:
-          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          If RaiseError Then RethrowError
           Exit Sub
 
 ErrorHandler:

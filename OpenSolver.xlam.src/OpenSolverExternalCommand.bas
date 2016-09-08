@@ -281,8 +281,7 @@ Private Function StartProcess(Command As String, StartDir As String, Async As Bo
         ' Start command in pipe
         StartProcess.file = popen(FullCommand, "r")
         If StartProcess.file = 0 Then
-            Err.Raise OpenSolver_ExecutableError, _
-                Description:="Unable to run the command: " & vbNewLine & Command
+            RaiseGeneralError "Unable to run the command: " & vbNewLine & Command
         End If
         
         ' Log the pid of the spawned process
@@ -302,7 +301,7 @@ Private Function StartProcess(Command As String, StartDir As String, Async As Bo
             End With
         
             If CreatePipe(StartProcess.hRead, StartProcess.hWrite, tSA_CreatePipe, 0&) = 0& Then
-                Err.Raise OpenSolver_ExecutableError, Description:="Couldn't create pipe"
+                RaiseGeneralError "Couldn't create pipe"
             End If
         End If
         
@@ -341,9 +340,8 @@ Private Function StartProcess(Command As String, StartDir As String, Async As Bo
         
         ' Check process has started correctly
         If result = 0 Then
-            Err.Raise OpenSolver_ExecutableError, _
-                Description:="Unable to run the external program: " & Command & vbNewLine & vbNewLine & _
-                             "Error " & Err.LastDllError & ": " & DLLErrorText(Err.LastDllError)
+            RaiseGeneralError "Unable to run the external program: " & Command & vbNewLine & vbNewLine & _
+                              "Error " & Err.LastDllError & ": " & DLLErrorText(Err.LastDllError)
         End If
         
         ' Close unneeded handles
@@ -488,9 +486,9 @@ Public Function ExecCapture(Command As String, Optional LogPath As String, Optio
         
         If Len(status) > 0 Then
             If status = "Aborted" Then
-                Err.Raise OpenSolver_UserCancelledError, Description:="Execution was aborted"
+                RaiseUserCancelledError
             Else
-                Err.Raise OpenSolver_ExecutableError, Description:=status
+                RaiseGeneralError status
             End If
         End If
     Else
@@ -500,7 +498,7 @@ Public Function ExecCapture(Command As String, Optional LogPath As String, Optio
 ExitFunction:
     Application.Interactive = InteractiveStatus
     Application.Cursor = CursorStatus
-    If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+    If RaiseError Then RethrowError
     Exit Function
 
 ErrorHandler:
@@ -577,7 +575,7 @@ Private Function RunCommand(Command As String, LogPath As String, StartDir As St
         End If
         If DoingConsole Then
             If frmConsole.Tag = "Cancelled" Then
-                Err.Raise OpenSolver_UserCancelledError, Description:=SILENT_ERROR
+                RaiseUserCancelledError
             End If
         
             ' Update console even if no new data to update the elapsed time
@@ -593,7 +591,7 @@ ExitFunction:
     If Not Async Then ExitCode = GetExitCode(ExecInfo)
     CloseProcess ExecInfo
     If DoingConsole Then frmConsole.MarkCompleted
-    If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+    If RaiseError Then RethrowError
     Exit Function
 
 ErrorHandler:

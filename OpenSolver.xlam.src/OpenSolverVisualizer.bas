@@ -87,7 +87,7 @@ Function CreateLabelShape(w As Worksheet, Left As Long, Top As Long, Width As Lo
 3065      Set CreateLabelShape = s1
 
 ExitFunction:
-          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          If RaiseError Then RethrowError
           Exit Function
 
 ErrorHandler:
@@ -277,7 +277,7 @@ endLoop:
           End If
 
 ExitFunction:
-          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          If RaiseError Then RethrowError
           Exit Function
 
 ErrorHandler:
@@ -335,7 +335,7 @@ Function AddLabelledConnector(w As Worksheet, s1 As Shape, s2 As Shape, Label As
 3214      s3.Name = "OpenSolver" & ShapeIndex
 
 ExitFunction:
-          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          If RaiseError Then RethrowError
           Exit Function
 
 ErrorHandler:
@@ -409,7 +409,7 @@ Sub HighlightConstraint(myDocument As Worksheet, LHSRange As Range, _
 3247      End If
 
 ExitSub:
-          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          If RaiseError Then RethrowError
           Exit Sub
 
 ErrorHandler:
@@ -465,7 +465,7 @@ NextConstraint:
 ExitFunction:
 3283      Application.StatusBar = False
 3284      Application.ScreenUpdating = ScreenStatus
-          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          If RaiseError Then RethrowError
           Exit Function
 
 ErrorHandler:
@@ -615,7 +615,7 @@ NextConstraint:
 ExitFunction:
 3444      Application.StatusBar = False ' Resume normal status bar behaviour
 3445      Application.ScreenUpdating = ScreenStatus
-          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          If RaiseError Then RethrowError
           Exit Function
 
 ErrorHandler:

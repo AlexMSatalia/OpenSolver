@@ -47,7 +47,7 @@ Public Function ProcessSolverModel(OpenSolver As COpenSolver) As Boolean
 4817      ProcessSolverModel = ParseFormulae()
 
 ExitFunction:
-          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          If RaiseError Then RethrowError
           Exit Function
 
 ErrorHandler:
@@ -83,7 +83,7 @@ Private Sub ProcessVarTypes()
 4835      Next
 
 ExitSub:
-          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          If RaiseError Then RethrowError
           Exit Sub
 
 ErrorHandler:
@@ -112,7 +112,7 @@ Private Function ParseFormulae() As Boolean
 4840          objresult = ExpandFormula(s.ObjRange.Formula, s.ObjRange, 0)
               
 4841          If objresult Like "*Error*" Then
-4842              Err.Raise OpenSolver_BuildError, Description:="The objective contains an error"
+4842              RaiseUserError "The objective contains an error"
 4843          End If
 4844          CleanFormulae 1, Formulae.Count
 4845      End If
@@ -288,7 +288,7 @@ NextCons:
 
 ExitFunction:
           Application.StatusBar = False
-          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          If RaiseError Then RethrowError
           Exit Function
 
 ErrorHandler:
@@ -339,7 +339,7 @@ Function CellIsConstant(cell As Range) As Boolean
 4974      CellIsConstant = True
 
 ExitFunction:
-          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          If RaiseError Then RethrowError
           Exit Function
 
 ErrorHandler:
@@ -391,7 +391,7 @@ Function StringFormulaIsConstant(strFormula As String) As Boolean
 4992          Select Case tkn.TokenType
                   Case TokenType.ErrorText
                       ' TODO: Can't handle that, throw error
-4993                  Err.Raise OpenSolver_BuildError, "Parsing model formulae", "An error token was found while parsing the formulae."
+4993                  RaiseGeneralError "An error token was found while parsing the formulae."
                       
 4994              Case TokenType.Reference
                       ' Are we trying to complete a range?
@@ -457,7 +457,7 @@ Function StringFormulaIsConstant(strFormula As String) As Boolean
 5030      StringFormulaIsConstant = True
           
 ExitFunction:
-          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          If RaiseError Then RethrowError
           Exit Function
 
 ErrorHandler:
@@ -606,8 +606,8 @@ Function ExpandFormula(ByVal strFormula As String, _
 5096                  Set rngBuildingRef = s.sheet.Range(BuildingRef)
                       If Err.Number <> 0 Then
                           On Error GoTo ErrorHandler
-                          Err.Raise OpenSolver_ModelError, Description:="The model contains references to cells on other sheets, " & _
-                                                                         "which is not currently supported by the parsing solvers."
+                          RaiseUserError "The model contains references to cells on other sheets, " & _
+                                         "which is not currently supported by the parsing solvers."
                       End If
                       On Error GoTo ErrorHandler
 5097                  If rngBuildingRef.Count > 1 Then
@@ -638,7 +638,7 @@ Function ExpandFormula(ByVal strFormula As String, _
                           
 5114                  Case TokenType.ErrorText
                           ' TODO: Can't handle that, throw error
-5115                      Err.Raise OpenSolver_BuildError, "Parsing model formulae", "An error token was found while parsing the formulae."
+5115                      RaiseGeneralError "An error token was found while parsing the formulae."
                           
 5116                  Case TokenType.Reference
                           ' Are we trying to complete a range?
@@ -864,7 +864,7 @@ skipTokenising:
           
 ExitFunction:
           Application.StatusBar = False
-          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          If RaiseError Then RethrowError
           Exit Function
 
 ErrorHandler:
@@ -890,7 +890,7 @@ Function FindPosition(Word As String, FindString As String, Count As Long, Optio
 5255      Wend
 
 ExitFunction:
-          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          If RaiseError Then RethrowError
           Exit Function
 
 ErrorHandler:
@@ -980,7 +980,7 @@ Sub CleanFormulae(ByVal lngFStart As Long, ByVal lngFEnd As Long, Optional Const
 
 ExitSub:
           Application.StatusBar = False
-          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          If RaiseError Then RethrowError
           Exit Sub
 
 ErrorHandler:
@@ -1006,7 +1006,7 @@ Sub PUSHDOWN(ByRef objNode As CFormula, ByVal lngNewDepth As Long)
 5333      Next
 
 ExitSub:
-          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          If RaiseError Then RethrowError
           Exit Sub
 
 ErrorHandler:
@@ -1127,9 +1127,9 @@ Function AddNodeIfNew(ByRef objCurNode As CFormula, ByRef c As Range) As String
 5388                  AddNodeIfNew = StrExNoPlus(varReturn)
                       If Err.Number <> 0 Then
                           On Error GoTo ErrorHandler
-                          Err.Raise OpenSolver_ModelError, Description:= _
-                              "The constant in cell " & c.Address & " has value `" & varReturn & "` which is not numeric. " & _
-                              "Make sure this constant isn't being included in a formula unnecessarily."
+                          RaiseUserError "The constant in cell " & c.Address & " has value `" & varReturn & _
+                                         "` which is not numeric. " & _
+                                         "Make sure this constant isn't being included in a formula unnecessarily."
                       End If
                       On Error GoTo ErrorHandler
 5389                  GoTo finishedNode
@@ -1179,7 +1179,7 @@ finishedNode:
           ' Done!
 ExitFunction:
           Application.StatusBar = False
-          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          If RaiseError Then RethrowError
           Exit Function
 
 ErrorHandler:
@@ -1206,7 +1206,7 @@ Function ConvertFormula(tokenText As String) As String
 5436      End Select
 
 ExitFunction:
-          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          If RaiseError Then RethrowError
           Exit Function
 
 ErrorHandler:
@@ -1229,14 +1229,14 @@ Function ConvertFormula_AMPL(tokenText As String) As String
 5440      Case "pi"
 5441          ConvertFormula_AMPL = "(pi"
           Case "sumif"
-              Err.Raise OpenSolver_BuildError, "Parsing model formulae", "The operator " & UCase(tokenText) & " is not yet supported by OpenSolver when using the NEOS solvers."
+              RaiseUserError "The operator " & UCase(tokenText) & " is not yet supported by OpenSolver when using the NEOS solvers."
               ConvertFormula_AMPL = tokenText + "("
 5447      Case Else
 5448          ConvertFormula_AMPL = tokenText + "("
 5449      End Select
 
 ExitFunction:
-          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          If RaiseError Then RethrowError
           Exit Function
 
 ErrorHandler:
@@ -1263,7 +1263,7 @@ Function ConvertFormula_NL(tokenText As String) As String
 5464      End Select
 
 ExitFunction:
-          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          If RaiseError Then RethrowError
           Exit Function
 
 ErrorHandler:

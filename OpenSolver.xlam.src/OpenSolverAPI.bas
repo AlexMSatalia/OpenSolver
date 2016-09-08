@@ -108,8 +108,8 @@ Public Sub SetChosenSolver(SolverShortName As String, Optional sheet As Workshee
     Exit Sub
     
 SolverNotAllowed:
-    Err.Raise OpenSolver_ModelError, Description:="The specified solver (" & SolverShortName & ") is not in the list of available solvers. " & _
-                                                  "Please see the OpenSolverAPI module for the list of available solvers."
+    RaiseUserError "The specified solver (" & SolverShortName & ") is not in the list of available solvers. " & _
+                   "Please see the OpenSolverAPI module for the list of available solvers."
 End Sub
 
 '/**
@@ -128,11 +128,11 @@ Public Function GetObjectiveFunctionCell(Optional sheet As Worksheet, Optional V
     If Validate Then
         ' If objMissing is false, but the ObjRange is empty, the objective might be an out of date reference
         If objIsMissing = False And GetObjectiveFunctionCell Is Nothing Then
-            Err.Raise Number:=OpenSolver_BuildError, Description:="OpenSolver cannot find the objective ('solver_opt' is out of date). Please re-enter the objective, and try again."
+            RaiseUserError "OpenSolver cannot find the objective ('solver_opt' is out of date). Please re-enter the objective, and try again."
         End If
         ' Objective is corrupted somehow
         If ObjRefersToError Then
-            Err.Raise Number:=OpenSolver_BuildError, Description:="The objective is marked #REF!, indicating this cell has been deleted. Please fix the objective, and try again."
+            RaiseUserError "The objective is marked #REF!, indicating this cell has been deleted. Please fix the objective, and try again."
         End If
     End If
 End Function
@@ -210,7 +210,7 @@ Public Function GetDecisionVariables(Optional sheet As Worksheet, Optional Valid
 
     If Validate Then
         If IsMissing Then
-            Err.Raise Number:=OpenSolver_ModelError, Description:="No Solver model with decision variables was found on sheet " & sheet.Name
+            RaiseUserError "No Solver model with decision variables was found on sheet " & sheet.Name
         End If
         
         If Not IsRange Then
@@ -220,7 +220,7 @@ Public Function GetDecisionVariables(Optional sheet As Worksheet, Optional Valid
             On Error Resume Next
             Set GetDecisionVariables = sheet.Range("solver_adj")
             If Err.Number <> 0 Then
-                Err.Raise OpenSolver_ModelError, Description:="A model was found on the sheet " & sheet.Name & " but the decision variable cells (" & RefersTo & ") could not be interpreted. Please redefine the decision variable cells, and try again."
+                RaiseUserError "A model was found on the sheet " & sheet.Name & " but the decision variable cells (" & RefersTo & ") could not be interpreted. Please redefine the decision variable cells, and try again."
             End If
             On Error GoTo 0
         End If
@@ -396,15 +396,15 @@ Public Function GetConstraintLhs(Index As Long, Optional sheet As Worksheet, Opt
     If Validate Then
         ' Must have a left hand side defined
         If IsMissing Then
-            Err.Raise Number:=OpenSolver_BuildError, Description:="The left hand side for a constraint does not appear to be defined ('solver_lhs" & Index & " is missing). Please fix this, and try again."
+            RaiseUserError "The left hand side for a constraint does not appear to be defined ('solver_lhs" & Index & " is missing). Please fix this, and try again."
         End If
         ' Must be valid
         If RefersToError Then
-            Err.Raise Number:=OpenSolver_BuildError, Description:="The constraints reference cells marked #REF!, indicating these cells have been deleted. Please fix these constraints, and try again."
+            RaiseUserError "The constraints reference cells marked #REF!, indicating these cells have been deleted. Please fix these constraints, and try again."
         End If
         ' LHSs must be ranges
         If Not IsRange Then
-            Err.Raise Number:=OpenSolver_BuildError, Description:="A constraint was entered with a left hand side (" & RefersTo & ") that is not a range. Please update the constraint, and try again."
+            RaiseUserError "A constraint was entered with a left hand side (" & RefersTo & ") that is not a range. Please update the constraint, and try again."
         End If
     End If
 End Function
@@ -469,11 +469,11 @@ Public Function GetConstraintRhs(Index As Long, Formula As String, value As Doub
     If Validate Then
         ' Must have a right hand side defined
         If IsMissing Then
-            Err.Raise Number:=OpenSolver_BuildError, Description:="The right hand side for a constraint does not appear to be defined ('solver_rhs" & Index & " is missing). Please fix this, and try again."
+            RaiseUserError "The right hand side for a constraint does not appear to be defined ('solver_rhs" & Index & " is missing). Please fix this, and try again."
         End If
         ' Must be valid
         If RefersToError Then
-            Err.Raise Number:=OpenSolver_BuildError, Description:="The constraints reference cells marked #REF!, indicating these cells have been deleted. Please fix these constraints, and try again."
+            RaiseUserError "The constraints reference cells marked #REF!, indicating these cells have been deleted. Please fix these constraints, and try again."
         End If
     End If
 End Function
@@ -786,9 +786,9 @@ Public Function GetQuickSolveParameters(Optional sheet As Worksheet, Optional Va
     
     If Validate Then
         If GetQuickSolveParameters Is Nothing Then
-            Err.Raise OpenSolver_BuildError, Description:="No parameter range could be found on the worksheet. Please use ""Initialize Quick Solve Parameters""" & _
-                                                          "to define the cells that you wish to change between successive OpenSolver solves. Note that changes " & _
-                                                          "to these cells must lead to changes in the underlying model's right hand side values for its constraints."
+            RaiseUserError "No parameter range could be found on the worksheet. Please use ""Initialize Quick Solve Parameters""" & _
+                           "to define the cells that you wish to change between successive OpenSolver solves. Note that changes " & _
+                           "to these cells must lead to changes in the underlying model's right hand side values for its constraints."
         End If
     End If
 End Function
@@ -818,7 +818,7 @@ Public Sub InitializeQuickSolve(Optional SolveRelaxation As Boolean = False, Opt
     GetActiveSheetIfMissing sheet
 
     If Not CreateSolver(GetChosenSolver(sheet)).ModelType = Diff Then
-        Err.Raise OpenSolver_ModelError, Description:="The selected solver does not support QuickSolve"
+        RaiseUserError "The selected solver does not support QuickSolve"
     End If
 
     Dim ParamRange As Range
@@ -848,7 +848,7 @@ Public Function RunQuickSolve(Optional SolveRelaxation As Boolean = False, Optio
     Application.Interactive = False
 
     If QuickSolver Is Nothing Then
-        Err.Raise OpenSolver_SolveError, Description:="There is no model to solve, and so the quick solve cannot be completed. Please select the Initialize Quick Solve command."
+        RaiseUserError "There is no model to solve, and so the quick solve cannot be completed. Please select the Initialize Quick Solve command."
     Else
         QuickSolver.DoQuickSolve SolveRelaxation, MinimiseUserInteraction
         RunQuickSolve = QuickSolver.SolveStatus

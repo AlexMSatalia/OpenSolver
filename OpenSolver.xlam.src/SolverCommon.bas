@@ -49,13 +49,13 @@ Sub SolveModel(s As COpenSolver, ShouldSolveRelaxation As Boolean, ShouldMinimis
     Application.ScreenUpdating = False
     
     If s.ModelStatus <> Built Then
-        Err.Raise Number:=OpenSolver_SolveError, Description:="The model cannot be solved as it has not yet been built."
+        RaiseGeneralError "The model cannot be solved as it has not yet been built."
     End If
 
     'Check that solver is available
     Dim errorString As String
     If Not SolverIsAvailable(s.Solver, errorString:=errorString) Then
-        Err.Raise Number:=OpenSolver_SolveError, Description:=errorString
+        RaiseGeneralError errorString
     End If
 
     Dim LogFilePathName As String
@@ -128,7 +128,7 @@ Sub SolveModel(s As COpenSolver, ShouldSolveRelaxation As Boolean, ShouldMinimis
                     WriteConstraintSensitivityTable newSheet, s
                 End If
             ElseIf Not s.bGetDuals And (s.DualsOnNewSheet Or s.DualsOnSameSheet) And LinearSolver.SensitivityAnalysisAvailable Then
-                Err.Raise Number:=OpenSolver_SolveError, Description:= _
+                RaiseUserError _
                     "Could not get sensitivity analysis due to binary and/or integer constraints." & vbNewLine & vbNewLine & _
                     "Turn off sensitivity in the model dialogue or reformulate your model without these constraints." & vbNewLine & vbNewLine & _
                     "The " & s.Solver.ShortName & " solution has been returned to the sheet." & vbNewLine
@@ -143,7 +143,7 @@ ExitSub:
     Application.Calculation = oldCalculationMode
     Application.Iteration = oldIterationMode
     Application.Calculate
-    If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+    If RaiseError Then RethrowError
     Exit Sub
 
 ErrorHandler:
@@ -163,7 +163,7 @@ Function CreateSolver(SolverShortName As String) As ISolver
     Case "NOMAD":   Set CreateSolver = New CSolverNomad
     Case "NeosBon": Set CreateSolver = New CSolverNeosBon
     Case "NeosCou": Set CreateSolver = New CSolverNeosCou
-    Case Else: Err.Raise OpenSolver_ModelError, Description:="The specified solver ('" & SolverShortName & "') was not recognised."
+    Case Else: RaiseGeneralError "The specified solver ('" & SolverShortName & "') was not recognised."
     End Select
 End Function
 
@@ -240,7 +240,7 @@ Function SolverIsPresent(Solver As ISolver, Optional SolverPath As String, Optio
     End If
 
 ExitFunction:
-    If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+    If RaiseError Then RethrowError
     Exit Function
 
 ErrorHandler:
@@ -315,11 +315,12 @@ Sub RunLocalSolver(s As COpenSolver, ExternalCommand As String)
     ' Check log for any errors which can offer more descriptive messages than exeresult <> 0
     s.Solver.CheckLog s
     If exeResult <> 0 Then
-        Err.Raise Number:=OpenSolver_SolveError, Description:="The " & DisplayName(s.Solver) & " solver did not complete, but aborted with the error code " & exeResult & "." & vbCrLf & vbCrLf & "The last log file can be viewed under the OpenSolver menu and may give you more information on what caused this error."
+        RaiseGeneralError "The " & DisplayName(s.Solver) & " solver did not complete, but aborted with the error code " & exeResult & "." & vbCrLf & vbCrLf & "The last log file can be viewed under the OpenSolver menu and may give you more information on what caused this error.", _
+                          "http://opensolver.org/help/#cbccrashes"
     End If
 
 ExitSub:
-    If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+    If RaiseError Then RethrowError
     Exit Sub
 
 ErrorHandler:
@@ -397,7 +398,7 @@ Function SolverExecPath(LocalExecSolver As ISolverLocalExec, Optional errorStrin
     End If
 
 ExitFunction:
-    If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+    If RaiseError Then RethrowError
     Exit Function
 
 ErrorHandler:
@@ -476,7 +477,7 @@ Function WriteModelFile(s As COpenSolver) As String
     
 ExitFunction:
     Close #1
-    If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+    If RaiseError Then RethrowError
     Exit Function
 
 ErrorHandler:

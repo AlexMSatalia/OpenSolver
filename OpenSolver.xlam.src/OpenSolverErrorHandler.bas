@@ -10,31 +10,23 @@ Private Const FILE_ERROR_LOG As String = "error.log"
 Public ErrMsg As String
 Public ErrNum As Long
 Public ErrSource As String
+Public ErrLinkTarget As String
 
 ' OpenSolver error numbers.
-Public Const OpenSolver_Error = vbObjectError + 1000 ' A general error
-Public Const OpenSolver_ModelError = vbObjectError + 1001 ' An error occured while building the model
-Public Const OpenSolver_BuildError = vbObjectError + 1002 ' An error occured while building the model
-Public Const OpenSolver_SolveError = vbObjectError + 1003 ' An error occured while solving the model
-Public Const OpenSolver_UserCancelledError = vbObjectError + 1004 ' The user cancelled the model build or the model solve
+Public Const OpenSolver_Error = vbObjectError + 1000 ' A general unexpected error in our code
+Public Const OpenSolver_UserError = vbObjectError + 1001 ' An error caused by the user making a mistake
+Public Const OpenSolver_UserCancelledError = vbObjectError + 1002 ' The user requested the solve be cancelled
 
-Public Const OpenSolver_ExecutableError = vbObjectError + 1011 ' Something went wrong trying to run an external program
-Public Const OpenSolver_CBCError = vbObjectError + 1012 ' Something went wrong trying to run CBC
-Public Const OpenSolver_GurobiError = vbObjectError + 1013 ' Something went wrong trying to run Gurobi
-Public Const OpenSolver_NeosError = vbObjectError + 1014 ' Something went wrong trying to run NEOS
-Public Const OpenSolver_NomadError = vbObjectError + 1015 ' Something went wrong trying to run NOMAD
-
-Public Const OpenSolver_NoFile = vbObjectError + 1021
-Public Const OpenSolver_NoWorksheet = vbObjectError + 1022 ' There is no active workbook
-Public Const OpenSolver_NoWorkbook = vbObjectError + 1023 ' There is no active worksheet
-
-Public Const OpenSolver_VisualizerError = vbObjectError + 1031 ' An error occured while running the visualizer
+Public Const LINK_NO_SOLUTION_FILE As String = "http://opensolver.org/help/#cbcfails"
+Public Const LINK_SOLVER_CRASH As String = "http://opensolver.org/help/#cbccrashes"
+Public Const LINK_PARAMETER_DOCS As String = "http://opensolver.org/using-opensolver/#extra-parameters"
 
 Sub ClearError()
     ' Clear all saved error details
     ErrNum = 0
     ErrSource = ""
     ErrMsg = ""
+    ErrLinkTarget = ""
 End Sub
  
 Function ReportError(ModuleName As String, ProcedureName As String, Optional IsEntryPoint = False, Optional MinimiseUserInteraction As Boolean = False) As Boolean
@@ -111,11 +103,10 @@ Function ReportError(ModuleName As String, ProcedureName As String, Optional IsE
             Dim prompt As String, LinkTarget As String, MoreDetailsButton As Boolean, ReportIssueButton As Boolean
             prompt = ErrMsg
             ErrMsg = ""  ' Reset error message in case there's an error while showing the form
-            LinkTarget = ""
             
-            ' A message with an OpenSolver_*Error denotes an "intentional" error being reported, as opposed to an error we didn't expect to happen.
+            ' A message with an OpenSolver_UserError denotes an error caused by the user, as opposed to an error we didn't expect to happen.
             ' For these messages, other info isn't shown with the error message.
-            If False Then
+            If ErrNum = OpenSolver_UserError Then
                 ' Intentional error
                 MoreDetailsButton = False
                 ReportIssueButton = False
@@ -126,13 +117,13 @@ Function ReportError(ModuleName As String, ProcedureName As String, Optional IsE
                          "An error log with more details has been saved, which you can see by clicking 'More Details'. " & _
                          "If you continue to have trouble, please use the 'Report Issue' button or visit the OpenSolver website for assistance:"
                 ' Add the OpenSolver help link
-                LinkTarget = "http://opensolver.org/help/"
+                If Len(ErrLinkTarget) = 0 Then ErrLinkTarget = "http://opensolver.org/help/"
                 
                 MoreDetailsButton = True
                 ReportIssueButton = True
             End If
             
-            MsgBoxEx prompt, vbOKOnly, "OpenSolver - Error", LinkTarget:=LinkTarget, MoreDetailsButton:=MoreDetailsButton, ReportIssueButton:=ReportIssueButton
+            MsgBoxEx prompt, vbOKOnly, "OpenSolver - Error", LinkTarget:=ErrLinkTarget, MoreDetailsButton:=MoreDetailsButton, ReportIssueButton:=ReportIssueButton
         End If
     End If
     
@@ -142,3 +133,23 @@ End Function
 Public Function GetErrorLogFilePath() As String
     GetTempFilePath FILE_ERROR_LOG, GetErrorLogFilePath
 End Function
+
+Public Sub RaiseGeneralError(ErrorMessage As String, Optional HelpLink As String)
+    ErrLinkTarget = HelpLink
+    Err.Raise OpenSolver_Error, Description:=ErrorMessage
+End Sub
+Public Sub RaiseUserError(ErrorMessage As String, Optional HelpLink As String)
+    ErrLinkTarget = HelpLink
+    Err.Raise OpenSolver_UserError, Description:=ErrorMessage
+End Sub
+Public Sub RaiseUserCancelledError()
+    Err.Raise OpenSolver_UserCancelledError, Description:=SILENT_ERROR
+End Sub
+
+Public Sub RethrowError(Optional CurrentError As ErrObject)
+    If CurrentError Is Nothing Then
+        Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+    Else
+        Err.Raise CurrentError.Number, Description:=CurrentError.Description
+    End If
+End Sub

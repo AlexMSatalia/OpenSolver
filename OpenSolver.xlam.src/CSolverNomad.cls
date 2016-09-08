@@ -243,7 +243,7 @@ ExitSub:
         Application.Calculate
         Set SolverNOMAD.OS = Nothing
     #End If
-    If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+    If RaiseError Then RethrowError
     Exit Sub
 
 ErrorHandler:

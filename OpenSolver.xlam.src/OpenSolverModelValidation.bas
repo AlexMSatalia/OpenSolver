@@ -4,7 +4,7 @@ Option Explicit
 Public Sub ValidateObjectiveFunctionCell(ObjectiveFunctionCell As Range)
     If Not ObjectiveFunctionCell Is Nothing Then
         ' Check objective is a single cell
-        If ObjectiveFunctionCell.Count <> 1 Then Err.Raise OpenSolver_ModelError, Description:="The objective function cell must be a single cell."
+        If ObjectiveFunctionCell.Count <> 1 Then RaiseUserError "The objective function cell must be a single cell."
     End If
 End Sub
 Public Sub ValidateObjectiveFunctionCellRefersTo(ObjectiveFunctionCellRefersTo As String)
@@ -15,7 +15,7 @@ End Sub
 
 Public Sub ValidateDecisionVariables(DecisionVariables As Range)
      ' We allow empty range to be set, it will just throw an error when solving
-     'If DecisionVariables Is Nothing Then Err.Raise OpenSolver_ModelError, Description:="The adjustable cells must be specified"
+     'If DecisionVariables Is Nothing Then RaiseUserError "The adjustable cells must be specified"
 End Sub
 Public Sub ValidateDecisionVariablesRefersTo(DecisionVariablesRefersTo As String)
     Dim DecisionVariables As Range
@@ -27,13 +27,13 @@ Public Sub ValidateConstraint(LHSRange As Range, Relation As RelationConsts, RHS
     GetActiveSheetIfMissing sheet
     
     If LHSRange.Areas.Count > 1 Then
-        Err.Raise OpenSolver_ModelError, Description:="Left-hand-side of constraint must have only one area."
+        RaiseUserError "Left-hand-side of constraint must have only one area."
     End If
     
     If RelationHasRHS(Relation) Then
         If Not RHSRange Is Nothing Then
             If RHSRange.Count > 1 And RHSRange.Count <> LHSRange.Count Then
-                Err.Raise OpenSolver_ModelError, Description:="Right-hand-side of constraint has more than one cell, and does not match the number of cells on the left-hand-side."
+                RaiseUserError "Right-hand-side of constraint has more than one cell, and does not match the number of cells on the left-hand-side."
             End If
         Else
             ' Try to convert it to a US locale string internally
@@ -52,10 +52,10 @@ Public Sub ValidateConstraint(LHSRange As Range, Relation As RelationConsts, RHS
                     ' Allow
                 Case 2015  ' #VALUE!
                     ' Invalid formula structure
-                    Err.Raise OpenSolver_ModelError, Description:="The formula or value for the RHS is not valid. Please check and try again."
+                    RaiseUserError "The formula or value for the RHS is not valid. Please check and try again."
                 Case 2023  ' #REF!
                     ' Missing cell reference inside formula
-                    Err.Raise OpenSolver_ModelError, Description:="The RHS is marked #REF!, indicating it has been deleted. Please fix and try again."
+                    RaiseUserError "The RHS is marked #REF!, indicating it has been deleted. Please fix and try again."
                 Case 2029  ' #NAME?
                     ' Valid formula that evaluates to an error
                     ' Allow
@@ -65,7 +65,7 @@ Public Sub ValidateConstraint(LHSRange As Range, Relation As RelationConsts, RHS
                     ' Allow
                 End Select
             ElseIf VarType(varReturn) = vbArray + vbVariant Then  ' Formula evaluates to array
-                Err.Raise OpenSolver_ModelError, Description:="The formula for the RHS is not valid because it evaluates to multiple cells. The result of the formula must be a single numeric value. Please fix this and try again."
+                RaiseUserError "The formula for the RHS is not valid because it evaluates to multiple cells. The result of the formula must be a single numeric value. Please fix this and try again."
             End If
 
             ' Convert any cell references to absolute
@@ -86,7 +86,7 @@ Public Sub ValidateConstraint(LHSRange As Range, Relation As RelationConsts, RHS
     Else
         If Not RHSRange Is Nothing Or _
            (RHSFormula <> "" And RHSFormula <> "integer" And RHSFormula <> "binary" And RHSFormula <> "alldiff") Then
-            Err.Raise OpenSolver_ModelError, Description:="No right-hand-side is permitted for this relation"
+            RaiseUserError "No right-hand-side is permitted for this relation"
         End If
     End If
 End Sub
@@ -96,12 +96,12 @@ Public Sub ValidateConstraintRefersTo(LHSRefersTo As String, Relation As Relatio
     ConvertRefersToConstraint LHSRefersTo, RHSRefersTo, LHSRange, RHSRange, RHSFormula
     
     If LHSRange Is Nothing Then
-        Err.Raise OpenSolver_ModelError, Description:="Left-hand-side of constraints must be a range."
+        RaiseUserError "Left-hand-side of constraints must be a range."
     End If
     
     If RelationHasRHS(Relation) Then
         If Len(RHSRefersTo) = 0 Then
-            Err.Raise OpenSolver_ModelError, Description:="Right-hand-side cannot be blank!"
+            RaiseUserError "Right-hand-side cannot be blank!"
         End If
     End If
     
@@ -115,7 +115,7 @@ Public Sub ValidateDualsRefersTo(DualsRefersTo As String)
 End Sub
 Public Sub ValidateDuals(Duals As Range)
     If Not Duals Is Nothing Then
-        If Duals.Count <> 1 Then Err.Raise OpenSolver_ModelError, Description:="The dual range must be a single cell."
+        If Duals.Count <> 1 Then RaiseUserError "The dual range must be a single cell."
     End If
 End Sub
 
@@ -130,7 +130,8 @@ End Sub
 Sub ValidateSolverParameters(SolverParameters As Range)
     If SolverParameters Is Nothing Then Exit Sub
     If SolverParameters.Areas.Count > 1 Or SolverParameters.Columns.Count <> 2 Then
-        Err.Raise OpenSolver_SolveError, Description:="The Extra Solver Parameters range must be a single two-column table of keys and values."
+        RaiseUserError "The Extra Solver Parameters range must be a single two-column table of keys and values.", _
+                       "http://opensolver.org/using-opensolver/#extra-parameters"
     End If
 End Sub
 
@@ -142,7 +143,7 @@ End Sub
 
 Sub ValidateQuickSolveParameters(QuickSolveParameters As Range, sheet As Worksheet)
     If QuickSolveParameters.Worksheet.Name <> sheet.Name Then
-        Err.Raise OpenSolver_BuildError, Description:="The parameter cells need to be on the current worksheet."
+        RaiseUserError "The parameter cells need to be on the current worksheet."
     End If
 End Sub
 Sub ValidateQuickSolveParametersRefersTo(QuickSolveParametersRefersTo As String, sheet As Worksheet)

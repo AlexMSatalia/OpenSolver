@@ -9,8 +9,7 @@ Sub LaunchCommandLine_CBC()
           Dim ModelFilePathName As String
 6353      GetLPFilePath ModelFilePathName
           If Not FileOrDirExists(ModelFilePathName) Then
-              MsgBox "Error: There is no .lp file (" & ModelFilePathName & ") to open. Please solve the OpenSolver model and then try again."
-              GoTo ExitSub
+              RaiseUserError "There is no .lp file (" & ModelFilePathName & ") to open. Please solve the OpenSolver model and then try again."
           End If
 
           Dim SolverParametersString As String
@@ -25,7 +24,7 @@ Sub LaunchCommandLine_CBC()
           
           Dim SolverPath As String, errorString As String
 6350      If Not SolverIsAvailable(Solver, SolverPath, errorString) Then
-6351          Err.Raise OpenSolver_CBCError, Description:=errorString
+6351          RaiseGeneralError errorString
 6352      End If
           
           Dim SolverParameters As New Dictionary

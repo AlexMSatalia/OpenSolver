@@ -147,7 +147,7 @@ Function WriteNLFile_Parsed(OpenSolver As COpenSolver, ModelFilePathName As Stri
 7462      InitialiseModelStats s
           
 7464      If n_obj = 0 And n_con = 0 Then
-7465          Err.Raise OpenSolver_BuildError, "The model has no constraints that depend on the adjustable cells, and has no objective. There is nothing for the solver to do."
+7465          RaiseUserError "The model has no constraints that depend on the adjustable cells, and has no objective. There is nothing for the solver to do."
 7466      End If
           
 7467      CreateVariableIndex
@@ -185,7 +185,7 @@ Function WriteNLFile_Parsed(OpenSolver As COpenSolver, ModelFilePathName As Stri
 ExitFunction:
 7529      Application.StatusBar = False
 7530      Close #1
-          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          If RaiseError Then RethrowError
           Exit Function
 
 ErrorHandler:
@@ -279,7 +279,7 @@ Private Sub InitialiseModelStats(s As COpenSolver)
 7595      como1 = 0
 
 ExitSub:
-          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          If RaiseError Then RethrowError
           Exit Sub
 
 ErrorHandler:
@@ -326,7 +326,7 @@ Private Sub CreateVariableIndex()
 7616      Next i
 
 ExitSub:
-          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          If RaiseError Then RethrowError
           Exit Sub
 
 ErrorHandler:
@@ -488,7 +488,7 @@ Private Sub MakeVariableMap(SolveRelaxation As Boolean)
           End If
 
 ExitSub:
-          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          If RaiseError Then RethrowError
           Exit Sub
 
 ErrorHandler:
@@ -523,7 +523,7 @@ Private Sub AddVariable(cellName As String, Index As Long, i As Long)
 7730      Index = Index + 1
 
 ExitSub:
-          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          If RaiseError Then RethrowError
           Exit Sub
 
 ErrorHandler:
@@ -588,7 +588,7 @@ Private Sub MakeConstraintMap()
 7766      Next i
 
 ExitSub:
-          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          If RaiseError Then RethrowError
           Exit Sub
 
 ErrorHandler:
@@ -621,7 +621,7 @@ Private Sub AddConstraint(cellName As String, Index As Long, i As Long)
 7773      Index = Index + 1
 
 ExitSub:
-          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          If RaiseError Then RethrowError
           Exit Sub
 
 ErrorHandler:
@@ -661,7 +661,7 @@ Private Sub ProcessFormulae()
           
 ExitSub:
 7795      Application.StatusBar = False
-          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          If RaiseError Then RethrowError
           Exit Sub
 
 ErrorHandler:
@@ -783,7 +783,7 @@ Private Sub ProcessSingleFormula(RHSExpression As String, LHSVariable As String,
 7851      Next var
 
 ExitSub:
-          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          If RaiseError Then RethrowError
           Exit Sub
 
 ErrorHandler:
@@ -846,7 +846,7 @@ Private Sub ProcessObjective()
 7871      End If
 
 ExitSub:
-          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          If RaiseError Then RethrowError
           Exit Sub
 
 ErrorHandler:
@@ -873,7 +873,7 @@ Private Sub MakeHeader()
 7882      Print #1, " " & comb & " " & comc & " " & como & " " & comc1 & " " & como1; vbTab; "# common exprs: b,c,o,c1,o1"
 
 ExitSub:
-          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          If RaiseError Then RethrowError
           Exit Sub
 
 ErrorHandler:
@@ -904,7 +904,7 @@ Private Sub MakeCBlocks()
 7893      Next i
 
 ExitSub:
-          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          If RaiseError Then RethrowError
           Exit Sub
 
 ErrorHandler:
@@ -933,7 +933,7 @@ Private Sub MakeOBlocks()
 7900      Next i
 
 ExitSub:
-          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          If RaiseError Then RethrowError
           Exit Sub
 
 ErrorHandler:
@@ -963,7 +963,7 @@ Private Sub MakeDBlock()
 7910      Next i
 
 ExitSub:
-          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          If RaiseError Then RethrowError
           Exit Sub
 
 ErrorHandler:
@@ -1003,7 +1003,7 @@ Private Sub MakeXBlock()
 7926      Next i
 
 ExitSub:
-          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          If RaiseError Then RethrowError
           Exit Sub
 
 ErrorHandler:
@@ -1037,7 +1037,7 @@ Private Sub MakeRBlock()
 7938      Next i
 
 ExitSub:
-          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          If RaiseError Then RethrowError
           Exit Sub
 
 ErrorHandler:
@@ -1089,7 +1089,7 @@ Private Sub MakeBBlock()
 7968      Next i
 
 ExitSub:
-          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          If RaiseError Then RethrowError
           Exit Sub
 
 ErrorHandler:
@@ -1125,7 +1125,7 @@ Private Sub MakeKBlock()
 7980      Next i
 
 ExitSub:
-          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          If RaiseError Then RethrowError
           Exit Sub
 
 ErrorHandler:
@@ -1166,7 +1166,7 @@ Private Sub MakeJBlocks()
 8004      Next i
 
 ExitSub:
-          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          If RaiseError Then RethrowError
           Exit Sub
 
 ErrorHandler:
@@ -1205,7 +1205,7 @@ Private Sub MakeGBlocks()
 8015      Next i
 
 ExitSub:
-          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          If RaiseError Then RethrowError
           Exit Sub
 
 ErrorHandler:
@@ -1235,7 +1235,7 @@ Private Sub OutputColFile()
           
 ExitSub:
 8026      Close #2
-          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          If RaiseError Then RethrowError
           Exit Sub
 
 ErrorHandler:
@@ -1266,7 +1266,7 @@ Private Sub OutputRowFile()
 
 ExitSub:
           Close #3
-          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          If RaiseError Then RethrowError
           Exit Sub
 
 ErrorHandler:
@@ -1292,7 +1292,7 @@ Sub OutputLine(FileNum As Long, LineText As String, Optional CommentText As Stri
 8050      Print #FileNum,
 
 ExitSub:
-          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          If RaiseError Then RethrowError
           Exit Sub
 
 ErrorHandler:
@@ -1359,7 +1359,7 @@ Private Function ConvertFormulaToExpressionTree(strFormula As String) As Express
                       
                       ' If the operator stack runs out without finding a left parenthesis, then there are mismatched parentheses
 8074                  If Operators.Count = 0 Then
-8075                      Err.Raise OpenSolver_BuildError, "Mismatched parentheses"
+8075                      RaiseGeneralError "Mismatched parentheses"
 8076                  End If
 8077              Loop
                   ' Increase arg count for the new parameter
@@ -1377,9 +1377,9 @@ Private Function ConvertFormulaToExpressionTree(strFormula As String) As Express
                           GoTo NextToken
                       Case Else
                           ' Unknown unary operator
-                          Err.Raise OpenSolver_ModelError, Description:="While parsing formula for .nl output, the following unary operator was encountered: " & tkn.Text & vbNewLine & vbNewLine & _
-                                                                        "The entire formula was: " & vbNewLine & _
-                                                                        "=" & strFormula
+                          RaiseGeneralError "While parsing formula for .nl output, the following unary operator was encountered: " & tkn.Text & vbNewLine & vbNewLine & _
+                                            "The entire formula was: " & vbNewLine & _
+                                            "=" & strFormula
                       End Select
 8082              Else
 8083                  tkn.Text = ConvertExcelFunctionToNL(tkn.Text)
@@ -1410,7 +1410,7 @@ Private Function ConvertFormulaToExpressionTree(strFormula As String) As Express
 8098                  PopOperator Operators, Operands
                       ' If the operator stack runs out without finding a left parenthesis, then there are mismatched parentheses
 8099                  If Operators.Count = 0 Then
-8100                      Err.Raise OpenSolver_BuildError, "Mismatched parentheses"
+8100                      RaiseGeneralError "Mismatched parentheses"
 8101                  End If
 8102              Loop
                   ' Pop the left parenthesis from the operator stack, but not onto the operand stack
@@ -1429,7 +1429,7 @@ NextToken:
 8111      Do While Operators.Count > 0
               ' If the token on the top of the operator stack is a parenthesis, then there are mismatched parentheses
 8112          If Operators.Peek = "(" Then
-8113              Err.Raise OpenSolver_BuildError, "Mismatched parentheses"
+8113              RaiseGeneralError "Mismatched parentheses"
 8114          End If
               ' Pop the operator onto the operand stack as a new tree
 8115          PopOperator Operators, Operands
@@ -1439,7 +1439,7 @@ NextToken:
 8117      Set ConvertFormulaToExpressionTree = Operands.Pop
 
 ExitFunction:
-          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          If RaiseError Then RethrowError
           Exit Function
 
 ErrorHandler:
@@ -1464,7 +1464,7 @@ Public Function CreateTree(NodeText As String, NodeType As Long) As ExpressionTr
 8123      Set CreateTree = obj
 
 ExitFunction:
-          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          If RaiseError Then RethrowError
           Exit Function
 
 ErrorHandler:
@@ -1499,11 +1499,11 @@ Private Function NumberOfOperands(FunctionName As String, Optional ArgCount As L
 8135      Case "if", "ifs", "implies"
 8136          NumberOfOperands = 3
 8137      Case Else
-8138          Err.Raise OpenSolver_BuildError, "Building expression tree", "Unknown function " & FunctionName & vbCrLf & "Please let us know about this at opensolver.org so we can fix it."
+8138          RaiseGeneralError "Building expression tree", "Unknown function " & FunctionName & vbCrLf & "Please let us know about this so we can fix it."
 8139      End Select
 
 ExitFunction:
-          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          If RaiseError Then RethrowError
           Exit Function
 
 ErrorHandler:
@@ -1538,12 +1538,12 @@ Private Function ConvertExcelFunctionToNL(FunctionName As String) As String
 8171      Case "or":       FunctionName = "or_n"
               
 8173      Case "log", "ceiling", "floor", "power"
-8174          Err.Raise OpenSolver_BuildError, "Building expression tree", "Not implemented yet: " & FunctionName & vbCrLf & "Please let us know about this at opensolver.org so we can fix it."
+8174          RaiseGeneralError "Not implemented yet: " & FunctionName & vbCrLf & "Please let us know about this so we can fix it."
 8175      End Select
 8176      ConvertExcelFunctionToNL = FunctionName
 
 ExitFunction:
-          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          If RaiseError Then RethrowError
           Exit Function
 
 ErrorHandler:
@@ -1593,7 +1593,7 @@ Private Function CheckPrecedence(tkn1 As String, tkn2 As String) As Boolean
 8200      End If
 
 ExitFunction:
-          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          If RaiseError Then RethrowError
           Exit Function
 
 ErrorHandler:
@@ -1614,11 +1614,11 @@ Private Function OperatorIsLeftAssociative(tkn As String) As Boolean
 8203      Case "pow"
 8204          OperatorIsLeftAssociative = False
 8205      Case Else
-8206          Err.Raise OpenSolver_BuildError, "Parsing cleaned formula", "Unknown associativity: " & tkn & vbNewLine & "Please let us know about this at opensolver.org so we can fix it."
+8206          RaiseGeneralError "Unknown associativity: " & tkn & vbNewLine & "Please let us know about this so we can fix it."
 8207      End Select
 
 ExitFunction:
-          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          If RaiseError Then RethrowError
           Exit Function
 
 ErrorHandler:
@@ -1651,7 +1651,7 @@ Private Sub PopOperator(Operators As StringStack, Operands As ExpressionTreeStac
 8215      Operands.Push NewTree
 
 ExitSub:
-          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          If RaiseError Then RethrowError
           Exit Sub
 
 ErrorHandler:
@@ -1674,7 +1674,7 @@ Private Function IsFunctionOperator(tkn As String) As Boolean
 8220      End Select
 
 ExitFunction:
-          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          If RaiseError Then RethrowError
           Exit Function
 
 ErrorHandler:
@@ -1698,7 +1698,7 @@ Private Sub AddNegToTree(Tree As ExpressionTree)
 8224      Set Tree = NewTree
 
 ExitSub:
-          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          If RaiseError Then RethrowError
           Exit Sub
 
 ErrorHandler:
@@ -1723,7 +1723,7 @@ Function FormatNL(NodeText As String, NodeType As ExpressionTreeNodeType) As Str
 8231      End Select
 
 ExitFunction:
-          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          If RaiseError Then RethrowError
           Exit Function
 
 ErrorHandler:
@@ -1804,11 +1804,11 @@ Private Function ConvertObjectiveSenseToNL(ObjectiveSense As ObjectiveSenseType)
 8343      Case ObjectiveSenseType.MinimiseObjective
 8344          ConvertObjectiveSenseToNL = 0
 8345      Case Else
-8346          Err.Raise OpenSolver_SolveError, Description:="Objective sense not supported: " & ObjectiveSense
+8346          RaiseGeneralError "Objective sense not supported: " & ObjectiveSense
 8347      End Select
 
 ExitFunction:
-          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          If RaiseError Then RethrowError
           Exit Function
 
 ErrorHandler:
@@ -1843,10 +1843,11 @@ Sub ReadResults_NL(s As COpenSolver)
     If Not FileOrDirExists(s.SolutionFilePathName) Then
         If Not GetExtraInfoFromLog(s) Then
             CheckLog_NL s
-            Err.Raise OpenSolver_SolveError, Description:= _
+            RaiseGeneralError _
                 "The solver did not create a solution file. No new solution is available." & vbNewLine & vbNewLine & _
                 "This can happen when the initial conditions are invalid. " & _
-                "Check the log file for more information."
+                "Check the log file for more information.", _
+                LINK_NO_SOLUTION_FILE
         End If
     Else
         UpdateStatusBar "OpenSolver: Reading Solution... ", True
@@ -1872,7 +1873,7 @@ Sub ReadResults_NL(s As COpenSolver)
         
         Line Input #1, Line
         If LCase(Left(Line, 7)) <> "options" Then
-            Err.Raise OpenSolver_SolveError, Description:="Bad .sol file"
+            RaiseGeneralError "Bad .sol file"
         End If
         
         Dim Options(1 To 14) As Long
@@ -1885,7 +1886,7 @@ Sub ReadResults_NL(s As COpenSolver)
         Dim NumOptions As Long
         NumOptions = Options(1)
         If NumOptions < 3 Or NumOptions > 9 Then
-            Err.Raise OpenSolver_SolveError, Description:="Too many options"
+            RaiseGeneralError "Too many options"
         End If
         Dim NeedVbTol As Boolean
         NeedVbTol = False
@@ -1901,7 +1902,7 @@ Sub ReadResults_NL(s As COpenSolver)
         
         Line Input #1, Line
         If Val(Line) <> n_con Then
-            Err.Raise OpenSolver_SolveError, Description:="Wrong number of constraints"
+            RaiseGeneralError "Wrong number of constraints"
         End If
         
         Dim NumDualsToRead As Long
@@ -1910,7 +1911,7 @@ Sub ReadResults_NL(s As COpenSolver)
         
         Line Input #1, Line
         If Val(Line) <> n_var Then
-            Err.Raise OpenSolver_SolveError, Description:="Wrong number of variables"
+            RaiseGeneralError "Wrong number of variables"
         End If
         
         Dim NumVarsToRead As Long
@@ -1945,7 +1946,7 @@ Sub ReadResults_NL(s As COpenSolver)
             Dim SplitLine() As String
             SplitLine = Split(Line, " ")
             If Val(SplitLine(LBound(SplitLine) + 1)) <> 0 Then
-                Err.Raise OpenSolver_SolveError, Description:="Wrong objno"
+                RaiseGeneralError "Wrong objno"
             End If
             solve_result_num = Val(SplitLine(LBound(SplitLine) + 2))
         End If
@@ -1968,7 +1969,7 @@ Sub ReadResults_NL(s As COpenSolver)
             s.SolveStatusString = "Stopped on User Limit (Time/Iterations)"
             GetExtraInfoFromLog s
         Case 500 To 599
-            Err.Raise OpenSolver_SolveError, Description:= _
+            RaiseGeneralError _
                 "There was an error while solving the model. The solver returned: " & _
                 vbNewLine & vbNewLine & SolveMessage
         Case -1
@@ -1984,7 +1985,7 @@ Sub ReadResults_NL(s As COpenSolver)
 ExitSub:
     Application.StatusBar = False
     Close #1
-    If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+    If RaiseError Then RethrowError
     Exit Sub
 
 ErrorHandler:
@@ -2016,7 +2017,7 @@ Sub CheckSolveMessage(SolveMessage As String)
         s.SolveStatusString = "Stopped on Ctrl-C"
     Else
         If Not GetExtraInfoFromLog(s) Then
-            Err.Raise OpenSolver_SolveError = _
+            RaiseGeneralError _
                 "The response from the " & DisplayName(s.Solver) & " solver is not recognised. The response was: " & vbNewLine & vbNewLine & _
                 SolveMessage & vbNewLine & vbNewLine & _
                 "The " & DisplayName(s.Solver) & " command line can be found at:" & vbNewLine & _
@@ -2033,7 +2034,8 @@ Sub CheckLog_NL(s As COpenSolver)
           On Error GoTo ErrorHandler
 
           If Not FileOrDirExists(s.LogFilePathName) Then
-              Err.Raise Number:=OpenSolver_SolveError, Description:="The solver did not create a log file. No new solution is available."
+              RaiseGeneralError "The solver did not create a log file. No new solution is available.", _
+                                LINK_NO_SOLUTION_FILE
           End If
           
           Dim message As String
@@ -2052,34 +2054,36 @@ Sub CheckLog_NL(s As COpenSolver)
           For Each Key In s.SolverParameters.Keys
               If InStr(message, LCase("Unknown keyword " & Quote(CStr(Key)))) > 0 Or _
                  InStr(message, LCase(Key & """. It is not a valid option.")) > 0 Then
-                  Err.Raise OpenSolver_SolveError, Description:= _
+                  RaiseUserError _
                       "The parameter '" & Key & "' was not recognised by the " & DisplayName(s.Solver) & " solver. " & _
-                      "Please check that this name is correct, or consult the solver documentation for more information."
+                      "Please check that this name is correct, or consult the solver documentation for more information.", _
+                      LINK_PARAMETER_DOCS
               End If
               If InStr(message, LCase("not a valid setting for Option: " & Key)) > 0 Then
-                  Err.Raise OpenSolver_SolveError, Description:= _
+                  RaiseUserError _
                       "The value specified for the parameter '" & Key & "' was invalid. " & _
-                      "Please check the OpenSolver log file for a description, or consult the solver documentation for more information."
+                      "Please check the OpenSolver log file for a description, or consult the solver documentation for more information.", _
+                      LINK_PARAMETER_DOCS
               End If
           Next Key
 
           Dim BadFunction As Variant
           For Each BadFunction In Array("max", "min")
               If InStr(message, LCase(BadFunction & " not implemented")) > 0 Then
-                  Err.Raise OpenSolver_SolveError, Description:= _
+                  RaiseUserError _
                       "The '" & BadFunction & "' function is not supported by the " & DisplayName(s.Solver) & " solver"
               End If
           Next BadFunction
           
           If InStr(message, LCase("unknown operator")) > 0 Then
-              Err.Raise OpenSolver_SolveError, Description:= _
+              RaiseUserError _
                   "A function in the model is not supported by the " & DisplayName(s.Solver) & " solver. " & _
                   "This is likely to be either MIN or MAX"
           End If
 
 ExitSub:
           Close #3
-          If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+          If RaiseError Then RethrowError
           Exit Sub
 
 ErrorHandler:
@@ -2125,7 +2129,7 @@ Function GetExtraInfoFromLog(s As COpenSolver) As Boolean
     End If
 
 ExitFunction:
-    If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+    If RaiseError Then RethrowError
     Exit Function
 
 ErrorHandler:
@@ -2162,7 +2166,7 @@ Function CreateSolveCommand_NL(s As COpenSolver, ScriptFilePathName As String) A
     CreateScriptFile ScriptFilePathName, CreateSolveCommand_NL
 
 ExitFunction:
-    If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+    If RaiseError Then RethrowError
     Exit Function
 
 ErrorHandler:
