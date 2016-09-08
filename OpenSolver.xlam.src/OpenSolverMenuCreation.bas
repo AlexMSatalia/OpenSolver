@@ -6,32 +6,14 @@ Private Const MenuName As String = "&OpenSolver"
 Private Const MenuBarName As String = "Worksheet Menu Bar"
 
 Sub AlterMenuItems(AddItems As Boolean)
-          ' Add if we are on Mac or prior to Excel 2007
-7         If IsMac Or Val(Application.Version) < 12 Then
+          ' Add if we are on Mac 2011 or Windows prior to Excel 2007
+7         If (IsMac And Val(Application.Version) < 15) Or Val(Application.Version) < 12 Then
 8             If AddItems Then
-9                 AddMenuItems
+9                 AddMenuItems_MenuBar
 10            Else
-11                DelMenuItems
+11                DelMenuItems_MenuBar
 12            End If
 13        End If
-End Sub
-
-Private Sub AddMenuItems()
-    ' If we are on Mac 2016 we have a toolbar style menu
-    If IsMac And Int(Val(Application.Version)) = 15 Then
-        AddMenuItems_Toolbar
-    Else
-        AddMenuItems_MenuBar
-    End If
-End Sub
-
-Private Sub DelMenuItems()
-    ' If we are on Mac 2016 we have a toolbar style menu
-    If IsMac And Int(Val(Application.Version)) = 15 Then
-        DelMenuItems_Toolbar
-    Else
-        DelMenuItems_MenuBar
-    End If
 End Sub
 
 '====================================================================
@@ -238,94 +220,6 @@ End Sub
 Private Sub DelMenuItems_MenuBar()
 3011      On Error Resume Next
 3012      Application.CommandBars(MenuBarName).Controls(MenuName).Delete
-End Sub
-
-'====================================================================
-' Code for making the Toolbar menu
-' Adapted from http://peltiertech.com/office-2016-for-mac-is-here/#comment-693017
-'====================================================================
-
-Public Sub AddMenuItems_Toolbar(Optional RootItem As String)
-    ' Creates a menu using the children of the MenuItem with the id specified by RootItem
-    DelMenuItems_Toolbar
-    
-    Dim OpenSolverMenu As CommandBar
-    Set OpenSolverMenu = Application.CommandBars.Add(MenuName)
-    OpenSolverMenu.Visible = True
-    
-    ' Get the children of RootItem
-    Dim MenuItems As Collection
-    Set MenuItems = FindChildren(GenerateMenuItems(), RootItem)
-    
-    ' Add a 'Back to main menu' item if we are in a sub-menu
-    If Len(RootItem) <> 0 Then
-        AddToMenu_Toolbar OpenSolverMenu, _
-            NewMenuItem("button", "back", ChrW(&H25C2) & " Back to Main Menu", "AddMenuItems_Toolbar")
-    End If
-    
-    Dim Item As MenuItem
-    For Each Item In MenuItems
-        AddToMenu_Toolbar OpenSolverMenu, Item
-    Next Item
-End Sub
-
-Private Function FindChildren(Items As Collection, RootItem As String) As Collection
-    If Len(RootItem) = 0 Then
-        Set FindChildren = Items
-        Exit Function
-    End If
-    
-    Dim Item As MenuItem
-    For Each Item In Items
-        If Item.Id = RootItem Then
-            Set FindChildren = Item.Children
-            Exit Function
-        End If
-        Set FindChildren = FindChildren(Item.Children, RootItem)
-        If FindChildren.Count <> 0 Then Exit Function
-    Next Item
-    ' No match, return empty collection
-    Set FindChildren = New Collection
-End Function
-
-Private Sub AddToMenu_Toolbar(Menu As CommandBar, Item As MenuItem)
-    Select Case Item.Tag
-    Case "button"
-        ' Add button for the item
-        With Menu.Controls.Add(Type:=msoControlButton)
-          .Style = msoButtonCaption
-          .Caption = Item.Label
-          .OnAction = Item.OnAction
-          .Enabled = True
-        End With
-    Case "splitButton", "menu"
-        ' Add button to open the specified sub-menu
-        With Menu.Controls.Add(Type:=msoControlButton)
-          .Style = msoButtonCaption
-          .Caption = IIf(Item.Tag = "splitButton", Item.Children(1).Label, Item.Label)
-          .OnAction = "AddMenuItems_Toolbar" & Replace(.Caption, "&", "")
-          .Caption = .Caption & " " & ChrW(&H25BE)
-          .Enabled = True
-        End With
-    End Select
-End Sub
-
-' Click handlers for opening sub-menus
-Public Sub AddMenuItems_ToolbarModel()
-    AddMenuItems_Toolbar "OpenSolverModelMenu"
-End Sub
-
-Public Sub AddMenuItems_ToolbarSolve()
-    AddMenuItems_Toolbar "OpenSolverSolveMenu"
-End Sub
-
-Public Sub AddMenuItems_ToolbarOpenSolver()
-    AddMenuItems_Toolbar "menu"
-End Sub
-
-Private Sub DelMenuItems_Toolbar()
-          On Error Resume Next
-          Application.CommandBars(MenuName).Delete
 End Sub
 
 '====================================================================
