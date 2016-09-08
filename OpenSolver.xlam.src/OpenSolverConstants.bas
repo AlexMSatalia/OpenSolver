@@ -1,7 +1,8 @@
 Attribute VB_Name = "OpenSolverConstants"
 Option Explicit
 
-Public Const EPSILON = 0.00001
+Public Const EPSILON As Double = 0.00001
+Public Const MAX_LONG As Long = 2147483647
 
 'Solution results, as reported by Excel Solver
 ' FROM http://msdn.microsoft.com/en-us/library/ff197237.aspx

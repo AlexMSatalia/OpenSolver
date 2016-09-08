@@ -299,9 +299,17 @@ Function GetSolverParametersDict(Solver As ISolver, sheet As Worksheet) As Dicti
           
           ' First we fill all info from the saved options. These can then be overridden by the parameters defined on the sheet
           If PrecisionAvailable(Solver) Then SolverParameters.Add Key:=Solver.PrecisionName, Item:=GetPrecision(sheet)
-          If TimeLimitAvailable(Solver) Then SolverParameters.Add Key:=Solver.TimeLimitName, Item:=GetMaxTime(sheet)
-          If IterationLimitAvailable(Solver) Then SolverParameters.Add Key:=Solver.IterationLimitName, Item:=GetMaxIterations(sheet)
           If ToleranceAvailable(Solver) Then SolverParameters.Add Key:=Solver.ToleranceName, Item:=GetTolerance(sheet)
+          
+          If TimeLimitAvailable(Solver) Then
+              ' Trim TimeLimit to valid value - MAX_LONG seconds is still 68 years!
+              SolverParameters.Add Key:=Solver.TimeLimitName, Item:=Min(GetMaxTime(sheet), MAX_LONG)
+          End If
+          
+          If IterationLimitAvailable(Solver) Then
+              ' Trim IterationLimit to a valid integer
+              SolverParameters.Add Key:=Solver.IterationLimitName, Item:=Int(Min(GetMaxIterations(sheet), MAX_LONG))
+          End If
           
           ' The user can define a set of parameters they want to pass to the solver; this gets them as a dictionary. MUST be on the current sheet
           Dim SolverParametersRange As Range, i As Long

@@ -613,9 +613,9 @@ End Sub
 ' * Returns the solver iteration limit for an OpenSolver model.
 ' * @param {} sheet The worksheet containing the model (defaults to active worksheet)
 ' */
-Public Function GetMaxIterations(Optional sheet As Worksheet) As Long
+Public Function GetMaxIterations(Optional sheet As Worksheet) As Double
     GetActiveSheetIfMissing sheet
-    GetMaxIterations = GetNamedIntegerWithDefault(sheet, "solver_itr", 999999999)
+    GetMaxIterations = GetNamedDoubleWithDefault(sheet, "solver_itr", 999999999)
 End Function
 
 '/**
@@ -623,9 +623,9 @@ End Function
 ' * @param {} MaxIterations The iteration limit to set
 ' * @param {} sheet The worksheet containing the model (defaults to active worksheet)
 ' */
-Public Sub SetMaxIterations(MaxIterations As Long, Optional sheet As Worksheet)
+Public Sub SetMaxIterations(MaxIterations As Double, Optional sheet As Worksheet)
     GetActiveSheetIfMissing sheet
-    SetIntegerNameOnSheet "solver_itr", MaxIterations, sheet
+    SetDoubleNameOnSheet "solver_itr", MaxIterations, sheet
 End Sub
 
 '/**
