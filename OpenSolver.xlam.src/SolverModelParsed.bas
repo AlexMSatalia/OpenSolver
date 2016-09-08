@@ -31,7 +31,7 @@ Function ConvertCellToStandardName(rngCell As Range, Optional strParentName As S
           Else
               strCleanParentName = strParentName
               
-              For Each BannedChar In Array("-", "+", " ", "(", ")", ":", "*", "/", "^")
+              For Each BannedChar In Array("-", "+", " ", "(", ")", ":", "*", "/", "^", "!")
                   strCleanParentName = Replace(strCleanParentName, BannedChar, "_")
               Next BannedChar
               
