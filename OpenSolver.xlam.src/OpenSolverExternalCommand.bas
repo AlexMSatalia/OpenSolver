@@ -3,14 +3,26 @@ Option Explicit
 
 #If Mac Then
     ' Declare libc functions
-    Private Declare Function system Lib "libc.dylib" (ByVal Command As String) As Long
-    Private Declare Function popen Lib "libc.dylib" (ByVal Command As String, ByVal Mode As String) As Long
-    Private Declare Function pclose Lib "libc.dylib" (ByVal file As Long) As Long
-    Private Declare Function read Lib "libc.dylib" (ByVal fd As Long, ByVal buffer As String, ByVal Size As Long) As Long
-    Private Declare Function fread Lib "libc.dylib" (ByVal outStr As String, ByVal Size As Long, ByVal Items As Long, ByVal stream As Long) As Long
-    Private Declare Function feof Lib "libc.dylib" (ByVal file As Long) As Long
-    Private Declare Function fileno Lib "libc.dylib" (ByVal file As Long) As Long
-    Private Declare Function fcntl Lib "libc.dylib" (ByVal fd As Long, ByVal cmd As Long, funcargs As Any) As Long
+    #If VBA7 Then
+         ' TODO not sure here on longptr vs long
+        Private Declare PtrSafe Function system Lib "libc.dylib" (ByVal Command As String) As Long
+        Private Declare PtrSafe Function popen Lib "libc.dylib" (ByVal Command As String, ByVal Mode As String) As LongPtr
+        Private Declare PtrSafe Function pclose Lib "libc.dylib" (ByVal file As LongPtr) As Long
+        Private Declare PtrSafe Function read Lib "libc.dylib" (ByVal fd As Long, ByVal buffer As String, ByVal Size As Long) As Long
+        Private Declare PtrSafe Function fread Lib "libc.dylib" (ByVal outStr As String, ByVal Size As Long, ByVal Items As Long, ByVal stream As LongPtr) As Long
+        Private Declare PtrSafe Function feof Lib "libc.dylib" (ByVal file As LongPtr) As Long
+        Private Declare PtrSafe Function fileno Lib "libc.dylib" (ByVal file As LongPtr) As Long
+        Private Declare PtrSafe Function fcntl Lib "libc.dylib" (ByVal fd As Long, ByVal cmd As Long, funcargs As Any) As Long
+    #Else
+        Private Declare Function system Lib "libc.dylib" (ByVal Command As String) As Long
+        Private Declare Function popen Lib "libc.dylib" (ByVal Command As String, ByVal Mode As String) As Long
+        Private Declare Function pclose Lib "libc.dylib" (ByVal file As Long) As Long
+        Private Declare Function read Lib "libc.dylib" (ByVal fd As Long, ByVal buffer As String, ByVal Size As Long) As Long
+        Private Declare Function fread Lib "libc.dylib" (ByVal outStr As String, ByVal Size As Long, ByVal Items As Long, ByVal stream As Long) As Long
+        Private Declare Function feof Lib "libc.dylib" (ByVal file As Long) As Long
+        Private Declare Function fileno Lib "libc.dylib" (ByVal file As Long) As Long
+        Private Declare Function fcntl Lib "libc.dylib" (ByVal fd As Long, ByVal cmd As Long, funcargs As Any) As Long
+    #End If
 
     Private Const O_NONBLOCK As Integer = 4
     Private Const F_GETFL As Long = 3&
@@ -134,24 +146,35 @@ Public StartTime As Single
 
 ' Our custom type
 #If Mac Then
-    Private Type ExecInformation
-        file As Long
-        fd As Long
-        BinaryName As String
-        pid As Long
-    End Type
-#ElseIf VBA7 Then
-    Private Type ExecInformation
-        ProcInfo As PROCESS_INFORMATION
-        hWrite As LongPtr
-        hRead As LongPtr
-    End Type
+    #If VBA7 Then
+        Private Type ExecInformation
+            file As LongPtr
+            fd As Long
+            BinaryName As String
+            pid As Long
+        End Type
+    #Else
+        Private Type ExecInformation
+            file As Long
+            fd As Long
+            BinaryName As String
+            pid As Long
+        End Type
+    #End If
 #Else
-    Private Type ExecInformation
-        ProcInfo As PROCESS_INFORMATION
-        hWrite As Long
-        hRead As Long
-    End Type
+    #If VBA7 Then
+        Private Type ExecInformation
+            ProcInfo As PROCESS_INFORMATION
+            hWrite As LongPtr
+            hRead As LongPtr
+        End Type
+    #Else
+        Private Type ExecInformation
+            ProcInfo As PROCESS_INFORMATION
+            hWrite As Long
+            hRead As Long
+        End Type
+    #End If
 #End If
 
 #If Win32 Then
@@ -196,18 +219,36 @@ Private Sub GetPid(ExecInfo As ExecInformation)
     ' Gets the pid of the last spawned process with the same binary name
     ' We use popen directly rather than ExecCapture to avoid creating an infinite loop
     
+    ' MAC2016: `fread` on `pgrep` seems to hang on Mac 2016? We just skip this for now
+    If Val(Application.Version) >= 15 Then Exit Sub
+    
     ' Get the pid of the newest process (-n) with the same name
-    Dim file As Long
+    #If VBA7 Then
+        Dim file As LongPtr
+    #Else
+        Dim file As Long
+    #End If
     file = popen("pgrep -n " & ExecInfo.BinaryName, "r")
     If file = 0 Then Exit Sub
     
+    ' TODO merge into read chunk?
     Dim result As String
     Do While feof(file) = 0
-        Dim chunk As String, read As Long
-        chunk = Space(4096)
-        read = fread(chunk, 1, Len(chunk) - 1, file)
-        If read > 0 Then
-            chunk = Left$(chunk, read)
+        Dim chunk As String, NumCharsRead As Long
+        chunk = String(4096, Chr$(0))
+        NumCharsRead = fread(chunk, 1, Len(chunk) - 1, file)
+        
+        ' On Mac 2016, `fread` returns 0 always? So we initialize with nulls
+        ' and trim the result to first null char instead
+        If Val(Application.Version) >= 15 Then
+            NumCharsRead = InStr(chunk, Chr$(0)) - 1
+            If NumCharsRead < 0 Then
+                NumCharsRead = Len(chunk)
+            End If
+        End If
+        
+        If NumCharsRead > 0 Then
+            chunk = Left$(chunk, NumCharsRead)
             result = result & chunk
         End If
     Loop
@@ -355,16 +396,39 @@ Private Function ReadChunk(ExecInfo As ExecInformation, ByRef NewData As String)
     #If Mac Then
         Const CHUNK_SIZE As Long = 4096
         Dim chunk As String
-        chunk = Space(CHUNK_SIZE)
-        NumCharsRead = read(ExecInfo.fd, chunk, Len(chunk) - 1)
         
-        ' NumCharsRead = -1 if nothing new written but process alive
-        '              =  0 if nothing new written and process ended
-        '              >  0 if new data has been read - need to read again to get state of process
-        If NumCharsRead > 0 Then
-            NewData = Left$(chunk, NumCharsRead)
+        If Val(Application.Version) >= 15 Then
+            ' `read` seems to hang on Mac 2016, use `fread` instead.
+            ' This means the read will block until the stream closes.
+            ' MAC2016: find a fix for this so we can get non-blocking reads?
+            ReadChunk = feof(ExecInfo.file) = 0
+            If ReadChunk Then
+                chunk = String(CHUNK_SIZE, Chr$(0))
+                NumCharsRead = fread(chunk, 1, Len(chunk) - 1, ExecInfo.file)
+                
+                ' NumCharsRead always seems to be zero on Mac 2016
+                ' We initialize the string with nulls and trim to first null instead
+                NumCharsRead = InStr(chunk, Chr$(0)) - 1
+                If NumCharsRead < 0 Then
+                    NumCharsRead = Len(chunk)
+                End If
+                
+                If NumCharsRead > 0 Then
+                    NewData = Left$(chunk, NumCharsRead)
+                End If
+            End If
+        Else
+            chunk = Space(CHUNK_SIZE)
+            NumCharsRead = read(ExecInfo.fd, chunk, Len(chunk) - 1)
+        
+            ' NumCharsRead = -1 if nothing new written but process alive
+            '              =  0 if nothing new written and process ended
+            '              >  0 if new data has been read - need to read again to get state of process
+            If NumCharsRead > 0 Then
+                NewData = Left$(chunk, NumCharsRead)
+            End If
+            ReadChunk = (NumCharsRead <> 0)  ' True if process is alive
         End If
-        ReadChunk = (NumCharsRead <> 0)  ' True if process is alive
     #Else
         #If VBA7 Then
             Dim lngResult As LongPtr
@@ -540,5 +604,3 @@ ErrorHandler:
     End If
     GoTo ExitFunction
 End Function
-
-
