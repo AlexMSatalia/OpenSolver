@@ -67,6 +67,7 @@ Private Sub ChangeAutoloadStatus(loadAtStartup As Boolean)
     Changed = ChangeOpenSolverAutoload(loadAtStartup)
     
     ' Mac doesn't close the userform when it unloads OpenSolver
+    ' MAC2016 broken on Mac 2016
     #If Mac Then
         If Not loadAtStartup And Changed Then
             Me.Hide

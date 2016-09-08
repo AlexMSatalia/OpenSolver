@@ -3,7 +3,11 @@ Option Explicit
 
 ' For sleep
 #If Mac Then
-    Private Declare Sub uSleep Lib "libc.dylib" Alias "usleep" (ByVal Microseconds As Long)
+    #If VBA7 Then
+        Private Declare PtrSafe Sub uSleep Lib "libc.dylib" Alias "usleep" (ByVal Microseconds As Long)
+    #Else
+        Private Declare Sub uSleep Lib "libc.dylib" Alias "usleep" (ByVal Microseconds As Long)
+    #End If
 #Else
     #If VBA7 Then
         Public Declare PtrSafe Sub mSleep Lib "kernel32" Alias "Sleep" (ByVal dwMilliseconds As Long)

@@ -4,7 +4,11 @@ Option Explicit
 ' All interactions with file system and sheets in Excel
 
 #If Mac Then
-    Private Declare Function mktemp Lib "libc.dylib" (ByVal template As String) As String
+    #If VBA7 Then
+        Private Declare PtrSafe Function mktemp Lib "libc.dylib" (ByVal template As String) As String
+    #Else
+        Private Declare Function mktemp Lib "libc.dylib" (ByVal template As String) As String
+    #End If
 #Else
     #If VBA7 Then
         Private Declare PtrSafe Function GetTempPath Lib "kernel32" Alias "GetTempPathA" (ByVal nBufferLength As Long, ByVal lpBuffer As String) As Long
@@ -108,7 +112,7 @@ Function GetRootDriveName() As String
               If DriveName = "" Then
                   Dim Path As String
                   Path = GetTempFolder(False)
-                  DriveName = Left(Path, InStr(Path, ":") - 1)
+                  DriveName = Left(Path, InStr(Path, Application.PathSeparator) - 1)
               End If
               GetRootDriveName = DriveName
           #End If
@@ -174,7 +178,7 @@ Function ConvertPosixPathToHfs(Path As String) As String
     On Error GoTo ErrorHandler
 
     #If Mac Then
-        ' Make sure we have an HFS path
+        ' Make sure we have a POSIX path
         If InStr(Path, ":") = 0 Then
             Const VolumePrefix = "/Volumes/"
             If Left(Path, Len(VolumePrefix)) = VolumePrefix Then
@@ -219,12 +223,23 @@ End Function
 Function FileOrDirExists(pathName As String) As Boolean
 ' from http://www.vbaexpress.com/kb/getarticle.php?kb_id=559
     
-          Dim iTemp As Long
-105       On Error Resume Next
-106       iTemp = GetAttr(pathName)
+          If IsMac And Val(Application.Version) >= 15 Then
+              ' On Mac 2016, any file access via VBA seems to set the extended attribute
+              ' `com.apple.quarantine` on the file.
+              ' This attribute blocks execution of the file later, like downloaded files on Windows
+              
+              ' Instead, we use the `test` shell function via libc to check existence
+              Dim result As String
+              result = ExecCapture("test -e " & MakePathSafe(pathName) & " && echo exists")
+              FileOrDirExists = Len(result) > 0
+          Else
+              Dim iTemp As Long
+105           On Error Resume Next
+106           iTemp = GetAttr(pathName)
+              'Check if error exists and set response appropriately
+107           FileOrDirExists = (Err.Number = 0)
+          End If
            
-           'Check if error exists and set response appropriately
-107       FileOrDirExists = (Err.Number = 0)
 End Function
 
 Sub DeleteFileAndVerify(FilePath As String)
@@ -344,8 +359,11 @@ Function GetTempFolder(Optional AllowEnvironOverride As Boolean = True) As Strin
           Static TempFolderPath As String
 88        If Len(TempFolderPath) = 0 Then
               #If Mac Then
-89                TempFolderPath = MacScript("return (path to temporary items) as string")
-
+                  If Val(Application.Version) >= 15 Then
+                      TempFolderPath = MacScript("return (POSIX path of (path to temporary items)) as string")
+                  Else
+89                    TempFolderPath = MacScript("return (path to temporary items) as string")
+                  End If
               #Else
                   ' Get Temp Folder
                   ' See http://www.pcreview.co.uk/forums/thread-934893.php
@@ -456,10 +474,10 @@ End Function
 Function GetOpenSolverAddInIfExists(OpenSolverAddIn As Excel.AddIn) As Boolean
           Dim Title As String
 3481      Title = "OpenSolver"
-          #If Mac Then
-              ' On Mac, the Application.AddIns collection is indexed by filename.ext rather than just filename as on Windows
+          If IsMac And Val(Application.Version) < 15 Then
+              ' On Mac 2011, the Application.AddIns collection is indexed by filename.ext rather than just filename as on Windows
 3482          Title = Title & ".xlam"
-          #End If
+          End If
           GetOpenSolverAddInIfExists = GetAddInIfExists(OpenSolverAddIn, Title)
 End Function
 
