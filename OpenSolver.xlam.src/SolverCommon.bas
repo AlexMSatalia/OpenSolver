@@ -14,6 +14,7 @@ Public LastUsedSolver As String
 Public Function SolverDir() As String
     Dim SolverDirBase As String
     #If Mac And MAC_OFFICE_VERSION >= 15 Then
+        ' On Mac 2016, we need to access the solvers from a folder that has execute permissions in the sandbox
         SolverDirBase = "/Library/OpenSolver"
     #Else
         SolverDirBase = ThisWorkbook.Path
