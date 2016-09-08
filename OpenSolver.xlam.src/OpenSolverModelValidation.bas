@@ -42,7 +42,7 @@ Public Sub ValidateConstraint(LHSRange As Range, Relation As RelationConsts, RHS
 
             ' Can we evaluate this function or constant?
             Dim varReturn As Variant
-            varReturn = sheet.Evaluate(internalRHS) ' Must be worksheet.evaluate to get references to names local to the sheet
+            varReturn = sheet.Evaluate(AddEquals(internalRHS)) ' Must be worksheet.evaluate to get references to names local to the sheet
             If VBA.VarType(varReturn) = vbError Then
                 ' We want to catch any error that arises from the *structure* of the formula, **not** the current values of its precedent cells
                 Select Case CLng(varReturn)

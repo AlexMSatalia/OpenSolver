@@ -244,7 +244,7 @@ Function RefEditToRefersTo(RefEditText As String) As String
     ' detecting the invalid formula that never throws any error.
     ' ============
     Dim varReturn As Variant
-    varReturn = Application.Evaluate(RefEditText)
+    varReturn = Application.Evaluate(AddEquals(RefEditText))
     If VarType(varReturn) = vbError Then
         If CLng(varReturn) = 2015 Then
             RefEditToRefersTo = RefEditText
