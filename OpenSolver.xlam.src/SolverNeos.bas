@@ -13,7 +13,7 @@ Private Const NEOS_SCRIPT_FILE = "NeosClient.py"
 Public SOLVE_LOCAL As Boolean  ' Whether to use local AMPL to solve. Defaults to false
 
 Function NeosClientScriptPath() As String
-          NeosClientScriptPath = JoinPaths(ThisWorkbook.Path, SolverDir, SolverDirMac, NEOS_SCRIPT_FILE)
+          NeosClientScriptPath = JoinPaths(SolverDir, SolverDirMac, NEOS_SCRIPT_FILE)
 End Function
 
 Function CallNEOS(s As COpenSolver, OutgoingMessage As String) As String
@@ -207,7 +207,7 @@ Private Function SendToNeos_Mac(method As String, Optional param1 As String, Opt
     On Error GoTo ErrorHandler
 
     Dim SolverPath As String, NeosClientDir As String
-    NeosClientDir = JoinPaths(ThisWorkbook.Path, SolverDir, SolverDirMac)
+    NeosClientDir = JoinPaths(SolverDir, SolverDirMac)
     GetExistingFilePathName NeosClientDir, NEOS_SCRIPT_FILE, SolverPath
     SolverPath = MakePathSafe(SolverPath)
     Exec "chmod +x " & SolverPath

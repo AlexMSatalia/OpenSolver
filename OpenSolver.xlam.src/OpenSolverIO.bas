@@ -26,7 +26,7 @@ Sub CheckLocationValid()
 End Sub
 
 Function SolverDirIsPresent() As Boolean
-          SolverDirIsPresent = FileOrDirExists(JoinPaths(ThisWorkbook.Path, SolverDir))
+          SolverDirIsPresent = FileOrDirExists(SolverDir)
 End Function
 
 Function ActiveSheetWithValidation() As Worksheet

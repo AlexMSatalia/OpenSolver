@@ -4,12 +4,22 @@ Option Explicit
 Public Const LogFileName = "log1.tmp"
 Public Const SolutionFileName = "model.sol"
 
-Public Const SolverDir As String = "Solvers"
+Public Const SolverDirName As String = "Solvers"
 Public Const SolverDirMac As String = "osx"
 Public Const SolverDirWin32 As String = "win32"
 Public Const SolverDirWin64 As String = "win64"
 
 Public LastUsedSolver As String
+
+Public Function SolverDir() As String
+    Dim SolverDirBase As String
+    #If Mac And MAC_OFFICE_VERSION >= 15 Then
+        SolverDirBase = "/Library/OpenSolver"
+    #Else
+        SolverDirBase = ThisWorkbook.Path
+    #End If
+    SolverDir = JoinPaths(SolverDirBase, SolverDirName)
+End Function
 
 Sub SolveModel(s As COpenSolver, ShouldSolveRelaxation As Boolean, ShouldMinimiseUserInteraction As Boolean)
     Dim RaiseError As Boolean
@@ -318,17 +328,17 @@ ErrorHandler:
 End Sub
 
 Function LibDir(Optional Bitness As String) As String
-    LibDir = JoinPaths(ThisWorkbook.Path, SolverDir)
     #If Mac Then
-        LibDir = JoinPaths(LibDir, SolverDirMac)
+        LibDir = SolverDirMac
         Bitness = "64"
     #ElseIf Win64 Then
-        LibDir = JoinPaths(LibDir, SolverDirWin64)
+        LibDir = SolverDirWin64
         Bitness = "64"
     #Else
-        LibDir = JoinPaths(LibDir, SolverDirWin32)
+        LibDir = SolverDirWin32
         Bitness = "32"
     #End If
+    LibDir = JoinPaths(SolverDir, LibDir)
 End Function
 
 Function SolverLibPath(LocalLibSolver As ISolverLocalLib, Optional errorString As String, Optional Bitness As String) As String
@@ -350,7 +360,7 @@ Function SolverExecPath(LocalExecSolver As ISolverLocalExec, Optional errorStrin
     Set Solver = LocalExecSolver
 
     Dim SearchPath As String
-    SearchPath = JoinPaths(ThisWorkbook.Path, SolverDir)
+    SearchPath = SolverDir
     errorString = ""
     Bitness = ""
     

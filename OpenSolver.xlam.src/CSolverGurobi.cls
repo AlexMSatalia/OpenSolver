@@ -140,7 +140,7 @@ End Property
 ' Methods
 
 Private Function PythonScriptPath() As String
-    PythonScriptPath = JoinPaths(ThisWorkbook.Path, SolverDir, pPythonScript)
+    PythonScriptPath = JoinPaths(SolverDir, pPythonScript)
 End Function
 
 Private Function ScriptFilePath() As String
@@ -190,7 +190,7 @@ Function IsPresent(Optional SolverPath As String, Optional errorString As String
     
     If Not FileOrDirExists(PythonScriptPath()) Then
         errorString = "Unable to find OpenSolver Gurobi script ('" & pPythonScript & "'). Folders searched:" & _
-                      vbNewLine & MakePathSafe(JoinPaths(ThisWorkbook.Path, SolverDir))
+                      vbNewLine & MakePathSafe(SolverDir)
     #If Win32 Then
         ElseIf Not FileOrDirExists(GetGurobiHomeDir()) Then
             errorString = "No Gurobi installation was detected. " & _
