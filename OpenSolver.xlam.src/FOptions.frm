@@ -54,8 +54,8 @@ Private Sub cmdOk_Click()
 
 4092      SetNonNegativity chkNonNeg.value, sheet
 4098      SetShowSolverProgress chkShowSolverProgress.value, sheet
-4102      SetMaxTime CDbl(txtMaxTime.Text), sheet
-4103      SetMaxIterations CDbl(txtMaxIter.Text), sheet
+4102      SetMaxTime FormatNumberForSaving(txtMaxTime.Text), sheet
+4103      SetMaxIterations FormatNumberForSaving(txtMaxIter.Text), sheet
 4104      SetPrecision CDbl(txtPre.Text), sheet
 4106      SetToleranceAsPercentage CDbl(Replace(txtTol.Text, "%", "")), sheet
 4107      SetLinearityCheck chkPerformLinearityCheck.value, sheet
@@ -68,6 +68,22 @@ ErrorHandler:
           MsgBox Err.Description
 End Sub
 
+Private Function FormatNumberForDisplay(Number As Double) As String
+          If Number = MAX_LONG Then
+              FormatNumberForDisplay = vbNullString
+          Else
+              FormatNumberForDisplay = CStr(Number)
+          End If
+End Function
+
+Private Function FormatNumberForSaving(Number As String) As Double
+          If Number = vbNullString Then
+              FormatNumberForSaving = MAX_LONG
+          Else
+              FormatNumberForSaving = CDbl(Number)
+          End If
+End Function
+
 Private Sub UserForm_Activate()
           CenterForm
           
@@ -77,10 +93,10 @@ Private Sub UserForm_Activate()
 
 4129      chkNonNeg.value = GetNonNegativity(sheet)
 4130      chkShowSolverProgress.value = GetShowSolverProgress(sheet)
-4131      txtMaxTime.Text = CStr(GetMaxTime(sheet))
+4131      txtMaxTime.Text = FormatNumberForDisplay(GetMaxTime(sheet))
+4133      txtMaxIter.Text = FormatNumberForDisplay(GetMaxIterations(sheet))
 4132      txtTol.Text = CStr(GetToleranceAsPercentage(sheet))
-4133      txtMaxIter.Text = CStr(GetMaxIterations(sheet))
-4134      txtPre = CStr(GetPrecision(sheet))
+4134      txtPre.Text = CStr(GetPrecision(sheet))
 4135      chkPerformLinearityCheck.value = GetLinearityCheck(sheet)
 
           Dim Solver As ISolver
