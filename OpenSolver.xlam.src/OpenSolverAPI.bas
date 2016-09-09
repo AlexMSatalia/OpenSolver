@@ -558,15 +558,15 @@ End Sub
 ' */
 Public Function GetMaxTime(Optional sheet As Worksheet) As Double
     GetActiveSheetIfMissing sheet
-    GetMaxTime = GetNamedDoubleWithDefault(sheet, "solver_tim", 999999999)
+    GetMaxTime = GetNamedDoubleWithDefault(sheet, "solver_tim", MAX_LONG)
 End Function
 
 '/**
 ' * Sets the max solve time for an OpenSolver model.
-' * @param {} MaxTime The max solve time in seconds
+' * @param {} MaxTime The max solve time in seconds (defaults to no limit)
 ' * @param {} sheet The worksheet containing the model (defaults to active worksheet)
 ' */
-Public Sub SetMaxTime(MaxTime As Double, Optional sheet As Worksheet)
+Public Sub SetMaxTime(Optional MaxTime As Double = MAX_LONG, Optional sheet As Worksheet)
     GetActiveSheetIfMissing sheet
     SetDoubleNameOnSheet "solver_tim", MaxTime, sheet
 End Sub
@@ -615,15 +615,15 @@ End Sub
 ' */
 Public Function GetMaxIterations(Optional sheet As Worksheet) As Double
     GetActiveSheetIfMissing sheet
-    GetMaxIterations = GetNamedDoubleWithDefault(sheet, "solver_itr", 999999999)
+    GetMaxIterations = GetNamedDoubleWithDefault(sheet, "solver_itr", MAX_LONG)
 End Function
 
 '/**
 ' * Sets the solver iteration limit for an OpenSolver model.
-' * @param {} MaxIterations The iteration limit to set
+' * @param {} MaxIterations The iteration limit to set (defaults to no limit)
 ' * @param {} sheet The worksheet containing the model (defaults to active worksheet)
 ' */
-Public Sub SetMaxIterations(MaxIterations As Double, Optional sheet As Worksheet)
+Public Sub SetMaxIterations(Optional MaxIterations As Double = MAX_LONG, Optional sheet As Worksheet)
     GetActiveSheetIfMissing sheet
     SetDoubleNameOnSheet "solver_itr", MaxIterations, sheet
 End Sub
