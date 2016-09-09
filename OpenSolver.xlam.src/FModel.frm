@@ -701,6 +701,7 @@ Private Sub cmdDelSelCon_Click()
           
           ' Update form
 4631      PopulateConstraintListBox
+          lstConstraints_Change
 End Sub
 
 Private Sub lstConstraints_Change()
