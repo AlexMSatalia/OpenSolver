@@ -13,6 +13,7 @@ Private Const PreferencesRegName = "Preferences"
 Private Const CheckForUpdatesRegName = "CheckForUpdates"
 Private Const CheckForBetaUpdatesRegName = "CheckForBetaUpdates"
 Private Const LastUpdateCheckRegName = "LastUpdateCheck"
+Private Const FirstUpdateCheckRegName = "FirstUpdateCheck"
 Private Const GuidRegName = "Guid"
 
 ' From rondebruin.nl:
@@ -20,6 +21,7 @@ Private Const GuidRegName = "Guid"
 Private Const VALUE_IF_MISSING As String = "?"
 
 Private Const MinTimeBetweenChecks As Double = 1 ' 1 day between checks
+Private Const MinTimeBeforeCheck As Double = 1 ' 1 day before checks begin
 
 #If Mac Then
     Private Const UpdateLogName = "update.log"
@@ -207,6 +209,19 @@ Sub AutoUpdateCheck()
         ' we have already shown them the settings form
         HasCheckedForUpdate = True
         
+        Dim FirstUpdateCheckTime As Double
+        FirstUpdateCheckTime = GetFirstCheckTime()
+        ' Record if this is the first update check
+        If FirstUpdateCheckTime = 0 Then
+            SetFirstCheckTime Now
+            Exit Sub
+        End If
+        
+        ' Make sure 24 hours has passed since the first update check (ref #245)
+        If Now - FirstUpdateCheckTime < MinTimeBeforeCheck Then
+            Exit Sub
+        End If
+        
         Dim SettingWasMissing As Boolean, DoCheck As Boolean
         ' Get the entry, and show the update settings form if missing
         DoCheck = GetUpdateSetting(False, SettingWasMissing)
@@ -260,14 +275,11 @@ Public Function GetUpdateSetting(Optional SilentFail As Boolean = True, _
     DefaultSetting = IIf(Beta, False, True)
     GetUpdateSetting = SafeCBool(result, DefaultSetting)
 End Function
-
 Public Sub SaveUpdateSetting(UpdateSetting As Boolean, _
         Optional Beta As Boolean = False)
     SaveSetting OpenSolverRegName, PreferencesRegName, _
                 GetUpdateRegName(Beta), BoolToInt(UpdateSetting)
 End Sub
-
-' Useful for testing update check
 Private Sub DeleteUpdateSetting(Optional Beta As Boolean = False)
     On Error Resume Next
     DeleteSetting OpenSolverRegName, PreferencesRegName, GetUpdateRegName(Beta)
@@ -277,11 +289,9 @@ Public Function GetBetaUpdateSetting(Optional SilentFail As Boolean = True, _
         Optional Missing As Boolean) As Boolean
     GetBetaUpdateSetting = GetUpdateSetting(SilentFail, Missing, Beta:=True)
 End Function
-
 Public Sub SaveBetaUpdateSetting(UpdateSetting As Boolean)
     SaveUpdateSetting UpdateSetting, Beta:=True
 End Sub
-
 Private Sub DeleteBetaUpdateSetting()
     DeleteUpdateSetting Beta:=True
 End Sub
@@ -293,15 +303,29 @@ Private Function GetLastCheckTime() As Double
     
     GetLastCheckTime = Val(result)
 End Function
-
 Private Sub SetLastCheckTime(CheckTime As Double)
     SaveSetting OpenSolverRegName, PreferencesRegName, _
                 LastUpdateCheckRegName, StrExNoPlus(CheckTime)
 End Sub
-
 Private Sub DeleteLastCheckTime()
     On Error Resume Next
     DeleteSetting OpenSolverRegName, PreferencesRegName, LastUpdateCheckRegName
+End Sub
+
+Private Function GetFirstCheckTime() As Double
+    Dim result As Variant
+    result = GetSetting(OpenSolverRegName, PreferencesRegName, _
+                        FirstUpdateCheckRegName, 0)
+    
+    GetFirstCheckTime = Val(result)
+End Function
+Private Sub SetFirstCheckTime(CheckTime As Double)
+    SaveSetting OpenSolverRegName, PreferencesRegName, _
+                FirstUpdateCheckRegName, StrExNoPlus(CheckTime)
+End Sub
+Private Sub DeleteFirstCheckTime()
+    On Error Resume Next
+    DeleteSetting OpenSolverRegName, PreferencesRegName, FirstUpdateCheckRegName
 End Sub
 
 Private Sub ResetHasChecked()
@@ -343,5 +367,6 @@ Private Sub ResetAllUpdateSettings()
     DeleteBetaUpdateSetting
     DeleteUpdateSetting
     DeleteLastCheckTime
+    DeleteFirstCheckTime
     HasCheckedForUpdate = False
 End Sub
