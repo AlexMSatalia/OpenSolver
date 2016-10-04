@@ -23,6 +23,9 @@ End Sub
 
 Private Sub Workbook_BeforeClose(Cancel As Boolean)
           If Not ThisWorkbook.Saved Then
+              ' Ignore this check on Mac 2016 since .Saved always seems to return false
+              If IsMac And Val(Application.Version) >= 15 Then GoTo DoClose
+              
               Dim Answer As VbMsgBoxResult
               Answer = MsgBox(ThisWorkbook.Name & " is unsaved. Save?", _
                               vbExclamation + vbYesNoCancel, "Unsaved Addin")
@@ -36,7 +39,8 @@ Private Sub Workbook_BeforeClose(Cancel As Boolean)
                   Exit Sub
               End If
           End If
-    
+
+DoClose:
           On Error Resume Next
 3         AlterMenuItems (False)
           DeleteTempFolder
