@@ -1,5 +1,35 @@
 # OpenSolver Release Notes
 
+## v2.8.3 - 2016-10-05
+### Added
+- Console can now be resized
+- Added support for using current solution on sheet as starting point in Gurobi and CBC on NEOS
+- Add initial support for Mac Excel 2016 (model building and linear solvers)
+
+### Changed
+- Full system information is included in "About OpenSolver" box for easier support
+- Starting solution is checked for small infeasibilities and adjusted if possible before passing to solver
+- Use current Solver algorithm choice to pick solver if no solver has been chosen
+- Error message form is now contextual and shows help links that are relevant to the error
+
+### Fixed
+- Fix in non-linear parser for multiple arg SUMPRODUCT
+- Speedups for non-linear parsing
+- Fix sensitivity analysis when constraints are presolved out
+- Persist model dialog options across multiple showings of the form
+- Fix error when deleting last constraint in model form
+- Use tiled horizontal shapes for wide models in visualizer
+- Fix overflow errors in option dialog
+- More locale-robust storage of model options
+- Fix showing model when parts of sheet are hidden
+- Only check update setting once per Excel session
+- Better checking for error values in linear model building
+- Revert to linearity offset of zero for binary variables
+- Warmstarts only loaded if feasible
+- Fix appearance of forms on Excel 2016
+- Ignore integrality restrictions in feasibility check when solving relaxation
+- Fix bugs with 64-bit Office
+
 ## v2.8.2 - 2016-02-14
 ### Fixed
 - Another fix for "Automation Error"
