@@ -308,7 +308,7 @@ Private Function StartProcess(Command As String, StartDir As String, Async As Bo
         Dim tStartupInfo As STARTUPINFO
         With tStartupInfo
             .cb = Len(tStartupInfo)
-            GetStartupInfo tStartupInfo
+            ' GetStartupInfo tStartupInfo
             
             If Async Then
                 .dwFlags = STARTF_USESHOWWINDOW Or .dwFlags
