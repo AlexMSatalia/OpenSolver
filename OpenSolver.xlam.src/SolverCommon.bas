@@ -16,6 +16,9 @@ Public Function SolverDir() As String
     #If Mac And MAC_OFFICE_VERSION >= 15 Then
         ' On Mac 2016, we need to access the solvers from a folder that has execute permissions in the sandbox
         SolverDirBase = "/Library/OpenSolver"
+        If Not FileOrDirExists(SolverDirBase) Then
+            RaiseUserError "Unable to find the solvers in `" & SolverDirBase & "`. Make sure you have run the `OpenSolver Solvers.pkg` installer in the `Solvers/osx` folder where you unzipped OpenSolver.", "http://opensolver.org/installing-opensolver/"
+        End If
     #Else
         SolverDirBase = ThisWorkbook.Path
     #End If
