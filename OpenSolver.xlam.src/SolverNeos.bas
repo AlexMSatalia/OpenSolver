@@ -239,7 +239,7 @@ ExitFunction:
 ErrorHandler:
     If Not PingNeos() Then
         Err.Description = "OpenSolver could not establish a connection to NEOS. Check your internet connection and try again. If this error message persists, NEOS may be down."
-        Err.Number = OpenSolver_NeosError
+        Err.Number = OpenSolver_Error
     End If
     If Not ReportError("SolverNeos", "SendToNeos_Mac") Then Resume
     RaiseError = True
