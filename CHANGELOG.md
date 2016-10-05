@@ -1,15 +1,15 @@
 # OpenSolver Release Notes
 
-## [v2.8.2] - 2016-02-14
+## v2.8.2 - 2016-02-14
 ### Fixed
 - Another fix for "Automation Error"
 
-## [v2.8.1] - 2016-02-11
+## v2.8.1 - 2016-02-11
 ### Fixed
 - Fix "Automation Error"
 - Fix error on "Set QuickSolve Parameters" cancel press
 
-## [v2.8.0] - 2016-02-01
+## v2.8.0 - 2016-02-01
 ### Added
 - Can use named ranges to define the model
 - Support for PRODUCT function in nonlinear solvers
@@ -58,11 +58,11 @@
 - backend changes to model form to handle named ranges as model parameters
 - Tidyup of names storage backend
 
-## [v2.7.1] - 2015-06-28
+## v2.7.1 - 2015-06-28
 ### Fixed
 - Various bugfixes
 
-## [v2.7.0] - 2015-06-16
+## v2.7.0 - 2015-06-16
 ### Added
 - Update Checker
 - OpenSolver API VBA interface
@@ -76,7 +76,7 @@
 ### Fixed
 Various bugfixes (including lots of locale issues)
 
-## [v2.6.1] - 2015-02-16
+## v2.6.1 - 2015-02-16
 ### Added
 - Extra parameter support for Gurobi (see http://opensolver.org/using-opensolver/#gurobi-params)
 - Abort NEOS solve if Cancel button is clicked
@@ -100,7 +100,7 @@ Various bugfixes (including lots of locale issues)
 - Implement proper sheet name escaping for the formula parser.
 
 
-## [v2.6.0] - 2014-10-08
+## v2.6.0 - 2014-10-08
 ### Added
 - Add support for Office 2011 on Mac - nearly all features supported
 - Add support for local COIN-OR non-linear solvers
@@ -114,20 +114,20 @@ Various bugfixes (including lots of locale issues)
 - Bugfixes for non-linear NOMAD solver
 - Bugfixes for NEOS solvers
 
-## [v2.5.4-alpha] - 2014-07-03
+## v2.5.4-alpha - 2014-07-03
 ### Fixed
 - NOMAD bug fixes for when errors are encountered
 
-## [v2.5.3-alpha] - 2014-07-02
+## v2.5.3-alpha - 2014-07-02
 ### Added
 - Add support for NOMAD in 64-bit Office.
 
-## [v2.5.2-alpha] - 2014-06-27
+## v2.5.2-alpha - 2014-06-27
 ### Fixed
 - Fix memory bug causing Excel 2013 to crash when using NOMAD
 - Non-linear NEOS bug fixes
 
-## [v2.5.1-alpha] - 2014-06-25
+## v2.5.1-alpha - 2014-06-25
 ### Added
 - Inclusion of 64-bit CBC with release - appropriate version is selected automatically
 - Re-add NEOS non-linear solvers to release with lots of bug fixes.
@@ -136,7 +136,7 @@ Various bugfixes (including lots of locale issues)
 - Stability fixes for NOMAD non-linear solver
 - Bug fixes for sensitivity analysis methods.
 
-## [v2.5.0-alpha] - 2014-06-20
+## v2.5.0-alpha - 2014-06-20
 ### Added
 - Support for using the Gurobi LP/IP solver if a user has this installed on their machine
 - Support for cloud-based NEOS server for CBC solver
