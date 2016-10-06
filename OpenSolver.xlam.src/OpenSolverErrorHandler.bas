@@ -24,9 +24,9 @@ Public Const LINK_PARAMETER_DOCS As String = "http://opensolver.org/using-openso
 Sub ClearError()
     ' Clear all saved error details
     ErrNum = 0
-    ErrSource = ""
-    ErrMsg = ""
-    ErrLinkTarget = ""
+    ErrSource = vbNullString
+    ErrMsg = vbNullString
+    ErrLinkTarget = vbNullString
 End Sub
  
 Function ReportError(ModuleName As String, ProcedureName As String, Optional IsEntryPoint = False, Optional MinimiseUserInteraction As Boolean = False) As Boolean
@@ -102,7 +102,7 @@ Function ReportError(ModuleName As String, ProcedureName As String, Optional IsE
             ' We are at an entry point - report the error to the user
             Dim prompt As String, LinkTarget As String, MoreDetailsButton As Boolean, ReportIssueButton As Boolean
             prompt = ErrMsg
-            ErrMsg = ""  ' Reset error message in case there's an error while showing the form
+            ErrMsg = vbNullString  ' Reset error message in case there's an error while showing the form
             
             ' A message with an OpenSolver_UserError denotes an error caused by the user, as opposed to an error we didn't expect to happen.
             ' For these messages, other info isn't shown with the error message.

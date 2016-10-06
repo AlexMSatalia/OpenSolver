@@ -100,9 +100,9 @@ End Sub
 Public Sub AutoLayout()
     AutoFormat Me.Controls
     
-    cmdButton1.Visible = cmdButton1.Caption <> ""
-    cmdButton2.Visible = cmdButton2.Caption <> ""
-    cmdButton3.Visible = cmdButton3.Caption <> ""
+    cmdButton1.Visible = Len(cmdButton1.Caption) > 0
+    cmdButton2.Visible = Len(cmdButton2.Caption) > 0
+    cmdButton3.Visible = Len(cmdButton3.Caption) > 0
     
     ' Calculate the needed width based on how many buttons are visible
     ' We sum the values of .Visible, where True is -1 and False 0
@@ -122,7 +122,7 @@ Public Sub AutoLayout()
     End With
     
     With lblLink
-        If .Caption = "" Then
+        If Len(.Caption) = 0 Then
             .Visible = False
         Else
             AutoHeight lblLink, Me.Width, True

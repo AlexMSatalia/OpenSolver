@@ -134,7 +134,7 @@ Private Function Version() As String
 
     Dim SolverPath As String
     If Not SolverIsPresent(Me, SolverPath) Then
-        Version = ""
+        Version = vbNullString
         GoTo ExitFunction
     End If
     

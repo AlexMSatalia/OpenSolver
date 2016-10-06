@@ -127,7 +127,7 @@ End Function
 
 Sub DeleteNameOnSheet(Name As String, Optional sheet As Worksheet, Optional SolverName As Boolean = False)
           GetActiveSheetIfMissing sheet
-608       Name = EscapeSheetName(sheet) & IIf(SolverName, SolverPrefix, "") & Name
+608       Name = EscapeSheetName(sheet) & IIf(SolverName, SolverPrefix, vbNullString) & Name
 609       On Error Resume Next
 610       sheet.Parent.Names(Name).Delete
 doesntExist:
@@ -137,7 +137,7 @@ Sub SetNameOnSheet(Name As String, value As Variant, Optional sheet As Worksheet
 ' If a key exists we can just add it (http://www.cpearson.com/Excel/DefinedNames.aspx)
           GetActiveSheetIfMissing sheet
           Dim FullName As String ' Don't mangle the value of Name!
-600       FullName = EscapeSheetName(sheet) & IIf(SolverName, SolverPrefix, "") & Name
+600       FullName = EscapeSheetName(sheet) & IIf(SolverName, SolverPrefix, vbNullString) & Name
 603       sheet.Parent.Names.Add FullName, value, False
 End Sub
 

@@ -26,7 +26,7 @@ Private Const pSensitivityAnalysisAvailable As Boolean = False
 
 Private Const pNeosSolverName As String = "cbc"
 Private Const pNeosSolverCategory As String = "milp"
-Private Const pOptionFile As String = ""
+Private Const pOptionFile As String = vbNullString
 Private Const pFileType = OpenSolver_FileType.AMPL
 Private Const pModelType = OpenSolver_ModelType.Diff
 

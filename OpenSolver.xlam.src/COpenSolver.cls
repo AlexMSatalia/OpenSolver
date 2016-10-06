@@ -581,10 +581,10 @@ Sub GetConstraintInstanceData(constraint As Long, instance As Long, LHSCellRange
 912       Select Case RHSType(constraint)
               Case SolverInputType.SingleCellRange
 913               Set RHSCellRange = RHSRange(constraint)
-914               RHSstring = ""
+914               RHSstring = vbNullString
 915           Case SolverInputType.MultiCellRange
 916               Set RHSCellRange = GetOneCellInRange(RHSRange(constraint), instance)
-917               RHSstring = ""
+917               RHSstring = vbNullString
 918           Case SolverInputType.Formula, SolverInputType.constant
 919               Set RHSCellRange = Nothing
 920               RHSstring = RHSFormula(constraint)
@@ -698,7 +698,7 @@ Sub BuildModelFromSolverData(Optional LinearityOffset As Double = 0, _
 
 935       SolveStatus = OpenSolverResult.Unsolved
 936       SolveStatusString = "Unsolved"
-937       SolveStatusComment = ""
+937       SolveStatusComment = vbNullString
 940       SolutionWasLoaded = False
 941       ModelStatus = Unitialized
 
@@ -1131,7 +1131,7 @@ Sub ReportAnySolutionSubOptimality()
           Case Else
               MsgBox "OpenSolver could not find an optimal solution, and reported:" & vbCrLf & _
                      SolveStatusString & vbCrLf & vbCrLf & _
-                     IIf(SolveStatusComment = "", "", SolveStatusComment & vbCrLf & vbCrLf) & _
+                     IIf(Len(SolveStatusComment) > 0, SolveStatusComment & vbCrLf & vbCrLf, vbNullString) & _
                      IIf(SolutionWasLoaded, "The solution generated has been loaded into the spreadsheet.", "No solution was available to load into the spreadsheet.")
           End Select
 End Sub

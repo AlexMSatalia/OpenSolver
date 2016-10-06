@@ -85,7 +85,7 @@ Public Sub ValidateConstraint(LHSRange As Range, Relation As RelationConsts, RHS
         
     Else
         If Not RHSRange Is Nothing Or _
-           (RHSFormula <> "" And RHSFormula <> "integer" And RHSFormula <> "binary" And RHSFormula <> "alldiff") Then
+           (Len(RHSFormula) > 0 And RHSFormula <> "integer" And RHSFormula <> "binary" And RHSFormula <> "alldiff") Then
             RaiseUserError "No right-hand-side is permitted for this relation"
         End If
     End If

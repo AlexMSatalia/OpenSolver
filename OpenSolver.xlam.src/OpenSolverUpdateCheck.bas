@@ -86,7 +86,7 @@ Sub InitialiseUpdateCheck_Windows()
     ' Get the page asynchronously.
     xmlHttpRequest.Open "GET", GetPageUrl(), True
     xmlHttpRequest.setRequestHeader "User-Agent", GetUserAgent()
-    xmlHttpRequest.send ""
+    xmlHttpRequest.send vbNullString
     Exit Sub
 
 FailedState:

@@ -364,7 +364,7 @@ Private Sub DoFullLinearityCheck()
           InteractiveStatus = Application.Interactive
           
           Dim NonLinearInformation As String
-2051      NonLinearInformation = ""
+2051      NonLinearInformation = vbNullString
           
           'Build each matrix where the decision variables start at the base linearity offset (ValueBase()), one (ValueOne()) and ten (ValueTen())
           Dim ValueBase() As CIndexedCoeffs, ObjectiveCoeffsBase As CIndexedCoeffs
@@ -413,7 +413,7 @@ Private Sub DoFullLinearityCheck()
           End If
 
           NonLinearInformation = TrimBlankLines(NonLinearInformation)
-          If NonLinearInformation = "" Then
+          If Len(NonLinearInformation) = 0 Then
               NonLinearInformation = "There have been no instances of nonlinearity found in this model. Some models can generate warnings of non-linearity " & _
                                      "because of numerical errors that accumulate in the spreadsheet. OpenSolver's non-linearity check can be disabled under OpenSolver's " & _
                                      "Options settings."
@@ -537,7 +537,7 @@ Sub DoQuickLinearityCheck()
 928       Next c
           
           Dim NonLinearInfo As String
-2186      NonLinearInfo = ""
+2186      NonLinearInfo = vbNullString
 
           Dim RowIsNonLinear() As Boolean
 2180      If s.NumRows > 0 Then ReDim RowIsNonLinear(s.NumRows) As Boolean
@@ -582,7 +582,7 @@ Sub DoQuickLinearityCheck()
                               ' If the RHS is a range, we show its address; if not, RHSString contains the RHS's constant or formula
 2215                          If Not RHSCellRange Is Nothing Then RHSstring = RHSCellRange.AddressLocal(RowAbsolute:=False, ColumnAbsolute:=False)
                               
-                              If NonLinearInfo = "" Then NonLinearInfo = "The following constraint(s) do not appear to be linear: "
+                              If Len(NonLinearInfo) = 0 Then NonLinearInfo = "The following constraint(s) do not appear to be linear: "
 2216                          NonLinearInfo = NonLinearInfo & vbNewLine & s.ConstraintSummary(constraint) & ": instance " & instance & _
                                               ", LHS=" & LHSCellRange.AddressLocal(RowAbsolute:=False, ColumnAbsolute:=False) & _
                                               ", RHS=" & RHSstring & _

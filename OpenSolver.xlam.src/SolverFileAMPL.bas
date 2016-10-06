@@ -332,14 +332,14 @@ Function ConvertVarTypeAMPL(intVarType As Long, SolveRelaxation As Boolean) As S
           If SolveRelaxation Then
               Select Case intVarType
               Case VarContinuous, VarInteger
-                  ConvertVarTypeAMPL = ""
+                  ConvertVarTypeAMPL = vbNullString
               Case VarBinary
                   ConvertVarTypeAMPL = ", <= 1, >= 0"
               End Select
           Else
 7262          Select Case intVarType
               Case VarContinuous
-7263              ConvertVarTypeAMPL = ""
+7263              ConvertVarTypeAMPL = vbNullString
 7264          Case VarInteger
 7265              ConvertVarTypeAMPL = ", integer"
 7266          Case VarBinary

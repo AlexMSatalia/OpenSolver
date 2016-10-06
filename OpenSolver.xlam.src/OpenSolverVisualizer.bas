@@ -208,7 +208,7 @@ Function HighlightRange(r As Range, Label As String, HighlightColor As Long, Opt
 3128                  tmpName = r.Worksheet.Shapes(shapeName).Name
                       On Error GoTo ErrorHandler
                       'If there hasn't been a bound on that cell then make a new cell
-3129                  If tmpName = "" Then
+3129                  If Len(tmpName) = 0 Then
 3130                      r.Worksheet.Shapes.AddShape(msoShapeRectangle, left2, top2, Width, Height).Name = shapeName
 3131                  Else
                           'If there has already been a bound then just add new text to it rather then making a new box
@@ -317,7 +317,7 @@ Function AddLabelledConnector(w As Worksheet, s1 As Shape, s2 As Shape, Label As
 3197      s3.Line.Visible = False
 3198      s3.Fill.Visible = False
 3199      s3.Shadow.Visible = msoFalse
-3200      If Label <> "" Then
+3200      If Len(Label) > 0 Then
 3201          With s3.TextFrame
 3202              .Characters.Text = Label
 3203              .MarginBottom = 0
@@ -361,7 +361,7 @@ Sub HighlightConstraint(myDocument As Worksheet, LHSRange As Range, _
 3215      If Color = 0 Then Color = NextHighlightColor
           
 3216      Reversed = False
-3217      If RHSRange Is Nothing And RHSValue <> "" Then
+3217      If RHSRange Is Nothing And Len(RHSValue) > 0 Then
               ' We have a constant or formula in the constraint. Put into form RHS <|=|> Range1 (reversing the sense)
 3218          Set s1 = HighlightRange(LHSRange, RHSValue & SolverRelationAsUnicodeChar(4 - sense), Color, , , True)
 3219      ElseIf Not RHSRange Is Nothing Then
@@ -393,7 +393,7 @@ Sub HighlightConstraint(myDocument As Worksheet, LHSRange As Range, _
 3238              Set Range2 = RHSRange
 3239          End If
           
-3240          Set s1 = HighlightRange(Range1, "", Color)
+3240          Set s1 = HighlightRange(Range1, vbNullString, Color)
           
               ' Reverse the sense if the objects are shown in the reverse order
 3241          Set s2 = HighlightRange(Range2, SolverRelationAsUnicodeChar(IIf(Reversed, 4 - sense, sense)), Color)
@@ -402,10 +402,10 @@ Sub HighlightConstraint(myDocument As Worksheet, LHSRange As Range, _
                  Range1.Worksheet.Name = ActiveSheet.Name And _
                  Not s1 Is Nothing And _
                  Not s2 Is Nothing Then
-3243              AddLabelledConnector Range1.Worksheet, s1(1), s2(1), ""
+3243              AddLabelledConnector Range1.Worksheet, s1(1), s2(1), vbNullString
 3244          End If
 3245      Else 'this was added if there is only a lhs that needs highlighting in linearity
-3246          Set s1 = HighlightRange(LHSRange, "", Color)
+3246          Set s1 = HighlightRange(LHSRange, vbNullString, Color)
 3247      End If
 
 ExitSub:
@@ -606,7 +606,7 @@ NextConstraint:
           ' Mark non-decision variables with int or bin constraints
           If Not NonAdjustableCellsRange Is Nothing Then
               For Each selectedArea In NonAdjustableCellsRange.Areas
-                  HighlightRange selectedArea, "", RGB(255, 255, 0), True  ' Yellow highlight
+                  HighlightRange selectedArea, vbNullString, RGB(255, 255, 0), True  ' Yellow highlight
               Next selectedArea
           End If
           
@@ -635,7 +635,7 @@ End Function
 Sub AddObjectiveHighlighting(ObjectiveRange As Range, ObjectiveType As ObjectiveSenseType, ObjectiveTargetValue As Double)
           ' Highlight the cell
           Dim CellHighlight As ShapeRange
-3465      Set CellHighlight = HighlightRange(ObjectiveRange, "", RGB(255, 0, 255)) ' Magenta highlight
+3465      Set CellHighlight = HighlightRange(ObjectiveRange, vbNullString, RGB(255, 0, 255)) ' Magenta highlight
           
           ' Add the label
           Dim CellLabel As String
@@ -650,7 +650,7 @@ End Sub
 Sub AddDecisionVariableHighlighting(DecisionVariableRange As Range)
           Dim Area As Range
 3471      For Each Area In DecisionVariableRange.Areas
-3472          HighlightRange Area, "", RGB(255, 0, 255), True ' Magenta highlight
+3472          HighlightRange Area, vbNullString, RGB(255, 0, 255), True ' Magenta highlight
 3473      Next Area
           
 End Sub
@@ -668,7 +668,7 @@ Sub AddBinaryIntegerBlockLabels(CellsRange As Range, Label As String)
     Dim selectedArea As Range, CellHighlight As ShapeRange
     If Not CellsRange Is Nothing Then
         For Each selectedArea In CellsRange.Areas
-            Set CellHighlight = HighlightRange(selectedArea, "", RGB(255, 0, 255)) ' Magenta highlight
+            Set CellHighlight = HighlightRange(selectedArea, vbNullString, RGB(255, 0, 255)) ' Magenta highlight
             AddLabelToShape ActiveSheet, CellHighlight(1), -6, 10, Label, RGB(0, 0, 0) ' Black text
         Next selectedArea
     End If

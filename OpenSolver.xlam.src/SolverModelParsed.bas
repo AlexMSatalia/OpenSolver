@@ -10,7 +10,7 @@ Public SheetNameMapReverse As Collection   ' Stores a map from cleaned name to s
 ' include the sheet. This function removes any nasty characters, and sticks
 ' the sheet name at the front, thus giving nice unique names for Python and
 ' VBA collections to use.
-Function ConvertCellToStandardName(rngCell As Range, Optional strParentName As String = "") As String
+Function ConvertCellToStandardName(rngCell As Range, Optional strParentName As String = vbNullString) As String
           Dim RaiseError As Boolean
           RaiseError = False
           On Error GoTo ErrorHandler
@@ -20,10 +20,10 @@ Function ConvertCellToStandardName(rngCell As Range, Optional strParentName As S
 
           Dim BannedChar As Variant
           For Each BannedChar In Array("$", ":", "-")
-7441          strCleanAddress = Replace(strCleanAddress, BannedChar, "")
+7441          strCleanAddress = Replace(strCleanAddress, BannedChar, vbNullString)
           Next BannedChar
 
-7439      If strParentName = "" Then strParentName = Replace(rngCell.Parent.Name, " ", "_")
+7439      If Len(strParentName) = 0 Then strParentName = Replace(rngCell.Parent.Name, " ", "_")
           
           Dim strCleanParentName As String
           If TestKeyExists(SheetNameMap, strParentName) Then

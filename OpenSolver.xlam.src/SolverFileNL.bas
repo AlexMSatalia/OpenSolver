@@ -227,7 +227,7 @@ Private Sub InitialiseModelStats(s As COpenSolver)
           ' Initialise the ASL variables - see definitions for explanation of each variable
           
           ' Model statistics for line #1
-7564      problem_name = "Sheet=" + s.sheet.Name + ""
+7564      problem_name = "Sheet=" + s.sheet.Name
           
           ' Model statistics for line #2
 7565      n_var = numActualVars + numFakeVars
@@ -1277,7 +1277,7 @@ End Sub
 
 
 ' Adds a new line to the current string, appending LineText at position 0 and CommentText at position CommentSpacing
-Sub OutputLine(FileNum As Long, LineText As String, Optional CommentText As String = "")
+Sub OutputLine(FileNum As Long, LineText As String, Optional CommentText As String = vbNullString)
           Dim RaiseError As Boolean
           RaiseError = False
           On Error GoTo ErrorHandler
@@ -1285,7 +1285,7 @@ Sub OutputLine(FileNum As Long, LineText As String, Optional CommentText As Stri
           Print #FileNum, LineText;
           
           ' Add comment with padding if comment should be included
-8044      If WriteComments And CommentText <> "" Then
+8044      If WriteComments And Len(CommentText) > 0 Then
 8048          Print #FileNum, Tab(CommentSpacing); "# " & CommentText;
 8049      End If
           

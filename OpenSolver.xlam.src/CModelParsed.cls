@@ -204,7 +204,7 @@ Private Function ParseFormulae() As Boolean
 4892                          isValid = True
                               
 4893                          LHSValue = singleRngLHS.Value2
-4894                          If strRHSCell = "" Then
+4894                          If Len(strRHSCell) = 0 Then
 4895                              RHSValue = 0
 4896                          Else
 4897                              RHSValue = s.sheet.Evaluate(strRHSCell)
@@ -371,7 +371,7 @@ Function StringFormulaIsConstant(strFormula As String) As Boolean
                   ' search for another reference
 4979              LookingForEndOfRef = False
 4980              CheckForColon = False
-4981              If strSheetPrefix <> "" Then BuildingRef = strSheetPrefix + "!" + BuildingRef
+4981              If Len(strSheetPrefix) > 0 Then BuildingRef = strSheetPrefix + "!" + BuildingRef
 4982              Set rngBuildingRef = s.sheet.Range(BuildingRef)
                   
                   ' Cell reference found, check if constant
@@ -384,7 +384,7 @@ Function StringFormulaIsConstant(strFormula As String) As Boolean
 4989              End If
                   
                   ' Reset the sheet we are tracking
-4990              strSheetPrefix = ""
+4990              strSheetPrefix = vbNullString
 4991          End If
           
               ' Decide what to insert based on token type
@@ -403,7 +403,7 @@ Function StringFormulaIsConstant(strFormula As String) As Boolean
 4998                      CheckForColon = False
                           
                           ' Make sure this range is on the right sheet
-4999                      If strSheetPrefix <> "" Then BuildingRef = strSheetPrefix + "!" + BuildingRef
+4999                      If Len(strSheetPrefix) > 0 Then BuildingRef = strSheetPrefix + "!" + BuildingRef
                           
                           ' Cell reference found, check if constant
 5000                      Set rngBuildingRef = s.sheet.Range(BuildingRef)
@@ -412,7 +412,7 @@ Function StringFormulaIsConstant(strFormula As String) As Boolean
 5003                      Next c
 
                           ' Reset the sheet we are tracking
-5004                      strSheetPrefix = ""
+5004                      strSheetPrefix = vbNullString
                           
 5005                  Else
                           ' This is a new range, look for : and another cell ref
@@ -440,7 +440,7 @@ Function StringFormulaIsConstant(strFormula As String) As Boolean
 5018      If LookingForEndOfRef = True Then
               ' It never came - probably a solitary cell reference at the end
               ' of a formula. Check if we need a new node, add token to parsed string
-5019          If strSheetPrefix <> "" Then BuildingRef = strSheetPrefix + "!" + BuildingRef
+5019          If Len(strSheetPrefix) > 0 Then BuildingRef = strSheetPrefix + "!" + BuildingRef
 5020          Set rngBuildingRef = s.sheet.Range(BuildingRef)
               
               ' Cell reference found, check if constant
@@ -452,7 +452,7 @@ Function StringFormulaIsConstant(strFormula As String) As Boolean
 5026              If Not Intersect(rngBuildingRef.Precedents, s.AdjustableCells) Is Nothing Then GoTo NotConstant
 5027          End If
               
-5028          strSheetPrefix = ""
+5028          strSheetPrefix = vbNullString
 5029      End If
 5030      StringFormulaIsConstant = True
           
@@ -497,7 +497,7 @@ Function ExpandFormula(ByVal strFormula As String, _
           Dim start As Long
           Dim output As String, node As String
           Dim Count As Long
-5035      FunctionName = ""
+5035      FunctionName = vbNullString
 5036      FunctionCount = 0
           
           '==========================================================================
@@ -566,8 +566,8 @@ Function ExpandFormula(ByVal strFormula As String, _
                               "Processing formula " & lngIndex & "/" & Formulae.Count & ". "
               
 5082          Set objCurNode = Formulae(lngIndex)
-5083          strParsed = ""
-5084          strSheetPrefix = ""
+5083          strParsed = vbNullString
+5084          strSheetPrefix = vbNullString
           
               '======================================================================
               ' STEP 2.C. Tokenise if we can't evaluate
@@ -587,7 +587,7 @@ Function ExpandFormula(ByVal strFormula As String, _
               
               ' The candidate multicell range we are building
               Dim BuildingRef As String
-5089          BuildingRef = ""
+5089          BuildingRef = vbNullString
                       
               ' Take a walk through the tokens
               Dim i As Long, c As Range, tkn As Token
@@ -601,7 +601,7 @@ Function ExpandFormula(ByVal strFormula As String, _
                       ' search for another reference
 5093                  LookingForEndOfRef = False
 5094                  CheckForColon = False
-5095                  If strSheetPrefix <> "" Then BuildingRef = strSheetPrefix + "!" + BuildingRef
+5095                  If Len(strSheetPrefix) > 0 Then BuildingRef = strSheetPrefix + "!" + BuildingRef
                       On Error Resume Next
 5096                  Set rngBuildingRef = s.sheet.Range(BuildingRef)
                       If Err.Number <> 0 Then
@@ -620,7 +620,7 @@ Function ExpandFormula(ByVal strFormula As String, _
 5104                      strParsed = strParsed + AddNodeIfNew(objCurNode, rngBuildingRef)
 5105                  End If
                       ' Reset the sheet we are tracking
-5106                  strSheetPrefix = ""
+5106                  strSheetPrefix = vbNullString
 5107              End If
           
                   ' Decide what to insert based on token type
@@ -650,7 +650,7 @@ Function ExpandFormula(ByVal strFormula As String, _
 5120                          CheckForColon = False
                               
                               ' Make sure this range is on the right sheet
-5121                          If strSheetPrefix <> "" Then BuildingRef = strSheetPrefix + "!" + BuildingRef
+5121                          If Len(strSheetPrefix) > 0 Then BuildingRef = strSheetPrefix + "!" + BuildingRef
                               
 5122                          Set rngBuildingRef = s.sheet.Range(BuildingRef)
                               
@@ -677,11 +677,11 @@ Function ExpandFormula(ByVal strFormula As String, _
                                   If NewToken.TokenType = Text Then
                                       Select Case Left(NewToken.Text, 2)
                                           Case "<=", ">=", "<>"
-                                              IfOperator = ""
+                                              IfOperator = vbNullString
                                       End Select
                                       Select Case Left(NewToken.Text, 1)
                                           Case "<", ">", "="
-                                              IfOperator = ""
+                                              IfOperator = vbNullString
                                       End Select
                                   End If
                                   If NewToken.TokenType = TokenType.Reference Then
@@ -738,7 +738,7 @@ Function ExpandFormula(ByVal strFormula As String, _
 5151                          Next c
 5152                          FunctionCount = FunctionCount + 1
                               ' Reset the sheet we are tracking
-5153                          strSheetPrefix = ""
+5153                          strSheetPrefix = vbNullString
                               ' Kill the extra char added by last cell in range
 5154                          strParsed = Left(strParsed, Len(strParsed) - 1)
                               
@@ -827,7 +827,7 @@ Function ExpandFormula(ByVal strFormula As String, _
 5210          If LookingForEndOfRef = True Then
                   ' It never came - probably a solitary cell reference at the end
                   ' of a formula. Check if we need a new node, add token to parsed string
-5211              If strSheetPrefix <> "" Then BuildingRef = strSheetPrefix + "!" + BuildingRef
+5211              If Len(strSheetPrefix) > 0 Then BuildingRef = strSheetPrefix + "!" + BuildingRef
 5212              Set rngBuildingRef = s.sheet.Range(BuildingRef)
 5213              If rngBuildingRef.Count > 1 Then
 5214                  strParsed = strParsed + "["
@@ -838,7 +838,7 @@ Function ExpandFormula(ByVal strFormula As String, _
 5219              Else
 5220                  strParsed = strParsed + AddNodeIfNew(objCurNode, rngBuildingRef)
 5221              End If
-5222              strSheetPrefix = ""
+5222              strSheetPrefix = vbNullString
 5223          End If
               
               
@@ -1159,7 +1159,7 @@ Function AddNodeIfNew(ByRef objCurNode As CFormula, ByRef c As Range) As String
           ' 3. Create new node
 5403      With objNewNode
 5404          .strFormula = strCFormula
-              If c.Value2 = "" Then
+              If c.Value2 = vbNullString Then
                   .initialValue = 0
               Else
 5405              .initialValue = CDbl(c.Value2)

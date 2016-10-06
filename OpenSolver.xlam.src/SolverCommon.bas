@@ -35,7 +35,7 @@ Sub SolveModel(s As COpenSolver, ShouldSolveRelaxation As Boolean, ShouldMinimis
 
     s.SolveStatus = OpenSolverResult.Unsolved
     s.SolveStatusString = "Unsolved"
-    s.SolveStatusComment = ""
+    s.SolveStatusComment = vbNullString
     s.SolutionWasLoaded = False
     
     ' Track whether to show messages
@@ -212,7 +212,7 @@ Function SolverIsPresent(Solver As ISolver, Optional SolverPath As String, Optio
         Set LocalExecSolver = Solver
         
         SolverPath = LocalExecSolver.GetExecPath(errorString, Bitness)
-        If SolverPath = "" Then
+        If Len(SolverPath) = 0 Then
             SolverIsPresent = False
         Else
             SolverIsPresent = True
@@ -225,7 +225,7 @@ Function SolverIsPresent(Solver As ISolver, Optional SolverPath As String, Optio
         Dim LocalLibSolver As ISolverLocalLib
         Set LocalLibSolver = Solver
         SolverPath = LocalLibSolver.GetLibPath(errorString, Bitness)
-        SolverIsPresent = (SolverPath <> "")
+        SolverIsPresent = (Len(SolverPath) > 0)
     ElseIf TypeOf Solver Is ISolverNeos Then
         #If Mac Then
             SolverPath = NeosClientScriptPath()
@@ -305,7 +305,7 @@ Sub RunLocalSolver(s As COpenSolver, ExternalCommand As String)
     RaiseError = False
     On Error GoTo ErrorHandler
 
-    UpdateStatusBar "OpenSolver: Solving " & IIf(s.SolveRelaxation, "Relaxed ", "") & "Model... " & _
+    UpdateStatusBar "OpenSolver: Solving " & IIf(s.SolveRelaxation, "Relaxed ", vbNullString) & "Model... " & _
                     s.NumVars & " vars, " & _
                     s.NumDiscreteVars & " int vars " & "(" & s.NumBinVars & " bin), " & _
                     s.NumRows & " rows, " & _
@@ -348,7 +348,7 @@ End Function
 
 Function SolverLibPath(LocalLibSolver As ISolverLocalLib, Optional errorString As String, Optional Bitness As String) As String
     If Not GetExistingFilePathName(LibDir(Bitness), LocalLibSolver.LibBinary, SolverLibPath) Then
-        SolverLibPath = ""
+        SolverLibPath = vbNullString
         Dim Solver As ISolver
         Set Solver = LocalLibSolver
         errorString = "Unable to find " & DisplayName(Solver) & " ('" & LocalLibSolver.LibBinary & "'). Folders searched:" & _
@@ -366,8 +366,8 @@ Function SolverExecPath(LocalExecSolver As ISolverLocalExec, Optional errorStrin
 
     Dim SearchPath As String
     SearchPath = SolverDir
-    errorString = ""
-    Bitness = ""
+    errorString = vbNullString
+    Bitness = vbNullString
     
     #If Mac Then
         If GetExistingFilePathName(JoinPaths(SearchPath, SolverDirMac), LocalExecSolver.ExecName, SolverExecPath) Then
@@ -396,7 +396,7 @@ Function SolverExecPath(LocalExecSolver As ISolverLocalExec, Optional errorStrin
         
     If Len(Bitness) = 0 Then
         ' Failed to find a valid solver
-        SolverExecPath = ""
+        SolverExecPath = vbNullString
         errorString = "Unable to find " & DisplayName(Solver) & " ('" & LocalExecSolver.ExecName & "'). Folders searched:" & errorString
     End If
 
@@ -504,7 +504,7 @@ End Function
 Function RunSolver(s As COpenSolver, SolverCommand As String) As String
     If TypeOf s.Solver Is ISolverLocalExec Then
         RunLocalSolver s, SolverCommand
-        RunSolver = ""
+        RunSolver = vbNullString
     ElseIf TypeOf s.Solver Is ISolverNeos Then
         RunSolver = CallNEOS(s, SolverCommand)
     End If

@@ -473,14 +473,14 @@ Function WrapMessageForNEOS(message As String, NeosSolver As ISolverNeos, Option
             WrapInTag(NeosSolver.NeosSolverCategory, "category") & _
             WrapInTag(NeosSolver.NeosSolverName, "solver") & _
             WrapInTag(GetInputType(NeosSolver), "inputType") & _
-            WrapInTag("", "client") & _
+            WrapInTag(vbNullString, "client") & _
             WrapInTag("short", "priority") & _
-            WrapInTag("", "email") & _
+            WrapInTag(vbNullString, "email") & _
             WrapInTag(message, "model", True) & _
-            WrapInTag("", "data", True) & _
-            WrapInTag("", "commands", True) & _
+            WrapInTag(vbNullString, "data", True) & _
+            WrapInTag(vbNullString, "commands", True) & _
             IIf(Len(OptionsFileString) > 0, WrapInTag(OptionsFileString & vbNewLine, "options", True), "") & _
-            WrapInTag("", "comments", True), _
+            WrapInTag(vbNullString, "comments", True), _
         "document")
 
 ExitSub:
@@ -495,18 +495,18 @@ End Function
 
 Function WrapInTag(value As String, TagName As String, Optional AddCData As Boolean = False) As String
     WrapInTag = "<" & TagName & ">" & _
-                    IIf(AddCData, "<![CDATA[", "") & _
+                    IIf(AddCData, "<![CDATA[", vbNullString) & _
                         value & _
-                    IIf(AddCData, "]]>", "") & _
+                    IIf(AddCData, "]]>", vbNullString) & _
                 "</" & TagName & ">"
 End Function
 
-Function MakeNeosMethodCall(MethodName As String, Optional IntValue As String = "", Optional StringValue As String = "") As String
+Function MakeNeosMethodCall(MethodName As String, Optional IntValue As String = vbNullString, Optional StringValue As String = vbNullString) As String
     MakeNeosMethodCall = WrapInTag( _
                              WrapInTag(MethodName, "methodName") & _
                              WrapInTag( _
-                                 IIf(Len(IntValue) > 0, MakeNeosParam("int", IntValue), "") & _
-                                 IIf(Len(StringValue) > 0, MakeNeosParam("string", StringValue), ""), _
+                                 IIf(Len(IntValue) > 0, MakeNeosParam("int", IntValue), vbNullString) & _
+                                 IIf(Len(StringValue) > 0, MakeNeosParam("string", StringValue), vbNullString), _
                              "params"), _
                          "methodCall")
 

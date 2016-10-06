@@ -57,7 +57,7 @@ Private Sub cmdOk_Click()
 4102      SetMaxTime FormatNumberForSaving(txtMaxTime.Text), sheet
 4103      SetMaxIterations FormatNumberForSaving(txtMaxIter.Text), sheet
 4104      SetPrecision CDbl(txtPre.Text), sheet
-4106      SetToleranceAsPercentage CDbl(Replace(txtTol.Text, "%", "")), sheet
+4106      SetToleranceAsPercentage CDbl(Replace(txtTol.Text, "%", vbNullString)), sheet
 4107      SetLinearityCheck chkPerformLinearityCheck.value, sheet
           SetSolverParametersRefersTo SolverString, SolverParametersRefersTo, sheet
                                                                       

@@ -209,13 +209,13 @@ End Function
 
 Function MakePathSafe(Path As String) As String
 ' Prepares a path for command-line invocation
-    MakePathSafe = IIf(Len(Path) = 0, "", Quote(ConvertHfsPathToPosix(Path)))
+    MakePathSafe = IIf(Len(Path) = 0, vbNullString, Quote(ConvertHfsPathToPosix(Path)))
 End Function
 
 Function JoinPaths(ParamArray Paths() As Variant) As String
           Dim i As Long
           For i = LBound(Paths) To UBound(Paths) - 1
-              JoinPaths = JoinPaths & Paths(i) & IIf(Right(Paths(i), 1) <> Application.PathSeparator, Application.PathSeparator, "")
+              JoinPaths = JoinPaths & Paths(i) & IIf(Right(Paths(i), 1) <> Application.PathSeparator, Application.PathSeparator, vbNullString)
           Next i
           JoinPaths = JoinPaths & Paths(UBound(Paths))
 End Function
@@ -373,7 +373,7 @@ Function GetTempFolder(Optional AllowEnvironOverride As Boolean = True) As Strin
 92                If ret <> 0 Then
 93                    TempFolderPath = Left(TempFolderPath, ret)
 95                Else
-96                    TempFolderPath = ""
+96                    TempFolderPath = vbNullString
 97                End If
               #End If
               
@@ -381,7 +381,7 @@ Function GetTempFolder(Optional AllowEnvironOverride As Boolean = True) As Strin
               ' Allow user to specify a temp path using an environment variable
               ' This can also be a workaround to avoid problem with spaces in the temp path.
 98            If AllowEnvironOverride Then
-                  If Environ("OpenSolverTempPath") <> "" Then
+                  If Len(Environ("OpenSolverTempPath")) > 0 Then
 99                    TempFolderPath = Environ("OpenSolverTempPath")
                   End If
 100           End If

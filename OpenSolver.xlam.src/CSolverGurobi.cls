@@ -194,7 +194,7 @@ Function IsPresent(Optional SolverPath As String, Optional errorString As String
     #If Win32 Then
         ElseIf Not FileOrDirExists(GetGurobiHomeDir()) Then
             errorString = "No Gurobi installation was detected. " & _
-                          "The value of %GUROBI_HOME% was " & IIf(GetGurobiHomeDir() = "", "not set.", "invalid (" & MakePathSafe(GetGurobiHomeDir()) & ").")
+                          "The value of %GUROBI_HOME% was " & IIf(Len(GetGurobiHomeDir()) = 0, "not set.", "invalid (" & MakePathSafe(GetGurobiHomeDir()) & ").")
     #End If
     ElseIf Not FileOrDirExists(ExecFilePath()) Then
         errorString = "No Gurobi installation was detected. The following file was not found: " & MakePathSafe(ExecFilePath())
@@ -202,7 +202,7 @@ Function IsPresent(Optional SolverPath As String, Optional errorString As String
         errorString = "No Gurobi installation was detected. The following file was not found: " & MakePathSafe(PythonPath())
     End If
 
-    If errorString <> "" Then
+    If Len(errorString) > 0 Then
         IsPresent = False
     Else
         SolverPath = PythonPath()
@@ -226,7 +226,7 @@ Private Function Version() As String
     On Error GoTo ErrorHandler
 
     If Not SolverIsPresent(Me) Then
-        Version = ""
+        Version = vbNullString
         GoTo ExitFunction
     End If
     
@@ -255,7 +255,7 @@ Private Function Bitness() As String
     On Error GoTo ErrorHandler
 
     If Not SolverIsPresent(Me) Then
-        Bitness = ""
+        Bitness = vbNullString
         GoTo ExitFunction
     End If
     
@@ -400,7 +400,7 @@ Sub ReadResults(s As COpenSolver)
         UpdateStatusBar "OpenSolver: Loading Solution... " & s.SolveStatusString, True
         Dim NumVar As Long, SplitLine() As String
         Line Input #1, Line  ' Optimal - objective value              22
-        If Line <> "" Then
+        If Len(Line) > 0 Then
             Index = InStr(Line, "=")
             Dim ObjectiveValue As Double
             ObjectiveValue = Val(Mid(Line, Index + 2))

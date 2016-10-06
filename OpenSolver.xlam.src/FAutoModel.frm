@@ -68,7 +68,7 @@ Private Sub UserForm_Activate()
 4066      Me.Repaint
 4067      DoEvents
 
-          Me.Tag = ""
+          Me.Tag = vbNullString
 End Sub
 
 Private Sub ResetEverything()
@@ -85,7 +85,7 @@ Private Sub cmdFinish_Click()
 4072      If optMin.value = True Then ObjectiveSense = MinimiseObjective
           
 4073      If ObjectiveSense = UnknownObjectiveSense Then
-              If refObj.Text = "" Then
+              If Len(refObj.Text) = 0 Then
                   ' We allow a blank objective if no sense is set.
                   ' Set a valid sense
                   ObjectiveSense = MinimiseObjective

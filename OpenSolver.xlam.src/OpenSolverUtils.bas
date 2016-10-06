@@ -99,13 +99,13 @@ Function RemoveSheetNameFromString(s As String, sheet As Worksheet) As String
           Dim sheetName As String
           sheetName = "'[" & sheet.Parent.Name & "]" & Mid(EscapeSheetName(sheet, True), 2)
           If InStr(s, sheetName) Then
-              RemoveSheetNameFromString = Replace(s, sheetName, "")
+              RemoveSheetNameFromString = Replace(s, sheetName, vbNullString)
               GoTo ExitFunction
           End If
           
 280       sheetName = EscapeSheetName(sheet)
 281       If InStr(s, sheetName) Then
-282           RemoveSheetNameFromString = Replace(s, sheetName, "")
+282           RemoveSheetNameFromString = Replace(s, sheetName, vbNullString)
 283           GoTo ExitFunction
 284       End If
 
@@ -153,7 +153,7 @@ Function StripWorksheetNameAndDollars(s As String, currentSheet As Worksheet) As
 
           ' Remove the current worksheet name from a formula, along with any $
 586       StripWorksheetNameAndDollars = RemoveSheetNameFromString(s, currentSheet)
-588       StripWorksheetNameAndDollars = Replace(StripWorksheetNameAndDollars, "$", "")
+588       StripWorksheetNameAndDollars = Replace(StripWorksheetNameAndDollars, "$", vbNullString)
 
 ExitFunction:
           If RaiseError Then RethrowError
@@ -285,7 +285,7 @@ DecimalFixer: 'Ensures decimal character used is correct.
 ErrorHandler:
           If Not ReportError("OpenSolverUtils", "ConvertFromCurrentLocale") Then Resume
           RaiseError = True
-          ConvertLocale = ""
+          ConvertLocale = vbNullString
           GoTo ExitFunction
 End Function
 
@@ -319,7 +319,7 @@ Function GetSolverParametersDict(Solver As ISolver, sheet As Worksheet) As Dicti
 6109          For i = 1 To SolverParametersRange.Rows.Count
                   Dim ParamName As String, ParamValue As String
 6110              ParamName = Trim(SolverParametersRange.Cells(i, 1))
-6111              If ParamName <> "" Then
+6111              If Len(ParamName) > 0 Then
                       If SolverParameters.Exists(ParamName) Then SolverParameters.Remove ParamName
 6112                  ParamValue = SolverParametersRange.Cells(i, 2).value
 6114                  SolverParameters.Add Key:=ParamName, Item:=ParamValue
@@ -347,7 +347,7 @@ Function ParametersToKwargs(SolverParameters As Dictionary) As String
           Dim Key As Variant, result As String
           For Each Key In SolverParameters.Keys
               result = result & Key & _
-                       IIf(SolverParameters.Item(Key) <> "", "=" & StrExNoPlus(SolverParameters.Item(Key)), "") & " "
+                       IIf(Len(SolverParameters.Item(Key)) > 0, "=" & StrExNoPlus(SolverParameters.Item(Key)), vbNullString) & " "
           Next Key
           ParametersToKwargs = Trim(result)
 
@@ -368,7 +368,7 @@ Function ParametersToFlags(SolverParameters As Dictionary) As String
 
           Dim Key As Variant, result As String
           For Each Key In SolverParameters.Keys
-              result = result & IIf(Left(Key, 1) <> "-", "-", "") & Key & " " & StrExNoPlus(SolverParameters.Item(Key)) & " "
+              result = result & IIf(Left(Key, 1) <> "-", "-", vbNullString) & Key & " " & StrExNoPlus(SolverParameters.Item(Key)) & " "
           Next Key
           ParametersToFlags = Trim(result)
 
@@ -628,7 +628,7 @@ Function StrEx(d As Variant, Optional AddSign As Boolean = True) As String
               s = str(d)  ' check d is numeric and convert to string
 1912          s = Mid(s, 2)  ' remove the initial space (reserved by VB for the sign)
 1913          ' ensure we have "0.", not just "."
-1915          StrEx = IIf(Left(s, 1) = ".", "0", "") & s
+1915          StrEx = IIf(Left(s, 1) = ".", "0", vbNullString) & s
               If AddSign Or d < 0 Then StrEx = IIf(d >= 0, "+", "-") & StrEx
               Exit Function
 Abort:
@@ -698,7 +698,7 @@ Function SplitWithoutRepeats(StringToSplit As String, Delimiter As String) As St
           Dim LastNonEmpty As Long, i As Long
           LastNonEmpty = -1
           For i = 0 To UBound(SplitValues)
-              If SplitValues(i) <> "" Then
+              If Len(SplitValues(i)) > 0 Then
                   LastNonEmpty = LastNonEmpty + 1
                   SplitValues(LastNonEmpty) = SplitValues(i)
               End If
@@ -786,7 +786,7 @@ Public Function URLEncode(StringVal As String, Optional SpaceAsPlus As Boolean =
                     result(i) = "%" & Hex(CharCode)
             End Select
         Next i
-        URLEncode = Join(result, "")
+        URLEncode = Join(result, vbNullString)
     End If
 
 ExitFunction:
@@ -846,7 +846,7 @@ Public Function SystemIs64Bit() As Boolean
               ' http://www.mrexcel.com/forum/showthread.php?542727-Determining-If-OS-Is-32-Bit-Or-64-Bit-Using-VBA and
               ' http://stackoverflow.com/questions/6256140/how-to-detect-if-the-computer-is-x32-or-x64 and
               ' http://msdn.microsoft.com/en-us/library/ms684139%28v=vs.85%29.aspx
-666           SystemIs64Bit = Environ("ProgramFiles(x86)") <> ""
+666           SystemIs64Bit = Len(Environ("ProgramFiles(x86)")) > 0
           #End If
 End Function
 

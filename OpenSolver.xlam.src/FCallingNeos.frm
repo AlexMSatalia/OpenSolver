@@ -40,7 +40,7 @@ Private Sub UserForm_Activate()
     
     Dim message As String, errorString As String, result As String
     message = SolverNeos.FinalMessage
-    errorString = ""
+    errorString = vbNullString
 
     result = SolveOnNeos(message, errorString, Me)
 

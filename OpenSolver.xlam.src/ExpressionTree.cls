@@ -137,7 +137,7 @@ Public Function Display() As String
 8535      If NodeType = ExpressionTreeOperator Then
 8536          output = "("
 8537      Else
-8538          output = ""
+8538          output = vbNullString
 8539      End If
           
           Dim i As Long

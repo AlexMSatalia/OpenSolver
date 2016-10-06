@@ -138,7 +138,7 @@ End Sub
 
 Private Function Version_Win() As String
     If Not SolverIsPresent(Me) Then
-        Version_Win = ""
+        Version_Win = vbNullString
         Exit Function
     End If
     
@@ -153,7 +153,7 @@ Private Function Version_Win() As String
     ' Save to a new string first - modifying the string from the DLL can sometimes crash Excel
     Dim sNomadVersion As String
     sNomadVersion = NomadVersion()
-    sNomadVersion = Left(Replace(sNomadVersion, vbNullChar, ""), 5)
+    sNomadVersion = Left(Replace(sNomadVersion, vbNullChar, vbNullString), 5)
     
     SetCurrentDirectory currentDir
     
@@ -161,13 +161,13 @@ Private Function Version_Win() As String
     Exit Function
 
 ErrorHandler:
-    Version_Win = ""
+    Version_Win = vbNullString
 End Function
 
 Private Function Version_Mac() As String
     Dim SolverPath As String
     If Not SolverIsPresent(Me, SolverPath) Then
-        Version_Mac = ""
+        Version_Mac = vbNullString
         Exit Function
     End If
     
@@ -176,7 +176,7 @@ End Function
 
 Private Function LibVersion_Win() As String
     If Not SolverIsPresent(Me) Then
-        LibVersion_Win = ""
+        LibVersion_Win = vbNullString
         Exit Function
     End If
     
@@ -190,7 +190,7 @@ Private Function LibVersion_Win() As String
     ' Save to a new string first - modifying the string from the DLL can sometimes crash Excel
     Dim sLibVersion As String
     sLibVersion = NomadLibVersion()
-    sLibVersion = Left(Replace(sLibVersion, vbNullChar, ""), 5)
+    sLibVersion = Left(Replace(sLibVersion, vbNullChar, vbNullString), 5)
     
     SetCurrentDirectory currentDir
     
@@ -200,7 +200,7 @@ End Function
 Private Function LibVersion_Mac() As String
     Dim SolverPath As String
     If Not SolverIsPresent(Me, SolverPath) Then
-        LibVersion_Mac = ""
+        LibVersion_Mac = vbNullString
         Exit Function
     End If
     
