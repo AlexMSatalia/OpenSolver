@@ -9,7 +9,7 @@ del /Q Release\*
 
 :: Common elements of the 7-zip command
 set start=7z a Release\
-set end=. -xr!.git* -xr!OpenSolver.xlam.src -xr!Release -x!make_releases.* -x!upload_releases.* -xr!*~$* -xr!*._.DS_Store* -xr!RibbonX
+set end=. -xr!.git* -xr!OpenSolver.xlam.src -xr!Release -x!make_releases.* -x!upload_releases.* -xr!*~$* -xr!*._.DS_Store* -xr!RibbonX -xr!._*
 
 :: Ignore mtee source files
 set mtee=-xr!Utils\mtee\*.cpp -xr!Utils\mtee\*.h -xr!Utils\mtee\*.ico 
