@@ -1,5 +1,10 @@
 # OpenSolver Release Notes
 
+## Unreleased
+### Fixed
+- Fix crash on 64-bit Office on Windows 7
+- Fix error with piping on new versions of 64-bit Office
+
 ## v2.8.3 - 2016-10-05
 ### Added
 - Console can now be resized
