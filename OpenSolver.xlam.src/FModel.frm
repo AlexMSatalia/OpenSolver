@@ -47,436 +47,436 @@ Private ResizeStartY As Double
 ' Function to map string rels to combobox index positions
 ' Assigning combobox by .value fails a lot on Mac
 Function cboPosition(rel As String) As Integer
-4148      Select Case rel
+1         Select Case rel
           Case "="
-4149          cboPosition = 0
-4150      Case "<="
-4151          cboPosition = 1
-4152      Case ">="
-4153          cboPosition = 2
-4154      Case "int"
-4155          cboPosition = 3
-4156      Case "bin"
-4157          cboPosition = 4
-4158      Case "alldiff"
-4159          cboPosition = 5
-4160      End Select
+2             cboPosition = 0
+3         Case "<="
+4             cboPosition = 1
+5         Case ">="
+6             cboPosition = 2
+7         Case "int"
+8             cboPosition = 3
+9         Case "bin"
+10            cboPosition = 4
+11        Case "alldiff"
+12            cboPosition = 5
+13        End Select
 End Function
 
 Sub Disabler(TrueIfEnable As Boolean)
           ' Before calling Disabler, ensure that the focused control will not be disabled!
           ' This prevents tab-skipping into a RefEdit, and starting its event loop
           
-4161      lblDescHeader.Enabled = TrueIfEnable
-4162      lblDesc.Enabled = TrueIfEnable
-4163      cmdRunAutoModel.Enabled = TrueIfEnable
+1         lblDescHeader.Enabled = TrueIfEnable
+2         lblDesc.Enabled = TrueIfEnable
+3         cmdRunAutoModel.Enabled = TrueIfEnable
 
-4164      lblDiv1.Enabled = False
+4         lblDiv1.Enabled = False
 
-4165      lblStep1.Enabled = TrueIfEnable
-4166      refObj.Enabled = TrueIfEnable
-4167      optMax.Enabled = TrueIfEnable
-4168      optMin.Enabled = TrueIfEnable
-4169      optTarget.Enabled = TrueIfEnable
-4170      txtObjTarget.Enabled = TrueIfEnable And GetFormObjectiveSense() = TargetObjective
+5         lblStep1.Enabled = TrueIfEnable
+6         refObj.Enabled = TrueIfEnable
+7         optMax.Enabled = TrueIfEnable
+8         optMin.Enabled = TrueIfEnable
+9         optTarget.Enabled = TrueIfEnable
+10        txtObjTarget.Enabled = TrueIfEnable And GetFormObjectiveSense() = TargetObjective
 
-4171      lblDiv2.Enabled = False
+11        lblDiv2.Enabled = False
 
-4172      lblStep2.Enabled = TrueIfEnable
-4173      refDecision.Enabled = TrueIfEnable
+12        lblStep2.Enabled = TrueIfEnable
+13        refDecision.Enabled = TrueIfEnable
 
-4174      lblDiv3.Enabled = False
+14        lblDiv3.Enabled = False
 
-4175      chkNonNeg.Enabled = TrueIfEnable
-4176      cmdCancelCon.Enabled = Not TrueIfEnable
-4177      cmdDelSelCon.Enabled = TrueIfEnable And lstConstraints.ListIndex > 0
-          chkNameRange.Enabled = TrueIfEnable
+15        chkNonNeg.Enabled = TrueIfEnable
+16        cmdCancelCon.Enabled = Not TrueIfEnable
+17        cmdDelSelCon.Enabled = TrueIfEnable And lstConstraints.ListIndex > 0
+18        chkNameRange.Enabled = TrueIfEnable
 
-4178      lblDiv4.Enabled = False
+19        lblDiv4.Enabled = False
 
-4179      lblStep4.Enabled = TrueIfEnable
+20        lblStep4.Enabled = TrueIfEnable
 
           ' Regardless of TrueIfEnable, disable the dual options if the solver doesn't support it
           Dim HasSensitivity As Boolean
-          HasSensitivity = SensitivityAnalysisAvailable(CreateSolver(GetChosenSolver(sheet)))
+21        HasSensitivity = SensitivityAnalysisAvailable(CreateSolver(GetChosenSolver(sheet)))
 
-4180      chkGetDuals.Enabled = TrueIfEnable And HasSensitivity
-4184      refDuals.Enabled = TrueIfEnable And HasSensitivity And chkGetDuals.value
-4181      chkGetDuals2.Enabled = TrueIfEnable And HasSensitivity
-          optUpdate.Enabled = TrueIfEnable And HasSensitivity And chkGetDuals2.value
-          optNew.Enabled = TrueIfEnable And HasSensitivity And chkGetDuals2.value
+22        chkGetDuals.Enabled = TrueIfEnable And HasSensitivity
+23        refDuals.Enabled = TrueIfEnable And HasSensitivity And chkGetDuals.value
+24        chkGetDuals2.Enabled = TrueIfEnable And HasSensitivity
+25        optUpdate.Enabled = TrueIfEnable And HasSensitivity And chkGetDuals2.value
+26        optNew.Enabled = TrueIfEnable And HasSensitivity And chkGetDuals2.value
 
-4185      lblDiv5.Enabled = False
-4186      lblDiv6.Enabled = False
+27        lblDiv5.Enabled = False
+28        lblDiv6.Enabled = False
 
-4187      chkShowModel.Enabled = TrueIfEnable
-4188      cmdOptions.Enabled = TrueIfEnable
-4189      cmdBuild.Enabled = TrueIfEnable
-4190      cmdCancel.Enabled = TrueIfEnable
-          cmdReset.Enabled = TrueIfEnable
-          cmdChange.Enabled = TrueIfEnable
+29        chkShowModel.Enabled = TrueIfEnable
+30        cmdOptions.Enabled = TrueIfEnable
+31        cmdBuild.Enabled = TrueIfEnable
+32        cmdCancel.Enabled = TrueIfEnable
+33        cmdReset.Enabled = TrueIfEnable
+34        cmdChange.Enabled = TrueIfEnable
 End Sub
 
 Sub LoadModelFromSheet()
-          SetFormObjectiveSense GetObjectiveSense(sheet)
-          SetFormObjectiveTargetValue GetObjectiveTargetValue(sheet)
-          SetFormObjective GetObjectiveFunctionCellRefersTo(sheet)
-4215      SetFormDecisionVars GetDecisionVariablesRefersTo(sheet)
-4218      SetFormDuals GetDualsRefersTo(sheet)
+1         SetFormObjectiveSense GetObjectiveSense(sheet)
+2         SetFormObjectiveTargetValue GetObjectiveTargetValue(sheet)
+3         SetFormObjective GetObjectiveFunctionCellRefersTo(sheet)
+4         SetFormDecisionVars GetDecisionVariablesRefersTo(sheet)
+5         SetFormDuals GetDualsRefersTo(sheet)
 
-          NumConstraints = GetNumConstraints(sheet)
-          If NumConstraints > 0 Then
-              ReDim Constraints(1 To NumConstraints) As CConstraint
+6         NumConstraints = GetNumConstraints(sheet)
+7         If NumConstraints > 0 Then
+8             ReDim Constraints(1 To NumConstraints) As CConstraint
           
               Dim i As Long, LHSRefersTo As String, RHSRefersTo As String, Relation As RelationConsts
-              For i = 1 To NumConstraints
-                  GetConstraintRefersTo i, LHSRefersTo, Relation, RHSRefersTo, sheet
-                  Set Constraints(i) = New CConstraint
-                  Constraints(i).Update LHSRefersTo, Relation, RHSRefersTo, sheet
-              Next i
-          End If
+9             For i = 1 To NumConstraints
+10                GetConstraintRefersTo i, LHSRefersTo, Relation, RHSRefersTo, sheet
+11                Set Constraints(i) = New CConstraint
+12                Constraints(i).Update LHSRefersTo, Relation, RHSRefersTo, sheet
+13            Next i
+14        End If
 
-4213      chkNonNeg.value = GetNonNegativity(sheet)
-4216      chkGetDuals.value = Len(GetFormDuals()) > 0
-          chkGetDuals2.value = GetDualsOnSheet(sheet)
-4237      chkGetDuals2_Click  ' Set enabled status of dual checkboxes
+15        chkNonNeg.value = GetNonNegativity(sheet)
+16        chkGetDuals.value = Len(GetFormDuals()) > 0
+17        chkGetDuals2.value = GetDualsOnSheet(sheet)
+18        chkGetDuals2_Click  ' Set enabled status of dual checkboxes
 
-          optUpdate.value = GetUpdateSensitivity(sheet)
-4242      optNew.value = Not optUpdate.value
+19        optUpdate.value = GetUpdateSensitivity(sheet)
+20        optNew.value = Not optUpdate.value
 End Sub
 
 Private Sub PopulateConstraintListBox(Optional UpdateIndex As Long = -1)
           ' If UpdateIndex is specified, refresh that entry without redrawing the entire list
 
           Dim RaiseError As Boolean
-          RaiseError = False
-          On Error GoTo ErrorHandler
+1         RaiseError = False
+2         On Error GoTo ErrorHandler
 
           Dim DisplayString As String
           Dim oldLI As Long
           
           Dim showNamedRanges As Boolean
-          showNamedRanges = chkNameRange.value
-3984      If showNamedRanges Then SearchRangeName_DestroyCache
+3         showNamedRanges = chkNameRange.value
+4         If showNamedRanges Then SearchRangeName_DestroyCache
           
           ' Prevent change events from firing while we modify the list
-          DisableConstraintListChange = True
+5         DisableConstraintListChange = True
           
           
-3985      oldLI = lstConstraints.ListIndex
+6         oldLI = lstConstraints.ListIndex
           
-          If UpdateIndex = -1 Then
-3986          lstConstraints.Clear
-3987          lstConstraints.AddItem "<Add new constraint>"
+7         If UpdateIndex = -1 Then
+8             lstConstraints.Clear
+9             lstConstraints.AddItem "<Add new constraint>"
     
               Dim i As Long
-3988          For i = 1 To NumConstraints
-4001              lstConstraints.AddItem Constraints(i).ListDisplayString(sheet, showNamedRanges)
-4002          Next i
+10            For i = 1 To NumConstraints
+11                lstConstraints.AddItem Constraints(i).ListDisplayString(sheet, showNamedRanges)
+12            Next i
     
-          Else
-              If lstConstraints.ListCount > UpdateIndex Then lstConstraints.RemoveItem UpdateIndex
-              lstConstraints.AddItem Constraints(UpdateIndex).ListDisplayString(sheet, showNamedRanges), UpdateIndex
-          End If
+13        Else
+14            If lstConstraints.ListCount > UpdateIndex Then lstConstraints.RemoveItem UpdateIndex
+15            lstConstraints.AddItem Constraints(UpdateIndex).ListDisplayString(sheet, showNamedRanges), UpdateIndex
+16        End If
           
           ' Restore selected index, forcing a valid selection if needed
-4006      lstConstraints.ListIndex = Max(Min(oldLI, lstConstraints.ListCount - 1), 0)
+17        lstConstraints.ListIndex = Max(Min(oldLI, lstConstraints.ListCount - 1), 0)
 
           ' Restore change event
-          DisableConstraintListChange = False
+18        DisableConstraintListChange = False
           
 ExitSub:
-          If RaiseError Then RethrowError
-          Exit Sub
+19        If RaiseError Then RethrowError
+20        Exit Sub
 
 ErrorHandler:
-          If Not ReportError("CModel", "PopulateConstraintListBox") Then Resume
-          RaiseError = True
-          GoTo ExitSub
+21        If Not ReportError("CModel", "PopulateConstraintListBox") Then Resume
+22        RaiseError = True
+23        GoTo ExitSub
 End Sub
 
 Private Sub chkGetDuals_Click()
-4250      refDuals.Enabled = chkGetDuals.value
+1         refDuals.Enabled = chkGetDuals.value
 End Sub
 
 Private Sub chkGetDuals2_Click()
-4253      optUpdate.Enabled = chkGetDuals2.value And chkGetDuals2.Enabled
-4254      optNew.Enabled = chkGetDuals2.value And chkGetDuals2.Enabled
+1         optUpdate.Enabled = chkGetDuals2.value And chkGetDuals2.Enabled
+2         optNew.Enabled = chkGetDuals2.value And chkGetDuals2.Enabled
 End Sub
 
 Private Sub chkNameRange_Click()
-4256      PopulateConstraintListBox
-          ShowNamedRangesState = chkNameRange.value
+1         PopulateConstraintListBox
+2         ShowNamedRangesState = chkNameRange.value
 End Sub
 
 Private Sub chkShowModel_Click()
-          ShowModelAfterSavingState = chkShowModel.value
+1               ShowModelAfterSavingState = chkShowModel.value
 End Sub
 
 Private Sub cmdCancelCon_Click()
-          lstConstraints.SetFocus  ' Make sure refedits don't get focus
-4259      Disabler True
-4260      cmdAddCon.Enabled = False
-4262      RefreshConstraintPanel
+1         lstConstraints.SetFocus  ' Make sure refedits don't get focus
+2         Disabler True
+3         cmdAddCon.Enabled = False
+4         RefreshConstraintPanel
 End Sub
 
 Private Sub cmdChange_Click()
-    Dim frmSolverChange As FSolverChange
-    Set frmSolverChange = New FSolverChange
-    
-    Me.Hide  '  Hide the model form so the refedit on the options form works, and to keep the focus clear
-    frmSolverChange.Show
-    Unload frmSolverChange
-    
-    FormatCurrentSolver
-    PreserveModel = True
-    Me.Show
+          Dim frmSolverChange As FSolverChange
+1         Set frmSolverChange = New FSolverChange
+          
+2         Me.Hide  '  Hide the model form so the refedit on the options form works, and to keep the focus clear
+3         frmSolverChange.Show
+4         Unload frmSolverChange
+          
+5         FormatCurrentSolver
+6         PreserveModel = True
+7         Me.Show
 End Sub
 
 Sub FormatCurrentSolver()
-    Dim Solver As String
-    Solver = GetChosenSolver(sheet)
-    lblSolver.Caption = "Current Solver Engine: " & UCase(Left(Solver, 1)) & Mid(Solver, 2)
+          Dim Solver As String
+1         Solver = GetChosenSolver(sheet)
+2         lblSolver.Caption = "Current Solver Engine: " & UCase(Left(Solver, 1)) & Mid(Solver, 2)
 End Sub
 
 Private Sub cmdOptions_Click()
           ' Save the current "Assume Non Negative" option so this is shown in the options dialog.
           ' The saved value gets updated on OK, which we then reflect in our Model dialog
-4267      SetNonNegativity chkNonNeg.value, sheet
+1         SetNonNegativity chkNonNeg.value, sheet
           Dim frmOptions As FOptions
-          Set frmOptions = New FOptions
+2         Set frmOptions = New FOptions
           
-          Me.Hide  ' Hide the model form so the refedit on the options form works, and to keep the focus clear
-4268      frmOptions.Show
+3         Me.Hide  ' Hide the model form so the refedit on the options form works, and to keep the focus clear
+4         frmOptions.Show
           
-          Unload frmOptions
-4270      chkNonNeg.value = GetNonNegativity(sheet)
+5         Unload frmOptions
+6         chkNonNeg.value = GetNonNegativity(sheet)
 
           ' Restore the original model form
-          PreserveModel = True
-          Me.Show
+7         PreserveModel = True
+8         Me.Show
 End Sub
 
 Private Sub cmdReset_Click()
           'Check the user wants to reset the model
-4274      If MsgBox("This will reset the objective function, decision variables and constraints." _
+1         If MsgBox("This will reset the objective function, decision variables and constraints." _
                   & vbCrLf & " Are you sure you want to do this?", vbYesNo, "OpenSolver") = vbNo Then
-4275          Exit Sub
-4276      End If
+2             Exit Sub
+3         End If
 
           'Reset the objective function and the decision variables
-4277      SetFormObjective vbNullString
-4278      SetFormDecisionVars vbNullString
+4         SetFormObjective vbNullString
+5         SetFormDecisionVars vbNullString
 
           ' Remove the constraints
-4280      NumConstraints = 0
-4283      PopulateConstraintListBox
+6         NumConstraints = 0
+7         PopulateConstraintListBox
 End Sub
 
 Private Sub optMax_Click()
-4285      txtObjTarget.Enabled = optTarget.value
+1         txtObjTarget.Enabled = optTarget.value
 End Sub
 
 Private Sub optMin_Click()
-4287      txtObjTarget.Enabled = optTarget.value
+1         txtObjTarget.Enabled = optTarget.value
 End Sub
 
 Private Sub optTarget_Click()
-4291      txtObjTarget.Enabled = optTarget.value
+1         txtObjTarget.Enabled = optTarget.value
 End Sub
 
 Private Sub AlterConstraints(DoDisable As Boolean)
-          Disabler DoDisable
-          cmdAddCon.Enabled = Not DoDisable Or lstConstraints.ListIndex = 0
+1               Disabler DoDisable
+2               cmdAddCon.Enabled = Not DoDisable Or lstConstraints.ListIndex = 0
 End Sub
 
 Private Sub refConLHS_Change()
-    ' Only fire the change event if the RefEdit is being edited directly
-    If ActiveControl.Name <> "refConLHS" Then Exit Sub
-    
-    ' refConLHS has focus, we don't need to worry about setting the focus
-    AlterConstraints Not HasConstraintChanged()
+          ' Only fire the change event if the RefEdit is being edited directly
+1         If ActiveControl.Name <> "refConLHS" Then Exit Sub
+          
+          ' refConLHS has focus, we don't need to worry about setting the focus
+2         AlterConstraints Not HasConstraintChanged()
 End Sub
 
 Private Sub refConRHS_Change()
-    ' Only fire the change event if the RefEdit is being edited directly
-    If ActiveControl.Name <> "refConRHS" Then Exit Sub
-    
-    ' refConRHS has focus, we don't need to worry about setting the focus
-    AlterConstraints Not HasConstraintChanged()
+          ' Only fire the change event if the RefEdit is being edited directly
+1         If ActiveControl.Name <> "refConRHS" Then Exit Sub
+          
+          ' refConRHS has focus, we don't need to worry about setting the focus
+2         AlterConstraints Not HasConstraintChanged()
 End Sub
 
 Private Sub cboConRel_Change()
-    ' Caller should ensure focus is set correctly
-    refConRHS.Enabled = RelationHasRHS(GetFormRelation())
-    AlterConstraints Not HasConstraintChanged()
+          ' Caller should ensure focus is set correctly
+1         refConRHS.Enabled = RelationHasRHS(GetFormRelation())
+2         AlterConstraints Not HasConstraintChanged()
 End Sub
 
 Private Function HasConstraintChanged() As Boolean
-    Dim LHSChanged As Boolean, RelChanged As Boolean, RHSChanged As Boolean
+          Dim LHSChanged As Boolean, RelChanged As Boolean, RHSChanged As Boolean
 
-    Dim Index As Long
-    Index = lstConstraints.ListIndex
-    
-    ' If there is a selected constraint, we check against the original values
-    ' otherwise we compare to empty strings
-    Dim OrigLHS As String, OrigRHSLocal As String
-    If Index >= 1 Then
-        With Constraints(Index)
-            OrigLHS = .LHSRefersTo
-            OrigRHSLocal = .RHSRefersToLocal
-            
-            RelChanged = (GetFormRelation() <> .Relation)
-        End With
-    End If
-    
-    LHSChanged = GetFormLHSRefersTo() <> OrigLHS
-    ' Only check the RHS if the relation uses RHS
-    RHSChanged = RelationHasRHS(GetFormRelation()) And _
-                 GetFormRHSRefersTo() <> OrigRHSLocal
-    
-    HasConstraintChanged = LHSChanged Or RelChanged Or RHSChanged
+          Dim Index As Long
+1         Index = lstConstraints.ListIndex
+          
+          ' If there is a selected constraint, we check against the original values
+          ' otherwise we compare to empty strings
+          Dim OrigLHS As String, OrigRHSLocal As String
+2         If Index >= 1 Then
+3             With Constraints(Index)
+4                 OrigLHS = .LHSRefersTo
+5                 OrigRHSLocal = .RHSRefersToLocal
+                  
+6                 RelChanged = (GetFormRelation() <> .Relation)
+7             End With
+8         End If
+          
+9         LHSChanged = GetFormLHSRefersTo() <> OrigLHS
+          ' Only check the RHS if the relation uses RHS
+10        RHSChanged = RelationHasRHS(GetFormRelation()) And _
+                       GetFormRHSRefersTo() <> OrigRHSLocal
+          
+11        HasConstraintChanged = LHSChanged Or RelChanged Or RHSChanged
 End Function
 
 Private Sub UserForm_Activate()
-          CenterForm
-          On Error GoTo ErrorHandler
+1         CenterForm
+2         On Error GoTo ErrorHandler
 
-          cmdCancel.SetFocus
+3         cmdCancel.SetFocus
 
           ' Check if we have indicated to keep the model from the last time form was shown
-4350      If PreserveModel Then
-              PreserveModel = False
-          Else
-              UpdateStatusBar "Loading model...", True
-              Application.Cursor = xlWait
-              Application.ScreenUpdating = False
+4         If PreserveModel Then
+5             PreserveModel = False
+6         Else
+7             UpdateStatusBar "Loading model...", True
+8             Application.Cursor = xlWait
+9             Application.ScreenUpdating = False
 
               ' Check we can even start
-              GetActiveSheetIfMissing sheet
+10            GetActiveSheetIfMissing sheet
              
-4349          SetAnyMissingDefaultSolverOptions sheet
+11            SetAnyMissingDefaultSolverOptions sheet
           
-4351          If SheetHasOpenSolverHighlighting(sheet) Then
-                  RestoreHighlighting = True
-                  HideSolverModel sheet
-              End If
+12            If SheetHasOpenSolverHighlighting(sheet) Then
+13                RestoreHighlighting = True
+14                HideSolverModel sheet
+15            End If
           
               ' Make sure sheet is up to date
-4352          Application.Calculate
+16            Application.Calculate
               ' Remove the 'marching ants' showing if a range is copied.
               ' Otherwise, the ants stay visible, and visually conflict with
               ' our cell selection. The ants are also left behind on the
               ' screen. This works around an apparent bug (?) in Excel 2007.
-4353          Application.CutCopyMode = False
+17            Application.CutCopyMode = False
           
               ' Clear the form
-4354          SetFormObjectiveSense UnknownObjectiveSense
-4356          SetFormObjective vbNullString
-4357          SetFormDecisionVars vbNullString
-4358          SetFormLHSRefersTo vbNullString
-              SetFormRHSRefersTo vbNullString
-4360          lstConstraints.Clear
-4361          cboConRel.Clear
-4362          cboConRel.AddItem "="
-4363          cboConRel.AddItem "<="
-4364          cboConRel.AddItem ">="
-4365          cboConRel.AddItem "int"
-4366          cboConRel.AddItem "bin"
-4367          cboConRel.AddItem "alldiff"
-4368          SetFormRelation RelationEQ    ' We set an initial value just in case there is no model, and the user goes straight to AddNewConstraint
+18            SetFormObjectiveSense UnknownObjectiveSense
+19            SetFormObjective vbNullString
+20            SetFormDecisionVars vbNullString
+21            SetFormLHSRefersTo vbNullString
+22            SetFormRHSRefersTo vbNullString
+23            lstConstraints.Clear
+24            cboConRel.Clear
+25            cboConRel.AddItem "="
+26            cboConRel.AddItem "<="
+27            cboConRel.AddItem ">="
+28            cboConRel.AddItem "int"
+29            cboConRel.AddItem "bin"
+30            cboConRel.AddItem "alldiff"
+31            SetFormRelation RelationEQ    ' We set an initial value just in case there is no model, and the user goes straight to AddNewConstraint
 
               'Find current solver
-              FormatCurrentSolver
+32            FormatCurrentSolver
 
               ' Load the model on the sheet into memory
-4379          LoadModelFromSheet
-          End If
+33            LoadModelFromSheet
+34        End If
           
-          PopulateConstraintListBox
-          RefreshConstraintPanel
+35        PopulateConstraintListBox
+36        RefreshConstraintPanel
               
-          chkNameRange.value = ShowNamedRangesState
-          chkShowModel.value = ShowModelAfterSavingState
+37        chkNameRange.value = ShowNamedRangesState
+38        chkShowModel.value = ShowModelAfterSavingState
         
 ExitSub:
-          Application.StatusBar = False
-          Application.Cursor = xlDefault
-          Application.ScreenUpdating = True
-          Exit Sub
+39        Application.StatusBar = False
+40        Application.Cursor = xlDefault
+41        Application.ScreenUpdating = True
+42        Exit Sub
 
 ErrorHandler:
-          If RestoreHighlighting Then ShowSolverModel sheet, HandleError:=True
-          Me.Hide
-          ReportError "FModel", "UserForm_Activate", True
-          GoTo ExitSub
+43        If RestoreHighlighting Then ShowSolverModel sheet, HandleError:=True
+44        Me.Hide
+45        ReportError "FModel", "UserForm_Activate", True
+46        GoTo ExitSub
 End Sub
 
 
 Private Sub cmdCancel_Click()
-          If RestoreHighlighting Then ShowSolverModel sheet, HandleError:=True
-4386      DoEvents
-4387      On Error Resume Next ' Just to be safe on our select
-4388      Application.CutCopyMode = False
-4389      ActiveCell.Select ' Just select one cell, choosing a cell that should be visible to avoid scrolling
-4390      Application.ScreenUpdating = True
-          Me.Hide
+1         If RestoreHighlighting Then ShowSolverModel sheet, HandleError:=True
+2         DoEvents
+3         On Error Resume Next ' Just to be safe on our select
+4         Application.CutCopyMode = False
+5         ActiveCell.Select ' Just select one cell, choosing a cell that should be visible to avoid scrolling
+6         Application.ScreenUpdating = True
+7         Me.Hide
 End Sub
 
 ' Make the [x] hide the form rather than unload
 Private Sub UserForm_QueryClose(Cancel As Integer, CloseMode As Integer)
-    ' If CloseMode = vbFormControlMenu then we know the user
-    ' clicked the [x] close button or Alt+F4 to close the form.
-    If CloseMode = vbFormControlMenu Then
-        cmdCancel_Click
-        Cancel = True
-    End If
+          ' If CloseMode = vbFormControlMenu then we know the user
+          ' clicked the [x] close button or Alt+F4 to close the form.
+1         If CloseMode = vbFormControlMenu Then
+2             cmdCancel_Click
+3             Cancel = True
+4         End If
 End Sub
 
 Private Sub cmdRunAutoModel_Click()
-    ' Refedits on Mac don't work if more than one form is shown, so we need to hide it
-    ' We also hide on windows to make sure that the forms don't hide each other
-    Me.Hide
+          ' Refedits on Mac don't work if more than one form is shown, so we need to hide it
+          ' We also hide on windows to make sure that the forms don't hide each other
+1         Me.Hide
 
-    Dim AutoModel As CAutoModel
-    Set AutoModel = New CAutoModel
-    If AutoModel.BuildModel(sheet, MinimiseUserInteraction:=False, SaveAfterBuilding:=False) Then
-        ' Copy results into FModel
-        SetFormObjective AutoModel.ObjectiveFunctionCellRefersTo
-        SetFormDecisionVars RangeToRefersTo(AutoModel.DecVarsRange)
-        SetFormObjectiveSense AutoModel.ObjSense
-        
-        NumConstraints = AutoModel.Constraints.Count
-        ReDim Constraints(1 To NumConstraints) As CConstraint
-        Dim c As CAutoModelConstraint, i As Long
-        i = 1
-        For Each c In AutoModel.Constraints
-            Set Constraints(i) = New CConstraint
-            With c
-                Constraints(i).Update RangeToRefersTo(.LHS), .RelationType, RangeToRefersTo(.RHS), sheet
-            End With
-            i = i + 1
-        Next c
-    End If
-    
-    lstConstraints.ListIndex = -1  ' Clear the selection
-    PreserveModel = True
-    Me.Show
+          Dim AutoModel As CAutoModel
+2         Set AutoModel = New CAutoModel
+3         If AutoModel.BuildModel(sheet, MinimiseUserInteraction:=False, SaveAfterBuilding:=False) Then
+              ' Copy results into FModel
+4             SetFormObjective AutoModel.ObjectiveFunctionCellRefersTo
+5             SetFormDecisionVars RangeToRefersTo(AutoModel.DecVarsRange)
+6             SetFormObjectiveSense AutoModel.ObjSense
+              
+7             NumConstraints = AutoModel.Constraints.Count
+8             ReDim Constraints(1 To NumConstraints) As CConstraint
+              Dim c As CAutoModelConstraint, i As Long
+9             i = 1
+10            For Each c In AutoModel.Constraints
+11                Set Constraints(i) = New CConstraint
+12                With c
+13                    Constraints(i).Update RangeToRefersTo(.LHS), .RelationType, RangeToRefersTo(.RHS), sheet
+14                End With
+15                i = i + 1
+16            Next c
+17        End If
+          
+18        lstConstraints.ListIndex = -1  ' Clear the selection
+19        PreserveModel = True
+20        Me.Show
 End Sub
 
 Private Sub cmdBuild_Click()
-          On Error GoTo ErrorHandler
+1         On Error GoTo ErrorHandler
 
-4408      DoEvents
-4409      On Error Resume Next
-4410      Application.CutCopyMode = False
-4411      ActiveCell.Select ' Just select one cell, choosing a cell that should be visible to avoid scrolling
-4412      Application.ScreenUpdating = True
-4413      On Error GoTo ErrorHandler
+2         DoEvents
+3         On Error Resume Next
+4         Application.CutCopyMode = False
+5         ActiveCell.Select ' Just select one cell, choosing a cell that should be visible to avoid scrolling
+6         Application.ScreenUpdating = True
+7         On Error GoTo ErrorHandler
 
           Dim oldCalculationMode As Long
-          oldCalculationMode = Application.Calculation
-          Application.Calculation = xlCalculationManual
+8         oldCalculationMode = Application.Calculation
+9         Application.Calculation = xlCalculationManual
           
           
           '''''
@@ -485,737 +485,737 @@ Private Sub cmdBuild_Click()
           
           ' Check objective
           Dim ObjectiveFunctionCellRefersTo As String
-          On Error GoTo BadObjRef
-          ObjectiveFunctionCellRefersTo = GetFormObjective()
-          ValidateObjectiveFunctionCellRefersTo ObjectiveFunctionCellRefersTo
-          On Error GoTo ErrorHandler
+10        On Error GoTo BadObjRef
+11        ObjectiveFunctionCellRefersTo = GetFormObjective()
+12        ValidateObjectiveFunctionCellRefersTo ObjectiveFunctionCellRefersTo
+13        On Error GoTo ErrorHandler
 
           ' Check objective sense
           Dim ObjectiveSense As ObjectiveSenseType
-4421      ObjectiveSense = GetFormObjectiveSense()
-4429      If ObjectiveSense = UnknownObjectiveSense Then
-4430          RaiseUserError "Please select an objective sense (minimise, maximise or target)."
-4432      End If
+14        ObjectiveSense = GetFormObjectiveSense()
+15        If ObjectiveSense = UnknownObjectiveSense Then
+16            RaiseUserError "Please select an objective sense (minimise, maximise or target)."
+17        End If
 
           ' Check objective target
-4423      If ObjectiveSense = TargetObjective Then
+18        If ObjectiveSense = TargetObjective Then
               Dim ObjectiveTarget As Double
-4425          On Error GoTo BadObjectiveTarget
-4426          ObjectiveTarget = GetFormObjectiveTargetValue()
-4427          On Error GoTo ErrorHandler
-4428      End If
+19            On Error GoTo BadObjectiveTarget
+20            ObjectiveTarget = GetFormObjectiveTargetValue()
+21            On Error GoTo ErrorHandler
+22        End If
 
           ' Check decision variables
           Dim DecisionVariablesRefersTo As String
-          On Error GoTo BadDecRef
-          DecisionVariablesRefersTo = GetFormDecisionVars()
-          ValidateDecisionVariablesRefersTo DecisionVariablesRefersTo
-          On Error GoTo ErrorHandler
+23        On Error GoTo BadDecRef
+24        DecisionVariablesRefersTo = GetFormDecisionVars()
+25        ValidateDecisionVariablesRefersTo DecisionVariablesRefersTo
+26        On Error GoTo ErrorHandler
 
           ' Check duals range
-4441      If chkGetDuals.value Then
+27        If chkGetDuals.value Then
               Dim DualsRefersTo As String
-              On Error GoTo BadDualsRef
-              DualsRefersTo = GetFormDuals()
-              ValidateDualsRefersTo DualsRefersTo
-              On Error GoTo ErrorHandler
-4445      End If
+28            On Error GoTo BadDualsRef
+29            DualsRefersTo = GetFormDuals()
+30            ValidateDualsRefersTo DualsRefersTo
+31            On Error GoTo ErrorHandler
+32        End If
 
           ' Check all constraints are valid
           Dim c As Long
-          For c = 1 To NumConstraints
-              With Constraints(c)
-                  On Error Resume Next
-                  ValidateConstraintRefersTo .LHSRefersTo, .Relation, .RHSRefersTo, sheet
-                  If Err.Number <> 0 Then
-                      MsgBox "There is an error in constraint " & c & ":" & vbNewLine & Err.Description
-                      GoTo ExitSub
-                  End If
-              End With
-          Next c
-          On Error GoTo ErrorHandler
+33        For c = 1 To NumConstraints
+34            With Constraints(c)
+35                On Error Resume Next
+36                ValidateConstraintRefersTo .LHSRefersTo, .Relation, .RHSRefersTo, sheet
+37                If Err.Number <> 0 Then
+38                    MsgBox "There is an error in constraint " & c & ":" & vbNewLine & Err.Description
+39                    GoTo ExitSub
+40                End If
+41            End With
+42        Next c
+43        On Error GoTo ErrorHandler
           
           ' Check int/bin constraints not set on non-decision variables before we start saving things
           ' TODO change to error ref #170
-3924      For c = 1 To NumConstraints
-3925          If Not RelationHasRHS(Constraints(c).Relation) Then
-3927              If Not SetDifference(Constraints(c).LHSRange, GetRefersToRange(DecisionVariablesRefersTo)) Is Nothing Then
-                      If MsgBox("This model has specified that a non-decision cell must take an integer/binary value. " & _
+44        For c = 1 To NumConstraints
+45            If Not RelationHasRHS(Constraints(c).Relation) Then
+46                If Not SetDifference(Constraints(c).LHSRange, GetRefersToRange(DecisionVariablesRefersTo)) Is Nothing Then
+47                    If MsgBox("This model has specified that a non-decision cell must take an integer/binary value. " & _
                                 "This is a valid model, but not one that OpenSolver can solve. " & _
                                 "Do you wish to continue with saving this model?", _
                                 vbQuestion + vbYesNo, "OpenSolver - Warning") = vbYes Then
-                          Exit For
-                      Else
-                          GoTo ExitSub
-                      End If
-                  End If
-3934          End If
-3935      Next c
+48                        Exit For
+49                    Else
+50                        GoTo ExitSub
+51                    End If
+52                End If
+53            End If
+54        Next c
 
           ''''''''
           ' Build is now confirmed, save everything to sheet
           ''''''''
-3906      SetDecisionVariablesRefersTo DecisionVariablesRefersTo, sheet
-3911      SetObjectiveFunctionCellRefersTo ObjectiveFunctionCellRefersTo, sheet
-3916      SetObjectiveSense ObjectiveSense, sheet
-3918      If ObjectiveSense = TargetObjective Then SetObjectiveTargetValue ObjectiveTarget, sheet
+55        SetDecisionVariablesRefersTo DecisionVariablesRefersTo, sheet
+56        SetObjectiveFunctionCellRefersTo ObjectiveFunctionCellRefersTo, sheet
+57        SetObjectiveSense ObjectiveSense, sheet
+58        If ObjectiveSense = TargetObjective Then SetObjectiveTargetValue ObjectiveTarget, sheet
           
           ' Constraints
-3936      SetNumConstraints NumConstraints, sheet
-3937      For c = 1 To NumConstraints
-              With Constraints(c)
-                  UpdateConstraintRefersTo c, .LHSRefersTo, .Relation, .RHSRefersTo, sheet
-              End With
-3968      Next c
+59        SetNumConstraints NumConstraints, sheet
+60        For c = 1 To NumConstraints
+61            With Constraints(c)
+62                UpdateConstraintRefersTo c, .LHSRefersTo, .Relation, .RHSRefersTo, sheet
+63            End With
+64        Next c
 
           ' Options
-          SetNonNegativity chkNonNeg.value, sheet
+65        SetNonNegativity chkNonNeg.value, sheet
           ' TODO: Only update these if doing sensitivity- needs a change to save chkGetDuals
           'If chkGetDuals.value Then
-              SetDualsRefersTo DualsRefersTo, sheet
-4252          SetDualsOnSheet chkGetDuals2.value, sheet
-              SetUpdateSensitivity optUpdate.value, sheet
+66            SetDualsRefersTo DualsRefersTo, sheet
+67            SetDualsOnSheet chkGetDuals2.value, sheet
+68            SetUpdateSensitivity optUpdate.value, sheet
           'End If
 
           ' Display on screen
-4449      If chkShowModel.value = True Then ShowSolverModel sheet, HandleError:=True
+69        If chkShowModel.value = True Then ShowSolverModel sheet, HandleError:=True
               
-4450      On Error GoTo CalculateFailed
-4451      Application.Calculate
-4452      On Error GoTo ErrorHandler
+70        On Error GoTo CalculateFailed
+71        Application.Calculate
+72        On Error GoTo ErrorHandler
           
-          Me.Hide
-4453      GoTo ExitSub
+73        Me.Hide
+74        GoTo ExitSub
 
 CalculateFailed:
           ' Application.Calculate failed. Ignore error and try again
-4454      On Error GoTo ErrorHandler
-4455      Application.Calculate
-4456      Resume Next
+75        On Error GoTo ErrorHandler
+76        Application.Calculate
+77        Resume Next
 
 BadObjRef:
           ' Couldn't turn the objective cell address into a range
-4457      MsgBox "Error: the cell address for the objective is invalid. " + _
+78        MsgBox "Error: the cell address for the objective is invalid. " + _
                  "This must be a single cell. " & _
                  "Please correct this and try again.", vbExclamation + vbOKOnly, "OpenSolver"
-4458      refObj.SetFocus ' Set the focus back to the RefEdit
-          GoTo ExitSub
+79        refObj.SetFocus ' Set the focus back to the RefEdit
+80        GoTo ExitSub
 BadDecRef:
           ' Try with raw text if it might work that way!
           ' Converting the text to RefersTo can increase the length (with sheet names etc)
           ' and could cause the range text to become too long for Excel
-          If DecisionVariablesRefersTo <> Me.refDecision.Text Then
-              DecisionVariablesRefersTo = Me.refDecision.Text
-              Resume ' Try again on the validation
-          End If
+81        If DecisionVariablesRefersTo <> Me.refDecision.Text Then
+82            DecisionVariablesRefersTo = Me.refDecision.Text
+83            Resume ' Try again on the validation
+84        End If
           
           ' Couldn't turn the decision variable address into a range
-4461      MsgBox "Error: the cell range specified for the Variable Cells is invalid. " + _
+85        MsgBox "Error: the cell range specified for the Variable Cells is invalid. " + _
                  "This must be a valid Excel range that does not exceed Excel's internal character count limits. " + _
                  "Please correct this and try again.", vbExclamation + vbOKOnly, "OpenSolver"
-4462      refDecision.SetFocus ' Set the focus back to the RefEdit
-          GoTo ExitSub
+86        refDecision.SetFocus ' Set the focus back to the RefEdit
+87        GoTo ExitSub
 BadObjectiveTarget:
           ' Couldn't turn the objective target into a value
-4465      MsgBox "Error: the target value for the objective cell is invalid. " + _
+88        MsgBox "Error: the target value for the objective cell is invalid. " + _
                  "Please correct this and try again.", vbExclamation + vbOKOnly, "OpenSolver"
-4466      txtObjTarget.SetFocus ' Set the focus back to the target text box
-          GoTo ExitSub
+89        txtObjTarget.SetFocus ' Set the focus back to the target text box
+90        GoTo ExitSub
 BadDualsRef:
           ' Couldn't turn the dual cell into a range
-4469      MsgBox "Error: the cell for storing the shadow prices is invalid. " + _
+91        MsgBox "Error: the cell for storing the shadow prices is invalid. " + _
                  "This must be a single cell. " & _
                  "Please correct this and try again.", vbExclamation + vbOKOnly, "OpenSolver"
-4470      refDuals.SetFocus ' Set the focus back to the refedit
-          GoTo ExitSub
+92        refDuals.SetFocus ' Set the focus back to the refedit
+93        GoTo ExitSub
 
 ExitSub:
-          Application.Calculation = oldCalculationMode
-          Exit Sub
+94        Application.Calculation = oldCalculationMode
+95        Exit Sub
 
 ErrorHandler:
-          ReportError "FModel", "cmdBuild_Click", True
-          GoTo ExitSub
+96        ReportError "FModel", "cmdBuild_Click", True
+97        GoTo ExitSub
 End Sub
 
 Private Sub cmdAddCon_Click()
-4496      On Error GoTo ErrorHandler
+1         On Error GoTo ErrorHandler
 
           Dim LHSRefersTo As String, RHSRefersTo As String, rel As RelationConsts
-          LHSRefersTo = GetFormLHSRefersTo()
-4513      RHSRefersTo = ConvertFromCurrentLocale(GetFormRHSRefersTo())
-          rel = GetFormRelation()
+2         LHSRefersTo = GetFormLHSRefersTo()
+3         RHSRefersTo = ConvertFromCurrentLocale(GetFormRHSRefersTo())
+4         rel = GetFormRelation()
 
-          ValidateConstraintRefersTo LHSRefersTo, rel, RHSRefersTo, sheet
+5         ValidateConstraintRefersTo LHSRefersTo, rel, RHSRefersTo, sheet
           
           ' Valid, now update
           
-          lstConstraints.SetFocus  ' Set focus back to constraint list to avoid disabling problems
-4558      AlterConstraints True
+6         lstConstraints.SetFocus  ' Set focus back to constraint list to avoid disabling problems
+7         AlterConstraints True
 
           Dim conIndex As Long
-4561      If cmdAddCon.Caption <> "Add constraint" Then
+8         If cmdAddCon.Caption <> "Add constraint" Then
               ' Update constraint
               ' Note that we use the saved index value rather than lstConstraints.ListIndex in case
               ' this update was prompted by the user changing the index on an unsaved constraint.
               ' In this case, lstConstraints.ListIndex does NOT reflect the constraint being altered.
-4562          conIndex = CurrentListIndex
-4585      Else
+9             conIndex = CurrentListIndex
+10        Else
               ' Add constraint
-              NumConstraints = NumConstraints + 1
-              ReDim Preserve Constraints(1 To NumConstraints) As CConstraint
-              conIndex = NumConstraints
-          End If
+11            NumConstraints = NumConstraints + 1
+12            ReDim Preserve Constraints(1 To NumConstraints) As CConstraint
+13            conIndex = NumConstraints
+14        End If
                    
-          Set Constraints(conIndex) = New CConstraint
-          Constraints(conIndex).Update LHSRefersTo, rel, RHSRefersTo, sheet
+15        Set Constraints(conIndex) = New CConstraint
+16        Constraints(conIndex).Update LHSRefersTo, rel, RHSRefersTo, sheet
           
-4608      PopulateConstraintListBox conIndex
-          RefreshConstraintPanel
-4609      Exit Sub
+17        PopulateConstraintListBox conIndex
+18        RefreshConstraintPanel
+19        Exit Sub
 
 ErrorHandler:
-4620      Application.DisplayAlerts = True
-4622      MsgBox Err.Description
-4624      Exit Sub
+20        Application.DisplayAlerts = True
+21        MsgBox Err.Description
+22        Exit Sub
 
 End Sub
 
 Private Sub cmdDelSelCon_Click()
-4626      If lstConstraints.ListIndex = -1 Then
-4627          MsgBox "Please select a constraint!", vbOKOnly, "AutoModel"
-4628          Exit Sub
-4629      End If
+1         If lstConstraints.ListIndex = -1 Then
+2             MsgBox "Please select a constraint!", vbOKOnly, "AutoModel"
+3             Exit Sub
+4         End If
 
           ' Set focus back to constraint box to avoid focus jumping around
-          lstConstraints.SetFocus
+5         lstConstraints.SetFocus
 
           Dim i As Long
-          For i = 1 To NumConstraints - 1
-              If i >= lstConstraints.ListIndex Then
-                  Set Constraints(i) = Constraints(i + 1)
-              End If
-          Next i
-          NumConstraints = NumConstraints - 1
-          If NumConstraints > 0 Then ReDim Preserve Constraints(1 To NumConstraints) As CConstraint
+6         For i = 1 To NumConstraints - 1
+7             If i >= lstConstraints.ListIndex Then
+8                 Set Constraints(i) = Constraints(i + 1)
+9             End If
+10        Next i
+11        NumConstraints = NumConstraints - 1
+12        If NumConstraints > 0 Then ReDim Preserve Constraints(1 To NumConstraints) As CConstraint
           
           ' Update form
-4631      PopulateConstraintListBox
-          lstConstraints_Change
+13        PopulateConstraintListBox
+14        lstConstraints_Change
 End Sub
 
 Private Sub lstConstraints_Change()
-          If DisableConstraintListChange Then Exit Sub
+1         If DisableConstraintListChange Then Exit Sub
 
-4633      If cmdCancelCon.Enabled Then
+2         If cmdCancelCon.Enabled Then
               Dim SaveChanges As Boolean
-4634          If cmdAddCon.Caption = "Update constraint" Then
-4635              SaveChanges = (MsgBox("You have made changes to the current constraint." & vbNewLine & _
+3             If cmdAddCon.Caption = "Update constraint" Then
+4                 SaveChanges = (MsgBox("You have made changes to the current constraint." & vbNewLine & _
                                         "Do you want to save these changes?", vbYesNo) = vbYes)
-4640          Else
-4641              SaveChanges = (MsgBox("You have entered a constraint." & vbNewLine & _
+5             Else
+6                 SaveChanges = (MsgBox("You have entered a constraint." & vbNewLine & _
                                         "Do you want to save this as a new constraint?", vbYesNo) = vbYes)
-4646          End If
-              If SaveChanges Then
-4643              cmdAddCon_Click
-              End If
-4647          AlterConstraints True
-4651      End If
+7             End If
+8             If SaveChanges Then
+9                 cmdAddCon_Click
+10            End If
+11            AlterConstraints True
+12        End If
           
-          RefreshConstraintPanel
+13        RefreshConstraintPanel
           
 End Sub
 
 Private Sub RefreshConstraintPanel()
           ' Save the index of the constraint we will display
-          CurrentListIndex = lstConstraints.ListIndex
+1         CurrentListIndex = lstConstraints.ListIndex
 
-4653      If lstConstraints.ListIndex = -1 Then
-4654          Exit Sub
-4655      End If
-4656      If lstConstraints.ListIndex = 0 Then
+2         If lstConstraints.ListIndex = -1 Then
+3             Exit Sub
+4         End If
+5         If lstConstraints.ListIndex = 0 Then
               'Add constraint
-4659          SetFormLHSRefersTo vbNullString
-              SetFormRHSRefersTo vbNullString
-4663          cboConRel_Change ' Set the RHS to be active based on the last constraint
-4664          cmdAddCon.Enabled = True
-4665          cmdAddCon.Caption = "Add constraint"
-4666          cmdDelSelCon.Enabled = False
-4668          Application.CutCopyMode = False
-4669          ActiveCell.Select ' Just select one cell, choosing a cell that should be visible to avoid scrolling
-4670          Application.ScreenUpdating = True
-4672      Else
+6             SetFormLHSRefersTo vbNullString
+7             SetFormRHSRefersTo vbNullString
+8             cboConRel_Change ' Set the RHS to be active based on the last constraint
+9             cmdAddCon.Enabled = True
+10            cmdAddCon.Caption = "Add constraint"
+11            cmdDelSelCon.Enabled = False
+12            Application.CutCopyMode = False
+13            ActiveCell.Select ' Just select one cell, choosing a cell that should be visible to avoid scrolling
+14            Application.ScreenUpdating = True
+15        Else
               ' Update constraint
-4677          cmdAddCon.Enabled = False
-4678          cmdAddCon.Caption = "Update constraint"
-4679          cmdDelSelCon.Enabled = True
+16            cmdAddCon.Enabled = False
+17            cmdAddCon.Caption = "Update constraint"
+18            cmdDelSelCon.Enabled = True
 
               ' Set text and marching ants; the select/copy operations can throw errors if on different sheets
-4681          On Error Resume Next
-4682          ActiveCell.Select   ' We may fail in the next steps, so we cancel any old highlighting
-4683          Application.CutCopyMode = False
+19            On Error Resume Next
+20            ActiveCell.Select   ' We may fail in the next steps, so we cancel any old highlighting
+21            Application.CutCopyMode = False
               Dim copyRange As Range
               
-              With Constraints(lstConstraints.ListIndex)
-                  SetFormLHSRefersTo .LHSRefersTo
-4687              SetFormRelation .Relation
-4688              SetFormRHSRefersTo .RHSRefersTo
+22            With Constraints(lstConstraints.ListIndex)
+23                SetFormLHSRefersTo .LHSRefersTo
+24                SetFormRelation .Relation
+25                SetFormRHSRefersTo .RHSRefersTo
 
-                  Set copyRange = ProperUnion(.LHSRange, .RHSRange)
-              End With
-4686
-4700          cboConRel_Change
+26                Set copyRange = ProperUnion(.LHSRange, .RHSRange)
+27            End With
+28
+29            cboConRel_Change
 
               ' Will fail if LHS and RHS are different shape
               ' Silently fail, nothing that can be done about it
-4701          copyRange.Select
-4702          copyRange.Copy
-4703          Application.ScreenUpdating = True
-4705      End If
+30            copyRange.Select
+31            copyRange.Copy
+32            Application.ScreenUpdating = True
+33        End If
 End Sub
 
 Private Sub lstConstraints_Exit(ByVal Cancel As MSForms.ReturnBoolean)
           ' When the focus leaves this list, we want to remove any highlighting shown by selected cells
-4706      ActiveCell.Select
+1         ActiveCell.Select
 End Sub
 
 Private Sub UserForm_Initialize()
-    AutoLayout
-    CenterForm
+1         AutoLayout
+2         CenterForm
 End Sub
 
 Private Sub AutoLayout()
-    AutoFormat Me.Controls
-    
-    Me.Width = FormWidthModel
-    
-    With cmdRunAutoModel
-        .Caption = "AutoModel"
-        .Width = FormButtonWidth * 1.3
-        .Top = FormMargin
-        .Left = LeftOfForm(Me.Width, .Width)
-    End With
-    
-    With lblDescHeader
-        .Left = FormMargin
-        .Top = cmdRunAutoModel.Top + FormSpacing
-        .Caption = "What is AutoModel?"
-    End With
-    
-    With lblDesc
-        .Left = lblDescHeader.Left
-        .Top = Below(cmdRunAutoModel)
-        .Caption = "AutoModel is a feature of OpenSolver that tries to automatically determine " & _
-                   "the problem you are trying to optimise by observing the structure of the " & _
-                   "spreadsheet. It will turn its best guess into a Solver model, which you can " & _
-                   "then edit in this window."
-        AutoHeight lblDesc, Me.Width - 2 * FormMargin
-    End With
-    
-    With lblDiv1
-        .Left = lblDescHeader.Left
-        .Top = Below(lblDesc)
-        .Width = lblDesc.Width
-        .Height = FormDivHeight
-        .BackColor = FormDivBackColor
-    End With
-    
-    With lblStep1
-        .Caption = "Objective Cell:"
-        .Left = lblDescHeader.Left
-        .Top = Below(lblDiv1)
-        AutoHeight lblStep1, Me.Width, True
-    End With
-    
-    With txtObjTarget
-        .Width = cmdRunAutoModel.Width
-        .Top = lblStep1.Top
-        .Left = LeftOfForm(Me.Width, .Width)
-    End With
-    
-    With optTarget
-        .Caption = "target value:"
-        AutoHeight optTarget, Me.Width, True
-        .Top = lblStep1.Top
-        .Left = LeftOf(txtObjTarget, .Width)
-    End With
-    
-    With optMin
-        .Caption = "minimise"
-        AutoHeight optMin, Me.Width, True
-        .Top = lblStep1.Top
-        .Left = LeftOf(optTarget, .Width)
-    End With
-    
-    With optMax
-        .Caption = "maximise"
-        AutoHeight optMax, Me.Width, True
-        .Top = lblStep1.Top
-        .Left = LeftOf(optMin, .Width)
-    End With
-    
-    With refObj
-        .Left = RightOf(lblStep1)
-        .Top = lblStep1.Top
-        .Width = LeftOf(optMax, .Left)
-    End With
-    
-    With lblDiv2
-        .Left = lblDescHeader.Left
-        .Top = Below(optMax)
-        .Width = lblDesc.Width
-        .Height = FormDivHeight
-        .BackColor = FormDivBackColor
-    End With
-    
-    With lblStep2
-        .Caption = "Variable Cells:"
-        .Left = lblDescHeader.Left
-        .Top = Below(lblDiv2)
-        AutoHeight lblStep2, Me.Width, True
-    End With
-    
-    With refDecision
-        .Height = 2 * refObj.Height
-        .Left = refObj.Left
-        .Top = lblStep2.Top
-        .Width = LeftOfForm(Me.Width, .Left)
-    End With
-    
-    With lblDiv3
-        .Left = lblDescHeader.Left
-        .Top = Below(refDecision)
-        .Width = lblDesc.Width
-        .Height = FormDivHeight
-        .BackColor = FormDivBackColor
-    End With
-    
-    With lblStep3
-        .Caption = "Constraints:"
-        .Left = lblDescHeader.Left
-        .Top = Below(lblDiv3)
-        .Width = lblDesc.Width
-    End With
-    
-    lblConstraintGroup.Top = Below(lblStep3, False)
-    
-    With cboConRel
-        .Width = cmdRunAutoModel.Width / 2
-        .Height = refObj.Height
-        .Top = lblConstraintGroup.Top + FormSpacing
-        .Left = LeftOfForm(Me.Width, .Width) - FormSpacing
-    End With
-    
-    With refConLHS
-        .Width = cboConRel.Width * 3
-        .Height = refObj.Height
-        .Top = cboConRel.Top
-        .Left = LeftOf(cboConRel, .Width)
-    End With
-    
-    With refConRHS
-        .Width = refConLHS.Width
-        .Left = refConLHS.Left
-        .Height = refObj.Height
-        .Top = Below(refConLHS)
-    End With
-    
-    With cmdAddCon
-        .Caption = "Add constraint"
-        .Left = refConLHS.Left
-        .Top = Below(refConRHS)
-        .Width = cboConRel.Width * 2
-    End With
-    
-    With cmdCancelCon
-        .Caption = "Cancel"
-        .Left = RightOf(cmdAddCon)
-        .Top = cmdAddCon.Top
-        .Width = cmdAddCon.Width
-    End With
-    
-    With lblConstraintGroup
-        .Left = refConLHS.Left - FormSpacing
-        .Width = FormSpacing * 3 + cmdAddCon.Width + cmdCancelCon.Width
-        .Height = FormSpacing * 4 + refConLHS.Height + refConRHS.Height + cmdAddCon.Height
-    End With
-    
-    With cmdDelSelCon
-        .Caption = "Delete selected constraint"
-        .Left = lblConstraintGroup.Left
-        .Top = Below(lblConstraintGroup)
-        .Width = lblConstraintGroup.Width
-    End With
-    
-    With chkNonNeg
-        .Caption = "Make unconstrained variable cells non-negative"
-        .Left = lblConstraintGroup.Left
-        .Top = Below(cmdDelSelCon)
-        .Width = lblConstraintGroup.Width
-    End With
-    
-    With chkNameRange
-        .Left = lblConstraintGroup.Left
-        .Width = lstConstraints.Width
-        .Caption = "Show named ranges in constraint list"
-        .Top = Below(chkNonNeg, False)
-    End With
-    
-    With lstConstraints
-        .Left = lblDescHeader.Left
-        .Top = lblConstraintGroup.Top
-        .Height = MinHeight
-        .Width = LeftOf(lblConstraintGroup, .Left)
-    End With
-    
-    With lblDiv4
-        .Left = lblDescHeader.Left
-        .Width = lblDesc.Width
-        .Height = FormDivHeight
-        .BackColor = FormDivBackColor
-    End With
-    
-    With lblStep4
-        .Caption = "Sensitivity Analysis"
-        .Left = lblDescHeader.Left
-        AutoHeight lblStep4, Me.Width, True
-    End With
-    
-    With chkGetDuals
-        .Caption = "List sensitivity analysis on the same sheet with top left cell:"
-        .Left = RightOf(lblStep4)
-        AutoHeight chkGetDuals, Me.Width, True
-    End With
-    
-    With refDuals
-        .Left = RightOf(chkGetDuals)
-        .Width = LeftOfForm(Me.Width, .Left)
-        .Height = refObj.Height
-    End With
-    
-    With chkGetDuals2
-        .Caption = "Output sensitivity analysis:"
-        .Left = chkGetDuals.Left
-        AutoHeight chkGetDuals2, Me.Width, True
-    End With
-    
-    With optUpdate
-        .Caption = "updating any previous output sheet"
-        .Left = RightOf(chkGetDuals2)
-        AutoHeight optUpdate, Me.Width, True
-    End With
-    
-    With optNew
-        .Caption = "on a new sheet"
-        .Left = RightOf(optUpdate)
-        AutoHeight optNew, Me.Width, True
-    End With
-    
-    With lblDiv5
-        .Left = lblDescHeader.Left
-        .Width = lblDesc.Width
-        .Height = FormDivHeight
-        .BackColor = FormDivBackColor
-    End With
-    
-    With lblStep5
-        .Left = lblDescHeader.Left
-        .Caption = "Solver Engine:"
-    End With
-    
-    With cmdChange
-        .Width = cmdRunAutoModel.Width
-        .Left = LeftOfForm(Me.Width, .Width)
-        .Caption = "Solver Engine..."
-    End With
-    
-    With lblSolver
-        .Width = LeftOf(cmdChange, .Left)
-    End With
-    
-    With lblDiv6
-        .Left = lblDescHeader.Left
-        .Width = lblDesc.Width
-        .Height = FormDivHeight
-        .BackColor = FormDivBackColor
-    End With
-        
-    With chkShowModel
-        .Left = lblDescHeader.Left
-        AutoHeight chkShowModel, Me.Width, True
-    End With
-    
-    With cmdCancel
-        .Width = cmdRunAutoModel.Width
-        .Caption = "Cancel"
-        .Left = LeftOfForm(Me.Width, .Width)
-        .Cancel = True
-    End With
-    
-    With cmdBuild
-        .Width = cmdRunAutoModel.Width
-        .Caption = "Save Model"
-        .Left = LeftOf(cmdCancel, .Width)
-    End With
-    
-    With cmdOptions
-        .Width = cmdRunAutoModel.Width
-        .Caption = "Options..."
-        .Left = LeftOf(cmdBuild, .Width)
-    End With
-    
-    With cmdReset
-        .Width = cmdRunAutoModel.Width
-        .Caption = "Clear Model"
-        .Left = LeftOf(cmdOptions, .Width)
-    End With
-    
-    ' Add resizer
-    With lblResizer
+1         AutoFormat Me.Controls
+          
+2         Me.Width = FormWidthModel
+          
+3         With cmdRunAutoModel
+4             .Caption = "AutoModel"
+5             .Width = FormButtonWidth * 1.3
+6             .Top = FormMargin
+7             .Left = LeftOfForm(Me.Width, .Width)
+8         End With
+          
+9         With lblDescHeader
+10            .Left = FormMargin
+11            .Top = cmdRunAutoModel.Top + FormSpacing
+12            .Caption = "What is AutoModel?"
+13        End With
+          
+14        With lblDesc
+15            .Left = lblDescHeader.Left
+16            .Top = Below(cmdRunAutoModel)
+17            .Caption = "AutoModel is a feature of OpenSolver that tries to automatically determine " & _
+                         "the problem you are trying to optimise by observing the structure of the " & _
+                         "spreadsheet. It will turn its best guess into a Solver model, which you can " & _
+                         "then edit in this window."
+18            AutoHeight lblDesc, Me.Width - 2 * FormMargin
+19        End With
+          
+20        With lblDiv1
+21            .Left = lblDescHeader.Left
+22            .Top = Below(lblDesc)
+23            .Width = lblDesc.Width
+24            .Height = FormDivHeight
+25            .BackColor = FormDivBackColor
+26        End With
+          
+27        With lblStep1
+28            .Caption = "Objective Cell:"
+29            .Left = lblDescHeader.Left
+30            .Top = Below(lblDiv1)
+31            AutoHeight lblStep1, Me.Width, True
+32        End With
+          
+33        With txtObjTarget
+34            .Width = cmdRunAutoModel.Width
+35            .Top = lblStep1.Top
+36            .Left = LeftOfForm(Me.Width, .Width)
+37        End With
+          
+38        With optTarget
+39            .Caption = "target value:"
+40            AutoHeight optTarget, Me.Width, True
+41            .Top = lblStep1.Top
+42            .Left = LeftOf(txtObjTarget, .Width)
+43        End With
+          
+44        With optMin
+45            .Caption = "minimise"
+46            AutoHeight optMin, Me.Width, True
+47            .Top = lblStep1.Top
+48            .Left = LeftOf(optTarget, .Width)
+49        End With
+          
+50        With optMax
+51            .Caption = "maximise"
+52            AutoHeight optMax, Me.Width, True
+53            .Top = lblStep1.Top
+54            .Left = LeftOf(optMin, .Width)
+55        End With
+          
+56        With refObj
+57            .Left = RightOf(lblStep1)
+58            .Top = lblStep1.Top
+59            .Width = LeftOf(optMax, .Left)
+60        End With
+          
+61        With lblDiv2
+62            .Left = lblDescHeader.Left
+63            .Top = Below(optMax)
+64            .Width = lblDesc.Width
+65            .Height = FormDivHeight
+66            .BackColor = FormDivBackColor
+67        End With
+          
+68        With lblStep2
+69            .Caption = "Variable Cells:"
+70            .Left = lblDescHeader.Left
+71            .Top = Below(lblDiv2)
+72            AutoHeight lblStep2, Me.Width, True
+73        End With
+          
+74        With refDecision
+75            .Height = 2 * refObj.Height
+76            .Left = refObj.Left
+77            .Top = lblStep2.Top
+78            .Width = LeftOfForm(Me.Width, .Left)
+79        End With
+          
+80        With lblDiv3
+81            .Left = lblDescHeader.Left
+82            .Top = Below(refDecision)
+83            .Width = lblDesc.Width
+84            .Height = FormDivHeight
+85            .BackColor = FormDivBackColor
+86        End With
+          
+87        With lblStep3
+88            .Caption = "Constraints:"
+89            .Left = lblDescHeader.Left
+90            .Top = Below(lblDiv3)
+91            .Width = lblDesc.Width
+92        End With
+          
+93        lblConstraintGroup.Top = Below(lblStep3, False)
+          
+94        With cboConRel
+95            .Width = cmdRunAutoModel.Width / 2
+96            .Height = refObj.Height
+97            .Top = lblConstraintGroup.Top + FormSpacing
+98            .Left = LeftOfForm(Me.Width, .Width) - FormSpacing
+99        End With
+          
+100       With refConLHS
+101           .Width = cboConRel.Width * 3
+102           .Height = refObj.Height
+103           .Top = cboConRel.Top
+104           .Left = LeftOf(cboConRel, .Width)
+105       End With
+          
+106       With refConRHS
+107           .Width = refConLHS.Width
+108           .Left = refConLHS.Left
+109           .Height = refObj.Height
+110           .Top = Below(refConLHS)
+111       End With
+          
+112       With cmdAddCon
+113           .Caption = "Add constraint"
+114           .Left = refConLHS.Left
+115           .Top = Below(refConRHS)
+116           .Width = cboConRel.Width * 2
+117       End With
+          
+118       With cmdCancelCon
+119           .Caption = "Cancel"
+120           .Left = RightOf(cmdAddCon)
+121           .Top = cmdAddCon.Top
+122           .Width = cmdAddCon.Width
+123       End With
+          
+124       With lblConstraintGroup
+125           .Left = refConLHS.Left - FormSpacing
+126           .Width = FormSpacing * 3 + cmdAddCon.Width + cmdCancelCon.Width
+127           .Height = FormSpacing * 4 + refConLHS.Height + refConRHS.Height + cmdAddCon.Height
+128       End With
+          
+129       With cmdDelSelCon
+130           .Caption = "Delete selected constraint"
+131           .Left = lblConstraintGroup.Left
+132           .Top = Below(lblConstraintGroup)
+133           .Width = lblConstraintGroup.Width
+134       End With
+          
+135       With chkNonNeg
+136           .Caption = "Make unconstrained variable cells non-negative"
+137           .Left = lblConstraintGroup.Left
+138           .Top = Below(cmdDelSelCon)
+139           .Width = lblConstraintGroup.Width
+140       End With
+          
+141       With chkNameRange
+142           .Left = lblConstraintGroup.Left
+143           .Width = lstConstraints.Width
+144           .Caption = "Show named ranges in constraint list"
+145           .Top = Below(chkNonNeg, False)
+146       End With
+          
+147       With lstConstraints
+148           .Left = lblDescHeader.Left
+149           .Top = lblConstraintGroup.Top
+150           .Height = MinHeight
+151           .Width = LeftOf(lblConstraintGroup, .Left)
+152       End With
+          
+153       With lblDiv4
+154           .Left = lblDescHeader.Left
+155           .Width = lblDesc.Width
+156           .Height = FormDivHeight
+157           .BackColor = FormDivBackColor
+158       End With
+          
+159       With lblStep4
+160           .Caption = "Sensitivity Analysis"
+161           .Left = lblDescHeader.Left
+162           AutoHeight lblStep4, Me.Width, True
+163       End With
+          
+164       With chkGetDuals
+165           .Caption = "List sensitivity analysis on the same sheet with top left cell:"
+166           .Left = RightOf(lblStep4)
+167           AutoHeight chkGetDuals, Me.Width, True
+168       End With
+          
+169       With refDuals
+170           .Left = RightOf(chkGetDuals)
+171           .Width = LeftOfForm(Me.Width, .Left)
+172           .Height = refObj.Height
+173       End With
+          
+174       With chkGetDuals2
+175           .Caption = "Output sensitivity analysis:"
+176           .Left = chkGetDuals.Left
+177           AutoHeight chkGetDuals2, Me.Width, True
+178       End With
+          
+179       With optUpdate
+180           .Caption = "updating any previous output sheet"
+181           .Left = RightOf(chkGetDuals2)
+182           AutoHeight optUpdate, Me.Width, True
+183       End With
+          
+184       With optNew
+185           .Caption = "on a new sheet"
+186           .Left = RightOf(optUpdate)
+187           AutoHeight optNew, Me.Width, True
+188       End With
+          
+189       With lblDiv5
+190           .Left = lblDescHeader.Left
+191           .Width = lblDesc.Width
+192           .Height = FormDivHeight
+193           .BackColor = FormDivBackColor
+194       End With
+          
+195       With lblStep5
+196           .Left = lblDescHeader.Left
+197           .Caption = "Solver Engine:"
+198       End With
+          
+199       With cmdChange
+200           .Width = cmdRunAutoModel.Width
+201           .Left = LeftOfForm(Me.Width, .Width)
+202           .Caption = "Solver Engine..."
+203       End With
+          
+204       With lblSolver
+205           .Width = LeftOf(cmdChange, .Left)
+206       End With
+          
+207       With lblDiv6
+208           .Left = lblDescHeader.Left
+209           .Width = lblDesc.Width
+210           .Height = FormDivHeight
+211           .BackColor = FormDivBackColor
+212       End With
+              
+213       With chkShowModel
+214           .Left = lblDescHeader.Left
+215           AutoHeight chkShowModel, Me.Width, True
+216       End With
+          
+217       With cmdCancel
+218           .Width = cmdRunAutoModel.Width
+219           .Caption = "Cancel"
+220           .Left = LeftOfForm(Me.Width, .Width)
+221           .Cancel = True
+222       End With
+          
+223       With cmdBuild
+224           .Width = cmdRunAutoModel.Width
+225           .Caption = "Save Model"
+226           .Left = LeftOf(cmdCancel, .Width)
+227       End With
+          
+228       With cmdOptions
+229           .Width = cmdRunAutoModel.Width
+230           .Caption = "Options..."
+231           .Left = LeftOf(cmdBuild, .Width)
+232       End With
+          
+233       With cmdReset
+234           .Width = cmdRunAutoModel.Width
+235           .Caption = "Clear Model"
+236           .Left = LeftOf(cmdOptions, .Width)
+237       End With
+          
+          ' Add resizer
+238       With lblResizer
         #If Mac Then
-            ' Mac labels don't fire MouseMove events correctly
-            .Visible = False
+                  ' Mac labels don't fire MouseMove events correctly
+239               .Visible = False
         #End If
-        .Caption = "o"
-        With .Font
-            .Name = "Marlett"
-            .Charset = 2
-            .Size = 10
-        End With
-        .AutoSize = True
-        .Left = Me.Width - .Width
-        .MousePointer = fmMousePointerSizeNWSE
-        .BackStyle = fmBackStyleTransparent
-    End With
-    
-    ' Set the vertical positions of the lower half of the form
-    UpdateLayout
-    
-    Me.Width = Me.Width + FormWindowMargin
-    
-    Me.BackColor = FormBackColor
-    Me.Caption = "OpenSolver - Model"
+240           .Caption = "o"
+241           With .Font
+242               .Name = "Marlett"
+243               .Charset = 2
+244               .Size = 10
+245           End With
+246           .AutoSize = True
+247           .Left = Me.Width - .Width
+248           .MousePointer = fmMousePointerSizeNWSE
+249           .BackStyle = fmBackStyleTransparent
+250       End With
+          
+          ' Set the vertical positions of the lower half of the form
+251       UpdateLayout
+          
+252       Me.Width = Me.Width + FormWindowMargin
+          
+253       Me.BackColor = FormBackColor
+254       Me.Caption = "OpenSolver - Model"
 End Sub
 
 Private Sub UpdateLayout(Optional ChangeY As Single = 0)
-' Do the layout of the lower half of the form, changing the height of the list box by ChangeY
-    Dim NewHeight As Double
-    NewHeight = Max(lstConstraints.Height + ChangeY, MinHeight)
-    
-    lstConstraints.Height = NewHeight
-        
-    ' Cascade the updated height
-    lblDiv4.Top = Below(lstConstraints)
-    lblStep4.Top = Below(lblDiv4)
-    chkGetDuals.Top = lblStep4.Top
-    refDuals.Top = lblStep4.Top
-    chkGetDuals2.Top = Below(chkGetDuals, False)
-    optUpdate.Top = chkGetDuals2.Top
-    optNew.Top = chkGetDuals2.Top
-    lblDiv5.Top = Below(optNew, False)
-    lblStep5.Top = Below(lblDiv5)
-    cmdChange.Top = lblStep5.Top
-    lblSolver.Top = lblStep5.Top + FormButtonHeight - FormTextHeight
-    lblDiv6.Top = Below(cmdChange)
-    chkShowModel.Top = Below(lblDiv6)
-    cmdCancel.Top = chkShowModel.Top
-    cmdBuild.Top = chkShowModel.Top
-    cmdOptions.Top = chkShowModel.Top
-    cmdReset.Top = chkShowModel.Top
-    Me.Height = FormHeight(cmdCancel)
-    lblResizer.Top = Me.InsideHeight - lblResizer.Height
+      ' Do the layout of the lower half of the form, changing the height of the list box by ChangeY
+          Dim NewHeight As Double
+1         NewHeight = Max(lstConstraints.Height + ChangeY, MinHeight)
+          
+2         lstConstraints.Height = NewHeight
+              
+          ' Cascade the updated height
+3         lblDiv4.Top = Below(lstConstraints)
+4         lblStep4.Top = Below(lblDiv4)
+5         chkGetDuals.Top = lblStep4.Top
+6         refDuals.Top = lblStep4.Top
+7         chkGetDuals2.Top = Below(chkGetDuals, False)
+8         optUpdate.Top = chkGetDuals2.Top
+9         optNew.Top = chkGetDuals2.Top
+10        lblDiv5.Top = Below(optNew, False)
+11        lblStep5.Top = Below(lblDiv5)
+12        cmdChange.Top = lblStep5.Top
+13        lblSolver.Top = lblStep5.Top + FormButtonHeight - FormTextHeight
+14        lblDiv6.Top = Below(cmdChange)
+15        chkShowModel.Top = Below(lblDiv6)
+16        cmdCancel.Top = chkShowModel.Top
+17        cmdBuild.Top = chkShowModel.Top
+18        cmdOptions.Top = chkShowModel.Top
+19        cmdReset.Top = chkShowModel.Top
+20        Me.Height = FormHeight(cmdCancel)
+21        lblResizer.Top = Me.InsideHeight - lblResizer.Height
 End Sub
 
 Private Sub lblResizer_MouseDown(ByVal Button As Integer, ByVal Shift As Integer, ByVal X As Single, ByVal Y As Single)
-    If Button = 1 Then
-        ResizeStartY = Y
-    End If
+1         If Button = 1 Then
+2             ResizeStartY = Y
+3         End If
 End Sub
 
 Private Sub lblResizer_MouseMove(ByVal Button As Integer, ByVal Shift As Integer, ByVal X As Single, ByVal Y As Single)
-    If Button = 1 Then
+1         If Button = 1 Then
         #If Mac Then
-            ' Mac reports delta already
-            UpdateLayout Y
+                  ' Mac reports delta already
+2                 UpdateLayout Y
         #Else
-            UpdateLayout (Y - ResizeStartY)
+3                 UpdateLayout (Y - ResizeStartY)
         #End If
-    End If
+4         End If
 End Sub
 
 Private Sub CenterForm()
-    Me.Top = CenterFormTop(Me.Height)
-    Me.Left = CenterFormLeft(Me.Width)
+1         Me.Top = CenterFormTop(Me.Height)
+2         Me.Left = CenterFormLeft(Me.Width)
 End Sub
 
 Private Function GetFormObjectiveSense() As ObjectiveSenseType
-    If optMax.value = True Then GetFormObjectiveSense = MaximiseObjective
-    If optMin.value = True Then GetFormObjectiveSense = MinimiseObjective
-    If optTarget.value = True Then GetFormObjectiveSense = TargetObjective
+1         If optMax.value = True Then GetFormObjectiveSense = MaximiseObjective
+2         If optMin.value = True Then GetFormObjectiveSense = MinimiseObjective
+3         If optTarget.value = True Then GetFormObjectiveSense = TargetObjective
 End Function
 Private Sub SetFormObjectiveSense(ObjectiveSense As ObjectiveSenseType)
-    Select Case ObjectiveSense
-    Case MaximiseObjective: optMax.value = True
-    Case MinimiseObjective: optMin.value = True
-    Case TargetObjective:   optTarget.value = True
-    Case UnknownObjectiveSense
-        optMax.value = False
-        optMin.value = False
-        optTarget.value = False
-    End Select
+1         Select Case ObjectiveSense
+          Case MaximiseObjective: optMax.value = True
+2         Case MinimiseObjective: optMin.value = True
+3         Case TargetObjective:   optTarget.value = True
+4         Case UnknownObjectiveSense
+5             optMax.value = False
+6             optMin.value = False
+7             optTarget.value = False
+8         End Select
 End Sub
 
 Private Function GetFormObjectiveTargetValue() As Double
-    GetFormObjectiveTargetValue = CDbl(txtObjTarget.Text)
+1         GetFormObjectiveTargetValue = CDbl(txtObjTarget.Text)
 End Function
 Private Sub SetFormObjectiveTargetValue(ObjectiveTargetValue As Double)
-    txtObjTarget.Text = CStr(ObjectiveTargetValue)
+1         txtObjTarget.Text = CStr(ObjectiveTargetValue)
 End Sub
 
 Private Function GetFormObjective() As String
-    GetFormObjective = RefEditToRefersTo(refObj.Text)
+1         GetFormObjective = RefEditToRefersTo(refObj.Text)
 End Function
 Private Sub SetFormObjective(ObjectiveRefersTo As String)
-    refObj.Text = GetDisplayAddress(ObjectiveRefersTo, sheet, False)
+1         refObj.Text = GetDisplayAddress(ObjectiveRefersTo, sheet, False)
 End Sub
 
 Private Function GetFormLHSRefersTo() As String
-    GetFormLHSRefersTo = RefEditToRefersTo(refConLHS.Text)
+1         GetFormLHSRefersTo = RefEditToRefersTo(refConLHS.Text)
 End Function
 Private Sub SetFormLHSRefersTo(newLHSRefersTo As String)
-    refConLHS.Text = GetDisplayAddress(newLHSRefersTo, sheet, False)
+1         refConLHS.Text = GetDisplayAddress(newLHSRefersTo, sheet, False)
 End Sub
 
 Private Function GetFormRHSRefersTo() As String
-    If RelationHasRHS(GetFormRelation()) Then
-        ' We don't convert from current locale here to avoid causing errors in the RefEdit events
-        GetFormRHSRefersTo = RefEditToRefersTo(refConRHS.Text)
-    Else
-        GetFormRHSRefersTo = vbNullString
-    End If
+1         If RelationHasRHS(GetFormRelation()) Then
+              ' We don't convert from current locale here to avoid causing errors in the RefEdit events
+2             GetFormRHSRefersTo = RefEditToRefersTo(refConRHS.Text)
+3         Else
+4             GetFormRHSRefersTo = vbNullString
+5         End If
 End Function
 Private Sub SetFormRHSRefersTo(newRHSRefersTo As String)
-    refConRHS.Text = ConvertToCurrentLocale(GetDisplayAddress(newRHSRefersTo, sheet, False))
+1         refConRHS.Text = ConvertToCurrentLocale(GetDisplayAddress(newRHSRefersTo, sheet, False))
 End Sub
 
 Private Function GetFormRelation() As RelationConsts
-    GetFormRelation = RelationStringToEnum(cboConRel.Text)
+1         GetFormRelation = RelationStringToEnum(cboConRel.Text)
 End Function
 Private Sub SetFormRelation(newRelation As RelationConsts)
-    cboConRel.ListIndex = cboPosition(RelationEnumToString(newRelation))
+1         cboConRel.ListIndex = cboPosition(RelationEnumToString(newRelation))
 End Sub
 
 ' We allow multiple area ranges for the variables, which requires ConvertLocale as delimiter can vary
 Private Function GetFormDecisionVars() As String
-    GetFormDecisionVars = ConvertFromCurrentLocale(RefEditToRefersTo(refDecision.Text))
+1         GetFormDecisionVars = ConvertFromCurrentLocale(RefEditToRefersTo(refDecision.Text))
 End Function
 Private Sub SetFormDecisionVars(newDecisionVars As String)
-    refDecision.Text = ConvertToCurrentLocale(GetDisplayAddress(newDecisionVars, sheet, False))
+1         refDecision.Text = ConvertToCurrentLocale(GetDisplayAddress(newDecisionVars, sheet, False))
 End Sub
 
 Private Function GetFormDuals() As String
-    GetFormDuals = RefEditToRefersTo(refDuals.Text)
+1         GetFormDuals = RefEditToRefersTo(refDuals.Text)
 End Function
 Private Sub SetFormDuals(newDuals As String)
-    refDuals.Text = GetDisplayAddress(newDuals, sheet, False)
+1         refDuals.Text = GetDisplayAddress(newDuals, sheet, False)
 End Sub

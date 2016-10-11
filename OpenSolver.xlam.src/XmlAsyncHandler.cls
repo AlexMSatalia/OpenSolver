@@ -14,17 +14,17 @@ Dim MacroToRun As String
 'http://dailydoseofexcel.com/archives/2006/10/09/async-xmlhttp-calls/
 
 Public Sub Initialize(ByRef xmlHttpRequest As Object, MacroName As String)
-    Set m_xmlHttp = xmlHttpRequest
-    MacroToRun = MacroName
+1         Set m_xmlHttp = xmlHttpRequest
+2         MacroToRun = MacroName
 End Sub
 
 Sub OnReadyStateChange()
 Attribute OnReadyStateChange.VB_UserMemId = 0
-    If m_xmlHttp.readyState = 4 Then
-        If m_xmlHttp.status = 200 Then
-            Application.Run MacroToRun, m_xmlHttp.responseText
-        Else
-           'Error happened
-        End If
-    End If
+1         If m_xmlHttp.readyState = 4 Then
+2             If m_xmlHttp.status = 200 Then
+3                 Application.Run MacroToRun, m_xmlHttp.responseText
+4             Else
+                 'Error happened
+5             End If
+6         End If
 End Sub

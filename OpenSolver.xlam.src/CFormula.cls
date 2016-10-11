@@ -36,73 +36,73 @@ Public Parents As Collection
  
 Private Sub Class_Initialize()
           Dim RaiseError As Boolean
-          RaiseError = False
-          On Error GoTo ErrorHandler
+1         RaiseError = False
+2         On Error GoTo ErrorHandler
 
-4765      Set rngAddress = Nothing
-4766      strAddress = ""
+3         Set rngAddress = Nothing
+4         strAddress = ""
           
-4767      lngDepth = 0
-4768      boolCanEval = False
-4769      boolIsConstant = False
-4770      intRefsAdjCell = AdjCellUnknown
-4771      boolEvaledWithCalculate = False
+5         lngDepth = 0
+6         boolCanEval = False
+7         boolIsConstant = False
+8         intRefsAdjCell = AdjCellUnknown
+9         boolEvaledWithCalculate = False
           
-4772      Set Children = New Collection
-4773      Set Parents = New Collection
+10        Set Children = New Collection
+11        Set Parents = New Collection
 
 ExitSub:
-          If RaiseError Then RethrowError
-          Exit Sub
+12        If RaiseError Then RethrowError
+13        Exit Sub
 
 ErrorHandler:
-          If Not ReportError("CFormula", "Class_Initialize") Then Resume
-          RaiseError = True
-          GoTo ExitSub
+14        If Not ReportError("CFormula", "Class_Initialize") Then Resume
+15        RaiseError = True
+16        GoTo ExitSub
 End Sub
 
 
 Public Function GetSheet() As String
           Dim RaiseError As Boolean
-          RaiseError = False
-          On Error GoTo ErrorHandler
+1         RaiseError = False
+2         On Error GoTo ErrorHandler
 
-4774      If rngAddress Is Nothing Then
-4775          GetSheet = ""
-4776      Else
-4777          GetSheet = rngAddress.Parent.Name
-4778      End If
+3         If rngAddress Is Nothing Then
+4             GetSheet = ""
+5         Else
+6             GetSheet = rngAddress.Parent.Name
+7         End If
 
 ExitFunction:
-          If RaiseError Then RethrowError
-          Exit Function
+8         If RaiseError Then RethrowError
+9         Exit Function
 
 ErrorHandler:
-          If Not ReportError("CFormula", "GetSheet") Then Resume
-          RaiseError = True
-          GoTo ExitFunction
+10        If Not ReportError("CFormula", "GetSheet") Then Resume
+11        RaiseError = True
+12        GoTo ExitFunction
 End Function
 
 Public Function IsDependentOn(rngAdjDepedents As Range) As Boolean
           Dim RaiseError As Boolean
-          RaiseError = False
-          On Error GoTo ErrorHandler
+1         RaiseError = False
+2         On Error GoTo ErrorHandler
 
-4779      IsDependentOn = True
+3         IsDependentOn = True
           ' Check this just in case. Shouldn't ever happen, because
           ' there should be sheet check before this is done, and for
           ' that to happen it must NOT be Nothing.
-4780      If rngAddress Is Nothing Then GoTo ExitFunction
+4         If rngAddress Is Nothing Then GoTo ExitFunction
           'If Intersect(rngAddress, rngAdjDepedents) Is Nothing Then
-4781      IsDependentOn = TestIntersect(rngAddress, rngAdjDepedents)
+5         IsDependentOn = TestIntersect(rngAddress, rngAdjDepedents)
 
 ExitFunction:
-          If RaiseError Then RethrowError
-          Exit Function
+6         If RaiseError Then RethrowError
+7         Exit Function
 
 ErrorHandler:
-          If Not ReportError("CFormula", "IsDependentOn") Then Resume
-          RaiseError = True
-          GoTo ExitFunction
+8         If Not ReportError("CFormula", "IsDependentOn") Then Resume
+9         RaiseError = True
+10        GoTo ExitFunction
 End Function
 

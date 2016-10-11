@@ -12,507 +12,507 @@ Public Const SolverDirWin64 As String = "win64"
 Public LastUsedSolver As String
 
 Public Function SolverDir() As String
-    Dim SolverDirBase As String
+          Dim SolverDirBase As String
     #If Mac And MAC_OFFICE_VERSION >= 15 Then
-        ' On Mac 2016, we need to access the solvers from a folder that has execute permissions in the sandbox
-        SolverDirBase = "/Library/OpenSolver"
-        If Not FileOrDirExists(SolverDirBase) Then
-            RaiseUserError "Unable to find the solvers in `" & SolverDirBase & "`. Make sure you have run the `OpenSolver Solvers.pkg` installer in the `Solvers/osx` folder where you unzipped OpenSolver.", "http://opensolver.org/installing-opensolver/"
-        End If
+              ' On Mac 2016, we need to access the solvers from a folder that has execute permissions in the sandbox
+1             SolverDirBase = "/Library/OpenSolver"
+2             If Not FileOrDirExists(SolverDirBase) Then
+3                 RaiseUserError "Unable to find the solvers in `" & SolverDirBase & "`. Make sure you have run the `OpenSolver Solvers.pkg` installer in the `Solvers/osx` folder where you unzipped OpenSolver.", "http://opensolver.org/installing-opensolver/"
+4             End If
     #Else
-        SolverDirBase = ThisWorkbook.Path
+5             SolverDirBase = ThisWorkbook.Path
     #End If
-    SolverDir = JoinPaths(SolverDirBase, SolverDirName)
+6         SolverDir = JoinPaths(SolverDirBase, SolverDirName)
 End Function
 
 Sub SolveModel(s As COpenSolver, ShouldSolveRelaxation As Boolean, ShouldMinimiseUserInteraction As Boolean)
-    Dim RaiseError As Boolean
-    RaiseError = False
-    On Error GoTo ErrorHandler
-    
-    Application.EnableCancelKey = xlErrorHandler
-    Application.Cursor = xlWait
+          Dim RaiseError As Boolean
+1         RaiseError = False
+2         On Error GoTo ErrorHandler
+          
+3         Application.EnableCancelKey = xlErrorHandler
+4         Application.Cursor = xlWait
 
-    s.SolveStatus = OpenSolverResult.Unsolved
-    s.SolveStatusString = "Unsolved"
-    s.SolveStatusComment = vbNullString
-    s.SolutionWasLoaded = False
-    
-    ' Track whether to show messages
-    s.MinimiseUserInteraction = ShouldMinimiseUserInteraction
-    s.SolveRelaxation = ShouldSolveRelaxation
+5         s.SolveStatus = OpenSolverResult.Unsolved
+6         s.SolveStatusString = "Unsolved"
+7         s.SolveStatusComment = vbNullString
+8         s.SolutionWasLoaded = False
+          
+          ' Track whether to show messages
+9         s.MinimiseUserInteraction = ShouldMinimiseUserInteraction
+10        s.SolveRelaxation = ShouldSolveRelaxation
 
-    Dim oldCalculationMode As Long, oldIterationMode As Boolean
-    oldIterationMode = Application.Iteration
-    oldCalculationMode = Application.Calculation
-    Application.Calculation = xlCalculationManual
-    
-    Dim ScreenStatus As Boolean
-    ScreenStatus = Application.ScreenUpdating
-    Application.ScreenUpdating = False
-    
-    If s.ModelStatus <> Built Then
-        RaiseGeneralError "The model cannot be solved as it has not yet been built."
-    End If
+          Dim oldCalculationMode As Long, oldIterationMode As Boolean
+11        oldIterationMode = Application.Iteration
+12        oldCalculationMode = Application.Calculation
+13        Application.Calculation = xlCalculationManual
+          
+          Dim ScreenStatus As Boolean
+14        ScreenStatus = Application.ScreenUpdating
+15        Application.ScreenUpdating = False
+          
+16        If s.ModelStatus <> Built Then
+17            RaiseGeneralError "The model cannot be solved as it has not yet been built."
+18        End If
 
-    'Check that solver is available
-    Dim errorString As String
-    If Not SolverIsAvailable(s.Solver, errorString:=errorString) Then
-        RaiseGeneralError errorString
-    End If
+          'Check that solver is available
+          Dim errorString As String
+19        If Not SolverIsAvailable(s.Solver, errorString:=errorString) Then
+20            RaiseGeneralError errorString
+21        End If
 
-    Dim LogFilePathName As String
-    If GetLogFilePath(LogFilePathName) Then DeleteFileAndVerify LogFilePathName
-    s.LogFilePathName = LogFilePathName
-    
-    ' Clean Solver specific files
-    s.Solver.CleanFiles
-    
-    'Check that we can write to all cells
-    TestCellsForWriting s.AdjustableCells
+          Dim LogFilePathName As String
+22        If GetLogFilePath(LogFilePathName) Then DeleteFileAndVerify LogFilePathName
+23        s.LogFilePathName = LogFilePathName
+          
+          ' Clean Solver specific files
+24        s.Solver.CleanFiles
+          
+          'Check that we can write to all cells
+25        TestCellsForWriting s.AdjustableCells
 
-    If TypeOf s.Solver Is ISolverLocalLib Then
-        Dim LocalLibSolver As ISolverLocalLib
-        Set LocalLibSolver = s.Solver
-        LocalLibSolver.Solve s
-    ElseIf TypeOf s.Solver Is ISolverFile Then
-        Dim LinearSolver As ISolverLinear
-        Dim FileSolver As ISolverFile
-        Set FileSolver = s.Solver
-        
-        'Delete any existing solution file
-        Dim SolutionFilePathName As String
-        If GetSolutionFilePath(SolutionFilePathName) Then DeleteFileAndVerify SolutionFilePathName
-        s.SolutionFilePathName = SolutionFilePathName
-        
-        ' Check if we need to request duals from the solver
-        If TypeOf s.Solver Is ISolverLinear Then
-            Set LinearSolver = s.Solver
-            Set s.rConstraintList = GetDuals(s.sheet)
-            s.DualsOnSameSheet = (Not s.rConstraintList Is Nothing)
-            s.DualsOnNewSheet = GetDualsOnSheet(s.sheet)
-            s.bGetDuals = ((s.NumDiscreteVars = 0) Or s.SolveRelaxation) And _
-                          (s.DualsOnNewSheet Or s.DualsOnSameSheet) And LinearSolver.SensitivityAnalysisAvailable
-        End If
-        
-        ' Set up arrays to hold solution values (to avoid dynamically resizing them later)
-        s.PrepareForSolution
-        
-        ' Write file
-        Dim SolverCommand As String
-        UpdateStatusBar "OpenSolver: Writing Model to disk... " & s.NumVars & " vars, " & s.NumRows & " rows.", True
-        SolverCommand = WriteModelFile(s)
-        
-        ' Check if anything detected while writing file
-        If s.SolveStatus <> OpenSolverResult.Unsolved Then GoTo ExitSub
-        
-        ' Run solver and read results
-        Dim solution As String
-        solution = RunSolver(s, SolverCommand)
-        FileSolver.ReadResults s, solution
-        
-        s.LoadResultsToSheet
-        
-        If TypeOf s.Solver Is ISolverLinear Then
-            ' Get sensitivity results
-            If s.bGetDuals And s.SolveStatus = OpenSolverResult.Optimal Then
-                'write the duals on the same sheet if the user has picked this option
-                If s.DualsOnSameSheet Then WriteConstraintListToSheet s.rConstraintList, s
-                'If the user wants a new sheet with the sensitivity data then call the functions that write this
-                If s.DualsOnNewSheet Then
-                    Dim newSheet As Worksheet, currentSheet As Worksheet
-                    ' Save sheet selection
-                    GetActiveSheetIfMissing currentSheet
-                    
-                    Set newSheet = MakeNewSheet(s.sheet.Name & " Sensitivity", GetUpdateSensitivity(s.sheet))
-                    
-                    ' Restore old sheet selection
-                    currentSheet.Select
-                    WriteConstraintSensitivityTable newSheet, s
-                End If
-            ElseIf Not s.bGetDuals And (s.DualsOnNewSheet Or s.DualsOnSameSheet) And LinearSolver.SensitivityAnalysisAvailable Then
-                RaiseUserError _
-                    "Could not get sensitivity analysis due to binary and/or integer constraints." & vbNewLine & vbNewLine & _
-                    "Turn off sensitivity in the model dialogue or reformulate your model without these constraints." & vbNewLine & vbNewLine & _
-                    "The " & s.Solver.ShortName & " solution has been returned to the sheet." & vbNewLine
-            End If
-        End If
-    End If
+26        If TypeOf s.Solver Is ISolverLocalLib Then
+              Dim LocalLibSolver As ISolverLocalLib
+27            Set LocalLibSolver = s.Solver
+28            LocalLibSolver.Solve s
+29        ElseIf TypeOf s.Solver Is ISolverFile Then
+              Dim LinearSolver As ISolverLinear
+              Dim FileSolver As ISolverFile
+30            Set FileSolver = s.Solver
+              
+              'Delete any existing solution file
+              Dim SolutionFilePathName As String
+31            If GetSolutionFilePath(SolutionFilePathName) Then DeleteFileAndVerify SolutionFilePathName
+32            s.SolutionFilePathName = SolutionFilePathName
+              
+              ' Check if we need to request duals from the solver
+33            If TypeOf s.Solver Is ISolverLinear Then
+34                Set LinearSolver = s.Solver
+35                Set s.rConstraintList = GetDuals(s.sheet)
+36                s.DualsOnSameSheet = (Not s.rConstraintList Is Nothing)
+37                s.DualsOnNewSheet = GetDualsOnSheet(s.sheet)
+38                s.bGetDuals = ((s.NumDiscreteVars = 0) Or s.SolveRelaxation) And _
+                                (s.DualsOnNewSheet Or s.DualsOnSameSheet) And LinearSolver.SensitivityAnalysisAvailable
+39            End If
+              
+              ' Set up arrays to hold solution values (to avoid dynamically resizing them later)
+40            s.PrepareForSolution
+              
+              ' Write file
+              Dim SolverCommand As String
+41            UpdateStatusBar "OpenSolver: Writing Model to disk... " & s.NumVars & " vars, " & s.NumRows & " rows.", True
+42            SolverCommand = WriteModelFile(s)
+              
+              ' Check if anything detected while writing file
+43            If s.SolveStatus <> OpenSolverResult.Unsolved Then GoTo ExitSub
+              
+              ' Run solver and read results
+              Dim solution As String
+44            solution = RunSolver(s, SolverCommand)
+45            FileSolver.ReadResults s, solution
+              
+46            s.LoadResultsToSheet
+              
+47            If TypeOf s.Solver Is ISolverLinear Then
+                  ' Get sensitivity results
+48                If s.bGetDuals And s.SolveStatus = OpenSolverResult.Optimal Then
+                      'write the duals on the same sheet if the user has picked this option
+49                    If s.DualsOnSameSheet Then WriteConstraintListToSheet s.rConstraintList, s
+                      'If the user wants a new sheet with the sensitivity data then call the functions that write this
+50                    If s.DualsOnNewSheet Then
+                          Dim newSheet As Worksheet, currentSheet As Worksheet
+                          ' Save sheet selection
+51                        GetActiveSheetIfMissing currentSheet
+                          
+52                        Set newSheet = MakeNewSheet(s.sheet.Name & " Sensitivity", GetUpdateSensitivity(s.sheet))
+                          
+                          ' Restore old sheet selection
+53                        currentSheet.Select
+54                        WriteConstraintSensitivityTable newSheet, s
+55                    End If
+56                ElseIf Not s.bGetDuals And (s.DualsOnNewSheet Or s.DualsOnSameSheet) And LinearSolver.SensitivityAnalysisAvailable Then
+57                    RaiseUserError _
+                          "Could not get sensitivity analysis due to binary and/or integer constraints." & vbNewLine & vbNewLine & _
+                          "Turn off sensitivity in the model dialogue or reformulate your model without these constraints." & vbNewLine & vbNewLine & _
+                          "The " & s.Solver.ShortName & " solution has been returned to the sheet." & vbNewLine
+58                End If
+59            End If
+60        End If
 
 ExitSub:
-    Application.Cursor = xlDefault
-    Application.StatusBar = False ' Resume normal status bar behaviour
-    Application.ScreenUpdating = ScreenStatus
-    Application.Calculation = oldCalculationMode
-    Application.Iteration = oldIterationMode
-    Application.Calculate
-    If RaiseError Then RethrowError
-    Exit Sub
+61        Application.Cursor = xlDefault
+62        Application.StatusBar = False ' Resume normal status bar behaviour
+63        Application.ScreenUpdating = ScreenStatus
+64        Application.Calculation = oldCalculationMode
+65        Application.Iteration = oldIterationMode
+66        Application.Calculate
+67        If RaiseError Then RethrowError
+68        Exit Sub
 
 ErrorHandler:
-    If Not ReportError("SolverCommon", "SolveModel") Then Resume
-    RaiseError = True
-    GoTo ExitSub
+69        If Not ReportError("SolverCommon", "SolveModel") Then Resume
+70        RaiseError = True
+71        GoTo ExitSub
 
 End Sub
 
 Function CreateSolver(SolverShortName As String) As ISolver
-    Select Case LCase(SolverShortName)
-    Case "cbc":     Set CreateSolver = New CSolverCbc
-    Case "gurobi":  Set CreateSolver = New CSolverGurobi
-    Case "neoscbc": Set CreateSolver = New CSolverNeosCbc
-    Case "bonmin":  Set CreateSolver = New CSolverBonmin
-    Case "couenne": Set CreateSolver = New CSolverCouenne
-    Case "nomad":   Set CreateSolver = New CSolverNomad
-    Case "neosbon": Set CreateSolver = New CSolverNeosBon
-    Case "neoscou": Set CreateSolver = New CSolverNeosCou
-    Case Else: RaiseGeneralError "The specified solver ('" & SolverShortName & "') was not recognised."
-    End Select
+1         Select Case LCase(SolverShortName)
+          Case "cbc":     Set CreateSolver = New CSolverCbc
+2         Case "gurobi":  Set CreateSolver = New CSolverGurobi
+3         Case "neoscbc": Set CreateSolver = New CSolverNeosCbc
+4         Case "bonmin":  Set CreateSolver = New CSolverBonmin
+5         Case "couenne": Set CreateSolver = New CSolverCouenne
+6         Case "nomad":   Set CreateSolver = New CSolverNomad
+7         Case "neosbon": Set CreateSolver = New CSolverNeosBon
+8         Case "neoscou": Set CreateSolver = New CSolverNeosCou
+9         Case Else: RaiseGeneralError "The specified solver ('" & SolverShortName & "') was not recognised."
+10        End Select
 End Function
 
 Function GetLogFilePath(ByRef Path As String) As Boolean
-    GetLogFilePath = GetTempFilePath(LogFileName, Path)
+1         GetLogFilePath = GetTempFilePath(LogFileName, Path)
 End Function
 
 Function GetSolutionFilePath(ByRef Path As String) As Boolean
-    GetSolutionFilePath = GetTempFilePath(SolutionFileName, Path)
+1         GetSolutionFilePath = GetTempFilePath(SolutionFileName, Path)
 End Function
 
 Function IterationLimitAvailable(Solver As ISolver) As Boolean
-    IterationLimitAvailable = (Len(Solver.IterationLimitName) <> 0)
+1         IterationLimitAvailable = (Len(Solver.IterationLimitName) <> 0)
 End Function
 
 Function PrecisionAvailable(Solver As ISolver) As Boolean
-    PrecisionAvailable = (Len(Solver.PrecisionName) <> 0)
+1         PrecisionAvailable = (Len(Solver.PrecisionName) <> 0)
 End Function
 
 Function TimeLimitAvailable(Solver As ISolver) As Boolean
-    TimeLimitAvailable = (Len(Solver.TimeLimitName) <> 0)
+1         TimeLimitAvailable = (Len(Solver.TimeLimitName) <> 0)
 End Function
 
 Function ToleranceAvailable(Solver As ISolver) As Boolean
-    ToleranceAvailable = (Len(Solver.ToleranceName) <> 0)
+1         ToleranceAvailable = (Len(Solver.ToleranceName) <> 0)
 End Function
 
 Function SolverIsPresent(Solver As ISolver, Optional SolverPath As String, Optional errorString As String, Optional Bitness As String) As Boolean
-    Dim RaiseError As Boolean
-    RaiseError = False
-    On Error GoTo ErrorHandler
-    
-    If Not SolverDirIsPresent Then
-        errorString = "Could not find the Solvers folder in the folder containing OpenSolver.xlam, " & _
-                      "indicating OpenSolver has not been properly installed. Make sure you have " & _
-                      "unzipped all files from the downloaded zip file to the same place."
-        SolverIsPresent = False
-        Exit Function
-    End If
+          Dim RaiseError As Boolean
+1         RaiseError = False
+2         On Error GoTo ErrorHandler
+          
+3         If Not SolverDirIsPresent Then
+4             errorString = "Could not find the Solvers folder in the folder containing OpenSolver.xlam, " & _
+                            "indicating OpenSolver has not been properly installed. Make sure you have " & _
+                            "unzipped all files from the downloaded zip file to the same place."
+5             SolverIsPresent = False
+6             Exit Function
+7         End If
 
-    If TypeOf Solver Is ISolverLocalExec Then
-        Dim LocalExecSolver As ISolverLocalExec
-        Set LocalExecSolver = Solver
-        
-        SolverPath = LocalExecSolver.GetExecPath(errorString, Bitness)
-        If Len(SolverPath) = 0 Then
-            SolverIsPresent = False
-        Else
-            SolverIsPresent = True
+8         If TypeOf Solver Is ISolverLocalExec Then
+              Dim LocalExecSolver As ISolverLocalExec
+9             Set LocalExecSolver = Solver
+              
+10            SolverPath = LocalExecSolver.GetExecPath(errorString, Bitness)
+11            If Len(SolverPath) = 0 Then
+12                SolverIsPresent = False
+13            Else
+14                SolverIsPresent = True
             #If Mac Then
-                ' Make sure solver is executable on Mac
-                Exec "chmod +x " & MakePathSafe(SolverPath)
+                      ' Make sure solver is executable on Mac
+15                    Exec "chmod +x " & MakePathSafe(SolverPath)
             #End If
-        End If
-    ElseIf TypeOf Solver Is ISolverLocalLib Then
-        Dim LocalLibSolver As ISolverLocalLib
-        Set LocalLibSolver = Solver
-        SolverPath = LocalLibSolver.GetLibPath(errorString, Bitness)
-        SolverIsPresent = (Len(SolverPath) > 0)
-    ElseIf TypeOf Solver Is ISolverNeos Then
+16            End If
+17        ElseIf TypeOf Solver Is ISolverLocalLib Then
+              Dim LocalLibSolver As ISolverLocalLib
+18            Set LocalLibSolver = Solver
+19            SolverPath = LocalLibSolver.GetLibPath(errorString, Bitness)
+20            SolverIsPresent = (Len(SolverPath) > 0)
+21        ElseIf TypeOf Solver Is ISolverNeos Then
         #If Mac Then
-            SolverPath = NeosClientScriptPath()
-            If FileOrDirExists(SolverPath) Then
-                SolverIsPresent = True
-            Else
-                errorString = "Unable to find the NeosClient.py file at " & MakeSpacesNonBreaking(MakePathSafe(SolverPath))
-                SolverPath = ""
-            End If
+22                SolverPath = NeosClientScriptPath()
+23                If FileOrDirExists(SolverPath) Then
+24                    SolverIsPresent = True
+25                Else
+26                    errorString = "Unable to find the NeosClient.py file at " & MakeSpacesNonBreaking(MakePathSafe(SolverPath))
+27                    SolverPath = ""
+28                End If
         #Else
-            SolverIsPresent = True
+29                SolverIsPresent = True
         #End If
-    Else
-        SolverIsPresent = False
-    End If
+30        Else
+31            SolverIsPresent = False
+32        End If
 
 ExitFunction:
-    If RaiseError Then RethrowError
-    Exit Function
+33        If RaiseError Then RethrowError
+34        Exit Function
 
 ErrorHandler:
-    If Not ReportError("SolverCommon", "SolverIsPresent") Then Resume
-    RaiseError = True
-    GoTo ExitFunction
+35        If Not ReportError("SolverCommon", "SolverIsPresent") Then Resume
+36        RaiseError = True
+37        GoTo ExitFunction
 End Function
 
 Function SolverIsAvailable(Solver As ISolver, Optional SolverPath As String, Optional errorString As String) As Boolean
-    If Not SolverIsPresent(Solver, SolverPath, errorString) Then Exit Function
-    
-    If TypeOf Solver Is ISolverLocal Then
-        Dim LocalSolver As ISolverLocal
-        Set LocalSolver = Solver
-        
-        On Error GoTo ErrorHandlerLocal
-        If Len(LocalSolver.Version) <> 0 Then
-            SolverIsAvailable = True
-        Else
+1         If Not SolverIsPresent(Solver, SolverPath, errorString) Then Exit Function
+          
+2         If TypeOf Solver Is ISolverLocal Then
+              Dim LocalSolver As ISolverLocal
+3             Set LocalSolver = Solver
+              
+4             On Error GoTo ErrorHandlerLocal
+5             If Len(LocalSolver.Version) <> 0 Then
+6                 SolverIsAvailable = True
+7             Else
 ErrorHandlerLocal:
-            SolverIsAvailable = False
-            errorString = "Unable to access the " & DisplayName(Solver) & " solver at " & MakeSpacesNonBreaking(MakePathSafe(SolverPath))
-        End If
-    ElseIf TypeOf Solver Is ISolverNeos Then
-        SolverIsAvailable = True
-    Else
-        SolverIsAvailable = False
-    End If
+8                 SolverIsAvailable = False
+9                 errorString = "Unable to access the " & DisplayName(Solver) & " solver at " & MakeSpacesNonBreaking(MakePathSafe(SolverPath))
+10            End If
+11        ElseIf TypeOf Solver Is ISolverNeos Then
+12            SolverIsAvailable = True
+13        Else
+14            SolverIsAvailable = False
+15        End If
 End Function
 
 Function AboutLocalSolver(LocalSolver As ISolverLocal) As String
-    Dim SolverPath As String, errorString As String, Solver As ISolver
-    Set Solver = LocalSolver
-    If Not SolverIsPresent(Solver, SolverPath, errorString) Then
-        AboutLocalSolver = errorString
-    Else
-        Dim LibVersion As String
-        If TypeOf Solver Is ISolverLocalLib Then
-            Dim LocalLibSolver As ISolverLocalLib
-            Set LocalLibSolver = Solver
-            LibVersion = "using " & LocalLibSolver.LibName & " v" & LocalLibSolver.LibVersion & " "
-        ElseIf TypeOf Solver Is CSolverGurobi Then
-            Dim GurobiSolver As CSolverGurobi
-            Set GurobiSolver = Solver
-            SolverPath = GurobiSolver.ExecFilePath()
-        End If
-    
-        AboutLocalSolver = DisplayName(Solver) & " " & _
-                           "v" & LocalSolver.Version & " " & _
-                           "(" & LocalSolver.Bitness & "-bit) " & _
-                           LibVersion & _
-                           "at " & MakeSpacesNonBreaking(MakePathSafe(SolverPath))
-    End If
+          Dim SolverPath As String, errorString As String, Solver As ISolver
+1         Set Solver = LocalSolver
+2         If Not SolverIsPresent(Solver, SolverPath, errorString) Then
+3             AboutLocalSolver = errorString
+4         Else
+              Dim LibVersion As String
+5             If TypeOf Solver Is ISolverLocalLib Then
+                  Dim LocalLibSolver As ISolverLocalLib
+6                 Set LocalLibSolver = Solver
+7                 LibVersion = "using " & LocalLibSolver.LibName & " v" & LocalLibSolver.LibVersion & " "
+8             ElseIf TypeOf Solver Is CSolverGurobi Then
+                  Dim GurobiSolver As CSolverGurobi
+9                 Set GurobiSolver = Solver
+10                SolverPath = GurobiSolver.ExecFilePath()
+11            End If
+          
+12            AboutLocalSolver = DisplayName(Solver) & " " & _
+                                 "v" & LocalSolver.Version & " " & _
+                                 "(" & LocalSolver.Bitness & "-bit) " & _
+                                 LibVersion & _
+                                 "at " & MakeSpacesNonBreaking(MakePathSafe(SolverPath))
+13        End If
 End Function
 
 Sub RunLocalSolver(s As COpenSolver, ExternalCommand As String)
 
-    Dim RaiseError As Boolean
-    RaiseError = False
-    On Error GoTo ErrorHandler
+          Dim RaiseError As Boolean
+1         RaiseError = False
+2         On Error GoTo ErrorHandler
 
-    UpdateStatusBar "OpenSolver: Solving " & IIf(s.SolveRelaxation, "Relaxed ", vbNullString) & "Model... " & _
-                    s.NumVars & " vars, " & _
-                    s.NumDiscreteVars & " int vars " & "(" & s.NumBinVars & " bin), " & _
-                    s.NumRows & " rows, " & _
-                    s.SolverParameters.Item(s.Solver.TimeLimitName) & "s time limit, " & _
-                    s.SolverParameters.Item(s.Solver.ToleranceName) * 100 & "% tolerance.", True
-                          
-    Dim exeResult As Long
-    ExecCapture ExternalCommand, s.LogFilePathName, GetTempFolder(), s.ShowIterationResults And Not s.MinimiseUserInteraction, exeResult
-    
-    ' Check log for any errors which can offer more descriptive messages than exeresult <> 0
-    s.Solver.CheckLog s
-    If exeResult <> 0 Then
-        RaiseGeneralError "The " & DisplayName(s.Solver) & " solver did not complete, but aborted with the error code " & exeResult & "." & vbCrLf & vbCrLf & "The last log file can be viewed under the OpenSolver menu and may give you more information on what caused this error.", _
-                          "http://opensolver.org/help/#cbccrashes"
-    End If
+3         UpdateStatusBar "OpenSolver: Solving " & IIf(s.SolveRelaxation, "Relaxed ", vbNullString) & "Model... " & _
+                          s.NumVars & " vars, " & _
+                          s.NumDiscreteVars & " int vars " & "(" & s.NumBinVars & " bin), " & _
+                          s.NumRows & " rows, " & _
+                          s.SolverParameters.Item(s.Solver.TimeLimitName) & "s time limit, " & _
+                          s.SolverParameters.Item(s.Solver.ToleranceName) * 100 & "% tolerance.", True
+                                
+          Dim exeResult As Long
+4         ExecCapture ExternalCommand, s.LogFilePathName, GetTempFolder(), s.ShowIterationResults And Not s.MinimiseUserInteraction, exeResult
+          
+          ' Check log for any errors which can offer more descriptive messages than exeresult <> 0
+5         s.Solver.CheckLog s
+6         If exeResult <> 0 Then
+7             RaiseGeneralError "The " & DisplayName(s.Solver) & " solver did not complete, but aborted with the error code " & exeResult & "." & vbCrLf & vbCrLf & "The last log file can be viewed under the OpenSolver menu and may give you more information on what caused this error.", _
+                                "http://opensolver.org/help/#cbccrashes"
+8         End If
 
 ExitSub:
-    If RaiseError Then RethrowError
-    Exit Sub
+9         If RaiseError Then RethrowError
+10        Exit Sub
 
 ErrorHandler:
-    If Not ReportError("SolverCommon", "RunLocalSolver") Then Resume
-    RaiseError = True
-    GoTo ExitSub
+11        If Not ReportError("SolverCommon", "RunLocalSolver") Then Resume
+12        RaiseError = True
+13        GoTo ExitSub
 End Sub
 
 Function LibDir(Optional Bitness As String) As String
     #If Mac Then
-        LibDir = SolverDirMac
-        Bitness = "64"
+1             LibDir = SolverDirMac
+2             Bitness = "64"
     #ElseIf Win64 Then
-        LibDir = SolverDirWin64
-        Bitness = "64"
+3             LibDir = SolverDirWin64
+4             Bitness = "64"
     #Else
-        LibDir = SolverDirWin32
-        Bitness = "32"
+5             LibDir = SolverDirWin32
+6             Bitness = "32"
     #End If
-    LibDir = JoinPaths(SolverDir, LibDir)
+7         LibDir = JoinPaths(SolverDir, LibDir)
 End Function
 
 Function SolverLibPath(LocalLibSolver As ISolverLocalLib, Optional errorString As String, Optional Bitness As String) As String
-    If Not GetExistingFilePathName(LibDir(Bitness), LocalLibSolver.LibBinary, SolverLibPath) Then
-        SolverLibPath = vbNullString
-        Dim Solver As ISolver
-        Set Solver = LocalLibSolver
-        errorString = "Unable to find " & DisplayName(Solver) & " ('" & LocalLibSolver.LibBinary & "'). Folders searched:" & _
-                      vbNewLine & MakePathSafe(LibDir())
-    End If
+1         If Not GetExistingFilePathName(LibDir(Bitness), LocalLibSolver.LibBinary, SolverLibPath) Then
+2             SolverLibPath = vbNullString
+              Dim Solver As ISolver
+3             Set Solver = LocalLibSolver
+4             errorString = "Unable to find " & DisplayName(Solver) & " ('" & LocalLibSolver.LibBinary & "'). Folders searched:" & _
+                            vbNewLine & MakePathSafe(LibDir())
+5         End If
 End Function
 
 Function SolverExecPath(LocalExecSolver As ISolverLocalExec, Optional errorString As String, Optional Bitness As String) As String
-    Dim RaiseError As Boolean
-    RaiseError = False
-    On Error GoTo ErrorHandler
-    
-    Dim Solver As ISolver
-    Set Solver = LocalExecSolver
+          Dim RaiseError As Boolean
+1         RaiseError = False
+2         On Error GoTo ErrorHandler
+          
+          Dim Solver As ISolver
+3         Set Solver = LocalExecSolver
 
-    Dim SearchPath As String
-    SearchPath = SolverDir
-    errorString = vbNullString
-    Bitness = vbNullString
-    
+          Dim SearchPath As String
+4         SearchPath = SolverDir
+5         errorString = vbNullString
+6         Bitness = vbNullString
+          
     #If Mac Then
-        If GetExistingFilePathName(JoinPaths(SearchPath, SolverDirMac), LocalExecSolver.ExecName, SolverExecPath) Then
-            Bitness = "64"
-        Else
-            errorString = errorString & vbNewLine & MakePathSafe(JoinPaths(SearchPath, SolverDirMac))
-            SolverExecPath = ""
-        End If
+7             If GetExistingFilePathName(JoinPaths(SearchPath, SolverDirMac), LocalExecSolver.ExecName, SolverExecPath) Then
+8                 Bitness = "64"
+9             Else
+10                errorString = errorString & vbNewLine & MakePathSafe(JoinPaths(SearchPath, SolverDirMac))
+11                SolverExecPath = ""
+12            End If
     #Else
-        ' Look for the 64 bit version
-        If SystemIs64Bit And GetExistingFilePathName(JoinPaths(SearchPath, SolverDirWin64), LocalExecSolver.ExecName, SolverExecPath) Then
-            Bitness = "64"
-        ' Look for the 32 bit version
-        Else
-            errorString = vbNewLine & MakePathSafe(JoinPaths(SearchPath, SolverDirWin64))
-            If GetExistingFilePathName(JoinPaths(SearchPath, SolverDirWin32), LocalExecSolver.ExecName, SolverExecPath) Then
-                Bitness = "32"
-                If SystemIs64Bit Then
-                    errorString = "Unable to find 64-bit " & DisplayName(Solver) & " in the Solvers folder. A 32-bit version will be used instead."
-                End If
-            Else
-                errorString = errorString & vbNewLine & MakePathSafe(JoinPaths(SearchPath, SolverDirWin32))
-            End If
-        End If
+              ' Look for the 64 bit version
+13            If SystemIs64Bit And GetExistingFilePathName(JoinPaths(SearchPath, SolverDirWin64), LocalExecSolver.ExecName, SolverExecPath) Then
+14                Bitness = "64"
+              ' Look for the 32 bit version
+15            Else
+16                errorString = vbNewLine & MakePathSafe(JoinPaths(SearchPath, SolverDirWin64))
+17                If GetExistingFilePathName(JoinPaths(SearchPath, SolverDirWin32), LocalExecSolver.ExecName, SolverExecPath) Then
+18                    Bitness = "32"
+19                    If SystemIs64Bit Then
+20                        errorString = "Unable to find 64-bit " & DisplayName(Solver) & " in the Solvers folder. A 32-bit version will be used instead."
+21                    End If
+22                Else
+23                    errorString = errorString & vbNewLine & MakePathSafe(JoinPaths(SearchPath, SolverDirWin32))
+24                End If
+25            End If
     #End If
-        
-    If Len(Bitness) = 0 Then
-        ' Failed to find a valid solver
-        SolverExecPath = vbNullString
-        errorString = "Unable to find " & DisplayName(Solver) & " ('" & LocalExecSolver.ExecName & "'). Folders searched:" & errorString
-    End If
+              
+26        If Len(Bitness) = 0 Then
+              ' Failed to find a valid solver
+27            SolverExecPath = vbNullString
+28            errorString = "Unable to find " & DisplayName(Solver) & " ('" & LocalExecSolver.ExecName & "'). Folders searched:" & errorString
+29        End If
 
 ExitFunction:
-    If RaiseError Then RethrowError
-    Exit Function
+30        If RaiseError Then RethrowError
+31        Exit Function
 
 ErrorHandler:
-    If Not ReportError("SolverCommon", "SolverExecPath") Then Resume
-    RaiseError = True
-    GoTo ExitFunction
+32        If Not ReportError("SolverCommon", "SolverExecPath") Then Resume
+33        RaiseError = True
+34        GoTo ExitFunction
 End Function
 
 Function SolverLinearity(Solver As ISolver) As OpenSolver_SolverType
-    If TypeOf Solver Is ISolverLinear Then
-        SolverLinearity = Linear
-    Else
-        SolverLinearity = NonLinear
-    End If
+1         If TypeOf Solver Is ISolverLinear Then
+2             SolverLinearity = Linear
+3         Else
+4             SolverLinearity = NonLinear
+5         End If
 End Function
 
 Function SensitivityAnalysisAvailable(Solver As ISolver) As Boolean
-    SensitivityAnalysisAvailable = False
-    If TypeOf Solver Is ISolverLinear Then
-        Dim LinearSolver As ISolverLinear
-        Set LinearSolver = Solver
-        If LinearSolver.SensitivityAnalysisAvailable Then
-            SensitivityAnalysisAvailable = True
-        End If
-    End If
+1         SensitivityAnalysisAvailable = False
+2         If TypeOf Solver Is ISolverLinear Then
+              Dim LinearSolver As ISolverLinear
+3             Set LinearSolver = Solver
+4             If LinearSolver.SensitivityAnalysisAvailable Then
+5                 SensitivityAnalysisAvailable = True
+6             End If
+7         End If
 End Function
 
 Function SolverUsesUpperBounds(SolverShortName As String) As Boolean
-    Select Case LCase(SolverShortName)
-    Case "nomad"
-        SolverUsesUpperBounds = True
-    Case Else
-        SolverUsesUpperBounds = False
-    End Select
+1         Select Case LCase(SolverShortName)
+          Case "nomad"
+2             SolverUsesUpperBounds = True
+3         Case Else
+4             SolverUsesUpperBounds = False
+5         End Select
 End Function
 
 Function WriteModelFile(s As COpenSolver) As String
-    Dim RaiseError As Boolean
-    RaiseError = False
-    On Error GoTo ErrorHandler
+          Dim RaiseError As Boolean
+1         RaiseError = False
+2         On Error GoTo ErrorHandler
 
-    Dim ModelFilePathName As String
-    ModelFilePathName = GetModelFilePath(s.Solver)
-    If FileOrDirExists(ModelFilePathName) Then DeleteFileAndVerify ModelFilePathName
-    
-    Dim FileSolver As ISolverFile
-    Set FileSolver = s.Solver
-    
-    If s.Solver.ModelType = Diff Then
-        Select Case FileSolver.FileType
-        Case AMPL
-            WriteAMPLFile_Diff s, ModelFilePathName
-        Case LP
-            WriteLPFile_Diff s, ModelFilePathName
-        End Select
-    ElseIf s.Solver.ModelType = Parsed Then
-        Select Case FileSolver.FileType
-        Case AMPL
-            WriteAMPLFile_Parsed s, ModelFilePathName
-        Case NL
-            WriteNLFile_Parsed s, ModelFilePathName
-        End Select
-    End If
-    
-    If TypeOf s.Solver Is ISolverLocalExec Then
-        ' Create a script to run the solver
-        Dim LocalExecSolver As ISolverLocalExec
-        Set LocalExecSolver = s.Solver
-        WriteModelFile = LocalExecSolver.CreateSolveCommand(s)
-    ElseIf TypeOf s.Solver Is ISolverNeos Then
-        ' Load the model file back into a string
-        Open ModelFilePathName For Input As #1
-            WriteModelFile = Input$(LOF(1), 1)
-        Close #1
-    End If
-    
+          Dim ModelFilePathName As String
+3         ModelFilePathName = GetModelFilePath(s.Solver)
+4         If FileOrDirExists(ModelFilePathName) Then DeleteFileAndVerify ModelFilePathName
+          
+          Dim FileSolver As ISolverFile
+5         Set FileSolver = s.Solver
+          
+6         If s.Solver.ModelType = Diff Then
+7             Select Case FileSolver.FileType
+              Case AMPL
+8                 WriteAMPLFile_Diff s, ModelFilePathName
+9             Case LP
+10                WriteLPFile_Diff s, ModelFilePathName
+11            End Select
+12        ElseIf s.Solver.ModelType = Parsed Then
+13            Select Case FileSolver.FileType
+              Case AMPL
+14                WriteAMPLFile_Parsed s, ModelFilePathName
+15            Case NL
+16                WriteNLFile_Parsed s, ModelFilePathName
+17            End Select
+18        End If
+          
+19        If TypeOf s.Solver Is ISolverLocalExec Then
+              ' Create a script to run the solver
+              Dim LocalExecSolver As ISolverLocalExec
+20            Set LocalExecSolver = s.Solver
+21            WriteModelFile = LocalExecSolver.CreateSolveCommand(s)
+22        ElseIf TypeOf s.Solver Is ISolverNeos Then
+              ' Load the model file back into a string
+23            Open ModelFilePathName For Input As #1
+24                WriteModelFile = Input$(LOF(1), 1)
+25            Close #1
+26        End If
+          
 ExitFunction:
-    Close #1
-    If RaiseError Then RethrowError
-    Exit Function
+27        Close #1
+28        If RaiseError Then RethrowError
+29        Exit Function
 
 ErrorHandler:
-    If Not ReportError("SolverCommon", "WriteModelFile") Then Resume
-    RaiseError = True
-    GoTo ExitFunction
+30        If Not ReportError("SolverCommon", "WriteModelFile") Then Resume
+31        RaiseError = True
+32        GoTo ExitFunction
 
 End Function
 
 Function GetModelFilePath(FileSolver As ISolverFile) As String
-    Select Case FileSolver.FileType
-    Case AMPL
-        GetAMPLFilePath GetModelFilePath
-    Case NL
-        GetNLModelFilePath GetModelFilePath
-    Case LP
-        GetLPFilePath GetModelFilePath
-    End Select
+1         Select Case FileSolver.FileType
+          Case AMPL
+2             GetAMPLFilePath GetModelFilePath
+3         Case NL
+4             GetNLModelFilePath GetModelFilePath
+5         Case LP
+6             GetLPFilePath GetModelFilePath
+7         End Select
 End Function
 
 Function RunSolver(s As COpenSolver, SolverCommand As String) As String
-    If TypeOf s.Solver Is ISolverLocalExec Then
-        RunLocalSolver s, SolverCommand
-        RunSolver = vbNullString
-    ElseIf TypeOf s.Solver Is ISolverNeos Then
-        RunSolver = CallNEOS(s, SolverCommand)
-    End If
+1         If TypeOf s.Solver Is ISolverLocalExec Then
+2             RunLocalSolver s, SolverCommand
+3             RunSolver = vbNullString
+4         ElseIf TypeOf s.Solver Is ISolverNeos Then
+5             RunSolver = CallNEOS(s, SolverCommand)
+6         End If
 End Function
 
 Function DisplayName(Solver As ISolver) As String
-    DisplayName = Solver.Name
-    If TypeOf Solver Is ISolverNeos Then
-        DisplayName = DisplayName & " on NEOS"
-    End If
+1         DisplayName = Solver.Name
+2         If TypeOf Solver Is ISolverNeos Then
+3             DisplayName = DisplayName & " on NEOS"
+4         End If
 End Function

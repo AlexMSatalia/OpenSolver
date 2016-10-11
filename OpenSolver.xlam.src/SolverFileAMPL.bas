@@ -4,360 +4,360 @@ Option Explicit
 Public Const AMPLFileName As String = "model.ampl"
 
 Function GetAMPLFilePath(ByRef Path As String) As Boolean
-          GetAMPLFilePath = GetTempFilePath(AMPLFileName, Path)
+1               GetAMPLFilePath = GetTempFilePath(AMPLFileName, Path)
 End Function
 
 Sub WriteAMPLFile_Diff(s As COpenSolver, ModelFilePathName As String)
            Dim RaiseError As Boolean
-           RaiseError = False
-           On Error GoTo ErrorHandler
+1          RaiseError = False
+2          On Error GoTo ErrorHandler
 
-1777       Open ModelFilePathName For Output As #1 ' supply path with filename
+3          Open ModelFilePathName For Output As #1 ' supply path with filename
                 
            ' Model File - Replace with Data File
-1778       Print #1, "# Define our sets, parameters and variables (with names matching those"
-1779       Print #1, "# used in defining the data items)"
+4          Print #1, "# Define our sets, parameters and variables (with names matching those"
+5          Print #1, "# used in defining the data items)"
            
            ' Intialise Variables
            Dim var As Long
-1803       For var = 1 To s.NumVars
-1804           Print #1, "var "; s.VarName(var); ConvertVarTypeAMPL(s.VarCategory(var), s.SolveRelaxation);
-1805           If s.AssumeNonNegativeVars Then
+6          For var = 1 To s.NumVars
+7              Print #1, "var "; s.VarName(var); ConvertVarTypeAMPL(s.VarCategory(var), s.SolveRelaxation);
+8              If s.AssumeNonNegativeVars Then
                    ' If no lower bound has been applied then we need to add >= 0
-1806               If Not s.VarLowerBounds.Exists(s.VarName(var)) Then
-1807                   Print #1, ", >= 0";
-1808               End If
-1809           End If
-               If s.InitialSolutionIsValid Then
-                   Print #1, ", := "; s.VarInitialValue(var);
-               End If
-1810           Print #1, ";"
-1811       Next var
+9                  If Not s.VarLowerBounds.Exists(s.VarName(var)) Then
+10                     Print #1, ", >= 0";
+11                 End If
+12             End If
+13             If s.InitialSolutionIsValid Then
+14                 Print #1, ", := "; s.VarInitialValue(var);
+15             End If
+16             Print #1, ";"
+17         Next var
            
-1812       Print #1,   ' New line
+18         Print #1,   ' New line
            
-           If Not s.ObjRange Is Nothing Then
+19         If Not s.ObjRange Is Nothing Then
                ' Objective function replaced with constraint if
-1820           If s.ObjectiveSense = TargetObjective Then
-1821               Print #1, "# We have no objective function as the objective must achieve a given target value"
-1822               Print #1,
-1823               Print #1, "# The objective must achieve a given target value; this constraint enforces this."
-1824               Print #1, "subject to TargetConstr:"
-                   Print #1, "  "; StrEx(s.ObjectiveTargetValue); " == ";
-1826           Else
-                   Print #1, ObjectiveSenseToAMPLString(s.ObjectiveSense); "Total_Cost:"
-1832               Print #1, "  ";
-1834           End If
+20             If s.ObjectiveSense = TargetObjective Then
+21                 Print #1, "# We have no objective function as the objective must achieve a given target value"
+22                 Print #1,
+23                 Print #1, "# The objective must achieve a given target value; this constraint enforces this."
+24                 Print #1, "subject to TargetConstr:"
+25                 Print #1, "  "; StrEx(s.ObjectiveTargetValue); " == ";
+26             Else
+27                 Print #1, ObjectiveSenseToAMPLString(s.ObjectiveSense); "Total_Cost:"
+28                 Print #1, "  ";
+29             End If
            
                ' Parameter - Costs
-1814           With s.CostCoeffs
+30             With s.CostCoeffs
                    Dim i As Long
-                   For i = 1 To .Count
-                       Print #1, StrEx(.Coefficient(i)); " * "; s.VarName(.Index(i)); " ";
-                   Next i
-               End With
-               Print #1, StrEx(s.ObjectiveFunctionConstant); ";"
-           End If
+31                 For i = 1 To .Count
+32                     Print #1, StrEx(.Coefficient(i)); " * "; s.VarName(.Index(i)); " ";
+33                 Next i
+34             End With
+35             Print #1, StrEx(s.ObjectiveFunctionConstant); ";"
+36         End If
            
            ' Subject to Constraints
            Dim row As Long
-1835       For row = 1 To s.NumRows
+37         For row = 1 To s.NumRows
                Dim constraint As Long, instance As Long
-               constraint = s.RowToConstraint(row)
-1837           instance = s.GetConstraintInstance(row, constraint)
-1838           If instance = 1 Then
+38             constraint = s.RowToConstraint(row)
+39             instance = s.GetConstraintInstance(row, constraint)
+40             If instance = 1 Then
                    ' We are outputting the first row of a new Excel constraint block; put a comment in the .lp file
-1867               Print #1, ' New line
-1839               Print #1, "# "; s.ConstraintSummary(constraint)
-1840           End If
+41                 Print #1, ' New line
+42                 Print #1, "# "; s.ConstraintSummary(constraint)
+43             End If
                
               
-1856           If s.SparseA(row).Count = 0 Then
+44             If s.SparseA(row).Count = 0 Then
                    ' This constraint must be satisfied trivially!
-1858               Print #1, "# (A row with all zero coeffs)";
-1862           Else
+45                 Print #1, "# (A row with all zero coeffs)";
+46             Else
                    'Output the constraint header
-1863               Print #1, "subject to c"; StrEx(row, False); ": ";
+47                 Print #1, "subject to c"; StrEx(row, False); ": ";
                 
                    ' Output variables
-1841               With s.SparseA(row)
-1842                   For i = 1 To .Count
-1845                       Print #1, StrEx(.Coefficient(i)); " * "; s.VarName(.Index(i)); " ";
-1846                   Next i
-1847               End With
-               End If
-               Print #1, RelationToAMPLString(s.Relation(constraint)); StrEx(s.RHS(row)); ";"
-1868       Next row
-1869       Print #1, ' New line
+48                 With s.SparseA(row)
+49                     For i = 1 To .Count
+50                         Print #1, StrEx(.Coefficient(i)); " * "; s.VarName(.Index(i)); " ";
+51                     Next i
+52                 End With
+53             End If
+54             Print #1, RelationToAMPLString(s.Relation(constraint)); StrEx(s.RHS(row)); ";"
+55         Next row
+56         Print #1, ' New line
            
            ' Run Commands
            Dim AMPLFileSolver As ISolverFileAMPL
-           Set AMPLFileSolver = s.Solver
+57         Set AMPLFileSolver = s.Solver
            
-1870       Print #1, "# Solve the problem"
-1871       Print #1, "option solver "; AMPLFileSolver.AmplSolverName; ";"
-           Print #1, "option "; AMPLFileSolver.AmplSolverName; "_options "; _
+58         Print #1, "# Solve the problem"
+59         Print #1, "option solver "; AMPLFileSolver.AmplSolverName; ";"
+60         Print #1, "option "; AMPLFileSolver.AmplSolverName; "_options "; _
                       Quote(ParametersToKwargs(s.SolverParameters)); ";"
-1872       Print #1, "solve;"
+61         Print #1, "solve;"
 
-1873       Print #1,   ' New line
+62         Print #1,   ' New line
 
            ' Display variables
-1874       For var = 1 To s.NumVars
-1875           Print #1, "_display "; s.VarName(var); ";"
-1876       Next var
+63         For var = 1 To s.NumVars
+64             Print #1, "_display "; s.VarName(var); ";"
+65         Next var
 
-           If Not s.ObjRange Is Nothing And Not s.ObjectiveSense = TargetObjective Then
+66         If Not s.ObjRange Is Nothing And Not s.ObjectiveSense = TargetObjective Then
               ' Display objective
-               Print #1, "_display Total_Cost;"
-           Else
+67             Print #1, "_display Total_Cost;"
+68         Else
                ' We use the keyword "_display" to know where to begin scanning for variable values and also when to stop scanning.
                ' Even if there is not an objective, we still need to display something so we can read in the variables.
-               Print #1, "_display 1;"
-           End If
+69             Print #1, "_display 1;"
+70         End If
 
-1877       Print #1, "display solve_result_num, solve_result;"
-1878       Print #1,   ' New line
+71         Print #1, "display solve_result_num, solve_result;"
+72         Print #1,   ' New line
            
 ExitSub:
-           Close #1
-           If RaiseError Then RethrowError
-           Exit Sub
+73         Close #1
+74         If RaiseError Then RethrowError
+75         Exit Sub
 
 ErrorHandler:
-           If Not ReportError("SolverFileAMPL", "WriteAMPLFile_Diff") Then Resume
-           RaiseError = True
-           GoTo ExitSub
+76         If Not ReportError("SolverFileAMPL", "WriteAMPLFile_Diff") Then Resume
+77         RaiseError = True
+78         GoTo ExitSub
 End Sub
 Sub WriteAMPLFile_Parsed(s As COpenSolver, ModelFilePathName As String)
           Dim RaiseError As Boolean
-          RaiseError = False
-          On Error GoTo ErrorHandler
+1         RaiseError = False
+2         On Error GoTo ErrorHandler
           
           Dim m As CModelParsed
-          Set m = s.ParsedModel
+3         Set m = s.ParsedModel
 
-7188      Open ModelFilePathName For Output As #1
+4         Open ModelFilePathName For Output As #1
               
           ' Define useful constants
-7191      Print #1, "param pi = 4 * atan(1);"
+5         Print #1, "param pi = 4 * atan(1);"
           
-7192      Print #1, "# 'Sheet="; s.sheet.Name; "'"
+6         Print #1, "# 'Sheet="; s.sheet.Name; "'"
               
           ' Vars
           Dim VarName As String, c As Range
-7193      For Each c In s.AdjustableCells
-              VarName = ConvertCellToStandardName(c)
-7194          Print #1, "var "; VarName; _
+7         For Each c In s.AdjustableCells
+8             VarName = ConvertCellToStandardName(c)
+9             Print #1, "var "; VarName; _
                         ConvertVarTypeAMPL(m.VarTypeMap(VarName), s.SolveRelaxation);
               
-7195          If s.AssumeNonNegativeVars Then
+10            If s.AssumeNonNegativeVars Then
                   ' If no lower bound has been applied then we need to add >= 0
-7196              If Not s.VarLowerBounds.Exists(GetCellName(c)) Then
-7197                  Print #1, ", >= 0";
-7198              End If
-7199          End If
-              If s.InitialSolutionIsValid Then
-7200              Print #1, ", := "; s.VarInitialValue(s.VarNameToIndex(GetCellName(c)));
-7204          End If
-7205          Print #1, ";"
-7206      Next
-7207      Print #1, ' New line
+11                If Not s.VarLowerBounds.Exists(GetCellName(c)) Then
+12                    Print #1, ", >= 0";
+13                End If
+14            End If
+15            If s.InitialSolutionIsValid Then
+16                Print #1, ", := "; s.VarInitialValue(s.VarNameToIndex(GetCellName(c)));
+17            End If
+18            Print #1, ";"
+19        Next
+20        Print #1, ' New line
           
           Dim Formula As Variant
-7208      For Each Formula In m.Formulae
-7209          Print #1, "var "; Formula.strAddress; _
+21        For Each Formula In m.Formulae
+22            Print #1, "var "; Formula.strAddress; _
                         " := "; StrExNoPlus(Formula.initialValue); ";"
-7210      Next Formula
-7211      Print #1, ' New line
+23        Next Formula
+24        Print #1, ' New line
           
-7212      If Not s.ObjRange Is Nothing Then
+25        If Not s.ObjRange Is Nothing Then
               Dim objCellName As String
-7213          objCellName = ConvertCellToStandardName(s.ObjRange)
+26            objCellName = ConvertCellToStandardName(s.ObjRange)
               
-7214          If s.ObjectiveSense = TargetObjective Then
+27            If s.ObjectiveSense = TargetObjective Then
                   ' Replace objective function with constraint
-7215              Print #1, "# We have no objective function as the objective must achieve a given target value"
-7216              Print #1, "subject to targetObj:"
-7217              Print #1, "  "; s.ObjectiveTargetValue; " == ";
-7219          Else
-7220              Print #1, ObjectiveSenseToAMPLString(s.ObjectiveSense); "Total_Cost:"
-7226          End If
-7225          Print #1, objCellName; ";"
-              Print #1, ' New line
-7227      End If
+28                Print #1, "# We have no objective function as the objective must achieve a given target value"
+29                Print #1, "subject to targetObj:"
+30                Print #1, "  "; s.ObjectiveTargetValue; " == ";
+31            Else
+32                Print #1, ObjectiveSenseToAMPLString(s.ObjectiveSense); "Total_Cost:"
+33            End If
+34            Print #1, objCellName; ";"
+35            Print #1, ' New line
+36        End If
              
           Dim i As Long
-7228      For i = 1 To m.LHSKeys.Count
+37        For i = 1 To m.LHSKeys.Count
               Dim strLHS As String, strRel As String, strRHS As String
-7229          strLHS = m.LHSKeys(i)
-7230          strRel = RelationToAMPLString(m.RELs(i))
-7231          strRHS = m.RHSKeys(i)
-7232          Print #1, "# Actual constraint: "; strLHS; strRel; strRHS
-7233          Print #1, "subject to c"; StrEx(i, False); ":"
-7234          Print #1, "    "; strLHS; strRel; strRHS; ";"
-7235      Next i
+38            strLHS = m.LHSKeys(i)
+39            strRel = RelationToAMPLString(m.RELs(i))
+40            strRHS = m.RHSKeys(i)
+41            Print #1, "# Actual constraint: "; strLHS; strRel; strRHS
+42            Print #1, "subject to c"; StrEx(i, False); ":"
+43            Print #1, "    "; strLHS; strRel; strRHS; ";"
+44        Next i
           
-7236      For i = 1 To m.Formulae.Count
-7237          Print #1, "# Parsed formula for "; m.Formulae(i).strAddress
-7238          Print #1, "subject to f"; StrEx(i, False); ":"
-7239          Print #1, "    "; m.Formulae(i).strAddress; " == "; m.Formulae(i).strFormulaParsed; ";"
-7240      Next i
+45        For i = 1 To m.Formulae.Count
+46            Print #1, "# Parsed formula for "; m.Formulae(i).strAddress
+47            Print #1, "subject to f"; StrEx(i, False); ":"
+48            Print #1, "    "; m.Formulae(i).strAddress; " == "; m.Formulae(i).strFormulaParsed; ";"
+49        Next i
           
           ' Run Commands
           Dim AMPLFileSolver As ISolverFileAMPL
-          Set AMPLFileSolver = s.Solver
+50        Set AMPLFileSolver = s.Solver
           
-7241      Print #1, "# Solve the problem"
-7242      Print #1, "option solver "; AMPLFileSolver.AmplSolverName; ";"
-7243      Print #1, "solve;"
+51        Print #1, "# Solve the problem"
+52        Print #1, "option solver "; AMPLFileSolver.AmplSolverName; ";"
+53        Print #1, "solve;"
          
           ' Display variables
-7244      For Each c In s.AdjustableCells
-7246          Print #1, "_display "; ConvertCellToStandardName(c); ";"
-7247      Next
+54        For Each c In s.AdjustableCells
+55            Print #1, "_display "; ConvertCellToStandardName(c); ";"
+56        Next
           
           ' Display objective
-7248      If Not s.ObjRange Is Nothing Then
-7249          Print #1, "_display "; objCellName; ";"
-7250      Else
+57        If Not s.ObjRange Is Nothing Then
+58            Print #1, "_display "; objCellName; ";"
+59        Else
               ' We use the keyword "_display" to know where to begin scanning for variable values and also when to stop scanning.
               ' Even if there is not an objective, we still need to display something so we can read in the variables.
-7251          Print #1, "_display 1;"
-7252      End If
+60            Print #1, "_display 1;"
+61        End If
               
           ' Display solving condition
-7253      Print #1, "display solve_result_num, solve_result;"
+62        Print #1, "display solve_result_num, solve_result;"
 
 ExitSub:
-          Close #1
-          If RaiseError Then RethrowError
-          Exit Sub
+63        Close #1
+64        If RaiseError Then RethrowError
+65        Exit Sub
 
 ErrorHandler:
-          If Not ReportError("SolverFileAMPL", "WriteAMPLFile_Parsed") Then Resume
-          RaiseError = True
-          GoTo ExitSub
+66        If Not ReportError("SolverFileAMPL", "WriteAMPLFile_Parsed") Then Resume
+67        RaiseError = True
+68        GoTo ExitSub
 
 End Sub
 
 Sub ReadResults_AMPL(s As COpenSolver, solution As String)
-    Dim RaiseError As Boolean
-    RaiseError = False
-    On Error GoTo ErrorHandler
+          Dim RaiseError As Boolean
+1         RaiseError = False
+2         On Error GoTo ErrorHandler
 
-    Dim SolutionStatus As String
-    s.SolutionWasLoaded = False
+          Dim SolutionStatus As String
+3         s.SolutionWasLoaded = False
 
-    ' Check logs first
-    s.Solver.CheckLog s
+          ' Check logs first
+4         s.Solver.CheckLog s
 
-    Dim openingParen As Long, closingParen As Long, result As String
-    ' Extract the solve status
-    openingParen = InStr(solution, "solve_result =")
-    SolutionStatus = Mid(solution, openingParen + 1 + Len("solve_result ="))
-    
-    ' Trim to end of line - marked by line feed char
-    SolutionStatus = Left(SolutionStatus, InStr(SolutionStatus, Chr(10)))
+          Dim openingParen As Long, closingParen As Long, result As String
+          ' Extract the solve status
+5         openingParen = InStr(solution, "solve_result =")
+6         SolutionStatus = Mid(solution, openingParen + 1 + Len("solve_result ="))
+          
+          ' Trim to end of line - marked by line feed char
+7         SolutionStatus = Left(SolutionStatus, InStr(SolutionStatus, Chr(10)))
 
-    ' Determine Feasibility
-    If SolutionStatus Like "unbounded*" Then
-        s.SolveStatus = OpenSolverResult.Unbounded
-        s.SolveStatusString = "No Solution Found (Unbounded)"
-    ElseIf SolutionStatus Like "infeasible*" Then
-        s.SolveStatus = OpenSolverResult.Infeasible
-        s.SolveStatusString = "No Feasible Solution"
-    ElseIf SolutionStatus Like "*limit*" Then  ' Stopped on iterations or time
-        s.SolveStatus = OpenSolverResult.LimitedSubOptimal
-        s.SolveStatusString = "Stopped on User Limit (Time/Iterations)"
-        s.SolutionWasLoaded = True
-    ElseIf SolutionStatus Like "solved*" Then
-        s.SolveStatus = OpenSolverResult.Optimal
-        s.SolveStatusString = "Optimal"
-        s.SolutionWasLoaded = True
-    Else
-        s.SolveStatus = OpenSolverResult.ErrorOccurred
-        openingParen = InStr(solution, ">>>")
-        If openingParen = 0 Then
-            openingParen = InStr(solution, "processing commands.")
-            s.SolveStatusString = Mid(solution, openingParen + 1 + Len("processing commands."))
-        Else
-            closingParen = InStr(solution, "<<<")
-            s.SolveStatusString = "Error: " & Mid(solution, openingParen, closingParen - openingParen)
-        End If
-        s.SolveStatusString = "Neos Returned:" & vbNewLine & vbNewLine & SolutionStatus
-    End If
+          ' Determine Feasibility
+8         If SolutionStatus Like "unbounded*" Then
+9             s.SolveStatus = OpenSolverResult.Unbounded
+10            s.SolveStatusString = "No Solution Found (Unbounded)"
+11        ElseIf SolutionStatus Like "infeasible*" Then
+12            s.SolveStatus = OpenSolverResult.Infeasible
+13            s.SolveStatusString = "No Feasible Solution"
+14        ElseIf SolutionStatus Like "*limit*" Then  ' Stopped on iterations or time
+15            s.SolveStatus = OpenSolverResult.LimitedSubOptimal
+16            s.SolveStatusString = "Stopped on User Limit (Time/Iterations)"
+17            s.SolutionWasLoaded = True
+18        ElseIf SolutionStatus Like "solved*" Then
+19            s.SolveStatus = OpenSolverResult.Optimal
+20            s.SolveStatusString = "Optimal"
+21            s.SolutionWasLoaded = True
+22        Else
+23            s.SolveStatus = OpenSolverResult.ErrorOccurred
+24            openingParen = InStr(solution, ">>>")
+25            If openingParen = 0 Then
+26                openingParen = InStr(solution, "processing commands.")
+27                s.SolveStatusString = Mid(solution, openingParen + 1 + Len("processing commands."))
+28            Else
+29                closingParen = InStr(solution, "<<<")
+30                s.SolveStatusString = "Error: " & Mid(solution, openingParen, closingParen - openingParen)
+31            End If
+32            s.SolveStatusString = "Neos Returned:" & vbNewLine & vbNewLine & SolutionStatus
+33        End If
 
-    If s.SolutionWasLoaded Then
-        ' Save the solution values
-        Dim c As Range, i As Long, VarName As String
-        i = 1
-        For Each c In s.AdjustableCells
-            If s.Solver.ModelType = Parsed Then
-                VarName = ConvertCellToStandardName(c)
-            Else
-                VarName = s.VarName(i)
-            End If
-            
-            openingParen = InStr(solution, VarName)
-            closingParen = openingParen + InStr(Mid(solution, openingParen + 1), "_display")
-            result = Mid(solution, openingParen + Len(VarName) + 1, Max(closingParen - openingParen - Len(VarName) - 1, 0))
-    
-            s.VarFinalValue(i) = Val(result)
-            s.VarCellName(i) = s.VarName(i)
-            i = i + 1
-        Next
-    End If
+34        If s.SolutionWasLoaded Then
+              ' Save the solution values
+              Dim c As Range, i As Long, VarName As String
+35            i = 1
+36            For Each c In s.AdjustableCells
+37                If s.Solver.ModelType = Parsed Then
+38                    VarName = ConvertCellToStandardName(c)
+39                Else
+40                    VarName = s.VarName(i)
+41                End If
+                  
+42                openingParen = InStr(solution, VarName)
+43                closingParen = openingParen + InStr(Mid(solution, openingParen + 1), "_display")
+44                result = Mid(solution, openingParen + Len(VarName) + 1, Max(closingParen - openingParen - Len(VarName) - 1, 0))
+          
+45                s.VarFinalValue(i) = Val(result)
+46                s.VarCellName(i) = s.VarName(i)
+47                i = i + 1
+48            Next
+49        End If
 
 ExitSub:
-    If RaiseError Then RethrowError
-    Exit Sub
+50        If RaiseError Then RethrowError
+51        Exit Sub
 
 ErrorHandler:
-    If Not ReportError("SolverFileAMPL", "ReadResults_AMPL") Then Resume
-    RaiseError = True
-    GoTo ExitSub
+52        If Not ReportError("SolverFileAMPL", "ReadResults_AMPL") Then Resume
+53        RaiseError = True
+54        GoTo ExitSub
 End Sub
 
 ' Given the value of an OpenSolver RelationConst, pick the equivalent AMPL comparison operator
 Function ConvertRelationToAMPL(Relation As RelationConsts) As String
-7258      Select Case Relation
+1         Select Case Relation
               Case RelationConsts.RelationLE: ConvertRelationToAMPL = " <= "
-7259          Case RelationConsts.RelationEQ: ConvertRelationToAMPL = " == "
-7260          Case RelationConsts.RelationGE: ConvertRelationToAMPL = " >= "
-7261      End Select
+2             Case RelationConsts.RelationEQ: ConvertRelationToAMPL = " == "
+3             Case RelationConsts.RelationGE: ConvertRelationToAMPL = " >= "
+4         End Select
 End Function
 
 Function ConvertVarTypeAMPL(intVarType As Long, SolveRelaxation As Boolean) As String
-          If SolveRelaxation Then
-              Select Case intVarType
+1         If SolveRelaxation Then
+2             Select Case intVarType
               Case VarContinuous, VarInteger
-                  ConvertVarTypeAMPL = vbNullString
-              Case VarBinary
-                  ConvertVarTypeAMPL = ", <= 1, >= 0"
-              End Select
-          Else
-7262          Select Case intVarType
+3                 ConvertVarTypeAMPL = vbNullString
+4             Case VarBinary
+5                 ConvertVarTypeAMPL = ", <= 1, >= 0"
+6             End Select
+7         Else
+8             Select Case intVarType
               Case VarContinuous
-7263              ConvertVarTypeAMPL = vbNullString
-7264          Case VarInteger
-7265              ConvertVarTypeAMPL = ", integer"
-7266          Case VarBinary
-7267              ConvertVarTypeAMPL = ", binary"
-7268          End Select
-          End If
+9                 ConvertVarTypeAMPL = vbNullString
+10            Case VarInteger
+11                ConvertVarTypeAMPL = ", integer"
+12            Case VarBinary
+13                ConvertVarTypeAMPL = ", binary"
+14            End Select
+15        End If
 End Function
 
 Function RelationToAMPLString(rel As RelationConsts) As String
-7258      Select Case rel
+1         Select Case rel
               Case RelationLE: RelationToAMPLString = " <= "
-7259          Case RelationEQ: RelationToAMPLString = " == "
-7260          Case RelationGE: RelationToAMPLString = " >= "
-7261      End Select
+2             Case RelationEQ: RelationToAMPLString = " == "
+3             Case RelationGE: RelationToAMPLString = " >= "
+4         End Select
 End Function
 Function ObjectiveSenseToAMPLString(ObjSense As ObjectiveSenseType) As String
-          Select Case ObjSense
-          Case MaximiseObjective: ObjectiveSenseToAMPLString = "maximize "
-          Case MinimiseObjective: ObjectiveSenseToAMPLString = "minimize "
-          End Select
+1               Select Case ObjSense
+                Case MaximiseObjective: ObjectiveSenseToAMPLString = "maximize "
+2               Case MinimiseObjective: ObjectiveSenseToAMPLString = "minimize "
+3               End Select
 End Function

@@ -35,209 +35,209 @@ Private ResizeStartX As Double
 Private ResizeStartY As Double
 
 Private Sub cmdCancel_Click()
-    ProcessAbortSignal
+1         ProcessAbortSignal
 End Sub
 
 Private Sub cmdOk_Click()
-    ProcessAbortSignal
+1         ProcessAbortSignal
 End Sub
 
 Private Sub txtConsole_KeyDown(ByVal KeyCode As MSForms.ReturnInteger, ByVal Shift As Integer)
-    ' Override any escape keypress for the textbox so it doesn't clear the text
-    If KeyCode = 27 Then
-        KeyCode = 0
-        ProcessAbortSignal
-    End If
+          ' Override any escape keypress for the textbox so it doesn't clear the text
+1         If KeyCode = 27 Then
+2             KeyCode = 0
+3             ProcessAbortSignal
+4         End If
 End Sub
 
 ' Make the [x] hide the form rather than unload
 Private Sub UserForm_QueryClose(Cancel As Integer, CloseMode As Integer)
-    ' If CloseMode = vbFormControlMenu then we know the user
-    ' clicked the [x] close button or Alt+F4 to close the form.
-    If CloseMode = vbFormControlMenu Then
-        ProcessAbortSignal
-        Cancel = True
-    End If
+          ' If CloseMode = vbFormControlMenu then we know the user
+          ' clicked the [x] close button or Alt+F4 to close the form.
+1         If CloseMode = vbFormControlMenu Then
+2             ProcessAbortSignal
+3             Cancel = True
+4         End If
 End Sub
 
 Public Sub SetInput(Command As String, LogPath As String, StartDir As String)
-    pCommand = Command
-    pLogPath = LogPath
-    pStartDir = StartDir
+1         pCommand = Command
+2         pLogPath = LogPath
+3         pStartDir = StartDir
 End Sub
 
 Public Sub GetOutput(ByRef ExitCode As Long, ByRef ConsoleOutput As String)
-    ExitCode = pExitCode
-    ConsoleOutput = pConsoleOutput
+1         ExitCode = pExitCode
+2         ConsoleOutput = pConsoleOutput
 End Sub
 
 Public Sub AppendText(NewText As String)
-    If Len(NewText) > 0 Then
-        With Me.txtConsole
-            .Locked = False
-            .Text = .Text & NewText
-            .Locked = True
-        End With
-    End If
-    UpdateElapsedTime
+1         If Len(NewText) > 0 Then
+2             With Me.txtConsole
+3                 .Locked = False
+4                 .Text = .Text & NewText
+5                 .Locked = True
+6             End With
+7         End If
+8         UpdateElapsedTime
 End Sub
 
 Private Sub UpdateElapsedTime()
-    Me.lblElapsed.Caption = "Elapsed Time: " & Int(Timer() - OpenSolverExternalCommand.StartTime) & "s"
+1         Me.lblElapsed.Caption = "Elapsed Time: " & Int(Timer() - OpenSolverExternalCommand.StartTime) & "s"
 End Sub
 
 Public Sub MarkCompleted()
-    Dim message As String
-    If Me.Tag = "Cancelled" Then
-        message = "Process cancelled."
-    ElseIf pExitCode <> 0 Then
-        message = "Process exited abnormally with exit code " & pExitCode & "."
-    Else
-        message = "Process completed successfully."
-    End If
-    Me.AppendText vbNewLine & vbNewLine & message
-    
-    ' Scroll to bottom
-    Me.txtConsole.SetFocus
-    
-    cmdCancel.Enabled = False
-    cmdOk.Enabled = True
-    cmdOk.SetFocus
+          Dim message As String
+1         If Me.Tag = "Cancelled" Then
+2             message = "Process cancelled."
+3         ElseIf pExitCode <> 0 Then
+4             message = "Process exited abnormally with exit code " & pExitCode & "."
+5         Else
+6             message = "Process completed successfully."
+7         End If
+8         Me.AppendText vbNewLine & vbNewLine & message
+          
+          ' Scroll to bottom
+9         Me.txtConsole.SetFocus
+          
+10        cmdCancel.Enabled = False
+11        cmdOk.Enabled = True
+12        cmdOk.SetFocus
 End Sub
 
 Private Sub ProcessAbortSignal()
-    If cmdCancel.Enabled Then
-        Me.Tag = "Cancelled"
-    Else
-        Me.Hide
-    End If
+1         If cmdCancel.Enabled Then
+2             Me.Tag = "Cancelled"
+3         Else
+4             Me.Hide
+5         End If
 End Sub
 
 Private Sub UserForm_Activate()
-    On Error GoTo ErrorHandler  ' Don't let an error propogate out of the execution
-    pConsoleOutput = ExecConsole(Me, pCommand, pLogPath, pStartDir, pExitCode)
-    Exit Sub
-    
+1         On Error GoTo ErrorHandler  ' Don't let an error propogate out of the execution
+2         pConsoleOutput = ExecConsole(Me, pCommand, pLogPath, pStartDir, pExitCode)
+3         Exit Sub
+          
 ErrorHandler:
-    If OpenSolverErrorHandler.ErrNum = OpenSolver_UserCancelledError Then
-        Me.Tag = "Aborted"
-    Else
-        Me.Tag = OpenSolverErrorHandler.ErrMsg
-    End If
+4         If OpenSolverErrorHandler.ErrNum = OpenSolver_UserCancelledError Then
+5             Me.Tag = "Aborted"
+6         Else
+7             Me.Tag = OpenSolverErrorHandler.ErrMsg
+8         End If
 End Sub
 
 Private Sub UserForm_Initialize()
-   AutoLayout
-   CenterForm
+1        AutoLayout
+2        CenterForm
 End Sub
 
 Private Sub AutoLayout()
-    AutoFormat Me.Controls
-    
-    With Me.txtConsole
+1         AutoFormat Me.Controls
+          
+2         With Me.txtConsole
         #If Mac Then
-            .Font.Name = "Menlo Regular"
+3                 .Font.Name = "Menlo Regular"
         #Else
-            .Font.Name = "Consolas"
+4                 .Font.Name = "Consolas"
         #End If
-        .ForeColor = &HFFFFFF
-        .BackColor = &H0
-        .MultiLine = True
-        .ScrollBars = fmScrollBarsVertical
-        .SpecialEffect = fmSpecialEffectEtched
-        .Width = ConsoleWidth
-        .Height = ConsoleHeight
-        .Top = FormMargin
-        .Left = FormMargin
-    End With
-    
-    With Me.cmdCancel
-        .Caption = "Cancel"
-        .Width = FormButtonWidth
-        .Cancel = True
-        .Enabled = True
-    End With
-    
-    With Me.cmdOk
-        .Caption = "OK"
-        .Width = FormButtonWidth
-        .Cancel = True
-        .Enabled = False
-    End With
-    
-    ' Make the label wide enough so that the message is on one line, then use autosize to shrink the width.
-    With Me.lblElapsed
-        .Caption = "OpenSolver is busy running your optimisation model..."
-        .Left = FormMargin
-    End With
-    
-    ' Add resizer
-    With lblResizer
+5             .ForeColor = &HFFFFFF
+6             .BackColor = &H0
+7             .MultiLine = True
+8             .ScrollBars = fmScrollBarsVertical
+9             .SpecialEffect = fmSpecialEffectEtched
+10            .Width = ConsoleWidth
+11            .Height = ConsoleHeight
+12            .Top = FormMargin
+13            .Left = FormMargin
+14        End With
+          
+15        With Me.cmdCancel
+16            .Caption = "Cancel"
+17            .Width = FormButtonWidth
+18            .Cancel = True
+19            .Enabled = True
+20        End With
+          
+21        With Me.cmdOk
+22            .Caption = "OK"
+23            .Width = FormButtonWidth
+24            .Cancel = True
+25            .Enabled = False
+26        End With
+          
+          ' Make the label wide enough so that the message is on one line, then use autosize to shrink the width.
+27        With Me.lblElapsed
+28            .Caption = "OpenSolver is busy running your optimisation model..."
+29            .Left = FormMargin
+30        End With
+          
+          ' Add resizer
+31        With lblResizer
         #If Mac Then
-            ' Mac labels don't fire MouseMove events correctly
-            .Visible = False
+                  ' Mac labels don't fire MouseMove events correctly
+32                .Visible = False
         #End If
-        .Caption = "o"
-        With .Font
-            .Name = "Marlett"
-            .Charset = 2
-            .Size = 10
-        End With
-        .AutoSize = True
-        .MousePointer = fmMousePointerSizeNWSE
-        .BackStyle = fmBackStyleTransparent
-    End With
-    
-    ' Set the positions of the form
-    UpdateLayout
-    
-    Me.BackColor = FormBackColor
-    Me.Caption = "OpenSolver - Optimisation Running"
+33            .Caption = "o"
+34            With .Font
+35                .Name = "Marlett"
+36                .Charset = 2
+37                .Size = 10
+38            End With
+39            .AutoSize = True
+40            .MousePointer = fmMousePointerSizeNWSE
+41            .BackStyle = fmBackStyleTransparent
+42        End With
+          
+          ' Set the positions of the form
+43        UpdateLayout
+          
+44        Me.BackColor = FormBackColor
+45        Me.Caption = "OpenSolver - Optimisation Running"
 End Sub
 
 Private Sub CenterForm()
-    Me.Top = CenterFormTop(Me.Height)
-    Me.Left = CenterFormLeft(Me.Width)
+1         Me.Top = CenterFormTop(Me.Height)
+2         Me.Left = CenterFormLeft(Me.Width)
 End Sub
 
 Private Sub UpdateLayout(Optional ChangeX As Single = 0, Optional ChangeY As Single = 0)
-    Dim NewWidth As Double, NewHeight As Double
-    NewWidth = Max(txtConsole.Width + ChangeX, MinWidth)
-    NewHeight = Max(txtConsole.Height + ChangeY, MinHeight)
-    
-    ' Update based on new width
-    txtConsole.Width = NewWidth
-    Me.Width = Me.txtConsole.Width + 2 * FormMargin
-    Me.cmdCancel.Left = LeftOfForm(Me.Width, Me.cmdCancel.Width) - 1  ' To account for etched effect on textbox
-    Me.cmdOk.Left = LeftOf(cmdCancel, Me.cmdOk.Width)
-    Me.lblElapsed.Width = Me.cmdOk.Left - Me.txtConsole.Left - FormMargin
-    AutoHeight Me.lblElapsed, Me.lblElapsed.Width
-    Me.lblResizer.Left = Me.Width - Me.lblResizer.Width
-    Me.Width = Me.Width + FormWindowMargin
-    
-    ' Update based on new height
-    txtConsole.Height = NewHeight
-    Me.cmdCancel.Top = Below(Me.txtConsole)
-    Me.cmdOk.Top = Me.cmdCancel.Top
-    Me.lblElapsed.Top = Me.cmdCancel.Top + (Me.cmdCancel.Height - Me.lblElapsed.Height) / 2
-    Me.Height = FormHeight(Me.cmdCancel)
-    Me.lblResizer.Top = Me.InsideHeight - Me.lblResizer.Height
+          Dim NewWidth As Double, NewHeight As Double
+1         NewWidth = Max(txtConsole.Width + ChangeX, MinWidth)
+2         NewHeight = Max(txtConsole.Height + ChangeY, MinHeight)
+          
+          ' Update based on new width
+3         txtConsole.Width = NewWidth
+4         Me.Width = Me.txtConsole.Width + 2 * FormMargin
+5         Me.cmdCancel.Left = LeftOfForm(Me.Width, Me.cmdCancel.Width) - 1  ' To account for etched effect on textbox
+6         Me.cmdOk.Left = LeftOf(cmdCancel, Me.cmdOk.Width)
+7         Me.lblElapsed.Width = Me.cmdOk.Left - Me.txtConsole.Left - FormMargin
+8         AutoHeight Me.lblElapsed, Me.lblElapsed.Width
+9         Me.lblResizer.Left = Me.Width - Me.lblResizer.Width
+10        Me.Width = Me.Width + FormWindowMargin
+          
+          ' Update based on new height
+11        txtConsole.Height = NewHeight
+12        Me.cmdCancel.Top = Below(Me.txtConsole)
+13        Me.cmdOk.Top = Me.cmdCancel.Top
+14        Me.lblElapsed.Top = Me.cmdCancel.Top + (Me.cmdCancel.Height - Me.lblElapsed.Height) / 2
+15        Me.Height = FormHeight(Me.cmdCancel)
+16        Me.lblResizer.Top = Me.InsideHeight - Me.lblResizer.Height
 End Sub
 
 Private Sub lblResizer_MouseDown(ByVal Button As Integer, ByVal Shift As Integer, ByVal X As Single, ByVal Y As Single)
-    If Button = 1 Then
-        ResizeStartX = X
-        ResizeStartY = Y
-    End If
+1         If Button = 1 Then
+2             ResizeStartX = X
+3             ResizeStartY = Y
+4         End If
 End Sub
 
 Private Sub lblResizer_MouseMove(ByVal Button As Integer, ByVal Shift As Integer, ByVal X As Single, ByVal Y As Single)
-    If Button = 1 Then
+1         If Button = 1 Then
         #If Mac Then
-            ' Mac reports delta already
-            UpdateLayout X, Y
+                  ' Mac reports delta already
+2                 UpdateLayout X, Y
         #Else
-            UpdateLayout X - ResizeStartX, Y - ResizeStartY
+3                 UpdateLayout X - ResizeStartX, Y - ResizeStartY
         #End If
-    End If
+4         End If
 End Sub

@@ -14,58 +14,58 @@ Option Explicit
 Private Items As Collection
 
 Private Sub Class_Initialize()
-9163      Set Items = New Collection
+1         Set Items = New Collection
 End Sub
 
 Public Sub PushNewCount()
-9164      Items.Add 1
+1         Items.Add 1
 End Sub
 
 Public Function PopCount() As Long
           Dim RaiseError As Boolean
-          RaiseError = False
-          On Error GoTo ErrorHandler
+1         RaiseError = False
+2         On Error GoTo ErrorHandler
 
           Dim Count As Long
-9165      Count = Items(Items.Count)
-9166      Items.Remove (Items.Count)
-9167      PopCount = Count
+3         Count = Items(Items.Count)
+4         Items.Remove (Items.Count)
+5         PopCount = Count
 
 ExitFunction:
-          If RaiseError Then RethrowError
-          Exit Function
+6         If RaiseError Then RethrowError
+7         Exit Function
 
 ErrorHandler:
-          If Not ReportError("OperatorArgCountStack", "PopCount") Then Resume
-          RaiseError = True
-          GoTo ExitFunction
+8         If Not ReportError("OperatorArgCountStack", "PopCount") Then Resume
+9         RaiseError = True
+10        GoTo ExitFunction
 End Function
 
 Public Sub Increase()
           Dim RaiseError As Boolean
-          RaiseError = False
-          On Error GoTo ErrorHandler
+1         RaiseError = False
+2         On Error GoTo ErrorHandler
 
           Dim Count As Long
-9168      Count = Items(Items.Count) + 1
-9169      Items.Remove (Items.Count)
-9170      Items.Add Count
+3         Count = Items(Items.Count) + 1
+4         Items.Remove (Items.Count)
+5         Items.Add Count
 
 ExitSub:
-          If RaiseError Then RethrowError
-          Exit Sub
+6         If RaiseError Then RethrowError
+7         Exit Sub
 
 ErrorHandler:
-          If Not ReportError("OperatorArgCountStack", "Increase") Then Resume
-          RaiseError = True
-          GoTo ExitSub
+8         If Not ReportError("OperatorArgCountStack", "Increase") Then Resume
+9         RaiseError = True
+10        GoTo ExitSub
 End Sub
 
 Public Function Display() As String
           Dim i As Long, output As String
-9171      For i = 1 To Items.Count
-9172          output = output & Items(i) & ", "
-9173      Next i
-9174      Display = output
+1         For i = 1 To Items.Count
+2             output = output & Items(i) & ", "
+3         Next i
+4         Display = output
 End Function
 

@@ -18,37 +18,37 @@ Private Sub Workbook_AddinInstall()
 End Sub
 
 Private Sub Workbook_AddinUninstall()
-2         AlterMenuItems (False)
+1         AlterMenuItems (False)
 End Sub
 
 Private Sub Workbook_BeforeClose(Cancel As Boolean)
-          If Not ThisWorkbook.Saved Then
+1         If Not ThisWorkbook.Saved Then
               ' Ignore this check on Mac 2016 since .Saved always seems to return false
-              If IsMac And Val(Application.Version) >= 15 Then GoTo DoClose
+2             If IsMac And Val(Application.Version) >= 15 Then GoTo DoClose
               
               Dim Answer As VbMsgBoxResult
-              Answer = MsgBox(ThisWorkbook.Name & " is unsaved. Save?", _
+3             Answer = MsgBox(ThisWorkbook.Name & " is unsaved. Save?", _
                               vbExclamation + vbYesNoCancel, "Unsaved Addin")
-              If Answer = vbYes Then
-                  ThisWorkbook.Save
-              ElseIf Answer = vbNo Then
+4             If Answer = vbYes Then
+5                 ThisWorkbook.Save
+6             ElseIf Answer = vbNo Then
                   ' Do nothing special and proceed as normal
-              Else
+7             Else
                   ' Not yes or no - should be cancel, but we just abort the close either way
-                  Cancel = True
-                  Exit Sub
-              End If
-          End If
+8                 Cancel = True
+9                 Exit Sub
+10            End If
+11        End If
 
 DoClose:
-          On Error Resume Next
-3         AlterMenuItems (False)
-          DeleteTempFolder
-          On Error GoTo 0
+12        On Error Resume Next
+13        AlterMenuItems (False)
+14        DeleteTempFolder
+15        On Error GoTo 0
 End Sub
 
 Private Sub Workbook_Open()
-4         AlterMenuItems (True)
+1         AlterMenuItems (True)
 End Sub
 '====================================================================
 ' Excel 2003 Menu Code
@@ -61,53 +61,53 @@ End Sub
 '====================================================================
 Private Sub Workbook_BeforeSave(ByVal SaveAsUI As Boolean, Cancel As Boolean)
 
-14        If MsgBox("Export VBA Code and tidy up?", vbYesNo, "Before you go") = vbYes Then
-15            ExportVBACode
-              CreateRibbonXML
-              DoTidyUp
-16        End If
+1         If MsgBox("Export VBA Code and tidy up?", vbYesNo, "Before you go") = vbYes Then
+2             ExportVBACode
+3             CreateRibbonXML
+4             DoTidyUp
+5         End If
 
-          If MsgBox("Close all VB windows? Do this before release!", vbYesNo, "Before you go") = vbYes Then
-              CloseAllVBEWindows
-          End If
+6         If MsgBox("Close all VB windows? Do this before release!", vbYesNo, "Before you go") = vbYes Then
+7             CloseAllVBEWindows
+8         End If
 End Sub
 
 Sub CloseAllVBEWindows()
-    Dim i As Long
-    With Application.VBE.Windows
-        For i = .Count To 1 Step -1
-            ' Window types:
-            '   0 - Code
-            '   1 - Form
-            '   2 - Object Browser
-            '   3 - Watches
-            '   4 - Locals
-            '   5 - Immediates
-            '   6 - Project Explorer
-            '   7 - Properties
-            If .Item(i).Type < 2 Then .Item(i).Close
-        Next i
-    End With
+          Dim i As Long
+1         With Application.VBE.Windows
+2             For i = .Count To 1 Step -1
+                  ' Window types:
+                  '   0 - Code
+                  '   1 - Form
+                  '   2 - Object Browser
+                  '   3 - Watches
+                  '   4 - Locals
+                  '   5 - Immediates
+                  '   6 - Project Explorer
+                  '   7 - Properties
+3                 If .Item(i).Type < 2 Then .Item(i).Close
+4             Next i
+5         End With
 End Sub
 
 Public Sub ExportVBACode()
 
-17        With New CodeExporter
-18            Set .SourceWorkbook = ThisWorkbook
-19            .ExportTo exportPath
-20        End With
+1         With New CodeExporter
+2             Set .SourceWorkbook = ThisWorkbook
+3             .ExportTo exportPath
+4         End With
 
 End Sub
 
 Private Function exportPath() As String
 
-21        exportPath = ThisWorkbook.FullName & ".src"
-22        If Not FileOrDirExists(exportPath) Then
+1         exportPath = ThisWorkbook.FullName & ".src"
+2         If Not FileOrDirExists(exportPath) Then
               ' Modification JWD: We need late binding on FSO here to avoid a dependence on Microsoft Scripting Runtime
               Dim fso As Object ' FileSystemObject
-23            Set fso = CreateObject("Scripting.FileSystemObject")
-24            fso.GetFolder(ThisWorkbook.Path).SubFolders.Add (ThisWorkbook.Name & ".src")
-25        End If
+3             Set fso = CreateObject("Scripting.FileSystemObject")
+4             fso.GetFolder(ThisWorkbook.Path).SubFolders.Add (ThisWorkbook.Name & ".src")
+5         End If
               
 
 End Function
@@ -117,11 +117,11 @@ End Function
 '====================================================================
 
 Private Sub DoTidyUp()
-    ' Clear help file
-    ThisWorkbook.VBProject.HelpFile = vbNullString
-    
-    ' Set version number in file properties to the current value
-    ' Adapted from Pearson code: www.cpearson.com/Excel/DocProp.apsx
-    On Error Resume Next
-    ThisWorkbook.BuiltinDocumentProperties("Document version").value = sOpenSolverVersion & " (" & sOpenSolverDate & ")"
+          ' Clear help file
+1         ThisWorkbook.VBProject.HelpFile = vbNullString
+          
+          ' Set version number in file properties to the current value
+          ' Adapted from Pearson code: www.cpearson.com/Excel/DocProp.apsx
+2         On Error Resume Next
+3         ThisWorkbook.BuiltinDocumentProperties("Document version").value = sOpenSolverVersion & " (" & sOpenSolverDate & ")"
 End Sub

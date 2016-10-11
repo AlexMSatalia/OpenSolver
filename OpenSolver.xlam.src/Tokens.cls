@@ -19,43 +19,43 @@ Option Explicit
 Private colTokens As Collection
 
 Private Sub Class_Initialize()
-5468      Set colTokens = New Collection
+1         Set colTokens = New Collection
 End Sub
 
 Public Property Get NewEnum() As IUnknown
-5469      Set NewEnum = colTokens.[_NewEnum]
+1         Set NewEnum = colTokens.[_NewEnum]
 End Property
 
 Public Sub Add(Token As Token, Optional Key As Variant)
-5470      colTokens.Add Token, Key
-5471      Set Token.Parent = Me
+1         colTokens.Add Token, Key
+2         Set Token.Parent = Me
 End Sub
 
 Public Sub Remove(Index As Variant)
-5472      colTokens.Remove Index
+1         colTokens.Remove Index
 End Sub
 
 Function Item(Index As Variant) As Token
-5473      Set Item = colTokens.Item(Index)
+1         Set Item = colTokens.Item(Index)
 End Function
 
 Property Get Count() As Long
-5474      Count = colTokens.Count
+1         Count = colTokens.Count
 End Property
 
 Public Sub Clear()
-5475      Set colTokens = New Collection
+1         Set colTokens = New Collection
 End Sub
 
 Public Function NewToken(Text As String, TokenType As Long, FormulaIndex As Long, FormulaLength As Long) As Token
           Dim obj As Token
 
-5476      Set obj = New Token
-5477      obj.Text = Text
-5478      obj.TokenType = TokenType
-5479      obj.FormulaIndex = FormulaIndex
-5480      obj.FormulaLength = FormulaLength
+1         Set obj = New Token
+2         obj.Text = Text
+3         obj.TokenType = TokenType
+4         obj.FormulaIndex = FormulaIndex
+5         obj.FormulaLength = FormulaLength
 
-5481      Set NewToken = obj
+6         Set NewToken = obj
 End Function
 

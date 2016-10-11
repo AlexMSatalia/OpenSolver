@@ -19,53 +19,53 @@ Option Explicit
 Private colTokens As Collection
 
 Private Sub Class_Initialize()
-5482      Set colTokens = New Collection
+1         Set colTokens = New Collection
 End Sub
 
 Public Sub Push(Token As Token)
-5483      colTokens.Add Token
+1         colTokens.Add Token
 End Sub
 
 Public Function Pop() As Token
           Dim RaiseError As Boolean
-          RaiseError = False
-          On Error GoTo ErrorHandler
+1         RaiseError = False
+2         On Error GoTo ErrorHandler
 
           Dim obj As Token
-5484      Set obj = colTokens(colTokens.Count)
-5485      colTokens.Remove (colTokens.Count)
-5486      Set Pop = obj
+3         Set obj = colTokens(colTokens.Count)
+4         colTokens.Remove (colTokens.Count)
+5         Set Pop = obj
 
 ExitFunction:
-          If RaiseError Then RethrowError
-          Exit Function
+6         If RaiseError Then RethrowError
+7         Exit Function
 
 ErrorHandler:
-          If Not ReportError("TokenStack", "Pop") Then Resume
-          RaiseError = True
-          GoTo ExitFunction
+8         If Not ReportError("TokenStack", "Pop") Then Resume
+9         RaiseError = True
+10        GoTo ExitFunction
 End Function
 
 Public Function Peek() As Token
           Dim RaiseError As Boolean
-          RaiseError = False
-          On Error GoTo ErrorHandler
+1         RaiseError = False
+2         On Error GoTo ErrorHandler
 
           Dim obj As Token
-5487      Set obj = colTokens(colTokens.Count)
-5488      Set Peek = obj
+3         Set obj = colTokens(colTokens.Count)
+4         Set Peek = obj
 
 ExitFunction:
-          If RaiseError Then RethrowError
-          Exit Function
+5         If RaiseError Then RethrowError
+6         Exit Function
 
 ErrorHandler:
-          If Not ReportError("TokenStack", "Peek") Then Resume
-          RaiseError = True
-          GoTo ExitFunction
+7         If Not ReportError("TokenStack", "Peek") Then Resume
+8         RaiseError = True
+9         GoTo ExitFunction
 End Function
 
 Property Get Count() As Long
-5489      Count = colTokens.Count
+1         Count = colTokens.Count
 End Property
 

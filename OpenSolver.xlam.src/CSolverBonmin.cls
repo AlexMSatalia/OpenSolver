@@ -32,120 +32,120 @@ Private Const pTimeLimitName = "time_limit"
 Private Const pToleranceName = "allowable_fraction_gap"
 
 Private Property Get ISolver_Name() As String
-    ISolver_Name = pName
+1         ISolver_Name = pName
 End Property
 
 Private Property Get ISolver_ShortName() As String
-    ISolver_ShortName = pShortName
+1         ISolver_ShortName = pShortName
 End Property
 
 Private Property Get ISolver_Title() As String
-    ISolver_Title = pTitle
+1         ISolver_Title = pTitle
 End Property
 
 Private Property Get ISolver_Desc() As String
-    ISolver_Desc = pDesc
+1         ISolver_Desc = pDesc
 End Property
 
 Private Property Get ISolver_Link() As String
-    ISolver_Link = pLink
+1         ISolver_Link = pLink
 End Property
 
 Private Property Get ISolver_IterationLimitName() As String
-    ISolver_IterationLimitName = pIterationLimitName
+1         ISolver_IterationLimitName = pIterationLimitName
 End Property
 
 Private Property Get ISolver_PrecisionName() As String
 End Property
 
 Private Property Get ISolver_TimeLimitName() As String
-    ISolver_TimeLimitName = pTimeLimitName
+1         ISolver_TimeLimitName = pTimeLimitName
 End Property
 
 Private Property Get ISolver_ToleranceName() As String
-    ISolver_ToleranceName = pToleranceName
+1         ISolver_ToleranceName = pToleranceName
 End Property
 
 Private Property Get ISolver_ModelType() As OpenSolver_ModelType
-    ISolver_ModelType = pModelType
+1         ISolver_ModelType = pModelType
 End Property
 
 Private Sub ISolver_CleanFiles()
-    CleanFiles_NL Me
+1         CleanFiles_NL Me
 End Sub
 
 Private Sub ISolver_CheckLog(s As COpenSolver)
-    CheckLog_NL s
+1         CheckLog_NL s
 End Sub
 
 ' ISolverLocal
 
 Private Property Get ISolverLocal_Version() As String
-    ISolverLocal_Version = Version()
+1         ISolverLocal_Version = Version()
 End Property
 
 Private Property Get ISolverLocal_Bitness() As String
-    SolverIsPresent Me, Bitness:=ISolverLocal_Bitness
+1         SolverIsPresent Me, Bitness:=ISolverLocal_Bitness
 End Property
 
 ' ISolverLocalExec
 
 Private Property Get ISolverLocalExec_ExecName() As String
-    ISolverLocalExec_ExecName = pExecName
+1         ISolverLocalExec_ExecName = pExecName
 End Property
 
 Private Function ISolverLocalExec_GetExecPath(Optional errorString As String, Optional Bitness As String) As String
-    ISolverLocalExec_GetExecPath = SolverExecPath(Me, errorString, Bitness)
+1         ISolverLocalExec_GetExecPath = SolverExecPath(Me, errorString, Bitness)
 End Function
 
 Private Function ISolverLocalExec_CreateSolveCommand(s As COpenSolver) As String
-    ISolverLocalExec_CreateSolveCommand = CreateSolveCommand_NL(s, ScriptFilePath)
+1         ISolverLocalExec_CreateSolveCommand = CreateSolveCommand_NL(s, ScriptFilePath)
 End Function
 
 ' ISolverFile
 
 Private Sub ISolverFile_ReadResults(s As COpenSolver, Optional solution As String)
-    ReadResults_NL s
+1         ReadResults_NL s
 End Sub
 
 Private Property Get ISolverFile_FileType() As OpenSolver_FileType
-    ISolverFile_FileType = pFileType
+1         ISolverFile_FileType = pFileType
 End Property
 
 ' ISolverFileNL
 
 Private Property Get ISolverFileNL_OptionFile() As String
-    ISolverFileNL_OptionFile = pOptionFile
+1         ISolverFileNL_OptionFile = pOptionFile
 End Property
 
 ' Methods
 
 Function ScriptFilePath() As String
-    GetTempFilePath pScriptFile, ScriptFilePath
+1         GetTempFilePath pScriptFile, ScriptFilePath
 End Function
 
 Private Function Version() As String
-      ' Get Bonmin version by running 'bonmin -v' at command line
-    Dim RaiseError As Boolean
-    RaiseError = False
-    On Error GoTo ErrorHandler
+            ' Get Bonmin version by running 'bonmin -v' at command line
+          Dim RaiseError As Boolean
+1         RaiseError = False
+2         On Error GoTo ErrorHandler
 
-    Dim SolverPath As String
-    If Not SolverIsPresent(Me, SolverPath) Then
-        Version = vbNullString
-        GoTo ExitFunction
-    End If
-    
-    Dim result As String
-    result = ExecCapture(MakePathSafe(SolverPath) & " -v")
-    Version = Mid(result, 8, 5)
+          Dim SolverPath As String
+3         If Not SolverIsPresent(Me, SolverPath) Then
+4             Version = vbNullString
+5             GoTo ExitFunction
+6         End If
+          
+          Dim result As String
+7         result = ExecCapture(MakePathSafe(SolverPath) & " -v")
+8         Version = Mid(result, 8, 5)
 
 ExitFunction:
-    If RaiseError Then RethrowError
-    Exit Function
+9         If RaiseError Then RethrowError
+10        Exit Function
 
 ErrorHandler:
-    If Not ReportError("CSolverBonmin", "Version") Then Resume
-    RaiseError = True
-    GoTo ExitFunction
+11        If Not ReportError("CSolverBonmin", "Version") Then Resume
+12        RaiseError = True
+13        GoTo ExitFunction
 End Function

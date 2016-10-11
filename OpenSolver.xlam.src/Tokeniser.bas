@@ -110,715 +110,715 @@ Public Function ParseFormula(strFormula As String) As Tokens
 
           Dim objToken As Token, objTokens As Tokens, objTokenStack As TokenStack
 
-5490      Set objTokens = New Tokens
-5491      Set objTokenStack = New TokenStack
+1         Set objTokens = New Tokens
+2         Set objTokenStack = New TokenStack
 
-5492      strDecimalSeparator = "." ' Application.International(xlDecimalSeparator)
-5493      strListSeparator = "," ' Application.International(xlListSeparator)
-5494      strArrayRowSeparator = ";" ' Application.International(xlRowSeparator)
+3         strDecimalSeparator = "." ' Application.International(xlDecimalSeparator)
+4         strListSeparator = "," ' Application.International(xlListSeparator)
+5         strArrayRowSeparator = ";" ' Application.International(xlRowSeparator)
 '5495      If Application.International(xlColumnSeparator) = Application.International(xlDecimalSeparator) Then
 '5496          strArrayColumnSeparator = Application.International(xlAlternateArraySeparator)
 '5497      Else
-5498          strArrayColumnSeparator = "," ' Application.International(xlColumnSeparator)
+6             strArrayColumnSeparator = "," ' Application.International(xlColumnSeparator)
 '5499      End If
-5500      strLeftBrace = "{" ' Application.International(xlLeftBrace)
-5501      strRightBrace = "}" ' Application.International(xlRightBrace)
-5502      strLeftBracket = "[" ' Application.International(xlLeftBracket)       'todo: implement ' check if this applies to tableopen and tableclose symbols
-5503      strRightBracket = "]" ' Application.International(xlRightBracket)     'todo: implement
-5504      strLeftRoundBracket = "("
-5505      strRightRoundBracket = ")"
-5506      strBooleanTrue = "TRUE"
-5507      strBooleanFalse = "FALSE"
-5508      strDoubleQuote = """"
+7         strLeftBrace = "{" ' Application.International(xlLeftBrace)
+8         strRightBrace = "}" ' Application.International(xlRightBrace)
+9         strLeftBracket = "[" ' Application.International(xlLeftBracket)       'todo: implement ' check if this applies to tableopen and tableclose symbols
+10        strRightBracket = "]" ' Application.International(xlRightBracket)     'todo: implement
+11        strLeftRoundBracket = "("
+12        strRightRoundBracket = ")"
+13        strBooleanTrue = "TRUE"
+14        strBooleanFalse = "FALSE"
+15        strDoubleQuote = """"
 
-5509      strErrorRef = "#REF!"
-5510      strErrorDiv0 = "#DIV/0!"
-5511      strErrorNA = "#N/A"
-5512      strErrorName = "#NAME?"
-5513      strErrorNull = "#NULL!"
-5514      strErrorNum = "#NUM!"
-5515      strErrorValue = "#VALUE!"
-5516      strErrorGettingData = "#GETTING_DATA"
+16        strErrorRef = "#REF!"
+17        strErrorDiv0 = "#DIV/0!"
+18        strErrorNA = "#N/A"
+19        strErrorName = "#NAME?"
+20        strErrorNull = "#NULL!"
+21        strErrorNum = "#NUM!"
+22        strErrorValue = "#VALUE!"
+23        strErrorGettingData = "#GETTING_DATA"
 
-5517      lngFormulaLen = Len(strFormula)
+24        lngFormulaLen = Len(strFormula)
 
-5518      If lngFormulaLen <= 1 Then GoTo e
-5519      If Left(strFormula, 1) <> "=" Then GoTo e
+25        If lngFormulaLen <= 1 Then GoTo e
+26        If Left(strFormula, 1) <> "=" Then GoTo e
 
-5520      varState = ParsingState.Expression1
-5521      i = 2
-5522      lngPrevIndex = 1
+27        varState = ParsingState.Expression1
+28        i = 2
+29        lngPrevIndex = 1
 
-5523      blnLoop = True
+30        blnLoop = True
 
-5524      Do
-5525          If i <= lngFormulaLen Then c = Mid(strFormula, i, 1) Else c = ""
+31        Do
+32            If i <= lngFormulaLen Then c = Mid(strFormula, i, 1) Else c = ""
 
       ''' -------------------- -------------------- -------------------- '''
 
-5526          If varState = ParsingState.ParsingError Then
-5527              MsgBox strError, vbCritical, "Error"
-5528              blnLoop = False
+33            If varState = ParsingState.ParsingError Then
+34                MsgBox strError, vbCritical, "Error"
+35                blnLoop = False
       ''' -------------------- -------------------- -------------------- '''
 
-5529          ElseIf varState = ParsingState.Expression1 Then
-5530              If c = " " Or c = Chr(10) Then
-5531                  varReturnState = varState
-5532                  varState = ParsingState.whitespace
-5533                  lngTokenIndex = i
+36            ElseIf varState = ParsingState.Expression1 Then
+37                If c = " " Or c = Chr(10) Then
+38                    varReturnState = varState
+39                    varState = ParsingState.whitespace
+40                    lngTokenIndex = i
 
-5534              ElseIf c = strDoubleQuote Then
-5535                  varReturnState = ParsingState.Expression2
-5536                  varState = ParsingState.Text1
-5537                  lngTokenIndex = i
-5538                  i = i + 1
+41                ElseIf c = strDoubleQuote Then
+42                    varReturnState = ParsingState.Expression2
+43                    varState = ParsingState.Text1
+44                    lngTokenIndex = i
+45                    i = i + 1
 
-5539              ElseIf c = "0" Or c = "1" Or c = "2" Or c = "3" Or c = "4" Or _
+46                ElseIf c = "0" Or c = "1" Or c = "2" Or c = "3" Or c = "4" Or _
                          c = "5" Or c = "6" Or c = "7" Or c = "8" Or c = "9" Then
-5540                  varReturnState = ParsingState.Expression2
-5541                  varState = ParsingState.Number1
-5542                  lngTokenIndex = i
+47                    varReturnState = ParsingState.Expression2
+48                    varState = ParsingState.Number1
+49                    lngTokenIndex = i
 
-5543              ElseIf c = "-" Then
-5544                  str = c
-5545                  varReturnState = ParsingState.Expression2
-5546                  varState = ParsingState.MinusSign
-5547                  lngTokenIndex = i
-5548                  i = i + 1
+50                ElseIf c = "-" Then
+51                    str = c
+52                    varReturnState = ParsingState.Expression2
+53                    varState = ParsingState.MinusSign
+54                    lngTokenIndex = i
+55                    i = i + 1
 
-5549              ElseIf c = "+" Then
-5550                  varState = ParsingState.PrefixOperator
-5551                  lngTokenIndex = i
+56                ElseIf c = "+" Then
+57                    varState = ParsingState.PrefixOperator
+58                    lngTokenIndex = i
 
-5552              ElseIf c = strLeftRoundBracket Then
-5553                  varState = ParsingState.SubExpression
+59                ElseIf c = strLeftRoundBracket Then
+60                    varState = ParsingState.SubExpression
 
-5554              ElseIf c = strLeftBrace Then
-5555                  varState = ParsingState.ArrayOpen
+61                ElseIf c = strLeftBrace Then
+62                    varState = ParsingState.ArrayOpen
 
-5556              ElseIf c = "'" Then
-5557                  varState = ParsingState.LeadingName2
-5558                  lngTokenIndex = i
-5559                  i = i + 1
+63                ElseIf c = "'" Then
+64                    varState = ParsingState.LeadingName2
+65                    lngTokenIndex = i
+66                    i = i + 1
 
-5560              ElseIf c = "#" Then
-5561                  varReturnState = ParsingState.Expression2
-5562                  varState = ParsingState.ErrorX
-5563                  lngTokenIndex = i
+67                ElseIf c = "#" Then
+68                    varReturnState = ParsingState.Expression2
+69                    varState = ParsingState.ErrorX
+70                    lngTokenIndex = i
 
-5564              Else
-5565                  varState = ParsingState.LeadingName1
-5566                  lngTokenIndex = i
+71                Else
+72                    varState = ParsingState.LeadingName1
+73                    lngTokenIndex = i
 
-5567              End If
+74                End If
 
       ''' -------------------- -------------------- -------------------- '''
 
-5568          ElseIf varState = ParsingState.Expression2 Then
-5569              If c = "" Then
-5570                  blnLoop = False
+75            ElseIf varState = ParsingState.Expression2 Then
+76                If c = "" Then
+77                    blnLoop = False
 
-5571              ElseIf c = " " Or c = Chr(10) Then
-5572                  varReturnState = varState
-5573                  varState = ParsingState.whitespace
-5574                  lngTokenIndex = i
+78                ElseIf c = " " Or c = Chr(10) Then
+79                    varReturnState = varState
+80                    varState = ParsingState.whitespace
+81                    lngTokenIndex = i
 
-5575              ElseIf c = strRightRoundBracket Then
-5576                  varState = ParsingState.BracketClose
+82                ElseIf c = strRightRoundBracket Then
+83                    varState = ParsingState.BracketClose
 
-5577              ElseIf c = "+" Or c = "-" Or c = "*" Or c = "/" Or c = "^" Then
-5578                  varState = ParsingState.ArithmeticOperator
-5579                  lngTokenIndex = i
+84                ElseIf c = "+" Or c = "-" Or c = "*" Or c = "/" Or c = "^" Then
+85                    varState = ParsingState.ArithmeticOperator
+86                    lngTokenIndex = i
 
-5580              ElseIf c = "=" Or c = "<" Or c = ">" Then
-5581                  varState = ParsingState.ComparisonOperator1
-5582                  lngTokenIndex = i
+87                ElseIf c = "=" Or c = "<" Or c = ">" Then
+88                    varState = ParsingState.ComparisonOperator1
+89                    lngTokenIndex = i
 
-5583              ElseIf c = "&" Then
-5584                  varState = ParsingState.TextOperator
-5585                  lngTokenIndex = i
+90                ElseIf c = "&" Then
+91                    varState = ParsingState.TextOperator
+92                    lngTokenIndex = i
 
-5586              ElseIf c = "%" Then
-5587                  varState = ParsingState.PostfixOperator
-5588                  lngTokenIndex = i
+93                ElseIf c = "%" Then
+94                    varState = ParsingState.PostfixOperator
+95                    lngTokenIndex = i
 
-5589              ElseIf c = ":" Then
-5590                  varState = ParsingState.RangeOperator
-5591                  lngTokenIndex = i
+96                ElseIf c = ":" Then
+97                    varState = ParsingState.RangeOperator
+98                    lngTokenIndex = i
 
-5592              ElseIf c = strListSeparator Then
-5593                  varState = ParsingState.ListSeparator
-5594                  lngTokenIndex = i
+99                ElseIf c = strListSeparator Then
+100                   varState = ParsingState.ListSeparator
+101                   lngTokenIndex = i
 
-5595              Else
+102               Else
                       'Check if whitespace is actually union operator
-5596                  Set objToken = objTokens(objTokens.Count)
-5597                  bln = False
-5598                  If objToken.TokenType = TokenType.whitespace Then
-5599                      lng = InStr(1, objToken.Text, " ")
-5600                      If lng > 0 Then
-5601                          str = Mid(objToken.Text, lng + 1)
-5602                          If lng = 1 Then
-5603                              objToken.TokenType = TokenType.RangeOperator
-5604                              objToken.Text = " "
-5605                              objToken.FormulaLength = 1
-5606                          Else
-5607                              objToken.Text = Left(objToken.Text, lng - 1)
-5608                              objToken.FormulaLength = lng - 1
-5609                              objTokens.Add objTokens.NewToken(" ", TokenType.RangeOperator, objToken.FormulaIndex + lng - 1, 1)
-5610                          End If
+103                   Set objToken = objTokens(objTokens.Count)
+104                   bln = False
+105                   If objToken.TokenType = TokenType.whitespace Then
+106                       lng = InStr(1, objToken.Text, " ")
+107                       If lng > 0 Then
+108                           str = Mid(objToken.Text, lng + 1)
+109                           If lng = 1 Then
+110                               objToken.TokenType = TokenType.RangeOperator
+111                               objToken.Text = " "
+112                               objToken.FormulaLength = 1
+113                           Else
+114                               objToken.Text = Left(objToken.Text, lng - 1)
+115                               objToken.FormulaLength = lng - 1
+116                               objTokens.Add objTokens.NewToken(" ", TokenType.RangeOperator, objToken.FormulaIndex + lng - 1, 1)
+117                           End If
 
-5611                          If str <> "" Then
-5612                              objTokens.Add objTokens.NewToken(str, TokenType.whitespace, objToken.FormulaIndex + lng, Len(str))
-5613                              str = ""
-5614                          End If
+118                           If str <> "" Then
+119                               objTokens.Add objTokens.NewToken(str, TokenType.whitespace, objToken.FormulaIndex + lng, Len(str))
+120                               str = ""
+121                           End If
 
-5615                          varState = ParsingState.Expression1
-5616                          bln = True
-5617                      End If
+122                           varState = ParsingState.Expression1
+123                           bln = True
+124                       End If
 
-5618                  ElseIf objToken.TokenType = TokenType.ErrorText And objToken.Text = strErrorRef Then
-5619                      varState = ParsingState.Expression1
-5620                      bln = True
-5621                  End If
-5622                  If Not bln Then
-5623                      strError = "Expected Operator, but got " & c & " at position " & i
-5624                      varState = ParsingState.ParsingError
-5625                  End If
-5626              End If
+125                   ElseIf objToken.TokenType = TokenType.ErrorText And objToken.Text = strErrorRef Then
+126                       varState = ParsingState.Expression1
+127                       bln = True
+128                   End If
+129                   If Not bln Then
+130                       strError = "Expected Operator, but got " & c & " at position " & i
+131                       varState = ParsingState.ParsingError
+132                   End If
+133               End If
 
       ''' -------------------- -------------------- -------------------- '''
 
-5627          ElseIf varState = ParsingState.ArrayConstant1 Then
-5628              If c = strDoubleQuote Then
-5629                  varReturnState = ParsingState.ArrayConstant2
-5630                  varState = ParsingState.Text1
-5631                  lngTokenIndex = i
-5632                  i = i + 1
+134           ElseIf varState = ParsingState.ArrayConstant1 Then
+135               If c = strDoubleQuote Then
+136                   varReturnState = ParsingState.ArrayConstant2
+137                   varState = ParsingState.Text1
+138                   lngTokenIndex = i
+139                   i = i + 1
 
-5633              ElseIf c = "0" Or c = "1" Or c = "2" Or c = "3" Or c = "4" Or _
+140               ElseIf c = "0" Or c = "1" Or c = "2" Or c = "3" Or c = "4" Or _
                          c = "5" Or c = "6" Or c = "7" Or c = "8" Or c = "9" Then
-5634                  varReturnState = ParsingState.ArrayConstant2
-5635                  varState = ParsingState.Number1
-5636                  lngTokenIndex = i
+141                   varReturnState = ParsingState.ArrayConstant2
+142                   varState = ParsingState.Number1
+143                   lngTokenIndex = i
 
-5637              ElseIf c = "-" Then
-5638                  str = c
-5639                  varReturnState = ParsingState.ArrayConstant2
-5640                  varState = ParsingState.Number1
-5641                  lngTokenIndex = i
-5642                  i = i + 1
+144               ElseIf c = "-" Then
+145                   str = c
+146                   varReturnState = ParsingState.ArrayConstant2
+147                   varState = ParsingState.Number1
+148                   lngTokenIndex = i
+149                   i = i + 1
 
-5643              ElseIf c = "#" Then
-5644                  varReturnState = ParsingState.ArrayConstant2
-5645                  varState = ParsingState.ErrorX
-5646                  lngTokenIndex = i
+150               ElseIf c = "#" Then
+151                   varReturnState = ParsingState.ArrayConstant2
+152                   varState = ParsingState.ErrorX
+153                   lngTokenIndex = i
 
-5647              Else
-5648                  varReturnState = ParsingState.ArrayConstant2
-5649                  varState = ParsingState.Bool
-5650                  lngTokenIndex = i
+154               Else
+155                   varReturnState = ParsingState.ArrayConstant2
+156                   varState = ParsingState.Bool
+157                   lngTokenIndex = i
 
-5651              End If
-
-      ''' -------------------- -------------------- -------------------- '''
-
-5652          ElseIf varState = ParsingState.ArrayConstant2 Then
-5653              If c = strRightBrace Then
-5654                  varState = ParsingState.ArrayClose
-
-5655              ElseIf c = strArrayRowSeparator Then
-5656                  varState = ParsingState.ArrayRowSeparator
-5657                  lngTokenIndex = i
-
-5658              ElseIf c = strArrayColumnSeparator Then
-5659                  varState = ParsingState.ArrayColumnSeparator
-5660                  lngTokenIndex = i
-
-5661              Else
-5662                  strError = "Expected " & strRightBrace & " " & strArrayRowSeparator & " " & ParsingState.ArrayColumnSeparator & " but got " & c & " at position " & i
-5663                  varState = ParsingState.ParsingError
-5664              End If
+158               End If
 
       ''' -------------------- -------------------- -------------------- '''
 
-5665          ElseIf varState = ParsingState.ArrayOpen Then
-5666              Set objToken = objTokens.NewToken(c, TokenType.ArrayOpen, i, 1)
-5667              objTokens.Add objToken
-5668              objTokenStack.Push objToken
+159           ElseIf varState = ParsingState.ArrayConstant2 Then
+160               If c = strRightBrace Then
+161                   varState = ParsingState.ArrayClose
 
-5669              varState = ParsingState.ArrayConstant1
-5670              i = i + 1
+162               ElseIf c = strArrayRowSeparator Then
+163                   varState = ParsingState.ArrayRowSeparator
+164                   lngTokenIndex = i
 
-5671          ElseIf varState = ParsingState.ArrayClose Then
-5672              Set objToken = objTokenStack.Pop
-5673              If objToken.TokenType = TokenType.ArrayOpen Then
-5674                  objTokens.Add objTokens.NewToken(c, TokenType.ArrayClose, i, 1)
-5675                  varState = ParsingState.Expression2
-5676                  i = i + 1
-5677              Else
-5678                  strError = "Encountered " & strRightBrace & " without matching " & strLeftBrace & " at position " & i
-5679                  varState = ParsingState.ParsingError
-5680              End If
+165               ElseIf c = strArrayColumnSeparator Then
+166                   varState = ParsingState.ArrayColumnSeparator
+167                   lngTokenIndex = i
 
-5681          ElseIf varState = ParsingState.ArrayColumnSeparator Then
-5682              i = i + 1
-5683              objTokens.Add objTokens.NewToken(c, TokenType.ArrayColumnSeparator, lngTokenIndex, i - lngTokenIndex)
-5684              varState = ParsingState.ArrayConstant1
-
-5685          ElseIf varState = ParsingState.ArrayRowSeparator Then
-5686              i = i + 1
-5687              objTokens.Add objTokens.NewToken(c, TokenType.ArrayRowSeparator, lngTokenIndex, i - lngTokenIndex)
-5688              varState = ParsingState.ArrayConstant1
+168               Else
+169                   strError = "Expected " & strRightBrace & " " & strArrayRowSeparator & " " & ParsingState.ArrayColumnSeparator & " but got " & c & " at position " & i
+170                   varState = ParsingState.ParsingError
+171               End If
 
       ''' -------------------- -------------------- -------------------- '''
 
-5689          ElseIf varState = ParsingState.Bool Then
-5690              str = str & c
-5691              lng = Len(str)
-5692              i = i + 1
+172           ElseIf varState = ParsingState.ArrayOpen Then
+173               Set objToken = objTokens.NewToken(c, TokenType.ArrayOpen, i, 1)
+174               objTokens.Add objToken
+175               objTokenStack.Push objToken
 
-5693              str2 = Chr(0) & strBooleanTrue & Chr(0) & strBooleanFalse & Chr(0)
+176               varState = ParsingState.ArrayConstant1
+177               i = i + 1
 
-5694              If InStr(1, str2, Chr(0) & str) > 0 Then
-5695                  If InStr(1, str2, Chr(0) & str & Chr(0)) > 0 Then
-5696                      objTokens.Add objTokens.NewToken(str, TokenType.Bool, lngTokenIndex, i - lngTokenIndex)
-5697                      str = ""
-5698                      varState = varReturnState
-5699                  End If
-5700              Else
-5701                  strError = "Expected Array Constant at position " & lngTokenIndex
-5702                  varState = ParsingState.ParsingError
-5703              End If
+178           ElseIf varState = ParsingState.ArrayClose Then
+179               Set objToken = objTokenStack.Pop
+180               If objToken.TokenType = TokenType.ArrayOpen Then
+181                   objTokens.Add objTokens.NewToken(c, TokenType.ArrayClose, i, 1)
+182                   varState = ParsingState.Expression2
+183                   i = i + 1
+184               Else
+185                   strError = "Encountered " & strRightBrace & " without matching " & strLeftBrace & " at position " & i
+186                   varState = ParsingState.ParsingError
+187               End If
 
-      ''' -------------------- -------------------- -------------------- '''
+188           ElseIf varState = ParsingState.ArrayColumnSeparator Then
+189               i = i + 1
+190               objTokens.Add objTokens.NewToken(c, TokenType.ArrayColumnSeparator, lngTokenIndex, i - lngTokenIndex)
+191               varState = ParsingState.ArrayConstant1
 
-5704          ElseIf varState = ParsingState.whitespace Then
-5705              If c = " " Or c = Chr(10) Then
-5706                  str = str & c
-5707                  i = i + 1
-5708              Else
-5709                  objTokens.Add objTokens.NewToken(str, TokenType.whitespace, lngTokenIndex, i - lngTokenIndex)
-5710                  str = ""
-5711                  varState = varReturnState
-
-5712              End If
+192           ElseIf varState = ParsingState.ArrayRowSeparator Then
+193               i = i + 1
+194               objTokens.Add objTokens.NewToken(c, TokenType.ArrayRowSeparator, lngTokenIndex, i - lngTokenIndex)
+195               varState = ParsingState.ArrayConstant1
 
       ''' -------------------- -------------------- -------------------- '''
 
-5713          ElseIf varState = ParsingState.SubExpression Then
-5714              Set objToken = objTokens.NewToken(c, TokenType.SubExpressionOpen, i, 1)
-5715              objTokens.Add objToken
-5716              objTokenStack.Push objToken
+196           ElseIf varState = ParsingState.Bool Then
+197               str = str & c
+198               lng = Len(str)
+199               i = i + 1
 
-5717              varState = ParsingState.Expression1
-5718              i = i + 1
+200               str2 = Chr(0) & strBooleanTrue & Chr(0) & strBooleanFalse & Chr(0)
 
-5719          ElseIf varState = ParsingState.BracketClose Then
-5720              Set objToken = objTokenStack.Pop
-5721              If objToken.TokenType = TokenType.FunctionOpen Then
-5722                  Set objToken = objTokens.NewToken(c, TokenType.FunctionClose, i, 1)
-5723              ElseIf objToken.TokenType = TokenType.SubExpressionOpen Then
-5724                  Set objToken = objTokens.NewToken(c, TokenType.SubExpressionClose, i, 1)
-5725              Else
-5726                  strError = "Encountered " & strRightRoundBracket & " without matching " & strLeftRoundBracket & " at position " & i
-5727                  varState = ParsingState.ParsingError
-5728              End If
-5729              objTokens.Add objToken
+201               If InStr(1, str2, Chr(0) & str) > 0 Then
+202                   If InStr(1, str2, Chr(0) & str & Chr(0)) > 0 Then
+203                       objTokens.Add objTokens.NewToken(str, TokenType.Bool, lngTokenIndex, i - lngTokenIndex)
+204                       str = ""
+205                       varState = varReturnState
+206                   End If
+207               Else
+208                   strError = "Expected Array Constant at position " & lngTokenIndex
+209                   varState = ParsingState.ParsingError
+210               End If
 
-5730              varState = ParsingState.Expression2
-5731              i = i + 1
+      ''' -------------------- -------------------- -------------------- '''
+
+211           ElseIf varState = ParsingState.whitespace Then
+212               If c = " " Or c = Chr(10) Then
+213                   str = str & c
+214                   i = i + 1
+215               Else
+216                   objTokens.Add objTokens.NewToken(str, TokenType.whitespace, lngTokenIndex, i - lngTokenIndex)
+217                   str = ""
+218                   varState = varReturnState
+
+219               End If
+
+      ''' -------------------- -------------------- -------------------- '''
+
+220           ElseIf varState = ParsingState.SubExpression Then
+221               Set objToken = objTokens.NewToken(c, TokenType.SubExpressionOpen, i, 1)
+222               objTokens.Add objToken
+223               objTokenStack.Push objToken
+
+224               varState = ParsingState.Expression1
+225               i = i + 1
+
+226           ElseIf varState = ParsingState.BracketClose Then
+227               Set objToken = objTokenStack.Pop
+228               If objToken.TokenType = TokenType.FunctionOpen Then
+229                   Set objToken = objTokens.NewToken(c, TokenType.FunctionClose, i, 1)
+230               ElseIf objToken.TokenType = TokenType.SubExpressionOpen Then
+231                   Set objToken = objTokens.NewToken(c, TokenType.SubExpressionClose, i, 1)
+232               Else
+233                   strError = "Encountered " & strRightRoundBracket & " without matching " & strLeftRoundBracket & " at position " & i
+234                   varState = ParsingState.ParsingError
+235               End If
+236               objTokens.Add objToken
+
+237               varState = ParsingState.Expression2
+238               i = i + 1
 
       ''' -------------------- -------------------- -------------------- '''
       ''' Decide: Leading Name for Function, Table, R1C1Reference, Reference Qualifier or Cell Reference
 
-5732          ElseIf varState = ParsingState.LeadingName1 Then
-5733              If str <> "" And c = strLeftRoundBracket Then
-5734                  varState = ParsingState.FunctionX
-5735                  bln = True
+239           ElseIf varState = ParsingState.LeadingName1 Then
+240               If str <> "" And c = strLeftRoundBracket Then
+241                   varState = ParsingState.FunctionX
+242                   bln = True
 
-5736              ElseIf str <> "" And c = "[" Then                   'todo move symbol to variable
-5737                  varState = ParsingState.SquareBracketOpen
+243               ElseIf str <> "" And c = "[" Then                   'todo move symbol to variable
+244                   varState = ParsingState.SquareBracketOpen
 
-5738              ElseIf str <> "" And c = "!" Then
-5739                  varState = ParsingState.ReferenceQualifier
+245               ElseIf str <> "" And c = "!" Then
+246                   varState = ParsingState.ReferenceQualifier
 
-5740              ElseIf c = "" Or c = strRightRoundBracket Or c = strRightBrace Or _
+247               ElseIf c = "" Or c = strRightRoundBracket Or c = strRightBrace Or _
                          c = " " Or c = Chr(10) Or _
                          c = "+" Or c = "-" Or c = "*" Or c = "/" Or c = "^" Or c = "%" Or _
                          c = "=" Or c = "<" Or c = ">" Or _
                          c = "&" Or c = ":" Or c = strListSeparator Then
-5741                  varState = ParsingState.LeadingNameE
-5742              Else
-5743                  str = str & c
-5744                  i = i + 1
-5745              End If
+248                   varState = ParsingState.LeadingNameE
+249               Else
+250                   str = str & c
+251                   i = i + 1
+252               End If
 
-5746          ElseIf varState = ParsingState.LeadingName2 Then
-5747              If c = "'" Then
-5748                  varState = ParsingState.LeadingName3
-5749              Else
-5750                  str = str & c
-5751              End If
-5752              i = i + 1
+253           ElseIf varState = ParsingState.LeadingName2 Then
+254               If c = "'" Then
+255                   varState = ParsingState.LeadingName3
+256               Else
+257                   str = str & c
+258               End If
+259               i = i + 1
 
-5753          ElseIf varState = ParsingState.LeadingName3 Then
-5754              If c = "'" Then
-5755                  varState = ParsingState.LeadingName2   'Was escape sequence
-5756                  str = str & c
-5757                  i = i + 1
-5758              Else
-5759                  varState = ParsingState.LeadingName1
-5760              End If
+260           ElseIf varState = ParsingState.LeadingName3 Then
+261               If c = "'" Then
+262                   varState = ParsingState.LeadingName2   'Was escape sequence
+263                   str = str & c
+264                   i = i + 1
+265               Else
+266                   varState = ParsingState.LeadingName1
+267               End If
 
-5761          ElseIf varState = ParsingState.LeadingNameE Then
-5762              If str <> "" Then
-5763                  If str = strBooleanTrue Or str = strBooleanFalse Then
-5764                      Set objToken = objTokens.NewToken(str, TokenType.Bool, lngTokenIndex, i - lngTokenIndex)
-5765                  Else
-5766                      Set objToken = objTokens.NewToken(str, TokenType.Reference, lngTokenIndex, i - lngTokenIndex)
-5767                  End If
-5768                  objTokens.Add objToken
-5769                  str = ""
-5770              End If
+268           ElseIf varState = ParsingState.LeadingNameE Then
+269               If str <> "" Then
+270                   If str = strBooleanTrue Or str = strBooleanFalse Then
+271                       Set objToken = objTokens.NewToken(str, TokenType.Bool, lngTokenIndex, i - lngTokenIndex)
+272                   Else
+273                       Set objToken = objTokens.NewToken(str, TokenType.Reference, lngTokenIndex, i - lngTokenIndex)
+274                   End If
+275                   objTokens.Add objToken
+276                   str = ""
+277               End If
 
-5771              varState = ParsingState.Expression2
+278               varState = ParsingState.Expression2
 
       ''' -------------------- -------------------- -------------------- '''
       ''' Function
 
-5772          ElseIf varState = ParsingState.FunctionX Then
-5773              If Left(str, 1) = "@" Then str = Mid(str, 2)
-5774              Set objToken = objTokens.NewToken(str, TokenType.FunctionOpen, lngTokenIndex, i - lngTokenIndex + 1)
-5775              objTokens.Add objToken
-5776              objTokenStack.Push objToken
-5777              str = ""
-5778              varState = ParsingState.Expression1
-5779              i = i + 1
+279           ElseIf varState = ParsingState.FunctionX Then
+280               If Left(str, 1) = "@" Then str = Mid(str, 2)
+281               Set objToken = objTokens.NewToken(str, TokenType.FunctionOpen, lngTokenIndex, i - lngTokenIndex + 1)
+282               objTokens.Add objToken
+283               objTokenStack.Push objToken
+284               str = ""
+285               varState = ParsingState.Expression1
+286               i = i + 1
 
       ''' -------------------- -------------------- -------------------- '''
       ''' Decide: Table or R1C1 Reference
 
-5780          ElseIf varState = ParsingState.SquareBracketOpen Then
-5781              If str = "R" Or str = "C" Then                          'todo: use International characters
-5782                  varState = ParsingState.R1C1Reference
-5783              Else
-5784                  Set objToken = objTokens.NewToken(str, TokenType.TableOpen, lngTokenIndex, i - lngTokenIndex + 1)
-5785                  objTokens.Add objToken
-5786                  objTokenStack.Push objToken
-5787                  str = ""
-5788                  varState = ParsingState.Table1
-5789                  i = i + 1
-5790              End If
+287           ElseIf varState = ParsingState.SquareBracketOpen Then
+288               If str = "R" Or str = "C" Then                          'todo: use International characters
+289                   varState = ParsingState.R1C1Reference
+290               Else
+291                   Set objToken = objTokens.NewToken(str, TokenType.TableOpen, lngTokenIndex, i - lngTokenIndex + 1)
+292                   objTokens.Add objToken
+293                   objTokenStack.Push objToken
+294                   str = ""
+295                   varState = ParsingState.Table1
+296                   i = i + 1
+297               End If
 
       ''' -------------------- -------------------- -------------------- '''
       ''' Table
 
           'todo: escape character
 
-5791          ElseIf varState = ParsingState.Table1 Then
-5792              lngTokenIndex = i
-5793              If c = " " Then
-5794                  varReturnState = ParsingState.Table1
-5795                  varState = ParsingState.whitespace
-5796              ElseIf c = "[" Then                                     'todo, possibly use international bracket
-5797                  i = i + 1
-5798                  varState = ParsingState.Table6
-5799              Else
-5800                  varState = ParsingState.Table5
-5801              End If
+298           ElseIf varState = ParsingState.Table1 Then
+299               lngTokenIndex = i
+300               If c = " " Then
+301                   varReturnState = ParsingState.Table1
+302                   varState = ParsingState.whitespace
+303               ElseIf c = "[" Then                                     'todo, possibly use international bracket
+304                   i = i + 1
+305                   varState = ParsingState.Table6
+306               Else
+307                   varState = ParsingState.Table5
+308               End If
 
-5802          ElseIf varState = ParsingState.Table2 Then
-5803              lngTokenIndex = i
-5804              If c = " " Then
-5805                  varReturnState = ParsingState.Table2
-5806                  varState = ParsingState.whitespace
-5807              ElseIf c = "," Then                                     'todo possibly use list separator?
-5808                  varState = ParsingState.Table3
-5809              ElseIf c = ":" Then
-5810                  varState = ParsingState.Table4
-5811              ElseIf c = "]" Then                                     'todo, possibly use international bracket
-5812                  varState = ParsingState.TableE
-5813              Else
-5814                  varState = ParsingState.Table5
-5815              End If
+309           ElseIf varState = ParsingState.Table2 Then
+310               lngTokenIndex = i
+311               If c = " " Then
+312                   varReturnState = ParsingState.Table2
+313                   varState = ParsingState.whitespace
+314               ElseIf c = "," Then                                     'todo possibly use list separator?
+315                   varState = ParsingState.Table3
+316               ElseIf c = ":" Then
+317                   varState = ParsingState.Table4
+318               ElseIf c = "]" Then                                     'todo, possibly use international bracket
+319                   varState = ParsingState.TableE
+320               Else
+321                   varState = ParsingState.Table5
+322               End If
 
-5816          ElseIf varState = ParsingState.Table3 Then
-5817              i = i + 1
+323           ElseIf varState = ParsingState.Table3 Then
+324               i = i + 1
 
-5818              objTokens.Add objTokens.NewToken(c, TokenType.TableItemSeparator, lngTokenIndex, i - lngTokenIndex)
-5819              str = ""
-5820              varState = ParsingState.Table1
+325               objTokens.Add objTokens.NewToken(c, TokenType.TableItemSeparator, lngTokenIndex, i - lngTokenIndex)
+326               str = ""
+327               varState = ParsingState.Table1
 
-5821          ElseIf varState = ParsingState.Table4 Then
-5822              i = i + 1
+328           ElseIf varState = ParsingState.Table4 Then
+329               i = i + 1
 
                   'todo: decide whether to make this a tablecolumns token type, or leave separated
-5823              objTokens.Add objTokens.NewToken(c, TokenType.TableColumnSeparator, lngTokenIndex, i - lngTokenIndex)
-5824              str = ""
-5825              varState = ParsingState.Table1
+330               objTokens.Add objTokens.NewToken(c, TokenType.TableColumnSeparator, lngTokenIndex, i - lngTokenIndex)
+331               str = ""
+332               varState = ParsingState.Table1
 
-5826          ElseIf varState = ParsingState.Table5 Then
-5827              If c = "]" Then                             'todo, possibly use international bracket
-5828                  If Left(str, 1) = "#" Then
-5829                      objTokens.Add objTokens.NewToken(str, TokenType.TableSection, lngTokenIndex, i - lngTokenIndex)
-5830                  Else
-5831                      objTokens.Add objTokens.NewToken(str, TokenType.TableColumn, lngTokenIndex, i - lngTokenIndex)
-5832                  End If
-5833                  str = ""
-5834                  varState = ParsingState.TableE
-5835              ElseIf c = "'" Then
-5836                  i = i + 1
-5837                  varReturnState = ParsingState.Table5
-5838                  varState = ParsingState.TableQ
-5839              Else
-5840                  str = str & c
-5841                  i = i + 1
-5842              End If
+333           ElseIf varState = ParsingState.Table5 Then
+334               If c = "]" Then                             'todo, possibly use international bracket
+335                   If Left(str, 1) = "#" Then
+336                       objTokens.Add objTokens.NewToken(str, TokenType.TableSection, lngTokenIndex, i - lngTokenIndex)
+337                   Else
+338                       objTokens.Add objTokens.NewToken(str, TokenType.TableColumn, lngTokenIndex, i - lngTokenIndex)
+339                   End If
+340                   str = ""
+341                   varState = ParsingState.TableE
+342               ElseIf c = "'" Then
+343                   i = i + 1
+344                   varReturnState = ParsingState.Table5
+345                   varState = ParsingState.TableQ
+346               Else
+347                   str = str & c
+348                   i = i + 1
+349               End If
 
-5843          ElseIf varState = ParsingState.Table6 Then
-5844              If c = "]" Then                             'todo, possibly use international bracket
-5845                  i = i + 1
-5846                  If Left(str, 1) = "#" Then
-5847                      objTokens.Add objTokens.NewToken(str, TokenType.TableSection, lngTokenIndex, i - lngTokenIndex)
-5848                  Else
-5849                      objTokens.Add objTokens.NewToken(str, TokenType.TableColumn, lngTokenIndex, i - lngTokenIndex)
-5850                  End If
-5851                  str = ""
-5852                  varState = ParsingState.Table2
-5853              ElseIf c = "'" Then
-5854                  i = i + 1
-5855                  varReturnState = ParsingState.Table6
-5856                  varState = ParsingState.TableQ
-5857              Else
-5858                  str = str & c
-5859                  i = i + 1
-5860              End If
+350           ElseIf varState = ParsingState.Table6 Then
+351               If c = "]" Then                             'todo, possibly use international bracket
+352                   i = i + 1
+353                   If Left(str, 1) = "#" Then
+354                       objTokens.Add objTokens.NewToken(str, TokenType.TableSection, lngTokenIndex, i - lngTokenIndex)
+355                   Else
+356                       objTokens.Add objTokens.NewToken(str, TokenType.TableColumn, lngTokenIndex, i - lngTokenIndex)
+357                   End If
+358                   str = ""
+359                   varState = ParsingState.Table2
+360               ElseIf c = "'" Then
+361                   i = i + 1
+362                   varReturnState = ParsingState.Table6
+363                   varState = ParsingState.TableQ
+364               Else
+365                   str = str & c
+366                   i = i + 1
+367               End If
 
-5861          ElseIf varState = ParsingState.TableQ Then
-5862              str = str & c
-5863              i = i + 1
-5864              varState = varReturnState
+368           ElseIf varState = ParsingState.TableQ Then
+369               str = str & c
+370               i = i + 1
+371               varState = varReturnState
 
-5865          ElseIf varState = ParsingState.TableE Then
-5866              Set objToken = objTokenStack.Pop
-5867              If objToken.TokenType = TokenType.TableOpen Then
-5868                  objTokens.Add objTokens.NewToken(c, TokenType.TableClose, i, 1)
-5869                  varState = ParsingState.Expression2
-5870                  i = i + 1
-5871              Else
-5872                  strError = "Encountered " & "]" & " without matching " & "[" & " at position " & i 'todo, possibly use international bracket
-5873                  varState = ParsingState.ParsingError
-5874              End If
+372           ElseIf varState = ParsingState.TableE Then
+373               Set objToken = objTokenStack.Pop
+374               If objToken.TokenType = TokenType.TableOpen Then
+375                   objTokens.Add objTokens.NewToken(c, TokenType.TableClose, i, 1)
+376                   varState = ParsingState.Expression2
+377                   i = i + 1
+378               Else
+379                   strError = "Encountered " & "]" & " without matching " & "[" & " at position " & i 'todo, possibly use international bracket
+380                   varState = ParsingState.ParsingError
+381               End If
 
 
       ''' -------------------- -------------------- -------------------- '''
       ''' Text
 
-5875          ElseIf varState = ParsingState.Text1 Then
-5876              If c = strDoubleQuote Then
-5877                  varState = ParsingState.Text2
-5878              Else
-5879                  str = str & c
-5880              End If
-5881              i = i + 1
+382           ElseIf varState = ParsingState.Text1 Then
+383               If c = strDoubleQuote Then
+384                   varState = ParsingState.Text2
+385               Else
+386                   str = str & c
+387               End If
+388               i = i + 1
 
-5882          ElseIf varState = ParsingState.Text2 Then
-5883              If c = strDoubleQuote Then
-5884                  varState = ParsingState.Text1   'Was escape sequence
-5885                  str = str & c
-5886                  i = i + 1
-5887              Else
-5888                  objTokens.Add objTokens.NewToken(str, TokenType.Text, lngTokenIndex, i - lngTokenIndex)
-5889                  str = ""
-5890                  varState = varReturnState
-5891              End If
+389           ElseIf varState = ParsingState.Text2 Then
+390               If c = strDoubleQuote Then
+391                   varState = ParsingState.Text1   'Was escape sequence
+392                   str = str & c
+393                   i = i + 1
+394               Else
+395                   objTokens.Add objTokens.NewToken(str, TokenType.Text, lngTokenIndex, i - lngTokenIndex)
+396                   str = ""
+397                   varState = varReturnState
+398               End If
 
       ''' -------------------- -------------------- -------------------- '''
       ''' Number
 
-5892          ElseIf varState = ParsingState.Number1 Or varState = ParsingState.Number2 Then
-5893              If c = "0" Or c = "1" Or c = "2" Or c = "3" Or c = "4" Or _
+399           ElseIf varState = ParsingState.Number1 Or varState = ParsingState.Number2 Then
+400               If c = "0" Or c = "1" Or c = "2" Or c = "3" Or c = "4" Or _
                      c = "5" Or c = "6" Or c = "7" Or c = "8" Or c = "9" Then
-5894                  str = str & c
-5895                  i = i + 1
+401                   str = str & c
+402                   i = i + 1
 
-5896              ElseIf c = strDecimalSeparator And varState = ParsingState.Number1 Then
-5897                  str = str & c
-5898                  varState = ParsingState.Number2
-5899                  i = i + 1
+403               ElseIf c = strDecimalSeparator And varState = ParsingState.Number1 Then
+404                   str = str & c
+405                   varState = ParsingState.Number2
+406                   i = i + 1
 
-5900              ElseIf c = "E" Then
-5901                  str = str & c
-5902                  varState = ParsingState.Number3
-5903                  i = i + 1
+407               ElseIf c = "E" Then
+408                   str = str & c
+409                   varState = ParsingState.Number3
+410                   i = i + 1
 
-5904              Else
-5905                  varState = ParsingState.NumberE
-5906              End If
+411               Else
+412                   varState = ParsingState.NumberE
+413               End If
 
-5907          ElseIf varState = ParsingState.Number3 Then
-5908              If c = "+" Or c = "-" Then
-5909                  str = str & c
-5910                  varState = ParsingState.Number4
-5911                  i = i + 1
-5912              Else
-5913                  strError = "Expected + or - at position " & i
-5914                  varState = ParsingState.ParsingError
-5915              End If
+414           ElseIf varState = ParsingState.Number3 Then
+415               If c = "+" Or c = "-" Then
+416                   str = str & c
+417                   varState = ParsingState.Number4
+418                   i = i + 1
+419               Else
+420                   strError = "Expected + or - at position " & i
+421                   varState = ParsingState.ParsingError
+422               End If
 
-5916          ElseIf varState = ParsingState.Number4 Then
-5917              If c = "0" Or c = "1" Or c = "2" Or c = "3" Or c = "4" Or _
+423           ElseIf varState = ParsingState.Number4 Then
+424               If c = "0" Or c = "1" Or c = "2" Or c = "3" Or c = "4" Or _
                      c = "5" Or c = "6" Or c = "7" Or c = "8" Or c = "9" Then
-5918                  str = str & c
-5919                  i = i + 1
-5920              Else
-5921                  varState = ParsingState.NumberE
-5922              End If
+425                   str = str & c
+426                   i = i + 1
+427               Else
+428                   varState = ParsingState.NumberE
+429               End If
 
-5923          ElseIf varState = ParsingState.NumberE Then
-5924              objTokens.Add objTokens.NewToken(str, TokenType.Number, lngTokenIndex, i - lngTokenIndex)
-5925              str = ""
-5926              varState = varReturnState
+430           ElseIf varState = ParsingState.NumberE Then
+431               objTokens.Add objTokens.NewToken(str, TokenType.Number, lngTokenIndex, i - lngTokenIndex)
+432               str = ""
+433               varState = varReturnState
 
       ''' -------------------- -------------------- -------------------- '''
       ''' Error
 
-5927          ElseIf varState = ParsingState.ErrorX Then
-5928              str = str & c
-5929              lng = Len(str)
-5930              i = i + 1
+434           ElseIf varState = ParsingState.ErrorX Then
+435               str = str & c
+436               lng = Len(str)
+437               i = i + 1
 
-5931              str2 = Chr(0) & strErrorRef & Chr(0) & strErrorDiv0 & Chr(0) & strErrorNA & Chr(0) & strErrorName & _
+438               str2 = Chr(0) & strErrorRef & Chr(0) & strErrorDiv0 & Chr(0) & strErrorNA & Chr(0) & strErrorName & _
                          Chr(0) & strErrorNull & Chr(0) & strErrorNum & Chr(0) & strErrorValue & Chr(0) & strErrorGettingData & Chr(0)
 
-5932              If InStr(1, str2, Chr(0) & str) > 0 Then
-5933                  If InStr(1, str2, Chr(0) & str & Chr(0)) > 0 Then
-5934                      objTokens.Add objTokens.NewToken(str, TokenType.ErrorText, lngTokenIndex, i - lngTokenIndex)
-5935                      str = ""
-5936                      varState = varReturnState
-5937                  End If
-5938              Else
-5939                  strError = "Expected Error Constant at position " & lngTokenIndex
-5940                  varState = ParsingState.ParsingError
-5941              End If
+439               If InStr(1, str2, Chr(0) & str) > 0 Then
+440                   If InStr(1, str2, Chr(0) & str & Chr(0)) > 0 Then
+441                       objTokens.Add objTokens.NewToken(str, TokenType.ErrorText, lngTokenIndex, i - lngTokenIndex)
+442                       str = ""
+443                       varState = varReturnState
+444                   End If
+445               Else
+446                   strError = "Expected Error Constant at position " & lngTokenIndex
+447                   varState = ParsingState.ParsingError
+448               End If
 
       ''' -------------------- -------------------- -------------------- '''
 
-5942          ElseIf varState = ParsingState.ReferenceQualifier Then
-5943              objTokens.Add objTokens.NewToken(str, TokenType.ReferenceQualifier, lngTokenIndex, i - lngTokenIndex)
-5944              objTokens.Add objTokens.NewToken(c, TokenType.ExternalReferenceOperator, i, 1)
+449           ElseIf varState = ParsingState.ReferenceQualifier Then
+450               objTokens.Add objTokens.NewToken(str, TokenType.ReferenceQualifier, lngTokenIndex, i - lngTokenIndex)
+451               objTokens.Add objTokens.NewToken(c, TokenType.ExternalReferenceOperator, i, 1)
 
-5945              i = i + 1
-5946              str = ""
-5947              varState = ParsingState.Expression1
+452               i = i + 1
+453               str = ""
+454               varState = ParsingState.Expression1
 
-5948          ElseIf varState = ParsingState.MinusSign Then
-5949              If c = "0" Or c = "1" Or c = "2" Or c = "3" Or c = "4" Or _
+455           ElseIf varState = ParsingState.MinusSign Then
+456               If c = "0" Or c = "1" Or c = "2" Or c = "3" Or c = "4" Or _
                      c = "5" Or c = "6" Or c = "7" Or c = "8" Or c = "9" Then
-5950                  varState = ParsingState.Number1
-5951              Else
-5952                  varState = ParsingState.PrefixOperator
-5953                  i = i - 1
-5954              End If
+457                   varState = ParsingState.Number1
+458               Else
+459                   varState = ParsingState.PrefixOperator
+460                   i = i - 1
+461               End If
 
-5955          ElseIf varState = ParsingState.PrefixOperator Then
-5956              i = i + 1
+462           ElseIf varState = ParsingState.PrefixOperator Then
+463               i = i + 1
 
-5957              objTokens.Add objTokens.NewToken(c, TokenType.UnaryOperator, lngTokenIndex, i - lngTokenIndex)
-5958              str = ""
-5959              varState = ParsingState.Expression1
+464               objTokens.Add objTokens.NewToken(c, TokenType.UnaryOperator, lngTokenIndex, i - lngTokenIndex)
+465               str = ""
+466               varState = ParsingState.Expression1
 
       ''' -------------------- -------------------- -------------------- '''
 
               'ListSeparator can be either function parameter separator, or a union operator
-5960          ElseIf varState = ParsingState.ListSeparator Then
-5961              bln = False
-5962              If objTokenStack.Count > 0 Then
-5963                  If objTokenStack.Peek.TokenType = TokenType.FunctionOpen Then
-5964                      varState = ParsingState.ParameterSeparator
-5965                      bln = True
-5966                  End If
-5967              End If
-5968              If Not bln Then varState = ParsingState.RangeOperator
+467           ElseIf varState = ParsingState.ListSeparator Then
+468               bln = False
+469               If objTokenStack.Count > 0 Then
+470                   If objTokenStack.Peek.TokenType = TokenType.FunctionOpen Then
+471                       varState = ParsingState.ParameterSeparator
+472                       bln = True
+473                   End If
+474               End If
+475               If Not bln Then varState = ParsingState.RangeOperator
 
-5969          ElseIf varState = ParsingState.RangeOperator Then
-5970              str = c
-5971              i = i + 1
+476           ElseIf varState = ParsingState.RangeOperator Then
+477               str = c
+478               i = i + 1
 
-5972              objTokens.Add objTokens.NewToken(str, TokenType.RangeOperator, lngTokenIndex, i - lngTokenIndex)
-5973              str = ""
-5974              varState = ParsingState.Expression1
-
-      ''' -------------------- -------------------- -------------------- '''
-
-5975          ElseIf varState = ParsingState.ArithmeticOperator Then
-5976              str = c
-5977              i = i + 1
-
-5978              objTokens.Add objTokens.NewToken(c, TokenType.ArithmeticOperator, lngTokenIndex, i - lngTokenIndex)
-5979              str = ""
-5980              varState = ParsingState.Expression1
+479               objTokens.Add objTokens.NewToken(str, TokenType.RangeOperator, lngTokenIndex, i - lngTokenIndex)
+480               str = ""
+481               varState = ParsingState.Expression1
 
       ''' -------------------- -------------------- -------------------- '''
 
-5981          ElseIf varState = ParsingState.ComparisonOperator1 Then
-5982              str = c
-5983              i = i + 1
+482           ElseIf varState = ParsingState.ArithmeticOperator Then
+483               str = c
+484               i = i + 1
 
-5984              If c = "<" Or c = ">" Then
-5985                  varState = ParsingState.ComparisonOperator2
-5986              Else
-5987                  varState = ParsingState.ComparisonOperatorE
-5988              End If
-
-5989          ElseIf varState = ParsingState.ComparisonOperator2 Then
-5990              If c = "=" Or (str = "<" And c = ">") Then
-5991                  str = str & c
-5992                  i = i + 1
-5993              End If
-
-5994              varState = ParsingState.ComparisonOperatorE
-
-5995          ElseIf varState = ParsingState.ComparisonOperatorE Then
-5996              objTokens.Add objTokens.NewToken(str, TokenType.ComparisonOperator, lngTokenIndex, i - lngTokenIndex)
-5997              str = ""
-5998              varState = ParsingState.Expression1
+485               objTokens.Add objTokens.NewToken(c, TokenType.ArithmeticOperator, lngTokenIndex, i - lngTokenIndex)
+486               str = ""
+487               varState = ParsingState.Expression1
 
       ''' -------------------- -------------------- -------------------- '''
 
-5999          ElseIf varState = ParsingState.TextOperator Then
-6000              str = c
-6001              i = i + 1
+488           ElseIf varState = ParsingState.ComparisonOperator1 Then
+489               str = c
+490               i = i + 1
 
-6002              objTokens.Add objTokens.NewToken(c, TokenType.TextOperator, lngTokenIndex, i - lngTokenIndex)
-6003              str = ""
-6004              varState = ParsingState.Expression1
+491               If c = "<" Or c = ">" Then
+492                   varState = ParsingState.ComparisonOperator2
+493               Else
+494                   varState = ParsingState.ComparisonOperatorE
+495               End If
+
+496           ElseIf varState = ParsingState.ComparisonOperator2 Then
+497               If c = "=" Or (str = "<" And c = ">") Then
+498                   str = str & c
+499                   i = i + 1
+500               End If
+
+501               varState = ParsingState.ComparisonOperatorE
+
+502           ElseIf varState = ParsingState.ComparisonOperatorE Then
+503               objTokens.Add objTokens.NewToken(str, TokenType.ComparisonOperator, lngTokenIndex, i - lngTokenIndex)
+504               str = ""
+505               varState = ParsingState.Expression1
 
       ''' -------------------- -------------------- -------------------- '''
 
-6005          ElseIf varState = ParsingState.PostfixOperator Then
-6006              str = c
-6007              i = i + 1
+506           ElseIf varState = ParsingState.TextOperator Then
+507               str = c
+508               i = i + 1
 
-6008              objTokens.Add objTokens.NewToken(str, TokenType.PostfixOperator, lngTokenIndex, i - lngTokenIndex)
-6009              str = ""
-6010              varState = ParsingState.Expression2
+509               objTokens.Add objTokens.NewToken(c, TokenType.TextOperator, lngTokenIndex, i - lngTokenIndex)
+510               str = ""
+511               varState = ParsingState.Expression1
 
       ''' -------------------- -------------------- -------------------- '''
 
-6011          ElseIf varState = ParsingState.ParameterSeparator Then
-6012              str = c
-6013              i = i + 1
+512           ElseIf varState = ParsingState.PostfixOperator Then
+513               str = c
+514               i = i + 1
 
-6014              objTokens.Add objTokens.NewToken(str, TokenType.ParameterSeparator, lngTokenIndex, i - lngTokenIndex)
-6015              str = ""
-6016              varState = ParsingState.Expression1
+515               objTokens.Add objTokens.NewToken(str, TokenType.PostfixOperator, lngTokenIndex, i - lngTokenIndex)
+516               str = ""
+517               varState = ParsingState.Expression2
 
-6017          End If
+      ''' -------------------- -------------------- -------------------- '''
 
-6018          lngPrevIndex = i
-6019      Loop While blnLoop
+518           ElseIf varState = ParsingState.ParameterSeparator Then
+519               str = c
+520               i = i + 1
+
+521               objTokens.Add objTokens.NewToken(str, TokenType.ParameterSeparator, lngTokenIndex, i - lngTokenIndex)
+522               str = ""
+523               varState = ParsingState.Expression1
+
+524           End If
+
+525           lngPrevIndex = i
+526       Loop While blnLoop
 
           'todo: error if token stack not empty
 
@@ -826,6 +826,6 @@ Public Function ParseFormula(strFormula As String) As Tokens
           '1. Scan and detect !, and join if the 3 tokens prior are CellReference-Colon-CellReference
           '2. Scan and detect CellReference-Colon-CellReference, because they should be joined into an AreaReference
 
-6020 e:    Set ParseFormula = objTokens
+527 e:      Set ParseFormula = objTokens
 End Function
 

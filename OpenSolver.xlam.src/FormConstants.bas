@@ -41,143 +41,143 @@ Public Const FormDivBackColor = &HC1C1C1
     ' We can then use these functions as we would the original constants
     
     Public Function FormWindowMargin() As Long
-        If Val(Application.Version) >= 16 Then
-            FormWindowMargin = 12
-        Else
-            FormWindowMargin = 4
-        End If
+1             If Val(Application.Version) >= 16 Then
+2                 FormWindowMargin = 12
+3             Else
+4                 FormWindowMargin = 4
+5             End If
     End Function
     
     Public Function FormTitleHeight() As Long
-        If Val(Application.Version) >= 16 Then
-            FormTitleHeight = 29
-        Else
-            FormTitleHeight = 20
-        End If
+1             If Val(Application.Version) >= 16 Then
+2                 FormTitleHeight = 29
+3             Else
+4                 FormTitleHeight = 20
+5             End If
     End Function
 #End If
 
 Public Sub AutoFormat(ByRef Controls As Controls)
-' Sets default appearances for Form controls
-' Hopefully we don't run into late binding issues this way
-    Dim Cont As Control, ContType As String
-    For Each Cont In Controls
-        ContType = TypeName(Cont)
-        If ContType = "TextBox" Or ContType = "CheckBox" Or ContType = "Label" Or _
-          ContType = "CommandButton" Or ContType = "OptionButton" Or _
-          ContType = "RefEdit" Or ContType = "ListBox" Or ContType = "ComboBox" Then
-            With Cont
-                .Font.Name = FormFontName
-                .Font.Size = FormFontSize
-                If ContType = "TextBox" Or ContType = "RefEdit" Or ContType = "ListBox" Or ContType = "ComboBox" Then
-                    .BackColor = FormTextBoxColor
-                Else
-                    .BackColor = FormBackColor
-                End If
-                
-                If ContType = "CommandButton" Then
-                    .Height = FormButtonHeight
-                    .Cancel = False
-                ElseIf ContType = "CheckBox" Or ContType = "OptionButton" Then
-                    .Height = FormCheckBoxHeight
-                ElseIf ContType = "TextBox" Or ContType = "RefEdit" Or ContType = "ComboBox" Then
-                    .Height = FormTextBoxHeight
-                Else
-                    .Height = FormTextHeight
-                End If
-                
-                If ContType = "RefEdit" Then
-                    ' Prevent refedit focus bugs, but lose the ability to tab into refedits, so we don't do it
-                    ' See: http://peltiertech.com/using-refedit-controls-in-excel-dialogs/#comment-276990
-                    '.TabStop = False
-                End If
-            End With
-        End If
-    Next
+      ' Sets default appearances for Form controls
+      ' Hopefully we don't run into late binding issues this way
+          Dim Cont As Control, ContType As String
+1         For Each Cont In Controls
+2             ContType = TypeName(Cont)
+3             If ContType = "TextBox" Or ContType = "CheckBox" Or ContType = "Label" Or _
+                ContType = "CommandButton" Or ContType = "OptionButton" Or _
+                ContType = "RefEdit" Or ContType = "ListBox" Or ContType = "ComboBox" Then
+4                 With Cont
+5                     .Font.Name = FormFontName
+6                     .Font.Size = FormFontSize
+7                     If ContType = "TextBox" Or ContType = "RefEdit" Or ContType = "ListBox" Or ContType = "ComboBox" Then
+8                         .BackColor = FormTextBoxColor
+9                     Else
+10                        .BackColor = FormBackColor
+11                    End If
+                      
+12                    If ContType = "CommandButton" Then
+13                        .Height = FormButtonHeight
+14                        .Cancel = False
+15                    ElseIf ContType = "CheckBox" Or ContType = "OptionButton" Then
+16                        .Height = FormCheckBoxHeight
+17                    ElseIf ContType = "TextBox" Or ContType = "RefEdit" Or ContType = "ComboBox" Then
+18                        .Height = FormTextBoxHeight
+19                    Else
+20                        .Height = FormTextHeight
+21                    End If
+                      
+22                    If ContType = "RefEdit" Then
+                          ' Prevent refedit focus bugs, but lose the ability to tab into refedits, so we don't do it
+                          ' See: http://peltiertech.com/using-refedit-controls-in-excel-dialogs/#comment-276990
+                          '.TabStop = False
+23                    End If
+24                End With
+25            End If
+26        Next
 End Sub
 
 Public Function RightOf(OldControl As Control, Optional Spacing As Boolean = True) As Long
-    RightOf = OldControl.Left + OldControl.Width + IIf(Spacing, FormSpacing, 0)
+1         RightOf = OldControl.Left + OldControl.Width + IIf(Spacing, FormSpacing, 0)
 End Function
 
 Public Function LeftOf(OldControl As Control, NewControlWidth As Long, Optional Spacing As Boolean = True) As Long
-    LeftOf = OldControl.Left - NewControlWidth - IIf(Spacing, FormSpacing, 0)
+1         LeftOf = OldControl.Left - NewControlWidth - IIf(Spacing, FormSpacing, 0)
 End Function
 
 Public Function LeftOfForm(FormWidth As Long, NewControlWidth As Long)
-    LeftOfForm = FormWidth - FormMargin - NewControlWidth
+1         LeftOfForm = FormWidth - FormMargin - NewControlWidth
 End Function
 
 Public Function Below(OldControl As Control, Optional Spacing As Boolean = True) As Long
-    Below = OldControl.Top + OldControl.Height + IIf(Spacing, FormSpacing, 0)
+1         Below = OldControl.Top + OldControl.Height + IIf(Spacing, FormSpacing, 0)
 End Function
 
 Public Function FormHeight(BottomControl As Control) As Long
-    FormHeight = Below(BottomControl, False) + FormMargin + FormTitleHeight
+1         FormHeight = Below(BottomControl, False) + FormMargin + FormTitleHeight
 End Function
 
 Public Sub AutoHeight(NewControl As Control, Width As Long, Optional ShrinkWidth As Boolean = False)
-    With NewControl
-        .Width = Width
-        .AutoSize = False
-        .AutoSize = True
-        .AutoSize = False
-        If Not ShrinkWidth Then .Width = Width
-    End With
+1         With NewControl
+2             .Width = Width
+3             .AutoSize = False
+4             .AutoSize = True
+5             .AutoSize = False
+6             If Not ShrinkWidth Then .Width = Width
+7         End With
 End Sub
 
 Public Function CenterFormTop(FormHeight As Long) As Single
-    Dim BaseTop As Long, BaseHeight As Long
-    
-    On Error GoTo NoWindow
-    BaseTop = Application.ActiveWindow.Top
-    BaseHeight = Application.ActiveWindow.Height
-    
-    ' Excel 2010 needs Application.top instead?
+          Dim BaseTop As Long, BaseHeight As Long
+          
+1         On Error GoTo NoWindow
+2         BaseTop = Application.ActiveWindow.Top
+3         BaseHeight = Application.ActiveWindow.Height
+          
+          ' Excel 2010 needs Application.top instead?
     #If Win32 Then
-        If Val(Application.Version) < 15 Then
-            BaseTop = Application.Top - BaseTop
-        End If
+4             If Val(Application.Version) < 15 Then
+5                 BaseTop = Application.Top - BaseTop
+6             End If
     #End If
-    
+          
 Calculate:
-    CenterFormTop = BaseTop + Max(BaseHeight / 2 - FormHeight / 2, 0)
-    Exit Function
-    
+7         CenterFormTop = BaseTop + Max(BaseHeight / 2 - FormHeight / 2, 0)
+8         Exit Function
+          
 NoWindow:
-    BaseTop = Application.Top
+9         BaseTop = Application.Top
     #If Mac Then
-        BaseHeight = Application.UsableHeight
+10            BaseHeight = Application.UsableHeight
     #Else
-        BaseHeight = Application.Height
+11            BaseHeight = Application.Height
     #End If
-    Resume Calculate
+12        Resume Calculate
 End Function
 
 Public Function CenterFormLeft(FormWidth As Long) As Single
-    Dim BaseLeft As Long, BaseWidth As Long
-    
-    On Error GoTo NoWindow
-    BaseLeft = Application.ActiveWindow.Left
-    BaseWidth = Application.ActiveWindow.Width
-    
-    ' Excel 2010 needs Application.left instead?
+          Dim BaseLeft As Long, BaseWidth As Long
+          
+1         On Error GoTo NoWindow
+2         BaseLeft = Application.ActiveWindow.Left
+3         BaseWidth = Application.ActiveWindow.Width
+          
+          ' Excel 2010 needs Application.left instead?
     #If Win32 Then
-        If Val(Application.Version) < 15 Then
-            BaseLeft = Application.Left
-        End If
+4             If Val(Application.Version) < 15 Then
+5                 BaseLeft = Application.Left
+6             End If
     #End If
-    
+          
 Calculate:
-    CenterFormLeft = BaseLeft + Max(BaseWidth / 2 - FormWidth / 2, 0)
-    Exit Function
-    
+7         CenterFormLeft = BaseLeft + Max(BaseWidth / 2 - FormWidth / 2, 0)
+8         Exit Function
+          
 NoWindow:
-    BaseLeft = Application.Left
+9         BaseLeft = Application.Left
     #If Mac Then
-        BaseWidth = Application.UsableWidth
+10            BaseWidth = Application.UsableWidth
     #Else
-        BaseWidth = Application.Width
+11            BaseWidth = Application.Width
     #End If
-    Resume Calculate
+12        Resume Calculate
 End Function

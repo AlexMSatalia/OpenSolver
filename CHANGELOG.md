@@ -1,6 +1,6 @@
 # OpenSolver Release Notes
 
-## Unreleased
+## v2.8.4 - 2016-10-12
 ### Fixed
 - Fix crash on 64-bit Office on Windows 7
 - Fix error with piping on new versions of 64-bit Office

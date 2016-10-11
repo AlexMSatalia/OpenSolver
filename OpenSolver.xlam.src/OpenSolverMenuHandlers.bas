@@ -3,225 +3,225 @@ Option Explicit
 
 Sub OpenSolver_SolveClickHandler(Optional Control)
           Dim sheet As Worksheet
-          GetActiveSheetIfMissing sheet
-2755      RunOpenSolver SolveRelaxation:=False, MinimiseUserInteraction:=False, sheet:=sheet
-          AutoUpdateCheck
+1         GetActiveSheetIfMissing sheet
+2         RunOpenSolver SolveRelaxation:=False, MinimiseUserInteraction:=False, sheet:=sheet
+3         AutoUpdateCheck
 End Sub
 
 Sub OpenSolver_ModelOptions(Optional Control)
           Dim frmOptions As FOptions
-          Set frmOptions = New FOptions
-2757      frmOptions.Show
-          Unload frmOptions
-          AutoUpdateCheck
+1         Set frmOptions = New FOptions
+2         frmOptions.Show
+3         Unload frmOptions
+4         AutoUpdateCheck
 End Sub
 
 Sub OpenSolver_SolverOptions(Optional Control)
           Dim frmSolverChange As FSolverChange
-          Set frmSolverChange = New FSolverChange
-2761      frmSolverChange.Show
-          Unload frmSolverChange
-          AutoUpdateCheck
+1         Set frmSolverChange = New FSolverChange
+2         frmSolverChange.Show
+3         Unload frmSolverChange
+4         AutoUpdateCheck
 End Sub
 
 Sub OpenSolver_SolveRelaxationClickHandler(Optional Control)
           Dim sheet As Worksheet
-          GetActiveSheetIfMissing sheet
-2763      RunOpenSolver SolveRelaxation:=True, MinimiseUserInteraction:=False, sheet:=sheet
-          AutoUpdateCheck
+1         GetActiveSheetIfMissing sheet
+2         RunOpenSolver SolveRelaxation:=True, MinimiseUserInteraction:=False, sheet:=sheet
+3         AutoUpdateCheck
 End Sub
 
 Sub OpenSolver_LaunchCBCCommandLine(Optional Control)
-          If Len(LastUsedSolver) = 0 Then
-              MsgBox "Cannot open the last model in CBC as the model has not been solved yet."
-          Else
+1         If Len(LastUsedSolver) = 0 Then
+2             MsgBox "Cannot open the last model in CBC as the model has not been solved yet."
+3         Else
               Dim Solver As ISolver
-              Set Solver = CreateSolver(LastUsedSolver)
-              If TypeOf Solver Is ISolverFile Then
+4             Set Solver = CreateSolver(LastUsedSolver)
+5             If TypeOf Solver Is ISolverFile Then
                   Dim FileSolver As ISolverFile
-                  Set FileSolver = Solver
-                  If FileSolver.FileType = LP Then
-2764                  LaunchCommandLine_CBC
-                  Else
-                      GoTo NotLPSolver
-                  End If
-              Else
+6                 Set FileSolver = Solver
+7                 If FileSolver.FileType = LP Then
+8                     LaunchCommandLine_CBC
+9                 Else
+10                    GoTo NotLPSolver
+11                End If
+12            Else
 NotLPSolver:
-                  MsgBox "The last used solver (" & DisplayName(Solver) & ") does not use .lp model files, so CBC cannot load the model. " & _
+13                MsgBox "The last used solver (" & DisplayName(Solver) & ") does not use .lp model files, so CBC cannot load the model. " & _
                          "Please solve the model using a solver that uses .lp files, such as CBC or Gurobi, and try again."
-              End If
-          End If
-          AutoUpdateCheck
+14            End If
+15        End If
+16        AutoUpdateCheck
 End Sub
 
 Sub OpenSolver_ShowHideModelClickHandler(Optional Control)
           Dim sheet As Worksheet
-          GetActiveSheetIfMissing sheet
+1         GetActiveSheetIfMissing sheet
           
-2766      On Error GoTo ExitSub
-2768      If SheetHasOpenSolverHighlighting(sheet) Then
-2769          HideSolverModel sheet
-2770      Else
-2771          ShowSolverModel sheet, HandleError:=True
-2772      End If
-          AutoUpdateCheck
+2         On Error GoTo ExitSub
+3         If SheetHasOpenSolverHighlighting(sheet) Then
+4             HideSolverModel sheet
+5         Else
+6             ShowSolverModel sheet, HandleError:=True
+7         End If
+8         AutoUpdateCheck
 ExitSub:
 End Sub
 
 Sub OpenSolver_SetQuickSolveParametersClickHandler(Optional Control)
-2774      If SetQuickSolveParameterRange Then
-2775          ClearQuickSolve
-2776      End If
-          AutoUpdateCheck
+1         If SetQuickSolveParameterRange Then
+2             ClearQuickSolve
+3         End If
+4         AutoUpdateCheck
 End Sub
 
 Sub OpenSolver_InitQuickSolveClickHandler(Optional Control)
           Dim sheet As Worksheet
-          GetActiveSheetIfMissing sheet
-2778      InitializeQuickSolve sheet:=sheet
-          AutoUpdateCheck
+1         GetActiveSheetIfMissing sheet
+2         InitializeQuickSolve sheet:=sheet
+3         AutoUpdateCheck
 End Sub
 
 Sub OpenSolver_QuickSolveClickHandler(Optional Control)
-2780      RunQuickSolve
-          AutoUpdateCheck
+1         RunQuickSolve
+2         AutoUpdateCheck
 End Sub
 
 Sub OpenSolver_ViewLastModelClickHandler(Optional Control)
-          If Len(LastUsedSolver) = 0 Then
-              MsgBox "Cannot open the last model file as the model has not been solved yet."
-          Else
-              Dim Solver As ISolver
-              Set Solver = CreateSolver(LastUsedSolver)
-              If TypeOf Solver Is ISolverFile Then
-                  Dim NotFoundMessage As String, FilePath As String
-                  FilePath = GetModelFilePath(Solver)
-                  NotFoundMessage = "Error: There is no model file (" & FilePath & ") to open. Please solve the OpenSolver model and then try again."
-                  OpenFile FilePath, NotFoundMessage
-              Else
-                  MsgBox "The last used solver (" & DisplayName(Solver) & ") does not use a model file."
-              End If
-          End If
-          AutoUpdateCheck
+1               If Len(LastUsedSolver) = 0 Then
+2                   MsgBox "Cannot open the last model file as the model has not been solved yet."
+3               Else
+                    Dim Solver As ISolver
+4                   Set Solver = CreateSolver(LastUsedSolver)
+5                   If TypeOf Solver Is ISolverFile Then
+                        Dim NotFoundMessage As String, FilePath As String
+6                       FilePath = GetModelFilePath(Solver)
+7                       NotFoundMessage = "Error: There is no model file (" & FilePath & ") to open. Please solve the OpenSolver model and then try again."
+8                       OpenFile FilePath, NotFoundMessage
+9                   Else
+10                      MsgBox "The last used solver (" & DisplayName(Solver) & ") does not use a model file."
+11                  End If
+12              End If
+13              AutoUpdateCheck
 End Sub
 
 Sub OpenSolver_ViewSolverLogFileClickHandler(Optional Control)
           Dim NotFoundMessage As String, FilePath As String
-2787      GetLogFilePath FilePath
-2788      NotFoundMessage = "Error: There is no solver log file (" & FilePath & ") to open. Please solve the OpenSolver model and then try again."
-2789      OpenFile FilePath, NotFoundMessage
-          AutoUpdateCheck
+1         GetLogFilePath FilePath
+2         NotFoundMessage = "Error: There is no solver log file (" & FilePath & ") to open. Please solve the OpenSolver model and then try again."
+3         OpenFile FilePath, NotFoundMessage
+4         AutoUpdateCheck
 End Sub
 
 Sub OpenSolver_ViewErrorLogFileClickHandler(Optional Control)
           Dim NotFoundMessage As String, FilePath As String
-2787      FilePath = GetErrorLogFilePath()
-2788      NotFoundMessage = "Error: There is no error log file (" & FilePath & ") to open."
-2789      OpenFile FilePath, NotFoundMessage
-          AutoUpdateCheck
+1         FilePath = GetErrorLogFilePath()
+2         NotFoundMessage = "Error: There is no error log file (" & FilePath & ") to open."
+3         OpenFile FilePath, NotFoundMessage
+4         AutoUpdateCheck
 End Sub
 
 Sub OpenSolver_ViewLastSolutionClickHandler(Optional Control)
-          If Len(LastUsedSolver) = 0 Then
-              MsgBox "Cannot open the last solution file as the model has not been solved yet."
-          Else
+1         If Len(LastUsedSolver) = 0 Then
+2             MsgBox "Cannot open the last solution file as the model has not been solved yet."
+3         Else
               Dim Solver As ISolver
-              Set Solver = CreateSolver(LastUsedSolver)
-              If TypeOf Solver Is ISolverLocalExec Then
+4             Set Solver = CreateSolver(LastUsedSolver)
+5             If TypeOf Solver Is ISolverLocalExec Then
                   Dim NotFoundMessage As String, FilePath As String
-2790              GetSolutionFilePath FilePath
-2791              NotFoundMessage = "Error: There is no solution file (" & FilePath & ") to open. Please solve the OpenSolver model and then try again."
-2792              OpenFile FilePath, NotFoundMessage
-              Else
-                  MsgBox "The last used solver (" & DisplayName(Solver) & ") does not produce a solution file. Please check the log file for any solution information."
-              End If
-          End If
-          AutoUpdateCheck
+6                 GetSolutionFilePath FilePath
+7                 NotFoundMessage = "Error: There is no solution file (" & FilePath & ") to open. Please solve the OpenSolver model and then try again."
+8                 OpenFile FilePath, NotFoundMessage
+9             Else
+10                MsgBox "The last used solver (" & DisplayName(Solver) & ") does not produce a solution file. Please check the log file for any solution information."
+11            End If
+12        End If
+13        AutoUpdateCheck
 End Sub
 
 Sub OpenSolver_ViewTempFolderClickHandler(Optional Control)
-    Dim NotFoundMessage As String, FolderPath As String
-    FolderPath = GetTempFolder()
-    NotFoundMessage = "Error: The OpenSolver temporary files folder (" & FolderPath & ") doesn't exist."
-    OpenFolder FolderPath, NotFoundMessage
-    AutoUpdateCheck
+          Dim NotFoundMessage As String, FolderPath As String
+1         FolderPath = GetTempFolder()
+2         NotFoundMessage = "Error: The OpenSolver temporary files folder (" & FolderPath & ") doesn't exist."
+3         OpenFolder FolderPath, NotFoundMessage
+4         AutoUpdateCheck
 End Sub
 
 Sub OpenSolver_OnlineHelp(Optional Control)
-2796      OpenURL "http://help.opensolver.org"
-          AutoUpdateCheck
+1         OpenURL "http://help.opensolver.org"
+2         AutoUpdateCheck
 End Sub
 
 Sub OpenSolver_AboutClickHandler(Optional Control)
           Dim frmAbout As FAbout
-          Set frmAbout = New FAbout
-2798      frmAbout.Show
-          Unload frmAbout
-          AutoUpdateCheck
+1         Set frmAbout = New FAbout
+2         frmAbout.Show
+3         Unload frmAbout
+4         AutoUpdateCheck
 End Sub
 
 Sub OpenSolver_AboutCoinOR(Optional Control)
-2799      MsgBox "COIN-OR" & vbCrLf & _
+1         MsgBox "COIN-OR" & vbCrLf & _
                  "http://www.Coin-OR.org" & vbCrLf & _
                  vbCrLf & _
                  "The Computational Infrastructure for Operations Research (COIN-OR, or simply COIN)  project is an initiative to spur the development of open-source software for the operations research community." & vbCrLf & _
                  vbCrLf & _
                  "OpenSolver uses the Coin-OR CBC optimization engine. CBC is licensed under the Common Public License 1.0. Visit the web sites for more information."
-          AutoUpdateCheck
+2         AutoUpdateCheck
 End Sub
 
 Sub OpenSolver_VisitOpenSolverOrg(Optional Control)
-2800      OpenURL "http://www.opensolver.org"
-          AutoUpdateCheck
+1         OpenURL "http://www.opensolver.org"
+2         AutoUpdateCheck
 End Sub
 
 Sub OpenSolver_VisitCoinOROrg(Optional Control)
-2801      OpenURL "http://www.coin-or.org"
-          AutoUpdateCheck
+1         OpenURL "http://www.coin-or.org"
+2         AutoUpdateCheck
 End Sub
 Sub OpenSolver_ModelClick(Optional Control)
           Static ShownFormBefore As Boolean, ShowNamedRangesState As Boolean, ShowModelAfterSavingState As Boolean
           ' Set the checkboxes default to true
-          If Not ShownFormBefore Then
-              ShownFormBefore = True
-              ShowNamedRangesState = True
-              ShowModelAfterSavingState = True
-          End If
+1         If Not ShownFormBefore Then
+2             ShownFormBefore = True
+3             ShowNamedRangesState = True
+4             ShowModelAfterSavingState = True
+5         End If
 
           Dim frmModel As FModel
-          Set frmModel = New FModel
-          frmModel.ShowModelAfterSavingState = ShowModelAfterSavingState
-          frmModel.ShowNamedRangesState = ShowNamedRangesState
-2853      frmModel.Show
-          ShowModelAfterSavingState = frmModel.ShowModelAfterSavingState
-          ShowNamedRangesState = frmModel.ShowNamedRangesState
-          Unload frmModel
+6         Set frmModel = New FModel
+7         frmModel.ShowModelAfterSavingState = ShowModelAfterSavingState
+8         frmModel.ShowNamedRangesState = ShowNamedRangesState
+9         frmModel.Show
+10        ShowModelAfterSavingState = frmModel.ShowModelAfterSavingState
+11        ShowNamedRangesState = frmModel.ShowNamedRangesState
+12        Unload frmModel
           
-2854      DoEvents
-          AutoUpdateCheck
+13        DoEvents
+14        AutoUpdateCheck
 End Sub
 
 Sub OpenSolver_QuickAutoModelClick(Optional Control)
-          Dim sheet As Worksheet
-          GetActiveSheetIfMissing sheet
-          
-          Dim AutoModel As CAutoModel
-          Set AutoModel = New CAutoModel
-          AutoModel.BuildModel sheet, MinimiseUserInteraction:=False, SaveAfterBuilding:=True
-          
-          AutoUpdateCheck
+                Dim sheet As Worksheet
+1               GetActiveSheetIfMissing sheet
+                
+                Dim AutoModel As CAutoModel
+2               Set AutoModel = New CAutoModel
+3               AutoModel.BuildModel sheet, MinimiseUserInteraction:=False, SaveAfterBuilding:=True
+                
+4               AutoUpdateCheck
 End Sub
 
 Sub OpenSolver_AutoModelAndSolveClick(Optional Control)
           Dim sheet As Worksheet
-          GetActiveSheetIfMissing sheet
+1         GetActiveSheetIfMissing sheet
           
           Dim AutoModel As CAutoModel
-          Set AutoModel = New CAutoModel
-          If Not AutoModel.BuildModel(sheet, MinimiseUserInteraction:=False, SaveAfterBuilding:=True) Then Exit Sub
+2         Set AutoModel = New CAutoModel
+3         If Not AutoModel.BuildModel(sheet, MinimiseUserInteraction:=False, SaveAfterBuilding:=True) Then Exit Sub
 
-2882      RunOpenSolver SolveRelaxation:=False, MinimiseUserInteraction:=False, sheet:=sheet
+4         RunOpenSolver SolveRelaxation:=False, MinimiseUserInteraction:=False, sheet:=sheet
 
-          AutoUpdateCheck
+5         AutoUpdateCheck
 End Sub
 

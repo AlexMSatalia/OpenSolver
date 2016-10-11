@@ -166,31 +166,31 @@ ErrorHandler:
 End Function
 
 Function EscapeSheetName(sheet As Worksheet, Optional ForceQuotes As Boolean = False) As String
-    EscapeSheetName = sheet.Name
-    
-    Dim SpecialChar As Variant, NeedsEscaping As Boolean
-    NeedsEscaping = False
-    For Each SpecialChar In Array("'", "!", "(", ")", "+", "-", " ")
-        If InStr(EscapeSheetName, SpecialChar) Then
-            NeedsEscaping = True
-            Exit For
-        End If
-    Next SpecialChar
+1         EscapeSheetName = sheet.Name
+          
+          Dim SpecialChar As Variant, NeedsEscaping As Boolean
+2         NeedsEscaping = False
+3         For Each SpecialChar In Array("'", "!", "(", ")", "+", "-", " ")
+4             If InStr(EscapeSheetName, SpecialChar) Then
+5                 NeedsEscaping = True
+6                 Exit For
+7             End If
+8         Next SpecialChar
 
-    If NeedsEscaping Then EscapeSheetName = Replace(EscapeSheetName, "'", "''")
-    If ForceQuotes Or NeedsEscaping Then EscapeSheetName = "'" & EscapeSheetName & "'"
-    
-    EscapeSheetName = EscapeSheetName & "!"
+9         If NeedsEscaping Then EscapeSheetName = Replace(EscapeSheetName, "'", "''")
+10        If ForceQuotes Or NeedsEscaping Then EscapeSheetName = "'" & EscapeSheetName & "'"
+          
+11        EscapeSheetName = EscapeSheetName & "!"
 End Function
 
 Function ConvertFromCurrentLocale(ByVal s As String) As String
-' Convert a formula or a range from the current locale into US locale
-          ConvertFromCurrentLocale = ConvertLocale(s, True)
+      ' Convert a formula or a range from the current locale into US locale
+1               ConvertFromCurrentLocale = ConvertLocale(s, True)
 End Function
 
 Function ConvertToCurrentLocale(ByVal s As String) As String
-' Convert a formula or a range from US locale into the current locale
-          ConvertToCurrentLocale = ConvertLocale(s, False)
+      ' Convert a formula or a range from US locale into the current locale
+1               ConvertToCurrentLocale = ConvertLocale(s, False)
 End Function
 
 Private Function ConvertLocale(ByVal s As String, ConvertToUS As Boolean) As String
@@ -200,8 +200,8 @@ Private Function ConvertLocale(ByVal s As String, ConvertToUS As Boolean) As Str
 ' This works by putting the expression into cell A1 on Sheet1 of the add-in!
 
           Dim RaiseError As Boolean
-          RaiseError = False
-          On Error GoTo ErrorHandler
+1         RaiseError = False
+2         On Error GoTo ErrorHandler
 
           ' Static to track whether we can skip or not
           ' 0 = Haven't checked yet
@@ -209,435 +209,435 @@ Private Function ConvertLocale(ByVal s As String, ConvertToUS As Boolean) As Str
           ' 2 = Can skip
           Static SkipConvert As Long
           
-          If SkipConvert < 1 Then
-              SkipConvert = 1  ' Don't check again
+3         If SkipConvert < 1 Then
+4             SkipConvert = 1  ' Don't check again
               ' If we are in an english version of Excel and a known locale, we can skip the conversion
-              If Application.International(xlCountryCode) = 1 Then ' English language excel
+5             If Application.International(xlCountryCode) = 1 Then ' English language excel
                   Dim Country As Long
-                  Country = Application.International(xlCountrySetting)
-                  SkipConvert = 2
+6                 Country = Application.International(xlCountrySetting)
+7                 SkipConvert = 2
                   
-                  Select Case Country
+8                 Select Case Country
                   Case 1  ' US
-                  Case 44 ' UK
-                  Case 61 ' Australia
-                  Case 64 ' NZ
-                  Case Else: SkipConvert = 1
-                  End Select
-              End If
-          End If
+9                 Case 44 ' UK
+10                Case 61 ' Australia
+11                Case 64 ' NZ
+12                Case Else: SkipConvert = 1
+13                End Select
+14            End If
+15        End If
           
-          If SkipConvert = 2 Then
-              ConvertLocale = s
-              Exit Function
-          End If
+16        If SkipConvert = 2 Then
+17            ConvertLocale = s
+18            Exit Function
+19        End If
               
 
           ' We turn off calculation & hide alerts as we don't want Excel popping up dialogs asking for references to other sheets
           Dim oldCalculation As Long
-291       oldCalculation = Application.Calculation
+20        oldCalculation = Application.Calculation
           Dim oldDisplayAlerts As Boolean
-292       oldDisplayAlerts = Application.DisplayAlerts
+21        oldDisplayAlerts = Application.DisplayAlerts
 
-294       s = Trim(s)
+22        s = Trim(s)
           Dim equalsAdded As Boolean
-295       If Left(s, 1) <> "=" Then
-296           s = "=" & s
-297           equalsAdded = True
-298       End If
-299       Application.Calculation = xlCalculationManual
-300       Application.DisplayAlerts = False
+23        If Left(s, 1) <> "=" Then
+24            s = "=" & s
+25            equalsAdded = True
+26        End If
+27        Application.Calculation = xlCalculationManual
+28        Application.DisplayAlerts = False
           
-          If ConvertToUS Then
+29        If ConvertToUS Then
               ' Set FormulaLocal and get Formula
-              On Error GoTo DecimalFixer
-              ThisWorkbook.Sheets(1).Cells(1, 1).FormulaLocal = s
-              On Error GoTo ErrorHandler
-302           s = ThisWorkbook.Sheets(1).Cells(1, 1).Formula
-          Else
+30            On Error GoTo DecimalFixer
+31            ThisWorkbook.Sheets(1).Cells(1, 1).FormulaLocal = s
+32            On Error GoTo ErrorHandler
+33            s = ThisWorkbook.Sheets(1).Cells(1, 1).Formula
+34        Else
               ' Set Formula and get FormulaLocal
-              On Error GoTo DecimalFixer
-              ThisWorkbook.Sheets(1).Cells(1, 1).Formula = s
-              On Error GoTo ErrorHandler
-              s = ThisWorkbook.Sheets(1).Cells(1, 1).FormulaLocal
-          End If
+35            On Error GoTo DecimalFixer
+36            ThisWorkbook.Sheets(1).Cells(1, 1).Formula = s
+37            On Error GoTo ErrorHandler
+38            s = ThisWorkbook.Sheets(1).Cells(1, 1).FormulaLocal
+39        End If
           
-303       If equalsAdded Then
-304           If Left(s, 1) = "=" Then s = Mid(s, 2)
-305       End If
-306       ConvertLocale = s
+40        If equalsAdded Then
+41            If Left(s, 1) = "=" Then s = Mid(s, 2)
+42        End If
+43        ConvertLocale = s
 
 ExitFunction:
-          ThisWorkbook.Sheets(1).Cells(1, 1).Clear
-          Application.Calculation = oldCalculation
-          Application.DisplayAlerts = oldDisplayAlerts
-          If RaiseError Then RethrowError
-          Exit Function
+44        ThisWorkbook.Sheets(1).Cells(1, 1).Clear
+45        Application.Calculation = oldCalculation
+46        Application.DisplayAlerts = oldDisplayAlerts
+47        If RaiseError Then RethrowError
+48        Exit Function
 
 DecimalFixer: 'Ensures decimal character used is correct.
-          If ConvertToUS Then
-              s = Replace(s, ".", Application.DecimalSeparator)
-          Else
-              s = Replace(s, Application.DecimalSeparator, ".")
-          End If
-          Resume
+49        If ConvertToUS Then
+50            s = Replace(s, ".", Application.DecimalSeparator)
+51        Else
+52            s = Replace(s, Application.DecimalSeparator, ".")
+53        End If
+54        Resume
 
 ErrorHandler:
-          If Not ReportError("OpenSolverUtils", "ConvertFromCurrentLocale") Then Resume
-          RaiseError = True
-          ConvertLocale = vbNullString
-          GoTo ExitFunction
+55        If Not ReportError("OpenSolverUtils", "ConvertFromCurrentLocale") Then Resume
+56        RaiseError = True
+57        ConvertLocale = vbNullString
+58        GoTo ExitFunction
 End Function
 
 Function GetSolverParametersDict(Solver As ISolver, sheet As Worksheet) As Dictionary
           Dim RaiseError As Boolean
-          RaiseError = False
-          On Error GoTo ErrorHandler
+1         RaiseError = False
+2         On Error GoTo ErrorHandler
           
           Dim SolverParameters As Dictionary
-          Set SolverParameters = New Dictionary
+3         Set SolverParameters = New Dictionary
           
           ' First we fill all info from the saved options. These can then be overridden by the parameters defined on the sheet
-          If PrecisionAvailable(Solver) Then SolverParameters.Add Key:=Solver.PrecisionName, Item:=GetPrecision(sheet)
-          If ToleranceAvailable(Solver) Then SolverParameters.Add Key:=Solver.ToleranceName, Item:=GetTolerance(sheet)
+4         If PrecisionAvailable(Solver) Then SolverParameters.Add Key:=Solver.PrecisionName, Item:=GetPrecision(sheet)
+5         If ToleranceAvailable(Solver) Then SolverParameters.Add Key:=Solver.ToleranceName, Item:=GetTolerance(sheet)
           
-          If TimeLimitAvailable(Solver) Then
+6         If TimeLimitAvailable(Solver) Then
               ' Trim TimeLimit to valid value - MAX_LONG seconds is still 68 years!
-              SolverParameters.Add Key:=Solver.TimeLimitName, Item:=Min(GetMaxTime(sheet), MAX_LONG)
-          End If
+7             SolverParameters.Add Key:=Solver.TimeLimitName, Item:=Min(GetMaxTime(sheet), MAX_LONG)
+8         End If
           
-          If IterationLimitAvailable(Solver) Then
+9         If IterationLimitAvailable(Solver) Then
               ' Trim IterationLimit to a valid integer
-              SolverParameters.Add Key:=Solver.IterationLimitName, Item:=Int(Min(GetMaxIterations(sheet), MAX_LONG))
-          End If
+10            SolverParameters.Add Key:=Solver.IterationLimitName, Item:=Int(Min(GetMaxIterations(sheet), MAX_LONG))
+11        End If
           
           ' The user can define a set of parameters they want to pass to the solver; this gets them as a dictionary. MUST be on the current sheet
           Dim SolverParametersRange As Range, i As Long
-6104      Set SolverParametersRange = GetSolverParameters(Solver.ShortName, sheet:=sheet)
-          If Not SolverParametersRange Is Nothing Then
-6105          ValidateSolverParameters SolverParametersRange
-6109          For i = 1 To SolverParametersRange.Rows.Count
+12        Set SolverParametersRange = GetSolverParameters(Solver.ShortName, sheet:=sheet)
+13        If Not SolverParametersRange Is Nothing Then
+14            ValidateSolverParameters SolverParametersRange
+15            For i = 1 To SolverParametersRange.Rows.Count
                   Dim ParamName As String, ParamValue As String
-6110              ParamName = Trim(SolverParametersRange.Cells(i, 1))
-6111              If Len(ParamName) > 0 Then
-                      If SolverParameters.Exists(ParamName) Then SolverParameters.Remove ParamName
-6112                  ParamValue = SolverParametersRange.Cells(i, 2).value
-6114                  SolverParameters.Add Key:=ParamName, Item:=ParamValue
-6115              End If
-6116          Next i
-6117      End If
+16                ParamName = Trim(SolverParametersRange.Cells(i, 1))
+17                If Len(ParamName) > 0 Then
+18                    If SolverParameters.Exists(ParamName) Then SolverParameters.Remove ParamName
+19                    ParamValue = SolverParametersRange.Cells(i, 2).value
+20                    SolverParameters.Add Key:=ParamName, Item:=ParamValue
+21                End If
+22            Next i
+23        End If
 
-          Set GetSolverParametersDict = SolverParameters
+24        Set GetSolverParametersDict = SolverParameters
 
 ExitFunction:
-          If RaiseError Then RethrowError
-          Exit Function
+25        If RaiseError Then RethrowError
+26        Exit Function
 
 ErrorHandler:
-          If Not ReportError("OpenSolverUtils", "GetSolverParametersDict") Then Resume
-          RaiseError = True
-          GoTo ExitFunction
+27        If Not ReportError("OpenSolverUtils", "GetSolverParametersDict") Then Resume
+28        RaiseError = True
+29        GoTo ExitFunction
 End Function
 
 Function ParametersToKwargs(SolverParameters As Dictionary) As String
-          Dim RaiseError As Boolean
-          RaiseError = False
-          On Error GoTo ErrorHandler
+                Dim RaiseError As Boolean
+1               RaiseError = False
+2               On Error GoTo ErrorHandler
 
-          Dim Key As Variant, result As String
-          For Each Key In SolverParameters.Keys
-              result = result & Key & _
-                       IIf(Len(SolverParameters.Item(Key)) > 0, "=" & StrExNoPlus(SolverParameters.Item(Key)), vbNullString) & " "
-          Next Key
-          ParametersToKwargs = Trim(result)
+                Dim Key As Variant, result As String
+3               For Each Key In SolverParameters.Keys
+4                   result = result & Key & _
+                             IIf(Len(SolverParameters.Item(Key)) > 0, "=" & StrExNoPlus(SolverParameters.Item(Key)), vbNullString) & " "
+5               Next Key
+6               ParametersToKwargs = Trim(result)
 
 ExitFunction:
-          If RaiseError Then RethrowError
-          Exit Function
+7               If RaiseError Then RethrowError
+8               Exit Function
 
 ErrorHandler:
-          If Not ReportError("OpenSolverUtils", "ParametersToKwargs") Then Resume
-          RaiseError = True
-          GoTo ExitFunction
+9               If Not ReportError("OpenSolverUtils", "ParametersToKwargs") Then Resume
+10              RaiseError = True
+11              GoTo ExitFunction
 End Function
 
 Function ParametersToFlags(SolverParameters As Dictionary) As String
-          Dim RaiseError As Boolean
-          RaiseError = False
-          On Error GoTo ErrorHandler
+                Dim RaiseError As Boolean
+1               RaiseError = False
+2               On Error GoTo ErrorHandler
 
-          Dim Key As Variant, result As String
-          For Each Key In SolverParameters.Keys
-              result = result & IIf(Left(Key, 1) <> "-", "-", vbNullString) & Key & " " & StrExNoPlus(SolverParameters.Item(Key)) & " "
-          Next Key
-          ParametersToFlags = Trim(result)
+                Dim Key As Variant, result As String
+3               For Each Key In SolverParameters.Keys
+4                   result = result & IIf(Left(Key, 1) <> "-", "-", vbNullString) & Key & " " & StrExNoPlus(SolverParameters.Item(Key)) & " "
+5               Next Key
+6               ParametersToFlags = Trim(result)
 
 ExitFunction:
-          If RaiseError Then RethrowError
-          Exit Function
+7               If RaiseError Then RethrowError
+8               Exit Function
 
 ErrorHandler:
-          If Not ReportError("OpenSolverUtils", "ParametersToFlags") Then Resume
-          RaiseError = True
-          GoTo ExitFunction
+9               If Not ReportError("OpenSolverUtils", "ParametersToFlags") Then Resume
+10              RaiseError = True
+11              GoTo ExitFunction
 End Function
 
 Function ParametersToOptionsFileString(SolverParameters As Dictionary) As String
-          Dim RaiseError As Boolean
-          RaiseError = False
-          On Error GoTo ErrorHandler
-          
-          Dim Key As Variant, result As String
-          For Each Key In SolverParameters.Keys
-              result = result & Key & " " & StrExNoPlus(SolverParameters.Item(Key)) & vbNewLine
-          Next Key
-          
-          ParametersToOptionsFileString = StripTrailingNewline(result)
-          
+                Dim RaiseError As Boolean
+1               RaiseError = False
+2               On Error GoTo ErrorHandler
+                
+                Dim Key As Variant, result As String
+3               For Each Key In SolverParameters.Keys
+4                   result = result & Key & " " & StrExNoPlus(SolverParameters.Item(Key)) & vbNewLine
+5               Next Key
+                
+6               ParametersToOptionsFileString = StripTrailingNewline(result)
+                
 ExitFunction:
-          If RaiseError Then RethrowError
-          Exit Function
+7               If RaiseError Then RethrowError
+8               Exit Function
 
 ErrorHandler:
-          If Not ReportError("OpenSolverUtils", "ParametersToOptionsFileString") Then Resume
-          RaiseError = True
-          GoTo ExitFunction
+9               If Not ReportError("OpenSolverUtils", "ParametersToOptionsFileString") Then Resume
+10              RaiseError = True
+11              GoTo ExitFunction
 End Function
 
 Sub ParametersToOptionsFile(OptionsFilePath As String, SolverParameters As Dictionary)
-          Dim RaiseError As Boolean
-          RaiseError = False
-          On Error GoTo ErrorHandler
+                Dim RaiseError As Boolean
+1               RaiseError = False
+2               On Error GoTo ErrorHandler
 
-          DeleteFileAndVerify OptionsFilePath
-          
-          Dim FileNum As Integer
-          FileNum = FreeFile()
-          Open OptionsFilePath For Output As #FileNum
-          Print #FileNum, ParametersToOptionsFileString(SolverParameters)
+3               DeleteFileAndVerify OptionsFilePath
+                
+                Dim FileNum As Integer
+4               FileNum = FreeFile()
+5               Open OptionsFilePath For Output As #FileNum
+6               Print #FileNum, ParametersToOptionsFileString(SolverParameters)
 
 ExitSub:
-          Close #FileNum
-          If RaiseError Then RethrowError
-          Exit Sub
+7               Close #FileNum
+8               If RaiseError Then RethrowError
+9               Exit Sub
 
 ErrorHandler:
-          If Not ReportError("SolverFileNL", "OutputOptionsFile") Then Resume
-          RaiseError = True
-          GoTo ExitSub
+10              If Not ReportError("SolverFileNL", "OutputOptionsFile") Then Resume
+11              RaiseError = True
+12              GoTo ExitSub
 End Sub
 
 Function Max(ParamArray Vals() As Variant) As Variant
-          Max = Vals(LBound(Vals))
+1         Max = Vals(LBound(Vals))
           
           Dim i As Long
-          For i = LBound(Vals) + 1 To UBound(Vals)
-482           If Vals(i) > Max Then
-483               Max = Vals(i)
-486           End If
-          Next i
+2         For i = LBound(Vals) + 1 To UBound(Vals)
+3             If Vals(i) > Max Then
+4                 Max = Vals(i)
+5             End If
+6         Next i
 End Function
 
 Function Min(ParamArray Vals() As Variant) As Variant
-          Min = Vals(LBound(Vals))
+1         Min = Vals(LBound(Vals))
           
           Dim i As Long
-          For i = LBound(Vals) + 1 To UBound(Vals)
-482           If Vals(i) < Min Then
-483               Min = Vals(i)
-486           End If
-          Next i
+2         For i = LBound(Vals) + 1 To UBound(Vals)
+3             If Vals(i) < Min Then
+4                 Min = Vals(i)
+5             End If
+6         Next i
 End Function
 
 Function Create1x1Array(X As Variant) As Variant
           ' Create a 1x1 array containing the value x
           Dim v(1, 1) As Variant
-492       v(1, 1) = X
-493       Create1x1Array = v
+1         v(1, 1) = X
+2         Create1x1Array = v
 End Function
 
 Function StringArray(ParamArray Vals() As Variant) As String()
-          ' Creates a string array from the input args
-          Dim TempArray() As String
-          ReDim TempArray(LBound(Vals) To UBound(Vals))
-          Dim i As Long
-          For i = LBound(Vals) To UBound(Vals)
-              TempArray(i) = CStr(Vals(i))
-          Next i
-          StringArray = TempArray
+                ' Creates a string array from the input args
+                Dim TempArray() As String
+1               ReDim TempArray(LBound(Vals) To UBound(Vals))
+                Dim i As Long
+2               For i = LBound(Vals) To UBound(Vals)
+3                   TempArray(i) = CStr(Vals(i))
+4               Next i
+5               StringArray = TempArray
 End Function
 
 Function ForceCalculate(prompt As String, Optional MinimiseUserInteraction As Boolean = False) As Boolean
           Dim RaiseError As Boolean
-          RaiseError = False
-          On Error GoTo ErrorHandler
+1         RaiseError = False
+2         On Error GoTo ErrorHandler
 
           #If Mac Then
               'In Excel 2011 the Application.CalculationState is not included:
               'http://sysmod.wordpress.com/2011/10/24/more-differences-mainly-vba/
               'Try calling 'Calculate' two times just to be safe? This will probably cause problems down the line, maybe Office 2014 will fix it?
-494           Application.Calculate
-495           Application.Calculate
-496           ForceCalculate = True
+3             Application.Calculate
+4             Application.Calculate
+5             ForceCalculate = True
           #Else
               'There appears to be a bug in Excel 2010 where the .Calculate does not always complete. We handle up to 3 such failures.
               ' We have seen this problem arise on large models.
-497           Application.Calculate
-498           If Application.CalculationState <> xlDone Then
-499               Application.Calculate
+6             Application.Calculate
+7             If Application.CalculationState <> xlDone Then
+8                 Application.Calculate
                   Dim i As Long
-500               For i = 1 To 10
-501                   DoEvents
-502                   mSleep 100
-503               Next i
-504           End If
-505           If Application.CalculationState <> xlDone Then Application.Calculate
-506           If Application.CalculationState <> xlDone Then
-507               DoEvents
-508               Application.CalculateFullRebuild
-509               DoEvents
-510           End If
+9                 For i = 1 To 10
+10                    DoEvents
+11                    mSleep 100
+12                Next i
+13            End If
+14            If Application.CalculationState <> xlDone Then Application.Calculate
+15            If Application.CalculationState <> xlDone Then
+16                DoEvents
+17                Application.CalculateFullRebuild
+18                DoEvents
+19            End If
           
               ' Check for circular references causing problems, which can happen if iterative calculation mode is enabled.
-511           If Application.CalculationState <> xlDone Then
-512               If Application.Iteration Then
-513                   If MinimiseUserInteraction Then
-514                       Application.Iteration = False
-515                       Application.Calculate
-516                   ElseIf MsgBox("Iterative calculation mode is enabled and may be interfering with the inital calculation. " & _
+20            If Application.CalculationState <> xlDone Then
+21                If Application.Iteration Then
+22                    If MinimiseUserInteraction Then
+23                        Application.Iteration = False
+24                        Application.Calculate
+25                    ElseIf MsgBox("Iterative calculation mode is enabled and may be interfering with the inital calculation. " & _
                                     "Would you like to try disabling iterative calculation mode to see if this fixes the problem?", _
                                     vbYesNo, _
                                     "OpenSolver: Iterative Calculation Mode Detected...") = vbYes Then
-517                       Application.Iteration = False
-518                       Application.Calculate
-519                   End If
-520               End If
-521           End If
+26                        Application.Iteration = False
+27                        Application.Calculate
+28                    End If
+29                End If
+30            End If
           
-522           While Application.CalculationState <> xlDone
-523               If MinimiseUserInteraction Then
-524                   ForceCalculate = False
-525                   GoTo ExitFunction
-526               ElseIf MsgBox(prompt, _
+31            While Application.CalculationState <> xlDone
+32                If MinimiseUserInteraction Then
+33                    ForceCalculate = False
+34                    GoTo ExitFunction
+35                ElseIf MsgBox(prompt, _
                                 vbCritical + vbRetryCancel + vbDefaultButton1, _
                                 "OpenSolver: Calculation Error Occured...") = vbCancel Then
-527                   ForceCalculate = False
-528                   GoTo ExitFunction
-529               Else 'Recalculate the workbook if the user wants to retry
-530                   Application.Calculate
-531               End If
-532           Wend
-533           ForceCalculate = True
+36                    ForceCalculate = False
+37                    GoTo ExitFunction
+38                Else 'Recalculate the workbook if the user wants to retry
+39                    Application.Calculate
+40                End If
+41            Wend
+42            ForceCalculate = True
           #End If
 
 ExitFunction:
-          If RaiseError Then RethrowError
-          Exit Function
+43        If RaiseError Then RethrowError
+44        Exit Function
 
 ErrorHandler:
-          If Not ReportError("OpenSolverUtils", "ForceCalculate") Then Resume
-          RaiseError = True
-          GoTo ExitFunction
+45        If Not ReportError("OpenSolverUtils", "ForceCalculate") Then Resume
+46        RaiseError = True
+47        GoTo ExitFunction
 End Function
 
 Sub WriteToFile(intFileNum As Long, strData As String, Optional numSpaces As Long = 0, Optional AbortIfBlank As Boolean = False)
 ' Writes a string to the given file number, adds a newline, and number of spaces to front if specified
           Dim RaiseError As Boolean
-          RaiseError = False
-          On Error GoTo ErrorHandler
+1         RaiseError = False
+2         On Error GoTo ErrorHandler
 
-          If Len(strData) = 0 And AbortIfBlank Then GoTo ExitSub
-781       Print #intFileNum, Space(numSpaces) & strData
+3         If Len(strData) = 0 And AbortIfBlank Then GoTo ExitSub
+4         Print #intFileNum, Space(numSpaces) & strData
 
 ExitSub:
-          If RaiseError Then RethrowError
-          Exit Sub
+5         If RaiseError Then RethrowError
+6         Exit Sub
 
 ErrorHandler:
-          If Not ReportError("OpenSolverUtils", "WriteToFile") Then Resume
-          RaiseError = True
-          GoTo ExitSub
+7         If Not ReportError("OpenSolverUtils", "WriteToFile") Then Resume
+8         RaiseError = True
+9         GoTo ExitSub
 End Sub
 
 Function MakeSpacesNonBreaking(Text As String) As String
 ' Replaces all spaces with NBSP char
-784       MakeSpacesNonBreaking = Replace(Text, Chr(32), Chr(NBSP))
+1         MakeSpacesNonBreaking = Replace(Text, Chr(32), Chr(NBSP))
 End Function
 
 Function StripNonBreakingSpaces(Text As String) As String
 ' Replaces all spaces with NBSP char
-784       StripNonBreakingSpaces = Replace(Text, Chr(NBSP), Chr(32))
+1         StripNonBreakingSpaces = Replace(Text, Chr(NBSP), Chr(32))
 End Function
 
 Function Quote(Text As String) As String
-745       Quote = """" & Text & """"
+1         Quote = """" & Text & """"
 End Function
 
 Function TrimBlankLines(s As String) As String
 ' Remove any blank lines at the beginning or end of s
           Dim RaiseError As Boolean
-          RaiseError = False
-          On Error GoTo ErrorHandler
+1         RaiseError = False
+2         On Error GoTo ErrorHandler
 
           Dim Done As Boolean, NewLineSize As Integer
-          NewLineSize = Len(vbNewLine)
-611       While Not Done
-612           If Len(s) < NewLineSize Then
-613               Done = True
-614           ElseIf Left(s, NewLineSize) = vbNewLine Then
-615              s = Mid(s, NewLineSize + 1)
-616           Else
-617               Done = True
-618           End If
-619       Wend
-620       Done = False
-621       While Not Done
-622           If Len(s) < NewLineSize Then
-623               Done = True
-624           ElseIf Right(s, NewLineSize) = vbNewLine Then
-625              s = Left(s, Len(s) - NewLineSize)
-626           Else
-627               Done = True
-628           End If
-629       Wend
-630       TrimBlankLines = s
+3         NewLineSize = Len(vbNewLine)
+4         While Not Done
+5             If Len(s) < NewLineSize Then
+6                 Done = True
+7             ElseIf Left(s, NewLineSize) = vbNewLine Then
+8                s = Mid(s, NewLineSize + 1)
+9             Else
+10                Done = True
+11            End If
+12        Wend
+13        Done = False
+14        While Not Done
+15            If Len(s) < NewLineSize Then
+16                Done = True
+17            ElseIf Right(s, NewLineSize) = vbNewLine Then
+18               s = Left(s, Len(s) - NewLineSize)
+19            Else
+20                Done = True
+21            End If
+22        Wend
+23        TrimBlankLines = s
 
 ExitFunction:
-          If RaiseError Then RethrowError
-          Exit Function
+24        If RaiseError Then RethrowError
+25        Exit Function
 
 ErrorHandler:
-          If Not ReportError("OpenSolverUtils", "TrimBlankLines") Then Resume
-          RaiseError = True
-          GoTo ExitFunction
+26        If Not ReportError("OpenSolverUtils", "TrimBlankLines") Then Resume
+27        RaiseError = True
+28        GoTo ExitFunction
 End Function
 
 Function IsZero(num As Double) As Boolean
 ' Returns true if a number is zero (within tolerance)
-785       IsZero = IIf(Abs(num) < OpenSolver.EPSILON, True, False)
+1         IsZero = IIf(Abs(num) < OpenSolver.EPSILON, True, False)
 End Function
 
 Function ZeroIfSmall(value As Double) As Double
-          ZeroIfSmall = IIf(IsZero(value), 0, value)
+1               ZeroIfSmall = IIf(IsZero(value), 0, value)
 End Function
 
 Function StrEx(d As Variant, Optional AddSign As Boolean = True) As String
 ' Convert a double to a string, always with a + or -. Also ensure we have "0.", not just "." for values between -1 and 1
               Dim s As String
-              On Error GoTo Abort
-              s = str(d)  ' check d is numeric and convert to string
-1912          s = Mid(s, 2)  ' remove the initial space (reserved by VB for the sign)
-1913          ' ensure we have "0.", not just "."
-1915          StrEx = IIf(Left(s, 1) = ".", "0", vbNullString) & s
-              If AddSign Or d < 0 Then StrEx = IIf(d >= 0, "+", "-") & StrEx
-              Exit Function
+1             On Error GoTo Abort
+2             s = str(d)  ' check d is numeric and convert to string
+3             s = Mid(s, 2)  ' remove the initial space (reserved by VB for the sign)
+              ' ensure we have "0.", not just "."
+4             StrEx = IIf(Left(s, 1) = ".", "0", vbNullString) & s
+5             If AddSign Or d < 0 Then StrEx = IIf(d >= 0, "+", "-") & StrEx
+6             Exit Function
 Abort:
               ' d is not a number
-              StrEx = d
+7             StrEx = d
 End Function
 
 Function StrExNoPlus(d As Variant) As String
-    StrExNoPlus = StrEx(d, False)
+1         StrExNoPlus = StrEx(d, False)
 End Function
 
 Function IsAmericanNumber(s As String, Optional i As Long = 1) As Boolean
@@ -650,185 +650,185 @@ Function IsAmericanNumber(s As String, Optional i As Long = 1) As Boolean
           '   IsNumeric("($1,23,,3.4,,,5,,E67$)")=True! See http://www.eggheadcafe.com/software/aspnet/31496070/another-vba-bug.aspx)
 
           Dim RaiseError As Boolean
-          RaiseError = False
-          On Error GoTo ErrorHandler
+1         RaiseError = False
+2         On Error GoTo ErrorHandler
 
           Dim MustBeInteger As Boolean, SeenDot As Boolean, SeenDigit As Boolean
-631       MustBeInteger = i > 1   ' We call this a second time after seeing the "E", when only an int is allowed
-632       IsAmericanNumber = False    ' Assume we fail
-633       If Len(s) = 0 Then GoTo ExitFunction ' Not a number
-634       If Mid(s, i, 1) = "+" Or Mid(s, i, 1) = "-" Then i = i + 1 ' Skip leading sign
-635       For i = i To Len(s)
-636           Select Case Asc(Mid(s, i, 1))
+3         MustBeInteger = i > 1   ' We call this a second time after seeing the "E", when only an int is allowed
+4         IsAmericanNumber = False    ' Assume we fail
+5         If Len(s) = 0 Then GoTo ExitFunction ' Not a number
+6         If Mid(s, i, 1) = "+" Or Mid(s, i, 1) = "-" Then i = i + 1 ' Skip leading sign
+7         For i = i To Len(s)
+8             Select Case Asc(Mid(s, i, 1))
               Case Asc("E"), Asc("e")
-637               If MustBeInteger Or Not SeenDigit Then GoTo ExitFunction ' No exponent allowed (as must be a simple integer)
-638               IsAmericanNumber = IsAmericanNumber(s, i + 1)   ' Process an int after the E
-639               GoTo ExitFunction
-640           Case Asc(".")
-641               If SeenDot Then GoTo ExitFunction
-642               SeenDot = True
-643           Case Asc("0") To Asc("9")
-644               SeenDigit = True
-645           Case Else
-646               GoTo ExitFunction   ' Not a valid char
-647           End Select
-648       Next i
+9                 If MustBeInteger Or Not SeenDigit Then GoTo ExitFunction ' No exponent allowed (as must be a simple integer)
+10                IsAmericanNumber = IsAmericanNumber(s, i + 1)   ' Process an int after the E
+11                GoTo ExitFunction
+12            Case Asc(".")
+13                If SeenDot Then GoTo ExitFunction
+14                SeenDot = True
+15            Case Asc("0") To Asc("9")
+16                SeenDigit = True
+17            Case Else
+18                GoTo ExitFunction   ' Not a valid char
+19            End Select
+20        Next i
           ' i As Long, AllowDot As Boolean
-649       IsAmericanNumber = SeenDigit
+21        IsAmericanNumber = SeenDigit
 
 ExitFunction:
-          If RaiseError Then RethrowError
-          Exit Function
+22        If RaiseError Then RethrowError
+23        Exit Function
 
 ErrorHandler:
-          If Not ReportError("OpenSolverUtils", "IsAmericanNumber") Then Resume
-          RaiseError = True
-          GoTo ExitFunction
+24        If Not ReportError("OpenSolverUtils", "IsAmericanNumber") Then Resume
+25        RaiseError = True
+26        GoTo ExitFunction
 End Function
 
 Function SplitWithoutRepeats(StringToSplit As String, Delimiter As String) As String()
-' As Split() function, but treats consecutive delimiters as one
-          Dim RaiseError As Boolean
-          RaiseError = False
-          On Error GoTo ErrorHandler
+      ' As Split() function, but treats consecutive delimiters as one
+                Dim RaiseError As Boolean
+1               RaiseError = False
+2               On Error GoTo ErrorHandler
 
-          Dim SplitValues() As String
-          SplitValues = Split(StringToSplit, Delimiter)
-          ' Remove empty splits caused by consecutive delimiters
-          Dim LastNonEmpty As Long, i As Long
-          LastNonEmpty = -1
-          For i = 0 To UBound(SplitValues)
-              If Len(SplitValues(i)) > 0 Then
-                  LastNonEmpty = LastNonEmpty + 1
-                  SplitValues(LastNonEmpty) = SplitValues(i)
-              End If
-          Next
-          ReDim Preserve SplitValues(0 To LastNonEmpty)
-          SplitWithoutRepeats = SplitValues
+                Dim SplitValues() As String
+3               SplitValues = Split(StringToSplit, Delimiter)
+                ' Remove empty splits caused by consecutive delimiters
+                Dim LastNonEmpty As Long, i As Long
+4               LastNonEmpty = -1
+5               For i = 0 To UBound(SplitValues)
+6                   If Len(SplitValues(i)) > 0 Then
+7                       LastNonEmpty = LastNonEmpty + 1
+8                       SplitValues(LastNonEmpty) = SplitValues(i)
+9                   End If
+10              Next
+11              ReDim Preserve SplitValues(0 To LastNonEmpty)
+12              SplitWithoutRepeats = SplitValues
 
 ExitFunction:
-          If RaiseError Then RethrowError
-          Exit Function
+13              If RaiseError Then RethrowError
+14              Exit Function
 
 ErrorHandler:
-          If Not ReportError("OpenSolverUtils", "SplitWithoutRepeats") Then Resume
-          RaiseError = True
-          GoTo ExitFunction
+15              If Not ReportError("OpenSolverUtils", "SplitWithoutRepeats") Then Resume
+16              RaiseError = True
+17              GoTo ExitFunction
 End Function
 
 Public Function TestKeyExists(ByRef col As Collection, Key As String) As Boolean
-          On Error GoTo doesntExist:
+    On Error GoTo doesntExist:
           Dim Item As Variant
-2020      Set Item = col(Key)
-2021      TestKeyExists = True
-2022      Exit Function
+1         Set Item = col(Key)
+2         TestKeyExists = True
+3         Exit Function
           
 doesntExist:
-2023      If Err.Number = 5 Then
-2024          TestKeyExists = False
-2025      Else
-2026          TestKeyExists = True
-2027      End If
+4         If Err.Number = 5 Then
+5             TestKeyExists = False
+6         Else
+7             TestKeyExists = True
+8         End If
           
 End Function
 
 Public Sub OpenURL(URL As String)
-          Dim RaiseError As Boolean
-          RaiseError = False
-          On Error GoTo ErrorHandler
+                Dim RaiseError As Boolean
+1               RaiseError = False
+2               On Error GoTo ErrorHandler
 
           #If Mac Then
-              ExecAsync "open " & Quote(URL)
+3                   ExecAsync "open " & Quote(URL)
           #Else
-              ' We can't use ActiveWorkbook.FollowHyperlink as this seems to have some limit on
-              ' the length of the URL that we can pass
-              fHandleFile URL, WIN_NORMAL
+                    ' We can't use ActiveWorkbook.FollowHyperlink as this seems to have some limit on
+                    ' the length of the URL that we can pass
+4                   fHandleFile URL, WIN_NORMAL
           #End If
 
 ExitSub:
-          If RaiseError Then RethrowError
-          Exit Sub
+5               If RaiseError Then RethrowError
+6               Exit Sub
 
 ErrorHandler:
-          If Not ReportError("OpenSolverUtils", "OpenURL") Then Resume
-          RaiseError = True
-          GoTo ExitSub
+7               If Not ReportError("OpenSolverUtils", "OpenURL") Then Resume
+8               RaiseError = True
+9               GoTo ExitSub
 End Sub
 
 Public Function URLEncode(StringVal As String, Optional SpaceAsPlus As Boolean = False) As String
-    Dim RaiseError As Boolean
-    RaiseError = False
+          Dim RaiseError As Boolean
+1         RaiseError = False
 
-    ' Starting in Excel 2013, this function is built in as WorksheetFunction.EncodeURL
-    ' We can't include it without causing compilation errors on earlier versions, so we need our own
-    
-    ' From http://stackoverflow.com/a/218199
-    On Error GoTo ErrorHandler
-    Dim StringLen As Long: StringLen = Len(StringVal)
-    If StringLen > 0 Then
-        ReDim result(StringLen) As String
-        Dim i As Long, CharCode As Integer
-        Dim Char As String, Space As String
+          ' Starting in Excel 2013, this function is built in as WorksheetFunction.EncodeURL
+          ' We can't include it without causing compilation errors on earlier versions, so we need our own
+          
+          ' From http://stackoverflow.com/a/218199
+2         On Error GoTo ErrorHandler
+3         Dim StringLen As Long: StringLen = Len(StringVal)
+4         If StringLen > 0 Then
+5             ReDim result(StringLen) As String
+              Dim i As Long, CharCode As Integer
+              Dim Char As String, Space As String
 
-        If SpaceAsPlus Then Space = "+" Else Space = "%20"
+6             If SpaceAsPlus Then Space = "+" Else Space = "%20"
 
-        For i = 1 To StringLen
-            Char = Mid$(StringVal, i, 1)
-            CharCode = Asc(Char)
-            Select Case CharCode
-                Case 97 To 122, 65 To 90, 48 To 57, 45, 46, 95, 126
-                    result(i) = Char
-                Case 32
-                    result(i) = Space
-                Case 0 To 15
-                    result(i) = "%0" & Hex(CharCode)
-                Case Else
-                    result(i) = "%" & Hex(CharCode)
-            End Select
-        Next i
-        URLEncode = Join(result, vbNullString)
-    End If
+7             For i = 1 To StringLen
+8                 Char = Mid$(StringVal, i, 1)
+9                 CharCode = Asc(Char)
+10                Select Case CharCode
+                      Case 97 To 122, 65 To 90, 48 To 57, 45, 46, 95, 126
+11                        result(i) = Char
+12                    Case 32
+13                        result(i) = Space
+14                    Case 0 To 15
+15                        result(i) = "%0" & Hex(CharCode)
+16                    Case Else
+17                        result(i) = "%" & Hex(CharCode)
+18                End Select
+19            Next i
+20            URLEncode = Join(result, vbNullString)
+21        End If
 
 ExitFunction:
-    If RaiseError Then RethrowError
-    Exit Function
+22        If RaiseError Then RethrowError
+23        Exit Function
 
 ErrorHandler:
-    If Not ReportError("OpenSolverUtils", "URLEncode") Then Resume
-    RaiseError = True
-    GoTo ExitFunction
+24        If Not ReportError("OpenSolverUtils", "URLEncode") Then Resume
+25        RaiseError = True
+26        GoTo ExitFunction
 End Function
 
 #If Win32 Then
 Private Sub fHandleFile(FilePath As String, WindowStyle As Long)
-    ' Used to open a URL - Code Courtesy of Dev Ashish
-    Dim lRet As Long
+          ' Used to open a URL - Code Courtesy of Dev Ashish
+          Dim lRet As Long
     #If VBA7 Then
-        Dim hwnd As LongPtr
+              Dim hwnd As LongPtr
     #Else
-        Dim hwnd As Long
+              Dim hwnd As Long
     #End If
-    'First try ShellExecute
-    lRet = apiShellExecute(hwnd, vbNullString, FilePath, vbNullString, vbNullString, WindowStyle)
+          'First try ShellExecute
+1         lRet = apiShellExecute(hwnd, vbNullString, FilePath, vbNullString, vbNullString, WindowStyle)
 
-    If lRet <= ERROR_SUCCESS Then
-        Select Case lRet
-            Case ERROR_NO_ASSOC:
-                'Try the OpenWith dialog
-                Dim varTaskID As Variant
-                varTaskID = Shell("rundll32.exe shell32.dll, OpenAs_RunDLL " & FilePath, WIN_NORMAL)
-            Case ERROR_OUT_OF_MEM:
-                RaiseGeneralError "Error: Out of Memory/Resources. Couldn't Execute!"
-            Case ERROR_FILE_NOT_FOUND:
-                RaiseGeneralError "Error: File not found.  Couldn't Execute!"
-            Case ERROR_PATH_NOT_FOUND:
-                RaiseGeneralError "Error: Path not found. Couldn't Execute!"
-            Case ERROR_BAD_FORMAT:
-                RaiseGeneralError "Error:  Bad File Format. Couldn't Execute!"
-            Case Else:
-                RaiseGeneralError "Unknown error when opening file"
-        End Select
-    End If
+2         If lRet <= ERROR_SUCCESS Then
+3             Select Case lRet
+                  Case ERROR_NO_ASSOC:
+                      'Try the OpenWith dialog
+                      Dim varTaskID As Variant
+4                     varTaskID = Shell("rundll32.exe shell32.dll, OpenAs_RunDLL " & FilePath, WIN_NORMAL)
+5                 Case ERROR_OUT_OF_MEM:
+6                     RaiseGeneralError "Error: Out of Memory/Resources. Couldn't Execute!"
+7                 Case ERROR_FILE_NOT_FOUND:
+8                     RaiseGeneralError "Error: File not found.  Couldn't Execute!"
+9                 Case ERROR_PATH_NOT_FOUND:
+10                    RaiseGeneralError "Error: Path not found. Couldn't Execute!"
+11                Case ERROR_BAD_FORMAT:
+12                    RaiseGeneralError "Error:  Bad File Format. Couldn't Execute!"
+13                Case Else:
+14                    RaiseGeneralError "Unknown error when opening file"
+15            End Select
+16        End If
 End Sub
 #End If
 
@@ -836,8 +836,8 @@ Public Function SystemIs64Bit() As Boolean
           #If Mac Then
               ' Check output of uname -a
               Dim result As String
-664           result = ExecCapture("uname -a")
-665           SystemIs64Bit = (InStr(result, "x86_64") > 0)
+1             result = ExecCapture("uname -a")
+2             SystemIs64Bit = (InStr(result, "x86_64") > 0)
           #Else
               ' Is true if the Windows system is a 64 bit one
               ' If Not Environ("ProgramFiles(x86)") = "" Then Is64Bit=True, or
@@ -846,187 +846,187 @@ Public Function SystemIs64Bit() As Boolean
               ' http://www.mrexcel.com/forum/showthread.php?542727-Determining-If-OS-Is-32-Bit-Or-64-Bit-Using-VBA and
               ' http://stackoverflow.com/questions/6256140/how-to-detect-if-the-computer-is-x32-or-x64 and
               ' http://msdn.microsoft.com/en-us/library/ms684139%28v=vs.85%29.aspx
-666           SystemIs64Bit = Len(Environ("ProgramFiles(x86)")) > 0
+3             SystemIs64Bit = Len(Environ("ProgramFiles(x86)")) > 0
           #End If
 End Function
 
 Private Function VBAversion() As String
           #If VBA7 Then
-3517          VBAversion = "VBA7"
+1             VBAversion = "VBA7"
           #ElseIf VBA6 Then
-3518          VBAversion = "VBA6"
+2             VBAversion = "VBA6"
           #Else
-3516          VBAversion = "VBA"
+3             VBAversion = "VBA"
           #End If
 End Function
 
 Private Function ExcelBitness() As String
           #If Win64 Then
-3519          ExcelBitness = "64"
+1             ExcelBitness = "64"
           #Else
-3520          ExcelBitness = "32"
+2             ExcelBitness = "32"
           #End If
 End Function
 
 Private Function ExcelLanguage() As String
-    Dim Lang As Long
+          Dim Lang As Long
     #If Mac Then
-        ' http://www.rondebruin.nl/mac/mac002.htm
-        Lang = Application.LocalizedLanguage
+              ' http://www.rondebruin.nl/mac/mac002.htm
+1             Lang = Application.LocalizedLanguage
     #Else
-        Lang = Application.LanguageSettings.LanguageID(msoLanguageIDUI)
+2             Lang = Application.LanguageSettings.LanguageID(msoLanguageIDUI)
     #End If
-    ExcelLanguage = LanguageCodeToString(Lang)
+3         ExcelLanguage = LanguageCodeToString(Lang)
 End Function
     
 Private Function LanguageCodeToString(Lang As Long)
-    Dim Language As String
-    Select Case Lang
-    Case 1033: Language = "English - US"
-    Case 1036: Language = "French"
-    Case 1031: Language = "German"
-    Case 1040: Language = "Italian"
-    Case 3082: Language = "Spanish - Spain (Modern Sort)"
-    Case 1034: Language = "Spanish - Spain (Traditional Sort)"
-    Case Else: Language = "Code " & Lang & "; see http://msdn.microsoft.com/en-US/goglobal/bb964664.aspx"
-    End Select
-    LanguageCodeToString = Language
+          Dim Language As String
+1         Select Case Lang
+          Case 1033: Language = "English - US"
+2         Case 1036: Language = "French"
+3         Case 1031: Language = "German"
+4         Case 1040: Language = "Italian"
+5         Case 3082: Language = "Spanish - Spain (Modern Sort)"
+6         Case 1034: Language = "Spanish - Spain (Traditional Sort)"
+7         Case Else: Language = "Code " & Lang & "; see http://msdn.microsoft.com/en-US/goglobal/bb964664.aspx"
+8         End Select
+9         LanguageCodeToString = Language
 End Function
 
 Private Function OSFamily() As String
           #If Mac Then
-3521          OSFamily = "Mac"
+1             OSFamily = "Mac"
           #Else
-3522          OSFamily = "Windows"
+2             OSFamily = "Windows"
           #End If
 End Function
 
 Private Function OSVersion() As String
     #If Mac Then
-        OSVersion = Application.Clean(ExecCapture("sw_vers -productVersion"))
+1             OSVersion = Application.Clean(ExecCapture("sw_vers -productVersion"))
     #Else
-        Dim info As OSVERSIONINFO
-        Dim retvalue As Integer
-        info.dwOSVersionInfoSize = 148
-        info.szCSDVersion = Space$(128)
-        retvalue = GetVersionExA(info)
-        OSVersion = info.dwMajorVersion & "." & info.dwMinorVersion
+              Dim info As OSVERSIONINFO
+              Dim retvalue As Integer
+2             info.dwOSVersionInfoSize = 148
+3             info.szCSDVersion = Space$(128)
+4             retvalue = GetVersionExA(info)
+5             OSVersion = info.dwMajorVersion & "." & info.dwMinorVersion
     #End If
 End Function
 
 Private Function OSBitness() As String
-    OSBitness = IIf(SystemIs64Bit, "64", "32")
+1         OSBitness = IIf(SystemIs64Bit, "64", "32")
 End Function
 
 Private Function OSUsername() As String
     #If Mac Then
-        OSUsername = ExecCapture("whoami")
+1             OSUsername = ExecCapture("whoami")
     #Else
-        OSUsername = Environ("USERNAME")
+2             OSUsername = Environ("USERNAME")
     #End If
 End Function
 
 Private Function OpenSolverDistribution() As String
-    ' TODO replace with enum
-    OpenSolverDistribution = IIf(SolverIsPresent(CreateSolver("Bonmin")), "Advanced", "Linear")
+          ' TODO replace with enum
+1         OpenSolverDistribution = IIf(SolverIsPresent(CreateSolver("Bonmin")), "Advanced", "Linear")
 End Function
 
 Public Function EnvironmentString() As String
-' Short encoding of key environment details
-    EnvironmentString = _
-        OSFamily() & "/" & OSVersion() & "x" & OSBitness() & " " & _
-        "Excel/" & Application.Version & "x" & ExcelBitness() & " " & _
-        "OpenSolver/" & sOpenSolverVersion & "x" & OpenSolverDistribution()
+      ' Short encoding of key environment details
+1         EnvironmentString = _
+              OSFamily() & "/" & OSVersion() & "x" & OSBitness() & " " & _
+              "Excel/" & Application.Version & "x" & ExcelBitness() & " " & _
+              "OpenSolver/" & sOpenSolverVersion & "x" & OpenSolverDistribution()
 End Function
 
 Public Function EnvironmentSummary() As String
-' Human-readable summary of key environment details
-    EnvironmentSummary = _
-        "Version " & sOpenSolverVersion & " (" & sOpenSolverDate & ") " & _
-        "running on " & OSBitness() & "-bit " & OSFamily() & " " & _
-        OSVersion() & " with " & VBAversion() & " in " & ExcelBitness() & _
-        "-bit Excel " & Application.Version
+      ' Human-readable summary of key environment details
+1         EnvironmentSummary = _
+              "Version " & sOpenSolverVersion & " (" & sOpenSolverDate & ") " & _
+              "running on " & OSBitness() & "-bit " & OSFamily() & " " & _
+              OSVersion() & " with " & VBAversion() & " in " & ExcelBitness() & _
+              "-bit Excel " & Application.Version
 End Function
 
 Public Function EnvironmentDetail() As String
-' Full description of environment details
-    Dim ProductCodeLine As String
+      ' Full description of environment details
+          Dim ProductCodeLine As String
     #If Win32 Then
-        ProductCodeLine = "Excel product code = " & Application.ProductCode & _
-                          vbNewLine
+1             ProductCodeLine = "Excel product code = " & Application.ProductCode & _
+                                vbNewLine
     #End If
-    EnvironmentDetail = _
-        "OpenSolver version " & sOpenSolverVersion & " (" & sOpenSolverDate & _
-        "); Distribution=" & OpenSolverDistribution & vbNewLine & _
-        "Location: " & _
-        MakeSpacesNonBreaking(MakePathSafe(ThisWorkbook.FullName)) & _
-        vbNewLine & vbNewLine & _
-        "Excel " & Application.Version & "; build " & _
-        Application.Build & "; " & ExcelBitness & "-bit; " & VBAversion & _
-        vbNewLine & _
-        ProductCodeLine & _
-        "Excel language: " & ExcelLanguage & vbNewLine & _
-        "OS: " & OSFamily & " " & OSVersion & "; " & OSBitness & "-bit" & _
-        vbNewLine & _
-        "Username: " & OSUsername
+2         EnvironmentDetail = _
+              "OpenSolver version " & sOpenSolverVersion & " (" & sOpenSolverDate & _
+              "); Distribution=" & OpenSolverDistribution & vbNewLine & _
+              "Location: " & _
+              MakeSpacesNonBreaking(MakePathSafe(ThisWorkbook.FullName)) & _
+              vbNewLine & vbNewLine & _
+              "Excel " & Application.Version & "; build " & _
+              Application.Build & "; " & ExcelBitness & "-bit; " & VBAversion & _
+              vbNewLine & _
+              ProductCodeLine & _
+              "Excel language: " & ExcelLanguage & vbNewLine & _
+              "OS: " & OSFamily & " " & OSVersion & "; " & OSBitness & "-bit" & _
+              vbNewLine & _
+              "Username: " & OSUsername
 End Function
 
 Public Function SolverSummary() As String
-    Dim SolverShortName As Variant, Solver As ISolver
-    For Each SolverShortName In GetAvailableSolvers()
-        Set Solver = CreateSolver(CStr(SolverShortName))
-        If TypeOf Solver Is ISolverLocal Then
-            SolverSummary = SolverSummary & AboutLocalSolver(Solver) & vbNewLine & vbNewLine
-            
-            ' If we are not correctly installed, we can break after the first such message
-            If Not SolverDirIsPresent Then
-                Exit Function
-            End If
-        End If
-    Next SolverShortName
+          Dim SolverShortName As Variant, Solver As ISolver
+1         For Each SolverShortName In GetAvailableSolvers()
+2             Set Solver = CreateSolver(CStr(SolverShortName))
+3             If TypeOf Solver Is ISolverLocal Then
+4                 SolverSummary = SolverSummary & AboutLocalSolver(Solver) & vbNewLine & vbNewLine
+                  
+                  ' If we are not correctly installed, we can break after the first such message
+5                 If Not SolverDirIsPresent Then
+6                     Exit Function
+7                 End If
+8             End If
+9         Next SolverShortName
 End Function
 
 Sub UpdateStatusBar(Text As String, Optional Force As Boolean = False)
-' Function for updating the status bar.
-' Saves the last time the bar was updated and won't re-update until a specified amount of time has passed
-' The bar can be forced to display the new text regardless of time with the Force argument.
-' We only need to toggle ScreenUpdating on Mac
-    Dim RaiseError As Boolean
-    RaiseError = False
-    On Error GoTo ErrorHandler
+      ' Function for updating the status bar.
+      ' Saves the last time the bar was updated and won't re-update until a specified amount of time has passed
+      ' The bar can be forced to display the new text regardless of time with the Force argument.
+      ' We only need to toggle ScreenUpdating on Mac
+          Dim RaiseError As Boolean
+1         RaiseError = False
+2         On Error GoTo ErrorHandler
 
     #If Mac Then
-        Dim ScreenStatus As Boolean
-        ScreenStatus = Application.ScreenUpdating
+              Dim ScreenStatus As Boolean
+3             ScreenStatus = Application.ScreenUpdating
     #End If
 
-    Static LastUpdate As Double
-    Dim TimeDiff As Double
-    TimeDiff = (Now() - LastUpdate) * 86400  ' Time since last update in seconds
+          Static LastUpdate As Double
+          Dim TimeDiff As Double
+4         TimeDiff = (Now() - LastUpdate) * 86400  ' Time since last update in seconds
 
-    ' Check if last update was long enough ago
-    If TimeDiff > 0.5 Or Force Then
-        LastUpdate = Now()
-        
+          ' Check if last update was long enough ago
+5         If TimeDiff > 0.5 Or Force Then
+6             LastUpdate = Now()
+              
         #If Mac Then
-            Application.ScreenUpdating = True
+7                 Application.ScreenUpdating = True
         #End If
 
-        Application.StatusBar = Text
-        DoEvents
-    End If
+8             Application.StatusBar = Text
+9             DoEvents
+10        End If
 
 ExitSub:
     #If Mac Then
-        Application.ScreenUpdating = ScreenStatus
+11            Application.ScreenUpdating = ScreenStatus
     #End If
-    If RaiseError Then RethrowError
-    Exit Sub
+12        If RaiseError Then RethrowError
+13        Exit Sub
 
 ErrorHandler:
-    If Not ReportError("OpenSolverUtils", "UpdateStatusBar") Then Resume
-    RaiseError = True
-    GoTo ExitSub
+14        If Not ReportError("OpenSolverUtils", "UpdateStatusBar") Then Resume
+15        RaiseError = True
+16        GoTo ExitSub
 End Sub
 
 Public Function MsgBoxEx(ByVal prompt As String, _
@@ -1040,128 +1040,128 @@ Public Function MsgBoxEx(ByVal prompt As String, _
                 Optional ByVal ReportIssueButton As Boolean) _
         As VbMsgBoxResult
 
-    ' Extends MsgBox with extra options:
-    ' - First five args are the same as MsgBox, so any MsgBox calls can be swapped to MsgBoxEx
-    ' - LinkTarget: a hyperlink will be included above the button if this is set
-    ' - LinkText: the display text for the hyperlink. Defaults to the URL if not set
-    ' - MoreDetailsButton: Shows a button that opens the error log
-    ' - EmailReportButton: Shows a button that prepares an error report email
-    
-    Dim InteractiveStatus As Boolean
-    InteractiveStatus = Application.Interactive
-    
-    If Len(LinkText) = 0 Then LinkText = LinkTarget
-    
-    Dim Button1 As String, Button2 As String, Button3 As String
-    Dim Value1 As VbMsgBoxResult, Value2 As VbMsgBoxResult, Value3 As VbMsgBoxResult
-    
-    ' Get button types
-    Select Case Options Mod 8
-    Case vbOKOnly
-        Button1 = "OK"
-        Value1 = vbOK
-    Case vbOKCancel
-        Button1 = "OK"
-        Value1 = vbOK
-        Button2 = "Cancel"
-        Value2 = vbCancel
-    Case vbAbortRetryIgnore
-        Button1 = "Abort"
-        Value1 = vbAbort
-        Button2 = "Retry"
-        Value2 = vbRetry
-        Button3 = "Ignore"
-        Value3 = vbIgnore
-    Case vbYesNoCancel
-        Button1 = "Yes"
-        Value1 = vbYes
-        Button2 = "No"
-        Value2 = vbNo
-        Button3 = "Cancel"
-        Value3 = vbCancel
-    Case vbYesNo
-        Button1 = "Yes"
-        Value1 = vbYes
-        Button2 = "No"
-        Value2 = vbNo
-    Case vbRetryCancel
-        Button1 = "Retry"
-        Value1 = vbRetry
-        Button2 = "Cancel"
-        Value2 = vbCancel
-    End Select
-    
-    With New FMsgBoxEx
-        .cmdMoreDetails.Visible = MoreDetailsButton
-        .cmdReportIssue.Visible = ReportIssueButton
-    
-        ' Set up buttons
-        .cmdButton1.Caption = Button1
-        .cmdButton2.Caption = Button2
-        .cmdButton3.Caption = Button3
-        .cmdButton1.Tag = Value1
-        .cmdButton2.Tag = Value2
-        .cmdButton3.Tag = Value3
-        
-        ' Get default button
-        Select Case (Options / 256) Mod 4
-        Case vbDefaultButton1 / 256
-            .cmdButton1.SetFocus
-        Case vbDefaultButton2 / 256
-            .cmdButton2.SetFocus
-        Case vbDefaultButton3 / 256
-            .cmdButton3.SetFocus
-        End Select
-        ' Adjust default button if specified default is going to be hidden
-        If .ActiveControl.Tag = "0" Then .cmdButton1.SetFocus
-    
-        ' We need to unlock the textbox before writing to it on Mac
-        .txtMessage.Locked = False
-        .txtMessage.Text = prompt
-        .txtMessage.Locked = True
-    
-        .lblLink.Caption = LinkText
-        .lblLink.ControlTipText = LinkTarget
-    
-        .Caption = Title
-        
-        .AutoLayout
-        
-        Application.Interactive = True
-        .Show
-        Application.Interactive = InteractiveStatus
-     
-        ' If form was closed using [X], then it was also unloaded, so we set the default to vbCancel
-        MsgBoxEx = vbCancel
-        On Error Resume Next
-        MsgBoxEx = CLng(.Tag)
-        On Error GoTo 0
-    End With
+          ' Extends MsgBox with extra options:
+          ' - First five args are the same as MsgBox, so any MsgBox calls can be swapped to MsgBoxEx
+          ' - LinkTarget: a hyperlink will be included above the button if this is set
+          ' - LinkText: the display text for the hyperlink. Defaults to the URL if not set
+          ' - MoreDetailsButton: Shows a button that opens the error log
+          ' - EmailReportButton: Shows a button that prepares an error report email
+          
+          Dim InteractiveStatus As Boolean
+1         InteractiveStatus = Application.Interactive
+          
+2         If Len(LinkText) = 0 Then LinkText = LinkTarget
+          
+          Dim Button1 As String, Button2 As String, Button3 As String
+          Dim Value1 As VbMsgBoxResult, Value2 As VbMsgBoxResult, Value3 As VbMsgBoxResult
+          
+          ' Get button types
+3         Select Case Options Mod 8
+          Case vbOKOnly
+4             Button1 = "OK"
+5             Value1 = vbOK
+6         Case vbOKCancel
+7             Button1 = "OK"
+8             Value1 = vbOK
+9             Button2 = "Cancel"
+10            Value2 = vbCancel
+11        Case vbAbortRetryIgnore
+12            Button1 = "Abort"
+13            Value1 = vbAbort
+14            Button2 = "Retry"
+15            Value2 = vbRetry
+16            Button3 = "Ignore"
+17            Value3 = vbIgnore
+18        Case vbYesNoCancel
+19            Button1 = "Yes"
+20            Value1 = vbYes
+21            Button2 = "No"
+22            Value2 = vbNo
+23            Button3 = "Cancel"
+24            Value3 = vbCancel
+25        Case vbYesNo
+26            Button1 = "Yes"
+27            Value1 = vbYes
+28            Button2 = "No"
+29            Value2 = vbNo
+30        Case vbRetryCancel
+31            Button1 = "Retry"
+32            Value1 = vbRetry
+33            Button2 = "Cancel"
+34            Value2 = vbCancel
+35        End Select
+          
+36        With New FMsgBoxEx
+37            .cmdMoreDetails.Visible = MoreDetailsButton
+38            .cmdReportIssue.Visible = ReportIssueButton
+          
+              ' Set up buttons
+39            .cmdButton1.Caption = Button1
+40            .cmdButton2.Caption = Button2
+41            .cmdButton3.Caption = Button3
+42            .cmdButton1.Tag = Value1
+43            .cmdButton2.Tag = Value2
+44            .cmdButton3.Tag = Value3
+              
+              ' Get default button
+45            Select Case (Options / 256) Mod 4
+              Case vbDefaultButton1 / 256
+46                .cmdButton1.SetFocus
+47            Case vbDefaultButton2 / 256
+48                .cmdButton2.SetFocus
+49            Case vbDefaultButton3 / 256
+50                .cmdButton3.SetFocus
+51            End Select
+              ' Adjust default button if specified default is going to be hidden
+52            If .ActiveControl.Tag = "0" Then .cmdButton1.SetFocus
+          
+              ' We need to unlock the textbox before writing to it on Mac
+53            .txtMessage.Locked = False
+54            .txtMessage.Text = prompt
+55            .txtMessage.Locked = True
+          
+56            .lblLink.Caption = LinkText
+57            .lblLink.ControlTipText = LinkTarget
+          
+58            .Caption = Title
+              
+59            .AutoLayout
+              
+60            Application.Interactive = True
+61            .Show
+62            Application.Interactive = InteractiveStatus
+           
+              ' If form was closed using [X], then it was also unloaded, so we set the default to vbCancel
+63            MsgBoxEx = vbCancel
+64            On Error Resume Next
+65            MsgBoxEx = CLng(.Tag)
+66            On Error GoTo 0
+67        End With
 End Function
 
 Function ShowEscapeCancelMessage() As VbMsgBoxResult
-    ShowEscapeCancelMessage = MsgBox("You have pressed the Escape key. Do you wish to cancel?", _
-                                     vbCritical + vbYesNo + vbDefaultButton1, _
-                                     "OpenSolver - User Interrupt Occured...")
+1         ShowEscapeCancelMessage = MsgBox("You have pressed the Escape key. Do you wish to cancel?", _
+                                           vbCritical + vbYesNo + vbDefaultButton1, _
+                                           "OpenSolver - User Interrupt Occured...")
 End Function
 
 Function StringHasUnicode(TestString As String) As Boolean
-' Quickly check for any characters that aren't ASCII
-    Dim i As Long, CharCode As Long
-    For i = 1 To Len(TestString)
-        CharCode = AscW(Mid(TestString, i, 1))
-        If CharCode > 127 Or CharCode < 0 Then
-            StringHasUnicode = True
-            Exit Function
-        End If
-    Next i
-    StringHasUnicode = False
+      ' Quickly check for any characters that aren't ASCII
+          Dim i As Long, CharCode As Long
+1         For i = 1 To Len(TestString)
+2             CharCode = AscW(Mid(TestString, i, 1))
+3             If CharCode > 127 Or CharCode < 0 Then
+4                 StringHasUnicode = True
+5                 Exit Function
+6             End If
+7         Next i
+8         StringHasUnicode = False
 End Function
 
 Function AddEquals(s As String) As String
-    AddEquals = IIf(Left(s, 1) <> "=", "=", vbNullString) & s
+1         AddEquals = IIf(Left(s, 1) <> "=", "=", vbNullString) & s
 End Function
 Function RemoveEquals(s As String) As String
-    RemoveEquals = IIf(Left(s, 1) <> "=", s, Mid(s, 2))
+1         RemoveEquals = IIf(Left(s, 1) <> "=", s, Mid(s, 2))
 End Function
 

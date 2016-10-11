@@ -15,62 +15,62 @@ Option Explicit
 Private colTreeStack As Collection
 
 Private Sub Class_Initialize()
-8498      Set colTreeStack = New Collection
+1         Set colTreeStack = New Collection
 End Sub
 
 Public Sub Push(Tree As ExpressionTree)
-8499      colTreeStack.Add Tree
+1         colTreeStack.Add Tree
 End Sub
 
 Public Function Pop() As ExpressionTree
           Dim RaiseError As Boolean
-          RaiseError = False
-          On Error GoTo ErrorHandler
+1         RaiseError = False
+2         On Error GoTo ErrorHandler
 
           Dim obj As ExpressionTree
-8500      Set obj = colTreeStack(colTreeStack.Count)
-8501      colTreeStack.Remove (colTreeStack.Count)
-8502      Set Pop = obj
+3         Set obj = colTreeStack(colTreeStack.Count)
+4         colTreeStack.Remove (colTreeStack.Count)
+5         Set Pop = obj
 
 ExitFunction:
-          If RaiseError Then RethrowError
-          Exit Function
+6         If RaiseError Then RethrowError
+7         Exit Function
 
 ErrorHandler:
-          If Not ReportError("ExpressionTreeStack", "Pop") Then Resume
-          RaiseError = True
-          GoTo ExitFunction
+8         If Not ReportError("ExpressionTreeStack", "Pop") Then Resume
+9         RaiseError = True
+10        GoTo ExitFunction
 End Function
 
 Public Function Peek() As ExpressionTree
           Dim RaiseError As Boolean
-          RaiseError = False
-          On Error GoTo ErrorHandler
+1         RaiseError = False
+2         On Error GoTo ErrorHandler
 
           Dim obj As ExpressionTree
-8503      Set obj = colTreeStack(colTreeStack.Count)
-8504      Set Peek = obj
+3         Set obj = colTreeStack(colTreeStack.Count)
+4         Set Peek = obj
 
 ExitFunction:
-          If RaiseError Then RethrowError
-          Exit Function
+5         If RaiseError Then RethrowError
+6         Exit Function
 
 ErrorHandler:
-          If Not ReportError("ExpressionTreeStack", "Peek") Then Resume
-          RaiseError = True
-          GoTo ExitFunction
+7         If Not ReportError("ExpressionTreeStack", "Peek") Then Resume
+8         RaiseError = True
+9         GoTo ExitFunction
 End Function
 
 Property Get Count() As Long
-8505      Count = colTreeStack.Count
+1         Count = colTreeStack.Count
 End Property
 
 Public Function Display() As String
           Dim i As Long, output As String
-8506      For i = 1 To colTreeStack.Count
-8507          output = output & colTreeStack(i).Display & ", "
-8508      Next i
-8509      Display = output
+1         For i = 1 To colTreeStack.Count
+2             output = output & colTreeStack(i).Display & ", "
+3         Next i
+4         Display = output
 End Function
 
 

@@ -12,70 +12,70 @@ Public SheetNameMapReverse As Collection   ' Stores a map from cleaned name to s
 ' VBA collections to use.
 Function ConvertCellToStandardName(rngCell As Range, Optional strParentName As String = vbNullString) As String
           Dim RaiseError As Boolean
-          RaiseError = False
-          On Error GoTo ErrorHandler
+1         RaiseError = False
+2         On Error GoTo ErrorHandler
 
           Dim strCleanAddress As String
-7438      strCleanAddress = rngCell.Address
+3         strCleanAddress = rngCell.Address
 
           Dim BannedChar As Variant
-          For Each BannedChar In Array("$", ":", "-")
-7441          strCleanAddress = Replace(strCleanAddress, BannedChar, vbNullString)
-          Next BannedChar
+4         For Each BannedChar In Array("$", ":", "-")
+5             strCleanAddress = Replace(strCleanAddress, BannedChar, vbNullString)
+6         Next BannedChar
 
-7439      If Len(strParentName) = 0 Then strParentName = Replace(rngCell.Parent.Name, " ", "_")
+7         If Len(strParentName) = 0 Then strParentName = Replace(rngCell.Parent.Name, " ", "_")
           
           Dim strCleanParentName As String
-          If TestKeyExists(SheetNameMap, strParentName) Then
-              strCleanParentName = SheetNameMap(strParentName)
-          Else
-              strCleanParentName = strParentName
+8         If TestKeyExists(SheetNameMap, strParentName) Then
+9             strCleanParentName = SheetNameMap(strParentName)
+10        Else
+11            strCleanParentName = strParentName
               
-              For Each BannedChar In Array("-", "+", " ", "(", ")", ":", "*", "/", "^", "!")
-                  strCleanParentName = Replace(strCleanParentName, BannedChar, "_")
-              Next BannedChar
+12            For Each BannedChar In Array("-", "+", " ", "(", ")", ":", "*", "/", "^", "!")
+13                strCleanParentName = Replace(strCleanParentName, BannedChar, "_")
+14            Next BannedChar
               
               ' If the cleaned name already exists, append an extra "1"
-              Do While TestKeyExists(SheetNameMapReverse, strCleanParentName)
-                  strCleanParentName = strCleanParentName & "1"
-              Loop
-              SheetNameMap.Add strCleanParentName, strParentName
-              SheetNameMapReverse.Add strParentName, strCleanParentName
-          End If
+15            Do While TestKeyExists(SheetNameMapReverse, strCleanParentName)
+16                strCleanParentName = strCleanParentName & "1"
+17            Loop
+18            SheetNameMap.Add strCleanParentName, strParentName
+19            SheetNameMapReverse.Add strParentName, strCleanParentName
+20        End If
 
-7444      ConvertCellToStandardName = strCleanParentName + "_" + strCleanAddress
+21        ConvertCellToStandardName = strCleanParentName + "_" + strCleanAddress
 
 ExitFunction:
-          If RaiseError Then RethrowError
-          Exit Function
+22        If RaiseError Then RethrowError
+23        Exit Function
 
 ErrorHandler:
-          If Not ReportError("OpenSolverParser", "ConvertCellToStandardName") Then Resume
-          RaiseError = True
-          GoTo ExitFunction
+24        If Not ReportError("OpenSolverParser", "ConvertCellToStandardName") Then Resume
+25        RaiseError = True
+26        GoTo ExitFunction
 End Function
 '==============================================================================
 
 ' Looks up node in collection and returns .strFormulaParsed. If node doesn't exist, returns the supplied default value
 Function GetFormulaWithDefault(Formulae As Collection, NodeName As String, Default As String) As String
           Dim RaiseError As Boolean
-          RaiseError = False
-          On Error GoTo ErrorHandler
+1         RaiseError = False
+2         On Error GoTo ErrorHandler
 
-7445      If TestKeyExists(Formulae, NodeName) Then
-7446          GetFormulaWithDefault = Formulae(NodeName).strFormulaParsed
-7447      Else
-7448          GetFormulaWithDefault = Default
-7449      End If
+3         If TestKeyExists(Formulae, NodeName) Then
+4             GetFormulaWithDefault = Formulae(NodeName).strFormulaParsed
+5         Else
+6             GetFormulaWithDefault = Default
+7         End If
 
 ExitFunction:
-          If RaiseError Then RethrowError
-          Exit Function
+8         If RaiseError Then RethrowError
+9         Exit Function
 
 ErrorHandler:
-          If Not ReportError("OpenSolverParser", "GetFormulaWithDefault") Then Resume
-          RaiseError = True
-          GoTo ExitFunction
+10        If Not ReportError("OpenSolverParser", "GetFormulaWithDefault") Then Resume
+11        RaiseError = True
+12        GoTo ExitFunction
 End Function
 
 

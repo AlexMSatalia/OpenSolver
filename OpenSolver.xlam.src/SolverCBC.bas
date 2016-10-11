@@ -4,45 +4,45 @@ Option Explicit
 Sub LaunchCommandLine_CBC()
 ' Open the CBC solver with our last model loaded.
 ' If we have a worksheet open with a model, then we pass the solver options (max runtime etc) from this model to CBC. Otherwise, we don't pass any options.
-6347      On Error GoTo ErrorHandler
+1         On Error GoTo ErrorHandler
 
           Dim ModelFilePathName As String
-6353      GetLPFilePath ModelFilePathName
-          If Not FileOrDirExists(ModelFilePathName) Then
-              RaiseUserError "There is no .lp file (" & ModelFilePathName & ") to open. Please solve the OpenSolver model and then try again."
-          End If
+2         GetLPFilePath ModelFilePathName
+3         If Not FileOrDirExists(ModelFilePathName) Then
+4             RaiseUserError "There is no .lp file (" & ModelFilePathName & ") to open. Please solve the OpenSolver model and then try again."
+5         End If
 
           Dim SolverParametersString As String
             
           Dim sheet As Worksheet
-          On Error GoTo NoSheet
-6349      GetActiveSheetIfMissing sheet
-          On Error GoTo ErrorHandler
+6         On Error GoTo NoSheet
+7         GetActiveSheetIfMissing sheet
+8         On Error GoTo ErrorHandler
 
           Dim Solver As ISolver
-          Set Solver = CreateSolver("CBC")
+9         Set Solver = CreateSolver("CBC")
           
           Dim SolverPath As String, errorString As String
-6350      If Not SolverIsAvailable(Solver, SolverPath, errorString) Then
-6351          RaiseGeneralError errorString
-6352      End If
+10        If Not SolverIsAvailable(Solver, SolverPath, errorString) Then
+11            RaiseGeneralError errorString
+12        End If
           
           Dim SolverParameters As New Dictionary
-          Set SolverParameters = GetSolverParametersDict(Solver, sheet)
-          SolverParametersString = ParametersToFlags(SolverParameters)
+13        Set SolverParameters = GetSolverParametersDict(Solver, sheet)
+14        SolverParametersString = ParametersToFlags(SolverParameters)
              
 NoSheet:
           Dim CBCRunString As String
-6364      CBCRunString = " -directory " & MakePathSafe(Left(GetTempFolder, Len(GetTempFolder) - 1)) _
+15        CBCRunString = " -directory " & MakePathSafe(Left(GetTempFolder, Len(GetTempFolder) - 1)) _
                            & " -import " & MakePathSafe(ModelFilePathName) _
                            & " " & SolverParametersString _
                            & " -" ' Force CBC to accept commands from the command line
-6365      ExecAsync MakePathSafe(SolverPath) & CBCRunString, GetTempFolder(), True
+16        ExecAsync MakePathSafe(SolverPath) & CBCRunString, GetTempFolder(), True
 
 ExitSub:
-          Exit Sub
+17        Exit Sub
 
 ErrorHandler:
-          ReportError "SolverCBC", "LaunchCommandLine_CBC", True
-          GoTo ExitSub
+18        ReportError "SolverCBC", "LaunchCommandLine_CBC", True
+19        GoTo ExitSub
 End Sub

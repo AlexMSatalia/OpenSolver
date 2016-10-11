@@ -24,231 +24,231 @@ Private SolverString As String
 Private sheet As Worksheet
 
 Private Sub cmdCancel_Click()
-4089      Me.Hide
+1         Me.Hide
 End Sub
 
 Private Sub lblExtraParametersHelp_Click()
-    OpenURL "http://opensolver.org/using-opensolver/#extra-parameters"
+1         OpenURL "http://opensolver.org/using-opensolver/#extra-parameters"
 End Sub
 
 ' Make the [x] hide the form rather than unload
 Private Sub UserForm_QueryClose(Cancel As Integer, CloseMode As Integer)
-    ' If CloseMode = vbFormControlMenu then we know the user
-    ' clicked the [x] close button or Alt+F4 to close the form.
-    If CloseMode = vbFormControlMenu Then
-        cmdCancel_Click
-        Cancel = True
-    End If
+          ' If CloseMode = vbFormControlMenu then we know the user
+          ' clicked the [x] close button or Alt+F4 to close the form.
+1         If CloseMode = vbFormControlMenu Then
+2             cmdCancel_Click
+3             Cancel = True
+4         End If
 End Sub
 
 Private Sub cmdOk_Click()
-          On Error GoTo ErrorHandler
+1         On Error GoTo ErrorHandler
           
           ' All validation
           
           Dim SolverParametersRefersTo As String
-          SolverParametersRefersTo = RefEditToRefersTo(refExtraParameters.Text)
-          ValidateSolverParametersRefersTo SolverParametersRefersTo
+2         SolverParametersRefersTo = RefEditToRefersTo(refExtraParameters.Text)
+3         ValidateSolverParametersRefersTo SolverParametersRefersTo
           
           ' Save confirmed!
 
-4092      SetNonNegativity chkNonNeg.value, sheet
-4098      SetShowSolverProgress chkShowSolverProgress.value, sheet
-4102      SetMaxTime FormatNumberForSaving(txtMaxTime.Text), sheet
-4103      SetMaxIterations FormatNumberForSaving(txtMaxIter.Text), sheet
-4104      SetPrecision CDbl(txtPre.Text), sheet
-4106      SetToleranceAsPercentage CDbl(Replace(txtTol.Text, "%", vbNullString)), sheet
-4107      SetLinearityCheck chkPerformLinearityCheck.value, sheet
-          SetSolverParametersRefersTo SolverString, SolverParametersRefersTo, sheet
+4         SetNonNegativity chkNonNeg.value, sheet
+5         SetShowSolverProgress chkShowSolverProgress.value, sheet
+6         SetMaxTime FormatNumberForSaving(txtMaxTime.Text), sheet
+7         SetMaxIterations FormatNumberForSaving(txtMaxIter.Text), sheet
+8         SetPrecision CDbl(txtPre.Text), sheet
+9         SetToleranceAsPercentage CDbl(Replace(txtTol.Text, "%", vbNullString)), sheet
+10        SetLinearityCheck chkPerformLinearityCheck.value, sheet
+11        SetSolverParametersRefersTo SolverString, SolverParametersRefersTo, sheet
                                                                       
-4112      Me.Hide
-          Exit Sub
+12        Me.Hide
+13        Exit Sub
 
 ErrorHandler:
-          MsgBox Err.Description
+14        MsgBox Err.Description
 End Sub
 
 Private Function FormatNumberForDisplay(Number As Double) As String
-          If Number = MAX_LONG Then
-              FormatNumberForDisplay = vbNullString
-          Else
-              FormatNumberForDisplay = CStr(Number)
-          End If
+1               If Number = MAX_LONG Then
+2                   FormatNumberForDisplay = vbNullString
+3               Else
+4                   FormatNumberForDisplay = CStr(Number)
+5               End If
 End Function
 
 Private Function FormatNumberForSaving(Number As String) As Double
-          If Number = vbNullString Then
-              FormatNumberForSaving = MAX_LONG
-          Else
-              FormatNumberForSaving = CDbl(Number)
-          End If
+1               If Number = vbNullString Then
+2                   FormatNumberForSaving = MAX_LONG
+3               Else
+4                   FormatNumberForSaving = CDbl(Number)
+5               End If
 End Function
 
 Private Sub UserForm_Activate()
-          CenterForm
+1         CenterForm
           
-          GetActiveSheetIfMissing sheet
+2         GetActiveSheetIfMissing sheet
           
-4114      SetAnyMissingDefaultSolverOptions sheet
+3         SetAnyMissingDefaultSolverOptions sheet
 
-4129      chkNonNeg.value = GetNonNegativity(sheet)
-4130      chkShowSolverProgress.value = GetShowSolverProgress(sheet)
-4131      txtMaxTime.Text = FormatNumberForDisplay(GetMaxTime(sheet))
-4133      txtMaxIter.Text = FormatNumberForDisplay(GetMaxIterations(sheet))
-4132      txtTol.Text = CStr(GetToleranceAsPercentage(sheet))
-4134      txtPre.Text = CStr(GetPrecision(sheet))
-4135      chkPerformLinearityCheck.value = GetLinearityCheck(sheet)
+4         chkNonNeg.value = GetNonNegativity(sheet)
+5         chkShowSolverProgress.value = GetShowSolverProgress(sheet)
+6         txtMaxTime.Text = FormatNumberForDisplay(GetMaxTime(sheet))
+7         txtMaxIter.Text = FormatNumberForDisplay(GetMaxIterations(sheet))
+8         txtTol.Text = CStr(GetToleranceAsPercentage(sheet))
+9         txtPre.Text = CStr(GetPrecision(sheet))
+10        chkPerformLinearityCheck.value = GetLinearityCheck(sheet)
 
           Dim Solver As ISolver
-4136      SolverString = GetChosenSolver(sheet)
-          Set Solver = CreateSolver(SolverString)
+11        SolverString = GetChosenSolver(sheet)
+12        Set Solver = CreateSolver(SolverString)
 
-          chkPerformLinearityCheck.Enabled = (SolverLinearity(Solver) = Linear) And _
+13        chkPerformLinearityCheck.Enabled = (SolverLinearity(Solver) = Linear) And _
                                              Solver.ModelType = Diff
-          txtMaxIter.Enabled = IterationLimitAvailable(Solver)
-          txtPre.Enabled = PrecisionAvailable(Solver)
-          txtMaxTime.Enabled = TimeLimitAvailable(Solver)
-          txtTol.Enabled = ToleranceAvailable(Solver)
+14        txtMaxIter.Enabled = IterationLimitAvailable(Solver)
+15        txtPre.Enabled = PrecisionAvailable(Solver)
+16        txtMaxTime.Enabled = TimeLimitAvailable(Solver)
+17        txtTol.Enabled = ToleranceAvailable(Solver)
           
-          refExtraParameters.Text = GetDisplayAddress(GetSolverParametersRefersTo(SolverString, sheet), sheet, False)
+18        refExtraParameters.Text = GetDisplayAddress(GetSolverParametersRefersTo(SolverString, sheet), sheet, False)
 End Sub
 
 Private Sub UserForm_Initialize()
-    AutoLayout
-    CenterForm
+1         AutoLayout
+2         CenterForm
 End Sub
 
 Private Sub AutoLayout()
-    AutoFormat Me.Controls
+1         AutoFormat Me.Controls
 
-    Me.Width = FormWidthOptions
-       
-    With chkNonNeg
-        .Caption = "Make unconstrained variable cells non-negative"
-        .Left = FormMargin
-        .Top = FormMargin
-        .Width = Me.Width - 2 * FormMargin
-    End With
-       
-    With chkPerformLinearityCheck
-        .Caption = "Perform a quick linearity check on the model"
-        .Left = chkNonNeg.Left
-        .Top = Below(chkNonNeg, False)
-        .Width = chkNonNeg.Width
-    End With
-        
-    With chkShowSolverProgress
-        .Caption = "Show optimisation progress while solving"
-        .Left = chkNonNeg.Left
-        .Top = Below(chkPerformLinearityCheck, False)
-        .Width = chkNonNeg.Width
-    End With
-    
-    With txtMaxTime
-        .Width = FormButtonWidth
-        .Left = LeftOfForm(Me.Width, .Width)
-        .Top = Below(chkShowSolverProgress)
-    End With
-    
-    With lblMaxTime
-        .Caption = "Maximum Solution Time (seconds):"
-        .Left = chkNonNeg.Left
-        .Width = LeftOf(txtMaxTime, .Left)
-        .Top = txtMaxTime.Top
-    End With
-    
-    With txtTol
-        .Width = txtMaxTime.Width
-        .Left = txtMaxTime.Left
-        .Top = Below(txtMaxTime)
-    End With
-    
-    With lblTol
-        .Caption = "Branch and Bound Tolerance (%):"
-        .Left = lblMaxTime.Left
-        .Width = lblMaxTime.Width
-        .Top = txtTol.Top
-    End With
-    
-    With txtMaxIter
-        .Width = txtMaxTime.Width
-        .Left = txtMaxTime.Left
-        .Top = Below(txtTol)
-    End With
-    
-    With lblMaxIter
-        .Caption = "Maximum Number of Iterations:"
-        .Left = lblMaxTime.Left
-        .Width = lblMaxTime.Width
-        .Top = txtMaxIter.Top
-    End With
-    
-    With txtPre
-        .Width = txtMaxTime.Width
-        .Left = txtMaxTime.Left
-        .Top = Below(txtMaxIter)
-    End With
-    
-    With lblPre
-        .Caption = "Precision:"
-        .Left = lblMaxTime.Left
-        .Width = lblMaxTime.Width
-        .Top = txtPre.Top
-    End With
-    
-    With lblExtraParameters
-        .Caption = "Extra Solver Parameters Range:"
-        .Left = chkNonNeg.Left
-        .Width = chkNonNeg.Width
-        .Top = Below(txtPre)
-    End With
-    
-    With lblExtraParametersHelp
-        .Caption = "What's this?"
-        .Width = Me.Width
-        AutoHeight lblExtraParametersHelp, Me.Width, True
-        .Left = LeftOfForm(Me.Width, .Width)
-        .Top = lblExtraParameters.Top
-        .Font.Underline = True
-        .ForeColor = FormLinkColor
-    End With
-    
-    With refExtraParameters
-        .Width = chkNonNeg.Width
-        .Left = chkNonNeg.Left
-        .Top = Below(lblExtraParameters, False) - FormSpacing / 2
-    End With
-    
-    With lblFootnote
-        .Caption = "Note: Only options that are used by the currently selected solver can be changed"
-        .Top = Below(refExtraParameters)
-        .Left = chkNonNeg.Left
-        AutoHeight lblFootnote, chkNonNeg.Width
-    End With
-    
-    With cmdCancel
-        .Caption = "Cancel"
-        .Left = txtMaxTime.Left
-        .Width = txtMaxTime.Width
-        .Top = Below(lblFootnote)
-        .Cancel = True
-    End With
-    
-    With cmdOk
-        .Caption = "OK"
-        .Width = txtMaxTime.Width
-        .Left = LeftOf(cmdCancel, .Width)
-        .Top = cmdCancel.Top
-    End With
-    
-    Me.Height = FormHeight(cmdCancel)
-    Me.Width = Me.Width + FormWindowMargin
-    
-    Me.BackColor = FormBackColor
-    Me.Caption = "OpenSolver - Solve Options"
+2         Me.Width = FormWidthOptions
+             
+3         With chkNonNeg
+4             .Caption = "Make unconstrained variable cells non-negative"
+5             .Left = FormMargin
+6             .Top = FormMargin
+7             .Width = Me.Width - 2 * FormMargin
+8         End With
+             
+9         With chkPerformLinearityCheck
+10            .Caption = "Perform a quick linearity check on the model"
+11            .Left = chkNonNeg.Left
+12            .Top = Below(chkNonNeg, False)
+13            .Width = chkNonNeg.Width
+14        End With
+              
+15        With chkShowSolverProgress
+16            .Caption = "Show optimisation progress while solving"
+17            .Left = chkNonNeg.Left
+18            .Top = Below(chkPerformLinearityCheck, False)
+19            .Width = chkNonNeg.Width
+20        End With
+          
+21        With txtMaxTime
+22            .Width = FormButtonWidth
+23            .Left = LeftOfForm(Me.Width, .Width)
+24            .Top = Below(chkShowSolverProgress)
+25        End With
+          
+26        With lblMaxTime
+27            .Caption = "Maximum Solution Time (seconds):"
+28            .Left = chkNonNeg.Left
+29            .Width = LeftOf(txtMaxTime, .Left)
+30            .Top = txtMaxTime.Top
+31        End With
+          
+32        With txtTol
+33            .Width = txtMaxTime.Width
+34            .Left = txtMaxTime.Left
+35            .Top = Below(txtMaxTime)
+36        End With
+          
+37        With lblTol
+38            .Caption = "Branch and Bound Tolerance (%):"
+39            .Left = lblMaxTime.Left
+40            .Width = lblMaxTime.Width
+41            .Top = txtTol.Top
+42        End With
+          
+43        With txtMaxIter
+44            .Width = txtMaxTime.Width
+45            .Left = txtMaxTime.Left
+46            .Top = Below(txtTol)
+47        End With
+          
+48        With lblMaxIter
+49            .Caption = "Maximum Number of Iterations:"
+50            .Left = lblMaxTime.Left
+51            .Width = lblMaxTime.Width
+52            .Top = txtMaxIter.Top
+53        End With
+          
+54        With txtPre
+55            .Width = txtMaxTime.Width
+56            .Left = txtMaxTime.Left
+57            .Top = Below(txtMaxIter)
+58        End With
+          
+59        With lblPre
+60            .Caption = "Precision:"
+61            .Left = lblMaxTime.Left
+62            .Width = lblMaxTime.Width
+63            .Top = txtPre.Top
+64        End With
+          
+65        With lblExtraParameters
+66            .Caption = "Extra Solver Parameters Range:"
+67            .Left = chkNonNeg.Left
+68            .Width = chkNonNeg.Width
+69            .Top = Below(txtPre)
+70        End With
+          
+71        With lblExtraParametersHelp
+72            .Caption = "What's this?"
+73            .Width = Me.Width
+74            AutoHeight lblExtraParametersHelp, Me.Width, True
+75            .Left = LeftOfForm(Me.Width, .Width)
+76            .Top = lblExtraParameters.Top
+77            .Font.Underline = True
+78            .ForeColor = FormLinkColor
+79        End With
+          
+80        With refExtraParameters
+81            .Width = chkNonNeg.Width
+82            .Left = chkNonNeg.Left
+83            .Top = Below(lblExtraParameters, False) - FormSpacing / 2
+84        End With
+          
+85        With lblFootnote
+86            .Caption = "Note: Only options that are used by the currently selected solver can be changed"
+87            .Top = Below(refExtraParameters)
+88            .Left = chkNonNeg.Left
+89            AutoHeight lblFootnote, chkNonNeg.Width
+90        End With
+          
+91        With cmdCancel
+92            .Caption = "Cancel"
+93            .Left = txtMaxTime.Left
+94            .Width = txtMaxTime.Width
+95            .Top = Below(lblFootnote)
+96            .Cancel = True
+97        End With
+          
+98        With cmdOk
+99            .Caption = "OK"
+100           .Width = txtMaxTime.Width
+101           .Left = LeftOf(cmdCancel, .Width)
+102           .Top = cmdCancel.Top
+103       End With
+          
+104       Me.Height = FormHeight(cmdCancel)
+105       Me.Width = Me.Width + FormWindowMargin
+          
+106       Me.BackColor = FormBackColor
+107       Me.Caption = "OpenSolver - Solve Options"
 End Sub
 
 Private Sub CenterForm()
-    Me.Top = CenterFormTop(Me.Height)
-    Me.Left = CenterFormLeft(Me.Width)
+1         Me.Top = CenterFormTop(Me.Height)
+2         Me.Left = CenterFormLeft(Me.Width)
 End Sub

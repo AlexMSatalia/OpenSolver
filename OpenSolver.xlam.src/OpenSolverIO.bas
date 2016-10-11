@@ -20,111 +20,111 @@ Option Explicit
 #End If
 
 Sub CheckLocationValid()
-          If StringHasUnicode(ThisWorkbook.Path) Then
-              MsgBoxEx "The path that OpenSolver is being loaded from contains unicode characters. " & _
-                       "This means the solvers are very unlikely to work. " & _
-                       "Please move the OpenSolver folder so that there are no unicode characters in the complete path to the folder " & vbNewLine & vbNewLine & _
-                       "The OpenSolver folder is currently located at: " & vbNewLine & _
-                       ThisWorkbook.Path
-          End If
+1               If StringHasUnicode(ThisWorkbook.Path) Then
+2                   MsgBoxEx "The path that OpenSolver is being loaded from contains unicode characters. " & _
+                             "This means the solvers are very unlikely to work. " & _
+                             "Please move the OpenSolver folder so that there are no unicode characters in the complete path to the folder " & vbNewLine & vbNewLine & _
+                             "The OpenSolver folder is currently located at: " & vbNewLine & _
+                             ThisWorkbook.Path
+3               End If
 End Sub
 
 Function SolverDirIsPresent() As Boolean
-          SolverDirIsPresent = FileOrDirExists(SolverDir)
+1               SolverDirIsPresent = FileOrDirExists(SolverDir)
 End Function
 
 Function ActiveSheetWithValidation() As Worksheet
           Dim RaiseError As Boolean
-          RaiseError = False
-          On Error GoTo ErrorHandler
+1         RaiseError = False
+2         On Error GoTo ErrorHandler
 
           ' Check there is a workbook
-465       If Application.Workbooks.Count = 0 Then RaiseGeneralError "No active workbook available."
+3         If Application.Workbooks.Count = 0 Then RaiseGeneralError "No active workbook available."
 
           ' Check we can access the worksheet
-470       On Error Resume Next
-471       Set ActiveSheetWithValidation = ActiveSheet
-472       If Err.Number <> 0 Then
-              On Error GoTo ErrorHandler
-473           RaiseGeneralError "The active sheet is not a worksheet."
-476       End If
+4         On Error Resume Next
+5         Set ActiveSheetWithValidation = ActiveSheet
+6         If Err.Number <> 0 Then
+7             On Error GoTo ErrorHandler
+8             RaiseGeneralError "The active sheet is not a worksheet."
+9         End If
 
 ExitFunction:
-          If RaiseError Then RethrowError
-          Exit Function
+10        If RaiseError Then RethrowError
+11        Exit Function
 
 ErrorHandler:
-          If Not ReportError("OpenSolverIO", "CheckActiveWorksheetAvailable") Then Resume
-          RaiseError = True
-          GoTo ExitFunction
+12        If Not ReportError("OpenSolverIO", "CheckActiveWorksheetAvailable") Then Resume
+13        RaiseError = True
+14        GoTo ExitFunction
 End Function
 
 Sub GetActiveSheetIfMissing(sheet As Worksheet)
-    If sheet Is Nothing Then Set sheet = ActiveSheetWithValidation
+1         If sheet Is Nothing Then Set sheet = ActiveSheetWithValidation
 End Sub
 
 Function MakeNewSheet(namePrefix As String, OverwriteExisting As Boolean) As Worksheet
           Dim ScreenStatus As Boolean
-          ScreenStatus = Application.ScreenUpdating
-668       Application.ScreenUpdating = False
+1         ScreenStatus = Application.ScreenUpdating
+2         Application.ScreenUpdating = False
 
           Dim newSheet As Worksheet
-          On Error Resume Next
-669       Set newSheet = Sheets(namePrefix)
-670       If Err.Number <> 0 Then
-671           Set newSheet = Sheets.Add
-672           newSheet.Name = namePrefix
-675       Else
-677           If OverwriteExisting Then
-                  newSheet.Cells.Delete
-680           Else
-682               Set newSheet = Sheets.Add
+3         On Error Resume Next
+4         Set newSheet = Sheets(namePrefix)
+5         If Err.Number <> 0 Then
+6             Set newSheet = Sheets.Add
+7             newSheet.Name = namePrefix
+8         Else
+9             If OverwriteExisting Then
+10                newSheet.Cells.Delete
+11            Else
+12                Set newSheet = Sheets.Add
                   Dim i As Long, NeedSheet As Boolean
-681               i = 1
-683               NeedSheet = True
-684               On Error Resume Next
-685               While NeedSheet
-686                   newSheet.Name = namePrefix & " " & i
-688                   If Err.Number = 0 Then NeedSheet = False
-689                   i = i + 1
-690                   Err.Number = 0
-691               Wend
-693           End If
-694       End If
-695       Set MakeNewSheet = newSheet
-696       Application.ScreenUpdating = ScreenStatus
+13                i = 1
+14                NeedSheet = True
+15                On Error Resume Next
+16                While NeedSheet
+17                    newSheet.Name = namePrefix & " " & i
+18                    If Err.Number = 0 Then NeedSheet = False
+19                    i = i + 1
+20                    Err.Number = 0
+21                Wend
+22            End If
+23        End If
+24        Set MakeNewSheet = newSheet
+25        Application.ScreenUpdating = ScreenStatus
 End Function
 
 Function GetExistingFilePathName(Directory As String, FileName As String, ByRef pathName As String) As Boolean
-462       pathName = JoinPaths(Directory, FileName)
-463       GetExistingFilePathName = FileOrDirExists(pathName)
+1         pathName = JoinPaths(Directory, FileName)
+2         GetExistingFilePathName = FileOrDirExists(pathName)
 End Function
 
 Function GetRootDriveName() As String
-          Dim RaiseError As Boolean
-          RaiseError = False
-          On Error GoTo ErrorHandler
+                Dim RaiseError As Boolean
+1               RaiseError = False
+2               On Error GoTo ErrorHandler
 
           #If Mac Then
-              Static DriveName As String
-              ' We assume that the temp folder is on the root drive
-              ' Seems reasonable, the user might be able to mess this up if they really try.
-              If DriveName = "" Then
-                  Dim Path As String
-                  Path = GetTempFolder(False)
-                  DriveName = Left(Path, InStr(Path, Application.PathSeparator) - 1)
-              End If
-              GetRootDriveName = DriveName
+                    Static DriveName As String
+                    ' We assume that the temp folder is on the root drive
+                    ' Seems reasonable, the user might be able to mess this up if they really try.
+3                   If DriveName = "" Then
+                        Dim Path As String
+4                       Path = GetTempFolder(False)
+5                       DriveName = Left(Path, InStr(Path, Application.PathSeparator) - 1)
+6                   End If
+7                   GetRootDriveName = DriveName
           #End If
 
 ExitFunction:
-          If RaiseError Then RethrowError
-          Exit Function
+8               If RaiseError Then RethrowError
+9               Exit Function
 
 ErrorHandler:
-          If Not ReportError("OpenSolverIO", "GetRootDriveName") Then Resume
-          RaiseError = True
-          GoTo ExitFunction
+10              If Not ReportError("OpenSolverIO", "GetRootDriveName") Then Resume
+11              RaiseError = True
+12              GoTo ExitFunction
 End Function
 
 Function ConvertHfsPathToPosix(Path As String) As String
@@ -135,124 +135,124 @@ Function ConvertHfsPathToPosix(Path As String) As String
 ' Output (POSIX path): "/Volumes/Macintosh HD/Users/jack/filename.txt"
 
           Dim RaiseError As Boolean
-          RaiseError = False
-          On Error GoTo ErrorHandler
+1         RaiseError = False
+2         On Error GoTo ErrorHandler
 
           #If Mac Then
               ' Check we have an HFS path and not POSIX
-738           If InStr(Path, "/") = 0 Then
+3             If InStr(Path, "/") = 0 Then
                   Dim RootDriveName As String
-                  RootDriveName = GetRootDriveName()
-                  If Left(Path, Len(RootDriveName)) = RootDriveName Then
-                      ConvertHfsPathToPosix = Mid(Path, Len(RootDriveName) + 1)
-                  Else
+4                 RootDriveName = GetRootDriveName()
+5                 If Left(Path, Len(RootDriveName)) = RootDriveName Then
+6                     ConvertHfsPathToPosix = Mid(Path, Len(RootDriveName) + 1)
+7                 Else
                       ' Prefix disk name with :Volumes:
-739                   ConvertHfsPathToPosix = ":Volumes:" & Path
-                  End If
+8                     ConvertHfsPathToPosix = ":Volumes:" & Path
+9                 End If
                   ' Convert path delimiters
-740               ConvertHfsPathToPosix = Replace(ConvertHfsPathToPosix, ":", "/")
-741           Else
+10                ConvertHfsPathToPosix = Replace(ConvertHfsPathToPosix, ":", "/")
+11            Else
                   ' Path is already POSIX
-742               ConvertHfsPathToPosix = Path
-743           End If
+12                ConvertHfsPathToPosix = Path
+13            End If
           #Else
-744           ConvertHfsPathToPosix = Path
+14            ConvertHfsPathToPosix = Path
           #End If
 
 ExitFunction:
-          If RaiseError Then RethrowError
-          Exit Function
+15        If RaiseError Then RethrowError
+16        Exit Function
 
 ErrorHandler:
-          If Not ReportError("OpenSolverIO", "ConvertHfsPathToPosix") Then Resume
-          RaiseError = True
-          GoTo ExitFunction
+17        If Not ReportError("OpenSolverIO", "ConvertHfsPathToPosix") Then Resume
+18        RaiseError = True
+19        GoTo ExitFunction
 End Function
 
 Function ConvertPosixPathToHfs(Path As String) As String
-' Converts a POSIX path back to HFS
-' Input (POSIX path): "/Volumes/Macintosh HD/Users/jack/filename.txt"
-' Output (HFS path): "Macintosh HD:Users:jack:filename.txt"
-    Dim RaiseError As Boolean
-    RaiseError = False
-    On Error GoTo ErrorHandler
+      ' Converts a POSIX path back to HFS
+      ' Input (POSIX path): "/Volumes/Macintosh HD/Users/jack/filename.txt"
+      ' Output (HFS path): "Macintosh HD:Users:jack:filename.txt"
+          Dim RaiseError As Boolean
+1         RaiseError = False
+2         On Error GoTo ErrorHandler
 
     #If Mac Then
-        ' Make sure we have a POSIX path
-        If InStr(Path, ":") = 0 Then
-            Const VolumePrefix = "/Volumes/"
-            If Left(Path, Len(VolumePrefix)) = VolumePrefix Then
-                ' If the POSIX path starts with /Volumes/, then we keep the drive name after /Volumes/
-                ConvertPosixPathToHfs = Mid(Path, Len(VolumePrefix) + 1)
-            Else
-                ' If the POSIX path starts at the root, we add the name of the root drive
-                ConvertPosixPathToHfs = GetRootDriveName() & Path
-            End If
-            ' Convert Path delimiters
-            ConvertPosixPathToHfs = Replace(ConvertPosixPathToHfs, "/", ":")
-        Else
-            ConvertPosixPathToHfs = Path
-        End If
+              ' Make sure we have a POSIX path
+3             If InStr(Path, ":") = 0 Then
+                  Const VolumePrefix = "/Volumes/"
+4                 If Left(Path, Len(VolumePrefix)) = VolumePrefix Then
+                      ' If the POSIX path starts with /Volumes/, then we keep the drive name after /Volumes/
+5                     ConvertPosixPathToHfs = Mid(Path, Len(VolumePrefix) + 1)
+6                 Else
+                      ' If the POSIX path starts at the root, we add the name of the root drive
+7                     ConvertPosixPathToHfs = GetRootDriveName() & Path
+8                 End If
+                  ' Convert Path delimiters
+9                 ConvertPosixPathToHfs = Replace(ConvertPosixPathToHfs, "/", ":")
+10            Else
+11                ConvertPosixPathToHfs = Path
+12            End If
     #Else
-        ConvertPosixPathToHfs = Path
+13            ConvertPosixPathToHfs = Path
     #End If
 
 ExitFunction:
-    If RaiseError Then RethrowError
-    Exit Function
+14        If RaiseError Then RethrowError
+15        Exit Function
 
 ErrorHandler:
-    If Not ReportError("OpenSolverIO", "ConvertPosixPathToHfs") Then Resume
-    RaiseError = True
-    GoTo ExitFunction
+16        If Not ReportError("OpenSolverIO", "ConvertPosixPathToHfs") Then Resume
+17        RaiseError = True
+18        GoTo ExitFunction
 End Function
 
 Function MakePathSafe(Path As String) As String
-' Prepares a path for command-line invocation
-    MakePathSafe = IIf(Len(Path) = 0, vbNullString, Quote(ConvertHfsPathToPosix(Path)))
+      ' Prepares a path for command-line invocation
+1         MakePathSafe = IIf(Len(Path) = 0, vbNullString, Quote(ConvertHfsPathToPosix(Path)))
 End Function
 
 Function JoinPaths(ParamArray Paths() As Variant) As String
-          Dim i As Long
-          For i = LBound(Paths) To UBound(Paths) - 1
-              JoinPaths = JoinPaths & Paths(i) & IIf(Right(Paths(i), 1) <> Application.PathSeparator, Application.PathSeparator, vbNullString)
-          Next i
-          JoinPaths = JoinPaths & Paths(UBound(Paths))
+                Dim i As Long
+1               For i = LBound(Paths) To UBound(Paths) - 1
+2                   JoinPaths = JoinPaths & Paths(i) & IIf(Right(Paths(i), 1) <> Application.PathSeparator, Application.PathSeparator, vbNullString)
+3               Next i
+4               JoinPaths = JoinPaths & Paths(UBound(Paths))
 End Function
 
 Function FileOrDirExists(pathName As String) As Boolean
 ' from http://www.vbaexpress.com/kb/getarticle.php?kb_id=559
     
-          If IsMac And Val(Application.Version) >= 15 Then
+1         If IsMac And Val(Application.Version) >= 15 Then
               ' On Mac 2016, any file access via VBA seems to set the extended attribute
               ' `com.apple.quarantine` on the file.
               ' This attribute blocks execution of the file later, like downloaded files on Windows
               
               ' Instead, we use the `test` shell function via libc to check existence
               Dim result As String
-              result = ExecCapture("test -e " & MakePathSafe(pathName) & " && echo exists")
-              FileOrDirExists = Len(result) > 0
-          Else
+2             result = ExecCapture("test -e " & MakePathSafe(pathName) & " && echo exists")
+3             FileOrDirExists = Len(result) > 0
+4         Else
               Dim iTemp As Long
-105           On Error Resume Next
-106           iTemp = GetAttr(pathName)
+5             On Error Resume Next
+6             iTemp = GetAttr(pathName)
               'Check if error exists and set response appropriately
-107           FileOrDirExists = (Err.Number = 0)
-          End If
+7             FileOrDirExists = (Err.Number = 0)
+8         End If
            
 End Function
 
 Sub DeleteFileAndVerify(FilePath As String)
       ' Deletes file and raises error if not successful
-          On Error GoTo DeleteError
-757       If FileOrDirExists(FilePath) Then Kill FilePath
-758       If FileOrDirExists(FilePath) Then
-759           GoTo DeleteError
-760       End If
-          Exit Sub
+1         On Error GoTo DeleteError
+2         If FileOrDirExists(FilePath) Then Kill FilePath
+3         If FileOrDirExists(FilePath) Then
+4             GoTo DeleteError
+5         End If
+6         Exit Sub
           
 DeleteError:
-          RaiseUserError "Unable to delete the file: " & FilePath & vbNewLine & vbNewLine & _
+7         RaiseUserError "Unable to delete the file: " & FilePath & vbNewLine & vbNewLine & _
                          Err.Description & vbNewLine & vbNewLine & _
                          "To fix this, try restarting Excel and check Task Manager to make sure no solver is running. " & _
                          "If this error still appears after that, try restarting the computer."
@@ -260,259 +260,259 @@ End Sub
 
 Sub OpenFile(FilePath As String, NotFoundMessage As String)
           Dim RaiseError As Boolean
-          RaiseError = False
-          On Error GoTo ErrorHandler
+1         RaiseError = False
+2         On Error GoTo ErrorHandler
 
-762       If Not FileOrDirExists(FilePath) Then
-763           RaiseGeneralError NotFoundMessage
-764       Else
+3         If Not FileOrDirExists(FilePath) Then
+4             RaiseGeneralError NotFoundMessage
+5         Else
               ' Check that there is no workbook open with the same name
               Dim w As Workbook
-765           On Error Resume Next
-766           Set w = Workbooks(Right(FilePath, InStr(FilePath, Application.PathSeparator)))
-767           On Error GoTo ErrorHandler
-768           Workbooks.Open FileName:=FilePath, ReadOnly:=True ' , Format:=Tabs
-769       End If
-          Exit Sub
+6             On Error Resume Next
+7             Set w = Workbooks(Right(FilePath, InStr(FilePath, Application.PathSeparator)))
+8             On Error GoTo ErrorHandler
+9             Workbooks.Open FileName:=FilePath, ReadOnly:=True ' , Format:=Tabs
+10        End If
+11        Exit Sub
 
 ErrorHandler:
-          MsgBox NotFoundMessage
+12        MsgBox NotFoundMessage
 End Sub
 
 Sub OpenFolder(FolderPath As String, NotFoundMessage As String)
-    Dim RaiseError As Boolean
-    RaiseError = False
-    On Error GoTo ErrorHandler
+          Dim RaiseError As Boolean
+1         RaiseError = False
+2         On Error GoTo ErrorHandler
 
-    If Not FileOrDirExists(FolderPath) Then
-        RaiseGeneralError NotFoundMessage
-    Else
+3         If Not FileOrDirExists(FolderPath) Then
+4             RaiseGeneralError NotFoundMessage
+5         Else
         #If Mac Then
-            ExecAsync "open " & MakePathSafe(FolderPath)
+6                 ExecAsync "open " & MakePathSafe(FolderPath)
         #Else
-            ExecAsync "explorer.exe " & FolderPath, DisplayOutput:=True
+7                 ExecAsync "explorer.exe " & FolderPath, DisplayOutput:=True
         #End If
-    End If
-    Exit Sub
+8         End If
+9         Exit Sub
 
 ErrorHandler:
-    MsgBox NotFoundMessage
+10        MsgBox NotFoundMessage
 End Sub
 
 Sub DeleteFolderAndContents(FolderPath As String)
-    On Error Resume Next
+1         On Error Resume Next
 
     #If Mac Then
-        ExecAsync "rm -rf " & MakePathSafe(FolderPath)
+2             ExecAsync "rm -rf " & MakePathSafe(FolderPath)
     #Else
-        Kill JoinPaths(FolderPath, "*.*")
-        RmDir FolderPath
+3             Kill JoinPaths(FolderPath, "*.*")
+4             RmDir FolderPath
     #End If
-    On Error GoTo 0
+5         On Error GoTo 0
 End Sub
 
 Sub DeleteTempFolder()
-    Dim RaiseError As Boolean
-    RaiseError = False
-    On Error GoTo ErrorHandler
+          Dim RaiseError As Boolean
+1         RaiseError = False
+2         On Error GoTo ErrorHandler
 
-    Dim TempFolderPath As String
-    TempFolderPath = GetTempFolder()
-    If Len(TempFolderPath) <> 0 Then
-        DeleteFolderAndContents TempFolderPath
-    End If
+          Dim TempFolderPath As String
+3         TempFolderPath = GetTempFolder()
+4         If Len(TempFolderPath) <> 0 Then
+5             DeleteFolderAndContents TempFolderPath
+6         End If
 
 ExitSub:
-    If RaiseError Then RethrowError
-    Exit Sub
+7         If RaiseError Then RethrowError
+8         Exit Sub
 
 ErrorHandler:
-    If Not ReportError("OpenSolverIO", "DeleteTempFolder") Then Resume
-    RaiseError = True
-    GoTo ExitSub
+9         If Not ReportError("OpenSolverIO", "DeleteTempFolder") Then Resume
+10        RaiseError = True
+11        GoTo ExitSub
 End Sub
 
 Function CreateTempName(Prefix As String) As String
-    On Error GoTo Failed
+1         On Error GoTo Failed
     #If Mac Then
-        CreateTempName = mktemp(Prefix & "-XXXX")
+2             CreateTempName = mktemp(Prefix & "-XXXX")
     #Else
-        Dim fso As Object
-        Set fso = CreateObject("Scripting.FileSystemObject")
-        
-        Dim RandomName As String
-        RandomName = fso.GetTempName()
-        RandomName = Mid(RandomName, 4, Len(RandomName) - 8)
-        CreateTempName = Prefix & "-" & RandomName
+              Dim fso As Object
+3             Set fso = CreateObject("Scripting.FileSystemObject")
+              
+              Dim RandomName As String
+4             RandomName = fso.GetTempName()
+5             RandomName = Mid(RandomName, 4, Len(RandomName) - 8)
+6             CreateTempName = Prefix & "-" & RandomName
     #End If
-    Exit Function
-    
+7         Exit Function
+          
 Failed:
-    CreateTempName = Prefix
+8         CreateTempName = Prefix
 End Function
 
 Function GetTempFolder(Optional AllowEnvironOverride As Boolean = True) As String
           Dim RaiseError As Boolean
-          RaiseError = False
-          On Error GoTo ErrorHandler
+1         RaiseError = False
+2         On Error GoTo ErrorHandler
 
           Static TempFolderPath As String
-88        If Len(TempFolderPath) = 0 Then
+3         If Len(TempFolderPath) = 0 Then
               #If Mac Then
-                  If Val(Application.Version) >= 15 Then
-                      TempFolderPath = MacScript("return (POSIX path of (path to temporary items)) as string")
-                  Else
-89                    TempFolderPath = MacScript("return (path to temporary items) as string")
-                  End If
+4                 If Val(Application.Version) >= 15 Then
+5                     TempFolderPath = MacScript("return (POSIX path of (path to temporary items)) as string")
+6                 Else
+7                     TempFolderPath = MacScript("return (path to temporary items) as string")
+8                 End If
               #Else
                   ' Get Temp Folder
                   ' See http://www.pcreview.co.uk/forums/thread-934893.php
                   Dim ret As Long
-90                TempFolderPath = String$(255, 0)
-91                ret = GetTempPath(255, TempFolderPath)
-92                If ret <> 0 Then
-93                    TempFolderPath = Left(TempFolderPath, ret)
-95                Else
-96                    TempFolderPath = vbNullString
-97                End If
+9                 TempFolderPath = String$(255, 0)
+10                ret = GetTempPath(255, TempFolderPath)
+11                If ret <> 0 Then
+12                    TempFolderPath = Left(TempFolderPath, ret)
+13                Else
+14                    TempFolderPath = vbNullString
+15                End If
               #End If
               
               ' Andres Sommerhoff (ASL) - Country: Chile
               ' Allow user to specify a temp path using an environment variable
               ' This can also be a workaround to avoid problem with spaces in the temp path.
-98            If AllowEnvironOverride Then
-                  If Len(Environ("OpenSolverTempPath")) > 0 Then
-99                    TempFolderPath = Environ("OpenSolverTempPath")
-                  End If
-100           End If
+16            If AllowEnvironOverride Then
+17                If Len(Environ("OpenSolverTempPath")) > 0 Then
+18                    TempFolderPath = Environ("OpenSolverTempPath")
+19                End If
+20            End If
 
               ' Append OpenSolver to dir
-              If Len(TempFolderPath) <> 0 Then
-                  TempFolderPath = JoinPaths(TempFolderPath, CreateTempName("OpenSolver"))
-                  If Right(TempFolderPath, 1) <> Application.PathSeparator Then TempFolderPath = TempFolderPath & Application.PathSeparator
-              End If
-101       End If
+21            If Len(TempFolderPath) <> 0 Then
+22                TempFolderPath = JoinPaths(TempFolderPath, CreateTempName("OpenSolver"))
+23                If Right(TempFolderPath, 1) <> Application.PathSeparator Then TempFolderPath = TempFolderPath & Application.PathSeparator
+24            End If
+25        End If
           
-          If Not FileOrDirExists(TempFolderPath) Then MkDir TempFolderPath
-102       GetTempFolder = TempFolderPath
+26        If Not FileOrDirExists(TempFolderPath) Then MkDir TempFolderPath
+27        GetTempFolder = TempFolderPath
 
 ExitFunction:
-          If RaiseError Then RethrowError
-          Exit Function
+28        If RaiseError Then RethrowError
+29        Exit Function
 
 ErrorHandler:
-          If Not ReportError("OpenSolverIO", "GetTempFolder") Then Resume
-          RaiseError = True
-          GoTo ExitFunction
+30        If Not ReportError("OpenSolverIO", "GetTempFolder") Then Resume
+31        RaiseError = True
+32        GoTo ExitFunction
 End Function
 
 Function GetTempFilePath(FileName As String, ByRef Path As String) As Boolean
-104       GetTempFilePath = GetExistingFilePathName(GetTempFolder, FileName, Path)
+1         GetTempFilePath = GetExistingFilePathName(GetTempFolder, FileName, Path)
 End Function
 
 Sub CreateScriptFile(ByRef ScriptFilePath As String, FileContents As String, Optional EnableEcho As Boolean)
 ' Create a script file with the specified contents.
           Dim RaiseError As Boolean
-          RaiseError = False
-          On Error GoTo ErrorHandler
+1         RaiseError = False
+2         On Error GoTo ErrorHandler
 
-747       Open ScriptFilePath For Output As #1
+3         Open ScriptFilePath For Output As #1
           
           #If Win32 Then
               ' Add echo off for windows
-748           If Not EnableEcho Then
-749               Print #1, "@echo off" & vbCrLf
-750           End If
+4             If Not EnableEcho Then
+5                 Print #1, "@echo off" & vbCrLf
+6             End If
           #End If
-751       Print #1, FileContents
-752       Close #1
+7         Print #1, FileContents
+8         Close #1
           
           #If Mac Then
-753           Exec "chmod +x " & MakePathSafe(ScriptFilePath)
+9             Exec "chmod +x " & MakePathSafe(ScriptFilePath)
           #End If
 
 ExitSub:
-          Close #1
-          If RaiseError Then RethrowError
-          Exit Sub
+10        Close #1
+11        If RaiseError Then RethrowError
+12        Exit Sub
 
 ErrorHandler:
-          If Not ReportError("OpenSolverIO", "CreateScriptFile") Then Resume
-          RaiseError = True
-          GoTo ExitSub
+13        If Not ReportError("OpenSolverIO", "CreateScriptFile") Then Resume
+14        RaiseError = True
+15        GoTo ExitSub
 End Sub
 
 Sub SetCurrentDirectory(NewPath As String)
           Dim RaiseError As Boolean
-          RaiseError = False
-          On Error GoTo ErrorHandler
+1         RaiseError = False
+2         On Error GoTo ErrorHandler
 
           #If Mac Then
-735           ChDir NewPath
+3             ChDir NewPath
           #Else
-736           SetCurrentDirectoryA NewPath
+4             SetCurrentDirectoryA NewPath
           #End If
 
 ExitSub:
-          If RaiseError Then RethrowError
-          Exit Sub
+5         If RaiseError Then RethrowError
+6         Exit Sub
 
 ErrorHandler:
-          If Not ReportError("OpenSolverIO", "SetCurrentDirectory") Then Resume
-          RaiseError = True
-          GoTo ExitSub
+7         If Not ReportError("OpenSolverIO", "SetCurrentDirectory") Then Resume
+8         RaiseError = True
+9         GoTo ExitSub
 End Sub
 
 Function GetAddInIfExists(AddInObj As Excel.AddIn, Title As String) As Boolean
           ' See http://msdn.microsoft.com/en-us/library/microsoft.office.interop.excel.addins.aspx
-3474      Set AddInObj = Nothing
-3475      On Error Resume Next
-3476      Set AddInObj = Application.AddIns.Item(Title)
-3477      GetAddInIfExists = (Err = 0)
+1         Set AddInObj = Nothing
+2         On Error Resume Next
+3         Set AddInObj = Application.AddIns.Item(Title)
+4         GetAddInIfExists = (Err = 0)
 End Function
 
 Function GetOpenSolverAddInIfExists(OpenSolverAddIn As Excel.AddIn) As Boolean
           Dim Title As String
-3481      Title = "OpenSolver"
-          If IsMac And Val(Application.Version) < 15 Then
+1         Title = "OpenSolver"
+2         If IsMac And Val(Application.Version) < 15 Then
               ' On Mac 2011, the Application.AddIns collection is indexed by filename.ext rather than just filename as on Windows
-3482          Title = Title & ".xlam"
-          End If
-          GetOpenSolverAddInIfExists = GetAddInIfExists(OpenSolverAddIn, Title)
+3             Title = Title & ".xlam"
+4         End If
+5         GetOpenSolverAddInIfExists = GetAddInIfExists(OpenSolverAddIn, Title)
 End Function
 
 Function ChangeOpenSolverAutoload(loadAtStartup As Boolean) As Boolean
           ' NOTE: If Mac and no workbooks are open, this will crash
-          ChangeOpenSolverAutoload = False
+1         ChangeOpenSolverAutoload = False
 
-3495      If loadAtStartup Then  ' User is changing from True to False
-3496          If MsgBox("This will configure Excel to automatically load the OpenSolver add-in (from its current location) when Excel starts.  Continue?", vbOKCancel) <> vbOK Then GoTo ExitSub
-3497      Else ' User is turning off auto load
-3498          If MsgBox("This will re-configure Excel's Add-In settings so that OpenSolver does not load automatically at startup. You will need to re-load OpenSolver when you wish to use it next, or re-enable it using Excel's Add-In settings." & vbCrLf & vbCrLf _
+2         If loadAtStartup Then  ' User is changing from True to False
+3             If MsgBox("This will configure Excel to automatically load the OpenSolver add-in (from its current location) when Excel starts.  Continue?", vbOKCancel) <> vbOK Then GoTo ExitSub
+4         Else ' User is turning off auto load
+5             If MsgBox("This will re-configure Excel's Add-In settings so that OpenSolver does not load automatically at startup. You will need to re-load OpenSolver when you wish to use it next, or re-enable it using Excel's Add-In settings." & vbCrLf & vbCrLf _
                         & "WARNING: OpenSolver will also be shut down right now by Excel, and so will disappear immediately. No data will be lost." & vbCrLf & vbCrLf _
                         & "Continue?", vbOKCancel) <> vbOK Then GoTo ExitSub
-3499      End If
+6         End If
           
           ' On older versions of Excel, Add-ins can only be added if we have at least one workbook open; see http://vbadud.blogspot.com/2007/06/excel-vba-install-excel-add-in-xla-or.html
           Dim TempBook As Workbook
-3501      If Workbooks.Count = 0 Then Set TempBook = Workbooks.Add
+7         If Workbooks.Count = 0 Then Set TempBook = Workbooks.Add
           
           Dim OpenSolverAddIn As Excel.AddIn
-3502      If Not GetOpenSolverAddInIfExists(OpenSolverAddIn) Then
-3503          Set OpenSolverAddIn = Application.AddIns.Add(ThisWorkbook.FullName, False)
-3504      End If
+8         If Not GetOpenSolverAddInIfExists(OpenSolverAddIn) Then
+9             Set OpenSolverAddIn = Application.AddIns.Add(ThisWorkbook.FullName, False)
+10        End If
           
           ' Closing the temp book can throw an error on Mac, we just ignore
-          On Error Resume Next
-3505      If Not TempBook Is Nothing Then TempBook.Close
-          On Error GoTo 0
+11        On Error Resume Next
+12        If Not TempBook Is Nothing Then TempBook.Close
+13        On Error GoTo 0
           
-3506      If OpenSolverAddIn Is Nothing Then
-3507          MsgBox "Unable to load or access addin " & ThisWorkbook.FullName
-3508      Else
-3509          OpenSolverAddIn.Installed = loadAtStartup ' OpenSolver will quit immediately when this is set to false, unless a reference is set to OpenSolver
-              ChangeOpenSolverAutoload = True
-          End If
+14        If OpenSolverAddIn Is Nothing Then
+15            MsgBox "Unable to load or access addin " & ThisWorkbook.FullName
+16        Else
+17            OpenSolverAddIn.Installed = loadAtStartup ' OpenSolver will quit immediately when this is set to false, unless a reference is set to OpenSolver
+18            ChangeOpenSolverAutoload = True
+19        End If
 ExitSub:
 End Function
 

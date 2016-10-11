@@ -38,431 +38,431 @@ Private Const pToleranceName = "ratioGap"
 ' ISolver
 
 Private Property Get ISolver_Name() As String
-    ISolver_Name = pName
+1         ISolver_Name = pName
 End Property
 
 Private Property Get ISolver_ShortName() As String
-    ISolver_ShortName = pShortName
+1         ISolver_ShortName = pShortName
 End Property
 
 Private Property Get ISolver_Title() As String
-    ISolver_Title = pTitle
+1         ISolver_Title = pTitle
 End Property
 
 Private Property Get ISolver_Desc() As String
-    ISolver_Desc = pDesc
+1         ISolver_Desc = pDesc
 End Property
 
 Private Property Get ISolver_Link() As String
-    ISolver_Link = pLink
+1         ISolver_Link = pLink
 End Property
 
 Private Property Get ISolver_IterationLimitName() As String
-    ISolver_IterationLimitName = pIterationLimitName
+1         ISolver_IterationLimitName = pIterationLimitName
 End Property
 
 Private Property Get ISolver_PrecisionName() As String
 End Property
 
 Private Property Get ISolver_TimeLimitName() As String
-    ISolver_TimeLimitName = pTimeLimitName
+1         ISolver_TimeLimitName = pTimeLimitName
 End Property
 
 Private Property Get ISolver_ToleranceName() As String
-    ISolver_ToleranceName = pToleranceName
+1         ISolver_ToleranceName = pToleranceName
 End Property
 
 Private Property Get ISolver_ModelType() As OpenSolver_ModelType
-    ISolver_ModelType = pModelType
+1         ISolver_ModelType = pModelType
 End Property
 
 Private Sub ISolver_CleanFiles()
-    CleanFiles
+1         CleanFiles
 End Sub
 
 Private Sub ISolver_CheckLog(s As COpenSolver)
-    CheckLog s
+1         CheckLog s
 End Sub
 
 ' ISolverLocal
 
 Private Property Get ISolverLocal_Version() As String
-    ISolverLocal_Version = Version()
+1         ISolverLocal_Version = Version()
 End Property
 
 Private Property Get ISolverLocal_Bitness() As String
-    SolverIsPresent Me, Bitness:=ISolverLocal_Bitness
+1         SolverIsPresent Me, Bitness:=ISolverLocal_Bitness
 End Property
 
 ' ISolverLocalExec
 
 Private Property Get ISolverLocalExec_ExecName() As String
-    ISolverLocalExec_ExecName = pExecName
+1         ISolverLocalExec_ExecName = pExecName
 End Property
 
 Private Function ISolverLocalExec_GetExecPath(Optional errorString As String, Optional Bitness As String) As String
-    ISolverLocalExec_GetExecPath = SolverExecPath(Me, errorString, Bitness)
+1         ISolverLocalExec_GetExecPath = SolverExecPath(Me, errorString, Bitness)
 End Function
 
 Private Function ISolverLocalExec_CreateSolveCommand(s As COpenSolver) As String
-    ISolverLocalExec_CreateSolveCommand = CreateSolveCommand(s)
+1         ISolverLocalExec_CreateSolveCommand = CreateSolveCommand(s)
 End Function
 
 ' ISolverLinear
 
 Private Property Get ISolverLinear_SensitivityAnalysisAvailable() As Boolean
-    ISolverLinear_SensitivityAnalysisAvailable = pSensitivityAnalysisAvailable
+1         ISolverLinear_SensitivityAnalysisAvailable = pSensitivityAnalysisAvailable
 End Property
 
 ' ISolverFile
 
 Private Sub ISolverFile_ReadResults(s As COpenSolver, Optional solution As String)
-    ReadResults s
+1         ReadResults s
 End Sub
 
 Private Property Get ISolverFile_FileType() As OpenSolver_FileType
-    ISolverFile_FileType = pFileType
+1         ISolverFile_FileType = pFileType
 End Property
 
 ' Methods
 
 Private Function Version() As String
-' Get CBC version by running 'cbc -exit' at command line
-    Dim RaiseError As Boolean
-    RaiseError = False
-    On Error GoTo ErrorHandler
+      ' Get CBC version by running 'cbc -exit' at command line
+          Dim RaiseError As Boolean
+1         RaiseError = False
+2         On Error GoTo ErrorHandler
 
-    Dim SolverPath As String
-    If Not SolverIsPresent(Me, SolverPath) Then
-        Version = vbNullString
-        GoTo ExitFunction
-    End If
-    
-    Dim result As String
-    result = ExecCapture(MakePathSafe(SolverPath) & " -exit")
-    Version = Mid(result, InStr(result, "Version:") + 9, 5)
+          Dim SolverPath As String
+3         If Not SolverIsPresent(Me, SolverPath) Then
+4             Version = vbNullString
+5             GoTo ExitFunction
+6         End If
+          
+          Dim result As String
+7         result = ExecCapture(MakePathSafe(SolverPath) & " -exit")
+8         Version = Mid(result, InStr(result, "Version:") + 9, 5)
 
 ExitFunction:
-    If RaiseError Then RethrowError
-    Exit Function
+9         If RaiseError Then RethrowError
+10        Exit Function
 
 ErrorHandler:
-    If Not ReportError("CSolverCbc", "Version") Then Resume
-    RaiseError = True
-    GoTo ExitFunction
+11        If Not ReportError("CSolverCbc", "Version") Then Resume
+12        RaiseError = True
+13        GoTo ExitFunction
 End Function
 
 Private Sub CleanFiles()
-    DeleteFileAndVerify CostRangesFilePath()
-    DeleteFileAndVerify RHSRangesFilePath()
-    DeleteFileAndVerify ScriptFilePath()
+1         DeleteFileAndVerify CostRangesFilePath()
+2         DeleteFileAndVerify RHSRangesFilePath()
+3         DeleteFileAndVerify ScriptFilePath()
 End Sub
 
 Function ScriptFilePath() As String
-    GetTempFilePath pScriptFile, ScriptFilePath
+1         GetTempFilePath pScriptFile, ScriptFilePath
 End Function
 
 Function CostRangesFilePath() As String
-    GetTempFilePath pCostRangesFile, CostRangesFilePath
+1         GetTempFilePath pCostRangesFile, CostRangesFilePath
 End Function
 
 Function RHSRangesFilePath() As String
-    GetTempFilePath pRHSRangesFile, RHSRangesFilePath
+1         GetTempFilePath pRHSRangesFile, RHSRangesFilePath
 End Function
 
 Private Function CreateSolveCommand(s As COpenSolver) As String
-    Dim RaiseError As Boolean
-    RaiseError = False
-    On Error GoTo ErrorHandler
-    
-    CreateSolveCommand = _
-        MakePathSafe(ISolverLocalExec_GetExecPath()) & _
-        " -directory " & MakePathSafe(Left(GetTempFolder, Len(GetTempFolder) - 1)) & _
-        " -import " & MakePathSafe(GetModelFilePath(Me)) & _
-        " " & ParametersToFlags(s.SolverParameters) & _
-        " -solve" & _
-        IIf(s.bGetDuals, " -printingOptions all", vbNullString) & _
-        " -solution " & MakePathSafe(s.SolutionFilePathName) & _
-        IIf(s.bGetDuals, " -printingOptions rhs  -solution " & pRHSRangesFile & _
-                         " -printingOptions objective -solution " & pCostRangesFile, vbNullString)
-        
-    CreateScriptFile ScriptFilePath, CreateSolveCommand
+          Dim RaiseError As Boolean
+1         RaiseError = False
+2         On Error GoTo ErrorHandler
+          
+3         CreateSolveCommand = _
+              MakePathSafe(ISolverLocalExec_GetExecPath()) & _
+              " -directory " & MakePathSafe(Left(GetTempFolder, Len(GetTempFolder) - 1)) & _
+              " -import " & MakePathSafe(GetModelFilePath(Me)) & _
+              " " & ParametersToFlags(s.SolverParameters) & _
+              " -solve" & _
+              IIf(s.bGetDuals, " -printingOptions all", vbNullString) & _
+              " -solution " & MakePathSafe(s.SolutionFilePathName) & _
+              IIf(s.bGetDuals, " -printingOptions rhs  -solution " & pRHSRangesFile & _
+                               " -printingOptions objective -solution " & pCostRangesFile, vbNullString)
+              
+4         CreateScriptFile ScriptFilePath, CreateSolveCommand
 
 ExitFunction:
-    If RaiseError Then RethrowError
-    Exit Function
+5         If RaiseError Then RethrowError
+6         Exit Function
 
 ErrorHandler:
-    If Not ReportError("CSolverCbc", "CreateSolveScript") Then Resume
-    RaiseError = True
-    GoTo ExitFunction
+7         If Not ReportError("CSolverCbc", "CreateSolveScript") Then Resume
+8         RaiseError = True
+9         GoTo ExitFunction
 End Function
 
 Private Sub ReadResults(s As COpenSolver)
-    Dim RaiseError As Boolean
-    RaiseError = False
-    On Error GoTo ErrorHandler
-    
-    If Not FileOrDirExists(s.SolutionFilePathName) Then
-        RaiseGeneralError "The solver did not create a solution file. No new solution is available.", _
-                          "http://opensolver.org/help/#cbcfails"
-    End If
+          Dim RaiseError As Boolean
+1         RaiseError = False
+2         On Error GoTo ErrorHandler
+          
+3         If Not FileOrDirExists(s.SolutionFilePathName) Then
+4             RaiseGeneralError "The solver did not create a solution file. No new solution is available.", _
+                                "http://opensolver.org/help/#cbcfails"
+5         End If
 
-    Open s.SolutionFilePathName For Input As #1
-    Dim Response As String
-    Line Input #1, Response  ' Optimal - objective value              22
+6         Open s.SolutionFilePathName For Input As #1
+          Dim Response As String
+7         Line Input #1, Response  ' Optimal - objective value              22
 
-    s.SolutionWasLoaded = True
-    If Response Like "Optimal*" Then
-        s.SolveStatus = OpenSolverResult.Optimal
-        s.SolveStatusString = "Optimal"
-        '
-    ElseIf Response Like "Infeasible*" Then
-        s.SolveStatus = OpenSolverResult.Infeasible
-        s.SolveStatusString = "No Feasible Solution"
-        '
-    ElseIf Response Like "Integer infeasible*" Then
-        s.SolveStatus = OpenSolverResult.Infeasible
-        s.SolveStatusString = "No Feasible Integer Solution"
-        '
-    ElseIf Response Like "Unbounded*" Then
-        s.SolveStatus = OpenSolverResult.Unbounded
-        s.SolveStatusString = "No Solution Found (Unbounded)"
-        s.SolutionWasLoaded = False
-        '
-    ElseIf Response Like "Stopped on time *" Then ' Stopped on iterations or time
-        s.SolveStatus = OpenSolverResult.LimitedSubOptimal
-        s.SolveStatusString = "Stopped on Time Limit"
-        If Response Like "*(no integer solution - continuous used)*" Then
-            s.SolveStatusString = s.SolveStatusString & ": No integer solution found. Fractional solution returned."
-        End If
-        '
-    ElseIf Response Like "Stopped on iterations*" Then ' Stopped on iterations or time
-        s.SolveStatus = OpenSolverResult.LimitedSubOptimal
-        s.SolveStatusString = "Stopped on Iteration Limit"
-        If Response Like "*(no integer solution - continuous used)*" Then
-            s.SolveStatusString = s.SolveStatusString & ": No integer solution found. Fractional solution returned."
-        End If
-        '
-    ElseIf Response Like "Stopped on difficulties*" Then ' Stopped on iterations or time
-        s.SolveStatus = OpenSolverResult.LimitedSubOptimal
-        s.SolveStatusString = "Stopped on CBC difficulties"
-        If Response Like "*(no integer solution - continuous used)*" Then
-            s.SolveStatusString = s.SolveStatusString & ": No integer solution found. Fractional solution returned."
-        End If
-        '
-    ElseIf Response Like "Stopped on ctrl-c*" Then ' Stopped on iterations or time
-        s.SolveStatus = OpenSolverResult.LimitedSubOptimal
-        s.SolveStatusString = "Stopped on Ctrl-C"
-        If Response Like "*(no integer solution - continuous used)*" Then
-            s.SolveStatusString = s.SolveStatusString & ": No integer solution found. Fractional solution returned."
-        End If
-        '
-    ElseIf Response Like "Status unknown*" Then
-        RaiseGeneralError "The CBC solver did not solve the problem, suggesting there was an error " & _
-                          "in the CBC input parameters. The response was: " & vbNewLine & _
-                          Response & vbNewLine & _
-                          "The CBC command line can be found at:" & vbNewLine & _
-                          ScriptFilePath()
-    Else
-        RaiseGeneralError "The response from the CBC solver is not recognised. The response was: " & Response
-    End If
-    
-    ' Remove the double spaces from Response
-    Response = Replace(Response, "    ", " ")
-    Response = Replace(Response, "   ", " ")
-    Response = Replace(Response, "  ", " ")
+8         s.SolutionWasLoaded = True
+9         If Response Like "Optimal*" Then
+10            s.SolveStatus = OpenSolverResult.Optimal
+11            s.SolveStatusString = "Optimal"
+              '
+12        ElseIf Response Like "Infeasible*" Then
+13            s.SolveStatus = OpenSolverResult.Infeasible
+14            s.SolveStatusString = "No Feasible Solution"
+              '
+15        ElseIf Response Like "Integer infeasible*" Then
+16            s.SolveStatus = OpenSolverResult.Infeasible
+17            s.SolveStatusString = "No Feasible Integer Solution"
+              '
+18        ElseIf Response Like "Unbounded*" Then
+19            s.SolveStatus = OpenSolverResult.Unbounded
+20            s.SolveStatusString = "No Solution Found (Unbounded)"
+21            s.SolutionWasLoaded = False
+              '
+22        ElseIf Response Like "Stopped on time *" Then ' Stopped on iterations or time
+23            s.SolveStatus = OpenSolverResult.LimitedSubOptimal
+24            s.SolveStatusString = "Stopped on Time Limit"
+25            If Response Like "*(no integer solution - continuous used)*" Then
+26                s.SolveStatusString = s.SolveStatusString & ": No integer solution found. Fractional solution returned."
+27            End If
+              '
+28        ElseIf Response Like "Stopped on iterations*" Then ' Stopped on iterations or time
+29            s.SolveStatus = OpenSolverResult.LimitedSubOptimal
+30            s.SolveStatusString = "Stopped on Iteration Limit"
+31            If Response Like "*(no integer solution - continuous used)*" Then
+32                s.SolveStatusString = s.SolveStatusString & ": No integer solution found. Fractional solution returned."
+33            End If
+              '
+34        ElseIf Response Like "Stopped on difficulties*" Then ' Stopped on iterations or time
+35            s.SolveStatus = OpenSolverResult.LimitedSubOptimal
+36            s.SolveStatusString = "Stopped on CBC difficulties"
+37            If Response Like "*(no integer solution - continuous used)*" Then
+38                s.SolveStatusString = s.SolveStatusString & ": No integer solution found. Fractional solution returned."
+39            End If
+              '
+40        ElseIf Response Like "Stopped on ctrl-c*" Then ' Stopped on iterations or time
+41            s.SolveStatus = OpenSolverResult.LimitedSubOptimal
+42            s.SolveStatusString = "Stopped on Ctrl-C"
+43            If Response Like "*(no integer solution - continuous used)*" Then
+44                s.SolveStatusString = s.SolveStatusString & ": No integer solution found. Fractional solution returned."
+45            End If
+              '
+46        ElseIf Response Like "Status unknown*" Then
+47            RaiseGeneralError "The CBC solver did not solve the problem, suggesting there was an error " & _
+                                "in the CBC input parameters. The response was: " & vbNewLine & _
+                                Response & vbNewLine & _
+                                "The CBC command line can be found at:" & vbNewLine & _
+                                ScriptFilePath()
+48        Else
+49            RaiseGeneralError "The response from the CBC solver is not recognised. The response was: " & Response
+50        End If
+          
+          ' Remove the double spaces from Response
+51        Response = Replace(Response, "    ", " ")
+52        Response = Replace(Response, "   ", " ")
+53        Response = Replace(Response, "  ", " ")
 
-    If s.SolutionWasLoaded Then
-        ' We read in whatever solution CBC returned
-        UpdateStatusBar "OpenSolver: Loading Solution... " & Response
-        
-        Dim m As CModelDiff
-        Set m = s.DiffModel
-    
-        Dim Line As String, SplitLine() As String, Index As Double, NameValue As String, value As Double, CBCConstraintIndex As Long, StartOffset As Long
-        If s.bGetDuals Then
-            ' Read in the Solution File
-            ' Line format: Index ConstraintName Value ConShadowPrice
+54        If s.SolutionWasLoaded Then
+              ' We read in whatever solution CBC returned
+55            UpdateStatusBar "OpenSolver: Loading Solution... " & Response
+              
+              Dim m As CModelDiff
+56            Set m = s.DiffModel
+          
+              Dim Line As String, SplitLine() As String, Index As Double, NameValue As String, value As Double, CBCConstraintIndex As Long, StartOffset As Long
+57            If s.bGetDuals Then
+                  ' Read in the Solution File
+                  ' Line format: Index ConstraintName Value ConShadowPrice
+                  
+                  Dim j As Long, row As Long
+58                CBCConstraintIndex = 0
+                  
+                  ' Throw away first constraint if it was from a seek objective model
+59                If s.ObjectiveSense = TargetObjective Then
+60                    Line Input #1, Line
+61                    CBCConstraintIndex = CBCConstraintIndex + 1
+62                End If
+
+63                For row = 1 To s.NumRows
+                      ' Only process rows that were in the model
+64                    If s.SparseA(row).Count > 0 Then
+65                        Line Input #1, Line
+66                        SplitLine = SplitWithoutRepeats(Line, " ")
+
+                          ' In the case of LpStatusInfeasible, we can get lines that start **. We strip the **
+67                        StartOffset = 0
+68                        If SplitLine(StartOffset) = "**" Then StartOffset = 1
+
+                          ' Check the index of the row
+69                        If CLng(Val(SplitLine(StartOffset))) <> CBCConstraintIndex Then
+70                            RaiseGeneralError "While reading the CBC solution file, OpenSolver found an unexpected constraint row."
+71                        End If
+
+72                        NameValue = SplitLine(StartOffset + 1)
+                          
+73                        s.ConFinalValue(row) = Val(SplitLine(StartOffset + 2))
+74                        value = Val(SplitLine(StartOffset + 3))
+75                        If s.ObjectiveSense = MaximiseObjective Then value = -value
+76                        s.ConShadowPrice(row) = value
+77                        CBCConstraintIndex = CBCConstraintIndex + 1
+78                    Else
+79                        s.ConFinalValue(row) = s.RHS(row)
+80                        s.ConShadowPrice(row) = 0
+81                    End If
+82                Next row
+83                ReadSensitivityData s
+84            End If
             
-            Dim j As Long, row As Long
-            CBCConstraintIndex = 0
-            
-            ' Throw away first constraint if it was from a seek objective model
-            If s.ObjectiveSense = TargetObjective Then
-                Line Input #1, Line
-                CBCConstraintIndex = CBCConstraintIndex + 1
-            End If
+              ' Now we read in the decision variable values
+              ' Line format: Index VariableName Value ReducedCost
+85            j = 1
+86            While Not EOF(1)
+87                Line Input #1, Line
+88                SplitLine = SplitWithoutRepeats(Line, " ")
 
-            For row = 1 To s.NumRows
-                ' Only process rows that were in the model
-                If s.SparseA(row).Count > 0 Then
-                    Line Input #1, Line
-                    SplitLine = SplitWithoutRepeats(Line, " ")
+                  ' In the case of LpStatusInfeasible, we can get lines that start **. We strip the **
+89                StartOffset = 0
+90                If SplitLine(StartOffset) = "**" Then StartOffset = 1
+                  
+91                Index = CLng(Val(SplitLine(StartOffset)))
+92                s.VarCellName(j) = GetVarNameFromLPName(SplitLine(StartOffset + 1))
+93                s.VarFinalValue(j) = Val(SplitLine(StartOffset + 2))
+                 
+94                If s.bGetDuals Then
+95                    value = Val(SplitLine(StartOffset + 3))
+96                    If s.ObjectiveSense = MaximiseObjective Then value = -value
+97                    s.VarReducedCost(j) = value
+98                End If
+99                j = j + 1
+100           Wend
+101           s.SolutionWasLoaded = True
 
-                    ' In the case of LpStatusInfeasible, we can get lines that start **. We strip the **
-                    StartOffset = 0
-                    If SplitLine(StartOffset) = "**" Then StartOffset = 1
-
-                    ' Check the index of the row
-                    If CLng(Val(SplitLine(StartOffset))) <> CBCConstraintIndex Then
-                        RaiseGeneralError "While reading the CBC solution file, OpenSolver found an unexpected constraint row."
-                    End If
-
-                    NameValue = SplitLine(StartOffset + 1)
-                    
-                    s.ConFinalValue(row) = Val(SplitLine(StartOffset + 2))
-                    value = Val(SplitLine(StartOffset + 3))
-                    If s.ObjectiveSense = MaximiseObjective Then value = -value
-                    s.ConShadowPrice(row) = value
-                    CBCConstraintIndex = CBCConstraintIndex + 1
-                Else
-                    s.ConFinalValue(row) = s.RHS(row)
-                    s.ConShadowPrice(row) = 0
-                End If
-            Next row
-            ReadSensitivityData s
-        End If
-      
-        ' Now we read in the decision variable values
-        ' Line format: Index VariableName Value ReducedCost
-        j = 1
-        While Not EOF(1)
-            Line Input #1, Line
-            SplitLine = SplitWithoutRepeats(Line, " ")
-
-            ' In the case of LpStatusInfeasible, we can get lines that start **. We strip the **
-            StartOffset = 0
-            If SplitLine(StartOffset) = "**" Then StartOffset = 1
-            
-            Index = CLng(Val(SplitLine(StartOffset)))
-            s.VarCellName(j) = GetVarNameFromLPName(SplitLine(StartOffset + 1))
-            s.VarFinalValue(j) = Val(SplitLine(StartOffset + 2))
-           
-            If s.bGetDuals Then
-                value = Val(SplitLine(StartOffset + 3))
-                If s.ObjectiveSense = MaximiseObjective Then value = -value
-                s.VarReducedCost(j) = value
-            End If
-            j = j + 1
-        Wend
-        s.SolutionWasLoaded = True
-
-    End If
+102       End If
 
 ExitSub:
-    Close #1
-    If RaiseError Then RethrowError
-    Exit Sub
+103       Close #1
+104       If RaiseError Then RethrowError
+105       Exit Sub
 
 ErrorHandler:
-    If Not ReportError("CSolverCBC", "ReadResults") Then Resume
-    RaiseError = True
-    GoTo ExitSub
+106       If Not ReportError("CSolverCBC", "ReadResults") Then Resume
+107       RaiseError = True
+108       GoTo ExitSub
 End Sub
 
 Sub ReadSensitivityData(s As COpenSolver)
-'Reads the two files with the limits on the bounds of shadow prices and reduced costs
-    Dim RaiseError As Boolean
-    RaiseError = False
-    On Error GoTo ErrorHandler
-    
-    Dim LineData() As String
-    Dim Line As String, row As Long, j As Long
-    
-    'Find the ranges on the constraints
+      'Reads the two files with the limits on the bounds of shadow prices and reduced costs
+          Dim RaiseError As Boolean
+1         RaiseError = False
+2         On Error GoTo ErrorHandler
+          
+          Dim LineData() As String
+          Dim Line As String, row As Long, j As Long
+          
+          'Find the ranges on the constraints
 
-    Open RHSRangesFilePath For Input As #2 ' supply path with filename
-    Line Input #2, Line 'Dont want first line
-    row = 1
-    
-    ' Throw away first constraint if it was from a seek objective model
-    If s.ObjectiveSense = TargetObjective Then
-        Line Input #2, Line
-    End If
-    
-    While Not EOF(2)
-        If s.SparseA(row).Count > 0 Then
-            Line Input #2, Line
-            LineData() = Split(Line, ",")
-            s.ConIncrease(row) = Val(LineData(2))
-            s.ConDecrease(row) = Val(LineData(4))
-        Else
-            s.ConIncrease(row) = 0
-            s.ConDecrease(row) = 0
-        End If
-        row = row + 1
-    Wend
-    Close 2
-    
-    j = 1
-    'Find the ranges on the variables
-    Open CostRangesFilePath For Input As #2 ' supply path with filename
-    Line Input #2, Line 'Dont want first line
-    row = s.NumRows + 2
-    While Not EOF(2)
-        Line Input #2, Line
-        LineData() = Split(Line, ",")
-        If s.ObjectiveSense = MaximiseObjective Then
-            s.VarIncrease(j) = Val(LineData(4))
-            s.VarDecrease(j) = Val(LineData(2))
-        Else
-            s.VarIncrease(j) = Val(LineData(2))
-            s.VarDecrease(j) = Val(LineData(4))
-        End If
-        j = j + 1
-    Wend
+3         Open RHSRangesFilePath For Input As #2 ' supply path with filename
+4         Line Input #2, Line 'Dont want first line
+5         row = 1
+          
+          ' Throw away first constraint if it was from a seek objective model
+6         If s.ObjectiveSense = TargetObjective Then
+7             Line Input #2, Line
+8         End If
+          
+9         While Not EOF(2)
+10            If s.SparseA(row).Count > 0 Then
+11                Line Input #2, Line
+12                LineData() = Split(Line, ",")
+13                s.ConIncrease(row) = Val(LineData(2))
+14                s.ConDecrease(row) = Val(LineData(4))
+15            Else
+16                s.ConIncrease(row) = 0
+17                s.ConDecrease(row) = 0
+18            End If
+19            row = row + 1
+20        Wend
+21        Close 2
+          
+22        j = 1
+          'Find the ranges on the variables
+23        Open CostRangesFilePath For Input As #2 ' supply path with filename
+24        Line Input #2, Line 'Dont want first line
+25        row = s.NumRows + 2
+26        While Not EOF(2)
+27            Line Input #2, Line
+28            LineData() = Split(Line, ",")
+29            If s.ObjectiveSense = MaximiseObjective Then
+30                s.VarIncrease(j) = Val(LineData(4))
+31                s.VarDecrease(j) = Val(LineData(2))
+32            Else
+33                s.VarIncrease(j) = Val(LineData(2))
+34                s.VarDecrease(j) = Val(LineData(4))
+35            End If
+36            j = j + 1
+37        Wend
 
 ExitSub:
-    Close #2
-    If RaiseError Then RethrowError
-    Exit Sub
+38        Close #2
+39        If RaiseError Then RethrowError
+40        Exit Sub
 
 ErrorHandler:
-    If Not ReportError("CSolverCbc", "ReadSensitivityData") Then Resume
-    RaiseError = True
-    GoTo ExitSub
+41        If Not ReportError("CSolverCbc", "ReadSensitivityData") Then Resume
+42        RaiseError = True
+43        GoTo ExitSub
 End Sub
 
 Private Sub CheckLog(s As COpenSolver)
-    Dim RaiseError As Boolean
-    RaiseError = False
-    On Error GoTo ErrorHandler
-    
-    If Not FileOrDirExists(s.LogFilePathName) Then
-        RaiseGeneralError "The solver did not create a log file. No new solution is available.", _
-                          "http://opensolver.org/help/#cbcfails"
-    End If
-    
-    Dim message As String
-    Open s.LogFilePathName For Input As #1
-        message = LCase(Input$(LOF(1), 1))
-    Close #1
-    
-    Dim Key As Variant
-    For Each Key In s.SolverParameters.Keys
-        If InStr(message, LCase("parameter " & Key & " value remains")) > 0 Then
-            RaiseUserError _
-                "The value for the parameter '" & Key & "' supplied to CBC was invalid. " & _
-                "Please check the value you have specified, or consult the CBC documentation for more information.", _
-                "http://opensolver.org/using-opensolver/#extra-parameters"
-        End If
-        If InStr(message, LCase("No match for " & Key)) > 0 Then
-            RaiseUserError _
-                "The parameter '" & Key & "' was not recognised by CBC. " & _
-                "Please check the parameter name you have specified, or consult the CBC documentation for more information.", _
-                "http://opensolver.org/using-opensolver/#extra-parameters"
-        End If
-    Next Key
+          Dim RaiseError As Boolean
+1         RaiseError = False
+2         On Error GoTo ErrorHandler
+          
+3         If Not FileOrDirExists(s.LogFilePathName) Then
+4             RaiseGeneralError "The solver did not create a log file. No new solution is available.", _
+                                "http://opensolver.org/help/#cbcfails"
+5         End If
+          
+          Dim message As String
+6         Open s.LogFilePathName For Input As #1
+7             message = LCase(Input$(LOF(1), 1))
+8         Close #1
+          
+          Dim Key As Variant
+9         For Each Key In s.SolverParameters.Keys
+10            If InStr(message, LCase("parameter " & Key & " value remains")) > 0 Then
+11                RaiseUserError _
+                      "The value for the parameter '" & Key & "' supplied to CBC was invalid. " & _
+                      "Please check the value you have specified, or consult the CBC documentation for more information.", _
+                      "http://opensolver.org/using-opensolver/#extra-parameters"
+12            End If
+13            If InStr(message, LCase("No match for " & Key)) > 0 Then
+14                RaiseUserError _
+                      "The parameter '" & Key & "' was not recognised by CBC. " & _
+                      "Please check the parameter name you have specified, or consult the CBC documentation for more information.", _
+                      "http://opensolver.org/using-opensolver/#extra-parameters"
+15            End If
+16        Next Key
 
 ExitSub:
-    If RaiseError Then RethrowError
-    Exit Sub
+17        If RaiseError Then RethrowError
+18        Exit Sub
 
 ErrorHandler:
-    If Not ReportError("CSolverCbc", "CheckLog") Then Resume
-    RaiseError = True
-    GoTo ExitSub
+19        If Not ReportError("CSolverCbc", "CheckLog") Then Resume
+20        RaiseError = True
+21        GoTo ExitSub
 End Sub
 
 

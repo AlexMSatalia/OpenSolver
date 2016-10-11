@@ -116,343 +116,343 @@ Dim QuickSolve As CQuickSolve
 ' ============================================================================
 ' Array accessors
 Public Property Get VarFinalValue(Index As Long) As Double
-793       VarFinalValue = pVarFinalValue(Index)
+1         VarFinalValue = pVarFinalValue(Index)
 End Property
 Public Property Let VarFinalValue(Index As Long, value As Double)
-794       If Index > UBound(pVarFinalValue) Then ReDim Preserve pVarFinalValue(Index)
-795       pVarFinalValue(Index) = value
+1         If Index > UBound(pVarFinalValue) Then ReDim Preserve pVarFinalValue(Index)
+2         pVarFinalValue(Index) = value
 End Property
 
 Public Property Get ConFinalValue(Index As Long) As Double
-796       ConFinalValue = pConFinalValue(Index)
+1         ConFinalValue = pConFinalValue(Index)
 End Property
 Public Property Let ConFinalValue(Index As Long, value As Double)
-797       If Index > UBound(pConFinalValue) Then ReDim Preserve pConFinalValue(Index)
-798       pConFinalValue(Index) = value
+1         If Index > UBound(pConFinalValue) Then ReDim Preserve pConFinalValue(Index)
+2         pConFinalValue(Index) = value
 End Property
 
 Public Property Get ConShadowPrice(Index As Long) As Double
-799       ConShadowPrice = pConShadowPrice(Index)
+1         ConShadowPrice = pConShadowPrice(Index)
 End Property
 Public Property Let ConShadowPrice(Index As Long, value As Double)
-800       If Index > UBound(pConShadowPrice) Then ReDim Preserve pConShadowPrice(Index)
-801       pConShadowPrice(Index) = value
+1         If Index > UBound(pConShadowPrice) Then ReDim Preserve pConShadowPrice(Index)
+2         pConShadowPrice(Index) = value
 End Property
 
 Public Property Get VarReducedCost(Index As Long) As Double
-802       VarReducedCost = pVarReducedCost(Index)
+1         VarReducedCost = pVarReducedCost(Index)
 End Property
 Public Property Let VarReducedCost(Index As Long, value As Double)
-803       If Index > UBound(pVarReducedCost) Then ReDim Preserve pVarReducedCost(Index)
-804       pVarReducedCost(Index) = value
+1         If Index > UBound(pVarReducedCost) Then ReDim Preserve pVarReducedCost(Index)
+2         pVarReducedCost(Index) = value
 End Property
 
 Public Property Get VarCellName(Index As Long) As String
-805       VarCellName = pVarCellName(Index)
+1         VarCellName = pVarCellName(Index)
 End Property
 Public Property Let VarCellName(Index As Long, value As String)
-806       If Index > UBound(pVarCellName) Then ReDim Preserve pVarCellName(Index)
-807       pVarCellName(Index) = value
+1         If Index > UBound(pVarCellName) Then ReDim Preserve pVarCellName(Index)
+2         pVarCellName(Index) = value
 End Property
 
 Public Property Get ConIncrease(Index As Long) As Double
-808       ConIncrease = pConIncrease(Index)
+1         ConIncrease = pConIncrease(Index)
 End Property
 Public Property Let ConIncrease(Index As Long, value As Double)
-809       If Index > UBound(pConIncrease) Then ReDim Preserve pConIncrease(Index)
-810       pConIncrease(Index) = value
+1         If Index > UBound(pConIncrease) Then ReDim Preserve pConIncrease(Index)
+2         pConIncrease(Index) = value
 End Property
 
 Public Property Get ConDecrease(Index As Long) As Double
-811       ConDecrease = pConDecrease(Index)
+1         ConDecrease = pConDecrease(Index)
 End Property
 Public Property Let ConDecrease(Index As Long, value As Double)
-812       If Index > UBound(pConDecrease) Then ReDim Preserve pConDecrease(Index)
-813       pConDecrease(Index) = value
+1         If Index > UBound(pConDecrease) Then ReDim Preserve pConDecrease(Index)
+2         pConDecrease(Index) = value
 End Property
 
 Public Property Get VarIncrease(Index As Long) As Double
-814       VarIncrease = pVarIncrease(Index)
+1         VarIncrease = pVarIncrease(Index)
 End Property
 Public Property Let VarIncrease(Index As Long, value As Double)
-815       If Index > UBound(pVarIncrease) Then ReDim Preserve pVarIncrease(Index)
-816       pVarIncrease(Index) = value
+1         If Index > UBound(pVarIncrease) Then ReDim Preserve pVarIncrease(Index)
+2         pVarIncrease(Index) = value
 End Property
 
 Public Property Get VarDecrease(Index As Long) As Double
-817       VarDecrease = pVarDecrease(Index)
+1         VarDecrease = pVarDecrease(Index)
 End Property
 Public Property Let VarDecrease(Index As Long, value As Double)
-818       If Index > UBound(pVarDecrease) Then ReDim Preserve pVarDecrease(Index)
-819       pVarDecrease(Index) = value
+1         If Index > UBound(pVarDecrease) Then ReDim Preserve pVarDecrease(Index)
+2         pVarDecrease(Index) = value
 End Property
 
 Public Property Get VarName(Index As Long) As String
-820       VarName = pVarName(Index)
+1         VarName = pVarName(Index)
 End Property
 Public Property Let VarName(Index As Long, value As String)
-          pVarName(Index) = value
+1               pVarName(Index) = value
 End Property
 
 Public Property Get VarInitialValue(Index As Long) As Double
-820       VarInitialValue = pVarInitialValue(Index)
+1         VarInitialValue = pVarInitialValue(Index)
 End Property
 Public Property Let VarInitialValue(Index As Long, value As Double)
-          pVarInitialValue(Index) = value
+1               pVarInitialValue(Index) = value
 End Property
 
 Public Property Get VarCategory(Index As Long) As VariableType
-          VarCategory = pVarCategory(Index)
+1               VarCategory = pVarCategory(Index)
 End Property
 Public Property Let VarCategory(Index As Long, value As VariableType)
-          pVarCategory(Index) = value
+1               pVarCategory(Index) = value
 End Property
 
 Public Property Get LHSType(Index As Long) As SolverInputType
-          LHSType = pLHSType(Index)
+1               LHSType = pLHSType(Index)
 End Property
 Public Property Let LHSType(Index As Long, value As SolverInputType)
-          pLHSType(Index) = value
+1               pLHSType(Index) = value
 End Property
 
 Public Property Get RHSType(Index As Long) As SolverInputType
-          RHSType = pRHSType(Index)
+1               RHSType = pRHSType(Index)
 End Property
 Public Property Let RHSType(Index As Long, value As SolverInputType)
-          pRHSType(Index) = value
+1               pRHSType(Index) = value
 End Property
 
 Public Property Get LHSRange(Index As Long) As Range
-          Set LHSRange = pLHSRange(Index)
+1               Set LHSRange = pLHSRange(Index)
 End Property
 Public Property Set LHSRange(Index As Long, value As Range)
-          Set pLHSRange(Index) = value
+1               Set pLHSRange(Index) = value
 End Property
 
 Public Property Get RHSRange(Index As Long) As Range
-          Set RHSRange = pRHSRange(Index)
+1               Set RHSRange = pRHSRange(Index)
 End Property
 Public Property Set RHSRange(Index As Long, value As Range)
-          Set pRHSRange(Index) = value
+1               Set pRHSRange(Index) = value
 End Property
 
 Public Property Get RHSFormula(Index As Long) As String
-          RHSFormula = pRHSFormula(Index)
+1               RHSFormula = pRHSFormula(Index)
 End Property
 Public Property Let RHSFormula(Index As Long, value As String)
-          pRHSFormula(Index) = value
+1               pRHSFormula(Index) = value
 End Property
 
 Public Property Get RHSConstant(Index As Long) As Double
-          RHSConstant = pRHSConstant(Index)
+1               RHSConstant = pRHSConstant(Index)
 End Property
 Public Property Let RHSConstant(Index As Long, value As Double)
-          pRHSConstant(Index) = value
+1               pRHSConstant(Index) = value
 End Property
 
 Public Property Get Relation(Index As Long) As RelationConsts
-          Relation = pRelation(Index)
+1               Relation = pRelation(Index)
 End Property
 Public Property Let Relation(Index As Long, value As RelationConsts)
-          pRelation(Index) = value
+1               pRelation(Index) = value
 End Property
 
 Public Property Get RowSetsBound(Index As Long) As Boolean
-          RowSetsBound = pRowSetsBound(Index)
+1               RowSetsBound = pRowSetsBound(Index)
 End Property
 Public Property Let RowSetsBound(Index As Long, value As Boolean)
-          pRowSetsBound(Index) = value
+1               pRowSetsBound(Index) = value
 End Property
 
 Public Property Get ConstraintSummary(Index As Long) As String
-          ConstraintSummary = pConstraintSummary(Index)
+1               ConstraintSummary = pConstraintSummary(Index)
 End Property
 Public Property Let ConstraintSummary(Index As Long, value As String)
-          pConstraintSummary(Index) = value
+1               pConstraintSummary(Index) = value
 End Property
 
 Public Property Set Solver(NewSolver As ISolver)
-          Set pSolver = NewSolver
+1               Set pSolver = NewSolver
 End Property
 Public Property Get Solver() As ISolver
-          Set Solver = pSolver
+1               Set Solver = pSolver
 End Property
 
 Public Property Set SolverParameters(NewSolverParameters As Dictionary)
-          Set pSolverParameters = NewSolverParameters
+1               Set pSolverParameters = NewSolverParameters
 End Property
 Public Property Get SolverParameters() As Dictionary
-          Set SolverParameters = pSolverParameters
+1               Set SolverParameters = pSolverParameters
 End Property
 
 Public Property Get RHS(Index As Long) As Double
-          RHS = pRHS(Index)
+1               RHS = pRHS(Index)
 End Property
 Public Property Let RHS(Index As Long, value As Double)
-          pRHS(Index) = value
+1               pRHS(Index) = value
 End Property
 
 Public Property Set SparseA(Index As Long, NewSparseA As CIndexedCoeffs)
-          Set pSparseA(Index) = NewSparseA
+1               Set pSparseA(Index) = NewSparseA
 End Property
 Public Property Get SparseA(Index As Long) As CIndexedCoeffs
-          Set SparseA = pSparseA(Index)
+1               Set SparseA = pSparseA(Index)
 End Property
 
 Public Property Get RowToConstraint(Index As Long) As Long
-          RowToConstraint = pRowToConstraint(Index)
+1               RowToConstraint = pRowToConstraint(Index)
 End Property
 Public Property Let RowToConstraint(Index As Long, value As Long)
-          pRowToConstraint(Index) = value
+1               pRowToConstraint(Index) = value
 End Property
 ' End of getters and setters
 '===============================================================================
 
 Function GetConstraintInstance(ByVal row As Long, ByVal constraint As Long) As Long
           Dim RaiseError As Boolean
-          RaiseError = False
-          On Error GoTo ErrorHandler
+1         RaiseError = False
+2         On Error GoTo ErrorHandler
 
-832       GetConstraintInstance = row - ConstraintToRow(constraint) + 1
+3         GetConstraintInstance = row - ConstraintToRow(constraint) + 1
 
 ExitFunction:
-          If RaiseError Then RethrowError
-          Exit Function
+4         If RaiseError Then RethrowError
+5         Exit Function
 
 ErrorHandler:
-          If Not ReportError("COpenSolver", "GetConstraintInstance") Then Resume
-          RaiseError = True
-          GoTo ExitFunction
+6         If Not ReportError("COpenSolver", "GetConstraintInstance") Then Resume
+7         RaiseError = True
+8         GoTo ExitFunction
 End Function
 
 Function CheckConstraintValuesAreNumeric(constraint As Long, LHSValues As Variant, RHSValues As Variant, ErrorMsg As String, AllowNonNumericIfNotConstant As Boolean) As Boolean
           ' Check that the LHS and RHS values are doubles (not vbError, or vbString, or ??)
           ' vbEmpty (blank) cell values are permitted as VBA quietly turns them into 0's in expressions
-836       CheckConstraintValuesAreNumeric = False
+1         CheckConstraintValuesAreNumeric = False
           Dim i As Long, j As Long, instance As Long
           Dim LHSCellRange As Range, RHSCellRange As Range, RHSstring As String, cell As Range
           
           ' Check LHS first; this is always an array
-837       instance = 0
-838       For i = 1 To UBound(LHSValues, 1)
-839           For j = 1 To UBound(LHSValues, 2)
-840               instance = instance + 1
-                  Select Case VarType(LHSValues(i, j))
+2         instance = 0
+3         For i = 1 To UBound(LHSValues, 1)
+4             For j = 1 To UBound(LHSValues, 2)
+5                 instance = instance + 1
+6                 Select Case VarType(LHSValues(i, j))
                       Case vbDouble:
-                      Case vbEmpty:
+7                     Case vbEmpty:
                           ' This is an empty cell; VBA quietly turns this into 0 when used in an expression. We need no special handling of this, and don't report an error.
-842                   Case vbError:
-843                       GetConstraintInstanceData constraint, instance, LHSCellRange, RHSCellRange, RHSstring
-844                       ErrorMsg = "The cell '" & LHSCellRange.AddressLocal(RowAbsolute:=False, ColumnAbsolute:=False) & "' in constraint '" & ConstraintSummary(constraint) & "' has a divide by zero error or has a problem with the function used ( eg #DIV/0! or #VALUE!)."
-846                   Case Else:
+8                     Case vbError:
+9                         GetConstraintInstanceData constraint, instance, LHSCellRange, RHSCellRange, RHSstring
+10                        ErrorMsg = "The cell '" & LHSCellRange.AddressLocal(RowAbsolute:=False, ColumnAbsolute:=False) & "' in constraint '" & ConstraintSummary(constraint) & "' has a divide by zero error or has a problem with the function used ( eg #DIV/0! or #VALUE!)."
+11                    Case Else:
                           ' It might be vbError, or vbString, or vbEmpty
-847                       GetConstraintInstanceData constraint, instance, LHSCellRange, RHSCellRange, RHSstring
-848                       ErrorMsg = "The cell '" & LHSCellRange.AddressLocal(RowAbsolute:=False, ColumnAbsolute:=False) & "' in constraint '" & ConstraintSummary(constraint) & "' has a value which is not numeric."
-849                       On Error Resume Next
+12                        GetConstraintInstanceData constraint, instance, LHSCellRange, RHSCellRange, RHSstring
+13                        ErrorMsg = "The cell '" & LHSCellRange.AddressLocal(RowAbsolute:=False, ColumnAbsolute:=False) & "' in constraint '" & ConstraintSummary(constraint) & "' has a value which is not numeric."
+14                        On Error Resume Next
                           ' Try to show the incorrect value; just cary on with the old ErrorMsg if this gives an error
-850                       ErrorMsg = "The cell '" & LHSCellRange.AddressLocal(RowAbsolute:=False, ColumnAbsolute:=False) & "' in constraint '" & ConstraintSummary(constraint) & "' has the value '" & LHSValues(i, j) & "' which is not numeric."
-                          On Error GoTo 0
-852               End Select
+15                        ErrorMsg = "The cell '" & LHSCellRange.AddressLocal(RowAbsolute:=False, ColumnAbsolute:=False) & "' in constraint '" & ConstraintSummary(constraint) & "' has the value '" & LHSValues(i, j) & "' which is not numeric."
+16                        On Error GoTo 0
+17                End Select
 
-                  If Len(ErrorMsg) > 0 Then
+18                If Len(ErrorMsg) > 0 Then
                       ' We have an invalid value
-                      If AllowNonNumericIfNotConstant Then
+19                    If AllowNonNumericIfNotConstant Then
                           ' Allow this if the cell depends on the variable cells - it might be valid later
-                          Set cell = GetOneCellInRange(LHSCellRange, instance)
-                          If Not ProperPrecedents(cell) Is Nothing Then
-                              If Not Intersect(ProperPrecedents(cell), AdjustableCells) Is Nothing Then
-                                  GoTo NextCellLHS
-                              End If
-                          End If
-                      End If
+20                        Set cell = GetOneCellInRange(LHSCellRange, instance)
+21                        If Not ProperPrecedents(cell) Is Nothing Then
+22                            If Not Intersect(ProperPrecedents(cell), AdjustableCells) Is Nothing Then
+23                                GoTo NextCellLHS
+24                            End If
+25                        End If
+26                    End If
                       ' Else the error is real, exit and report it
-                      GoTo ExitError
-                  End If
+27                    GoTo ExitError
+28                End If
 NextCellLHS:
-                  ErrorMsg = vbNullString
-853           Next j
-854       Next i
+29                ErrorMsg = vbNullString
+30            Next j
+31        Next i
           
-855       Select Case RHSType(constraint)
+32        Select Case RHSType(constraint)
               Case SolverInputType.SingleCellRange, SolverInputType.Formula, SolverInputType.constant
-856               Select Case VarType(RHSValues)
+33                Select Case VarType(RHSValues)
                       Case vbDouble
-                      Case vbEmpty:
+34                    Case vbEmpty:
                           ' This is an empty cell; VBA quietly turns this into 0 when used in an expression. We need no special handling of this, and don't report an error.
-857                   Case vbError:
-858                       GetConstraintInstanceData constraint, instance, LHSCellRange, RHSCellRange, RHSstring
-859                       ErrorMsg = "The right hand side in constraint '" & ConstraintSummary(constraint) & "' has a divide by zero error or has a problem with the function used (eg #DIV/0! or #VALUE!)."
-860                   Case Else:
+35                    Case vbError:
+36                        GetConstraintInstanceData constraint, instance, LHSCellRange, RHSCellRange, RHSstring
+37                        ErrorMsg = "The right hand side in constraint '" & ConstraintSummary(constraint) & "' has a divide by zero error or has a problem with the function used (eg #DIV/0! or #VALUE!)."
+38                    Case Else:
                           ' It might be vbError, or vbString, or anything else?
-862                       GetConstraintInstanceData constraint, 1, LHSCellRange, RHSCellRange, RHSstring
-863                       ErrorMsg = "The right hand side in constraint '" & ConstraintSummary(constraint) & "' has a value which is not a single numeric value."
+39                        GetConstraintInstanceData constraint, 1, LHSCellRange, RHSCellRange, RHSstring
+40                        ErrorMsg = "The right hand side in constraint '" & ConstraintSummary(constraint) & "' has a value which is not a single numeric value."
                           ' Try to show the incorrect value; just cary on with the old ErrorMsg if this gives an error
-864                       On Error Resume Next
-865                       ErrorMsg = "The right hand side in constraint '" & ConstraintSummary(constraint) & "' has the value '" & RHSValues & "' which is not numeric."
-                          On Error GoTo 0
-867               End Select
+41                        On Error Resume Next
+42                        ErrorMsg = "The right hand side in constraint '" & ConstraintSummary(constraint) & "' has the value '" & RHSValues & "' which is not numeric."
+43                        On Error GoTo 0
+44                End Select
 
-                  If Len(ErrorMsg) > 0 Then
+45                If Len(ErrorMsg) > 0 Then
                       ' We have an invalid value
-                      If AllowNonNumericIfNotConstant Then
+46                    If AllowNonNumericIfNotConstant Then
                           ' Allow this if the cell depends on the variable cells - it might be valid later
-                          Set cell = RHSCellRange
-                          If Not ProperPrecedents(cell) Is Nothing Then
-                              If Not Intersect(ProperPrecedents(cell), AdjustableCells) Is Nothing Then
-                                  GoTo NextCellSingleRHS
-                              End If
-                          End If
-                      End If
+47                        Set cell = RHSCellRange
+48                        If Not ProperPrecedents(cell) Is Nothing Then
+49                            If Not Intersect(ProperPrecedents(cell), AdjustableCells) Is Nothing Then
+50                                GoTo NextCellSingleRHS
+51                            End If
+52                        End If
+53                    End If
                       ' Else the error is real, exit and report it
-                      GoTo ExitError
-                  End If
+54                    GoTo ExitError
+55                End If
 NextCellSingleRHS:
-868           Case SolverInputType.MultiCellRange
-869               instance = 0
-870               For i = 1 To UBound(RHSValues, 1)
-871                   For j = 1 To UBound(RHSValues, 2)
-872                       instance = instance + 1
-873                       Select Case VarType(RHSValues(i, j))
+56            Case SolverInputType.MultiCellRange
+57                instance = 0
+58                For i = 1 To UBound(RHSValues, 1)
+59                    For j = 1 To UBound(RHSValues, 2)
+60                        instance = instance + 1
+61                        Select Case VarType(RHSValues(i, j))
                               Case vbDouble:
-                              Case vbEmpty:
+62                            Case vbEmpty:
                                   ' This is an empty cell; VBA quietly turns this into 0 when used in an expression. We need no special handling of this, and don't report an error.
-874                           Case vbError:
-875                               GetConstraintInstanceData constraint, instance, LHSCellRange, RHSCellRange, RHSstring
-876                               ErrorMsg = "The right hand side in constraint '" & ConstraintSummary(constraint) & "' has a divide by zero error or has a problem with the function used ( eg #DIV/0! or #VALUE!)."
-877                               GoTo ExitError
-878                           Case Else:
+63                            Case vbError:
+64                                GetConstraintInstanceData constraint, instance, LHSCellRange, RHSCellRange, RHSstring
+65                                ErrorMsg = "The right hand side in constraint '" & ConstraintSummary(constraint) & "' has a divide by zero error or has a problem with the function used ( eg #DIV/0! or #VALUE!)."
+66                                GoTo ExitError
+67                            Case Else:
                                   ' It might be vbError, or vbString, or vbEmpty
-879                               GetConstraintInstanceData constraint, instance, LHSCellRange, RHSCellRange, RHSstring
-880                               ErrorMsg = "The cell '" & RHSCellRange.AddressLocal(RowAbsolute:=False, ColumnAbsolute:=False) & "' in constraint '" & ConstraintSummary(constraint) & "' has a value which is not numeric."
-881                               On Error Resume Next
-882                               ErrorMsg = "The cell '" & RHSCellRange.AddressLocal(RowAbsolute:=False, ColumnAbsolute:=False) & "' in constraint '" & ConstraintSummary(constraint) & "' has the value '" & RHSValues(i, j) & "' which is not numeric."
-                                  On Error GoTo 0
-884                       End Select
+68                                GetConstraintInstanceData constraint, instance, LHSCellRange, RHSCellRange, RHSstring
+69                                ErrorMsg = "The cell '" & RHSCellRange.AddressLocal(RowAbsolute:=False, ColumnAbsolute:=False) & "' in constraint '" & ConstraintSummary(constraint) & "' has a value which is not numeric."
+70                                On Error Resume Next
+71                                ErrorMsg = "The cell '" & RHSCellRange.AddressLocal(RowAbsolute:=False, ColumnAbsolute:=False) & "' in constraint '" & ConstraintSummary(constraint) & "' has the value '" & RHSValues(i, j) & "' which is not numeric."
+72                                On Error GoTo 0
+73                        End Select
 
-                          If Len(ErrorMsg) > 0 Then
+74                        If Len(ErrorMsg) > 0 Then
                               ' We have an invalid value
-                              If AllowNonNumericIfNotConstant Then
+75                            If AllowNonNumericIfNotConstant Then
                                   ' Allow this if the cell depends on the variable cells - it might be valid later
-                                  Set cell = GetOneCellInRange(RHSCellRange, instance)
-                                  If Not ProperPrecedents(cell) Is Nothing Then
-                                      If Not Intersect(ProperPrecedents(cell), AdjustableCells) Is Nothing Then
-                                          GoTo NextCellMultiRHS
-                                      End If
-                                  End If
-                              End If
+76                                Set cell = GetOneCellInRange(RHSCellRange, instance)
+77                                If Not ProperPrecedents(cell) Is Nothing Then
+78                                    If Not Intersect(ProperPrecedents(cell), AdjustableCells) Is Nothing Then
+79                                        GoTo NextCellMultiRHS
+80                                    End If
+81                                End If
+82                            End If
                               ' Else the error is real, exit and report it
-                              GoTo ExitError
-                          End If
+83                            GoTo ExitError
+84                        End If
 NextCellMultiRHS:
-                          ErrorMsg = vbNullString
-885                   Next j
-886               Next i
-887       End Select
-888       CheckConstraintValuesAreNumeric = True
-          Exit Function
+85                        ErrorMsg = vbNullString
+86                    Next j
+87                Next i
+88        End Select
+89        CheckConstraintValuesAreNumeric = True
+90        Exit Function
           
 ExitError:
-          ErrorMsg = ErrorMsg & vbNewLine & vbNewLine & _
+91        ErrorMsg = ErrorMsg & vbNewLine & vbNewLine & _
                      IIf(AllowNonNumericIfNotConstant, "This can happen if you have made an error when constructing the model.", _
                                                        "This can happen if your model is nonlinear, or if you have made an error when constructing the model.") & _
                      " Please fix this and try again."
@@ -464,227 +464,227 @@ End Function
 ' - AllowNonNumericIfNotConstant: doesn't throw an error if the non-numeric value depends on the variable cells
 Sub GetCurrentConstraintValues(constraint As Long, LHSValues As Variant, RHSValues As Variant, Optional ValidateNumeric As Boolean = True, Optional AllowNonNumericIfNotConstant As Boolean = False)
           Dim RaiseError As Boolean
-          RaiseError = False
-          On Error GoTo ErrorHandler
+1         RaiseError = False
+2         On Error GoTo ErrorHandler
 
-889       If LHSType(constraint) = SolverInputType.SingleCellRange Then
+3         If LHSType(constraint) = SolverInputType.SingleCellRange Then
               ' Create a 1x1 array
-890           LHSValues = Create1x1Array(LHSRange(constraint).Value2)
-891       Else ' LHSType(constraint) = SolverInputType.MultiCellRange
+4             LHSValues = Create1x1Array(LHSRange(constraint).Value2)
+5         Else ' LHSType(constraint) = SolverInputType.MultiCellRange
               ' Copy all the values into a variant, which will then be an
               ' array of variants; see http://support.microsoft.com/kb/213798
-892           LHSValues = LHSRange(constraint).Value2
-893       End If
+6             LHSValues = LHSRange(constraint).Value2
+7         End If
 
-894       If RHSType(constraint) = SolverInputType.SingleCellRange Then
+8         If RHSType(constraint) = SolverInputType.SingleCellRange Then
               ' A variant containing just a single double
-895           RHSValues = RHSRange(constraint).Value2
-896       ElseIf RHSType(constraint) = SolverInputType.MultiCellRange Then
+9             RHSValues = RHSRange(constraint).Value2
+10        ElseIf RHSType(constraint) = SolverInputType.MultiCellRange Then
               ' Copy all the values into a variant, which will then be an
               ' array of variants
-897           RHSValues = RHSRange(constraint).Value2
-898       ElseIf RHSType(constraint) = SolverInputType.Formula Then
+11            RHSValues = RHSRange(constraint).Value2
+12        ElseIf RHSType(constraint) = SolverInputType.Formula Then
               ' Will not throw an error, but may put an error value in RHSValues
-899           RHSValues = sheet.Evaluate("=" & RHSFormula(constraint))
-900       Else  ' RHSType(constraint) = SolverInputType.Constant
-901           RHSValues = RHSConstant(constraint)
-902       End If
+13            RHSValues = sheet.Evaluate("=" & RHSFormula(constraint))
+14        Else  ' RHSType(constraint) = SolverInputType.Constant
+15            RHSValues = RHSConstant(constraint)
+16        End If
 
-1171      If ValidateNumeric Then
+17        If ValidateNumeric Then
               Dim ErrorMsg As String
-              If Not CheckConstraintValuesAreNumeric(constraint, LHSValues, RHSValues, ErrorMsg, _
+18            If Not CheckConstraintValuesAreNumeric(constraint, LHSValues, RHSValues, ErrorMsg, _
                                                      AllowNonNumericIfNotConstant) Then
-1173              RaiseUserError ErrorMsg
-              End If
-1174      End If
+19                RaiseUserError ErrorMsg
+20            End If
+21        End If
 
 ExitSub:
-          If RaiseError Then RethrowError
-          Exit Sub
+22        If RaiseError Then RethrowError
+23        Exit Sub
 
 ErrorHandler:
-          If Not ReportError("COpenSolver", "GetCurrentConstraintValues") Then Resume
-          RaiseError = True
-          GoTo ExitSub
+24        If Not ReportError("COpenSolver", "GetCurrentConstraintValues") Then Resume
+25        RaiseError = True
+26        GoTo ExitSub
 End Sub
 
 Function GetCurrentObjectiveValue(Optional ValidateNumeric As Boolean = True, Optional AllowNonNumericIfNotConstant As Boolean = False) As Variant
-          Dim RaiseError As Boolean
-          RaiseError = False
-          On Error GoTo ErrorHandler
-          
-          If ObjRange Is Nothing Then
-              GetCurrentObjectiveValue = 0
-              GoTo ExitFunction
-          End If
-              
-          Dim ObjValue As Variant
-          ObjValue = ObjRange.Value2
-          
-          If ValidateNumeric Then
-              Dim ErrorMsg As String
-              ' Check if objective has a value that is not a number
-              If VarType(ObjValue) <> vbDouble Then
-                  If VarType(ObjValue) = vbError Then
-                      ErrorMsg = "The objective cell appears to contain an error. This could have occurred if there is a divide by zero error or if you have used the wrong function (eg #DIV/0! or #VALUE!)."
-                  Else
-                      ErrorMsg = "The objective cell does not appear to contain a numeric value."
-                  End If
-              End If
-              
-              If Len(ErrorMsg) > 0 Then
-                  If AllowNonNumericIfNotConstant Then
-                      If Not ProperPrecedents(ObjRange) Is Nothing Then
-                          If Not Intersect(ProperPrecedents(ObjRange), AdjustableCells) Is Nothing Then
-                              GoTo DontRaise
-                          End If
-                      End If
-                  End If
-                  ErrorMsg = _
-                      ErrorMsg & vbNewLine & vbNewLine & _
-                      IIf(AllowNonNumericIfNotConstant, "This can happen if you have made an error when constructing the model.", _
-                                                        "This can happen if your model is nonlinear, or if you have made an error when constructing the model.") & _
-                      " Please fix this and try again."
-                  RaiseUserError ErrorMsg
-              End If
-          End If
+                Dim RaiseError As Boolean
+1               RaiseError = False
+2               On Error GoTo ErrorHandler
+                
+3               If ObjRange Is Nothing Then
+4                   GetCurrentObjectiveValue = 0
+5                   GoTo ExitFunction
+6               End If
+                    
+                Dim ObjValue As Variant
+7               ObjValue = ObjRange.Value2
+                
+8               If ValidateNumeric Then
+                    Dim ErrorMsg As String
+                    ' Check if objective has a value that is not a number
+9                   If VarType(ObjValue) <> vbDouble Then
+10                      If VarType(ObjValue) = vbError Then
+11                          ErrorMsg = "The objective cell appears to contain an error. This could have occurred if there is a divide by zero error or if you have used the wrong function (eg #DIV/0! or #VALUE!)."
+12                      Else
+13                          ErrorMsg = "The objective cell does not appear to contain a numeric value."
+14                      End If
+15                  End If
+                    
+16                  If Len(ErrorMsg) > 0 Then
+17                      If AllowNonNumericIfNotConstant Then
+18                          If Not ProperPrecedents(ObjRange) Is Nothing Then
+19                              If Not Intersect(ProperPrecedents(ObjRange), AdjustableCells) Is Nothing Then
+20                                  GoTo DontRaise
+21                              End If
+22                          End If
+23                      End If
+24                      ErrorMsg = _
+                            ErrorMsg & vbNewLine & vbNewLine & _
+                            IIf(AllowNonNumericIfNotConstant, "This can happen if you have made an error when constructing the model.", _
+                                                              "This can happen if your model is nonlinear, or if you have made an error when constructing the model.") & _
+                            " Please fix this and try again."
+25                      RaiseUserError ErrorMsg
+26                  End If
+27              End If
 DontRaise:
-          GetCurrentObjectiveValue = ObjValue
+28              GetCurrentObjectiveValue = ObjValue
 
 ExitFunction:
-          If RaiseError Then RethrowError
-          Exit Function
+29              If RaiseError Then RethrowError
+30              Exit Function
 
 ErrorHandler:
-          If Not ReportError("COpenSolver", "GetCurrentObjectiveValue") Then Resume
-          RaiseError = True
-          GoTo ExitFunction
+31              If Not ReportError("COpenSolver", "GetCurrentObjectiveValue") Then Resume
+32              RaiseError = True
+33              GoTo ExitFunction
 End Function
 
 
 ' Get the information required to display a single instance of a constraint to the user
 Sub GetConstraintInstanceData(constraint As Long, instance As Long, LHSCellRange As Range, RHSCellRange As Range, RHSstring As String)
           Dim RaiseError As Boolean
-          RaiseError = False
-          On Error GoTo ErrorHandler
+1         RaiseError = False
+2         On Error GoTo ErrorHandler
 
-903       Select Case LHSType(constraint)
+3         Select Case LHSType(constraint)
               Case SolverInputType.SingleCellRange
-904               Set LHSCellRange = LHSRange(constraint)
-905           Case SolverInputType.MultiCellRange
-906               Set LHSCellRange = GetOneCellInRange(LHSRange(constraint), instance)
-907           Case SolverInputType.Formula
-908               Debug.Assert False ' should never happen
-909           Case SolverInputType.constant
-910               Debug.Assert False ' should never happen
-911       End Select
-912       Select Case RHSType(constraint)
+4                 Set LHSCellRange = LHSRange(constraint)
+5             Case SolverInputType.MultiCellRange
+6                 Set LHSCellRange = GetOneCellInRange(LHSRange(constraint), instance)
+7             Case SolverInputType.Formula
+8                 Debug.Assert False ' should never happen
+9             Case SolverInputType.constant
+10                Debug.Assert False ' should never happen
+11        End Select
+12        Select Case RHSType(constraint)
               Case SolverInputType.SingleCellRange
-913               Set RHSCellRange = RHSRange(constraint)
-914               RHSstring = vbNullString
-915           Case SolverInputType.MultiCellRange
-916               Set RHSCellRange = GetOneCellInRange(RHSRange(constraint), instance)
-917               RHSstring = vbNullString
-918           Case SolverInputType.Formula, SolverInputType.constant
-919               Set RHSCellRange = Nothing
-920               RHSstring = RHSFormula(constraint)
-924       End Select
+13                Set RHSCellRange = RHSRange(constraint)
+14                RHSstring = vbNullString
+15            Case SolverInputType.MultiCellRange
+16                Set RHSCellRange = GetOneCellInRange(RHSRange(constraint), instance)
+17                RHSstring = vbNullString
+18            Case SolverInputType.Formula, SolverInputType.constant
+19                Set RHSCellRange = Nothing
+20                RHSstring = RHSFormula(constraint)
+21        End Select
 
 ExitSub:
-          If RaiseError Then RethrowError
-          Exit Sub
+22        If RaiseError Then RethrowError
+23        Exit Sub
 
 ErrorHandler:
-          If Not ReportError("COpenSolver", "GetConstraintInstanceData") Then Resume
-          RaiseError = True
-          GoTo ExitSub
+24        If Not ReportError("COpenSolver", "GetConstraintInstanceData") Then Resume
+25        RaiseError = True
+26        GoTo ExitSub
 End Sub
 
 Sub CheckCurrentConstraintFeasible(LHSValues As Variant, RHSValues As Variant, rel As RelationConsts, constraint As Long)
-          ' Check if the current solution is valid for this constraint
-          On Error GoTo Invalid
-          
-          Dim i As Long, j As Long, LHSValue As Double, RHSValue As Double, value As Double
-          For i = 1 To UBound(LHSValues, 1)
-              For j = 1 To UBound(LHSValues, 2)
-                  LHSValue = LHSValues(i, j)
-                  If RHSType(constraint) <> SolverInputType.MultiCellRange Then
-                      RHSValue = RHSValues
-                  ElseIf UBound(LHSValues, 1) = UBound(RHSValues, 1) Then
-                      RHSValue = RHSValues(i, j)
-                  Else
-                      RHSValue = RHSValues(j, i)
-                  End If
-                        
-                  value = RHSValue - LHSValue
-                  If (rel = RelationEQ And Abs(value) > EPSILON) Or _
-                     (rel = RelationGE And value > EPSILON) Or _
-                     (rel = RelationLE And value < -EPSILON) Then
-                      GoTo Invalid
-                  End If
-              Next j
-          Next i
-          Exit Sub
+                ' Check if the current solution is valid for this constraint
+1               On Error GoTo Invalid
+                
+                Dim i As Long, j As Long, LHSValue As Double, RHSValue As Double, value As Double
+2               For i = 1 To UBound(LHSValues, 1)
+3                   For j = 1 To UBound(LHSValues, 2)
+4                       LHSValue = LHSValues(i, j)
+5                       If RHSType(constraint) <> SolverInputType.MultiCellRange Then
+6                           RHSValue = RHSValues
+7                       ElseIf UBound(LHSValues, 1) = UBound(RHSValues, 1) Then
+8                           RHSValue = RHSValues(i, j)
+9                       Else
+10                          RHSValue = RHSValues(j, i)
+11                      End If
+                              
+12                      value = RHSValue - LHSValue
+13                      If (rel = RelationEQ And Abs(value) > EPSILON) Or _
+                           (rel = RelationGE And value > EPSILON) Or _
+                           (rel = RelationLE And value < -EPSILON) Then
+14                          GoTo Invalid
+15                      End If
+16                  Next j
+17              Next i
+18              Exit Sub
 Invalid:
-          InitialSolutionIsValid = False
+19              InitialSolutionIsValid = False
 End Sub
 
 Sub CheckCurrentVariablesFeasible(ShouldSolveRelaxation As Boolean)
-          Dim i As Long, RoundedValue As Double, bound As Double
-          For i = 1 To NumVars
-              ' Check value is integral if discrete
-              If VarCategory(i) <> VarContinuous And Not ShouldSolveRelaxation Then
-                  ' If the starting value is not integer, solution is invalid.
-                  ' Otherwise round starting value to ensure feasibility
-                  RoundedValue = CLng(VarInitialValue(i))
-                  If Abs(VarInitialValue(i) - RoundedValue) <= EPSILON Then
-                      VarInitialValue(i) = RoundedValue
-                  Else
-                      GoTo Invalid
-                  End If
-              End If
-              
-              ' Check bounds - we have already invalidated anything that violates these in the constraint validation
-              ' However, we go through them again because we can now adjust variables that are only just infeasible
-                  
-              ' Check lower bounds
-              If VarLowerBounds.Exists(VarName(i)) Or VarCategory(i) = VarBinary Or AssumeNonNegativeVars Then
-                  If VarLowerBounds.Exists(VarName(i)) And VarCategory(i) <> VarBinary Then
-                      bound = VarLowerBounds.Item(VarName(i))
-                  Else
-                      bound = 0
-                  End If
-                  If VarInitialValue(i) >= bound - EPSILON Then
-                      ' Make sure the bound is strictly satisfied
-                      If VarInitialValue(i) < bound Then
-                          VarInitialValue(i) = bound
-                      End If
-                  Else
-                      GoTo Invalid
-                  End If
-              End If
-              
-              ' Check upper bounds
-              If VarUpperBounds.Exists(VarName(i)) Or VarCategory(i) = VarBinary Then
-                  If VarCategory(i) = VarBinary Then
-                      bound = 1
-                  Else
-                      bound = VarUpperBounds.Item(VarName(i))
-                  End If
-                  
-                  If VarInitialValue(i) <= bound + EPSILON Then
-                      ' Make sure the bound is strictly satisfied
-                      If VarInitialValue(i) > bound Then
-                          VarInitialValue(i) = bound
-                      End If
-                  Else
-                      GoTo Invalid
-                  End If
-              End If
-          Next i
-          Exit Sub
+                Dim i As Long, RoundedValue As Double, bound As Double
+1               For i = 1 To NumVars
+                    ' Check value is integral if discrete
+2                   If VarCategory(i) <> VarContinuous And Not ShouldSolveRelaxation Then
+                        ' If the starting value is not integer, solution is invalid.
+                        ' Otherwise round starting value to ensure feasibility
+3                       RoundedValue = CLng(VarInitialValue(i))
+4                       If Abs(VarInitialValue(i) - RoundedValue) <= EPSILON Then
+5                           VarInitialValue(i) = RoundedValue
+6                       Else
+7                           GoTo Invalid
+8                       End If
+9                   End If
+                    
+                    ' Check bounds - we have already invalidated anything that violates these in the constraint validation
+                    ' However, we go through them again because we can now adjust variables that are only just infeasible
+                        
+                    ' Check lower bounds
+10                  If VarLowerBounds.Exists(VarName(i)) Or VarCategory(i) = VarBinary Or AssumeNonNegativeVars Then
+11                      If VarLowerBounds.Exists(VarName(i)) And VarCategory(i) <> VarBinary Then
+12                          bound = VarLowerBounds.Item(VarName(i))
+13                      Else
+14                          bound = 0
+15                      End If
+16                      If VarInitialValue(i) >= bound - EPSILON Then
+                            ' Make sure the bound is strictly satisfied
+17                          If VarInitialValue(i) < bound Then
+18                              VarInitialValue(i) = bound
+19                          End If
+20                      Else
+21                          GoTo Invalid
+22                      End If
+23                  End If
+                    
+                    ' Check upper bounds
+24                  If VarUpperBounds.Exists(VarName(i)) Or VarCategory(i) = VarBinary Then
+25                      If VarCategory(i) = VarBinary Then
+26                          bound = 1
+27                      Else
+28                          bound = VarUpperBounds.Item(VarName(i))
+29                      End If
+                        
+30                      If VarInitialValue(i) <= bound + EPSILON Then
+                            ' Make sure the bound is strictly satisfied
+31                          If VarInitialValue(i) > bound Then
+32                              VarInitialValue(i) = bound
+33                          End If
+34                      Else
+35                          GoTo Invalid
+36                      End If
+37                  End If
+38              Next i
+39              Exit Sub
 Invalid:
-          InitialSolutionIsValid = False
+40              InitialSolutionIsValid = False
 End Sub
 
 Sub BuildModelFromSolverData(Optional LinearityOffset As Double = 0, _
@@ -693,340 +693,340 @@ Sub BuildModelFromSolverData(Optional LinearityOffset As Double = 0, _
                              Optional ShouldSolveRelaxation As Boolean = False, _
                              Optional modelSheet As Worksheet)
           Dim RaiseError As Boolean
-          RaiseError = False
-          On Error GoTo ErrorHandler
+1         RaiseError = False
+2         On Error GoTo ErrorHandler
 
-935       SolveStatus = OpenSolverResult.Unsolved
-936       SolveStatusString = "Unsolved"
-937       SolveStatusComment = vbNullString
-940       SolutionWasLoaded = False
-941       ModelStatus = Unitialized
+3         SolveStatus = OpenSolverResult.Unsolved
+4         SolveStatusString = "Unsolved"
+5         SolveStatusComment = vbNullString
+6         SolutionWasLoaded = False
+7         ModelStatus = Unitialized
 
-          MinimiseUserInteraction = ShouldMinimiseUserInteraction
+8         MinimiseUserInteraction = ShouldMinimiseUserInteraction
 
           ' Change to manual calculation mode
           Dim oldCalculationMode As Long
-969       oldCalculationMode = Application.Calculation
-970       Application.Calculation = xlCalculationManual
+9         oldCalculationMode = Application.Calculation
+10        Application.Calculation = xlCalculationManual
 
           Dim ScreenStatus As Boolean
-          ScreenStatus = Application.ScreenUpdating
-971       Application.ScreenUpdating = False
+11        ScreenStatus = Application.ScreenUpdating
+12        Application.ScreenUpdating = False
 
-972       Application.Cursor = xlWait
+13        Application.Cursor = xlWait
 
           Dim StartTimeOfBuild As Single, StartDateTimeOfBuild As Date
           Dim EndTimeOfBuild As Single, EndDateTimeOfBuild As Date
-944       StartTimeOfBuild = Timer    ' Warning: This goes back to zero at midnight!
-945       StartDateTimeOfBuild = Now()
+14        StartTimeOfBuild = Timer    ' Warning: This goes back to zero at midnight!
+15        StartDateTimeOfBuild = Now()
 
-947       Application.EnableCancelKey = xlErrorHandler
+16        Application.EnableCancelKey = xlErrorHandler
           
-          GetActiveSheetIfMissing modelSheet
-          Set sheet = modelSheet
+17        GetActiveSheetIfMissing modelSheet
+18        Set sheet = modelSheet
           
           ' Find the solver
-960       Set Solver = CreateSolver(GetChosenSolver(sheet))
-          LastUsedSolver = Solver.ShortName
+19        Set Solver = CreateSolver(GetChosenSolver(sheet))
+20        LastUsedSolver = Solver.ShortName
 
           '--------------------------------------------------------------------------
           ' ADJUSTABLE CELLS SETUP
           
           ' Remove any overlap
-980       Set AdjustableCells = GetDecisionVariablesNoOverlap(sheet)
+21        Set AdjustableCells = GetDecisionVariablesNoOverlap(sheet)
           ' Handle any merged ranges
           Dim BadCell As Range
-981       If Not CheckRangeContainsNoAmbiguousMergedCells(AdjustableCells, BadCell) Then
-983           RaiseUserError "This model contains a decision variable " & BadCell.AddressLocal(RowAbsolute:=False, ColumnAbsolute:=False) & " that is inaccessible as it is within the merged range " & BadCell.MergeArea.AddressLocal(RowAbsolute:=False, ColumnAbsolute:=False) & ". Please redefine the decision variable cells, and try again."
-985       End If
+22        If Not CheckRangeContainsNoAmbiguousMergedCells(AdjustableCells, BadCell) Then
+23            RaiseUserError "This model contains a decision variable " & BadCell.AddressLocal(RowAbsolute:=False, ColumnAbsolute:=False) & " that is inaccessible as it is within the merged range " & BadCell.MergeArea.AddressLocal(RowAbsolute:=False, ColumnAbsolute:=False) & ". Please redefine the decision variable cells, and try again."
+24        End If
           ' Check we have any cells after all this
-986       NumVars = AdjustableCells.Count
-987       If NumVars < 1 Then
-989           RaiseUserError "There are no decision variable cells in this model, and so the model cannot be solved."
-990       End If
+25        NumVars = AdjustableCells.Count
+26        If NumVars < 1 Then
+27            RaiseUserError "There are no decision variable cells in this model, and so the model cannot be solved."
+28        End If
 
           ' Variable initialization
-          ReDim pVarName(1 To NumVars) As String
-          ReDim pVarInitialValue(1 To NumVars) As Double
-          ReDim pVarCategory(1 To NumVars) As VariableType
-          Set VarNameToIndex = New Collection
-          InitialSolutionIsValid = True
+29        ReDim pVarName(1 To NumVars) As String
+30        ReDim pVarInitialValue(1 To NumVars) As Double
+31        ReDim pVarCategory(1 To NumVars) As VariableType
+32        Set VarNameToIndex = New Collection
+33        InitialSolutionIsValid = True
           
           Dim AdjCell As Range, i As Long
-996       i = 1
-997       For Each AdjCell In AdjustableCells
-999           VarName(i) = GetCellName(AdjCell)
-              VarCategory(i) = VariableType.VarContinuous
-              VarNameToIndex.Add Item:=i, Key:=VarName(i)
+34        i = 1
+35        For Each AdjCell In AdjustableCells
+36            VarName(i) = GetCellName(AdjCell)
+37            VarCategory(i) = VariableType.VarContinuous
+38            VarNameToIndex.Add Item:=i, Key:=VarName(i)
               ' Try to get the starting value, if we can't the starting solution is invalid
-              On Error Resume Next
-              VarInitialValue(i) = AdjCell.Value2
-              If Err.Number <> 0 Then InitialSolutionIsValid = False
-              On Error GoTo ErrorHandler
-              i = i + 1
-1003      Next AdjCell
+39            On Error Resume Next
+40            VarInitialValue(i) = AdjCell.Value2
+41            If Err.Number <> 0 Then InitialSolutionIsValid = False
+42            On Error GoTo ErrorHandler
+43            i = i + 1
+44        Next AdjCell
           
           ' Reset the cell values to catch protected sheets
-1004      TestCellsForWriting AdjustableCells
+45        TestCellsForWriting AdjustableCells
           
           ' Initial sheet calculation
-          If Not ForceCalculate("Warning: The initial worksheet calculation did not complete, and so the model may not be generated correctly. Would you like to try again?", MinimiseUserInteraction) Then
-1008          On Error GoTo ErrorHandler
-1009          RaiseGeneralError "Calculation failed. The model has not been built so cannot be solved."
-1010      End If
+46        If Not ForceCalculate("Warning: The initial worksheet calculation did not complete, and so the model may not be generated correctly. Would you like to try again?", MinimiseUserInteraction) Then
+47            On Error GoTo ErrorHandler
+48            RaiseGeneralError "Calculation failed. The model has not been built so cannot be solved."
+49        End If
 
           '--------------------------------------------------------------------------
           ' OBJECTIVE SETUP
-1011      ObjectiveSense = GetObjectiveSense(sheet)
-1013      ObjectiveTargetValue = GetObjectiveTargetValue(sheet)
-          Set ObjRange = GetObjectiveFunctionCell(sheet, Validate:=True)
+50        ObjectiveSense = GetObjectiveSense(sheet)
+51        ObjectiveTargetValue = GetObjectiveTargetValue(sheet)
+52        Set ObjRange = GetObjectiveFunctionCell(sheet, Validate:=True)
           ' Check that objective is not an non-numeric constant
-          GetCurrentObjectiveValue AllowNonNumericIfNotConstant:=True
+53        GetCurrentObjectiveValue AllowNonNumericIfNotConstant:=True
 
           '--------------------------------------------------------------------------
           ' MODEL OPTIONS SETUP
-1041      AssumeNonNegativeVars = GetNonNegativity(sheet)
-          ShowIterationResults = GetShowSolverProgress(sheet)
+54        AssumeNonNegativeVars = GetNonNegativity(sheet)
+55        ShowIterationResults = GetShowSolverProgress(sheet)
           
           ' Collate all solver parameters (ours and user-defined)
-          Set SolverParameters = GetSolverParametersDict(Solver, sheet)
+56        Set SolverParameters = GetSolverParametersDict(Solver, sheet)
 
           ' Check for Solver's "Ignore Integer Constraints" option unless solving relaxation
-          If Not ShouldSolveRelaxation Then
+57        If Not ShouldSolveRelaxation Then
               ' If we are in Excel 2010 or newer, and the user has set "Ignore Integer Constraints", then we report an error
-1266          If Val(Application.Version) >= 14 And GetIgnoreIntegerConstraints(sheet) Then
-                   If MinimiseUserInteraction Then
-                       RaiseUserError "You have the Solver option 'ignore integer constraints' turned on. Please turn this off in the Solver (not OpenSolver) options menu and then solve with OpenSolver again or choose OpenSolver's solve relaxed model option"
-                   ElseIf Not MsgBox("You have the 'Ignore integer constraints' option enabled in Solver, so OpenSolver cannot proceed with solving. You can either disable this option, or use the 'Solve Relaxation' option in the OpenSolver menu. Would you like OpenSolver to disable this option and proceed?", vbCritical + vbYesNo + vbDefaultButton1, "OpenSolver Warning") = vbNo Then
-                       SetIgnoreIntegerConstraints False, sheet
-                   Else
+58            If Val(Application.Version) >= 14 And GetIgnoreIntegerConstraints(sheet) Then
+59                 If MinimiseUserInteraction Then
+60                     RaiseUserError "You have the Solver option 'ignore integer constraints' turned on. Please turn this off in the Solver (not OpenSolver) options menu and then solve with OpenSolver again or choose OpenSolver's solve relaxed model option"
+61                 ElseIf Not MsgBox("You have the 'Ignore integer constraints' option enabled in Solver, so OpenSolver cannot proceed with solving. You can either disable this option, or use the 'Solve Relaxation' option in the OpenSolver menu. Would you like OpenSolver to disable this option and proceed?", vbCritical + vbYesNo + vbDefaultButton1, "OpenSolver Warning") = vbNo Then
+62                     SetIgnoreIntegerConstraints False, sheet
+63                 Else
                        ' Already confirmed abort by user
-                       RaiseUserCancelledError
-                   End If
-1271          End If
-          End If
+64                     RaiseUserCancelledError
+65                 End If
+66            End If
+67        End If
           
           '--------------------------------------------------------------------------
           ' CONSTRAINTS SETUP
-1048      NumConstraints = GetNumConstraints(sheet)
-1049      UpdateStatusBar "OpenSolver: Setting Up Problem... " & NumVars & " vars, " & NumConstraints & " Solver constraints", True
+68        NumConstraints = GetNumConstraints(sheet)
+69        UpdateStatusBar "OpenSolver: Setting Up Problem... " & NumVars & " vars, " & NumConstraints & " Solver constraints", True
           'Set up arrays to be the correct size. We allow no constraints!
-1050      If NumConstraints > 0 Then
-1054          ReDim pLHSType(NumConstraints) As SolverInputType
-1055          ReDim pLHSRange(NumConstraints) As Range
-              ReDim pRelation(NumConstraints) As RelationConsts
-1053          ReDim pRHSType(NumConstraints) As SolverInputType
-1056          ReDim pRHSRange(NumConstraints) As Range
-1057          ReDim pRHSFormula(NumConstraints) As String
-              ReDim pRHSConstant(NumConstraints) As Double
-1058          ReDim pConstraintSummary(NumConstraints) As String
-1059          ReDim ConstraintToRow(NumConstraints) As Long
-              ReDim RowCount(NumConstraints) As Long
-1060      End If
-1061      Set VarLowerBounds = New Dictionary
-1062      Set VarUpperBounds = New Dictionary
-1063      ReDim pRowSetsBound(1)
+70        If NumConstraints > 0 Then
+71            ReDim pLHSType(NumConstraints) As SolverInputType
+72            ReDim pLHSRange(NumConstraints) As Range
+73            ReDim pRelation(NumConstraints) As RelationConsts
+74            ReDim pRHSType(NumConstraints) As SolverInputType
+75            ReDim pRHSRange(NumConstraints) As Range
+76            ReDim pRHSFormula(NumConstraints) As String
+77            ReDim pRHSConstant(NumConstraints) As Double
+78            ReDim pConstraintSummary(NumConstraints) As String
+79            ReDim ConstraintToRow(NumConstraints) As Long
+80            ReDim RowCount(NumConstraints) As Long
+81        End If
+82        Set VarLowerBounds = New Dictionary
+83        Set VarUpperBounds = New Dictionary
+84        ReDim pRowSetsBound(1)
 
-1064      NumRows = 0
+85        NumRows = 0
           Dim constraint As Long, row As Long
-1065      row = 1
+86        row = 1
           ' Iterate through each solver constraint
-1066      For constraint = 1 To NumConstraints
-1067          UpdateStatusBar "OpenSolver: Setting Up Constraints... " & NumVars & " vars, " & constraint & "/" & NumConstraints & " Solver constraints"
+87        For constraint = 1 To NumConstraints
+88            UpdateStatusBar "OpenSolver: Setting Up Constraints... " & NumVars & " vars, " & constraint & "/" & NumConstraints & " Solver constraints"
                            
               ' LEFT HAND SIDE
               Dim rangeLHS As Range, sRefersToLHS As String
-              Set rangeLHS = GetConstraintLhs(constraint, sheet, Validate:=True, RefersTo:=sRefersToLHS)
+89            Set rangeLHS = GetConstraintLhs(constraint, sheet, Validate:=True, RefersTo:=sRefersToLHS)
               Dim LHSCount As Long
-1082          LHSCount = rangeLHS.Count
+90            LHSCount = rangeLHS.Count
               
               ' RELATIONSHIP
               Dim rel As RelationConsts
-              rel = GetConstraintRel(constraint, sheet)
-              Relation(constraint) = rel
+91            rel = GetConstraintRel(constraint, sheet)
+92            Relation(constraint) = rel
               
-1083          Select Case rel
+93            Select Case rel
               Case RelationINT, RelationBIN
                   ' Check that they haven't set as integer or binary something that is not a decision variable...
                   Dim intersection As Range
-1084              Set intersection = Intersect(rangeLHS, AdjustableCells)
-1085              If intersection Is Nothing Then
+94                Set intersection = Intersect(rangeLHS, AdjustableCells)
+95                If intersection Is Nothing Then
                       ' The cells are not all decision variables
-1086                  On Error GoTo ErrorHandler
-1087                  RaiseUserError "A range of cells are specified as bin or int that are not decision variables. OpenSolver does not support this."
-1088              End If
-1089              If intersection.Count = rangeLHS.Count Then
-1090                  If rel = RelationINT Then
-1091                      Set IntegerCellsRange = ProperUnion(IntegerCellsRange, rangeLHS)
-1092                  Else
-1093                      Set BinaryCellsRange = ProperUnion(BinaryCellsRange, rangeLHS)
-1094                  End If
-1095              Else
+96                    On Error GoTo ErrorHandler
+97                    RaiseUserError "A range of cells are specified as bin or int that are not decision variables. OpenSolver does not support this."
+98                End If
+99                If intersection.Count = rangeLHS.Count Then
+100                   If rel = RelationINT Then
+101                       Set IntegerCellsRange = ProperUnion(IntegerCellsRange, rangeLHS)
+102                   Else
+103                       Set BinaryCellsRange = ProperUnion(BinaryCellsRange, rangeLHS)
+104                   End If
+105               Else
                       ' The cells are not all decision variables
-1096                  On Error GoTo ErrorHandler
-1097                  RaiseUserError "Unable to find a cell specified as bin or int in the decision variables."
-1098              End If
+106                   On Error GoTo ErrorHandler
+107                   RaiseUserError "Unable to find a cell specified as bin or int in the decision variables."
+108               End If
                   ' This constraint does not relate to any new rows, so mark it
                   ' with a dummy entry. row = same value as we get for the
                   ' next entry, so this refers to no rows.
-1099              ConstraintToRow(constraint) = row
+109               ConstraintToRow(constraint) = row
               
               ' RIGHT HAND SIDE
-              Case RelationGE, RelationLE, RelationEQ
+110           Case RelationGE, RelationLE, RelationEQ
                   ' The constraint is a full equation with a RHS
                   Dim valRHS As Double, rangeRHS As Range, sRefersToRHS As String, RHSRefersToFormula As Boolean
-1101              Set rangeRHS = GetConstraintRhs(constraint, sRefersToRHS, valRHS, RHSRefersToFormula, sheet)
+111               Set rangeRHS = GetConstraintRhs(constraint, sRefersToRHS, valRHS, RHSRefersToFormula, sheet)
                   
-1115              ConstraintSummary(constraint) = StripWorksheetNameAndDollars(sRefersToLHS, sheet) & _
+112               ConstraintSummary(constraint) = StripWorksheetNameAndDollars(sRefersToLHS, sheet) & _
                                                   " " & RelationEnumToString(rel) & " " & _
                                                   StripWorksheetNameAndDollars(sRefersToRHS, sheet)
                                                   
                   Dim RHSCount As Long
-1121              If Not rangeRHS Is Nothing Then
-                      RHSCount = rangeRHS.Count
-                  Else
-                      RHSCount = 1
-                  End If
+113               If Not rangeRHS Is Nothing Then
+114                   RHSCount = rangeRHS.Count
+115               Else
+116                   RHSCount = 1
+117               End If
                   
                   ' Check we have a compatible constraint system.
-1122              If (LHSCount <> 1 And RHSCount <> 1) And (LHSCount <> RHSCount) Then
-1123                  On Error GoTo ErrorHandler
-1124                  RaiseUserError "The constraint '" & ConstraintSummary(constraint) & "' has a different cell count on the left and the right. The model cannot be built."
-1125              End If
+118               If (LHSCount <> 1 And RHSCount <> 1) And (LHSCount <> RHSCount) Then
+119                   On Error GoTo ErrorHandler
+120                   RaiseUserError "The constraint '" & ConstraintSummary(constraint) & "' has a different cell count on the left and the right. The model cannot be built."
+121               End If
                   
                   ' Store left hand side:
-1126              Set LHSRange(constraint) = rangeLHS
-1127              LHSType(constraint) = IIf(LHSCount = 1, SolverInputType.SingleCellRange, SolverInputType.MultiCellRange)
+122               Set LHSRange(constraint) = rangeLHS
+123               LHSType(constraint) = IIf(LHSCount = 1, SolverInputType.SingleCellRange, SolverInputType.MultiCellRange)
                   
                   ' Store right hand side:
-1134              If Not rangeRHS Is Nothing Then
-1135                  Set RHSRange(constraint) = rangeRHS
-1136                  RHSType(constraint) = IIf(RHSCount = 1, SolverInputType.SingleCellRange, SolverInputType.MultiCellRange)
-1138              ElseIf RHSRefersToFormula Then
+124               If Not rangeRHS Is Nothing Then
+125                   Set RHSRange(constraint) = rangeRHS
+126                   RHSType(constraint) = IIf(RHSCount = 1, SolverInputType.SingleCellRange, SolverInputType.MultiCellRange)
+127               ElseIf RHSRefersToFormula Then
                       ' Store the formula internally as a string
-1139                  RHSFormula(constraint) = sRefersToRHS
-1140                  RHSType(constraint) = SolverInputType.Formula
-1142              Else
+128                   RHSFormula(constraint) = sRefersToRHS
+129                   RHSType(constraint) = SolverInputType.Formula
+130               Else
                       ' Store a constant
-                      RHSFormula(constraint) = sRefersToRHS
-1143                  RHSType(constraint) = SolverInputType.constant
-                      RHSConstant(constraint) = valRHS
-1145              End If
+131                   RHSFormula(constraint) = sRefersToRHS
+132                   RHSType(constraint) = SolverInputType.constant
+133                   RHSConstant(constraint) = valRHS
+134               End If
 
                   ' Check that all constant values are numeric
                   ' We allow non-numeric values that might later change with the variable cells
                   Dim LHSValues As Variant
                   Dim RHSValues As Variant
-                  GetCurrentConstraintValues constraint, LHSValues, RHSValues, AllowNonNumericIfNotConstant:=True
+135               GetCurrentConstraintValues constraint, LHSValues, RHSValues, AllowNonNumericIfNotConstant:=True
                   ' Check if the constraint is satisfied (unless we already know the solution is invalid)
-                  If InitialSolutionIsValid Then
-                      CheckCurrentConstraintFeasible LHSValues, RHSValues, rel, constraint
-                  End If
+136               If InitialSolutionIsValid Then
+137                   CheckCurrentConstraintFeasible LHSValues, RHSValues, rel, constraint
+138               End If
                   
                   ' Check if this constraint applies any bounds on decision variables
-1146              If LHSCount = 1 Then
+139               If LHSCount = 1 Then
                       ' Single LHS, single RHS
-1147                  ApplyBounds row, rel, rangeLHS, rangeRHS, valRHS, RHSRefersToFormula
-1148              Else
+140                   ApplyBounds row, rel, rangeLHS, rangeRHS, valRHS, RHSRefersToFormula
+141               Else
                       Dim CurRow As Long
-1154                  If RHSCount > 1 Then
+142                   If RHSCount > 1 Then
                           ' multiple LHS, multiple RHS
-1155                      For CurRow = 1 To LHSCount
-1156                          ApplyBounds row + CurRow - 1, rel, rangeLHS(CurRow), rangeRHS(CurRow), valRHS, RHSRefersToFormula
-1157                      Next CurRow
-1158                  Else
+143                       For CurRow = 1 To LHSCount
+144                           ApplyBounds row + CurRow - 1, rel, rangeLHS(CurRow), rangeRHS(CurRow), valRHS, RHSRefersToFormula
+145                       Next CurRow
+146                   Else
                           ' multiple LHS, single RHS
-1159                      For CurRow = 1 To LHSCount
-1160                          ApplyBounds row + CurRow - 1, rel, rangeLHS(CurRow), rangeRHS, valRHS, RHSRefersToFormula
-1161                      Next CurRow
-1162                  End If
-1163              End If
+147                       For CurRow = 1 To LHSCount
+148                           ApplyBounds row + CurRow - 1, rel, rangeLHS(CurRow), rangeRHS, valRHS, RHSRefersToFormula
+149                       Next CurRow
+150                   End If
+151               End If
                   
                   ' Store the row/constraint information
-                  RowCount(constraint) = LHSCount
-1169              ConstraintToRow(constraint) = row
-1168              row = row + LHSCount
+152               RowCount(constraint) = LHSCount
+153               ConstraintToRow(constraint) = row
+154               row = row + LHSCount
               
-              Case Else
+155           Case Else
                   ' Don't allow 'alldiff' from Excel 2010 or any other wierd things
-1116              On Error GoTo ErrorHandler
-1118              RaiseGeneralError "Unrecognised relationship for constraint " & ConstraintSummary(constraint)
-1175          End Select
-1176      Next constraint
-          NumRows = row - 1
+156               On Error GoTo ErrorHandler
+157               RaiseGeneralError "Unrecognised relationship for constraint " & ConstraintSummary(constraint)
+158           End Select
+159       Next constraint
+160       NumRows = row - 1
           
-          If NumRows > 0 Then
+161       If NumRows > 0 Then
               ' Make the row to constraint mapping
-              ReDim pRowToConstraint(NumRows) As Long
-              row = 0
-              For constraint = 1 To NumConstraints
-                  For i = 1 To RowCount(constraint)
-                      RowToConstraint(row + i) = constraint
-                  Next i
-                  row = row + RowCount(constraint)
-              Next constraint
-          End If
+162           ReDim pRowToConstraint(NumRows) As Long
+163           row = 0
+164           For constraint = 1 To NumConstraints
+165               For i = 1 To RowCount(constraint)
+166                   RowToConstraint(row + i) = constraint
+167               Next i
+168               row = row + RowCount(constraint)
+169           Next constraint
+170       End If
 
           ' Binary trumps integer, so remove all overlap
-          Set IntegerCellsRange = SetDifference(IntegerCellsRange, BinaryCellsRange)
+171       Set IntegerCellsRange = SetDifference(IntegerCellsRange, BinaryCellsRange)
           
           Dim RoundedValue As Long
-          If Not IntegerCellsRange Is Nothing Then
-              Me.NumIntVars = IntegerCellsRange.Count
-              For Each AdjCell In IntegerCellsRange
-                  VarCategory(VarNameToIndex(GetCellName(AdjCell))) = VarInteger
-              Next AdjCell
-          End If
-          If Not BinaryCellsRange Is Nothing Then
-              Me.NumBinVars = BinaryCellsRange.Count
-              For Each AdjCell In BinaryCellsRange
-                  Me.VarCategory(VarNameToIndex(GetCellName(AdjCell))) = VarBinary
-              Next AdjCell
-          End If
-          Me.NumDiscreteVars = Me.NumIntVars + Me.NumBinVars
+172       If Not IntegerCellsRange Is Nothing Then
+173           Me.NumIntVars = IntegerCellsRange.Count
+174           For Each AdjCell In IntegerCellsRange
+175               VarCategory(VarNameToIndex(GetCellName(AdjCell))) = VarInteger
+176           Next AdjCell
+177       End If
+178       If Not BinaryCellsRange Is Nothing Then
+179           Me.NumBinVars = BinaryCellsRange.Count
+180           For Each AdjCell In BinaryCellsRange
+181               Me.VarCategory(VarNameToIndex(GetCellName(AdjCell))) = VarBinary
+182           Next AdjCell
+183       End If
+184       Me.NumDiscreteVars = Me.NumIntVars + Me.NumBinVars
           
           ' Check whether variables are within bounds and discrete if needed
-          CheckCurrentVariablesFeasible ShouldSolveRelaxation
+185       CheckCurrentVariablesFeasible ShouldSolveRelaxation
 
-1177      If NumRows > 0 Then
-1178          ReDim Preserve pRowSetsBound(NumRows)
-1179      End If
+186       If NumRows > 0 Then
+187           ReDim Preserve pRowSetsBound(NumRows)
+188       End If
           
           'Set up extra model info depending on the solver
-1180      Select Case Solver.ModelType
+189       Select Case Solver.ModelType
           Case Diff
-1181          If NumRows > 0 Then
-                  ReDim Preserve pSparseA(NumRows) As CIndexedCoeffs
-                  ReDim pRHS(NumRows) As Double
-              End If
-              ReDim pCostCoeffs(NumVars) As Double
+190           If NumRows > 0 Then
+191               ReDim Preserve pSparseA(NumRows) As CIndexedCoeffs
+192               ReDim pRHS(NumRows) As Double
+193           End If
+194           ReDim pCostCoeffs(NumVars) As Double
               
-              Set DiffModel = New CModelDiff
-              If Not DiffModel.ProcessSolverModel(Me, LinearityOffset, ShouldCheckLinearity) Then GoTo ExitSub
-          Case Parsed
+195           Set DiffModel = New CModelDiff
+196           If Not DiffModel.ProcessSolverModel(Me, LinearityOffset, ShouldCheckLinearity) Then GoTo ExitSub
+197       Case Parsed
               ' Parse spreadsheet and build model
-              Set ParsedModel = New CModelParsed
-              If Not ParsedModel.ProcessSolverModel(Me) Then GoTo ExitSub
-1188      End Select
+198           Set ParsedModel = New CModelParsed
+199           If Not ParsedModel.ProcessSolverModel(Me) Then GoTo ExitSub
+200       End Select
 
-1189      ModelStatus = Built
-1190      EndTimeOfBuild = Timer
-1191      EndDateTimeOfBuild = Now()
-1192      SecondsTakenToBuildModel = DateDiff("s", StartDateTimeOfBuild, EndDateTimeOfBuild)
-1193      TimeTakenToBuildModel = EndTimeOfBuild - StartTimeOfBuild
+201       ModelStatus = Built
+202       EndTimeOfBuild = Timer
+203       EndDateTimeOfBuild = Now()
+204       SecondsTakenToBuildModel = DateDiff("s", StartDateTimeOfBuild, EndDateTimeOfBuild)
+205       TimeTakenToBuildModel = EndTimeOfBuild - StartTimeOfBuild
 
 ExitSub:
-          Application.Cursor = xlDefault
-          Application.StatusBar = False
-          Application.ScreenUpdating = ScreenStatus
-          Application.Calculation = oldCalculationMode
-          If RaiseError Then RethrowError
-          Exit Sub
+206       Application.Cursor = xlDefault
+207       Application.StatusBar = False
+208       Application.ScreenUpdating = ScreenStatus
+209       Application.Calculation = oldCalculationMode
+210       If RaiseError Then RethrowError
+211       Exit Sub
 
 ErrorHandler:
-          If Not ReportError("COpenSolver", "BuildModelFromSolverData") Then Resume
-          RaiseError = True
-          GoTo ExitSub
+212       If Not ReportError("COpenSolver", "BuildModelFromSolverData") Then Resume
+213       RaiseError = True
+214       GoTo ExitSub
 End Sub
 
 Sub ApplyBounds(row As Long, rel As Long, LHS As Range, RHS As Range, RHSValue As Double, RHSRefersToFormula As Boolean)
@@ -1040,178 +1040,178 @@ Sub ApplyBounds(row As Long, rel As Long, LHS As Range, RHS As Range, RHSValue A
           ' Note: A constraint of the form 'range <= decision var' does NOT count as a lower bound; the decision var MUST be in the LHS
               
           Dim RaiseError As Boolean
-          RaiseError = False
-          On Error GoTo ErrorHandler
+1         RaiseError = False
+2         On Error GoTo ErrorHandler
 
-1217      If rel <> RelationGE And rel <> RelationLE Then GoTo ExitSub
+3         If rel <> RelationGE And rel <> RelationLE Then GoTo ExitSub
            
           ' Following Solver, we don't apply formulae as lower bounds, even if constant
-1223      If RHSRefersToFormula Then GoTo ExitSub
+4         If RHSRefersToFormula Then GoTo ExitSub
           
           ' Check if LHS cell is a variable cell
-1226      If Intersect(LHS, AdjustableCells) Is Nothing Then GoTo ExitSub
+5         If Intersect(LHS, AdjustableCells) Is Nothing Then GoTo ExitSub
           
-1229      If Not RHS Is Nothing Then
-              If IsNumeric(RHS.value) Then
-1230              If Not RHS.HasFormula Then
+6         If Not RHS Is Nothing Then
+7             If IsNumeric(RHS.value) Then
+8                 If Not RHS.HasFormula Then
                       ' The RHS range is a constant - apply a bound
-1231                  UpdateBound row, GetCellName(LHS), CDbl(RHS.value), rel
-1232              Else
+9                     UpdateBound row, GetCellName(LHS), CDbl(RHS.value), rel
+10                Else
                       ' The RHS range is a formula, check if this depends on the decision vars
                       ' Will raise an error is no precedents are found (e.g. if they are on another sheet
-1234                  If Intersect(RHS.Precedents, AdjustableCells) Is Nothing Then
-1235                      UpdateBound row, GetCellName(LHS), CDbl(RHS.value), rel
-                      End If
-1236              End If
-1237          End If
-1238      Else
+11                    If Intersect(RHS.Precedents, AdjustableCells) Is Nothing Then
+12                        UpdateBound row, GetCellName(LHS), CDbl(RHS.value), rel
+13                    End If
+14                End If
+15            End If
+16        Else
               ' The RHS is a numeric constant - apply a bound
-1239          UpdateBound row, GetCellName(LHS), RHSValue, rel
-1240      End If
+17            UpdateBound row, GetCellName(LHS), RHSValue, rel
+18        End If
           
 ExitSub:
-          If RaiseError Then RethrowError
-          Exit Sub
+19        If RaiseError Then RethrowError
+20        Exit Sub
 
 ErrorHandler:
           ' Ignore a 'No cells were found' precedents error
-          If Err.Number = 1004 Then
-              GoTo ExitSub
-          End If
+21        If Err.Number = 1004 Then
+22            GoTo ExitSub
+23        End If
 
-          If Not ReportError("COpenSolver", "ApplyBounds") Then Resume
-          RaiseError = True
-          GoTo ExitSub
+24        If Not ReportError("COpenSolver", "ApplyBounds") Then Resume
+25        RaiseError = True
+26        GoTo ExitSub
 End Sub
 
 Sub UpdateBound(row As Long, VarName As String, bound As Double, rel As Long)
           Dim RaiseError As Boolean
-          RaiseError = False
-          On Error GoTo ErrorHandler
+1         RaiseError = False
+2         On Error GoTo ErrorHandler
           
           ' Only GE constraints can provide lower bounds
-1246      If rel = RelationGE Then
+3         If rel = RelationGE Then
               ' Remove existing lower bound on variable if our new one is better
-1247          If VarLowerBounds.Exists(VarName) Then
-1248              VarLowerBounds.Item(VarName) = Max(bound, VarLowerBounds.Item(VarName))
-1250          Else
-                  VarLowerBounds.Add Item:=bound, Key:=VarName
-1251          End If
+4             If VarLowerBounds.Exists(VarName) Then
+5                 VarLowerBounds.Item(VarName) = Max(bound, VarLowerBounds.Item(VarName))
+6             Else
+7                 VarLowerBounds.Add Item:=bound, Key:=VarName
+8             End If
           ' Only LE constraints can provide upper bounds
-1253      ElseIf rel = RelationLE Then
+9         ElseIf rel = RelationLE Then
               ' Remove existing upper bound on variable if our new one is better
-1254          If VarUpperBounds.Exists(VarName) Then
-1255              VarUpperBounds.Item(VarName) = Min(bound, VarUpperBounds.Item(VarName))
-              Else
-                  VarUpperBounds.Add Item:=bound, Key:=VarName
-              End If
-1260      End If
+10            If VarUpperBounds.Exists(VarName) Then
+11                VarUpperBounds.Item(VarName) = Min(bound, VarUpperBounds.Item(VarName))
+12            Else
+13                VarUpperBounds.Add Item:=bound, Key:=VarName
+14            End If
+15        End If
           
           ' Track that this constraint row applies a bound
-1261      If UBound(pRowSetsBound) < row Then ReDim Preserve pRowSetsBound(row)
-1262      RowSetsBound(row) = True
+16        If UBound(pRowSetsBound) < row Then ReDim Preserve pRowSetsBound(row)
+17        RowSetsBound(row) = True
 
 ExitSub:
-          If RaiseError Then RethrowError
-          Exit Sub
+18        If RaiseError Then RethrowError
+19        Exit Sub
 
 ErrorHandler:
-          If Not ReportError("COpenSolver", "UpdateBound") Then Resume
-          RaiseError = True
-          GoTo ExitSub
+20        If Not ReportError("COpenSolver", "UpdateBound") Then Resume
+21        RaiseError = True
+22        GoTo ExitSub
 End Sub
 
 Sub ReportAnySolutionSubOptimality()
-          Select Case SolveStatus
-          Case OpenSolverResult.Optimal                ' We are optimal
-          Case OpenSolverResult.Pending                ' The solve is scheduled
-          Case OpenSolverResult.NotLinear              ' Already shown non-linearity details
-          Case OpenSolverResult.AbortedThruUserAction  ' Already shown escape dialog
-       
-          Case Else
-              MsgBox "OpenSolver could not find an optimal solution, and reported:" & vbCrLf & _
-                     SolveStatusString & vbCrLf & vbCrLf & _
-                     IIf(Len(SolveStatusComment) > 0, SolveStatusComment & vbCrLf & vbCrLf, vbNullString) & _
-                     IIf(SolutionWasLoaded, "The solution generated has been loaded into the spreadsheet.", "No solution was available to load into the spreadsheet.")
-          End Select
+1               Select Case SolveStatus
+                Case OpenSolverResult.Optimal                ' We are optimal
+2               Case OpenSolverResult.Pending                ' The solve is scheduled
+3               Case OpenSolverResult.NotLinear              ' Already shown non-linearity details
+4               Case OpenSolverResult.AbortedThruUserAction  ' Already shown escape dialog
+             
+5               Case Else
+6                   MsgBox "OpenSolver could not find an optimal solution, and reported:" & vbCrLf & _
+                           SolveStatusString & vbCrLf & vbCrLf & _
+                           IIf(Len(SolveStatusComment) > 0, SolveStatusComment & vbCrLf & vbCrLf, vbNullString) & _
+                           IIf(SolutionWasLoaded, "The solution generated has been loaded into the spreadsheet.", "No solution was available to load into the spreadsheet.")
+7               End Select
 End Sub
 
 Sub ClearQuickSolve()
-1992      Set QuickSolve = Nothing
+1         Set QuickSolve = Nothing
 End Sub
 
 Function InitializeQuickSolve(ParamRange As Range) As Boolean
           Dim RaiseError As Boolean
-          RaiseError = False
-          On Error GoTo ErrorHandler
+1         RaiseError = False
+2         On Error GoTo ErrorHandler
 
-1993      InitializeQuickSolve = False
-1994      If ModelStatus <> Built Then
-1995          RaiseUserError "QuickSolve Initialisation Failed: The model cannot be solved as it has not yet been built."
-1997      End If
+3         InitializeQuickSolve = False
+4         If ModelStatus <> Built Then
+5             RaiseUserError "QuickSolve Initialisation Failed: The model cannot be solved as it has not yet been built."
+6         End If
 
-1998      Set QuickSolve = New CQuickSolve
-1999      If QuickSolve.AnalyseParameters(Me, ParamRange) Then
-2000          InitializeQuickSolve = True
-2001      Else
-2002          Set QuickSolve = Nothing
-2003      End If
+7         Set QuickSolve = New CQuickSolve
+8         If QuickSolve.AnalyseParameters(Me, ParamRange) Then
+9             InitializeQuickSolve = True
+10        Else
+11            Set QuickSolve = Nothing
+12        End If
 
 ExitFunction:
-          If RaiseError Then RethrowError
-          Exit Function
+13        If RaiseError Then RethrowError
+14        Exit Function
 
 ErrorHandler:
-          If Not ReportError("COpenSolver", "InitializeQuickSolve") Then Resume
-          RaiseError = True
-          GoTo ExitFunction
+15        If Not ReportError("COpenSolver", "InitializeQuickSolve") Then Resume
+16        RaiseError = True
+17        GoTo ExitFunction
 End Function
 
 Sub DoQuickSolve(Optional SolveRelaxation As Boolean = False, Optional MinimiseUserInteraction As Boolean = False)
           Dim RaiseError As Boolean
-          RaiseError = False
-          On Error GoTo ErrorHandler
+1         RaiseError = False
+2         On Error GoTo ErrorHandler
           
-2013      If QuickSolve Is Nothing Then
-2014          RaiseUserError "Quick Solve has not been initialized. Please choose Intialize Quick Solve, and then try again."
-2015      Else
-2016          If QuickSolve.UpdateModelRHS(sheet, pRHS) Then
-2017              SolveModel Me, SolveRelaxation, MinimiseUserInteraction
-2018          End If
-2019      End If
+3         If QuickSolve Is Nothing Then
+4             RaiseUserError "Quick Solve has not been initialized. Please choose Intialize Quick Solve, and then try again."
+5         Else
+6             If QuickSolve.UpdateModelRHS(sheet, pRHS) Then
+7                 SolveModel Me, SolveRelaxation, MinimiseUserInteraction
+8             End If
+9         End If
 
 ExitSub:
-          If RaiseError Then RethrowError
-          Exit Sub
+10        If RaiseError Then RethrowError
+11        Exit Sub
 
 ErrorHandler:
-          If Not ReportError("COpenSolver", "DoQuickSolve") Then Resume
-          RaiseError = True
-          GoTo ExitSub
+12        If Not ReportError("COpenSolver", "DoQuickSolve") Then Resume
+13        RaiseError = True
+14        GoTo ExitSub
 End Sub
 
 Public Sub PrepareForSolution()
-          ReDim pVarFinalValue(NumVars) As Double
-1435      ReDim pVarCellName(NumVars) As String
-1436      If bGetDuals Then
-1437          ReDim pConFinalValue(NumRows) As Double
-1438          ReDim pConShadowPrice(NumRows) As Double
-1439          ReDim pConIncrease(NumRows) As Double
-1440          ReDim pConDecrease(NumRows) As Double
-1441          ReDim pVarReducedCost(NumVars) As Double
-1442          ReDim pVarIncrease(NumVars) As Double
-1443          ReDim pVarDecrease(NumVars) As Double
-1444      End If
+1         ReDim pVarFinalValue(NumVars) As Double
+2         ReDim pVarCellName(NumVars) As String
+3         If bGetDuals Then
+4             ReDim pConFinalValue(NumRows) As Double
+5             ReDim pConShadowPrice(NumRows) As Double
+6             ReDim pConIncrease(NumRows) As Double
+7             ReDim pConDecrease(NumRows) As Double
+8             ReDim pVarReducedCost(NumVars) As Double
+9             ReDim pVarIncrease(NumVars) As Double
+10            ReDim pVarDecrease(NumVars) As Double
+11        End If
 End Sub
 
 Public Sub LoadResultsToSheet()
-   If SolutionWasLoaded Then
-        AdjustableCells.Value2 = 0
-        Dim i As Long
-        For i = 1 To NumVars
-            If Len(VarCellName(i)) <> 0 Then
-                AdjustableCells.Worksheet.Range(VarCellName(i)).Value2 = VarFinalValue(i)
-            End If
-        Next i
-    End If
+1        If SolutionWasLoaded Then
+2             AdjustableCells.Value2 = 0
+              Dim i As Long
+3             For i = 1 To NumVars
+4                 If Len(VarCellName(i)) <> 0 Then
+5                     AdjustableCells.Worksheet.Range(VarCellName(i)).Value2 = VarFinalValue(i)
+6                 End If
+7             Next i
+8         End If
 End Sub

@@ -32,85 +32,85 @@ Private Const pAmplSolverName As String = "couenne"
 ' Class
 
 Private Sub Class_Initialize()
-    Set pISolver = New CSolverCouenne
+1         Set pISolver = New CSolverCouenne
 End Sub
 
 ' ISolver
 
 Private Property Get ISolver_Name() As String
-    ISolver_Name = pISolver.Name
+1         ISolver_Name = pISolver.Name
 End Property
 
 Private Property Get ISolver_ShortName() As String
-    ISolver_ShortName = pShortName
+1         ISolver_ShortName = pShortName
 End Property
 
 Private Property Get ISolver_Title() As String
-    ISolver_Title = pTitle
+1         ISolver_Title = pTitle
 End Property
 
 Private Property Get ISolver_Desc() As String
-    ISolver_Desc = pDesc
+1         ISolver_Desc = pDesc
 End Property
 
 Private Property Get ISolver_Link() As String
-    ISolver_Link = pLink
+1         ISolver_Link = pLink
 End Property
 
 Private Property Get ISolver_IterationLimitName() As String
-    ISolver_IterationLimitName = pISolver.IterationLimitName
+1         ISolver_IterationLimitName = pISolver.IterationLimitName
 End Property
 
 Private Property Get ISolver_PrecisionName() As String
-    ISolver_PrecisionName = pISolver.PrecisionName
+1         ISolver_PrecisionName = pISolver.PrecisionName
 End Property
 
 Private Property Get ISolver_TimeLimitName() As String
-    ISolver_TimeLimitName = pISolver.TimeLimitName
+1         ISolver_TimeLimitName = pISolver.TimeLimitName
 End Property
 
 Private Property Get ISolver_ToleranceName() As String
-    ISolver_ToleranceName = pISolver.ToleranceName
+1         ISolver_ToleranceName = pISolver.ToleranceName
 End Property
 
 Private Property Get ISolver_ModelType() As OpenSolver_ModelType
-    ISolver_ModelType = pModelType
+1         ISolver_ModelType = pModelType
 End Property
 
 Private Sub ISolver_CleanFiles()
 End Sub
 
 Private Sub ISolver_CheckLog(s As COpenSolver)
-    pISolver.CheckLog s
+1         pISolver.CheckLog s
 End Sub
 
 ' ISolverNeos
 
 Private Property Get ISolverNeos_NeosSolverName() As String
-    ISolverNeos_NeosSolverName = pNeosSolverName
+1         ISolverNeos_NeosSolverName = pNeosSolverName
 End Property
 
 Private Property Get ISolverNeos_NeosSolverCategory() As String
-    ISolverNeos_NeosSolverCategory = pNeosSolverCategory
+1         ISolverNeos_NeosSolverCategory = pNeosSolverCategory
 End Property
 
 Private Property Get ISolverNeos_OptionFile() As String
-    ISolverNeos_OptionFile = pOptionFile
+1         ISolverNeos_OptionFile = pOptionFile
 End Property
 
 ' ISolverFile
 
 Private Sub ISolverFile_ReadResults(s As COpenSolver, Optional solution As String)
-    ReadResults_AMPL s, solution
+1         ReadResults_AMPL s, solution
 End Sub
 
 Private Property Get ISolverFile_FileType() As OpenSolver_FileType
-    ISolverFile_FileType = pFileType
+1         ISolverFile_FileType = pFileType
 End Property
 
 ' ISolverFileAMPL
 
 Private Property Get ISolverFileAMPL_AmplSolverName() As String
-    ISolverFileAMPL_AmplSolverName = pAmplSolverName
+1         ISolverFileAMPL_AmplSolverName = pAmplSolverName
 End Property
 

@@ -119,53 +119,53 @@ End Enum
 #End If
 
 Function ObjectiveSenseStringToEnum(ByVal sense As String) As ObjectiveSenseType
-    Select Case sense
-    Case "min", "minimize", "minimise": ObjectiveSenseStringToEnum = MinimiseObjective
-    Case "max", "maximize", "maximise": ObjectiveSenseStringToEnum = MaximiseObjective
-    End Select
+1         Select Case sense
+          Case "min", "minimize", "minimise": ObjectiveSenseStringToEnum = MinimiseObjective
+2         Case "max", "maximize", "maximise": ObjectiveSenseStringToEnum = MaximiseObjective
+3         End Select
 End Function
 
 Function RelationStringToEnum(ByVal rel As String) As RelationConsts
-    Select Case rel
-    Case "<", "<=":             RelationStringToEnum = RelationLE
-    Case "=", "'=":             RelationStringToEnum = RelationEQ
-    Case ">", ">=":             RelationStringToEnum = RelationGE
-    Case "integer", "int", "i": RelationStringToEnum = RelationINT
-    Case "binary", "bin", "b":  RelationStringToEnum = RelationBIN
-    Case "alldiff":             RelationStringToEnum = RelationAllDiff
-    Case Else
-        RaiseGeneralError "Unknown relation code: " & rel
-    End Select
+1         Select Case rel
+          Case "<", "<=":             RelationStringToEnum = RelationLE
+2         Case "=", "'=":             RelationStringToEnum = RelationEQ
+3         Case ">", ">=":             RelationStringToEnum = RelationGE
+4         Case "integer", "int", "i": RelationStringToEnum = RelationINT
+5         Case "binary", "bin", "b":  RelationStringToEnum = RelationBIN
+6         Case "alldiff":             RelationStringToEnum = RelationAllDiff
+7         Case Else
+8             RaiseGeneralError "Unknown relation code: " & rel
+9         End Select
 End Function
 
 Function RelationEnumToString(rel As RelationConsts) As String
-    Select Case rel
-    Case RelationLE:      RelationEnumToString = "<="
-    Case RelationEQ:      RelationEnumToString = "="
-    Case RelationGE:      RelationEnumToString = ">="
-    Case RelationINT:     RelationEnumToString = "int"
-    Case RelationBIN:     RelationEnumToString = "bin"
-    Case RelationAllDiff: RelationEnumToString = "alldiff"
-    End Select
+1         Select Case rel
+          Case RelationLE:      RelationEnumToString = "<="
+2         Case RelationEQ:      RelationEnumToString = "="
+3         Case RelationGE:      RelationEnumToString = ">="
+4         Case RelationINT:     RelationEnumToString = "int"
+5         Case RelationBIN:     RelationEnumToString = "bin"
+6         Case RelationAllDiff: RelationEnumToString = "alldiff"
+7         End Select
 End Function
 
 Function SolverRelationAsUnicodeChar(rel As RelationConsts) As String
-    Select Case rel
-    Case RelationGE: SolverRelationAsUnicodeChar = ChrW(&H2265) ' ">" gg
-    Case RelationEQ: SolverRelationAsUnicodeChar = "="
-    Case RelationLE: SolverRelationAsUnicodeChar = ChrW(&H2264) ' "<"
-    Case Else:       SolverRelationAsUnicodeChar = "(unknown)"
-    End Select
+1         Select Case rel
+          Case RelationGE: SolverRelationAsUnicodeChar = ChrW(&H2265) ' ">" gg
+2         Case RelationEQ: SolverRelationAsUnicodeChar = "="
+3         Case RelationLE: SolverRelationAsUnicodeChar = ChrW(&H2264) ' "<"
+4         Case Else:       SolverRelationAsUnicodeChar = "(unknown)"
+5         End Select
 End Function
 
 Function ReverseRelation(rel As Long) As Long
-    ReverseRelation 4 - rel
+1         ReverseRelation 4 - rel
 End Function
 
 Function RelationHasRHS(rel As RelationConsts) As Boolean
-    Select Case rel
-    Case RelationLE, RelationEQ, RelationGE:        RelationHasRHS = True
-    Case RelationINT, RelationBIN, RelationAllDiff: RelationHasRHS = False
-    End Select
+1         Select Case rel
+          Case RelationLE, RelationEQ, RelationGE:        RelationHasRHS = True
+2         Case RelationINT, RelationBIN, RelationAllDiff: RelationHasRHS = False
+3         End Select
 End Function
 

@@ -21,68 +21,68 @@ Option Explicit
 #End If
 
 Private Sub cmdCancel_Click()
-    Me.Hide
-    Me.Tag = "Cancelled"
+1         Me.Hide
+2         Me.Tag = "Cancelled"
 End Sub
 
 ' Make the [x] hide the form rather than unload
 Private Sub UserForm_QueryClose(Cancel As Integer, CloseMode As Integer)
-    ' If CloseMode = vbFormControlMenu then we know the user
-    ' clicked the [x] close button or Alt+F4 to close the form.
-    If CloseMode = vbFormControlMenu Then
-        cmdCancel_Click
-        Cancel = True
-    End If
+          ' If CloseMode = vbFormControlMenu then we know the user
+          ' clicked the [x] close button or Alt+F4 to close the form.
+1         If CloseMode = vbFormControlMenu Then
+2             cmdCancel_Click
+3             Cancel = True
+4         End If
 End Sub
 
 Private Sub UserForm_Activate()
-    CenterForm
-    
-    Dim message As String, errorString As String, result As String
-    message = SolverNeos.FinalMessage
-    errorString = vbNullString
+1         CenterForm
+          
+          Dim message As String, errorString As String, result As String
+2         message = SolverNeos.FinalMessage
+3         errorString = vbNullString
 
-    result = SolveOnNeos(message, errorString, Me)
+4         result = SolveOnNeos(message, errorString, Me)
 
-    SolverNeos.NeosResult = result
-    Me.Tag = errorString
-    Me.Hide
+5         SolverNeos.NeosResult = result
+6         Me.Tag = errorString
+7         Me.Hide
 End Sub
 
 Private Sub UserForm_Initialize()
-   AutoLayout
-   CenterForm
+1        AutoLayout
+2        CenterForm
 End Sub
 
 Private Sub AutoLayout()
-    AutoFormat Me.Controls
-    
-    ' Make the label wide enough so that the message is on one line, then use autosize to shrink the width.
-    With lblMessage
-        .Caption = "OpenSolver is busy running your optimisation model..."
-        .Left = FormMargin
-        .Top = FormMargin
-        AutoHeight lblMessage, FormWidthCallingNeos, True
-    End With
-    
-    Me.Width = lblMessage.Width + 2 * FormMargin
-    
-    With cmdCancel
-        .Caption = "Cancel"
-        .Width = FormButtonWidth
-        .Left = (lblMessage.Width - .Width) / 2 + lblMessage.Left
-        .Top = Below(lblMessage)
-        .Cancel = True
-    End With
-    
-    Me.Height = FormHeight(cmdCancel)
-    Me.Width = Me.Width + FormWindowMargin
-    
-    Me.BackColor = FormBackColor
-    Me.Caption = "OpenSolver - Optimisation Running"
+1         AutoFormat Me.Controls
+          
+          ' Make the label wide enough so that the message is on one line, then use autosize to shrink the width.
+2         With lblMessage
+3             .Caption = "OpenSolver is busy running your optimisation model..."
+4             .Left = FormMargin
+5             .Top = FormMargin
+6             AutoHeight lblMessage, FormWidthCallingNeos, True
+7         End With
+          
+8         Me.Width = lblMessage.Width + 2 * FormMargin
+          
+9         With cmdCancel
+10            .Caption = "Cancel"
+11            .Width = FormButtonWidth
+12            .Left = (lblMessage.Width - .Width) / 2 + lblMessage.Left
+13            .Top = Below(lblMessage)
+14            .Cancel = True
+15        End With
+          
+16        Me.Height = FormHeight(cmdCancel)
+17        Me.Width = Me.Width + FormWindowMargin
+          
+18        Me.BackColor = FormBackColor
+19        Me.Caption = "OpenSolver - Optimisation Running"
 End Sub
 
 Private Sub CenterForm()
-    Me.Top = CenterFormTop(Me.Height)
-    Me.Left = CenterFormLeft(Me.Width)
+1         Me.Top = CenterFormTop(Me.Height)
+2         Me.Left = CenterFormLeft(Me.Width)
 End Sub

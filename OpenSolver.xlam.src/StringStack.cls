@@ -14,60 +14,60 @@ Option Explicit
 Private Items As Collection
 
 Private Sub Class_Initialize()
-8980      Set Items = New Collection
+1         Set Items = New Collection
 End Sub
 
 Public Sub Push(Item As String)
-8981      Items.Add Item
+1         Items.Add Item
 End Sub
 
 Public Function Pop() As String
           Dim RaiseError As Boolean
-          RaiseError = False
-          On Error GoTo ErrorHandler
+1         RaiseError = False
+2         On Error GoTo ErrorHandler
 
           Dim obj As String
-8982      obj = Items(Items.Count)
-8983      Items.Remove (Items.Count)
-8984      Pop = obj
+3         obj = Items(Items.Count)
+4         Items.Remove (Items.Count)
+5         Pop = obj
 
 ExitFunction:
-          If RaiseError Then RethrowError
-          Exit Function
+6         If RaiseError Then RethrowError
+7         Exit Function
 
 ErrorHandler:
-          If Not ReportError("StringStack", "Pop") Then Resume
-          RaiseError = True
-          GoTo ExitFunction
+8         If Not ReportError("StringStack", "Pop") Then Resume
+9         RaiseError = True
+10        GoTo ExitFunction
 End Function
 
 Public Function Peek() As String
           Dim RaiseError As Boolean
-          RaiseError = False
-          On Error GoTo ErrorHandler
+1         RaiseError = False
+2         On Error GoTo ErrorHandler
 
           Dim obj As String
-8985      obj = Items(Items.Count)
-8986      Peek = obj
+3         obj = Items(Items.Count)
+4         Peek = obj
 
 ExitFunction:
-          If RaiseError Then RethrowError
-          Exit Function
+5         If RaiseError Then RethrowError
+6         Exit Function
 
 ErrorHandler:
-          If Not ReportError("StringStack", "Peek") Then Resume
-          RaiseError = True
-          GoTo ExitFunction
+7         If Not ReportError("StringStack", "Peek") Then Resume
+8         RaiseError = True
+9         GoTo ExitFunction
 End Function
 
 Property Get Count() As Long
-8987      Count = Items.Count
+1         Count = Items.Count
 End Property
 
 Public Function Display() As String
           Dim i As Long, output As String
-8988      For i = 1 To Items.Count
-8989          output = output & Items(i) & ", "
-8990      Next i
-8991      Display = output
+1         For i = 1 To Items.Count
+2             output = output & Items(i) & ", "
+3         Next i
+4         Display = output
 End Function

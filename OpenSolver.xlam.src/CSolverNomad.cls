@@ -45,211 +45,211 @@ Private Const pLibName = "OpenSolverNomad"
 #End If
 
 Private Property Get ISolver_Name() As String
-    ISolver_Name = pName
+1         ISolver_Name = pName
 End Property
 
 Private Property Get ISolver_ShortName() As String
-    ISolver_ShortName = pShortName
+1         ISolver_ShortName = pShortName
 End Property
 
 Private Property Get ISolver_Title() As String
-    ISolver_Title = pTitle
+1         ISolver_Title = pTitle
 End Property
 
 Private Property Get ISolver_Desc() As String
-    ISolver_Desc = pDesc
+1         ISolver_Desc = pDesc
 End Property
 
 Private Property Get ISolver_Link() As String
-    ISolver_Link = pLink
+1         ISolver_Link = pLink
 End Property
 
 Private Property Get ISolver_SolverType() As OpenSolver_SolverType
-    ISolver_SolverType = pType
+1         ISolver_SolverType = pType
 End Property
 
 Private Property Get ISolver_IterationLimitName() As String
-    ISolver_IterationLimitName = pIterationLimitName
+1         ISolver_IterationLimitName = pIterationLimitName
 End Property
 
 Private Property Get ISolver_PrecisionName() As String
-    ISolver_PrecisionName = pPrecisionName
+1         ISolver_PrecisionName = pPrecisionName
 End Property
 
 Private Property Get ISolver_TimeLimitName() As String
-    ISolver_TimeLimitName = pTimeLimitName
+1         ISolver_TimeLimitName = pTimeLimitName
 End Property
 
 Private Property Get ISolver_ToleranceName() As String
 End Property
 
 Private Property Get ISolver_ModelType() As OpenSolver_ModelType
-    ISolver_ModelType = pModelType
+1         ISolver_ModelType = pModelType
 End Property
 
 Private Sub ISolver_CleanFiles()
 End Sub
 
 Private Sub ISolver_CheckLog(s As COpenSolver)
-    CheckLog s
+1         CheckLog s
 End Sub
 
 ' ISolverLocal
 
 Private Property Get ISolverLocal_Version() As String
     #If Mac Then
-        ISolverLocal_Version = Version_Mac()
+1             ISolverLocal_Version = Version_Mac()
     #Else
-        ISolverLocal_Version = Version_Win()
+2             ISolverLocal_Version = Version_Win()
     #End If
 End Property
 
 Private Property Get ISolverLocal_Bitness() As String
-    SolverIsPresent Me, Bitness:=ISolverLocal_Bitness
+1         SolverIsPresent Me, Bitness:=ISolverLocal_Bitness
 End Property
 
 ' ISolverLocalLib
 
 Private Function ISolverLocalLib_GetLibPath(Optional errorString As String, Optional Bitness As String) As String
-    ISolverLocalLib_GetLibPath = SolverLibPath(Me, errorString, Bitness)
+1         ISolverLocalLib_GetLibPath = SolverLibPath(Me, errorString, Bitness)
 End Function
 
 Private Property Get ISolverLocalLib_LibName() As String
-    ISolverLocalLib_LibName = pLibName
+1         ISolverLocalLib_LibName = pLibName
 End Property
 
 Private Property Get ISolverLocalLib_LibBinary() As String
-    ISolverLocalLib_LibBinary = pLibBinary
+1         ISolverLocalLib_LibBinary = pLibBinary
 End Property
 
 Private Property Get ISolverLocalLib_LibVersion() As String
     #If Mac Then
-        ISolverLocalLib_LibVersion = LibVersion_Mac()
+1             ISolverLocalLib_LibVersion = LibVersion_Mac()
     #Else
-        ISolverLocalLib_LibVersion = LibVersion_Win()
+2             ISolverLocalLib_LibVersion = LibVersion_Win()
     #End If
 End Property
 
 Private Sub ISolverLocalLib_Solve(s As COpenSolver)
-    Solve s
+1         Solve s
 End Sub
 
 ' Methods
 
 Private Function Version_Win() As String
-    If Not SolverIsPresent(Me) Then
-        Version_Win = vbNullString
-        Exit Function
-    End If
-    
-    On Error GoTo ErrorHandler
-       
-    ' Set current dir for finding the DLL
-    Dim currentDir As String
-    currentDir = CurDir
-    SetCurrentDirectory LibDir()
-    
-    ' Get version info from DLL
-    ' Save to a new string first - modifying the string from the DLL can sometimes crash Excel
-    Dim sNomadVersion As String
-    sNomadVersion = NomadVersion()
-    sNomadVersion = Left(Replace(sNomadVersion, vbNullChar, vbNullString), 5)
-    
-    SetCurrentDirectory currentDir
-    
-    Version_Win = sNomadVersion
-    Exit Function
+1         If Not SolverIsPresent(Me) Then
+2             Version_Win = vbNullString
+3             Exit Function
+4         End If
+          
+5         On Error GoTo ErrorHandler
+             
+          ' Set current dir for finding the DLL
+          Dim currentDir As String
+6         currentDir = CurDir
+7         SetCurrentDirectory LibDir()
+          
+          ' Get version info from DLL
+          ' Save to a new string first - modifying the string from the DLL can sometimes crash Excel
+          Dim sNomadVersion As String
+8         sNomadVersion = NomadVersion()
+9         sNomadVersion = Left(Replace(sNomadVersion, vbNullChar, vbNullString), 5)
+          
+10        SetCurrentDirectory currentDir
+          
+11        Version_Win = sNomadVersion
+12        Exit Function
 
 ErrorHandler:
-    Version_Win = vbNullString
+13        Version_Win = vbNullString
 End Function
 
 Private Function Version_Mac() As String
-    Dim SolverPath As String
-    If Not SolverIsPresent(Me, SolverPath) Then
-        Version_Mac = vbNullString
-        Exit Function
-    End If
-    
-    Version_Mac = ExecCapture(MakePathSafe(SolverPath) & " -nv")
+          Dim SolverPath As String
+1         If Not SolverIsPresent(Me, SolverPath) Then
+2             Version_Mac = vbNullString
+3             Exit Function
+4         End If
+          
+5         Version_Mac = ExecCapture(MakePathSafe(SolverPath) & " -nv")
 End Function
 
 Private Function LibVersion_Win() As String
-    If Not SolverIsPresent(Me) Then
-        LibVersion_Win = vbNullString
-        Exit Function
-    End If
-    
-    Dim currentDir As String
-    
-    ' Set current dir for finding the DLL
-    currentDir = CurDir
-    SetCurrentDirectory LibDir()
-    
-    ' Get version info from DLL
-    ' Save to a new string first - modifying the string from the DLL can sometimes crash Excel
-    Dim sLibVersion As String
-    sLibVersion = NomadLibVersion()
-    sLibVersion = Left(Replace(sLibVersion, vbNullChar, vbNullString), 5)
-    
-    SetCurrentDirectory currentDir
-    
-    LibVersion_Win = sLibVersion
+1         If Not SolverIsPresent(Me) Then
+2             LibVersion_Win = vbNullString
+3             Exit Function
+4         End If
+          
+          Dim currentDir As String
+          
+          ' Set current dir for finding the DLL
+5         currentDir = CurDir
+6         SetCurrentDirectory LibDir()
+          
+          ' Get version info from DLL
+          ' Save to a new string first - modifying the string from the DLL can sometimes crash Excel
+          Dim sLibVersion As String
+7         sLibVersion = NomadLibVersion()
+8         sLibVersion = Left(Replace(sLibVersion, vbNullChar, vbNullString), 5)
+          
+9         SetCurrentDirectory currentDir
+          
+10        LibVersion_Win = sLibVersion
 End Function
 
 Private Function LibVersion_Mac() As String
-    Dim SolverPath As String
-    If Not SolverIsPresent(Me, SolverPath) Then
-        LibVersion_Mac = vbNullString
-        Exit Function
-    End If
-    
-    LibVersion_Mac = ExecCapture(MakePathSafe(SolverPath) & " -v")
+          Dim SolverPath As String
+1         If Not SolverIsPresent(Me, SolverPath) Then
+2             LibVersion_Mac = vbNullString
+3             Exit Function
+4         End If
+          
+5         LibVersion_Mac = ExecCapture(MakePathSafe(SolverPath) & " -v")
 End Function
 
 Private Sub Solve(s As COpenSolver)
-    Dim RaiseError As Boolean
-    RaiseError = False
-    On Error GoTo ErrorHandler
+          Dim RaiseError As Boolean
+1         RaiseError = False
+2         On Error GoTo ErrorHandler
 
-    Dim ScreenStatus As Boolean
-    ScreenStatus = Application.ScreenUpdating
-    Application.ScreenUpdating = GetShowSolverProgress(s.sheet)
-    
-    Dim currentDir As String
-    currentDir = CurDir
-    
-    SetCurrentDirectory LibDir()
+          Dim ScreenStatus As Boolean
+3         ScreenStatus = Application.ScreenUpdating
+4         Application.ScreenUpdating = GetShowSolverProgress(s.sheet)
+          
+          Dim currentDir As String
+5         currentDir = CurDir
+          
+6         SetCurrentDirectory LibDir()
 
-    Set SolverNOMAD.OS = s
-    
+7         Set SolverNOMAD.OS = s
+          
     #If Mac Then
-        s.SolveStatus = Pending
-        Dim LocalLibSolver As ISolverLocalLib
-        Set LocalLibSolver = Me
-        Shell LocalLibSolver.GetLibPath()
+8             s.SolveStatus = Pending
+              Dim LocalLibSolver As ISolverLocalLib
+9             Set LocalLibSolver = Me
+10            Shell LocalLibSolver.GetLibPath()
     #Else
-        ' We need to call NomadMain directly rather than use Application.Run .
-        ' Using Application.Run causes the API calls inside the DLL to fail on 64 bit Office
-        Dim NomadRetVal As Long
-        NomadRetVal = NomadMain(s.SolveRelaxation)
-        GetNomadSolveResult NomadRetVal, s
+              ' We need to call NomadMain directly rather than use Application.Run .
+              ' Using Application.Run causes the API calls inside the DLL to fail on 64 bit Office
+              Dim NomadRetVal As Long
+11            NomadRetVal = NomadMain(s.SolveRelaxation)
+12            GetNomadSolveResult NomadRetVal, s
     #End If
-    
+          
 ExitSub:
     #If Mac Then
     #Else
-        SetCurrentDirectory currentDir
-        Application.Calculate
-        Set SolverNOMAD.OS = Nothing
+13            SetCurrentDirectory currentDir
+14            Application.Calculate
+15            Set SolverNOMAD.OS = Nothing
     #End If
-    If RaiseError Then RethrowError
-    Exit Sub
+16        If RaiseError Then RethrowError
+17        Exit Sub
 
 ErrorHandler:
-    If Not ReportError("CSolverNomad", "Solve") Then Resume
-    RaiseError = True
-    GoTo ExitSub
+18        If Not ReportError("CSolverNomad", "Solve") Then Resume
+19        RaiseError = True
+20        GoTo ExitSub
 
 End Sub
 

@@ -24,38 +24,38 @@ Private pRHSRange As Range
 Private pRHSFormula As String
 
 Public Property Get LHSRefersTo() As String
-    LHSRefersTo = pLHSRefersTo
+1         LHSRefersTo = pLHSRefersTo
 End Property
 Public Property Get RHSRefersTo() As String
-    RHSRefersTo = pRHSRefersTo
+1         RHSRefersTo = pRHSRefersTo
 End Property
 Public Property Get RHSRefersToLocal() As String
-    RHSRefersToLocal = pRHSRefersToLocal
+1         RHSRefersToLocal = pRHSRefersToLocal
 End Property
 Public Property Get Relation() As RelationConsts
-    Relation = pRelation
+1         Relation = pRelation
 End Property
 Public Property Get LHSRange() As Range
-    Set LHSRange = pLHSRange
+1         Set LHSRange = pLHSRange
 End Property
 Public Property Get RHSRange() As Range
-    Set RHSRange = pRHSRange
+1         Set RHSRange = pRHSRange
 End Property
 Public Property Get RHSFormula() As String
-    RHSFormula = pRHSFormula
+1         RHSFormula = pRHSFormula
 End Property
 
 Public Sub Update(newLHSRefersTo As String, newRelation As RelationConsts, newRHSRefersTo As String, sheet As Worksheet)
-    pLHSRefersTo = newLHSRefersTo
-    pRelation = newRelation
-    pRHSRefersTo = IIf(RelationHasRHS(newRelation), newRHSRefersTo, vbNullString)
-    pRHSRefersToLocal = ConvertToCurrentLocale(pRHSRefersTo)
-    
-    ConvertRefersToConstraint pLHSRefersTo, pRHSRefersTo, pLHSRange, pRHSRange, pRHSFormula
+1         pLHSRefersTo = newLHSRefersTo
+2         pRelation = newRelation
+3         pRHSRefersTo = IIf(RelationHasRHS(newRelation), newRHSRefersTo, vbNullString)
+4         pRHSRefersToLocal = ConvertToCurrentLocale(pRHSRefersTo)
+          
+5         ConvertRefersToConstraint pLHSRefersTo, pRHSRefersTo, pLHSRange, pRHSRange, pRHSFormula
 End Sub
 
 Public Function ListDisplayString(sheet As Worksheet, Optional showNamedRanges As Boolean = False) As String
-    ListDisplayString = GetDisplayAddress(pLHSRefersTo, sheet, showNamedRanges) & _
-                        " " & RelationEnumToString(pRelation) & " " & _
-                        GetDisplayAddress(pRHSRefersToLocal, sheet, showNamedRanges)
+1         ListDisplayString = GetDisplayAddress(pLHSRefersTo, sheet, showNamedRanges) & _
+                              " " & RelationEnumToString(pRelation) & " " & _
+                              GetDisplayAddress(pRHSRefersToLocal, sheet, showNamedRanges)
 End Function

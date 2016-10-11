@@ -18,20 +18,20 @@ Private exportFolder As String
 Private fso As Object 'FileSystemObject
 
 Public Property Set SourceWorkbook(book As Excel.Workbook)
-6021     Set wkbk = book
+1        Set wkbk = book
 End Property
 
 Public Sub ExportTo(where As String)
          ' Modification JWD: We need late binding on FSO here to avoid a dependence on Microsoft Scripting Runtime
-6022     Set fso = CreateObject("Scripting.FileSystemObject")
+1        Set fso = CreateObject("Scripting.FileSystemObject")
          
-6023     If Not fso.FolderExists(where) Then
-6024         fso.CreateFolder where
-6025     End If
+2        If Not fso.FolderExists(where) Then
+3            fso.CreateFolder where
+4        End If
 
-6026     exportFolder = where
+5        exportFolder = where
 
-6027     WriteCode
+6        WriteCode
 
 End Sub
 
@@ -40,13 +40,13 @@ Private Sub WriteCode()
       Dim c As VBComponent
       Dim curMod As VBIDE.CodeModule
 
-6028     For Each c In wkbk.VBProject.VBComponents
+1        For Each c In wkbk.VBProject.VBComponents
          
-6029         Set curMod = c.CodeModule
+2            Set curMod = c.CodeModule
              
-6030         c.Export fso.BuildPath(exportFolder, ExportFileNameFor(c))
+3            c.Export fso.BuildPath(exportFolder, ExportFileNameFor(c))
              
-6031     Next
+4        Next
 
 End Sub
 
@@ -54,18 +54,18 @@ Private Function ExportFileNameFor(codeComponent As VBComponent) As String
 
          Dim extension As String
 
-6037     Select Case codeComponent.Type
+1        Select Case codeComponent.Type
              Case vbext_ct_ClassModule
-6038             extension = "cls"
-6039         Case vbext_ct_MSForm
-6040             extension = "frm"
-6041         Case vbext_ct_StdModule
-6042             extension = "bas"
-6043         Case vbext_ct_Document
-6044             extension = "sht"
-6045     End Select
+2                extension = "cls"
+3            Case vbext_ct_MSForm
+4                extension = "frm"
+5            Case vbext_ct_StdModule
+6                extension = "bas"
+7            Case vbext_ct_Document
+8                extension = "sht"
+9        End Select
 
-6046     ExportFileNameFor = codeComponent.Name & "." & extension
+10       ExportFileNameFor = codeComponent.Name & "." & extension
 
 End Function
 '====================================================================

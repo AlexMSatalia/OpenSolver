@@ -17,132 +17,132 @@ Private NumEntries As Long
 
 Public Sub Add(Index As Long, value As Double)
           Dim RaiseError As Boolean
-          RaiseError = False
-          On Error GoTo ErrorHandler
+1         RaiseError = False
+2         On Error GoTo ErrorHandler
 
-3550      If NumEntries = 0 Then
-3551          ReDim Indices(10) As Long
-3552          ReDim Values(10) As Double
-3553      ElseIf NumEntries = UBound(Indices) Then
+3         If NumEntries = 0 Then
+4             ReDim Indices(10) As Long
+5             ReDim Values(10) As Double
+6         ElseIf NumEntries = UBound(Indices) Then
               ' Array needs to grow
-3554          ReDim Preserve Indices(UBound(Indices) + Int(UBound(Indices) * 0.5) + 1) As Long
-3555          ReDim Preserve Values(UBound(Indices)) As Double
-3556      End If
-3557      NumEntries = NumEntries + 1
-3558      Indices(NumEntries) = Index
-3559      Values(NumEntries) = value
+7             ReDim Preserve Indices(UBound(Indices) + Int(UBound(Indices) * 0.5) + 1) As Long
+8             ReDim Preserve Values(UBound(Indices)) As Double
+9         End If
+10        NumEntries = NumEntries + 1
+11        Indices(NumEntries) = Index
+12        Values(NumEntries) = value
 
 ExitSub:
-          If RaiseError Then RethrowError
-          Exit Sub
+13        If RaiseError Then RethrowError
+14        Exit Sub
 
 ErrorHandler:
-          If Not ReportError("CIndexedCoeffs", "Add") Then Resume
-          RaiseError = True
-          GoTo ExitSub
+15        If Not ReportError("CIndexedCoeffs", "Add") Then Resume
+16        RaiseError = True
+17        GoTo ExitSub
 End Sub
 
 Public Function Index(i As Long) As Long
-3560      Index = Indices(i)
+1         Index = Indices(i)
 End Function
 
 Public Function Coefficient(i As Long) As Double
-3561      Coefficient = Values(i)
+1         Coefficient = Values(i)
 End Function
 
 Public Function Count() As Long
-3562      Count = NumEntries
+1         Count = NumEntries
 End Function
 
 Public Function Evaluate(DecisionVariableValues() As Double) As Double
           Dim RaiseError As Boolean
-          RaiseError = False
-          On Error GoTo ErrorHandler
+1         RaiseError = False
+2         On Error GoTo ErrorHandler
 
           ' Evaluate the equation's value for the given variable values
           Dim i As Long, v As Double
-3563      For i = 1 To NumEntries
-3564          v = v + Coefficient(i) * DecisionVariableValues(Index(i))
-3566      Next i
-3567      Evaluate = v
+3         For i = 1 To NumEntries
+4             v = v + Coefficient(i) * DecisionVariableValues(Index(i))
+5         Next i
+6         Evaluate = v
 
 ExitFunction:
-          If RaiseError Then RethrowError
-          Exit Function
+7         If RaiseError Then RethrowError
+8         Exit Function
 
 ErrorHandler:
-          If Not ReportError("CIndexedCoeffs", "Evaluate") Then Resume
-          RaiseError = True
-          GoTo ExitFunction
+9         If Not ReportError("CIndexedCoeffs", "Evaluate") Then Resume
+10        RaiseError = True
+11        GoTo ExitFunction
 End Function
 
 Public Function Evaluate_RecordPrecision(DecisionVariableValues() As Double, vMax As Double) As Double
           Dim RaiseError As Boolean
-          RaiseError = False
-          On Error GoTo ErrorHandler
+1         RaiseError = False
+2         On Error GoTo ErrorHandler
 
           ' Evaluate the equation's value for the given variable values
           Dim i As Long, v As Double, value As Double, coeff As Double
-3568      vMax = 0
-3569      For i = 1 To NumEntries
-3570          coeff = Coefficient(i)
-3571          value = DecisionVariableValues(Index(i))
-3572          v = v + coeff * value
-3573          If Abs(v) > vMax Then vMax = Abs(v)
-3574          If Abs(coeff) > vMax Then vMax = Abs(coeff)
-3575          If Abs(value) > vMax Then vMax = Abs(value)
-3576      Next i
-3577      Evaluate_RecordPrecision = v
+3         vMax = 0
+4         For i = 1 To NumEntries
+5             coeff = Coefficient(i)
+6             value = DecisionVariableValues(Index(i))
+7             v = v + coeff * value
+8             If Abs(v) > vMax Then vMax = Abs(v)
+9             If Abs(coeff) > vMax Then vMax = Abs(coeff)
+10            If Abs(value) > vMax Then vMax = Abs(value)
+11        Next i
+12        Evaluate_RecordPrecision = v
 
 ExitFunction:
-          If RaiseError Then RethrowError
-          Exit Function
+13        If RaiseError Then RethrowError
+14        Exit Function
 
 ErrorHandler:
-          If Not ReportError("CIndexedCoeffs", "Evaluate_RecordPrecision") Then Resume
-          RaiseError = True
-          GoTo ExitFunction
+15        If Not ReportError("CIndexedCoeffs", "Evaluate_RecordPrecision") Then Resume
+16        RaiseError = True
+17        GoTo ExitFunction
 End Function
 
 Public Function Clone() As CIndexedCoeffs
           Dim RaiseError As Boolean
-          RaiseError = False
-          On Error GoTo ErrorHandler
+1         RaiseError = False
+2         On Error GoTo ErrorHandler
 
           ' Return a copy of this class
           Dim v As CIndexedCoeffs, i As Long
-3578      Set v = New CIndexedCoeffs
+3         Set v = New CIndexedCoeffs
           'ReDim v.Indices(count)
           'ReDim v.Values(count)
-3579      For i = 1 To Count
-3580          v.Add Index(i), Coefficient(i)
-3581      Next i
-3582      Set Clone = v
+4         For i = 1 To Count
+5             v.Add Index(i), Coefficient(i)
+6         Next i
+7         Set Clone = v
 
 ExitFunction:
-          If RaiseError Then RethrowError
-          Exit Function
+8         If RaiseError Then RethrowError
+9         Exit Function
 
 ErrorHandler:
-          If Not ReportError("CIndexedCoeffs", "Clone") Then Resume
-          RaiseError = True
-          GoTo ExitFunction
+10        If Not ReportError("CIndexedCoeffs", "Clone") Then Resume
+11        RaiseError = True
+12        GoTo ExitFunction
 End Function
 
 Public Function AsVector(Length As Long) As Double()
-    Dim coeffs() As Double
-    ReDim coeffs(1 To Length) As Double
-    
-    ' Zero it out to be sure
-    Dim i As Long
-    For i = 1 To Length
-        coeffs(i) = 0
-    Next i
-    
-    ' Add in the results of the sparse vector
-    For i = 1 To Count
-        coeffs(Index(i)) = Coefficient(i)
-    Next i
-    
-    AsVector = coeffs()
+          Dim coeffs() As Double
+1         ReDim coeffs(1 To Length) As Double
+          
+          ' Zero it out to be sure
+          Dim i As Long
+2         For i = 1 To Length
+3             coeffs(i) = 0
+4         Next i
+          
+          ' Add in the results of the sparse vector
+5         For i = 1 To Count
+6             coeffs(Index(i)) = Coefficient(i)
+7         Next i
+          
+8         AsVector = coeffs()
 End Function
