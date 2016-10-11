@@ -305,10 +305,17 @@ Private Function StartProcess(Command As String, StartDir As String, Async As Bo
             End If
         End If
         
+        'Not used, but needed for CreateProcess
+        ' This needs to be above creation of `tStartupInfo` or it will crash x64 Excel on Windows 7
+        Dim sec1 As SECURITY_ATTRIBUTES
+        Dim sec2 As SECURITY_ATTRIBUTES
+        sec1.nLength = Len(sec1)
+        sec2.nLength = Len(sec2)
+        
         Dim tStartupInfo As STARTUPINFO
         With tStartupInfo
             .cb = Len(tStartupInfo)
-            ' GetStartupInfo tStartupInfo
+            GetStartupInfo tStartupInfo
             
             If Async Then
                 .dwFlags = STARTF_USESHOWWINDOW Or .dwFlags
@@ -322,12 +329,6 @@ Private Function StartProcess(Command As String, StartDir As String, Async As Bo
                 .wShowWindow = enSW.SW_HIDE
             End If
         End With
-        
-        'Not used, but needed for CreateProcess
-        Dim sec1 As SECURITY_ATTRIBUTES
-        Dim sec2 As SECURITY_ATTRIBUTES
-        sec1.nLength = Len(sec1)
-        sec2.nLength = Len(sec2)
         
         ' Start the process
         #If VBA7 Then
