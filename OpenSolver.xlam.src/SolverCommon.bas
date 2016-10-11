@@ -157,15 +157,15 @@ ErrorHandler:
 End Sub
 
 Function CreateSolver(SolverShortName As String) As ISolver
-    Select Case SolverShortName
-    Case "CBC":     Set CreateSolver = New CSolverCbc
-    Case "Gurobi":  Set CreateSolver = New CSolverGurobi
-    Case "NeosCBC": Set CreateSolver = New CSolverNeosCbc
-    Case "Bonmin":  Set CreateSolver = New CSolverBonmin
-    Case "Couenne": Set CreateSolver = New CSolverCouenne
-    Case "NOMAD":   Set CreateSolver = New CSolverNomad
-    Case "NeosBon": Set CreateSolver = New CSolverNeosBon
-    Case "NeosCou": Set CreateSolver = New CSolverNeosCou
+    Select Case LCase(SolverShortName)
+    Case "cbc":     Set CreateSolver = New CSolverCbc
+    Case "gurobi":  Set CreateSolver = New CSolverGurobi
+    Case "neoscbc": Set CreateSolver = New CSolverNeosCbc
+    Case "bonmin":  Set CreateSolver = New CSolverBonmin
+    Case "couenne": Set CreateSolver = New CSolverCouenne
+    Case "nomad":   Set CreateSolver = New CSolverNomad
+    Case "neosbon": Set CreateSolver = New CSolverNeosBon
+    Case "neoscou": Set CreateSolver = New CSolverNeosCou
     Case Else: RaiseGeneralError "The specified solver ('" & SolverShortName & "') was not recognised."
     End Select
 End Function
@@ -430,8 +430,8 @@ Function SensitivityAnalysisAvailable(Solver As ISolver) As Boolean
 End Function
 
 Function SolverUsesUpperBounds(SolverShortName As String) As Boolean
-    Select Case SolverShortName
-    Case "NOMAD"
+    Select Case LCase(SolverShortName)
+    Case "nomad"
         SolverUsesUpperBounds = True
     Case Else
         SolverUsesUpperBounds = False

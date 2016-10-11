@@ -4,6 +4,7 @@
 ### Fixed
 - Fix crash on 64-bit Office on Windows 7
 - Fix error with piping on new versions of 64-bit Office
+- Use case-insensitive matching when dealing with solver short names
 
 ## v2.8.3 - 2016-10-05
 ### Added
