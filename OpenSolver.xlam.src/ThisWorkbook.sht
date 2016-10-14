@@ -22,23 +22,24 @@ Private Sub Workbook_AddinUninstall()
 End Sub
 
 Private Sub Workbook_BeforeClose(Cancel As Boolean)
-1         If Not ThisWorkbook.Saved Then
-              ' Ignore this check on Mac 2016 since .Saved always seems to return false
-2             If IsMac And Val(Application.Version) >= 15 Then GoTo DoClose
+          ' Only check on Windows since .VBASigned doesn't seem to exist on Mac
+          #If Win32 Then
+1             If Not ThisWorkbook.Saved And Not ThisWorkbook.VBASigned Then
               
-              Dim Answer As VbMsgBoxResult
-3             Answer = MsgBox(ThisWorkbook.Name & " is unsaved. Save?", _
-                              vbExclamation + vbYesNoCancel, "Unsaved Addin")
-4             If Answer = vbYes Then
-5                 ThisWorkbook.Save
-6             ElseIf Answer = vbNo Then
-                  ' Do nothing special and proceed as normal
-7             Else
-                  ' Not yes or no - should be cancel, but we just abort the close either way
-8                 Cancel = True
-9                 Exit Sub
-10            End If
-11        End If
+                  Dim Answer As VbMsgBoxResult
+3                 Answer = MsgBox(ThisWorkbook.Name & " is unsaved. Save?", _
+                                  vbExclamation + vbYesNoCancel, "Unsaved Addin")
+4                 If Answer = vbYes Then
+5                     ThisWorkbook.Save
+6                 ElseIf Answer = vbNo Then
+                      ' Do nothing special and proceed as normal
+7                 Else
+                      ' Not yes or no - should be cancel, but we just abort the close either way
+8                     Cancel = True
+9                     Exit Sub
+10                End If
+11            End If
+          #End If
 
 DoClose:
 12        On Error Resume Next

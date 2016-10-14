@@ -1,5 +1,9 @@
 # OpenSolver Release Notes
 
+## Unreleased
+### Fixed
+- Don't show "OpenSolver.xlam is unsaved" message on release copies
+
 ## v2.8.4 - 2016-10-12
 ### Fixed
 - Fix crash on 64-bit Office on Windows 7
