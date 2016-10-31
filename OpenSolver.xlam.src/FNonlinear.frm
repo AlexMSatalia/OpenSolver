@@ -68,6 +68,8 @@ Private Sub AutoLayout()
 8                 .Height = MinHeightNonLinear
 9                 .Width = .Width + 20  ' margin for scrollbar
 10            End If
+              .BackColor = FormBackColor
+              .BackStyle = fmBackStyleTransparent
 11        End With
           
 12        With cmdContinue

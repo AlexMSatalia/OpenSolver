@@ -179,6 +179,7 @@ Private Sub AutoLayout()
 16            .Left = lblHeading.Left
 17            .Top = Below(lblHeading, False)
 18            .BackStyle = fmBackStyleTransparent
+              .BackColor = FormBackColor
 19        End With
           
 20        With lblUrl
@@ -210,6 +211,7 @@ Private Sub AutoLayout()
 43            .Left = lblHeading.Left
 44            .Top = Max(Below(lblUrl), Below(cmdUpdateSettings))
 45            .BackStyle = fmBackStyleTransparent
+              .BackColor = FormBackColor
 46            .SpecialEffect = fmSpecialEffectEtched
 47            .Height = txtAboutHeight
 48            .Width = lblHeading.Width
@@ -233,6 +235,7 @@ Private Sub AutoLayout()
 64            .Height = FormTextHeight + 2 ' Stop the text becoming smaller
 65            .Width = lblHeading.Width
 66            .BackStyle = fmBackStyleTransparent
+              .BackColor = FormBackColor
 67            .MultiLine = True
 68        End With
           

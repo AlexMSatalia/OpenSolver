@@ -939,6 +939,13 @@ Private Sub AutoLayout()
 126           .Width = FormSpacing * 3 + cmdAddCon.Width + cmdCancelCon.Width
 127           .Height = FormSpacing * 4 + refConLHS.Height + refConRHS.Height + cmdAddCon.Height
 128       End With
+
+          ' Hack: hide lblConstraintGroup on Excel builds over 73xx (ref #256)
+          #If Win32 Then
+              If Application.Build > 7300 Then
+                  lblConstraintGroup.Visible = False
+              End If
+          #End If
           
 129       With cmdDelSelCon
 130           .Caption = "Delete selected constraint"
