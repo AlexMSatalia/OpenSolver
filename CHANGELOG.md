@@ -1,6 +1,8 @@
 # OpenSolver Release Notes
 
 ## Unreleased
+### Added
+- Add support for user-supplied callback macro when using NOMAD
 ### Fixed
 - Workaround for Excel 2016 update 73xx which broke z-order on forms
 - Don't show "OpenSolver.xlam is unsaved" message on release copies

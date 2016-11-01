@@ -1,7 +1,10 @@
 Attribute VB_Name = "SolverNOMAD"
 Option Explicit
 
+Private Const NOMAD_CALLBACK_KEY As String = "OpenSolver_Callback"
+
 Public OS As COpenSolver
+Private CallbackMacro As String
 Dim IterationCount As Long
 
 #If Mac Then
@@ -158,6 +161,12 @@ Function NOMAD_RecalculateValues()
 1               On Error GoTo ErrorHandler
 2               Application.EnableCancelKey = xlErrorHandler
                 
+                ' Run user-provided callback if present before extracting sheet values
+                If Len(CallbackMacro) > 0 Then
+                    ForceCalculate "Warning: The worksheet calculation did not complete, and so the iteration may not be calculated correctly. Would you like to retry?"
+                    Application.Run CallbackMacro
+                End If
+                
 3               ForceCalculate "Warning: The worksheet calculation did not complete, and so the iteration may not be calculated correctly. Would you like to retry?"
 4               NOMAD_RecalculateValues = 0&
                 
@@ -301,6 +310,14 @@ Function NOMAD_GetOptionData() As Variant
 7               If SolverParameters.Exists(OS.Solver.PrecisionName) Then
 8                   SolverParameters.Item("H_MIN") = SolverParameters.Item(OS.Solver.PrecisionName)
 9               End If
+
+                ' Extract user-provided callback macro
+                If SolverParameters.Exists(NOMAD_CALLBACK_KEY) Then
+                    CallbackMacro = SolverParameters.Item(NOMAD_CALLBACK_KEY)
+                    SolverParameters.Remove NOMAD_CALLBACK_KEY
+                Else
+                    CallbackMacro = vbNullString
+                End If
                 
                 Dim X() As Variant
 10              ReDim X(1 To SolverParameters.Count, 1 To 2)
