@@ -2,6 +2,7 @@
 
 ## Unreleased
 ### Fixed
+- Workaround for Excel 2016 update 73xx which broke z-order on forms
 - Don't show "OpenSolver.xlam is unsaved" message on release copies
 
 ## v2.8.4 - 2016-10-12
