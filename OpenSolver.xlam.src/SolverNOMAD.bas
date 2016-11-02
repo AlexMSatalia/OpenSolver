@@ -4,8 +4,10 @@ Option Explicit
 Private Const NOMAD_CALLBACK_KEY As String = "OpenSolver_Callback"
 
 Public OS As COpenSolver
-Private CallbackMacro As String
 Dim IterationCount As Long
+
+Private CallbackMacro As String  ' Name of the user-provided macro
+Private CallbackAbort As Boolean  ' Flag indicating whether user-provided macro sent abort signal
 
 #If Mac Then
     Dim InteractiveStatus As Boolean
@@ -28,6 +30,11 @@ Private Type VariableData
     X() As Variant
     NumVars As Long
 End Type
+
+' User code should call this function from within callback macro to abort the NOMAD run
+Public Sub NOMAD_CallbackAbort()
+    CallbackAbort = True
+End Sub
 
 ' NOMAD functions
 ' Do not raise errors out of these functions, this will crash the NOMAD plugin
@@ -162,21 +169,39 @@ Function NOMAD_RecalculateValues()
 2               Application.EnableCancelKey = xlErrorHandler
                 
                 ' Run user-provided callback if present before extracting sheet values
-                If Len(CallbackMacro) > 0 Then
-                    ForceCalculate "Warning: The worksheet calculation did not complete, and so the iteration may not be calculated correctly. Would you like to retry?"
-                    Application.Run CallbackMacro
-                End If
+3               If Len(CallbackMacro) > 0 Then
+                    ' Update values on sheet so macro is working with current variable values
+4                   ForceCalculate "Warning: The worksheet calculation did not complete, and so the iteration may not be calculated correctly. Would you like to retry?"
+                    
+                    ' Reset callback abort flag
+5                   CallbackAbort = False
+                    
+                    ' Run user macro callback
+6                   Application.Run CallbackMacro
+                    
+                    ' Check whether callback abort flag was set by user macro
+7                   On Error GoTo ErrorHandler  ' Restore error handler just in case
+8                   If CallbackAbort Then
+9                       NOMAD_ShowCancelDialog
+                        ' Need to invalid this iteration regardless of response
+                        GoTo Abort
+10                  End If
+11              End If
                 
-3               ForceCalculate "Warning: The worksheet calculation did not complete, and so the iteration may not be calculated correctly. Would you like to retry?"
-4               NOMAD_RecalculateValues = 0&
+12              ForceCalculate "Warning: The worksheet calculation did not complete, and so the iteration may not be calculated correctly. Would you like to retry?"
+13              NOMAD_RecalculateValues = 0&
                 
 ExitFunction:
-5               Exit Function
+14              Exit Function
+
+Abort:
+                NOMAD_RecalculateValues = -1&
+                GoTo ExitFunction
                 
 ErrorHandler:
-6               If Not ReportError("SolverNOMAD", "NOMAD_RecalculateValues") Then Resume
-7               NOMAD_RecalculateValues = -1&
-8               Resume ExitFunction
+15              If Not ReportError("SolverNOMAD", "NOMAD_RecalculateValues") Then Resume
+16              NOMAD_RecalculateValues = -1&
+17              Resume ExitFunction
 End Function
 
 ' Returns -1 on error, integer number of variables otherwise
