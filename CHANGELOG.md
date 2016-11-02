@@ -1,6 +1,6 @@
 # OpenSolver Release Notes
 
-## Unreleased
+## v2.8.5 - 2016-11-03
 ### Added
 - Add support for user-supplied callback macro when using NOMAD
 ### Fixed
