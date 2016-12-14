@@ -29,7 +29,7 @@ Sub ClearError()
 4         ErrLinkTarget = vbNullString
 End Sub
  
-Function ReportError(ModuleName As String, ProcedureName As String, Optional IsEntryPoint = False, Optional MinimiseUserInteraction As Boolean = False) As Boolean
+Function ReportError(ModuleName As String, ProcedureName As String, Optional IsEntryPoint = False, Optional MinimiseUserInteraction As Boolean = False, Optional UserMessage As String = "", Optional StackTraceMessage As String = "") As Boolean
           ' See if we should clear the log file
           Dim NewLogFile
 1         NewLogFile = (ErrNum = 0)
@@ -58,6 +58,9 @@ Function ReportError(ModuleName As String, ProcedureName As String, Optional IsE
           ' If this is the originating error, the static error message variable will be empty.
           ' In that case, store the originating error message in the static variable.
 18        If Len(ErrMsg) = 0 Then ErrMsg = Err.Description
+
+          ' Add the additional user error message, if it is present.
+          If Len(UserMessage) > 0 Then ErrMsg = ErrMsg & vbNewLine & UserMessage
           
           ' We don't want errors in the error logging to matter.
 19        On Error Resume Next
@@ -76,6 +79,9 @@ Function ReportError(ModuleName As String, ProcedureName As String, Optional IsE
           ' Create the error text to be logged.
           Dim LogText As String
 24        LogText = ErrSource & ": Line " & ErrLine
+          
+          ' Add the additional stack trace error message, if it is present.
+          If Len(StackTraceMessage) > 0 Then LogText = LogText & ": " & StackTraceMessage
           
           ' Get the solver info if we need it, avoiding clashes in file handles while writing the log file
           ' TODO fix our file IO throughout so that this extra step isn't needed

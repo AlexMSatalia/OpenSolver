@@ -633,6 +633,8 @@ End Sub
 ' Processes all constraint formulae into the .nl model formats
 Private Sub ProcessFormulae()
           Dim RaiseError As Boolean
+          Dim UserMessage As String
+          Dim StackTraceMessage As String
 1         RaiseError = False
 2         On Error GoTo ErrorHandler
 
@@ -649,11 +651,13 @@ Private Sub ProcessFormulae()
           
           ' Loop through all constraints and process each
           Dim i As Long
+          On Error GoTo BadActualCon
 12        For i = 1 To numActualCons
 13            UpdateStatusBar "OpenSolver: Processing formulae into expression trees... " & i & "/" & n_con & " formulae."
 14            ProcessSingleFormula m.RHSKeys(i), m.LHSKeys(i), m.RELs(i), i
 15        Next i
           
+          On Error GoTo BadFakeCon
 16        For i = 1 To numFakeCons
 17            UpdateStatusBar "OpenSolver: Processing formulae into expression trees... " & i + numActualCons & "/" & n_con & " formulae."
 18            ProcessSingleFormula m.Formulae(i).strFormulaParsed, m.Formulae(i).strAddress, RelationConsts.RelationEQ, i + numActualCons
@@ -665,9 +669,19 @@ ExitSub:
 22        Exit Sub
 
 ErrorHandler:
-23        If Not ReportError("SolverFileNL", "ProcessFormulae") Then Resume
+23        If Not ReportError("SolverFileNL", "ProcessFormulae", UserMessage:=UserMessage, StackTraceMessage:=StackTraceMessage) Then Resume
 24        RaiseError = True
 25        GoTo ExitSub
+
+BadActualCon:
+          UserMessage = "Non-linear parser failed while processing constraint " & m.RHSKeys(i) & RelationEnumToString(m.RELs(i)) & m.LHSKeys(i) & "."
+          StackTraceMessage = UserMessage
+          GoTo ErrorHandler
+          
+BadFakeCon:
+          UserMessage = "Non-linear parser failed while processing cell " & m.Formulae(i).strAddress & "."
+          StackTraceMessage = UserMessage
+          GoTo ErrorHandler
 End Sub
 
 ' Processes a single constraint into .nl format. We require:
