@@ -6,7 +6,7 @@ Public NeosResult As String
 Public Const NeosTermsAndConditionsLink As String = "http://www.neos-server.org/neos/termofuse.html"
 Public Const NeosAdditionalSolverText As String = "Submitting a model to NEOS results in it becoming publicly available. Use of NEOS is subject to the NEOS Terms and Conditions:"
 
-Private Const NEOS_ADDRESS = "http://www.neos-server.org:3332"
+Private Const NEOS_ADDRESS = "https://www.neos-server.org:3333"
 Private Const NEOS_RESULT_FILE = "neosresult.txt"
 Private Const NEOS_SCRIPT_FILE = "NeosClient.py"
 

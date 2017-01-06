@@ -1,5 +1,9 @@
 # OpenSolver Release Notes
 
+## Unreleased
+### Fixed
+- Use HTTPS for NEOS connections since HTTP is no permitted.
+
 ## v2.8.5 - 2016-11-03
 ### Added
 - Add support for user-supplied callback macro when using NOMAD
