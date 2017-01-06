@@ -27,25 +27,25 @@ Private Sub Workbook_BeforeClose(Cancel As Boolean)
 1             If Not ThisWorkbook.Saved And Not ThisWorkbook.VBASigned Then
               
                   Dim Answer As VbMsgBoxResult
-3                 Answer = MsgBox(ThisWorkbook.Name & " is unsaved. Save?", _
+2                 Answer = MsgBox(ThisWorkbook.Name & " is unsaved. Save?", _
                                   vbExclamation + vbYesNoCancel, "Unsaved Addin")
-4                 If Answer = vbYes Then
-5                     ThisWorkbook.Save
-6                 ElseIf Answer = vbNo Then
+3                 If Answer = vbYes Then
+4                     ThisWorkbook.Save
+5                 ElseIf Answer = vbNo Then
                       ' Do nothing special and proceed as normal
-7                 Else
+6                 Else
                       ' Not yes or no - should be cancel, but we just abort the close either way
-8                     Cancel = True
-9                     Exit Sub
-10                End If
-11            End If
+7                     Cancel = True
+8                     Exit Sub
+9                 End If
+10            End If
           #End If
 
 DoClose:
-12        On Error Resume Next
-13        AlterMenuItems (False)
-14        DeleteTempFolder
-15        On Error GoTo 0
+11        On Error Resume Next
+12        AlterMenuItems (False)
+13        DeleteTempFolder
+14        On Error GoTo 0
 End Sub
 
 Private Sub Workbook_Open()

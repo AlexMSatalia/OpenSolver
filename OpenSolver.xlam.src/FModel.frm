@@ -942,166 +942,166 @@ Private Sub AutoLayout()
 
           ' Hack: hide lblConstraintGroup on Excel builds over 73xx (ref #256)
           #If Win32 Then
-              If Application.Build > 7300 Then
-                  lblConstraintGroup.Visible = False
-              End If
+129           If Application.Build > 7300 Then
+130               lblConstraintGroup.Visible = False
+131           End If
           #End If
           
-129       With cmdDelSelCon
-130           .Caption = "Delete selected constraint"
-131           .Left = lblConstraintGroup.Left
-132           .Top = Below(lblConstraintGroup)
-133           .Width = lblConstraintGroup.Width
-134       End With
+132       With cmdDelSelCon
+133           .Caption = "Delete selected constraint"
+134           .Left = lblConstraintGroup.Left
+135           .Top = Below(lblConstraintGroup)
+136           .Width = lblConstraintGroup.Width
+137       End With
           
-135       With chkNonNeg
-136           .Caption = "Make unconstrained variable cells non-negative"
-137           .Left = lblConstraintGroup.Left
-138           .Top = Below(cmdDelSelCon)
-139           .Width = lblConstraintGroup.Width
-140       End With
+138       With chkNonNeg
+139           .Caption = "Make unconstrained variable cells non-negative"
+140           .Left = lblConstraintGroup.Left
+141           .Top = Below(cmdDelSelCon)
+142           .Width = lblConstraintGroup.Width
+143       End With
           
-141       With chkNameRange
-142           .Left = lblConstraintGroup.Left
-143           .Width = lstConstraints.Width
-144           .Caption = "Show named ranges in constraint list"
-145           .Top = Below(chkNonNeg, False)
-146       End With
+144       With chkNameRange
+145           .Left = lblConstraintGroup.Left
+146           .Width = lstConstraints.Width
+147           .Caption = "Show named ranges in constraint list"
+148           .Top = Below(chkNonNeg, False)
+149       End With
           
-147       With lstConstraints
-148           .Left = lblDescHeader.Left
-149           .Top = lblConstraintGroup.Top
-150           .Height = MinHeight
-151           .Width = LeftOf(lblConstraintGroup, .Left)
-152       End With
+150       With lstConstraints
+151           .Left = lblDescHeader.Left
+152           .Top = lblConstraintGroup.Top
+153           .Height = MinHeight
+154           .Width = LeftOf(lblConstraintGroup, .Left)
+155       End With
           
-153       With lblDiv4
-154           .Left = lblDescHeader.Left
-155           .Width = lblDesc.Width
-156           .Height = FormDivHeight
-157           .BackColor = FormDivBackColor
-158       End With
+156       With lblDiv4
+157           .Left = lblDescHeader.Left
+158           .Width = lblDesc.Width
+159           .Height = FormDivHeight
+160           .BackColor = FormDivBackColor
+161       End With
           
-159       With lblStep4
-160           .Caption = "Sensitivity Analysis"
-161           .Left = lblDescHeader.Left
-162           AutoHeight lblStep4, Me.Width, True
-163       End With
+162       With lblStep4
+163           .Caption = "Sensitivity Analysis"
+164           .Left = lblDescHeader.Left
+165           AutoHeight lblStep4, Me.Width, True
+166       End With
           
-164       With chkGetDuals
-165           .Caption = "List sensitivity analysis on the same sheet with top left cell:"
-166           .Left = RightOf(lblStep4)
-167           AutoHeight chkGetDuals, Me.Width, True
-168       End With
+167       With chkGetDuals
+168           .Caption = "List sensitivity analysis on the same sheet with top left cell:"
+169           .Left = RightOf(lblStep4)
+170           AutoHeight chkGetDuals, Me.Width, True
+171       End With
           
-169       With refDuals
-170           .Left = RightOf(chkGetDuals)
-171           .Width = LeftOfForm(Me.Width, .Left)
-172           .Height = refObj.Height
-173       End With
+172       With refDuals
+173           .Left = RightOf(chkGetDuals)
+174           .Width = LeftOfForm(Me.Width, .Left)
+175           .Height = refObj.Height
+176       End With
           
-174       With chkGetDuals2
-175           .Caption = "Output sensitivity analysis:"
-176           .Left = chkGetDuals.Left
-177           AutoHeight chkGetDuals2, Me.Width, True
-178       End With
+177       With chkGetDuals2
+178           .Caption = "Output sensitivity analysis:"
+179           .Left = chkGetDuals.Left
+180           AutoHeight chkGetDuals2, Me.Width, True
+181       End With
           
-179       With optUpdate
-180           .Caption = "updating any previous output sheet"
-181           .Left = RightOf(chkGetDuals2)
-182           AutoHeight optUpdate, Me.Width, True
-183       End With
+182       With optUpdate
+183           .Caption = "updating any previous output sheet"
+184           .Left = RightOf(chkGetDuals2)
+185           AutoHeight optUpdate, Me.Width, True
+186       End With
           
-184       With optNew
-185           .Caption = "on a new sheet"
-186           .Left = RightOf(optUpdate)
-187           AutoHeight optNew, Me.Width, True
-188       End With
+187       With optNew
+188           .Caption = "on a new sheet"
+189           .Left = RightOf(optUpdate)
+190           AutoHeight optNew, Me.Width, True
+191       End With
           
-189       With lblDiv5
-190           .Left = lblDescHeader.Left
-191           .Width = lblDesc.Width
-192           .Height = FormDivHeight
-193           .BackColor = FormDivBackColor
-194       End With
+192       With lblDiv5
+193           .Left = lblDescHeader.Left
+194           .Width = lblDesc.Width
+195           .Height = FormDivHeight
+196           .BackColor = FormDivBackColor
+197       End With
           
-195       With lblStep5
-196           .Left = lblDescHeader.Left
-197           .Caption = "Solver Engine:"
-198       End With
+198       With lblStep5
+199           .Left = lblDescHeader.Left
+200           .Caption = "Solver Engine:"
+201       End With
           
-199       With cmdChange
-200           .Width = cmdRunAutoModel.Width
-201           .Left = LeftOfForm(Me.Width, .Width)
-202           .Caption = "Solver Engine..."
-203       End With
-          
-204       With lblSolver
-205           .Width = LeftOf(cmdChange, .Left)
+202       With cmdChange
+203           .Width = cmdRunAutoModel.Width
+204           .Left = LeftOfForm(Me.Width, .Width)
+205           .Caption = "Solver Engine..."
 206       End With
           
-207       With lblDiv6
-208           .Left = lblDescHeader.Left
-209           .Width = lblDesc.Width
-210           .Height = FormDivHeight
-211           .BackColor = FormDivBackColor
-212       End With
+207       With lblSolver
+208           .Width = LeftOf(cmdChange, .Left)
+209       End With
+          
+210       With lblDiv6
+211           .Left = lblDescHeader.Left
+212           .Width = lblDesc.Width
+213           .Height = FormDivHeight
+214           .BackColor = FormDivBackColor
+215       End With
               
-213       With chkShowModel
-214           .Left = lblDescHeader.Left
-215           AutoHeight chkShowModel, Me.Width, True
-216       End With
+216       With chkShowModel
+217           .Left = lblDescHeader.Left
+218           AutoHeight chkShowModel, Me.Width, True
+219       End With
           
-217       With cmdCancel
-218           .Width = cmdRunAutoModel.Width
-219           .Caption = "Cancel"
-220           .Left = LeftOfForm(Me.Width, .Width)
-221           .Cancel = True
-222       End With
+220       With cmdCancel
+221           .Width = cmdRunAutoModel.Width
+222           .Caption = "Cancel"
+223           .Left = LeftOfForm(Me.Width, .Width)
+224           .Cancel = True
+225       End With
           
-223       With cmdBuild
-224           .Width = cmdRunAutoModel.Width
-225           .Caption = "Save Model"
-226           .Left = LeftOf(cmdCancel, .Width)
-227       End With
+226       With cmdBuild
+227           .Width = cmdRunAutoModel.Width
+228           .Caption = "Save Model"
+229           .Left = LeftOf(cmdCancel, .Width)
+230       End With
           
-228       With cmdOptions
-229           .Width = cmdRunAutoModel.Width
-230           .Caption = "Options..."
-231           .Left = LeftOf(cmdBuild, .Width)
-232       End With
+231       With cmdOptions
+232           .Width = cmdRunAutoModel.Width
+233           .Caption = "Options..."
+234           .Left = LeftOf(cmdBuild, .Width)
+235       End With
           
-233       With cmdReset
-234           .Width = cmdRunAutoModel.Width
-235           .Caption = "Clear Model"
-236           .Left = LeftOf(cmdOptions, .Width)
-237       End With
+236       With cmdReset
+237           .Width = cmdRunAutoModel.Width
+238           .Caption = "Clear Model"
+239           .Left = LeftOf(cmdOptions, .Width)
+240       End With
           
           ' Add resizer
-238       With lblResizer
+241       With lblResizer
         #If Mac Then
                   ' Mac labels don't fire MouseMove events correctly
-239               .Visible = False
+242               .Visible = False
         #End If
-240           .Caption = "o"
-241           With .Font
-242               .Name = "Marlett"
-243               .Charset = 2
-244               .Size = 10
-245           End With
-246           .AutoSize = True
-247           .Left = Me.Width - .Width
-248           .MousePointer = fmMousePointerSizeNWSE
-249           .BackStyle = fmBackStyleTransparent
-250       End With
+243           .Caption = "o"
+244           With .Font
+245               .Name = "Marlett"
+246               .Charset = 2
+247               .Size = 10
+248           End With
+249           .AutoSize = True
+250           .Left = Me.Width - .Width
+251           .MousePointer = fmMousePointerSizeNWSE
+252           .BackStyle = fmBackStyleTransparent
+253       End With
           
           ' Set the vertical positions of the lower half of the form
-251       UpdateLayout
+254       UpdateLayout
           
-252       Me.Width = Me.Width + FormWindowMargin
+255       Me.Width = Me.Width + FormWindowMargin
           
-253       Me.BackColor = FormBackColor
-254       Me.Caption = "OpenSolver - Model"
+256       Me.BackColor = FormBackColor
+257       Me.Caption = "OpenSolver - Model"
 End Sub
 
 Private Sub UpdateLayout(Optional ChangeY As Single = 0)

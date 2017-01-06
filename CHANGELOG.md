@@ -1,6 +1,6 @@
 # OpenSolver Release Notes
 
-## Unreleased
+## v2.8.6 - 2017-01-07
 ### Fixed
 - Use HTTPS for NEOS connections since HTTP is no permitted.
 

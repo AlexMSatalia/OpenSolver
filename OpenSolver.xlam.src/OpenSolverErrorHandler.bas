@@ -60,80 +60,80 @@ Function ReportError(ModuleName As String, ProcedureName As String, Optional IsE
 18        If Len(ErrMsg) = 0 Then ErrMsg = Err.Description
 
           ' Add the additional user error message, if it is present.
-          If Len(UserMessage) > 0 Then ErrMsg = ErrMsg & vbNewLine & UserMessage
+19        If Len(UserMessage) > 0 Then ErrMsg = ErrMsg & vbNewLine & UserMessage
           
           ' We don't want errors in the error logging to matter.
-19        On Error Resume Next
+20        On Error Resume Next
           
           ' Load the default filename if required.
           Dim FileName As String
-20        FileName = ThisWorkbook.Name
+21        FileName = ThisWorkbook.Name
           
           Dim Path As String
-21        Path = GetErrorLogFilePath()
-22        If NewLogFile Then DeleteFileAndVerify Path
+22        Path = GetErrorLogFilePath()
+23        If NewLogFile Then DeleteFileAndVerify Path
           
           ' Construct the fully-qualified error source name.
-23        ErrSource = Format(Now, "dd mmm yy hh:mm:ss") & " [" & FileName & "] " & ModuleName & "." & ProcedureName
+24        ErrSource = Format(Now, "dd mmm yy hh:mm:ss") & " [" & FileName & "] " & ModuleName & "." & ProcedureName
           
           ' Create the error text to be logged.
           Dim LogText As String
-24        LogText = ErrSource & ": Line " & ErrLine
+25        LogText = ErrSource & ": Line " & ErrLine
           
           ' Add the additional stack trace error message, if it is present.
-          If Len(StackTraceMessage) > 0 Then LogText = LogText & ": " & StackTraceMessage
+26        If Len(StackTraceMessage) > 0 Then LogText = LogText & ": " & StackTraceMessage
           
           ' Get the solver info if we need it, avoiding clashes in file handles while writing the log file
           ' TODO fix our file IO throughout so that this extra step isn't needed
           Dim SolverInfo As String
-25        If IsEntryPoint Then
-26            SolverInfo = SolverSummary()
-27        End If
+27        If IsEntryPoint Then
+28            SolverInfo = SolverSummary()
+29        End If
           
           ' Open the log file, write out the error information and close the log file.
           Dim FileNum As Integer
-28        FileNum = FreeFile()
-29        Open Path For Append As #FileNum
-30        Print #FileNum, LogText
-31        If IsEntryPoint Then
-32            Print #FileNum, vbNewLine & "Error " & CStr(ErrNum) & ": " & ErrMsg & vbNewLine
-33            If Len(LastUsedSolver) <> 0 Then Print #FileNum, "Solver: " & LastUsedSolver & vbNewLine
-34            Print #FileNum, EnvironmentDetail() & vbNewLine
-35            Print #FileNum, StripNonBreakingSpaces(SolverInfo)
-36        End If
-37        Close #FileNum
+30        FileNum = FreeFile()
+31        Open Path For Append As #FileNum
+32        Print #FileNum, LogText
+33        If IsEntryPoint Then
+34            Print #FileNum, vbNewLine & "Error " & CStr(ErrNum) & ": " & ErrMsg & vbNewLine
+35            If Len(LastUsedSolver) <> 0 Then Print #FileNum, "Solver: " & LastUsedSolver & vbNewLine
+36            Print #FileNum, EnvironmentDetail() & vbNewLine
+37            Print #FileNum, StripNonBreakingSpaces(SolverInfo)
+38        End If
+39        Close #FileNum
           
-38        If IsEntryPoint Then
-39            If Not MinimiseUserInteraction And ErrNum <> OpenSolver_UserCancelledError Then
+40        If IsEntryPoint Then
+41            If Not MinimiseUserInteraction And ErrNum <> OpenSolver_UserCancelledError Then
                   ' We are at an entry point - report the error to the user
                   Dim prompt As String, LinkTarget As String, MoreDetailsButton As Boolean, ReportIssueButton As Boolean
-40                prompt = ErrMsg
-41                ErrMsg = vbNullString  ' Reset error message in case there's an error while showing the form
+42                prompt = ErrMsg
+43                ErrMsg = vbNullString  ' Reset error message in case there's an error while showing the form
                   
                   ' A message with an OpenSolver_UserError denotes an error caused by the user, as opposed to an error we didn't expect to happen.
                   ' For these messages, other info isn't shown with the error message.
-42                If ErrNum = OpenSolver_UserError Then
+44                If ErrNum = OpenSolver_UserError Then
                       ' Intentional error
-43                    MoreDetailsButton = False
-44                    ReportIssueButton = False
-45                Else
+45                    MoreDetailsButton = False
+46                    ReportIssueButton = False
+47                Else
                       ' Unintentional error, so add extra info
-46                    prompt = "OpenSolver " & sOpenSolverVersion & " encountered an error:" & vbNewLine & _
+48                    prompt = "OpenSolver " & sOpenSolverVersion & " encountered an error:" & vbNewLine & _
                                prompt & vbNewLine & vbNewLine & _
                                "An error log with more details has been saved, which you can see by clicking 'More Details'. " & _
                                "If you continue to have trouble, please use the 'Report Issue' button or visit the OpenSolver website for assistance:"
                       ' Add the OpenSolver help link
-47                    If Len(ErrLinkTarget) = 0 Then ErrLinkTarget = "http://opensolver.org/help/"
+49                    If Len(ErrLinkTarget) = 0 Then ErrLinkTarget = "http://opensolver.org/help/"
                       
-48                    MoreDetailsButton = True
-49                    ReportIssueButton = True
-50                End If
+50                    MoreDetailsButton = True
+51                    ReportIssueButton = True
+52                End If
                   
-51                MsgBoxEx prompt, vbOKOnly, "OpenSolver - Error", LinkTarget:=ErrLinkTarget, MoreDetailsButton:=MoreDetailsButton, ReportIssueButton:=ReportIssueButton
-52            End If
-53        End If
+53                MsgBoxEx prompt, vbOKOnly, "OpenSolver - Error", LinkTarget:=ErrLinkTarget, MoreDetailsButton:=MoreDetailsButton, ReportIssueButton:=ReportIssueButton
+54            End If
+55        End If
           
-54        ReportError = True
+56        ReportError = True
 End Function
 
 Public Function GetErrorLogFilePath() As String

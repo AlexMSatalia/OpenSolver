@@ -651,37 +651,37 @@ Private Sub ProcessFormulae()
           
           ' Loop through all constraints and process each
           Dim i As Long
-          On Error GoTo BadActualCon
-12        For i = 1 To numActualCons
-13            UpdateStatusBar "OpenSolver: Processing formulae into expression trees... " & i & "/" & n_con & " formulae."
-14            ProcessSingleFormula m.RHSKeys(i), m.LHSKeys(i), m.RELs(i), i
-15        Next i
+12        On Error GoTo BadActualCon
+13        For i = 1 To numActualCons
+14            UpdateStatusBar "OpenSolver: Processing formulae into expression trees... " & i & "/" & n_con & " formulae."
+15            ProcessSingleFormula m.RHSKeys(i), m.LHSKeys(i), m.RELs(i), i
+16        Next i
           
-          On Error GoTo BadFakeCon
-16        For i = 1 To numFakeCons
-17            UpdateStatusBar "OpenSolver: Processing formulae into expression trees... " & i + numActualCons & "/" & n_con & " formulae."
-18            ProcessSingleFormula m.Formulae(i).strFormulaParsed, m.Formulae(i).strAddress, RelationConsts.RelationEQ, i + numActualCons
-19        Next i
+17        On Error GoTo BadFakeCon
+18        For i = 1 To numFakeCons
+19            UpdateStatusBar "OpenSolver: Processing formulae into expression trees... " & i + numActualCons & "/" & n_con & " formulae."
+20            ProcessSingleFormula m.Formulae(i).strFormulaParsed, m.Formulae(i).strAddress, RelationConsts.RelationEQ, i + numActualCons
+21        Next i
           
 ExitSub:
-20        Application.StatusBar = False
-21        If RaiseError Then RethrowError
-22        Exit Sub
+22        Application.StatusBar = False
+23        If RaiseError Then RethrowError
+24        Exit Sub
 
 ErrorHandler:
-23        If Not ReportError("SolverFileNL", "ProcessFormulae", UserMessage:=UserMessage, StackTraceMessage:=StackTraceMessage) Then Resume
-24        RaiseError = True
-25        GoTo ExitSub
+25        If Not ReportError("SolverFileNL", "ProcessFormulae", UserMessage:=UserMessage, StackTraceMessage:=StackTraceMessage) Then Resume
+26        RaiseError = True
+27        GoTo ExitSub
 
 BadActualCon:
-          UserMessage = "Non-linear parser failed while processing constraint " & m.RHSKeys(i) & RelationEnumToString(m.RELs(i)) & m.LHSKeys(i) & "."
-          StackTraceMessage = UserMessage
-          GoTo ErrorHandler
+28        UserMessage = "Non-linear parser failed while processing constraint " & m.RHSKeys(i) & RelationEnumToString(m.RELs(i)) & m.LHSKeys(i) & "."
+29        StackTraceMessage = UserMessage
+30        GoTo ErrorHandler
           
 BadFakeCon:
-          UserMessage = "Non-linear parser failed while processing cell " & m.Formulae(i).strAddress & "."
-          StackTraceMessage = UserMessage
-          GoTo ErrorHandler
+31        UserMessage = "Non-linear parser failed while processing cell " & m.Formulae(i).strAddress & "."
+32        StackTraceMessage = UserMessage
+33        GoTo ErrorHandler
 End Sub
 
 ' Processes a single constraint into .nl format. We require:

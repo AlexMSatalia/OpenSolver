@@ -179,72 +179,72 @@ Private Sub AutoLayout()
 16            .Left = lblHeading.Left
 17            .Top = Below(lblHeading, False)
 18            .BackStyle = fmBackStyleTransparent
-              .BackColor = FormBackColor
-19        End With
+19            .BackColor = FormBackColor
+20        End With
           
-20        With lblUrl
-21            .Caption = "http://www.OpenSolver.org"
-22            .ForeColor = FormLinkColor
-23            .Left = lblHeading.Left
-24            .Top = Below(txtVersion, False)
-25            AutoHeight lblUrl, Me.Width, True
-26        End With
+21        With lblUrl
+22            .Caption = "http://www.OpenSolver.org"
+23            .ForeColor = FormLinkColor
+24            .Left = lblHeading.Left
+25            .Top = Below(txtVersion, False)
+26            AutoHeight lblUrl, Me.Width, True
+27        End With
           
-27        With cmdUpdate
-28            .Caption = "Check for updates"
-29            .Width = FormButtonWidth * 2
-30            .Left = LeftOfForm(Me.Width, .Width)
-31            .Top = lblHeading.Top
-32        End With
+28        With cmdUpdate
+29            .Caption = "Check for updates"
+30            .Width = FormButtonWidth * 2
+31            .Left = LeftOfForm(Me.Width, .Width)
+32            .Top = lblHeading.Top
+33        End With
           
-33        With cmdUpdateSettings
-34            .Caption = "Update Check settings..."
-35            .Width = cmdUpdate.Width
-36            .Left = cmdUpdate.Left
-37            .Top = Below(cmdUpdate)
-38        End With
+34        With cmdUpdateSettings
+35            .Caption = "Update Check settings..."
+36            .Width = cmdUpdate.Width
+37            .Left = cmdUpdate.Left
+38            .Top = Below(cmdUpdate)
+39        End With
           
-39        With txtAbout
-40            .Locked = False
-41            .Text = "Loading OpenSolver info..."
-42            .Locked = True
-43            .Left = lblHeading.Left
-44            .Top = Max(Below(lblUrl), Below(cmdUpdateSettings))
-45            .BackStyle = fmBackStyleTransparent
-              .BackColor = FormBackColor
-46            .SpecialEffect = fmSpecialEffectEtched
-47            .Height = txtAboutHeight
-48            .Width = lblHeading.Width
-49        End With
+40        With txtAbout
+41            .Locked = False
+42            .Text = "Loading OpenSolver info..."
+43            .Locked = True
+44            .Left = lblHeading.Left
+45            .Top = Max(Below(lblUrl), Below(cmdUpdateSettings))
+46            .BackStyle = fmBackStyleTransparent
+47            .BackColor = FormBackColor
+48            .SpecialEffect = fmSpecialEffectEtched
+49            .Height = txtAboutHeight
+50            .Width = lblHeading.Width
+51        End With
           
-50        With lblInstalled
-51            .Font.Bold = True
-52            .Left = lblHeading.Left
-53            .Top = Below(txtAbout)
-54            .Width = lblHeading.Width
-55            .BackStyle = fmBackStyleTransparent
-56            AutoHeight lblInstalled, .Width
-57        End With
+52        With lblInstalled
+53            .Font.Bold = True
+54            .Left = lblHeading.Left
+55            .Top = Below(txtAbout)
+56            .Width = lblHeading.Width
+57            .BackStyle = fmBackStyleTransparent
+58            AutoHeight lblInstalled, .Width
+59        End With
           
-58        With txtFilePath
-59            .Locked = False
-60            .Text = "OpenSolver file:"
-61            .Locked = True
-62            .Left = lblHeading.Left
-63            .Top = Below(lblInstalled)
-64            .Height = FormTextHeight + 2 ' Stop the text becoming smaller
-65            .Width = lblHeading.Width
-66            .BackStyle = fmBackStyleTransparent
-              .BackColor = FormBackColor
-67            .MultiLine = True
-68        End With
+60        With txtFilePath
+61            .Locked = False
+62            .Text = "OpenSolver file:"
+63            .Locked = True
+64            .Left = lblHeading.Left
+65            .Top = Below(lblInstalled)
+66            .Height = FormTextHeight + 2 ' Stop the text becoming smaller
+67            .Width = lblHeading.Width
+68            .BackStyle = fmBackStyleTransparent
+69            .BackColor = FormBackColor
+70            .MultiLine = True
+71        End With
           
-69        LayoutBottom
+72        LayoutBottom
           
-70        Me.Width = Me.Width + FormWindowMargin
+73        Me.Width = Me.Width + FormWindowMargin
           
-71        Me.BackColor = FormBackColor
-72        Me.Caption = "OpenSolver - About"
+74        Me.BackColor = FormBackColor
+75        Me.Caption = "OpenSolver - About"
 End Sub
 
 Private Sub LayoutBottom()

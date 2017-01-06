@@ -33,7 +33,7 @@ End Type
 
 ' User code should call this function from within callback macro to abort the NOMAD run
 Public Sub NOMAD_CallbackAbort()
-    CallbackAbort = True
+1         CallbackAbort = True
 End Sub
 
 ' NOMAD functions
@@ -184,24 +184,24 @@ Function NOMAD_RecalculateValues()
 8                   If CallbackAbort Then
 9                       NOMAD_ShowCancelDialog
                         ' Need to invalid this iteration regardless of response
-                        GoTo Abort
-10                  End If
-11              End If
+10                      GoTo Abort
+11                  End If
+12              End If
                 
-12              ForceCalculate "Warning: The worksheet calculation did not complete, and so the iteration may not be calculated correctly. Would you like to retry?"
-13              NOMAD_RecalculateValues = 0&
+13              ForceCalculate "Warning: The worksheet calculation did not complete, and so the iteration may not be calculated correctly. Would you like to retry?"
+14              NOMAD_RecalculateValues = 0&
                 
 ExitFunction:
-14              Exit Function
+15              Exit Function
 
 Abort:
-                NOMAD_RecalculateValues = -1&
-                GoTo ExitFunction
+16              NOMAD_RecalculateValues = -1&
+17              GoTo ExitFunction
                 
 ErrorHandler:
-15              If Not ReportError("SolverNOMAD", "NOMAD_RecalculateValues") Then Resume
-16              NOMAD_RecalculateValues = -1&
-17              Resume ExitFunction
+18              If Not ReportError("SolverNOMAD", "NOMAD_RecalculateValues") Then Resume
+19              NOMAD_RecalculateValues = -1&
+20              Resume ExitFunction
 End Function
 
 ' Returns -1 on error, integer number of variables otherwise
@@ -337,33 +337,33 @@ Function NOMAD_GetOptionData() As Variant
 9               End If
 
                 ' Extract user-provided callback macro
-                If SolverParameters.Exists(NOMAD_CALLBACK_KEY) Then
-                    CallbackMacro = SolverParameters.Item(NOMAD_CALLBACK_KEY)
-                    SolverParameters.Remove NOMAD_CALLBACK_KEY
-                Else
-                    CallbackMacro = vbNullString
-                End If
+10              If SolverParameters.Exists(NOMAD_CALLBACK_KEY) Then
+11                  CallbackMacro = SolverParameters.Item(NOMAD_CALLBACK_KEY)
+12                  SolverParameters.Remove NOMAD_CALLBACK_KEY
+13              Else
+14                  CallbackMacro = vbNullString
+15              End If
                 
                 Dim X() As Variant
-10              ReDim X(1 To SolverParameters.Count, 1 To 2)
+16              ReDim X(1 To SolverParameters.Count, 1 To 2)
 
                 Dim i As Long, Key As Variant
-11              i = 1
-12              For Each Key In SolverParameters.Keys
-13                  X(i, 1) = Key & " " & StrExNoPlus(SolverParameters.Item(Key))
-14                  X(i, 2) = Len(X(i, 1))
-15                  i = i + 1
-16              Next Key
+17              i = 1
+18              For Each Key In SolverParameters.Keys
+19                  X(i, 1) = Key & " " & StrExNoPlus(SolverParameters.Item(Key))
+20                  X(i, 2) = Len(X(i, 1))
+21                  i = i + 1
+22              Next Key
                 
-17              NOMAD_GetOptionData = X
+23              NOMAD_GetOptionData = X
 
 ExitFunction:
-18              Exit Function
+24              Exit Function
                 
 ErrorHandler:
-19              If Not ReportError("SolverNOMAD", "NOMAD_GetOptionData") Then Resume
-20              NOMAD_GetOptionData = -1&
-21              Resume ExitFunction
+25              If Not ReportError("SolverNOMAD", "NOMAD_GetOptionData") Then Resume
+26              NOMAD_GetOptionData = -1&
+27              Resume ExitFunction
 End Function
 
 ' Returns -1 on error, boolean whether to use warmstart or not otherwise
