@@ -61,7 +61,6 @@ End Sub
 ' Released under MIT License at https://xlvbadevtools.codeplex.com/
 '====================================================================
 Private Sub Workbook_BeforeSave(ByVal SaveAsUI As Boolean, Cancel As Boolean)
-
 1         If MsgBox("Export VBA Code and tidy up?", vbYesNo, "Before you go") = vbYes Then
 2             ExportVBACode
 3             CreateRibbonXML
@@ -127,5 +126,8 @@ Private Sub DoTidyUp()
 3         ThisWorkbook.BuiltinDocumentProperties("Document version").value = sOpenSolverVersion & " (" & sOpenSolverDate & ")"
 
           ' Set calculation mode to Automatic in case it is ever selected for use (#259)
-          Application.Calculation = xlCalculationAutomatic
+          ' Note that the workbook is NOT saved if we change Application.Calculation, so we check before resetting so that the workbook is still usually saved
+          If Application.Calculation <> xlCalculationAutomatic Then
+              Application.Calculation = xlCalculationAutomatic
+          End If
 End Sub
