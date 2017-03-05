@@ -419,12 +419,13 @@ ErrorHandler:
 End Sub
 
 Sub DeleteOpenSolverShapes(w As Worksheet)
-          Dim s As Shape
-1         For Each s In w.Shapes
+          Dim s As Shape, i As Long
+1         For i = w.Shapes.Count To 1 Step -1
+              Set s = w.Shapes(i)
 2             If s.Name Like "OpenSolver*" Then
 3                 s.Delete
 4             End If
-5         Next s
+5         Next i
 End Sub
 
 Function HideSolverModel(Optional sheet As Worksheet) As Boolean
