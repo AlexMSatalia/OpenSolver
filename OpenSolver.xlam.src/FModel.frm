@@ -940,9 +940,9 @@ Private Sub AutoLayout()
 127           .Height = FormSpacing * 4 + refConLHS.Height + refConRHS.Height + cmdAddCon.Height
 128       End With
 
-          ' Hack: hide lblConstraintGroup on Excel builds over 73xx (ref #256)
+          ' Hack: hide lblConstraintGroup on Excel builds between 73xx and 75xx (ref #256)
           #If Win32 Then
-129           If Application.Build > 7300 Then
+129           If Application.Build > 7300 And Application.Build < 7571 Then
 130               lblConstraintGroup.Visible = False
 131           End If
           #End If
