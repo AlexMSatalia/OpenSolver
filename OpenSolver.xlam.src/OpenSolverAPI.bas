@@ -81,11 +81,15 @@ SetDefault:
               ' Lookup based on standard Solver options
 7             Select Case SolverEng
               Case 1:  ' GRG Nonlinear
-8                 GetChosenSolver = "Bonmin"
+                  If SolverIsAvailable(CreateSolver("Bonmin")) Then
+                      GetChosenSolver = "Bonmin"
+                  End If
 9             Case 2:  ' Simplex LP
 10                GetChosenSolver = "CBC"
 11            Case 3:  ' Evolutionary
-12                GetChosenSolver = "NOMAD"
+                  If SolverIsAvailable(CreateSolver("NOMAD")) Then
+                      GetChosenSolver = "NOMAD"
+                  End If
 13            End Select
 14        End If
           ' Make a default choice if we still don't have anything
