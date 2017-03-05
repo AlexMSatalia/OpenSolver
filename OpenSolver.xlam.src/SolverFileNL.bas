@@ -1513,7 +1513,7 @@ Private Function NumberOfOperands(FunctionName As String, Optional ArgCount As L
 9         Case "if", "ifs", "implies"
 10            NumberOfOperands = 3
 11        Case Else
-12            RaiseGeneralError "Building expression tree", "Unknown function " & FunctionName & vbCrLf & "Please let us know about this so we can fix it."
+12            RaiseGeneralError "Unknown function " & FunctionName & vbCrLf & "Please let us know about this so we can fix it."
 13        End Select
 
 ExitFunction:
