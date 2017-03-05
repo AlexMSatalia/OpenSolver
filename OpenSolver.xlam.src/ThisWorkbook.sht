@@ -125,4 +125,7 @@ Private Sub DoTidyUp()
           ' Adapted from Pearson code: www.cpearson.com/Excel/DocProp.apsx
 2         On Error Resume Next
 3         ThisWorkbook.BuiltinDocumentProperties("Document version").value = sOpenSolverVersion & " (" & sOpenSolverDate & ")"
+
+          ' Set calculation mode to Automatic in case it is ever selected for use (#259)
+          Application.Calculation = xlCalculationAutomatic
 End Sub
