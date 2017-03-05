@@ -310,6 +310,7 @@ Sub RunLocalSolver(s As COpenSolver, ExternalCommand As String)
                           s.NumDiscreteVars & " int vars " & "(" & s.NumBinVars & " bin), " & _
                           s.NumRows & " rows, " & _
                           s.SolverParameters.Item(s.Solver.TimeLimitName) & "s time limit, " & _
+                          "limit of " & s.SolverParameters.Item(s.Solver.IterationLimitName) & " iterations, " & _
                           s.SolverParameters.Item(s.Solver.ToleranceName) * 100 & "% tolerance.", True
                                 
           Dim exeResult As Long
