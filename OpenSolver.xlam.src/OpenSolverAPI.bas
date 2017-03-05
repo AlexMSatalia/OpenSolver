@@ -568,6 +568,7 @@ End Function
 ' */
 Public Sub SetMaxTime(Optional MaxTime As Double = MAX_LONG, Optional sheet As Worksheet)
 1         GetActiveSheetIfMissing sheet
+          ValidateMaxTime MaxTime
 2         SetDoubleNameOnSheet "solver_tim", MaxTime, sheet
 End Sub
 
@@ -596,6 +597,7 @@ End Function
 ' */
 Public Sub SetTolerance(Tolerance As Double, Optional sheet As Worksheet)
 1         GetActiveSheetIfMissing sheet
+          ValidateTolerance Tolerance
 2         SetDoubleNameOnSheet "solver_tol", Tolerance, sheet
 End Sub
 
@@ -606,6 +608,7 @@ End Sub
 ' */
 Public Sub SetToleranceAsPercentage(Tolerance As Double, Optional sheet As Worksheet)
 1         GetActiveSheetIfMissing sheet
+          ValidateToleranceAsPercentage Tolerance
 2         SetTolerance Tolerance / 100, sheet
 End Sub
 
@@ -625,6 +628,7 @@ End Function
 ' */
 Public Sub SetMaxIterations(Optional MaxIterations As Double = MAX_LONG, Optional sheet As Worksheet)
 1         GetActiveSheetIfMissing sheet
+          ValidateMaxIterations MaxIterations
 2         SetDoubleNameOnSheet "solver_itr", MaxIterations, sheet
 End Sub
 
@@ -644,6 +648,7 @@ End Function
 ' */
 Public Sub SetPrecision(Precision As Double, Optional sheet As Worksheet)
 1         GetActiveSheetIfMissing sheet
+          ValidatePrecision Precision
 2         SetDoubleNameOnSheet "solver_pre", Precision, sheet
 End Sub
 

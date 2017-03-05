@@ -151,3 +151,32 @@ Sub ValidateQuickSolveParametersRefersTo(QuickSolveParametersRefersTo As String,
 1         Set QuickSolveParameters = GetRefersToRange(QuickSolveParametersRefersTo)
 2         ValidateQuickSolveParameters QuickSolveParameters, sheet
 End Sub
+
+Sub ValidateTolerance(Tolerance As Double)
+    If Tolerance < 0 Or Tolerance > 1 Then
+        RaiseUserError "Tolerance needs to be between 0 and 1."
+    End If
+End Sub
+Sub ValidateToleranceAsPercentage(Tolerance As Double)
+    If Tolerance < 0 Or Tolerance > 100 Then
+        RaiseUserError "Tolerance needs to be between 0 and 100."
+    End If
+End Sub
+
+Sub ValidateMaxTime(MaxTime As Double)
+    If MaxTime < 0 Then
+        RaiseUserError "Maximum solution time needs to be positive."
+    End If
+End Sub
+
+Sub ValidateMaxIterations(MaxIterations As Double)
+    If MaxIterations < 0 Then
+        RaiseUserError "Maximum number of iterations needs to be positive."
+    End If
+End Sub
+
+Sub ValidatePrecision(Precision As Double)
+    If Precision < 0 Then
+        RaiseUserError "Precision needs to be positive."
+    End If
+End Sub
