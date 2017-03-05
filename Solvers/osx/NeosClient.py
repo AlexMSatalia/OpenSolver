@@ -10,7 +10,7 @@ import xmlrpclib
 import time
 
 NEOS_HOST="www.neos-server.org"
-NEOS_PORT=3332
+NEOS_PORT=3333
 
 numargs = {
   "ping":  3,
@@ -26,7 +26,7 @@ if (len(sys.argv) != numargs[sys.argv[1]]):
   sys.stderr.write("If 'check' or 'read' is selected, 3rd and 4th parameter must be the job number and password on NEOS\n")
   sys.exit(1)
 
-neos=xmlrpclib.Server("http://%s:%d" % (NEOS_HOST, NEOS_PORT))
+neos=xmlrpclib.Server("https://%s:%d" % (NEOS_HOST, NEOS_PORT))
 resultfile = open(sys.argv[2], "w")
 
 if sys.argv[1] == "send":
