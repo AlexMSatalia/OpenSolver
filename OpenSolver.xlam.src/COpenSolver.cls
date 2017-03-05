@@ -636,7 +636,7 @@ Sub CheckCurrentVariablesFeasible(ShouldSolveRelaxation As Boolean)
 2                   If VarCategory(i) <> VarContinuous And Not ShouldSolveRelaxation Then
                         ' If the starting value is not integer, solution is invalid.
                         ' Otherwise round starting value to ensure feasibility
-3                       RoundedValue = CLng(VarInitialValue(i))
+3                       RoundedValue = Round(VarInitialValue(i))
 4                       If Abs(VarInitialValue(i) - RoundedValue) <= EPSILON Then
 5                           VarInitialValue(i) = RoundedValue
 6                       Else
