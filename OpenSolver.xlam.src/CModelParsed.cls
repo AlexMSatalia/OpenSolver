@@ -93,7 +93,7 @@ ErrorHandler:
 End Sub
 
 Private Function ParseFormulae() As Boolean
-' Parses all constraints and objective formulae to create formulae that depend only on variable cells and constants
+      ' Parses all constraints and objective formulae to create formulae that depend only on variable cells and constants
           Dim RaiseError As Boolean
 1         RaiseError = False
 2         On Error GoTo ErrorHandler

@@ -2,53 +2,53 @@ Attribute VB_Name = "OpenSolverMenuHandlers"
 Option Explicit
 
 Function CheckForActiveSheet() As Boolean
-    On Error GoTo ErrorHandler
-    Dim sheet As Worksheet
-    Set sheet = ActiveSheetWithValidation
-    CheckForActiveSheet = True
-    Exit Function
-    
+1         On Error GoTo ErrorHandler
+          Dim sheet As Worksheet
+2         Set sheet = ActiveSheetWithValidation
+3         CheckForActiveSheet = True
+4         Exit Function
+          
 ErrorHandler:
-    CheckForActiveSheet = False
-    MsgBox "No active workbook available", Title:="OpenSolver Error"
+5         CheckForActiveSheet = False
+6         MsgBox "No active workbook available", Title:="OpenSolver Error"
 End Function
 
 Sub OpenSolver_SolveClickHandler(Optional Control)
-          If Not CheckForActiveSheet() Then Exit Sub
+1         If Not CheckForActiveSheet() Then Exit Sub
           
           Dim sheet As Worksheet
-1         GetActiveSheetIfMissing sheet
-2         RunOpenSolver SolveRelaxation:=False, MinimiseUserInteraction:=False, sheet:=sheet
-3         AutoUpdateCheck
+2         GetActiveSheetIfMissing sheet
+3         RunOpenSolver SolveRelaxation:=False, MinimiseUserInteraction:=False, sheet:=sheet
+4         AutoUpdateCheck
 End Sub
 
 Sub OpenSolver_ModelOptions(Optional Control)
-          If Not CheckForActiveSheet() Then Exit Sub
+1         If Not CheckForActiveSheet() Then Exit Sub
               
           Dim frmOptions As FOptions
-1         Set frmOptions = New FOptions
-2         frmOptions.Show
-3         Unload frmOptions
-4         AutoUpdateCheck
+2         Set frmOptions = New FOptions
+3         frmOptions.Show
+4         Unload frmOptions
+5         AutoUpdateCheck
 End Sub
 
 Sub OpenSolver_SolverOptions(Optional Control)
-          If Not CheckForActiveSheet() Then Exit Sub
+1         If Not CheckForActiveSheet() Then Exit Sub
               
           Dim frmSolverChange As FSolverChange
-1         Set frmSolverChange = New FSolverChange
-2         frmSolverChange.Show
-3         Unload frmSolverChange
-4         AutoUpdateCheck
+2         Set frmSolverChange = New FSolverChange
+3         frmSolverChange.Show
+4         Unload frmSolverChange
+5         AutoUpdateCheck
 End Sub
 
 Sub OpenSolver_SolveRelaxationClickHandler(Optional Control)
-          If Not CheckForActiveSheet() Then Exit Sub
+1         If Not CheckForActiveSheet() Then Exit Sub
               
           Dim sheet As Worksheet
-1         GetActiveSheetIfMissing sheet
-2         RunOpenSolver SolveRelaxation:=True, MinimiseUserInteraction:=False, sheet:=sheet
-3         AutoUpdateCheck
+2         GetActiveSheetIfMissing sheet
+3         RunOpenSolver SolveRelaxation:=True, MinimiseUserInteraction:=False, sheet:=sheet
+4         AutoUpdateCheck
 End Sub
 
 Sub OpenSolver_LaunchCBCCommandLine(Optional Control)
@@ -75,37 +75,37 @@ NotLPSolver:
 End Sub
 
 Sub OpenSolver_ShowHideModelClickHandler(Optional Control)
-          If Not CheckForActiveSheet() Then Exit Sub
+1         If Not CheckForActiveSheet() Then Exit Sub
               
           Dim sheet As Worksheet
-1         GetActiveSheetIfMissing sheet
+2         GetActiveSheetIfMissing sheet
           
-2         On Error GoTo ExitSub
-3         If SheetHasOpenSolverHighlighting(sheet) Then
-4             HideSolverModel sheet
-5         Else
-6             ShowSolverModel sheet, HandleError:=True
-7         End If
-8         AutoUpdateCheck
+3         On Error GoTo ExitSub
+4         If SheetHasOpenSolverHighlighting(sheet) Then
+5             HideSolverModel sheet
+6         Else
+7             ShowSolverModel sheet, HandleError:=True
+8         End If
+9         AutoUpdateCheck
 ExitSub:
 End Sub
 
 Sub OpenSolver_SetQuickSolveParametersClickHandler(Optional Control)
-          If Not CheckForActiveSheet() Then Exit Sub
+1         If Not CheckForActiveSheet() Then Exit Sub
               
-1         If SetQuickSolveParameterRange Then
-2             ClearQuickSolve
-3         End If
-4         AutoUpdateCheck
+2         If SetQuickSolveParameterRange Then
+3             ClearQuickSolve
+4         End If
+5         AutoUpdateCheck
 End Sub
 
 Sub OpenSolver_InitQuickSolveClickHandler(Optional Control)
-          If Not CheckForActiveSheet() Then Exit Sub
+1         If Not CheckForActiveSheet() Then Exit Sub
               
           Dim sheet As Worksheet
-1         GetActiveSheetIfMissing sheet
-2         InitializeQuickSolve sheet:=sheet
-3         AutoUpdateCheck
+2         GetActiveSheetIfMissing sheet
+3         InitializeQuickSolve sheet:=sheet
+4         AutoUpdateCheck
 End Sub
 
 Sub OpenSolver_QuickSolveClickHandler(Optional Control)
@@ -206,54 +206,54 @@ Sub OpenSolver_VisitCoinOROrg(Optional Control)
 2         AutoUpdateCheck
 End Sub
 Sub OpenSolver_ModelClick(Optional Control)
-          If Not CheckForActiveSheet() Then Exit Sub
+1         If Not CheckForActiveSheet() Then Exit Sub
               
           Static ShownFormBefore As Boolean, ShowNamedRangesState As Boolean, ShowModelAfterSavingState As Boolean
           ' Set the checkboxes default to true
-1         If Not ShownFormBefore Then
-2             ShownFormBefore = True
-3             ShowNamedRangesState = True
-4             ShowModelAfterSavingState = True
-5         End If
+2         If Not ShownFormBefore Then
+3             ShownFormBefore = True
+4             ShowNamedRangesState = True
+5             ShowModelAfterSavingState = True
+6         End If
 
           Dim frmModel As FModel
-6         Set frmModel = New FModel
-7         frmModel.ShowModelAfterSavingState = ShowModelAfterSavingState
-8         frmModel.ShowNamedRangesState = ShowNamedRangesState
-9         frmModel.Show
-10        ShowModelAfterSavingState = frmModel.ShowModelAfterSavingState
-11        ShowNamedRangesState = frmModel.ShowNamedRangesState
-12        Unload frmModel
+7         Set frmModel = New FModel
+8         frmModel.ShowModelAfterSavingState = ShowModelAfterSavingState
+9         frmModel.ShowNamedRangesState = ShowNamedRangesState
+10        frmModel.Show
+11        ShowModelAfterSavingState = frmModel.ShowModelAfterSavingState
+12        ShowNamedRangesState = frmModel.ShowNamedRangesState
+13        Unload frmModel
           
-13        DoEvents
-14        AutoUpdateCheck
+14        DoEvents
+15        AutoUpdateCheck
 End Sub
 
 Sub OpenSolver_QuickAutoModelClick(Optional Control)
-          If Not CheckForActiveSheet() Then Exit Sub
+1         If Not CheckForActiveSheet() Then Exit Sub
               
           Dim sheet As Worksheet
-1         GetActiveSheetIfMissing sheet
+2         GetActiveSheetIfMissing sheet
                 
           Dim AutoModel As CAutoModel
-2         Set AutoModel = New CAutoModel
-3         AutoModel.BuildModel sheet, MinimiseUserInteraction:=False, SaveAfterBuilding:=True
+3         Set AutoModel = New CAutoModel
+4         AutoModel.BuildModel sheet, MinimiseUserInteraction:=False, SaveAfterBuilding:=True
                 
-4         AutoUpdateCheck
+5         AutoUpdateCheck
 End Sub
 
 Sub OpenSolver_AutoModelAndSolveClick(Optional Control)
-          If Not CheckForActiveSheet() Then Exit Sub
+1         If Not CheckForActiveSheet() Then Exit Sub
               
           Dim sheet As Worksheet
-1         GetActiveSheetIfMissing sheet
+2         GetActiveSheetIfMissing sheet
           
           Dim AutoModel As CAutoModel
-2         Set AutoModel = New CAutoModel
-3         If Not AutoModel.BuildModel(sheet, MinimiseUserInteraction:=False, SaveAfterBuilding:=True) Then Exit Sub
+3         Set AutoModel = New CAutoModel
+4         If Not AutoModel.BuildModel(sheet, MinimiseUserInteraction:=False, SaveAfterBuilding:=True) Then Exit Sub
 
-4         RunOpenSolver SolveRelaxation:=False, MinimiseUserInteraction:=False, sheet:=sheet
+5         RunOpenSolver SolveRelaxation:=False, MinimiseUserInteraction:=False, sheet:=sheet
 
-5         AutoUpdateCheck
+6         AutoUpdateCheck
 End Sub
 

@@ -116,11 +116,11 @@ Public Function ParseFormula(strFormula As String) As Tokens
 3         strDecimalSeparator = "." ' Application.International(xlDecimalSeparator)
 4         strListSeparator = "," ' Application.International(xlListSeparator)
 5         strArrayRowSeparator = ";" ' Application.International(xlRowSeparator)
-'5495      If Application.International(xlColumnSeparator) = Application.International(xlDecimalSeparator) Then
-'5496          strArrayColumnSeparator = Application.International(xlAlternateArraySeparator)
-'5497      Else
+      '5495      If Application.International(xlColumnSeparator) = Application.International(xlDecimalSeparator) Then
+      '5496          strArrayColumnSeparator = Application.International(xlAlternateArraySeparator)
+      '5497      Else
 6             strArrayColumnSeparator = "," ' Application.International(xlColumnSeparator)
-'5499      End If
+      '5499      End If
 7         strLeftBrace = "{" ' Application.International(xlLeftBrace)
 8         strRightBrace = "}" ' Application.International(xlRightBrace)
 9         strLeftBracket = "[" ' Application.International(xlLeftBracket)       'todo: implement ' check if this applies to tableopen and tableclose symbols
@@ -826,6 +826,6 @@ Public Function ParseFormula(strFormula As String) As Tokens
           '1. Scan and detect !, and join if the 3 tokens prior are CellReference-Colon-CellReference
           '2. Scan and detect CellReference-Colon-CellReference, because they should be joined into an AreaReference
 
-527 e:        Set ParseFormula = objTokens
+527 e:          Set ParseFormula = objTokens
 End Function
 

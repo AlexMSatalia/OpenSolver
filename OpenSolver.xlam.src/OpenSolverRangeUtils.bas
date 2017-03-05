@@ -4,8 +4,8 @@ Option Explicit
 Private SearchRangeNameCACHE As Collection
 
 Sub SearchRangeName_DestroyCache()
-' Destroy the name cache
-' Andres Sommerhoff
+      ' Destroy the name cache
+      ' Andres Sommerhoff
           Dim RaiseError As Boolean
 1         RaiseError = False
 2         On Error GoTo ErrorHandler
@@ -28,8 +28,8 @@ ErrorHandler:
 End Sub
 
 Private Sub SearchRangeName_LoadCache(sheet As Worksheet)
-' Save visible defined names in book in a cache to find them quickly
-' Andres Sommerhoff
+      ' Save visible defined names in book in a cache to find them quickly
+      ' Andres Sommerhoff
           Dim TestName As Name
           Dim rComp As Range
           Dim i As Long
@@ -83,8 +83,8 @@ tryNext:
 End Sub
 
 Function SearchRangeInVisibleNames(r As Range) As Name
-' Get a name from the cache if it exists
-' Andres Sommerhoff
+      ' Get a name from the cache if it exists
+      ' Andres Sommerhoff
 1         SearchRangeName_LoadCache r.Parent
 2         On Error Resume Next
 3         Set SearchRangeInVisibleNames = SearchRangeNameCACHE.Item((r.Name))
@@ -159,7 +159,7 @@ ErrorHandler:
 End Function
 
 Function GetRangeValues(r As Range) As Variant()
-' This copies the values from a possible multi-area range into a variant
+      ' This copies the values from a possible multi-area range into a variant
           Dim RaiseError As Boolean
 1         RaiseError = False
 2         On Error GoTo ErrorHandler
@@ -182,7 +182,7 @@ ErrorHandler:
 End Function
 
 Sub SetRangeValues(r As Range, v() As Variant)
-' This copies the values from a variant into a possibly multi-area range; see GetRangeValues
+      ' This copies the values from a variant into a possibly multi-area range; see GetRangeValues
           Dim RaiseError As Boolean
 1         RaiseError = False
 2         On Error GoTo ErrorHandler
@@ -203,7 +203,7 @@ ErrorHandler:
 End Sub
 
 Function GetOneCellInRange(r As Range, instance As Long) As Range
-' Given an 'instance' between 1 and r.Count, return the instance'th cell in the range, where our count goes cross each row in turn (as does 'for each in range')
+      ' Given an 'instance' between 1 and r.Count, return the instance'th cell in the range, where our count goes cross each row in turn (as does 'for each in range')
           Dim RaiseError As Boolean
 1         RaiseError = False
 2         On Error GoTo ErrorHandler
@@ -234,9 +234,9 @@ Function TestIntersect(ByRef R1 As Range, ByRef R2 As Range) As Boolean
 End Function
 
 Function CheckRangeContainsNoAmbiguousMergedCells(r As Range, BadCell As Range) As Boolean
-' This checks that if the range contains any merged cells, those cells are the 'home' cell (top left) in the merged cell block
-' and thus references to these cells are indeed to a unique cell
-' If we have a cell that is not the top left of a merged cell, then this will be read as blank, and writing to this will effect other cells.
+      ' This checks that if the range contains any merged cells, those cells are the 'home' cell (top left) in the merged cell block
+      ' and thus references to these cells are indeed to a unique cell
+      ' If we have a cell that is not the top left of a merged cell, then this will be read as blank, and writing to this will effect other cells.
           Dim RaiseError As Boolean
 1         RaiseError = False
 2         On Error GoTo ErrorHandler
@@ -267,9 +267,9 @@ ErrorHandler:
 End Function
 
 Function RemoveRangeOverlap(r As Range) As Range
-' This creates a new range from r which does not contain any multiple repetitions of cells
-' This works around the fact that Excel allows range like "A1:A2,A2:A3", which has a .count of 4 cells
-' The Union function does NOT remove all overlaps; call this after the union to get a valid range
+      ' This creates a new range from r which does not contain any multiple repetitions of cells
+      ' This works around the fact that Excel allows range like "A1:A2,A2:A3", which has a .count of 4 cells
+      ' The Union function does NOT remove all overlaps; call this after the union to get a valid range
           Dim RaiseError As Boolean
 1         RaiseError = False
 2         On Error GoTo ErrorHandler
@@ -307,8 +307,8 @@ ErrorHandler:
 End Function
 
 Function MergeRangesCellByCell(R1 As Range, R2 As Range) As Range
-' This merges range r2 into r1 cell by cell.
-' This shoulsd be fastest if range r2 is smaller than r1
+      ' This merges range r2 into r1 cell by cell.
+      ' This shoulsd be fastest if range r2 is smaller than r1
           Dim RaiseError As Boolean
 1         RaiseError = False
 2         On Error GoTo ErrorHandler
@@ -331,8 +331,8 @@ ErrorHandler:
 End Function
 
 Function ProperUnion(R1 As Range, R2 As Range) As Range
-' Return the union of r1 and r2, where r1 may be Nothing
-' TODO: Handle the fact that Union will return a range with multiple copies of overlapping cells - does this matter?
+      ' Return the union of r1 and r2, where r1 may be Nothing
+      ' TODO: Handle the fact that Union will return a range with multiple copies of overlapping cells - does this matter?
           Dim RaiseError As Boolean
 1         RaiseError = False
 2         On Error GoTo ErrorHandler

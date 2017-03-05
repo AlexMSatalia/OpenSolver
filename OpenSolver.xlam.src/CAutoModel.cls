@@ -87,8 +87,8 @@ ErrorHandler:
 End Function
 
 Private Sub FindObjective(sheet As Worksheet)
-' Tries to find the objective function cell and sense by searching for likely keywords,
-' then searching the area for appropriate calculations.
+      ' Tries to find the objective function cell and sense by searching for likely keywords,
+      ' then searching the area for appropriate calculations.
           Dim RaiseError As Boolean
 1         RaiseError = False
 2         On Error GoTo ErrorHandler
@@ -142,13 +142,13 @@ ErrorHandler:
 End Sub
 
 Private Function FindObjSense(ByVal searchStr As String, sheet As Worksheet) As Range
-' Run the right kind of search to find the objective sense (search values, don't match case)
+      ' Run the right kind of search to find the objective sense (search values, don't match case)
 1         Set FindObjSense = sheet.Cells.Find(What:=searchStr, After:=[a1], LookIn:=xlValues, _
                                               SearchOrder:=xlByRows, SearchDirection:=xlPrevious, MatchCase:=False)
 End Function
 
 Private Function FindObjCell(ByVal rowNum As Long, ByVal searchStr As String, sheet As Worksheet) As Range
-' Run the right kind of search to find objective cell (look in specified row, search formulas, don't match case)
+      ' Run the right kind of search to find objective cell (look in specified row, search formulas, don't match case)
 1         Set FindObjCell = sheet.Rows(rowNum).Find(What:=searchStr, LookIn:=xlFormulas, lookat:=xlPart, _
                                                     SearchOrder:=xlByRows, SearchDirection:=xlNext, MatchCase:=False)
 End Function
@@ -208,7 +208,7 @@ Private Function FindVarsAndCons(sheet As Worksheet) As Boolean
               ' TODO - Handle this somehow, if it has an application
 NextArea:
 31        Next Area
-    
+          
           ' Use precedents of objective function and constraints to find the set of possible decision variables
 32        UpdateStatusBar "OpenSolver: Searching for decision variables", True
           

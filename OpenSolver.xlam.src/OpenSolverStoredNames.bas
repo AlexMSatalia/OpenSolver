@@ -10,7 +10,7 @@ Sub GetSheetNameAsValueOrRange(sheet As Worksheet, theName As String, IsMissing 
 End Sub
 
 Sub GetNameAsValueOrRange(book As Workbook, theName As String, IsMissing As Boolean, IsRange As Boolean, r As Range, RefersToFormula As Boolean, RangeRefersToError As Boolean, RefersTo As String, value As Double)
-' See http://www.cpearson.com/excel/DefinedNames.aspx, but see below for internationalisation problems with this code
+      ' See http://www.cpearson.com/excel/DefinedNames.aspx, but see below for internationalisation problems with this code
 1         RangeRefersToError = False
 2         RefersToFormula = False
           ' Dim r As Range
@@ -134,7 +134,7 @@ doesntExist:
 End Sub
 
 Sub SetNameOnSheet(Name As String, value As Variant, Optional sheet As Worksheet, Optional SolverName As Boolean = False)
-' If a key exists we can just add it (http://www.cpearson.com/Excel/DefinedNames.aspx)
+      ' If a key exists we can just add it (http://www.cpearson.com/Excel/DefinedNames.aspx)
 1         GetActiveSheetIfMissing sheet
           Dim FullName As String ' Don't mangle the value of Name!
 2         FullName = EscapeSheetName(sheet) & IIf(SolverName, SolverPrefix, vbNullString) & Name
@@ -253,30 +253,30 @@ Function RefEditToRefersTo(RefEditText As String) As String
 8         End If
 
           ' Add the text as a name and retrieve the sanitised RefersTo
-          On Error GoTo DeleteName
+9         On Error GoTo DeleteName
           Dim n As Name
-9         Set n = ActiveWorkbook.Names.Add(TempPrefix, AddEquals(Trim(RefEditText)))
-10        RefEditToRefersTo = Mid(n.RefersTo, 2)
+10        Set n = ActiveWorkbook.Names.Add(TempPrefix, AddEquals(Trim(RefEditText)))
+11        RefEditToRefersTo = Mid(n.RefersTo, 2)
 
 DeleteName:
           ' Try deleting name so we don't leave it lying around
-          On Error Resume Next
-11        n.Delete
+12        On Error Resume Next
+13        n.Delete
 End Function
 
 Function RangeToRefersTo(ConvertRange As Range) As String
 1         If ConvertRange Is Nothing Then Exit Function
           
           ' Add the range and retrieve the sanitised refers to
-          On Error GoTo DeleteName
+2         On Error GoTo DeleteName
           Dim n As Name
-2         Set n = ActiveWorkbook.Names.Add(TempPrefix, ConvertRange)
-3         RangeToRefersTo = Mid(n.RefersTo, 2)
+3         Set n = ActiveWorkbook.Names.Add(TempPrefix, ConvertRange)
+4         RangeToRefersTo = Mid(n.RefersTo, 2)
 
 DeleteName:
           ' Try deleting name so we don't leave it lying around
-          On Error Resume Next
-4         n.Delete
+5         On Error Resume Next
+6         n.Delete
 End Function
 
 Sub TestBooleanConversion()

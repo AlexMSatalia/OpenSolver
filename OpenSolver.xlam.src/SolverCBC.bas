@@ -2,8 +2,8 @@ Attribute VB_Name = "SolverCBC"
 Option Explicit
 
 Sub LaunchCommandLine_CBC()
-' Open the CBC solver with our last model loaded.
-' If we have a worksheet open with a model, then we pass the solver options (max runtime etc) from this model to CBC. Otherwise, we don't pass any options.
+      ' Open the CBC solver with our last model loaded.
+      ' If we have a worksheet open with a model, then we pass the solver options (max runtime etc) from this model to CBC. Otherwise, we don't pass any options.
 1         On Error GoTo ErrorHandler
 
           Dim ModelFilePathName As String

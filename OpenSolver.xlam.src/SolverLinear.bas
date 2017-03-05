@@ -65,7 +65,7 @@ ErrorHandler:
 
 End Sub
 Sub WriteConstraintSensitivityTable(sheet As Worksheet, s As COpenSolver)
-'Writes out the sensitivity table on a new page (like the solver sensitivity report)
+      'Writes out the sensitivity table on a new page (like the solver sensitivity report)
           Dim RaiseError As Boolean
 1         RaiseError = False
 2         On Error GoTo ErrorHandler
@@ -161,7 +161,7 @@ ErrorHandler:
 End Sub
 
 Sub FormatSensitivityTable(sheet As Worksheet, row As Long, NumVars As Double)
-'Formats the sensitivity table on the new page with borders and bold writing
+      'Formats the sensitivity table on the new page with borders and bold writing
           Dim RaiseError As Boolean
 1         RaiseError = False
 2         On Error GoTo ErrorHandler
@@ -292,7 +292,7 @@ ErrorHandler:
 End Sub
 
 Function findName(searchSheet As Worksheet, cell As String) As String
-'Finds the name of a constraint or variable by finding the nearest strings to the left and above the cell and putting these together
+      'Finds the name of a constraint or variable by finding the nearest strings to the left and above the cell and putting these together
           Dim RaiseError As Boolean
 1         RaiseError = False
 2         On Error GoTo ErrorHandler

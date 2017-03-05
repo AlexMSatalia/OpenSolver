@@ -48,48 +48,48 @@ Function NOMAD_UpdateVar(X As Variant, Optional BestSolution As Variant = Nothin
 3         IterationCount = IterationCount + 1
 
           ' Update solution
-4         Dim status As String
-5         status = "OpenSolver: Running NOMAD. Iteration " & IterationCount & "."
+          Dim status As String
+4         status = "OpenSolver: Running NOMAD. Iteration " & IterationCount & "."
           ' Check for BestSolution = Nothing
-6         If Not VarType(BestSolution) = 9 Then
+5         If Not VarType(BestSolution) = 9 Then
               ' Flip solution if maximisation
-7             If OS.ObjectiveSense = MaximiseObjective Then BestSolution = -BestSolution
+6             If OS.ObjectiveSense = MaximiseObjective Then BestSolution = -BestSolution
 
-8             If Infeasible Then
-9                 status = status & " Distance to feasibility: " & BestSolution
-10            Else
-11                status = status & " Best solution so far: " & BestSolution
-12            End If
-13        End If
-14        UpdateStatusBar status, (IterationCount = 1)
+7             If Infeasible Then
+8                 status = status & " Distance to feasibility: " & BestSolution
+9             Else
+10                status = status & " Best solution so far: " & BestSolution
+11            End If
+12        End If
+13        UpdateStatusBar status, (IterationCount = 1)
 
           Dim i As Long, NumVars As Long
           'set new variable values on sheet
-15        NumVars = UBound(X)
-16        i = 1
+14        NumVars = UBound(X)
+15        i = 1
           Dim AdjCell As Range
           ' If only one variable is returned, X is treated as a 1D array rather than 2D, so we need to access it
           ' differently.
-17        If NumVars = 1 Then
-18            For Each AdjCell In OS.AdjustableCells
-19                AdjCell.Value2 = X(i)
-20                i = i + 1
-21            Next AdjCell
-22        Else
-23            For Each AdjCell In OS.AdjustableCells
-24                AdjCell.Value2 = X(i, 1)
-25                i = i + 1
-26            Next AdjCell
-27        End If
-28        NOMAD_UpdateVar = 0
+16        If NumVars = 1 Then
+17            For Each AdjCell In OS.AdjustableCells
+18                AdjCell.Value2 = X(i)
+19                i = i + 1
+20            Next AdjCell
+21        Else
+22            For Each AdjCell In OS.AdjustableCells
+23                AdjCell.Value2 = X(i, 1)
+24                i = i + 1
+25            Next AdjCell
+26        End If
+27        NOMAD_UpdateVar = 0
 
 ExitFunction:
-29        Exit Function
+28        Exit Function
 
 ErrorHandler:
-30        If Not ReportError("SolverNOMAD", "NOMAD_UpdateVar") Then Resume
-31        NOMAD_UpdateVar = -1&
-32        Resume ExitFunction
+29        If Not ReportError("SolverNOMAD", "NOMAD_UpdateVar") Then Resume
+30        NOMAD_UpdateVar = -1&
+31        Resume ExitFunction
 End Function
 
 ' Returns -1 on error, array of new constraint values otherwise

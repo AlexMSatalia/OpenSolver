@@ -232,7 +232,7 @@ Function QuickFeasibilityCheck() As Boolean
           Dim RaiseError As Boolean
 1         RaiseError = False
 2         On Error GoTo ErrorHandler
-    
+          
           ' Check if any empty constraints are feasible
           Dim row As Long
 3         For row = 1 To s.NumRows
@@ -512,7 +512,7 @@ Function CompareSparseVectors(v1 As CIndexedCoeffs, v2 As CIndexedCoeffs, v3 As 
 End Function
 
 Sub DoQuickLinearityCheck()
-' Returns false if a full check was performed by the user, meaning the model result is no longer valid.
+      ' Returns false if a full check was performed by the user, meaning the model result is no longer valid.
           Dim RaiseError As Boolean
 1         RaiseError = False
 2         On Error GoTo ErrorHandler

@@ -287,7 +287,7 @@ End Function
 Private Sub CleanFiles()
 1         DeleteFileAndVerify SensitivityFilePath()
 2         DeleteFileAndVerify ScriptFilePath()
-          DeleteFileAndVerify StatusFilePath()
+3         DeleteFileAndVerify StatusFilePath()
 End Sub
 
 Private Function CreateSolveCommand(s As COpenSolver) As String
@@ -364,9 +364,9 @@ Sub ReadResults(s As COpenSolver)
 7         Open StatusFilePath() For Input As #1 ' supply path with filename
           Dim Line As String, Index As Long
 8         Line Input #1, Line
-          Close #1
+9         Close #1
           ' Check for python exception while running Gurobi
-          If Left(Line, Len(pGurobiError)) = pGurobiError Then
+10        If Left(Line, Len(pGurobiError)) = pGurobiError Then
 11            RaiseGeneralError Line
 12        End If
           'Get the returned status code from gurobi.
@@ -407,106 +407,106 @@ Sub ReadResults(s As COpenSolver)
           
 46        If s.SolutionWasLoaded Then
 
-              If Not FileOrDirExists(s.SolutionFilePathName) Then
-                  RaiseGeneralError "The solver did not create a solution file. No new solution is available.", _
+47            If Not FileOrDirExists(s.SolutionFilePathName) Then
+48                RaiseGeneralError "The solver did not create a solution file. No new solution is available.", _
                                     LINK_NO_SOLUTION_FILE
-              End If
-              Open s.SolutionFilePathName() For Input As #1
+49            End If
+50            Open s.SolutionFilePathName() For Input As #1
 
-47            UpdateStatusBar "OpenSolver: Loading Solution... " & s.SolveStatusString, True
+51            UpdateStatusBar "OpenSolver: Loading Solution... " & s.SolveStatusString, True
               
               ' Loop over all comment lines
-              Do While Not EOF(1)
-                  Line Input #1, Line
-                  If Len(Line) = 0 Or Left(Line, 1) <> "#" Then
-                      Exit Do
-                  End If
-              Loop
+52            Do While Not EOF(1)
+53                Line Input #1, Line
+54                If Len(Line) = 0 Or Left(Line, 1) <> "#" Then
+55                    Exit Do
+56                End If
+57            Loop
               
               Dim NumVar As Long, SplitLine() As String, i As Long
-52            i = 1
-53            Do While True
-                  If Len(Line) > 0 Then
-55                    SplitLine = SplitWithoutRepeats(Line, " ")
+58            i = 1
+59            Do While True
+60                If Len(Line) > 0 Then
+61                    SplitLine = SplitWithoutRepeats(Line, " ")
                       Dim ConFinalValue As String
-56                    ConFinalValue = SplitLine(1)
+62                    ConFinalValue = SplitLine(1)
                       
                       ' Check for an exponent that is too large, rougly >300
                       ' Only do it for -ve exponents, since e-30 ~= e-300
-57                    Index = InStr(LCase(ConFinalValue), "e-")
-58                    If Index > 0 Then
+63                    Index = InStr(LCase(ConFinalValue), "e-")
+64                    If Index > 0 Then
                           ' Trim the final digit if the exponent has 3 digits
-59                        If Len(ConFinalValue) - Index - 1 > 2 Then
-60                            ConFinalValue = Left(ConFinalValue, Len(ConFinalValue) - 1)
-61                        End If
-62                    End If
+65                        If Len(ConFinalValue) - Index - 1 > 2 Then
+66                            ConFinalValue = Left(ConFinalValue, Len(ConFinalValue) - 1)
+67                        End If
+68                    End If
                       
-63                    s.VarFinalValue(i) = Val(ConFinalValue)
-64                    s.VarCellName(i) = GetVarNameFromLPName(SplitLine(0))
-    
+69                    s.VarFinalValue(i) = Val(ConFinalValue)
+70                    s.VarCellName(i) = GetVarNameFromLPName(SplitLine(0))
+          
                       ' Save number of vars read
-65                    NumVar = i
-66                    i = i + 1
-67                End If
+71                    NumVar = i
+72                    i = i + 1
+73                End If
 
-                  If EOF(1) Then
-                      Exit Do
-                  Else
-                      Line Input #1, Line
-                  End If
-              Loop
+74                If EOF(1) Then
+75                    Exit Do
+76                Else
+77                    Line Input #1, Line
+78                End If
+79            Loop
               
-69            If s.bGetDuals Then
+80            If s.bGetDuals Then
                   Dim CostVector() As Double
-70                CostVector = s.CostCoeffs.AsVector(s.NumVars)
+81                CostVector = s.CostCoeffs.AsVector(s.NumVars)
               
-71                Open SensitivityFilePath() For Input As 2
-72                For i = 1 To NumVar
-73                    Line Input #2, Line
-74                    SplitLine = SplitWithoutRepeats(Line, ",")
-75                    s.VarReducedCost(i) = Val(SplitLine(0))
-76                    s.VarDecrease(i) = CostVector(i) - Val(SplitLine(1))
-77                    s.VarIncrease(i) = Val(SplitLine(2)) - CostVector(i)
-78                Next i
+82                Open SensitivityFilePath() For Input As 2
+83                For i = 1 To NumVar
+84                    Line Input #2, Line
+85                    SplitLine = SplitWithoutRepeats(Line, ",")
+86                    s.VarReducedCost(i) = Val(SplitLine(0))
+87                    s.VarDecrease(i) = CostVector(i) - Val(SplitLine(1))
+88                    s.VarIncrease(i) = Val(SplitLine(2)) - CostVector(i)
+89                Next i
                   
                   ' Throw away first constraint if it was from a seek objective model
-79                If s.ObjectiveSense = TargetObjective Then
-80                    Line Input #2, Line
-81                End If
+90                If s.ObjectiveSense = TargetObjective Then
+91                    Line Input #2, Line
+92                End If
                   
                   Dim row As Long
-82                For row = 1 To s.NumRows
+93                For row = 1 To s.NumRows
                       ' Skip any rows that weren't written
-83                    If s.SparseA(row).Count > 0 Then
-84                        Line Input #2, Line
-85                        SplitLine = SplitWithoutRepeats(Line, ",")
-86                        s.ConShadowPrice(row) = Val(SplitLine(0))
+94                    If s.SparseA(row).Count > 0 Then
+95                        Line Input #2, Line
+96                        SplitLine = SplitWithoutRepeats(Line, ",")
+97                        s.ConShadowPrice(row) = Val(SplitLine(0))
                           Dim RHSValue As Double
-87                        RHSValue = Val(SplitLine(1))
-88                        s.ConIncrease(row) = Val(SplitLine(4)) - RHSValue
-89                        s.ConDecrease(row) = RHSValue - Val(SplitLine(3))
-90                        s.ConFinalValue(row) = RHSValue - Val(SplitLine(2))
-91                    Else
-92                        s.ConFinalValue(row) = s.RHS(row)
-93                        s.ConShadowPrice(row) = 0
-94                        s.ConIncrease(row) = 0
-95                        s.ConDecrease(row) = 0
-96                    End If
-97                Next row
-98            End If
-99        End If
+98                        RHSValue = Val(SplitLine(1))
+99                        s.ConIncrease(row) = Val(SplitLine(4)) - RHSValue
+100                       s.ConDecrease(row) = RHSValue - Val(SplitLine(3))
+101                       s.ConFinalValue(row) = RHSValue - Val(SplitLine(2))
+102                   Else
+103                       s.ConFinalValue(row) = s.RHS(row)
+104                       s.ConShadowPrice(row) = 0
+105                       s.ConIncrease(row) = 0
+106                       s.ConDecrease(row) = 0
+107                   End If
+108               Next row
+109           End If
+110       End If
 
 ExitSub:
-100       Application.StatusBar = False
-101       Close #1
-102       Close #2
-103       If RaiseError Then RethrowError
-104       Exit Sub
+111       Application.StatusBar = False
+112       Close #1
+113       Close #2
+114       If RaiseError Then RethrowError
+115       Exit Sub
 
 ErrorHandler:
-105       If Not ReportError("CSolverGurobi", "ReadResults") Then Resume
-106       RaiseError = True
-107       GoTo ExitSub
+116       If Not ReportError("CSolverGurobi", "ReadResults") Then Resume
+117       RaiseError = True
+118       GoTo ExitSub
 End Sub
 
 Private Sub CheckLog(s As COpenSolver)

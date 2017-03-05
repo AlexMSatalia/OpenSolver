@@ -79,75 +79,75 @@ Sub WriteLPFile_Diff(s As COpenSolver, ModelFilePathName As String)
                   ' We output the row as a comment
 43                Print #1, "\ (A row with all zero coeffs)";
 44            End If
-45
-46            Print #1, RelationToLPString(s.Relation(constraint)) & StrEx(s.RHS(row))
-47        Next row
 
-48        Print #1,   ' New line
-49        Print #1, "BOUNDS"
-50        Print #1,   ' New line
+45            Print #1, RelationToLPString(s.Relation(constraint)) & StrEx(s.RHS(row))
+46        Next row
+
+47        Print #1,   ' New line
+48        Print #1, "BOUNDS"
+49        Print #1,   ' New line
           
           Dim c As Range
-51        If s.SolveRelaxation And s.NumBinVars > 0 Then
-52            Print #1, "\ (Upper bounds of 1 on the relaxed binary variables)"
-53            For Each c In s.BinaryCellsRange
-54                Print #1, GetLPNameFromVarName(GetCellName(c)); " <= 1"
-55            Next c
-56            Print #1, ' New line
-57        End If
+50        If s.SolveRelaxation And s.NumBinVars > 0 Then
+51            Print #1, "\ (Upper bounds of 1 on the relaxed binary variables)"
+52            For Each c In s.BinaryCellsRange
+53                Print #1, GetLPNameFromVarName(GetCellName(c)); " <= 1"
+54            Next c
+55            Print #1, ' New line
+56        End If
           
           ' The LP file assumes >=0 bounds on all variables unless we tell it otherwise.
-58        If Not s.AssumeNonNegativeVars Then
+57        If Not s.AssumeNonNegativeVars Then
               ' We need to make all variables FREE variables (i.e. no lower bounds), except for the Binary variables
-59            Print #1, "\'Assume Non Negative' is FALSE, so default lower bounds of zero are removed from all non-binary variables."
+58            Print #1, "\'Assume Non Negative' is FALSE, so default lower bounds of zero are removed from all non-binary variables."
               Dim NonBinaryCellsRange As Range
-60            Set NonBinaryCellsRange = SetDifference(s.AdjustableCells, s.BinaryCellsRange)
-61            If Not NonBinaryCellsRange Is Nothing Then
-62                For Each c In NonBinaryCellsRange
-63                    Print #1, " "; GetLPNameFromVarName(GetCellName(c)); " FREE"
-64                Next c
-65            End If
-66            Print #1,   ' New line
-67        Else
+59            Set NonBinaryCellsRange = SetDifference(s.AdjustableCells, s.BinaryCellsRange)
+60            If Not NonBinaryCellsRange Is Nothing Then
+61                For Each c In NonBinaryCellsRange
+62                    Print #1, " "; GetLPNameFromVarName(GetCellName(c)); " FREE"
+63                Next c
+64            End If
+65            Print #1,   ' New line
+66        Else
               ' If AssumeNonNegative, then we need to remove the implicit >=0 bounds
               ' for any variables with explicit lower bounds, unless they are binary
               Dim VarName As Variant
-68            For Each VarName In s.VarLowerBounds.Keys()
-69                If s.VarCategory(s.VarNameToIndex(VarName)) <> VarBinary Then
-70                    Print #1, " "; GetLPNameFromVarName(CStr(VarName)); " FREE"
-71                End If
-72            Next VarName
-73        End If
+67            For Each VarName In s.VarLowerBounds.Keys()
+68                If s.VarCategory(s.VarNameToIndex(VarName)) <> VarBinary Then
+69                    Print #1, " "; GetLPNameFromVarName(CStr(VarName)); " FREE"
+70                End If
+71            Next VarName
+72        End If
           
           ' Output any integer variables
-74        If Not s.SolveRelaxation And s.NumIntVars > 0 Then
-75            Print #1, "GENERAL"
-76            For Each c In s.IntegerCellsRange
-77                Print #1, " "; GetLPNameFromVarName(GetCellName(c));
-78            Next c
-79            Print #1, ' New line
-80        End If
+73        If Not s.SolveRelaxation And s.NumIntVars > 0 Then
+74            Print #1, "GENERAL"
+75            For Each c In s.IntegerCellsRange
+76                Print #1, " "; GetLPNameFromVarName(GetCellName(c));
+77            Next c
+78            Print #1, ' New line
+79        End If
 
           ' Output binary variables
-81        If Not s.SolveRelaxation And s.NumBinVars > 0 Then
-82            Print #1, "BINARY"
-83            For Each c In s.BinaryCellsRange
-84                Print #1, " "; GetLPNameFromVarName(GetCellName(c));
-85            Next c
-86            Print #1, ' New line
-87        End If
+80        If Not s.SolveRelaxation And s.NumBinVars > 0 Then
+81            Print #1, "BINARY"
+82            For Each c In s.BinaryCellsRange
+83                Print #1, " "; GetLPNameFromVarName(GetCellName(c));
+84            Next c
+85            Print #1, ' New line
+86        End If
           
-88        Print #1, "END"
+87        Print #1, "END"
           
 ExitSub:
-89        Close #1
-90        If RaiseError Then RethrowError
-91        Exit Sub
+88        Close #1
+89        If RaiseError Then RethrowError
+90        Exit Sub
 
 ErrorHandler:
-92        If Not ReportError("SolverFileLP", "WriteLPFile") Then Resume
-93        RaiseError = True
-94        GoTo ExitSub
+91        If Not ReportError("SolverFileLP", "WriteLPFile") Then Resume
+92        RaiseError = True
+93        GoTo ExitSub
 End Sub
 
 Function RelationToLPString(rel As RelationConsts) As String
@@ -165,8 +165,8 @@ Function ObjectiveSenseToLPString(ObjSense As ObjectiveSenseType) As String
 End Function
 
 Function GetLPNameFromVarName(s As String) As String
-' http://lpsolve.sourceforge.net/5.5/CPLEX-format.htm
-' The letter E or e, alone or followed by other valid symbols, or followed by another E or e, should be avoided as this notation is reserved for exponential entries. Thus, variables cannot be named e9, E-24, E8cats, or other names that could be interpreted as an exponent. Even variable names such as eels or example can cause a read error, depending on their placement in an input line.
+      ' http://lpsolve.sourceforge.net/5.5/CPLEX-format.htm
+      ' The letter E or e, alone or followed by other valid symbols, or followed by another E or e, should be avoided as this notation is reserved for exponential entries. Thus, variables cannot be named e9, E-24, E8cats, or other names that could be interpreted as an exponent. Even variable names such as eels or example can cause a read error, depending on their placement in an input line.
 1         If Left(s, 1) = "E" Then
 2             GetLPNameFromVarName = "_" & s
 3         Else

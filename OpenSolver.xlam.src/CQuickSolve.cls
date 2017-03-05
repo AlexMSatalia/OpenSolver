@@ -163,7 +163,7 @@ ErrorHandler:
 End Function
 
 Public Function UpdateModelRHS(sheet As Worksheet, ByRef RHS() As Double) As Boolean
-' Given the new Parameter values on the worksheet, calculate a new set of model RHS values
+      ' Given the new Parameter values on the worksheet, calculate a new set of model RHS values
           Dim RaiseError As Boolean
 1         RaiseError = False
 2         On Error GoTo ErrorHandler

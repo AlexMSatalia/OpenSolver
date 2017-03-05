@@ -182,9 +182,9 @@ ExitFunction:
 24        Exit Function
 
 ErrorHandler:
-' We CANNOT raise an error in this function.
-' It is sometimes called with a form as a conduit, which means that errors can't propogate back to the main thread.
-' Instead, set the error string, which IS passed back to the main thread by the form.
+      ' We CANNOT raise an error in this function.
+      ' It is sometimes called with a form as a conduit, which means that errors can't propogate back to the main thread.
+      ' Instead, set the error string, which IS passed back to the main thread by the form.
 25        If Not ReportError("OpenSolverNeos", "SolveOnNeos_Windows") Then Resume
 26        If OpenSolverErrorHandler.ErrNum = OpenSolver_UserCancelledError Then GoTo Aborted
 27        errorString = OpenSolverErrorHandler.ErrMsg

@@ -55,11 +55,11 @@ NoHighlighting:
 End Function
 
 Function CreateLabelShape(w As Worksheet, Left As Long, Top As Long, Width As Long, Height As Long, Label As String, HighlightColor As Long) As Shape
-' Create a label (as a msoShapeRectangle) and give it text. This is used for labelling obj function as min/max, and decision vars as binary or integer
+      ' Create a label (as a msoShapeRectangle) and give it text. This is used for labelling obj function as min/max, and decision vars as binary or integer
           Dim RaiseError As Boolean
 1         RaiseError = False
 2         On Error GoTo ErrorHandler
-    
+          
           Dim s1 As Shape
 3         Set s1 = w.Shapes.AddShape(msoShapeRectangle, Left, Top, Width, Height)
 4         s1.Fill.Visible = True
@@ -421,11 +421,11 @@ End Sub
 Sub DeleteOpenSolverShapes(w As Worksheet)
           Dim s As Shape, i As Long
 1         For i = w.Shapes.Count To 1 Step -1
-              Set s = w.Shapes(i)
-2             If s.Name Like "OpenSolver*" Then
-3                 s.Delete
-4             End If
-5         Next i
+2             Set s = w.Shapes(i)
+3             If s.Name Like "OpenSolver*" Then
+4                 s.Delete
+5             End If
+6         Next i
 End Sub
 
 Function HideSolverModel(Optional sheet As Worksheet) As Boolean
@@ -445,34 +445,34 @@ Function HideSolverModel(Optional sheet As Worksheet) As Boolean
 8         DeleteOpenSolverShapes sheet
 
           ' Delete constraints on other sheets
-9         Dim i As Long
-10        For i = 1 To GetNumConstraints(sheet)
+          Dim i As Long
+9         For i = 1 To GetNumConstraints(sheet)
               Dim b As Boolean, rLHS As Range
-11            b = False
-12            Set rLHS = Nothing
+10            b = False
+11            Set rLHS = Nothing
               ' Set b to be true only if there is no error
-13            On Error Resume Next
-14            Set rLHS = GetConstraintLhs(i, sheet)
-15            b = rLHS.Worksheet.Name <> sheet.Name
-16            If b Then
-17                DeleteOpenSolverShapes rLHS.Worksheet
-18            End If
+12            On Error Resume Next
+13            Set rLHS = GetConstraintLhs(i, sheet)
+14            b = rLHS.Worksheet.Name <> sheet.Name
+15            If b Then
+16                DeleteOpenSolverShapes rLHS.Worksheet
+17            End If
 NextConstraint:
-19        Next i
-20        On Error GoTo ErrorHandler
+18        Next i
+19        On Error GoTo ErrorHandler
           
-21        HideSolverModel = True
+20        HideSolverModel = True
 
 ExitFunction:
-22        Application.StatusBar = False
-23        Application.ScreenUpdating = ScreenStatus
-24        If RaiseError Then RethrowError
-25        Exit Function
+21        Application.StatusBar = False
+22        Application.ScreenUpdating = ScreenStatus
+23        If RaiseError Then RethrowError
+24        Exit Function
 
 ErrorHandler:
-26        If Not ReportError("OpenSolverVisualizer", "HideSolverModel") Then Resume
-27        RaiseError = True
-28        GoTo ExitFunction
+25        If Not ReportError("OpenSolverVisualizer", "HideSolverModel") Then Resume
+26        RaiseError = True
+27        GoTo ExitFunction
           
 End Function
 
@@ -494,39 +494,39 @@ Function ShowSolverModel(Optional sheet As Worksheet, Optional HandleError As Bo
 9         InitialiseHighlighting
           
           ' Checks to see if a model exists internally
-10        Dim AdjustableCells As Range
-11        On Error Resume Next
-12        Set AdjustableCells = GetDecisionVariablesNoOverlap(sheet)
+          Dim AdjustableCells As Range
+10        On Error Resume Next
+11        Set AdjustableCells = GetDecisionVariablesNoOverlap(sheet)
           ' Don't try to highlight if we have no vars
-13        If AdjustableCells Is Nothing Then
-14            ShowSolverModel = False
-15            GoTo ExitFunction
-16        End If
+12        If AdjustableCells Is Nothing Then
+13            ShowSolverModel = False
+14            GoTo ExitFunction
+15        End If
           
           ' Highlight the decision variables
-17        AddDecisionVariableHighlighting AdjustableCells
+16        AddDecisionVariableHighlighting AdjustableCells
           
           Dim Errors As String
           
           ' Highlight the objective cell, if there is one
           Dim ObjRange As Range
-18        Set ObjRange = GetObjectiveFunctionCell(sheet, Validate:=False)
-19        If Not ObjRange Is Nothing Then
+17        Set ObjRange = GetObjectiveFunctionCell(sheet, Validate:=False)
+18        If Not ObjRange Is Nothing Then
               Dim ObjType As ObjectiveSenseType, ObjectiveTargetValue As Double
-20            ObjType = GetObjectiveSense(sheet)
-21            If ObjType = TargetObjective Then ObjectiveTargetValue = GetObjectiveTargetValue(sheet)
-22            AddObjectiveHighlighting ObjRange, ObjType, ObjectiveTargetValue
-23        End If
+19            ObjType = GetObjectiveSense(sheet)
+20            If ObjType = TargetObjective Then ObjectiveTargetValue = GetObjectiveTargetValue(sheet)
+21            AddObjectiveHighlighting ObjRange, ObjType, ObjectiveTargetValue
+22        End If
           
           ' Count the correct number of constraints, and form the constraint
           Dim NumConstraints As Long
-24        NumConstraints = GetNumConstraints(sheet)  ' Number of constraints entered in excel; can include ranges covering many constraints
+23        NumConstraints = GetNumConstraints(sheet)  ' Number of constraints entered in excel; can include ranges covering many constraints
           ' Note: Solver leaves around old constraints; the name <sheet>!solver_num gives the correct number of constraints (eg "=4")
           
-25        UpdateStatusBar "OpenSolver: Displaying Problem... " & AdjustableCells.Count & " vars, " & NumConstraints & " Solver constraints", True
+24        UpdateStatusBar "OpenSolver: Displaying Problem... " & AdjustableCells.Count & " vars, " & NumConstraints & " Solver constraints", True
                   
           Dim NumVars As Long
-26        NumVars = AdjustableCells.Count
+25        NumVars = AdjustableCells.Count
           Dim BinaryCellsRange As Range
           Dim IntegerCellsRange As Range
           Dim NonAdjustableCellsRange As Range
@@ -534,103 +534,103 @@ Function ShowSolverModel(Optional sheet As Worksheet, Optional HandleError As Bo
           ' Count the correct number of constraints, and form the constraint
           Dim constraint As Long
           Dim currentSheet As Worksheet
-27        For constraint = 1 To NumConstraints
+26        For constraint = 1 To NumConstraints
               
               Dim rLHS As Range
-28            Set rLHS = Nothing
-29            On Error Resume Next
-30            Set rLHS = GetConstraintLhs(constraint, sheet)
-31            If Err.Number <> 0 Then
-32                Errors = Error & "Error: " & Err.Description & vbNewLine
-33                GoTo NextConstraint
-34            End If
-35            On Error GoTo ErrorHandler
+27            Set rLHS = Nothing
+28            On Error Resume Next
+29            Set rLHS = GetConstraintLhs(constraint, sheet)
+30            If Err.Number <> 0 Then
+31                Errors = Error & "Error: " & Err.Description & vbNewLine
+32                GoTo NextConstraint
+33            End If
+34            On Error GoTo ErrorHandler
 
               Dim rel As Long
 
-36            rel = GetConstraintRel(constraint, sheet)
+35            rel = GetConstraintRel(constraint, sheet)
                       
               Dim LHSCount As Double, Count As Double
-37            LHSCount = rLHS.Count
-38            Count = LHSCount
+36            LHSCount = rLHS.Count
+37            Count = LHSCount
               Dim AllDecisionVariables As Boolean
-39            AllDecisionVariables = False
+38            AllDecisionVariables = False
 
-40            If rel = RelationINT Or rel = RelationBIN Then
+39            If rel = RelationINT Or rel = RelationBIN Then
                   ' Track all variables that are integer or binary
-41                If rel = RelationINT Then
-42                    Set IntegerCellsRange = ProperUnion(IntegerCellsRange, rLHS)
-43                Else
-44                    Set BinaryCellsRange = ProperUnion(BinaryCellsRange, rLHS)
-45                End If
+40                If rel = RelationINT Then
+41                    Set IntegerCellsRange = ProperUnion(IntegerCellsRange, rLHS)
+42                Else
+43                    Set BinaryCellsRange = ProperUnion(BinaryCellsRange, rLHS)
+44                End If
                   ' Keep track of all non-adjustable cells that are int/bin
-46                Set NonAdjustableCellsRange = ProperUnion(NonAdjustableCellsRange, SetDifference(rLHS, AdjustableCells))
-47            Else
+45                Set NonAdjustableCellsRange = ProperUnion(NonAdjustableCellsRange, SetDifference(rLHS, AdjustableCells))
+46            Else
                   ' Constraint is a full equation with a RHS
                   Dim valRHS As Double, rRHS As Range, sRefersToRHS As String, RefersToFormula As Boolean
-48                Set rRHS = Nothing
-49                On Error Resume Next
-50                Set rRHS = GetConstraintRhs(constraint, sRefersToRHS, valRHS, RefersToFormula, sheet)
-51                If Err.Number <> 0 Then
-52                    Errors = Error & "Error: " & Err.Description & vbNewLine
-53                    GoTo NextConstraint
-54                End If
-55                On Error GoTo ErrorHandler
+47                Set rRHS = Nothing
+48                On Error Resume Next
+49                Set rRHS = GetConstraintRhs(constraint, sRefersToRHS, valRHS, RefersToFormula, sheet)
+50                If Err.Number <> 0 Then
+51                    Errors = Error & "Error: " & Err.Description & vbNewLine
+52                    GoTo NextConstraint
+53                End If
+54                On Error GoTo ErrorHandler
                   
-56                If rLHS.Worksheet.Name <> sheet.Name Then
-57                    Set currentSheet = rLHS.Worksheet
-58                Else
-59                    Set currentSheet = sheet
-60                End If
+55                If rLHS.Worksheet.Name <> sheet.Name Then
+56                    Set currentSheet = rLHS.Worksheet
+57                Else
+58                    Set currentSheet = sheet
+59                End If
                   
-61                If rRHS Is Nothing Then
-62                    sRefersToRHS = ConvertToCurrentLocale(StripWorksheetNameAndDollars(sRefersToRHS, currentSheet))
-63                End If
-64                HighlightConstraint currentSheet, rLHS, rRHS, sRefersToRHS, rel, 0  ' Show either a value or a formula from sRefersToRHS
+60                If rRHS Is Nothing Then
+61                    sRefersToRHS = ConvertToCurrentLocale(StripWorksheetNameAndDollars(sRefersToRHS, currentSheet))
+62                End If
+63                HighlightConstraint currentSheet, rLHS, rRHS, sRefersToRHS, rel, 0  ' Show either a value or a formula from sRefersToRHS
 
-65            End If
+64            End If
 NextConstraint:
-66        Next constraint
+65        Next constraint
 
-67        Set IntegerCellsRange = SetDifference(IntegerCellsRange, BinaryCellsRange)
+66        Set IntegerCellsRange = SetDifference(IntegerCellsRange, BinaryCellsRange)
 
           ' Mark integer and binary variables
           Dim selectedArea As Range
-68        If NumVars > 200 Then
-69            AddBinaryIntegerBlockLabels BinaryCellsRange, "binary"
-70            AddBinaryIntegerBlockLabels IntegerCellsRange, "integer"
-71        Else
-72            AddBinaryIntegerIndividualLabels BinaryCellsRange, "b"
-73            AddBinaryIntegerIndividualLabels IntegerCellsRange, "i"
-74        End If
+67        If NumVars > 200 Then
+68            AddBinaryIntegerBlockLabels BinaryCellsRange, "binary"
+69            AddBinaryIntegerBlockLabels IntegerCellsRange, "integer"
+70        Else
+71            AddBinaryIntegerIndividualLabels BinaryCellsRange, "b"
+72            AddBinaryIntegerIndividualLabels IntegerCellsRange, "i"
+73        End If
 
           ' Mark non-decision variables with int or bin constraints
-75        If Not NonAdjustableCellsRange Is Nothing Then
-76            For Each selectedArea In NonAdjustableCellsRange.Areas
-77                HighlightRange selectedArea, vbNullString, RGB(255, 255, 0), True  ' Yellow highlight
-78            Next selectedArea
-79        End If
+74        If Not NonAdjustableCellsRange Is Nothing Then
+75            For Each selectedArea In NonAdjustableCellsRange.Areas
+76                HighlightRange selectedArea, vbNullString, RGB(255, 255, 0), True  ' Yellow highlight
+77            Next selectedArea
+78        End If
           
-80        ShowSolverModel = True  ' success
+79        ShowSolverModel = True  ' success
 
 ExitFunction:
-81        Application.StatusBar = False ' Resume normal status bar behaviour
-82        Application.ScreenUpdating = ScreenStatus
-83        If RaiseError Then RethrowError
-84        Exit Function
+80        Application.StatusBar = False ' Resume normal status bar behaviour
+81        Application.ScreenUpdating = ScreenStatus
+82        If RaiseError Then RethrowError
+83        Exit Function
 
 ErrorHandler:
-85        If Not ReportError("OpenSolverVisualizer", "ShowSolverModel") Then Resume
+84        If Not ReportError("OpenSolverVisualizer", "ShowSolverModel") Then Resume
           
           ' Only show an error once per Excel instance
-86        If HandleError And Not VisualizerHasShownError Then
-87            VisualizerHasShownError = True
-88            MsgBox "There was an error while showing the model. Please let us know about this so that we can investigate the issue.", vbOKOnly, "OpenSolver Visualizer Error"
-89            GoTo ExitFunction
-90        End If
+85        If HandleError And Not VisualizerHasShownError Then
+86            VisualizerHasShownError = True
+87            MsgBox "There was an error while showing the model. Please let us know about this so that we can investigate the issue.", vbOKOnly, "OpenSolver Visualizer Error"
+88            GoTo ExitFunction
+89        End If
           
-91        RaiseError = True
-92        GoTo ExitFunction
+90        RaiseError = True
+91        GoTo ExitFunction
 End Function
 
 Sub AddObjectiveHighlighting(ObjectiveRange As Range, ObjectiveType As ObjectiveSenseType, ObjectiveTargetValue As Double)

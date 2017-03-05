@@ -128,11 +128,11 @@ ErrorHandler:
 End Function
 
 Function ConvertHfsPathToPosix(Path As String) As String
-' Any direct file system access (using 'system' or in script files) on Mac requires
-' that HFS-style paths are converted to normal POSIX paths. On Windows this
-' function does nothing, so it can safely wrap all file system calls on any platform
-' Input (HFS path):   "Macintosh HD:Users:jack:filename.txt"
-' Output (POSIX path): "/Volumes/Macintosh HD/Users/jack/filename.txt"
+      ' Any direct file system access (using 'system' or in script files) on Mac requires
+      ' that HFS-style paths are converted to normal POSIX paths. On Windows this
+      ' function does nothing, so it can safely wrap all file system calls on any platform
+      ' Input (HFS path):   "Macintosh HD:Users:jack:filename.txt"
+      ' Output (POSIX path): "/Volumes/Macintosh HD/Users/jack/filename.txt"
 
           Dim RaiseError As Boolean
 1         RaiseError = False
@@ -221,8 +221,8 @@ Function JoinPaths(ParamArray Paths() As Variant) As String
 End Function
 
 Function FileOrDirExists(pathName As String) As Boolean
-' from http://www.vbaexpress.com/kb/getarticle.php?kb_id=559
-    
+      ' from http://www.vbaexpress.com/kb/getarticle.php?kb_id=559
+          
 1         If IsMac And Val(Application.Version) >= 15 Then
               ' On Mac 2016, any file access via VBA seems to set the extended attribute
               ' `com.apple.quarantine` on the file.
@@ -411,7 +411,7 @@ Function GetTempFilePath(FileName As String, ByRef Path As String) As Boolean
 End Function
 
 Sub CreateScriptFile(ByRef ScriptFilePath As String, FileContents As String, Optional EnableEcho As Boolean)
-' Create a script file with the specified contents.
+      ' Create a script file with the specified contents.
           Dim RaiseError As Boolean
 1         RaiseError = False
 2         On Error GoTo ErrorHandler

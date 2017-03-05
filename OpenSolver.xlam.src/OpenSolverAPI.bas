@@ -2,7 +2,7 @@ Attribute VB_Name = "OpenSolverAPI"
 Option Explicit
 
 Public Const sOpenSolverVersion As String = "2.8.6"
-Public Const sOpenSolverDate As String = "2017.01.07"
+Public Const sOpenSolverDate As String = "2017.03.06"
 
 '/**
 ' * Solves the OpenSolver model on the current sheet.
@@ -81,20 +81,20 @@ SetDefault:
               ' Lookup based on standard Solver options
 7             Select Case SolverEng
               Case 1:  ' GRG Nonlinear
-                  If SolverIsAvailable(CreateSolver("Bonmin")) Then
-                      GetChosenSolver = "Bonmin"
-                  End If
-9             Case 2:  ' Simplex LP
-10                GetChosenSolver = "CBC"
-11            Case 3:  ' Evolutionary
-                  If SolverIsAvailable(CreateSolver("NOMAD")) Then
-                      GetChosenSolver = "NOMAD"
-                  End If
-13            End Select
-14        End If
+8                 If SolverIsAvailable(CreateSolver("Bonmin")) Then
+9                     GetChosenSolver = "Bonmin"
+10                End If
+11            Case 2:  ' Simplex LP
+12                GetChosenSolver = "CBC"
+13            Case 3:  ' Evolutionary
+14                If SolverIsAvailable(CreateSolver("NOMAD")) Then
+15                    GetChosenSolver = "NOMAD"
+16                End If
+17            End Select
+18        End If
           ' Make a default choice if we still don't have anything
-15        If Len(GetChosenSolver) = 0 Then GetChosenSolver = GetAvailableSolvers()(LBound(GetAvailableSolvers))
-16        SetChosenSolver GetChosenSolver, sheet
+19        If Len(GetChosenSolver) = 0 Then GetChosenSolver = GetAvailableSolvers()(LBound(GetAvailableSolvers))
+20        SetChosenSolver GetChosenSolver, sheet
 End Function
 
 '/**
@@ -572,8 +572,8 @@ End Function
 ' */
 Public Sub SetMaxTime(Optional MaxTime As Double = MAX_LONG, Optional sheet As Worksheet)
 1         GetActiveSheetIfMissing sheet
-          ValidateMaxTime MaxTime
-2         SetDoubleNameOnSheet "solver_tim", MaxTime, sheet
+2         ValidateMaxTime MaxTime
+3         SetDoubleNameOnSheet "solver_tim", MaxTime, sheet
 End Sub
 
 '/**
@@ -601,8 +601,8 @@ End Function
 ' */
 Public Sub SetTolerance(Tolerance As Double, Optional sheet As Worksheet)
 1         GetActiveSheetIfMissing sheet
-          ValidateTolerance Tolerance
-2         SetDoubleNameOnSheet "solver_tol", Tolerance, sheet
+2         ValidateTolerance Tolerance
+3         SetDoubleNameOnSheet "solver_tol", Tolerance, sheet
 End Sub
 
 '/**
@@ -612,8 +612,8 @@ End Sub
 ' */
 Public Sub SetToleranceAsPercentage(Tolerance As Double, Optional sheet As Worksheet)
 1         GetActiveSheetIfMissing sheet
-          ValidateToleranceAsPercentage Tolerance
-2         SetTolerance Tolerance / 100, sheet
+2         ValidateToleranceAsPercentage Tolerance
+3         SetTolerance Tolerance / 100, sheet
 End Sub
 
 '/**
@@ -632,8 +632,8 @@ End Function
 ' */
 Public Sub SetMaxIterations(Optional MaxIterations As Double = MAX_LONG, Optional sheet As Worksheet)
 1         GetActiveSheetIfMissing sheet
-          ValidateMaxIterations MaxIterations
-2         SetDoubleNameOnSheet "solver_itr", MaxIterations, sheet
+2         ValidateMaxIterations MaxIterations
+3         SetDoubleNameOnSheet "solver_itr", MaxIterations, sheet
 End Sub
 
 '/**
@@ -652,8 +652,8 @@ End Function
 ' */
 Public Sub SetPrecision(Precision As Double, Optional sheet As Worksheet)
 1         GetActiveSheetIfMissing sheet
-          ValidatePrecision Precision
-2         SetDoubleNameOnSheet "solver_pre", Precision, sheet
+2         ValidatePrecision Precision
+3         SetDoubleNameOnSheet "solver_pre", Precision, sheet
 End Sub
 
 '/**

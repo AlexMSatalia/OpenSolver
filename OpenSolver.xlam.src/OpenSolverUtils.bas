@@ -194,10 +194,10 @@ Function ConvertToCurrentLocale(ByVal s As String) As String
 End Function
 
 Private Function ConvertLocale(ByVal s As String, ConvertToUS As Boolean) As String
-' Convert strings between locales
-' This will add a leading "=" if its not already there
-' A blank string is returned if any errors occur
-' This works by putting the expression into cell A1 on Sheet1 of the add-in!
+      ' Convert strings between locales
+      ' This will add a leading "=" if its not already there
+      ' A blank string is returned if any errors occur
+      ' This works by putting the expression into cell A1 on Sheet1 of the add-in!
 
           Dim RaiseError As Boolean
 1         RaiseError = False
@@ -541,7 +541,7 @@ ErrorHandler:
 End Function
 
 Sub WriteToFile(intFileNum As Long, strData As String, Optional numSpaces As Long = 0, Optional AbortIfBlank As Boolean = False)
-' Writes a string to the given file number, adds a newline, and number of spaces to front if specified
+      ' Writes a string to the given file number, adds a newline, and number of spaces to front if specified
           Dim RaiseError As Boolean
 1         RaiseError = False
 2         On Error GoTo ErrorHandler
@@ -560,12 +560,12 @@ ErrorHandler:
 End Sub
 
 Function MakeSpacesNonBreaking(Text As String) As String
-' Replaces all spaces with NBSP char
+      ' Replaces all spaces with NBSP char
 1         MakeSpacesNonBreaking = Replace(Text, Chr(32), Chr(NBSP))
 End Function
 
 Function StripNonBreakingSpaces(Text As String) As String
-' Replaces all spaces with NBSP char
+      ' Replaces all spaces with NBSP char
 1         StripNonBreakingSpaces = Replace(Text, Chr(NBSP), Chr(32))
 End Function
 
@@ -574,7 +574,7 @@ Function Quote(Text As String) As String
 End Function
 
 Function TrimBlankLines(s As String) As String
-' Remove any blank lines at the beginning or end of s
+      ' Remove any blank lines at the beginning or end of s
           Dim RaiseError As Boolean
 1         RaiseError = False
 2         On Error GoTo ErrorHandler
@@ -613,7 +613,7 @@ ErrorHandler:
 End Function
 
 Function IsZero(num As Double) As Boolean
-' Returns true if a number is zero (within tolerance)
+      ' Returns true if a number is zero (within tolerance)
 1         IsZero = IIf(Abs(num) < OpenSolver.EPSILON, True, False)
 End Function
 
@@ -622,7 +622,7 @@ Function ZeroIfSmall(value As Double) As Double
 End Function
 
 Function StrEx(d As Variant, Optional AddSign As Boolean = True) As String
-' Convert a double to a string, always with a + or -. Also ensure we have "0.", not just "." for values between -1 and 1
+      ' Convert a double to a string, always with a + or -. Also ensure we have "0.", not just "." for values between -1 and 1
               Dim s As String
 1             On Error GoTo Abort
 2             s = str(d)  ' check d is numeric and convert to string

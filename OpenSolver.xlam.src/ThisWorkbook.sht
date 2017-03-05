@@ -127,7 +127,7 @@ Private Sub DoTidyUp()
 
           ' Set calculation mode to Automatic in case it is ever selected for use (#259)
           ' Note that the workbook is NOT saved if we change Application.Calculation, so we check before resetting so that the workbook is still usually saved
-          If Application.Calculation <> xlCalculationAutomatic Then
-              Application.Calculation = xlCalculationAutomatic
-          End If
+4         If Application.Calculation <> xlCalculationAutomatic Then
+5             Application.Calculation = xlCalculationAutomatic
+6         End If
 End Sub

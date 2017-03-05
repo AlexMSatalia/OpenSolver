@@ -168,12 +168,12 @@ Private Sub PopulateConstraintListBox(Optional UpdateIndex As Long = -1)
 7         If UpdateIndex = -1 Then
 8             lstConstraints.Clear
 9             lstConstraints.AddItem "<Add new constraint>"
-    
+          
               Dim i As Long
 10            For i = 1 To NumConstraints
 11                lstConstraints.AddItem Constraints(i).ListDisplayString(sheet, showNamedRanges)
 12            Next i
-    
+          
 13        Else
 14            If lstConstraints.ListCount > UpdateIndex Then lstConstraints.RemoveItem UpdateIndex
 15            lstConstraints.AddItem Constraints(UpdateIndex).ListDisplayString(sheet, showNamedRanges), UpdateIndex
@@ -763,15 +763,15 @@ Private Sub RefreshConstraintPanel()
 
 26                Set copyRange = ProperUnion(.LHSRange, .RHSRange)
 27            End With
-28
-29            cboConRel_Change
+
+28            cboConRel_Change
 
               ' Will fail if LHS and RHS are different shape
               ' Silently fail, nothing that can be done about it
-30            copyRange.Select
-31            copyRange.Copy
-32            Application.ScreenUpdating = True
-33        End If
+29            copyRange.Select
+30            copyRange.Copy
+31            Application.ScreenUpdating = True
+32        End If
 End Sub
 
 Private Sub lstConstraints_Exit(ByVal Cancel As MSForms.ReturnBoolean)

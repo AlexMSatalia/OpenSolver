@@ -895,7 +895,7 @@ Public Sub ConvertLinearTreeToConstraint(constraint As Dictionary, constant As D
 
           ' Remove everything but "plus", variables, and constants
 3         CollateLinearTerms
-    
+          
           ' Add linear terms into constraint/constant
 4         AddLinearTreeToConstraint constraint, constant
 

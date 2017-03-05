@@ -93,7 +93,7 @@ End Sub
 
 Private Sub UserForm_Activate()
 1         CenterForm
-    
+          
 2         UpdateStatusBar "OpenSolver: Fetching solver information...", True
 3         Application.Cursor = xlWait
 

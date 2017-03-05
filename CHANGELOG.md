@@ -1,8 +1,16 @@
 # OpenSolver Release Notes
 
-## v2.8.6 - 2017-01-07
+## v2.8.6 - 2017-03-06
+### Changed
+- Validate bad inputs for solver options.
+- Show iteration limit in status bar while solving.
+
 ### Fixed
-- Use HTTPS for NEOS connections since HTTP is no permitted.
+- Use HTTPS for NEOS connections since HTTP is no longer permitted.
+- Fix errors when using Gurobi 7.
+- Set Application.Calculation to Automatic to avoid altering user settings.
+- Better error messages when no sheet is available.
+- Various bug fixes (overflow, error handling, etc.).
 
 ## v2.8.5 - 2016-11-03
 ### Added
