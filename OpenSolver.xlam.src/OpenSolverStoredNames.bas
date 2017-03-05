@@ -253,19 +253,29 @@ Function RefEditToRefersTo(RefEditText As String) As String
 8         End If
 
           ' Add the text as a name and retrieve the sanitised RefersTo
+          On Error GoTo DeleteName
           Dim n As Name
 9         Set n = ActiveWorkbook.Names.Add(TempPrefix, AddEquals(Trim(RefEditText)))
 10        RefEditToRefersTo = Mid(n.RefersTo, 2)
+
+DeleteName:
+          ' Try deleting name so we don't leave it lying around
+          On Error Resume Next
 11        n.Delete
 End Function
 
 Function RangeToRefersTo(ConvertRange As Range) As String
 1         If ConvertRange Is Nothing Then Exit Function
           
-          ' Add the text as a name and retrieve the sanitised refers to
+          ' Add the range and retrieve the sanitised refers to
+          On Error GoTo DeleteName
           Dim n As Name
 2         Set n = ActiveWorkbook.Names.Add(TempPrefix, ConvertRange)
 3         RangeToRefersTo = Mid(n.RefersTo, 2)
+
+DeleteName:
+          ' Try deleting name so we don't leave it lying around
+          On Error Resume Next
 4         n.Delete
 End Function
 
