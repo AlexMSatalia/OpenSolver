@@ -28,6 +28,7 @@ Private Const pMipStartFile = "model.mst"
 
 Private Const pSensitivityAnalysisAvailable = True
 
+Private Const pStatusFile = "status.sol"
 Private Const pSensitivityFile = "sensitivityData.sol"
 Private Const pFileType = OpenSolver_FileType.LP
 Private Const pModelType = OpenSolver_ModelType.Diff
@@ -47,6 +48,9 @@ Private Enum GurobiResult
     Unsolved = 12
     SubOptimal = 13
 End Enum
+
+Private Const pGurobiError = "Gurobi Error: "
+
 
 ' ISolver
 
@@ -149,6 +153,10 @@ End Function
 
 Function SensitivityFilePath() As String
 1         GetTempFilePath pSensitivityFile, SensitivityFilePath
+End Function
+
+Function StatusFilePath() As String
+1         GetTempFilePath pStatusFile, StatusFilePath
 End Function
 
 Function ExecFilePath() As String
@@ -279,6 +287,7 @@ End Function
 Private Sub CleanFiles()
 1         DeleteFileAndVerify SensitivityFilePath()
 2         DeleteFileAndVerify ScriptFilePath()
+          DeleteFileAndVerify StatusFilePath()
 End Sub
 
 Private Function CreateSolveCommand(s As COpenSolver) As String
@@ -296,6 +305,7 @@ Private Function CreateSolveCommand(s As COpenSolver) As String
                                MakePathSafe(PythonScriptPath()) & " " & _
                                MakePathSafe(GetModelFilePath(Me)) & " " & _
                                MakePathSafe(MipStartFilePath()) & " " & _
+                               MakePathSafe(StatusFilePath()) & " " & _
                                MakePathSafe(s.SolutionFilePathName) & " " & _
                                MakePathSafe(SensitivityFilePath()) & " " & _
                                ParametersToKwargs(s.SolverParameters)
@@ -344,24 +354,23 @@ Sub ReadResults(s As COpenSolver)
 1         RaiseError = False
 2         On Error GoTo ErrorHandler
 
-3         If Not FileOrDirExists(s.SolutionFilePathName) Then
-4             RaiseGeneralError "The solver did not create a solution file. No new solution is available.", _
+3         If Not FileOrDirExists(StatusFilePath()) Then
+4             RaiseGeneralError "The solver did not create a status file", _
                                 LINK_NO_SOLUTION_FILE
 5         End If
           
 6         s.SolutionWasLoaded = True
           
-7         Open s.SolutionFilePathName For Input As #1 ' supply path with filename
+7         Open StatusFilePath() For Input As #1 ' supply path with filename
           Dim Line As String, Index As Long
 8         Line Input #1, Line
+          Close #1
           ' Check for python exception while running Gurobi
-          Dim GurobiError As String ' The string that identifies a gurobi error in the model file
-9         GurobiError = "Gurobi Error: "
-10        If Left(Line, Len(GurobiError)) = GurobiError Then
+          If Left(Line, Len(pGurobiError)) = pGurobiError Then
 11            RaiseGeneralError Line
 12        End If
           'Get the returned status code from gurobi.
-          'List of return codes can be seen at - http://www.gurobi.com/documentation/5.1/reference-manual/node865#sec:StatusCodes
+          'List of return codes can be seen at - http://www.gurobi.com/documentation/7.0/refman/optimization_status_codes.html
 13        If Line = GurobiResult.Optimal Then
 14            s.SolveStatus = OpenSolverResult.Optimal
 15            s.SolveStatusString = "Optimal"
@@ -397,17 +406,27 @@ Sub ReadResults(s As COpenSolver)
 45        End If
           
 46        If s.SolutionWasLoaded Then
+
+              If Not FileOrDirExists(s.SolutionFilePathName) Then
+                  RaiseGeneralError "The solver did not create a solution file. No new solution is available.", _
+                                    LINK_NO_SOLUTION_FILE
+              End If
+              Open s.SolutionFilePathName() For Input As #1
+
 47            UpdateStatusBar "OpenSolver: Loading Solution... " & s.SolveStatusString, True
-              Dim NumVar As Long, SplitLine() As String
-48            Line Input #1, Line  ' Optimal - objective value              22
-49            If Len(Line) > 0 Then
-50                Index = InStr(Line, "=")
-                  Dim ObjectiveValue As Double
-51                ObjectiveValue = Val(Mid(Line, Index + 2))
-                  Dim i As Long
-52                i = 1
-53                While Not EOF(1)
-54                    Line Input #1, Line
+              
+              ' Loop over all comment lines
+              Do While Not EOF(1)
+                  Line Input #1, Line
+                  If Len(Line) = 0 Or Left(Line, 1) <> "#" Then
+                      Exit Do
+                  End If
+              Loop
+              
+              Dim NumVar As Long, SplitLine() As String, i As Long
+52            i = 1
+53            Do While True
+                  If Len(Line) > 0 Then
 55                    SplitLine = SplitWithoutRepeats(Line, " ")
                       Dim ConFinalValue As String
 56                    ConFinalValue = SplitLine(1)
@@ -424,11 +443,18 @@ Sub ReadResults(s As COpenSolver)
                       
 63                    s.VarFinalValue(i) = Val(ConFinalValue)
 64                    s.VarCellName(i) = GetVarNameFromLPName(SplitLine(0))
+    
                       ' Save number of vars read
 65                    NumVar = i
 66                    i = i + 1
-67                Wend
-68            End If
+67                End If
+
+                  If EOF(1) Then
+                      Exit Do
+                  Else
+                      Line Input #1, Line
+                  End If
+              Loop
               
 69            If s.bGetDuals Then
                   Dim CostVector() As Double
