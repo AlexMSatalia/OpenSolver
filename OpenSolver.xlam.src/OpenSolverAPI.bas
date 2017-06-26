@@ -58,7 +58,7 @@ End Function
 ' * Gets a list of short names for all solvers that can be set
 ' */
 Public Function GetAvailableSolvers() As String()
-1         GetAvailableSolvers = StringArray("CBC", "Gurobi", "NeosCBC", "Bonmin", "Couenne", "NOMAD", "NeosBon", "NeosCou")
+1         GetAvailableSolvers = StringArray("CBC", "Gurobi", "NeosCBC", "Bonmin", "Couenne", "NOMAD", "NeosBon", "NeosCou", "SolveEngine")
 End Function
 
 '/**

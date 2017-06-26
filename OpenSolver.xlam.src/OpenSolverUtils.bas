@@ -1165,3 +1165,116 @@ Function RemoveEquals(s As String) As String
 1         RemoveEquals = IIf(Left(s, 1) <> "=", s, Mid(s, 2))
 End Function
 
+
+' Base64 encode/decode implementations for mac and windows
+#If Mac Then
+    Function EncodeBase64(ByVal str As String) As String
+        EncodeBase64 = ExecCapture("base64 <<< " & Quote(str))
+    End Function
+    
+    Function DecodeBase64(ByVal str As String) As String
+        DecodeBase64 = ExecCapture("base64 --decode <<< " & str)
+    End Function
+#Else
+    Function EncodeBase64(ByVal str As String) As String
+        Dim arrData() As Byte
+        Dim objXML As Object 'MSXML2.DOMDocument
+        Dim objNode As Object 'MSXML2.IXMLDOMElement
+        
+        Dim RaiseError As Boolean
+        RaiseError = False
+        On Error GoTo ErrorHandler
+    
+        arrData = StrConv(str, vbFromUnicode)
+        Set objXML = CreateObject("MSXML2.DOMDocument")
+        Set objNode = objXML.createElement("b64")
+        
+        With objNode
+            .DataType = "bin.base64"
+            .nodeTypedValue = arrData
+            EncodeBase64 = .Text
+        End With
+    
+ExitFunction:
+        Set objNode = Nothing
+        Set objXML = Nothing
+        If RaiseError Then Err.Raise OpenSolverErrorHandler.ErrNum, Description:=OpenSolverErrorHandler.ErrMsg
+        Exit Function
+    
+ErrorHandler:
+        If Not ReportError("OpenSolverUtils", "EncodeBase64") Then Resume
+        RaiseError = True
+        GoTo ExitFunction
+        
+    End Function
+    
+    ' Code by Tim Hastings
+    Function DecodeBase64(ByVal strData As String) As String
+              Dim RaiseError As Boolean
+1             RaiseError = False
+2             On Error GoTo ErrorHandler
+    
+              Dim objXML As Object 'MSXML2.DOMDocument
+              Dim objNode As Object 'MSXML2.IXMLDOMElement
+            
+              ' Help from MSXML
+3             Set objXML = CreateObject("MSXML2.DOMDocument")
+4             Set objNode = objXML.createElement("b64")
+5             objNode.DataType = "bin.base64"
+6             objNode.Text = strData
+7             DecodeBase64 = Stream_BinaryToString(objNode.nodeTypedValue)
+            
+    
+ExitFunction:
+8             Set objNode = Nothing
+9             Set objXML = Nothing
+10            If RaiseError Then RethrowError
+11            Exit Function
+    
+ErrorHandler:
+12            If Not ReportError("OpenSolverUtils", "DecodeBase64") Then Resume
+13            RaiseError = True
+14            GoTo ExitFunction
+    End Function
+    
+    ' Code by Tim Hastings
+    Function Stream_BinaryToString(Binary)
+               Dim RaiseError As Boolean
+1              RaiseError = False
+2              On Error GoTo ErrorHandler
+              
+               Const adTypeText = 2
+               Const adTypeBinary = 1
+               
+               'Create Stream object
+               Dim BinaryStream 'As New Stream
+3              Set BinaryStream = CreateObject("ADODB.Stream")
+               
+               'Specify stream type - we want To save binary data.
+4              BinaryStream.Type = adTypeBinary
+               
+               'Open the stream And write binary data To the object
+5              BinaryStream.Open
+6              BinaryStream.Write Binary
+               
+               'Change stream type To text/string
+7              BinaryStream.Position = 0
+8              BinaryStream.Type = adTypeText
+               
+               'Specify charset For the output text (unicode) data.
+9              BinaryStream.Charset = "us-ascii"
+               
+               'Open the stream And get text/string data from the object
+10             Stream_BinaryToString = BinaryStream.ReadText
+11             Set BinaryStream = Nothing
+    
+ExitFunction:
+12             If RaiseError Then RethrowError
+13             Exit Function
+    
+ErrorHandler:
+14             If Not ReportError("OpenSolverUtils", "Stream_BinaryToString") Then Resume
+15             RaiseError = True
+16             GoTo ExitFunction
+    End Function
+#End If

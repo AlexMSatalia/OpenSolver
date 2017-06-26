@@ -516,3 +516,12 @@ Function ChangeOpenSolverAutoload(loadAtStartup As Boolean) As Boolean
 ExitSub:
 End Function
 
+Public Sub AppendFile(ByVal Path As String, ByVal txt As String)
+    Dim FileNum As Integer
+    
+    FileNum = FreeFile()
+    
+    Open Path For Append As #FileNum
+        Print #FileNum, txt
+    Close #FileNum
+End Sub

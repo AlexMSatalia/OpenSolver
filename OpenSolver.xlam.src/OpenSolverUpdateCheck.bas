@@ -8,17 +8,11 @@ Private DoSilentFail As Boolean
 Private DoWaitForResponse As Boolean
 Private AvoidPromptForBeta As Boolean
 
-Private Const OpenSolverRegName = "OpenSolver"
-Private Const PreferencesRegName = "Preferences"
 Private Const CheckForUpdatesRegName = "CheckForUpdates"
 Private Const CheckForBetaUpdatesRegName = "CheckForBetaUpdates"
 Private Const LastUpdateCheckRegName = "LastUpdateCheck"
 Private Const FirstUpdateCheckRegName = "FirstUpdateCheck"
 Private Const GuidRegName = "Guid"
-
-' From rondebruin.nl:
-' The GetSetting default argument can't be an emptystring on Mac
-Private Const VALUE_IF_MISSING As String = "?"
 
 Private Const MinTimeBetweenChecks As Double = 1 ' 1 day between checks
 Private Const MinTimeBeforeCheck As Double = 1 ' 1 day before checks begin

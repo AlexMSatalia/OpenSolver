@@ -158,14 +158,15 @@ End Sub
 
 Function CreateSolver(SolverShortName As String) As ISolver
 1         Select Case LCase(SolverShortName)
-          Case "cbc":     Set CreateSolver = New CSolverCbc
-2         Case "gurobi":  Set CreateSolver = New CSolverGurobi
-3         Case "neoscbc": Set CreateSolver = New CSolverNeosCbc
-4         Case "bonmin":  Set CreateSolver = New CSolverBonmin
-5         Case "couenne": Set CreateSolver = New CSolverCouenne
-6         Case "nomad":   Set CreateSolver = New CSolverNomad
-7         Case "neosbon": Set CreateSolver = New CSolverNeosBon
-8         Case "neoscou": Set CreateSolver = New CSolverNeosCou
+          Case "cbc":         Set CreateSolver = New CSolverCbc
+2         Case "gurobi":      Set CreateSolver = New CSolverGurobi
+3         Case "neoscbc":     Set CreateSolver = New CSolverNeosCbc
+4         Case "bonmin":      Set CreateSolver = New CSolverBonmin
+5         Case "couenne":     Set CreateSolver = New CSolverCouenne
+6         Case "nomad":       Set CreateSolver = New CSolverNomad
+7         Case "neosbon":     Set CreateSolver = New CSolverNeosBon
+8         Case "neoscou":     Set CreateSolver = New CSolverNeosCou
+          Case "solveengine": Set CreateSolver = New CSolverSolveEngine
 9         Case Else: RaiseGeneralError "The specified solver ('" & SolverShortName & "') was not recognised."
 10        End Select
 End Function
@@ -238,6 +239,9 @@ Function SolverIsPresent(Solver As ISolver, Optional SolverPath As String, Optio
         #Else
 29                SolverIsPresent = True
         #End If
+          ElseIf TypeOf Solver Is CSolverSolveEngine Then
+              SolverIsPresent = True
+              
 30        Else
 31            SolverIsPresent = False
 32        End If
@@ -269,6 +273,9 @@ ErrorHandlerLocal:
 10            End If
 11        ElseIf TypeOf Solver Is ISolverNeos Then
 12            SolverIsAvailable = True
+          ElseIf TypeOf Solver Is CSolverSolveEngine Then
+              SolverIsAvailable = True
+          
 13        Else
 14            SolverIsAvailable = False
 15        End If
@@ -472,7 +479,7 @@ Function WriteModelFile(s As COpenSolver) As String
               Dim LocalExecSolver As ISolverLocalExec
 20            Set LocalExecSolver = s.Solver
 21            WriteModelFile = LocalExecSolver.CreateSolveCommand(s)
-22        ElseIf TypeOf s.Solver Is ISolverNeos Then
+22        ElseIf TypeOf s.Solver Is ISolverNeos Or TypeOf s.Solver Is CSolverSolveEngine Then
               ' Load the model file back into a string
 23            Open ModelFilePathName For Input As #1
 24                WriteModelFile = Input$(LOF(1), 1)
@@ -508,6 +515,8 @@ Function RunSolver(s As COpenSolver, SolverCommand As String) As String
 3             RunSolver = vbNullString
 4         ElseIf TypeOf s.Solver Is ISolverNeos Then
 5             RunSolver = CallNEOS(s, SolverCommand)
+          ElseIf TypeOf s.Solver Is CSolverSolveEngine Then
+              RunSolver = CallSolveEngine(s, SolverCommand)
 6         End If
 End Function
 

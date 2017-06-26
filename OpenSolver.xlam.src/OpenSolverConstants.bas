@@ -1,6 +1,12 @@
 Attribute VB_Name = "OpenSolverConstants"
 Option Explicit
 
+Public Const OpenSolverRegName = "OpenSolver"
+Public Const PreferencesRegName = "Preferences"
+' From rondebruin.nl:
+' The GetSetting default argument can't be an emptystring on Mac
+Public Const VALUE_IF_MISSING As String = "?"
+
 Public Const EPSILON As Double = 0.00001
 Public Const MAX_LONG As Long = 2147483647
 
