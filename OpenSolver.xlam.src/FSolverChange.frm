@@ -115,6 +115,7 @@ Private Sub AutoLayout()
 10            .Left = lblChoose.Left
 11            .Top = Below(lblChoose, False)
 12            .Width = lblChoose.Width
+              .ListRows = UBound(GetAvailableSolvers()) - LBound(GetAvailableSolvers()) + 1
 13        End With
           
 14        With lblDesc
