@@ -1,5 +1,9 @@
 # OpenSolver Release Notes
 
+## v2.9.0 - 2017-11-10
+### Added
+- Add support for Satalia SolveEngine as a new solver.
+
 ## v2.8.6 - 2017-03-06
 ### Changed
 - Validate bad inputs for solver options.
