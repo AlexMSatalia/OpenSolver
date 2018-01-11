@@ -16,8 +16,8 @@ Implements ISolverFile
 Private Const pName = "SolveEngine"
 Private Const pShortName = "SolveEngine"
 Private Const pTitle = "Satalia using SolveEngine"
-Private Const pDesc = "SolveEngine provides optimization as a commercial online service. It uses algorithms from industry and academia to deliver rapid problem solving. To use the SolveEngine, register for an API key, choose a plan, and enter the API key when prompted."
-Private Const pLink = "https://solve.satalia.com/register"
+Private Const pDesc = "SolveEngine provides optimization as a commercial online service. It uses algorithms from industry and academia to deliver rapid problem solving. To use the SolveEngine, register for an API key using the link below, choose a plan, and enter the API key when prompted."
+Private Const pLink = "https://opensolver.org/solveengine/"
 
 Private Const pSensitivityAnalysisAvailable As Boolean = False
 
