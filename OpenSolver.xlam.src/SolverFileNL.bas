@@ -133,8 +133,10 @@ Function WriteNLFile_Parsed(OpenSolver As COpenSolver, ModelFilePathName As Stri
 4         Set s = OpenSolver
 5         Set m = s.ParsedModel
 
-          Dim LocalExecSolver As ISolverLocalExec
-6         Set LocalExecSolver = s.Solver
+          If TypeOf s.Solver Is ISolverLocalExec Then
+              Dim LocalExecSolver As ISolverLocalExec
+6             Set LocalExecSolver = s.Solver
+          End If
           
 7         WriteComments = ShouldWriteComments
           
@@ -154,6 +156,10 @@ Function WriteNLFile_Parsed(OpenSolver As COpenSolver, ModelFilePathName As Stri
           
 13        ProcessFormulae
 14        ProcessObjective
+          
+          If (nlc > 0 Or nlvc > 0) And OpenSolver.Solver.Name = "CPLEX" Then
+              RaiseUserError "The model is non-linear. Please choose a solver that can solve non-linear models."
+          End If
           
 15        MakeVariableMap s.SolveRelaxation
 16        MakeConstraintMap
@@ -637,6 +643,9 @@ Private Sub ProcessFormulae()
           Dim StackTraceMessage As String
 1         RaiseError = False
 2         On Error GoTo ErrorHandler
+        
+          ' Prevents memory bug that appears on second solve onwards
+          mSleep 10
 
 3         Erase NonLinearConstraintTrees
 4         Erase LinearConstraints
@@ -1513,7 +1522,7 @@ Private Function NumberOfOperands(FunctionName As String, Optional ArgCount As L
 9         Case "if", "ifs", "implies"
 10            NumberOfOperands = 3
 11        Case Else
-12            RaiseGeneralError "Unknown function " & FunctionName & vbCrLf & "Please re-design your spreadsheet it does not use this function as part of the model and try again."
+12            RaiseGeneralError "Unknown function " & FunctionName & vbCrLf & "Please re-design your spreadsheet so it does not use this function as part of the model and try again."
 13        End Select
 
 ExitFunction:
@@ -1960,7 +1969,10 @@ Sub ReadResults_NL(s As COpenSolver)
                   Dim SplitLine() As String
 71                SplitLine = Split(Line, " ")
 72                If Val(SplitLine(LBound(SplitLine) + 1)) <> 0 Then
-73                    RaiseGeneralError "Wrong objno"
+                      ' CPLEX reports objno -1 for some specific objective functions, but returns a solution anyway
+73                    If s.Solver.Name <> "CPLEX" Then
+                          RaiseGeneralError "Wrong objno"
+                      End If
 74                End If
 75                solve_result_num = Val(SplitLine(LBound(SplitLine) + 2))
 76            End If
@@ -2003,7 +2015,7 @@ ExitSub:
 104       Exit Sub
 
 ErrorHandler:
-105       If Not ReportError("SolverFileNL", "ReadModel_NL") Then Resume
+105       If Not ReportError("SolverFileNL", "ReadResults_NL") Then Resume
 106       RaiseError = True
 107       GoTo ExitSub
 End Sub

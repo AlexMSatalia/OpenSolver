@@ -1,7 +1,7 @@
 VERSION 5.00
 Begin {C62A69F0-16DC-11CE-9E98-00AA00574A4F} FOptions 
    Caption         =   "OpenSolver - Solve Options"
-   ClientHeight    =   4755
+   ClientHeight    =   5355
    ClientLeft      =   45
    ClientTop       =   375
    ClientWidth     =   4140
@@ -60,6 +60,7 @@ Private Sub cmdOk_Click()
 9         SetToleranceAsPercentage CDbl(Replace(txtTol.Text, "%", vbNullString)), sheet
 10        SetLinearityCheck chkPerformLinearityCheck.value, sheet
 11        SetSolverParametersRefersTo SolverString, SolverParametersRefersTo, sheet
+          SaveNeosSavedEmail (Trim(txtEnterEmail.Text))
                                                                       
 12        Me.Hide
 13        Exit Sub
@@ -111,6 +112,7 @@ Private Sub UserForm_Activate()
 17        txtTol.Enabled = ToleranceAvailable(Solver)
           
 18        refExtraParameters.Text = GetDisplayAddress(GetSolverParametersRefersTo(SolverString, sheet), sheet, False)
+          txtEnterEmail.Text = GetNeosSavedEmail
 End Sub
 
 Private Sub UserForm_Initialize()
@@ -225,12 +227,25 @@ Private Sub AutoLayout()
 88            .Left = chkNonNeg.Left
 89            AutoHeight lblFootnote, chkNonNeg.Width
 90        End With
+
+          With lblEnterEmail
+              .Caption = "Email address for NEOS solvers:"
+              .Top = Below(lblFootnote)
+              .Left = chkNonNeg.Left
+              AutoHeight lblEnterEmail, chkNonNeg.Width
+          End With
+          
+          With txtEnterEmail
+              .Width = chkNonNeg.Width
+              .Left = chkNonNeg.Left
+              .Top = Below(lblEnterEmail)
+          End With
           
 91        With cmdCancel
 92            .Caption = "Cancel"
 93            .Left = txtMaxTime.Left
 94            .Width = txtMaxTime.Width
-95            .Top = Below(lblFootnote)
+95            .Top = Below(txtEnterEmail)
 96            .Cancel = True
 97        End With
           

@@ -10,6 +10,9 @@ Private Const NEOS_ADDRESS = "https://www.neos-server.org:3333"
 Private Const NEOS_RESULT_FILE = "neosresult.txt"
 Private Const NEOS_SCRIPT_FILE = "NeosClient.py"
 
+' Name of save location for email address
+Private Const EmailAddressRegName = "NeosEmailAddress"
+
 Public SOLVE_LOCAL As Boolean  ' Whether to use local AMPL to solve. Defaults to false
 
 Function NeosClientScriptPath() As String
@@ -99,7 +102,7 @@ Function CallNeos_Remote(s As COpenSolver, OutgoingMessage As String) As String
 5         If Len(NeosSolver.OptionFile) <> 0 Then
 6             OptionsFileString = ParametersToOptionsFileString(s.SolverParameters)
 7         End If
-             
+   
           ' Wrap in XML for AMPL on NEOS
 8         FinalMessage = WrapMessageForNEOS(OutgoingMessage, NeosSolver, OptionsFileString)
           
@@ -147,6 +150,7 @@ Public Function SolveOnNeos(message As String, errorString As String, Optional f
 1         On Error GoTo ErrorHandler
 
           Dim result As String, jobNumber As String, Password As String
+
 2         result = SubmitNeosJob(message, jobNumber, Password)
           
 3         If jobNumber = "0" Then RaiseGeneralError "An error occured when sending file to NEOS."
@@ -164,6 +168,13 @@ Public Function SolveOnNeos(message As String, errorString As String, Optional f
               
 11            UpdateStatusBar "OpenSolver: Solving model on NEOS... Time Elapsed: " & Int(Timer() - StartTime) & " seconds"
 12            DoEvents
+
+          If InStr(message, "<solver>CPLEX</solver>") > 0 Then
+            result = GetNeosIntermediateResults(jobNumber, Password)
+            If InStr(result, "valid email") > 0 Then
+                RaiseUserError "CPLEX requires a valid email address. Please check a valid email address has been input under Model > Options."
+            End If
+          End If
               
 13            result = GetNeosJobStatus(jobNumber, Password)
 14            If result = "Done" Then
@@ -175,7 +186,7 @@ Public Function SolveOnNeos(message As String, errorString As String, Optional f
 20                DoEvents
 21            End If
 22        Wend
-          
+                 
 23        SolveOnNeos = GetNeosResult(jobNumber, Password)
           
 ExitFunction:
@@ -287,7 +298,18 @@ Private Function GetNeosResult(jobNumber As String, Password As String) As Strin
 3             GetNeosResult = SendToNeos_Mac("read", jobNumber, Password)
     #Else
 4             GetNeosResult = DecodeBase64(GetXmlTagValue(SendToNeos_Windows(MakeNeosMethodCall("getFinalResults", jobNumber, Password)), "base64"))
+              'NL file output has no variable values, must get from ampl file
+              If InStr(GetNeosResult, "Executing NL") > 0 Then
+                    Dim FileText As String
+                    ' Undocumented API call getOutputFile(jobNumber, Password, fileName)
+                    FileText = DecodeBase64(GetXmlTagValue(SendToNeos_Windows(MakeNeosMethodCall("getOutputFile", jobNumber, Password, , "ampl.sol")), "base64"))
+                    If FileText = "Output file not exists" Then '[sic]
+                          RaiseGeneralError "NEOS did not return a solution file. No new solution is available."
+                    End If
+                    WriteFile FileText
+              End If
     #End If
+
 
 ExitFunction:
 5         If RaiseError Then RethrowError
@@ -299,7 +321,7 @@ ErrorHandler:
 9         GoTo ExitFunction
 End Function
 
-Private Function SubmitNeosJob(message As String, ByRef jobNumber As String, ByRef Password As String) As String
+Private Function SubmitNeosJob(ByVal message As String, ByRef jobNumber As String, ByRef Password As String) As String
           Dim RaiseError As Boolean
 1         RaiseError = False
 2         On Error GoTo ErrorHandler
@@ -404,7 +426,7 @@ Function WrapMessageForNEOS(message As String, NeosSolver As ISolverNeos, Option
                   WrapInTag(GetInputType(NeosSolver), "inputType") & _
                   WrapInTag(vbNullString, "client") & _
                   WrapInTag("short", "priority") & _
-                  WrapInTag(vbNullString, "email") & _
+                  WrapInTag(GetNeosSavedEmail, "email") & _
                   WrapInTag(message, "model", True) & _
                   WrapInTag(vbNullString, "data", True) & _
                   WrapInTag(vbNullString, "commands", True) & _
@@ -430,12 +452,15 @@ Function WrapInTag(value As String, TagName As String, Optional AddCData As Bool
                       "</" & TagName & ">"
 End Function
 
-Function MakeNeosMethodCall(MethodName As String, Optional IntValue As String = vbNullString, Optional StringValue As String = vbNullString) As String
+Function MakeNeosMethodCall(MethodName As String, Optional IntValue As String = vbNullString, Optional StringValue As String = vbNullString, _
+                            Optional IntValue2 As String = vbNullString, Optional StringValue2 As String = vbNullString) As String
 1         MakeNeosMethodCall = WrapInTag( _
                                    WrapInTag(MethodName, "methodName") & _
                                    WrapInTag( _
                                        IIf(Len(IntValue) > 0, MakeNeosParam("int", IntValue), vbNullString) & _
-                                       IIf(Len(StringValue) > 0, MakeNeosParam("string", StringValue), vbNullString), _
+                                       IIf(Len(StringValue) > 0, MakeNeosParam("string", StringValue), vbNullString) & _
+                                       IIf(Len(IntValue2) > 0, MakeNeosParam("int", IntValue2), vbNullString) & _
+                                       IIf(Len(StringValue2) > 0, MakeNeosParam("string", StringValue2), vbNullString), _
                                    "params"), _
                                "methodCall")
 
@@ -453,6 +478,8 @@ End Function
 Private Function GetInputType(Solver As ISolver)
 1         If TypeOf Solver Is ISolverFileAMPL Then
 2             GetInputType = "AMPL"
+         ElseIf TypeOf Solver Is ISolverFileNL Then
+              GetInputType = "NL"
 3         End If
 End Function
 
@@ -471,4 +498,87 @@ Function PingNeos() As Boolean
           
 CantAccess:
 6         PingNeos = False
+End Function
+
+Function WriteFile(FileText As String)
+          Dim RaiseError As Boolean
+          RaiseError = False
+          On Error GoTo ErrorHandler
+
+          Dim SolutionFilePathName As String
+          GetTempFilePath "model.sol", SolutionFilePathName
+
+          FileText = Replace(FileText, Chr(10), vbCrLf)
+
+          Open SolutionFilePathName For Output As #1
+          Print #1, FileText
+          Close #1
+
+ExitSub:
+          If RaiseError Then RethrowError
+          Exit Function
+
+ErrorHandler:
+           If Not ReportError("SolverNeos", "WriteFile") Then Resume
+           RaiseError = True
+           GoTo ExitSub
+
+End Function
+
+Public Function GetNeosSavedEmail() As String
+1         GetNeosSavedEmail = GetSetting(OpenSolverRegName, PreferencesRegName, EmailAddressRegName, VALUE_IF_MISSING)
+          If GetNeosSavedEmail = VALUE_IF_MISSING Then
+              GetNeosSavedEmail = ""
+          End If
+End Function
+Public Sub SaveNeosSavedEmail(EmailAddress As String)
+1         SaveSetting OpenSolverRegName, PreferencesRegName, EmailAddressRegName, EmailAddress
+End Sub
+
+Private Function GetNeosIntermediateResults(jobNumber As String, Password As String) As String
+          Dim RaiseError As Boolean
+1         RaiseError = False
+2         On Error GoTo ErrorHandler
+
+    #If Mac Then
+3             GetNeosIntermediateResults = SendToNeos_Mac("intermediate", jobNumber, Password)
+    #Else
+4             GetNeosIntermediateResults = DecodeBase64(GetXmlTagValue(SendToNeos_Windows(MakeNeosMethodCall("getIntermediateResults", jobNumber, Password, "0")), "base64"))
+    #End If
+
+ExitFunction:
+5         If RaiseError Then RethrowError
+6         Exit Function
+
+ErrorHandler:
+7         If Not ReportError("SolverNeos", "GetNeosIntermediateResults") Then Resume
+8         RaiseError = True
+9         GoTo ExitFunction
+End Function
+
+Public Function ValidateEmail() As Boolean
+    ' Check that we have something along the lines of aaa@bbb.ccc
+    ' Following RFC-3696: https://tools.ietf.org/html/rfc3696#section-3
+    ' Does not support quoted strings
+    
+    Dim Email As String
+    Dim Char As String
+    Email = GetNeosSavedEmail
+    ValidateEmail = InStr(Email, "@") And InStrRev(Email, ".") > InStr(Email, "@")
+    
+    Dim pos As Long
+    For pos = 1 To InStr(Email, "@") - 1
+        Char = Mid(Email, pos, 1)
+        If Not Char Like "[A-Za-z.!#$%&'*+-/=?^_`{|}~]" Then
+            ValidateEmail = False
+        End If
+    Next pos
+    
+    For pos = InStr(Email, "@") + 1 To Len(Email)
+        Char = Mid(Email, pos, 1)
+        If Not Char Like "[A-Za-z-.]" Then
+            ValidateEmail = False
+        End If
+    Next pos
+    
 End Function

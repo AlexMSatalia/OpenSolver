@@ -167,6 +167,7 @@ Function CreateSolver(SolverShortName As String) As ISolver
 7         Case "neosbon":     Set CreateSolver = New CSolverNeosBon
 8         Case "neoscou":     Set CreateSolver = New CSolverNeosCou
           Case "solveengine": Set CreateSolver = New CSolverSolveEngine
+          Case "neoscplex":   Set CreateSolver = New CSolverNeosCplex
 9         Case Else: RaiseGeneralError "The specified solver ('" & SolverShortName & "') was not recognised."
 10        End Select
 End Function

@@ -26,6 +26,13 @@ Public Function RunOpenSolver(Optional SolveRelaxation As Boolean = False, _
           
 6         GetActiveSheetIfMissing sheet
 
+          Dim CurrentSolver As String
+          CurrentSolver = GetChosenSolver(sheet)
+            
+          If CurrentSolver = "NeosCplex" Then
+              If Not ValidateEmail Then RaiseUserError "CPLEX requires an email address. Please check a valid email address has been input under Model > Options."
+          End If
+
 7         RunOpenSolver = OpenSolverResult.Unsolved
           Dim OpenSolver As COpenSolver
 8         Set OpenSolver = New COpenSolver
@@ -58,7 +65,7 @@ End Function
 ' * Gets a list of short names for all solvers that can be set
 ' */
 Public Function GetAvailableSolvers() As String()
-1         GetAvailableSolvers = StringArray("CBC", "Gurobi", "NeosCBC", "Bonmin", "Couenne", "NOMAD", "NeosBon", "NeosCou", "SolveEngine")
+1         GetAvailableSolvers = StringArray("CBC", "Gurobi", "NeosCBC", "NeosCplex", "Bonmin", "Couenne", "NOMAD", "NeosBon", "NeosCou", "SolveEngine")
 End Function
 
 '/**
