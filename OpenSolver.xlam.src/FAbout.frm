@@ -4,7 +4,7 @@ Begin {C62A69F0-16DC-11CE-9E98-00AA00574A4F} FAbout
    ClientHeight    =   7140
    ClientLeft      =   45
    ClientTop       =   -120
-   ClientWidth     =   8880
+   ClientWidth     =   8880.001
    OleObjectBlob   =   "FAbout.frx":0000
 End
 Attribute VB_Name = "FAbout"

@@ -101,10 +101,11 @@ Private Sub FindObjective(sheet As Worksheet)
 6         Application.Cursor = xlWait
 
           Dim ObjKeyword As Variant
-7         For Each ObjKeyword In StringArray("min", "minimise", "minimize", "max", "maximise", "maximize")
+7         For Each ObjKeyword In StringArray("min", "minimise", "minimize", "max", "maximise", "maximize", _
+                                             "min:", "minimise:", "minimize:", "max:", "maximise:", "maximize:")
 8             Set ObjSenseCell = FindObjSense(ObjKeyword, sheet)
 9             If Not ObjSenseCell Is Nothing Then
-10                ObjSense = ObjectiveSenseStringToEnum(ObjKeyword)
+10                ObjSense = ObjectiveSenseStringToEnum(Replace(ObjKeyword, ":", ""))
 11                Exit For
 12            End If
 13        Next ObjKeyword

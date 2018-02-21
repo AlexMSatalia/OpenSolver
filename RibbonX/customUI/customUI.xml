@@ -34,10 +34,12 @@
             <button id="OpenSolverViewErrorLogFile" label="View Last Error Log File" onAction="OpenSolver_ViewErrorLogFileClickHandler" screentip="View the last error log file" supertip="OpenSolver creates a log file every time an error occurs with detailed information about the error."/>
             <button id="OpenSolverViewTempFolder" label="View All OpenSolver Files..." onAction="OpenSolver_ViewTempFolderClickHandler" screentip="View all temporary OpenSolver files" supertip="Opens the folder containing all files created while using OpenSolver."/>
             <button id="OpenSolverLaunchCBC" label="Open Last Model in CBC..." onAction="OpenSolver_LaunchCBCCommandLine" screentip="Open the CBC command line, and load in the last model." supertip="Open the CBC optimizer at the command line, and load in the last model solved by OpenSolver. Type '?' at the CBC command line to get help on the CBC commands, and 'exit' to quit CBC. Note that any solutions generated are discarded; they are not loaded back into your spreadsheet."/>
-            <menuSeparator id="separator2" title="About"/>
+            <menuSeparator id="separator2" title="Import"/>
+            <button id="OpenSolverModelImportLP" label="Import LP File..." onAction="OpenSolver_ImportLPClick" screentip="Import an existing LP file" supertip="Parse an existing CPLEX LP file on to a new sheet and load it into the model."/>
+            <menuSeparator id="separator3" title="About"/>
             <button id="OpenSolverAbout" label="About OpenSolver..." onAction="OpenSolver_AboutClickHandler"/>
             <button id="OpenSolverAboutCoinOR" label="About COIN-OR..." onAction="OpenSolver_AboutCoinOR"/>
-            <menuSeparator id="separator3" title="Help"/>
+            <menuSeparator id="separator4" title="Help"/>
             <button id="OpenSolverVisitOpenSolverOrg" label="Open OpenSolver.org" onAction="OpenSolver_VisitOpenSolverOrg"/>
             <button id="OpenSolverVisitCoinOROrg" label="Open COIN-OR.org" onAction="OpenSolver_VisitCoinOROrg"/>
           </menu>

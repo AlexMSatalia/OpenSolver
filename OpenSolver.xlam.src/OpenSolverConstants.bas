@@ -9,6 +9,7 @@ Public Const VALUE_IF_MISSING As String = "?"
 
 Public Const EPSILON As Double = 0.00001
 Public Const MAX_LONG As Long = 2147483647
+Public Const MAX_DOUBLE As Double = 1E+307 ' Actually ~1.8E+308 but errors occur if we try to set cell values that high
 
 'Solution results, as reported by Excel Solver
 ' FROM http://msdn.microsoft.com/en-us/library/ff197237.aspx
@@ -133,12 +134,12 @@ End Function
 
 Function RelationStringToEnum(ByVal rel As String) As RelationConsts
 1         Select Case rel
-          Case "<", "<=":             RelationStringToEnum = RelationLE
-2         Case "=", "'=":             RelationStringToEnum = RelationEQ
-3         Case ">", ">=":             RelationStringToEnum = RelationGE
-4         Case "integer", "int", "i": RelationStringToEnum = RelationINT
-5         Case "binary", "bin", "b":  RelationStringToEnum = RelationBIN
-6         Case "alldiff":             RelationStringToEnum = RelationAllDiff
+          Case "<", "<=", "=<":                                                     RelationStringToEnum = RelationLE
+2         Case "=", "'=":                                                           RelationStringToEnum = RelationEQ
+3         Case ">", ">=", "=>":                                                     RelationStringToEnum = RelationGE
+4         Case "integer", "int", "i", "integers", "generals", "general", "gen":     RelationStringToEnum = RelationINT
+5         Case "binary", "bin", "b", "binaries":                                    RelationStringToEnum = RelationBIN
+6         Case "alldiff":                                                           RelationStringToEnum = RelationAllDiff
 7         Case Else
 8             RaiseGeneralError "Unknown relation code: " & rel
 9         End Select

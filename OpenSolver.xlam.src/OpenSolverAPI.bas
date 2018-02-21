@@ -1090,3 +1090,32 @@ Public Sub SetQuickSolveParametersRefersTo(QuickSolveParametersRefersTo As Strin
 3         SetRefersToNameOnSheet "OpenSolverModelParameters", QuickSolveParametersRefersTo, sheet
 End Sub
 
+'/**
+' * Imports an LP file on to a worksheet.
+' * @param {} FilePath The full path to the LP file to import
+' * @param {} sheet The worksheet to write the model to. If the sheet does not exist, a new worksheet will be created named after the LP file name
+' * @param {} MinimiseUserInteraction If True, all dialogs and messages will be suppressed. Use this when automating a lot of solves so that there are no interruptions. Defaults to False
+' */
+Public Function RunImportLP(FilePath As String, ByRef sheet As Worksheet, Optional MinimiseUserInteraction As Boolean = False) As Variant
+1         CheckLocationValid  ' Check for unicode in path
+          
+2         ClearError
+3         On Error GoTo ErrorHandler
+          
+          Dim InteractiveStatus As Boolean
+4         InteractiveStatus = Application.Interactive
+5         Application.Interactive = False
+
+6         ReadLPFile FilePath, sheet, MinimiseUserInteraction
+          RunImportLP = True
+
+ExitFunction:
+8         Application.Interactive = InteractiveStatus
+9         Exit Function
+
+ErrorHandler:
+10        ReportError "OpenSolverAPI", "RunImportLP", True, MinimiseUserInteraction
+11        RunImportLP = OpenSolverErrorHandler.ErrMsg
+12        GoTo ExitFunction
+End Function
+

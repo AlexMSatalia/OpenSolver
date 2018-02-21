@@ -465,3 +465,11 @@ Sub TestCellsForWriting(r As Range)
 ErrorHandler:
 6         RaiseUserError Err.Description
 End Sub
+
+Function RangeExists(r As String) As Boolean
+    'https://stackoverflow.com/a/19179439
+    Dim Test As Range
+    On Error Resume Next
+    Set Test = ActiveSheet.Range(r)
+    RangeExists = Err.Number = 0
+End Function

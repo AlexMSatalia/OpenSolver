@@ -4,7 +4,7 @@ Begin {C62A69F0-16DC-11CE-9E98-00AA00574A4F} FMsgBoxEx
    ClientHeight    =   4275
    ClientLeft      =   45
    ClientTop       =   375
-   ClientWidth     =   9720
+   ClientWidth     =   9720.001
    OleObjectBlob   =   "FMsgBoxEx.frx":0000
 End
 Attribute VB_Name = "FMsgBoxEx"

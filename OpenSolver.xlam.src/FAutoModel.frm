@@ -4,7 +4,7 @@ Begin {C62A69F0-16DC-11CE-9E98-00AA00574A4F} FAutoModel
    ClientHeight    =   4470
    ClientLeft      =   45
    ClientTop       =   -75
-   ClientWidth     =   8820
+   ClientWidth     =   8820.001
    OleObjectBlob   =   "FAutoModel.frx":0000
 End
 Attribute VB_Name = "FAutoModel"
