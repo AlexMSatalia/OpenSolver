@@ -130,9 +130,9 @@ Function PromptSolveEngineApiKey() As String
 ' Prompt user to enter API key
     Dim ApiKey As String
     ApiKey = Application.InputBox( _
-        prompt:="Please enter your Satalia Solve Engine API key.", _
+        prompt:="Please enter your Satalia SolveEngine API key.", _
         Type:=2, _
-        Title:="Solve Engine API Key")
+        Title:="SolveEngine API Key")
     
     If ApiKey <> "False" Then SaveSolveEngineApiKey (ApiKey)
     
@@ -207,7 +207,7 @@ Public Function SolveOnSolveEngine(lpModel As String, LogPath As String, errorSt
     
     Dim jobId As String
     CheckIfCancel frmSolveEngine, ApiKey, jobId
-    UpdateStatus frmSolveEngine, "Solving model on SolveEngine: Sending model to Solve Engine..."
+    UpdateStatus frmSolveEngine, "Solving model on SolveEngine: Sending model to the SolveEngine..."
     
     ' Send the problem and get the job id
     jobId = CreateJob(ApiKey, problemData)
@@ -244,7 +244,7 @@ ErrorHandler:
 28        GoTo ExitFunction
           
 Aborted:
-29        SolveOnSolveEngine = "Solve Engine solve was aborted"
+29        SolveOnSolveEngine = "SolveEngine solve was aborted"
 30        errorString = "Aborted"
 31        Exit Function
 End Function
@@ -355,7 +355,7 @@ Private Function CreateJob(ApiKey As String, problemData As String) As String
         msg = GetErrorMessage(resp)
         Select Case LCase(msg)
         Case "invalid api key":
-            RaiseUserError "Invalid API key, please check at https://se.satalia.com/api"
+            RaiseUserError "Invalid API key, please check at https://solve.satalia.com/api"
         Case "unauthorized":
             RaiseGeneralError "The user is unauthorized."
         Case Else:
