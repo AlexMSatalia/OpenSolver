@@ -1,5 +1,13 @@
 # OpenSolver Release Notes
 
+## v2.9.2 - 2018-02-23
+### Added
+- Add support for NEOS CPLEX as a new solver.
+- Add import LP file feature.
+
+### Fixed
+- Fix memory error when solving consecutive non-linear models in 64bit.
+
 ## v2.9.0 - 2017-11-10
 ### Added
 - Add support for Satalia SolveEngine as a new solver.
