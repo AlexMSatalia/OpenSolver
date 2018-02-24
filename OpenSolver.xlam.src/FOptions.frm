@@ -12,8 +12,6 @@ Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = True
 Attribute VB_Exposed = False
-
-
 Option Explicit
 
 #If Mac Then
@@ -62,13 +60,13 @@ Private Sub cmdOk_Click()
 9         SetToleranceAsPercentage CDbl(Replace(txtTol.Text, "%", vbNullString)), sheet
 10        SetLinearityCheck chkPerformLinearityCheck.value, sheet
 11        SetSolverParametersRefersTo SolverString, SolverParametersRefersTo, sheet
-          SaveNeosSavedEmail (Trim(txtEnterEmail.Text))
+12        SaveNeosSavedEmail (Trim(txtEnterEmail.Text))
                                                                       
-12        Me.Hide
-13        Exit Sub
+13        Me.Hide
+14        Exit Sub
 
 ErrorHandler:
-14        MsgBox Err.Description
+15        MsgBox Err.Description
 End Sub
 
 Private Function FormatNumberForDisplay(Number As Double) As String
@@ -114,7 +112,7 @@ Private Sub UserForm_Activate()
 17        txtTol.Enabled = ToleranceAvailable(Solver)
           
 18        refExtraParameters.Text = GetDisplayAddress(GetSolverParametersRefersTo(SolverString, sheet), sheet, False)
-          txtEnterEmail.Text = GetNeosSavedEmail
+19        txtEnterEmail.Text = GetNeosSavedEmail
 End Sub
 
 Private Sub UserForm_Initialize()
@@ -230,39 +228,39 @@ Private Sub AutoLayout()
 89            AutoHeight lblFootnote, chkNonNeg.Width
 90        End With
 
-          With lblEnterEmail
-              .Caption = "Email address for NEOS solvers:"
-              .Top = Below(lblFootnote)
-              .Left = chkNonNeg.Left
-              AutoHeight lblEnterEmail, chkNonNeg.Width
-          End With
+91        With lblEnterEmail
+92            .Caption = "Email address for NEOS solvers:"
+93            .Top = Below(lblFootnote)
+94            .Left = chkNonNeg.Left
+95            AutoHeight lblEnterEmail, chkNonNeg.Width
+96        End With
           
-          With txtEnterEmail
-              .Width = chkNonNeg.Width
-              .Left = chkNonNeg.Left
-              .Top = Below(lblEnterEmail)
-          End With
+97        With txtEnterEmail
+98            .Width = chkNonNeg.Width
+99            .Left = chkNonNeg.Left
+100           .Top = Below(lblEnterEmail)
+101       End With
           
-91        With cmdCancel
-92            .Caption = "Cancel"
-93            .Left = txtMaxTime.Left
-94            .Width = txtMaxTime.Width
-95            .Top = Below(txtEnterEmail)
-96            .Cancel = True
-97        End With
+102       With cmdCancel
+103           .Caption = "Cancel"
+104           .Left = txtMaxTime.Left
+105           .Width = txtMaxTime.Width
+106           .Top = Below(txtEnterEmail)
+107           .Cancel = True
+108       End With
           
-98        With cmdOk
-99            .Caption = "OK"
-100           .Width = txtMaxTime.Width
-101           .Left = LeftOf(cmdCancel, .Width)
-102           .Top = cmdCancel.Top
-103       End With
+109       With cmdOk
+110           .Caption = "OK"
+111           .Width = txtMaxTime.Width
+112           .Left = LeftOf(cmdCancel, .Width)
+113           .Top = cmdCancel.Top
+114       End With
           
-104       Me.Height = FormHeight(cmdCancel)
-105       Me.Width = Me.Width + FormWindowMargin
+115       Me.Height = FormHeight(cmdCancel)
+116       Me.Width = Me.Width + FormWindowMargin
           
-106       Me.BackColor = FormBackColor
-107       Me.Caption = "OpenSolver - Solve Options"
+117       Me.BackColor = FormBackColor
+118       Me.Caption = "OpenSolver - Solve Options"
 End Sub
 
 Private Sub CenterForm()

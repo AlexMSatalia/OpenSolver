@@ -166,10 +166,10 @@ Function CreateSolver(SolverShortName As String) As ISolver
 6         Case "nomad":       Set CreateSolver = New CSolverNomad
 7         Case "neosbon":     Set CreateSolver = New CSolverNeosBon
 8         Case "neoscou":     Set CreateSolver = New CSolverNeosCou
-          Case "solveengine": Set CreateSolver = New CSolverSolveEngine
-          Case "neoscplex":   Set CreateSolver = New CSolverNeosCplex
-9         Case Else: RaiseGeneralError "The specified solver ('" & SolverShortName & "') was not recognised."
-10        End Select
+9         Case "solveengine": Set CreateSolver = New CSolverSolveEngine
+10        Case "neoscplex":   Set CreateSolver = New CSolverNeosCplex
+11        Case Else: RaiseGeneralError "The specified solver ('" & SolverShortName & "') was not recognised."
+12        End Select
 End Function
 
 Function GetLogFilePath(ByRef Path As String) As Boolean
@@ -240,21 +240,21 @@ Function SolverIsPresent(Solver As ISolver, Optional SolverPath As String, Optio
         #Else
 29                SolverIsPresent = True
         #End If
-          ElseIf TypeOf Solver Is CSolverSolveEngine Then
-              SolverIsPresent = True
+30        ElseIf TypeOf Solver Is CSolverSolveEngine Then
+31            SolverIsPresent = True
               
-30        Else
-31            SolverIsPresent = False
-32        End If
+32        Else
+33            SolverIsPresent = False
+34        End If
 
 ExitFunction:
-33        If RaiseError Then RethrowError
-34        Exit Function
+35        If RaiseError Then RethrowError
+36        Exit Function
 
 ErrorHandler:
-35        If Not ReportError("SolverCommon", "SolverIsPresent") Then Resume
-36        RaiseError = True
-37        GoTo ExitFunction
+37        If Not ReportError("SolverCommon", "SolverIsPresent") Then Resume
+38        RaiseError = True
+39        GoTo ExitFunction
 End Function
 
 Function SolverIsAvailable(Solver As ISolver, Optional SolverPath As String, Optional errorString As String) As Boolean
@@ -274,12 +274,12 @@ ErrorHandlerLocal:
 10            End If
 11        ElseIf TypeOf Solver Is ISolverNeos Then
 12            SolverIsAvailable = True
-          ElseIf TypeOf Solver Is CSolverSolveEngine Then
-              SolverIsAvailable = True
+13        ElseIf TypeOf Solver Is CSolverSolveEngine Then
+14            SolverIsAvailable = True
           
-13        Else
-14            SolverIsAvailable = False
-15        End If
+15        Else
+16            SolverIsAvailable = False
+17        End If
 End Function
 
 Function AboutLocalSolver(LocalSolver As ISolverLocal) As String
@@ -516,9 +516,9 @@ Function RunSolver(s As COpenSolver, SolverCommand As String) As String
 3             RunSolver = vbNullString
 4         ElseIf TypeOf s.Solver Is ISolverNeos Then
 5             RunSolver = CallNEOS(s, SolverCommand)
-          ElseIf TypeOf s.Solver Is CSolverSolveEngine Then
-              RunSolver = CallSolveEngine(s, SolverCommand)
-6         End If
+6         ElseIf TypeOf s.Solver Is CSolverSolveEngine Then
+7             RunSolver = CallSolveEngine(s, SolverCommand)
+8         End If
 End Function
 
 Function DisplayName(Solver As ISolver) As String

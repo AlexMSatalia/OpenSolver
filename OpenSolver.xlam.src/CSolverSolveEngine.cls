@@ -60,51 +60,51 @@ Private Property Get ISolverLinear_SensitivityAnalysisAvailable() As Boolean
 End Property
 
 Private Sub ReadResults(s As COpenSolver, solution As String)
-    Dim resp As Dictionary
-    Set resp = ParseJson(solution)
-    
-    If resp.Exists(strJsonKeyJobId) Then
-        Dim result As Dictionary
-        Set result = resp(strJsonKeyResult)
-        
-        Dim status As String
-        status = result(strJsonKeyStatus)
-        
-        Select Case status
-            Case strSolveStatusSEOptimal:
-                s.SolveStatus = OpenSolverResult.Optimal
-                s.SolveStatusString = "Optimal"
-            Case strSolveStatusSEInfeasible:
-                s.SolveStatus = OpenSolverResult.Infeasible
-                s.SolveStatusString = "No Feasible Solution"
-            Case strSolveStatusSEUnbounded:
-                s.SolveStatus = OpenSolverResult.Unbounded
-                s.SolveStatusString = "No Solution Found (Unbounded)"
-            Case strSolveStatusSEInterrupted
-                s.SolveStatus = OpenSolverResult.LimitedSubOptimal
-                s.SolveStatusString = "Stopped on Time Limit"
-            Case strSolveStatusSEFailed
-                s.SolveStatus = OpenSolverResult.LimitedSubOptimal
-                s.SolveStatusString = "Stopped on solver difficulties"
-        End Select
-        
-        If result.Exists(strJsonKeyVariables) Then
-            Dim variables As Collection
-            Set variables = result(strJsonKeyVariables)
+          Dim resp As Dictionary
+1         Set resp = ParseJson(solution)
+          
+2         If resp.Exists(strJsonKeyJobId) Then
+              Dim result As Dictionary
+3             Set result = resp(strJsonKeyResult)
               
-            Dim variable As Dictionary, i As Long
-            i = 1
-            For Each variable In variables
-                s.VarFinalValue(i) = variable(strJsonKeyValue)
-                s.VarCellName(i) = GetVarNameFromLPName(variable(strJsonKeyName))
-                i = i + 1
-            Next variable
-            
-            If variables.Count > 0 Then s.SolutionWasLoaded = True
-        End If
-    Else
-        RaiseGeneralError "Unexpected error while getting solution: " & GetErrorMessage(resp)
-    End If
+              Dim status As String
+4             status = result(strJsonKeyStatus)
+              
+5             Select Case status
+                  Case strSolveStatusSEOptimal:
+6                     s.SolveStatus = OpenSolverResult.Optimal
+7                     s.SolveStatusString = "Optimal"
+8                 Case strSolveStatusSEInfeasible:
+9                     s.SolveStatus = OpenSolverResult.Infeasible
+10                    s.SolveStatusString = "No Feasible Solution"
+11                Case strSolveStatusSEUnbounded:
+12                    s.SolveStatus = OpenSolverResult.Unbounded
+13                    s.SolveStatusString = "No Solution Found (Unbounded)"
+14                Case strSolveStatusSEInterrupted
+15                    s.SolveStatus = OpenSolverResult.LimitedSubOptimal
+16                    s.SolveStatusString = "Stopped on Time Limit"
+17                Case strSolveStatusSEFailed
+18                    s.SolveStatus = OpenSolverResult.LimitedSubOptimal
+19                    s.SolveStatusString = "Stopped on solver difficulties"
+20            End Select
+              
+21            If result.Exists(strJsonKeyVariables) Then
+                  Dim variables As Collection
+22                Set variables = result(strJsonKeyVariables)
+                    
+                  Dim variable As Dictionary, i As Long
+23                i = 1
+24                For Each variable In variables
+25                    s.VarFinalValue(i) = variable(strJsonKeyValue)
+26                    s.VarCellName(i) = GetVarNameFromLPName(variable(strJsonKeyName))
+27                    i = i + 1
+28                Next variable
+                  
+29                If variables.Count > 0 Then s.SolutionWasLoaded = True
+30            End If
+31        Else
+32            RaiseGeneralError "Unexpected error while getting solution: " & GetErrorMessage(resp)
+33        End If
 
 End Sub
 

@@ -826,6 +826,6 @@ Public Function ParseFormula(strFormula As String) As Tokens
           '1. Scan and detect !, and join if the 3 tokens prior are CellReference-Colon-CellReference
           '2. Scan and detect CellReference-Colon-CellReference, because they should be joined into an AreaReference
 
-527 e:          Set ParseFormula = objTokens
+527 e:            Set ParseFormula = objTokens
 End Function
 

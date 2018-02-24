@@ -150,23 +150,23 @@ Private Function GenerateMenuItems() As Collection
                                "Type '?' at the CBC command line to get help on the CBC commands, and 'exit' to quit CBC. " & _
                                "Note that any solutions generated are discarded; they are not loaded back into your spreadsheet.")
                                     
-              .Add NewMenuItem("menuSeparator", "separator2", "Import")
-              .Add NewMenuItem("button", "OpenSolverModelImportLP", "Import LP File...", _
+43            .Add NewMenuItem("menuSeparator", "separator2", "Import")
+44            .Add NewMenuItem("button", "OpenSolverModelImportLP", "Import LP File...", _
                                 "OpenSolver_ImportLPClick", "Import an existing LP file", _
                                 "Parse an existing CPLEX LP file on to a new sheet and load it into the model.")
                 
-43            .Add NewMenuItem("menuSeparator", "separator3", "About")
-44            .Add NewMenuItem("button", "OpenSolverAbout", "About OpenSolver...", "OpenSolver_AboutClickHandler")
-45            .Add NewMenuItem("button", "OpenSolverAboutCoinOR", "About COIN-OR...", "OpenSolver_AboutCoinOR")
+45            .Add NewMenuItem("menuSeparator", "separator3", "About")
+46            .Add NewMenuItem("button", "OpenSolverAbout", "About OpenSolver...", "OpenSolver_AboutClickHandler")
+47            .Add NewMenuItem("button", "OpenSolverAboutCoinOR", "About COIN-OR...", "OpenSolver_AboutCoinOR")
                                     
-46            .Add NewMenuItem("menuSeparator", "separator4", "Help")
-47            .Add NewMenuItem("button", "OpenSolverVisitOpenSolverOrg", "Open OpenSolver.org", "OpenSolver_VisitOpenSolverOrg")
-48            .Add NewMenuItem("button", "OpenSolverVisitCoinOROrg", "Open COIN-OR.org", "OpenSolver_VisitCoinOROrg")
+48            .Add NewMenuItem("menuSeparator", "separator4", "Help")
+49            .Add NewMenuItem("button", "OpenSolverVisitOpenSolverOrg", "Open OpenSolver.org", "OpenSolver_VisitOpenSolverOrg")
+50            .Add NewMenuItem("button", "OpenSolverVisitCoinOROrg", "Open COIN-OR.org", "OpenSolver_VisitCoinOROrg")
 
-49        End With
-50        Items.Add OpenSolverMenu
+51        End With
+52        Items.Add OpenSolverMenu
           
-51        Set GenerateMenuItems = Items
+53        Set GenerateMenuItems = Items
 End Function
 
 '====================================================================

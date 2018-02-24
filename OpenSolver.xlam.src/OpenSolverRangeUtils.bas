@@ -467,9 +467,9 @@ ErrorHandler:
 End Sub
 
 Function RangeExists(r As String) As Boolean
-    'https://stackoverflow.com/a/19179439
-    Dim Test As Range
-    On Error Resume Next
-    Set Test = ActiveSheet.Range(r)
-    RangeExists = Err.Number = 0
+          'https://stackoverflow.com/a/19179439
+          Dim Test As Range
+1         On Error Resume Next
+2         Set Test = ActiveSheet.Range(r)
+3         RangeExists = Err.Number = 0
 End Function

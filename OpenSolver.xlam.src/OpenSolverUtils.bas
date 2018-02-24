@@ -1169,11 +1169,11 @@ End Function
 ' Base64 encode/decode implementations for mac and windows
 #If Mac Then
     Function EncodeBase64(ByVal str As String) As String
-        EncodeBase64 = ExecCapture("base64 <<< " & Quote(str))
+1             EncodeBase64 = ExecCapture("base64 <<< " & Quote(str))
     End Function
     
     Function DecodeBase64(ByVal str As String) As String
-        DecodeBase64 = ExecCapture("base64 --decode <<< " & str)
+1             DecodeBase64 = ExecCapture("base64 --decode <<< " & str)
     End Function
 #Else
     Function EncodeBase64(ByVal str As String) As String

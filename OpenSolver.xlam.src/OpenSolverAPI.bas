@@ -27,38 +27,38 @@ Public Function RunOpenSolver(Optional SolveRelaxation As Boolean = False, _
 6         GetActiveSheetIfMissing sheet
 
           Dim CurrentSolver As String
-          CurrentSolver = GetChosenSolver(sheet)
+7         CurrentSolver = GetChosenSolver(sheet)
             
-          If CurrentSolver = "NeosCplex" Then
-              If Not ValidateEmail Then RaiseUserError "CPLEX requires an email address. Please check a valid email address has been input under Model > Options."
-          End If
+8         If CurrentSolver = "NeosCplex" Then
+9             If Not ValidateEmail Then RaiseUserError "CPLEX requires an email address. Please check a valid email address has been input under Model > Options."
+10        End If
 
-7         RunOpenSolver = OpenSolverResult.Unsolved
+11        RunOpenSolver = OpenSolverResult.Unsolved
           Dim OpenSolver As COpenSolver
-8         Set OpenSolver = New COpenSolver
+12        Set OpenSolver = New COpenSolver
 
-9         OpenSolver.BuildModelFromSolverData LinearityOffset, GetLinearityCheck(sheet), MinimiseUserInteraction, SolveRelaxation, sheet
+13        OpenSolver.BuildModelFromSolverData LinearityOffset, GetLinearityCheck(sheet), MinimiseUserInteraction, SolveRelaxation, sheet
           ' Only proceed with solve if nothing detected while building model
-10        If OpenSolver.SolveStatus = OpenSolverResult.Unsolved Then
-11            SolveModel OpenSolver, SolveRelaxation, MinimiseUserInteraction
-12        End If
+14        If OpenSolver.SolveStatus = OpenSolverResult.Unsolved Then
+15            SolveModel OpenSolver, SolveRelaxation, MinimiseUserInteraction
+16        End If
           
-13        RunOpenSolver = OpenSolver.SolveStatus
-14        If Not MinimiseUserInteraction Then OpenSolver.ReportAnySolutionSubOptimality
+17        RunOpenSolver = OpenSolver.SolveStatus
+18        If Not MinimiseUserInteraction Then OpenSolver.ReportAnySolutionSubOptimality
 
 ExitFunction:
-15        Application.Interactive = InteractiveStatus
-16        Set OpenSolver = Nothing    ' Free any OpenSolver memory used
-17        Exit Function
+19        Application.Interactive = InteractiveStatus
+20        Set OpenSolver = Nothing    ' Free any OpenSolver memory used
+21        Exit Function
 
 ErrorHandler:
-18        ReportError "OpenSolverAPI", "RunOpenSolver", True, MinimiseUserInteraction
-19        If OpenSolverErrorHandler.ErrNum = OpenSolver_UserCancelledError Then
-20            RunOpenSolver = AbortedThruUserAction
-21        Else
-22            RunOpenSolver = OpenSolverResult.ErrorOccurred
-23        End If
-24        GoTo ExitFunction
+22        ReportError "OpenSolverAPI", "RunOpenSolver", True, MinimiseUserInteraction
+23        If OpenSolverErrorHandler.ErrNum = OpenSolver_UserCancelledError Then
+24            RunOpenSolver = AbortedThruUserAction
+25        Else
+26            RunOpenSolver = OpenSolverResult.ErrorOccurred
+27        End If
+28        GoTo ExitFunction
 End Function
 
 '/**
@@ -1107,7 +1107,7 @@ Public Function RunImportLP(FilePath As String, ByRef sheet As Worksheet, Option
 5         Application.Interactive = False
 
 6         ReadLPFile FilePath, sheet, MinimiseUserInteraction
-          RunImportLP = True
+7         RunImportLP = True
 
 ExitFunction:
 8         Application.Interactive = InteractiveStatus

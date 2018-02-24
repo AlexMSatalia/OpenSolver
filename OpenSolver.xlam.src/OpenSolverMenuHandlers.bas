@@ -258,24 +258,24 @@ Sub OpenSolver_AutoModelAndSolveClick(Optional Control)
 End Sub
 
 Sub OpenSolver_ImportLPClick(Optional Control)
-        If Not CheckForActiveSheet() Then Exit Sub
-        
-        Dim Path As String
-        With Application.FileDialog(msoFileDialogOpen)
-            .AllowMultiSelect = False
-            .Title = "Select LP File"
-            .Filters.Clear
-            .Filters.Add "LP File", "*.lp"
-            .Show
-            If .SelectedItems.Count = 1 Then
-                Path = .SelectedItems(1)
-            End If
-        End With
-        
-        If Path <> "" Then
-            Dim ws As Worksheet
-            RunImportLP Path, ws
-        End If
-    
-        AutoUpdateCheck
+1             If Not CheckForActiveSheet() Then Exit Sub
+              
+              Dim Path As String
+2             With Application.FileDialog(msoFileDialogOpen)
+3                 .AllowMultiSelect = False
+4                 .Title = "Select LP File"
+5                 .Filters.Clear
+6                 .Filters.Add "LP File", "*.lp"
+7                 .Show
+8                 If .SelectedItems.Count = 1 Then
+9                     Path = .SelectedItems(1)
+10                End If
+11            End With
+              
+12            If Path <> "" Then
+                  Dim ws As Worksheet
+13                RunImportLP Path, ws
+14            End If
+          
+15            AutoUpdateCheck
 End Sub

@@ -133,12 +133,12 @@ Function WriteNLFile_Parsed(OpenSolver As COpenSolver, ModelFilePathName As Stri
 4         Set s = OpenSolver
 5         Set m = s.ParsedModel
 
-          If TypeOf s.Solver Is ISolverLocalExec Then
+6         If TypeOf s.Solver Is ISolverLocalExec Then
               Dim LocalExecSolver As ISolverLocalExec
-6             Set LocalExecSolver = s.Solver
-          End If
+7             Set LocalExecSolver = s.Solver
+8         End If
           
-7         WriteComments = ShouldWriteComments
+9         WriteComments = ShouldWriteComments
           
           ' =============================================================
           ' Process model for .nl output
@@ -146,58 +146,58 @@ Function WriteNLFile_Parsed(OpenSolver As COpenSolver, ModelFilePathName As Stri
           ' No modification to these variables should be done while writing the .nl file
           ' =============================================================
           
-8         InitialiseModelStats s
+10        InitialiseModelStats s
           
-9         If n_obj = 0 And n_con = 0 Then
-10            RaiseUserError "The model has no constraints that depend on the adjustable cells, and has no objective. There is nothing for the solver to do."
-11        End If
+11        If n_obj = 0 And n_con = 0 Then
+12            RaiseUserError "The model has no constraints that depend on the adjustable cells, and has no objective. There is nothing for the solver to do."
+13        End If
           
-12        CreateVariableIndex
+14        CreateVariableIndex
           
-13        ProcessFormulae
-14        ProcessObjective
+15        ProcessFormulae
+16        ProcessObjective
           
-          If (nlc > 0 Or nlvc > 0) And OpenSolver.Solver.Name = "CPLEX" Then
-              RaiseUserError "The model is non-linear. Please choose a solver that can solve non-linear models."
-          End If
+17        If (nlc > 0 Or nlvc > 0) And OpenSolver.Solver.Name = "CPLEX" Then
+18            RaiseUserError "The model is non-linear. Please choose a solver that can solve non-linear models."
+19        End If
           
-15        MakeVariableMap s.SolveRelaxation
-16        MakeConstraintMap
+20        MakeVariableMap s.SolveRelaxation
+21        MakeConstraintMap
           
           ' =============================================================
           ' Write output files
           ' =============================================================
           
           ' Create supplementary outputs
-17        If WriteComments Then
-18            OutputColFile
-19            OutputRowFile
-20        End If
+22        If WriteComments Then
+23            OutputColFile
+24            OutputRowFile
+25        End If
           
           ' Write .nl file
-21        Open ModelFilePathName For Output As #1
+26        Open ModelFilePathName For Output As #1
           
-22        MakeHeader
-23        MakeCBlocks
-24        MakeOBlocks
+27        MakeHeader
+28        MakeCBlocks
+29        MakeOBlocks
           'MakeDBlock
-25        If s.InitialSolutionIsValid Then MakeXBlock
-26        MakeRBlock
-27        MakeBBlock
-28        MakeKBlock
-29        MakeJBlocks
-30        MakeGBlocks
+30        If s.InitialSolutionIsValid Then MakeXBlock
+31        MakeRBlock
+32        MakeBBlock
+33        MakeKBlock
+34        MakeJBlocks
+35        MakeGBlocks
 
 ExitFunction:
-31        Application.StatusBar = False
-32        Close #1
-33        If RaiseError Then RethrowError
-34        Exit Function
+36        Application.StatusBar = False
+37        Close #1
+38        If RaiseError Then RethrowError
+39        Exit Function
 
 ErrorHandler:
-35        If Not ReportError("SolverFileNL", "SolveModelParsed_NL") Then Resume
-36        RaiseError = True
-37        GoTo ExitFunction
+40        If Not ReportError("SolverFileNL", "SolveModelParsed_NL") Then Resume
+41        RaiseError = True
+42        GoTo ExitFunction
 End Function
 
 Private Sub InitialiseModelStats(s As COpenSolver)
@@ -645,52 +645,52 @@ Private Sub ProcessFormulae()
 2         On Error GoTo ErrorHandler
         
           ' Prevents memory bug that appears on second solve onwards
-          mSleep 10
+3         mSleep 10
 
-3         Erase NonLinearConstraintTrees
-4         Erase LinearConstraints
-5         ReDim NonLinearConstraintTrees(1 To n_con) As ExpressionTree
-6         ReDim LinearConstraints(1 To n_con) As Dictionary
-7         ReDim LinearConstants(1 To n_con) As Double
-8         ReDim ConstraintRelations(1 To n_con) As RelationConsts
+4         Erase NonLinearConstraintTrees
+5         Erase LinearConstraints
+6         ReDim NonLinearConstraintTrees(1 To n_con) As ExpressionTree
+7         ReDim LinearConstraints(1 To n_con) As Dictionary
+8         ReDim LinearConstants(1 To n_con) As Double
+9         ReDim ConstraintRelations(1 To n_con) As RelationConsts
           
-9         ReDim NonLinearVars(1 To n_var) As Boolean
-10        ReDim NonLinearConstraints(1 To n_con) As Boolean
-11        ReDim NonZeroConstraintCount(1 To n_var) As Long
+10        ReDim NonLinearVars(1 To n_var) As Boolean
+11        ReDim NonLinearConstraints(1 To n_con) As Boolean
+12        ReDim NonZeroConstraintCount(1 To n_var) As Long
           
           ' Loop through all constraints and process each
           Dim i As Long
-12        On Error GoTo BadActualCon
-13        For i = 1 To numActualCons
-14            UpdateStatusBar "OpenSolver: Processing formulae into expression trees... " & i & "/" & n_con & " formulae."
-15            ProcessSingleFormula m.RHSKeys(i), m.LHSKeys(i), m.RELs(i), i
-16        Next i
+13        On Error GoTo BadActualCon
+14        For i = 1 To numActualCons
+15            UpdateStatusBar "OpenSolver: Processing formulae into expression trees... " & i & "/" & n_con & " formulae."
+16            ProcessSingleFormula m.RHSKeys(i), m.LHSKeys(i), m.RELs(i), i
+17        Next i
           
-17        On Error GoTo BadFakeCon
-18        For i = 1 To numFakeCons
-19            UpdateStatusBar "OpenSolver: Processing formulae into expression trees... " & i + numActualCons & "/" & n_con & " formulae."
-20            ProcessSingleFormula m.Formulae(i).strFormulaParsed, m.Formulae(i).strAddress, RelationConsts.RelationEQ, i + numActualCons
-21        Next i
+18        On Error GoTo BadFakeCon
+19        For i = 1 To numFakeCons
+20            UpdateStatusBar "OpenSolver: Processing formulae into expression trees... " & i + numActualCons & "/" & n_con & " formulae."
+21            ProcessSingleFormula m.Formulae(i).strFormulaParsed, m.Formulae(i).strAddress, RelationConsts.RelationEQ, i + numActualCons
+22        Next i
           
 ExitSub:
-22        Application.StatusBar = False
-23        If RaiseError Then RethrowError
-24        Exit Sub
+23        Application.StatusBar = False
+24        If RaiseError Then RethrowError
+25        Exit Sub
 
 ErrorHandler:
-25        If Not ReportError("SolverFileNL", "ProcessFormulae", UserMessage:=UserMessage, StackTraceMessage:=StackTraceMessage) Then Resume
-26        RaiseError = True
-27        GoTo ExitSub
+26        If Not ReportError("SolverFileNL", "ProcessFormulae", UserMessage:=UserMessage, StackTraceMessage:=StackTraceMessage) Then Resume
+27        RaiseError = True
+28        GoTo ExitSub
 
 BadActualCon:
-28        UserMessage = "Non-linear parser failed while processing constraint " & m.RHSKeys(i) & RelationEnumToString(m.RELs(i)) & m.LHSKeys(i) & "."
-29        StackTraceMessage = UserMessage
-30        GoTo ErrorHandler
+29        UserMessage = "Non-linear parser failed while processing constraint " & m.RHSKeys(i) & RelationEnumToString(m.RELs(i)) & m.LHSKeys(i) & "."
+30        StackTraceMessage = UserMessage
+31        GoTo ErrorHandler
           
 BadFakeCon:
-31        UserMessage = "Non-linear parser failed while processing cell " & m.Formulae(i).strAddress & "."
-32        StackTraceMessage = UserMessage
-33        GoTo ErrorHandler
+32        UserMessage = "Non-linear parser failed while processing cell " & m.Formulae(i).strAddress & "."
+33        StackTraceMessage = UserMessage
+34        GoTo ErrorHandler
 End Sub
 
 ' Processes a single constraint into .nl format. We require:
@@ -1971,53 +1971,53 @@ Sub ReadResults_NL(s As COpenSolver)
 72                If Val(SplitLine(LBound(SplitLine) + 1)) <> 0 Then
                       ' CPLEX reports objno -1 for some specific objective functions, but returns a solution anyway
 73                    If s.Solver.Name <> "CPLEX" Then
-                          RaiseGeneralError "Wrong objno"
-                      End If
-74                End If
-75                solve_result_num = Val(SplitLine(LBound(SplitLine) + 2))
-76            End If
+74                        RaiseGeneralError "Wrong objno"
+75                    End If
+76                End If
+77                solve_result_num = Val(SplitLine(LBound(SplitLine) + 2))
+78            End If
               
-77            Select Case solve_result_num
+79            Select Case solve_result_num
               Case 0 To 99
-78                s.SolveStatus = OpenSolverResult.Optimal
-79                s.SolveStatusString = "Optimal"
-80            Case 100 To 199
+80                s.SolveStatus = OpenSolverResult.Optimal
+81                s.SolveStatusString = "Optimal"
+82            Case 100 To 199
                   ' Status is `solved?`
-81                Debug.Assert False
-82            Case 200 To 299
-83                s.SolveStatus = OpenSolverResult.Infeasible
-84                s.SolveStatusString = "No Feasible Solution"
-85            Case 300 To 399
-86                s.SolveStatus = OpenSolverResult.Unbounded
-87                s.SolveStatusString = "No Solution Found (Unbounded)"
-88            Case 400 To 499
-89                s.SolveStatus = OpenSolverResult.LimitedSubOptimal
-90                s.SolveStatusString = "Stopped on User Limit (Time/Iterations)"
-91                GetExtraInfoFromLog s
-92            Case 500 To 599
-93                RaiseGeneralError _
+83                Debug.Assert False
+84            Case 200 To 299
+85                s.SolveStatus = OpenSolverResult.Infeasible
+86                s.SolveStatusString = "No Feasible Solution"
+87            Case 300 To 399
+88                s.SolveStatus = OpenSolverResult.Unbounded
+89                s.SolveStatusString = "No Solution Found (Unbounded)"
+90            Case 400 To 499
+91                s.SolveStatus = OpenSolverResult.LimitedSubOptimal
+92                s.SolveStatusString = "Stopped on User Limit (Time/Iterations)"
+93                GetExtraInfoFromLog s
+94            Case 500 To 599
+95                RaiseGeneralError _
                       "There was an error while solving the model. The solver returned: " & _
                       vbNewLine & vbNewLine & SolveMessage
-94            Case -1
+96            Case -1
                   ' The objno suffix wasn't there. Check SolveMessage for status
-95                Debug.Assert False
-96                CheckSolveMessage SolveMessage
-97            Case Else
+97                Debug.Assert False
+98                CheckSolveMessage SolveMessage
+99            Case Else
                   ' Something else
-98                Debug.Assert False
-99            End Select
-100       End If
+100               Debug.Assert False
+101           End Select
+102       End If
 
 ExitSub:
-101       Application.StatusBar = False
-102       Close #1
-103       If RaiseError Then RethrowError
-104       Exit Sub
+103       Application.StatusBar = False
+104       Close #1
+105       If RaiseError Then RethrowError
+106       Exit Sub
 
 ErrorHandler:
-105       If Not ReportError("SolverFileNL", "ReadResults_NL") Then Resume
-106       RaiseError = True
-107       GoTo ExitSub
+107       If Not ReportError("SolverFileNL", "ReadResults_NL") Then Resume
+108       RaiseError = True
+109       GoTo ExitSub
 End Sub
 
 Sub CheckSolveMessage(SolveMessage As String)
