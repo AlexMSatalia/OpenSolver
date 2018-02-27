@@ -455,7 +455,7 @@ Function SetConstraints(ModelText As Variant, Optional SortConstraints As Boolea
 4         j = FindNextHeaderLine(1, ModelText)
 5         NumConstraints = j - i - 1
 
-6         If NumConstraints = 0 Then
+6         If i = -1 Or NumConstraints = 0 Then
 7             SetConstraints = Array()
 8             GoTo ExitFunction
 9         End If
