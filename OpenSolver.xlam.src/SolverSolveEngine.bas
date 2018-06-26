@@ -52,7 +52,13 @@ Public Const strSolveStatusSEFailed As String = "failed"
 Public Const strSolveStatusSEUnbounded As String = "unbounded"
 
 ' Name of save location for API key
-Private Const SolveEngineRegName = "SolveEngineApiKey"
+Private Const SolveEngineApiKeyRegName = "SolveEngineApiKey"
+' Name of save location for last job id
+Private Const SolveEngineLastJobIdRegName = "SolveEngineJobId"
+' Name of save location for last model
+Private Const SolveEngineLastModelRegName = "SolveEngineLastModel"
+' Name of save location for model name
+Private Const SolveEngineModelNameRegName = "SolveEngineModelName"
 ' Attributes that the form needs to get/set
 Public SolveEngineFinalResponse As String
 Public SolveEngineLpModel As String
@@ -105,38 +111,54 @@ End Function
 
 ' Accessing the saved API key in the registry
 Public Function GetSolveEngineApiKey() As String
-1         GetSolveEngineApiKey = GetSetting(OpenSolverRegName, PreferencesRegName, SolveEngineRegName, VALUE_IF_MISSING)
+1         GetSolveEngineApiKey = GetSetting(OpenSolverRegName, PreferencesRegName, SolveEngineApiKeyRegName, VALUE_IF_MISSING)
 End Function
 Public Sub SaveSolveEngineApiKey(ApiKey As String)
-1         SaveSetting OpenSolverRegName, PreferencesRegName, SolveEngineRegName, ApiKey
+1         SaveSetting OpenSolverRegName, PreferencesRegName, SolveEngineApiKeyRegName, ApiKey
 End Sub
 Public Sub DeleteSolveEngineApiKey()
-1         DeleteSetting OpenSolverRegName, PreferencesRegName, SolveEngineRegName
+1         DeleteSetting OpenSolverRegName, PreferencesRegName, SolveEngineApiKeyRegName
 End Sub
 
-Function GetSolveEngineApiKeyOrPrompt() As String
-      ' Gets the saved API key and prompts user if no key is saved
-          Dim ApiKey As String
-1         ApiKey = GetSolveEngineApiKey()
-          
-2         If ApiKey = VALUE_IF_MISSING Then
-3             ApiKey = PromptSolveEngineApiKey()
-4         End If
-                  
-5         GetSolveEngineApiKeyOrPrompt = ApiKey
+' Accessing the saved last jobID in the registry
+Public Function GetSolveEngineLastJobId() As String
+1         GetSolveEngineLastJobId = GetSetting(OpenSolverRegName, PreferencesRegName, SolveEngineLastJobIdRegName, VALUE_IF_MISSING)
 End Function
+Public Sub SaveSolveEngineLastJobId(jobId As String)
+1         SaveSetting OpenSolverRegName, PreferencesRegName, SolveEngineLastJobIdRegName, jobId
+End Sub
+Public Sub DeleteSolveEngineLastJobId()
+1         DeleteSetting OpenSolverRegName, PreferencesRegName, SolveEngineLastJobIdRegName
+End Sub
 
-Function PromptSolveEngineApiKey() As String
-      ' Prompt user to enter API key
-          Dim ApiKey As String
-1         ApiKey = Application.InputBox( _
-              prompt:="Please enter your Satalia SolveEngine API key.", _
-              Type:=2, _
-              Title:="SolveEngine API Key")
-          
-2         If ApiKey <> "False" Then SaveSolveEngineApiKey (ApiKey)
-          
-3         PromptSolveEngineApiKey = ApiKey
+' Accessing the saved last model run in the registry
+Public Function GetSolveEngineLastModel() As String
+1         GetSolveEngineLastModel = GetSetting(OpenSolverRegName, PreferencesRegName, SolveEngineLastModelRegName, VALUE_IF_MISSING)
+End Function
+Public Sub SaveSolveEngineLastModel(model As String)
+1         SaveSetting OpenSolverRegName, PreferencesRegName, SolveEngineLastModelRegName, model
+End Sub
+Public Sub DeleteSolveEngineLastModel()
+1         DeleteSetting OpenSolverRegName, PreferencesRegName, SolveEngineLastModelRegName
+End Sub
+
+' Accessing the model name
+Public Function GetSolveEngineModelName() As String
+1         GetSolveEngineModelName = GetSetting(OpenSolverRegName, PreferencesRegName, SolveEngineModelNameRegName, strFileName)
+End Function
+Public Sub SaveSolveEngineModelName(name As String)
+1         SaveSetting OpenSolverRegName, PreferencesRegName, SolveEngineModelNameRegName, name
+End Sub
+Public Sub DeleteSolveEngineModelName()
+1         DeleteSetting OpenSolverRegName, PreferencesRegName, SolveEngineModelNameRegName
+End Sub
+
+Public Function PromptUsePreviousJob() As Boolean
+      Dim prompt As String
+    
+1     prompt = "We detected that you are requesting to solve the same model as the one that was previously sent. Would you like to consider the former job ?"
+    
+2     PromptUsePreviousJob = (MsgBox(prompt, vbYesNo, "Same model detected") = vbYes)
 End Function
 
 Public Function SolveEngineRequest(method As String, URL As String, ApiKey As String, Optional body As String) As Dictionary
@@ -205,48 +227,61 @@ Public Function SolveOnSolveEngine(lpModel As String, LogPath As String, errorSt
     Dim problemData As String
 4         problemData = BuildProblem(lpModel)
     
+5         If GetSolveEngineLastJobId() <> VALUE_IF_MISSING And GetSolveEngineLastModel() = problemData Then
+    Dim booUsePreviousJob As Boolean
+6             booUsePreviousJob = PromptUsePreviousJob()
+7         End If
+    
+8         SaveSolveEngineLastModel problemData
+    
     Dim jobId As String
-5         CheckIfCancel frmSolveEngine, ApiKey, jobId
-6         UpdateStatus frmSolveEngine, "Solving model on SolveEngine: Sending model to the SolveEngine..."
+9         CheckIfCancel frmSolveEngine, ApiKey, jobId
+10        UpdateStatus frmSolveEngine, "Solving model on SolveEngine: Sending model to the SolveEngine..."
     
     ' Send the problem and get the job id
-7         jobId = CreateJob(ApiKey, problemData)
-8         AppendFile LogPath, "Job ID: " & jobId
+11        If Not booUsePreviousJob Then
+12            jobId = CreateJob(ApiKey, problemData)
+13        Else
+              jobId = GetSolveEngineLastJobId
+14        End If
+    
+15        SaveSolveEngineLastJobId (jobId)
+16        AppendFile LogPath, "Job ID: " & jobId
 
-9         CheckIfCancel frmSolveEngine, ApiKey, jobId
+17        CheckIfCancel frmSolveEngine, ApiKey, jobId
 
     ' Start the job
-10        ScheduleJob ApiKey, jobId
+18        ScheduleJob ApiKey, jobId
 
     ' Wait for the job to finish
-11        WaitForAnswer ApiKey, jobId, LogPath, frmSolveEngine
+19        WaitForAnswer ApiKey, jobId, LogPath, frmSolveEngine
     
-12        CheckIfCancel frmSolveEngine, ApiKey, jobId
+20        CheckIfCancel frmSolveEngine, ApiKey, jobId
 
     ' Get the final results once the job is complete
     Dim FinalResponse As Dictionary
-13        Set FinalResponse = GetResults(ApiKey, jobId)
+21        Set FinalResponse = GetResults(ApiKey, jobId)
     
-14        AppendFile LogPath, ConvertToJson(FinalResponse, 2)
+22        AppendFile LogPath, ConvertToJson(FinalResponse, 2)
     
-15        SolveOnSolveEngine = ConvertToJson(FinalResponse)
+23        SolveOnSolveEngine = ConvertToJson(FinalResponse)
 
 ExitFunction:
-16        Exit Function
+24        Exit Function
     
 ErrorHandler:
       ' We CANNOT raise an error in this function.
       ' It is sometimes called with a form as a conduit, which means that errors can't propogate back to the main thread.
       ' Instead, set the error string, which IS passed back to the main thread by the form.
-17        If Not ReportError("SolverSolveEngine", "SolveOnSolveEngine") Then Resume
-18        If OpenSolverErrorHandler.ErrNum = OpenSolver_UserCancelledError Then GoTo Aborted
-19        errorString = OpenSolverErrorHandler.ErrMsg
-20        GoTo ExitFunction
+25        If Not ReportError("SolverSolveEngine", "SolveOnSolveEngine") Then Resume
+26        If OpenSolverErrorHandler.ErrNum = OpenSolver_UserCancelledError Then GoTo Aborted
+27        errorString = OpenSolverErrorHandler.ErrMsg
+28        GoTo ExitFunction
           
 Aborted:
-21        SolveOnSolveEngine = "SolveEngine solve was aborted"
-22        errorString = "Aborted"
-23        Exit Function
+29        SolveOnSolveEngine = "SolveEngine solve was aborted"
+30        errorString = "Aborted"
+31        Exit Function
 End Function
 
 Sub UpdateStatus(frmSolveEngine As FSolveEngine, message As String)
@@ -276,15 +311,17 @@ Private Sub CancelJob(ApiKey As String, jobId As String)
               SolveEngineServer & strUrlJobs & jobId & strUrlStop, _
               ApiKey)
           
-2         If resp.Count > 0 Then
+2         DeleteSolveEngineLastJobId
+    
+3         If resp.Count > 0 Then
               Dim msg As String
-3             msg = GetErrorMessage(resp)
-4             If Len(msg) > 0 Then
-5                 RaiseGeneralError "The job could not be cancelled. The response was: " & msg
-6             Else
-7                 RaiseUserCancelledError
-8             End If
-9         End If
+4             msg = GetErrorMessage(resp)
+5             If Len(msg) > 0 Then
+6                 RaiseGeneralError "The job could not be cancelled. The response was: " & msg
+7             Else
+8                 RaiseUserCancelledError
+9             End If
+10        End If
 End Sub
 
 Private Function LoadApiKey() As String
@@ -294,11 +331,11 @@ Private Function LoadApiKey() As String
 2         On Error GoTo ErrorHandler
           
           Dim ApiKey As String
-3         ApiKey = GetSolveEngineApiKeyOrPrompt()
+3         ApiKey = GetSolveEngineApiKey()
           
 4         If ApiKey = "False" Then
 5             RaiseUserCancelledError
-6         ElseIf Len(ApiKey) = 0 Then
+6         ElseIf (Len(ApiKey) = 0 Or ApiKey = VALUE_IF_MISSING) Then
 7             DeleteSolveEngineApiKey
 8             RaiseUserError "No SolveEngine API key was given, so the solve was aborted."
 9         End If
@@ -322,18 +359,23 @@ Public Function BuildProblem(lpModel As String) As String
 
           Dim problem As Dictionary
 2         Set problem = New Dictionary
-3         problem.Add strJsonKeyName, strFileName
-4         problem.Add strJsonKeyData, encodedLpModel
+    
+          Dim modelName As String
+3         modelName = GetSolveEngineModelName()
+4         modelName = IIf(Len(modelName) = 0, strFileName, modelName) & ".lp"
+    
+5         problem.Add strJsonKeyName, modelName
+6         problem.Add strJsonKeyData, encodedLpModel
           
           Dim problems As Collection
-5         Set problems = New Collection
-6         problems.Add problem
+7         Set problems = New Collection
+8         problems.Add problem
           
           Dim problemDataDict As Dictionary
-7         Set problemDataDict = New Dictionary
-8         problemDataDict.Add strJsonKeyProblems, problems
+9         Set problemDataDict = New Dictionary
+10        problemDataDict.Add strJsonKeyProblems, problems
           
-9         BuildProblem = ConvertToJson(problemDataDict)
+11        BuildProblem = ConvertToJson(problemDataDict)
 End Function
 
 Private Function CreateJob(ApiKey As String, problemData As String) As String

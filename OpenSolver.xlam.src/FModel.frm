@@ -1,7 +1,7 @@
 VERSION 5.00
 Begin {C62A69F0-16DC-11CE-9E98-00AA00574A4F} FModel 
    Caption         =   "OpenSolver - Model"
-   ClientHeight    =   8280.001
+   ClientHeight    =   8775.001
    ClientLeft      =   45
    ClientTop       =   -4665
    ClientWidth     =   9840.001
@@ -13,6 +13,7 @@ Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = True
 Attribute VB_Exposed = False
+
 Option Explicit
 
 #If Mac Then
@@ -237,6 +238,10 @@ Sub FormatCurrentSolver()
           Dim Solver As String
 1         Solver = GetChosenSolver(sheet)
 2         lblSolver.Caption = "Current Solver Engine: " & UCase(Left(Solver, 1)) & Mid(Solver, 2)
+4         lblModelName.Visible = (Solver = "SolveEngine")
+5         tbModelName.Visible = (Solver = "SolveEngine")
+6         UpdateLayout
+
 End Sub
 
 Private Sub cmdOptions_Click()
@@ -577,21 +582,25 @@ Private Sub cmdBuild_Click()
 68            SetUpdateSensitivity optUpdate.value, sheet
           'End If
 
+69        If GetChosenSolver(sheet) = "SolveEngine" Then
+70            SaveSolveEngineModelName tbModelName.value
+71        End If
+        
           ' Display on screen
-69        If chkShowModel.value = True Then ShowSolverModel sheet, HandleError:=True
+72        If chkShowModel.value = True Then ShowSolverModel sheet, HandleError:=True
               
-70        On Error GoTo CalculateFailed
-71        Application.Calculate
-72        On Error GoTo ErrorHandler
+73        On Error GoTo CalculateFailed
+74        Application.Calculate
+75        On Error GoTo ErrorHandler
           
-73        Me.Hide
-74        GoTo ExitSub
+76        Me.Hide
+77        GoTo ExitSub
 
 CalculateFailed:
           ' Application.Calculate failed. Ignore error and try again
-75        On Error GoTo ErrorHandler
-76        Application.Calculate
-77        Resume Next
+78        On Error GoTo ErrorHandler
+79        Application.Calculate
+80        Resume Next
 
 BadObjRef:
           ' Couldn't turn the objective cell address into a range
@@ -1039,69 +1048,88 @@ Private Sub AutoLayout()
 207       With lblSolver
 208           .Width = LeftOf(cmdChange, .Left)
 209       End With
+
+210       Dim booSolveEngine As Boolean
+211       booSolveEngine = GetChosenSolver(sheet) = "SolveEngine"
+        
+212       With lblModelName
+213           .Visible = booSolveEngine
+214           .Left = lblDescHeader.Left
+215           .Height = lblStep5.Height
+216           .Width = lblStep5.Width
+217       End With
+        
+218       With tbModelName
+219           .Visible = booSolveEngine
+220           .Left = RightOf(lblModelName)
+221           .Height = refDuals.Height
+222           .Width = refDuals.Width
+223           .value = GetSolveEngineModelName()
+224       End With
           
-210       With lblDiv6
-211           .Left = lblDescHeader.Left
-212           .Width = lblDesc.Width
-213           .Height = FormDivHeight
-214           .BackColor = FormDivBackColor
-215       End With
-              
-216       With chkShowModel
-217           .Left = lblDescHeader.Left
-218           AutoHeight chkShowModel, Me.Width, True
-219       End With
-          
-220       With cmdCancel
-221           .Width = cmdRunAutoModel.Width
-222           .Caption = "Cancel"
-223           .Left = LeftOfForm(Me.Width, .Width)
-224           .Cancel = True
-225       End With
-          
-226       With cmdBuild
-227           .Width = cmdRunAutoModel.Width
-228           .Caption = "Save Model"
-229           .Left = LeftOf(cmdCancel, .Width)
+225       With lblDiv6
+226           .Left = lblDescHeader.Left
+227           .Width = lblDesc.Width
+228           .Height = FormDivHeight
+229           .BackColor = FormDivBackColor
 230       End With
+              
+231       With chkShowModel
+232           .Left = lblDescHeader.Left
+233           AutoHeight chkShowModel, Me.Width, True
+234       End With
           
-231       With cmdOptions
-232           .Width = cmdRunAutoModel.Width
-233           .Caption = "Options..."
-234           .Left = LeftOf(cmdBuild, .Width)
-235       End With
-          
-236       With cmdReset
-237           .Width = cmdRunAutoModel.Width
-238           .Caption = "Clear Model"
-239           .Left = LeftOf(cmdOptions, .Width)
+235       With cmdCancel
+236           .Width = cmdRunAutoModel.Width
+237           .Caption = "Cancel"
+238           .Left = LeftOfForm(Me.Width, .Width)
+239           .Cancel = True
 240       End With
           
+241       With cmdBuild
+242           .Width = cmdRunAutoModel.Width
+243           .Caption = "Save Model"
+244           .Left = LeftOf(cmdCancel, .Width)
+245       End With
+          
+246       With cmdOptions
+247           .Width = cmdRunAutoModel.Width
+248           .Caption = "Options..."
+249           .Left = LeftOf(cmdBuild, .Width)
+250       End With
+          
+251       With cmdReset
+252           .Width = cmdRunAutoModel.Width
+253           .Caption = "Clear Model"
+254           .Left = LeftOf(cmdOptions, .Width)
+255       End With
+          
           ' Add resizer
-241       With lblResizer
+256       With lblResizer
         #If Mac Then
                   ' Mac labels don't fire MouseMove events correctly
-242               .Visible = False
+257               .Visible = False
         #End If
-243           .Caption = "o"
-244           With .Font
-245               .Name = "Marlett"
-246               .Charset = 2
-247               .Size = 10
-248           End With
-249           .AutoSize = True
-250           .Left = Me.Width - .Width
-251           .MousePointer = fmMousePointerSizeNWSE
-252           .BackStyle = fmBackStyleTransparent
-253       End With
+258           .Caption = "o"
+259           With .Font
+260               .Name = "Marlett"
+261               .Charset = 2
+262               .Size = 10
+263           End With
+264           .AutoSize = True
+265           .Top = Below(lblDiv6)
+266           .Left = Me.Width - .Width
+267           .MousePointer = fmMousePointerSizeNWSE
+268           .BackStyle = fmBackStyleTransparent
+269       End With
           
           ' Set the vertical positions of the lower half of the form
-254       UpdateLayout
+270       UpdateLayout
           
-255       Me.Width = Me.Width + FormWindowMargin
+271       Me.Width = Me.Width + FormWindowMargin
           
-256       Me.BackColor = FormBackColor
-257       Me.Caption = "OpenSolver - Model"
+272       Me.BackColor = FormBackColor
+273       Me.Caption = "OpenSolver - Model"
 End Sub
 
 Private Sub UpdateLayout(Optional ChangeY As Single = 0)
@@ -1111,26 +1139,31 @@ Private Sub UpdateLayout(Optional ChangeY As Single = 0)
           
 2         lstConstraints.Height = NewHeight
               
+3         Dim booSolveEngine As Boolean
+4         booSolveEngine = GetChosenSolver(sheet) = "SolveEngine"
+              
           ' Cascade the updated height
-3         lblDiv4.Top = Below(lstConstraints)
-4         lblStep4.Top = Below(lblDiv4)
-5         chkGetDuals.Top = lblStep4.Top
-6         refDuals.Top = lblStep4.Top
-7         chkGetDuals2.Top = Below(chkGetDuals, False)
-8         optUpdate.Top = chkGetDuals2.Top
-9         optNew.Top = chkGetDuals2.Top
-10        lblDiv5.Top = Below(optNew, False)
-11        lblStep5.Top = Below(lblDiv5)
-12        cmdChange.Top = lblStep5.Top
-13        lblSolver.Top = lblStep5.Top + FormButtonHeight - FormTextHeight
-14        lblDiv6.Top = Below(cmdChange)
-15        chkShowModel.Top = Below(lblDiv6)
-16        cmdCancel.Top = chkShowModel.Top
-17        cmdBuild.Top = chkShowModel.Top
-18        cmdOptions.Top = chkShowModel.Top
-19        cmdReset.Top = chkShowModel.Top
-20        Me.Height = FormHeight(cmdCancel)
-21        lblResizer.Top = Me.InsideHeight - lblResizer.Height
+5         lblDiv4.Top = Below(lstConstraints)
+6         lblStep4.Top = Below(lblDiv4)
+7         chkGetDuals.Top = lblStep4.Top
+8         refDuals.Top = lblStep4.Top
+9         chkGetDuals2.Top = Below(chkGetDuals, False)
+10        optUpdate.Top = chkGetDuals2.Top
+11        optNew.Top = chkGetDuals2.Top
+12        lblDiv5.Top = Below(optNew, False)
+13        lblStep5.Top = Below(lblDiv5)
+14        cmdChange.Top = lblStep5.Top
+15        lblSolver.Top = lblStep5.Top + FormButtonHeight - FormTextHeight
+16        lblModelName.Top = Below(lblStep5)
+17        tbModelName.Top = Below(lblStep5)
+18        lblDiv6.Top = IIf(booSolveEngine, Below(lblModelName), Below(cmdChange))
+19        chkShowModel.Top = Below(lblDiv6)
+20        cmdCancel.Top = chkShowModel.Top
+21        cmdBuild.Top = chkShowModel.Top
+22        cmdOptions.Top = chkShowModel.Top
+23        cmdReset.Top = chkShowModel.Top
+24        Me.Height = FormHeight(cmdCancel)
+25        lblResizer.Top = Me.InsideHeight - lblResizer.Height
 End Sub
 
 Private Sub lblResizer_MouseDown(ByVal Button As Integer, ByVal Shift As Integer, ByVal X As Single, ByVal Y As Single)

@@ -78,6 +78,9 @@ Private Sub cmdOk_Click()
          'Add the chosen solver as a hidden name in the workbook
 1         SetChosenSolver Solvers(cboSolver.ListIndex).ShortName, sheet
 2         Me.Hide
+3         If cboSolver.value = "Satalia using SolveEngine" Then
+4             SaveSolveEngineApiKey (tbApiKey.value)
+5         End If
 End Sub
 
 Private Sub cmdCancel_Click()
@@ -116,47 +119,66 @@ Private Sub AutoLayout()
 11            .Top = Below(lblChoose, False)
 12            .Width = lblChoose.Width
 13        End With
-          
-14        With lblDesc
-15            .Left = lblChoose.Left
-16            .Top = Below(cboSolver)
-17            AutoHeight lblDesc, lblChoose.Width
-18        End With
-          
-19        With lblHyperlink
-20            .Left = lblChoose.Left
-21            .Top = Below(lblDesc)
-22            AutoHeight lblHyperlink, lblChoose.Width, True
+            
+14        Dim booSolveEngine As Boolean
+15        booSolveEngine = cboSolver.value = "Satalia using SolveEngine"
+
+17        With lblApiKey
+18            .Visible = booSolveEngine
+19            .Left = lblChoose.Left
+20            .Top = Below(cboSolver, True)
+21            .Width = lblChoose.Width
+22            .Caption = "Add your api-key (sign in to solve.satalia.com to get it):"
 23        End With
-          
-24        With lblError
-25            .Visible = Len(.Caption) <> 0
+        
+24        With tbApiKey
+25            .Visible = booSolveEngine
 26            .Left = lblChoose.Left
-27            .Top = Below(lblHyperlink)
-28            AutoHeight lblError, lblChoose.Width
-29        End With
+27            .Top = Below(lblApiKey, False)
+28            .Width = cboSolver.Width
+29            .value = GetSolveEngineApiKey()
+30        End With
           
-30        With cmdCancel
-31            .Caption = "Cancel"
-32            .Width = FormButtonWidth
-33            .Top = Below(IIf(lblError.Visible, lblError, lblHyperlink))
-34            .Left = LeftOfForm(Me.Width, .Width)
-35            .Cancel = True
-36        End With
+31        With lblDesc
+32            .Left = lblChoose.Left
+33            .Top = IIf(booSolveEngine, Below(tbApiKey), Below(cboSolver))
+34            AutoHeight lblDesc, lblChoose.Width
+35        End With
           
-37        With cmdOk
-38            .Caption = "OK"
-39            .Width = FormButtonWidth
-40            .Top = cmdCancel.Top
-41            .Left = LeftOf(cmdCancel, .Width)
-42        End With
+36        With lblHyperlink
+37            .Left = lblChoose.Left
+38            .Top = Below(lblDesc)
+39            AutoHeight lblHyperlink, lblChoose.Width, True
+40        End With
+          
+41        With lblError
+42            .Visible = Len(.Caption) <> 0
+43            .Left = lblChoose.Left
+44            .Top = Below(lblHyperlink)
+45            AutoHeight lblError, lblChoose.Width
+46        End With
+          
+47        With cmdCancel
+48            .Caption = "Cancel"
+49            .Width = FormButtonWidth
+50            .Top = Below(IIf(lblError.Visible, lblError, lblHyperlink))
+51            .Left = LeftOfForm(Me.Width, .Width)
+52            .Cancel = True
+53        End With
+          
+54        With cmdOk
+55            .Caption = "OK"
+56            .Width = FormButtonWidth
+57            .Top = cmdCancel.Top
+58            .Left = LeftOf(cmdCancel, .Width)
+59        End With
           
           
-43        Me.Height = FormHeight(cmdCancel)
-44        Me.Width = Me.Width + FormWindowMargin
+60        Me.Height = FormHeight(cmdCancel)
+61        Me.Width = Me.Width + FormWindowMargin
           
-45        Me.BackColor = FormBackColor
-46        Me.Caption = "OpenSolver - Choose Solver"
+62        Me.BackColor = FormBackColor
+63        Me.Caption = "OpenSolver - Choose Solver"
 End Sub
 
 Private Sub CenterForm()
