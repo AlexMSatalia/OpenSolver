@@ -95,7 +95,7 @@ Private Sub ReadResults(s As COpenSolver, solution As String)
                   Dim variable As Dictionary, i As Long
 23                i = 1
 24                For Each variable In variables
-25                    s.VarFinalValue(i) = variable(strJsonKeyValue)
+25                    s.VarFinalValue(i) = Replace(variable(strJsonKeyValue), ".", Application.DecimalSeparator)
 26                    s.VarCellName(i) = GetVarNameFromLPName(variable(strJsonKeyName))
 27                    i = i + 1
 28                Next variable
